@@ -13,14 +13,13 @@
 ^\.gemini$
 ^\.github$
 ^\.lintr$
-^\.rtms-instructions\.md$
 ^\.vscode$
-^cran-comments\.md$
-^data-raw$
 ^dev$
 ^docs$
+^specs$
 ^AGENTS\.md$
 ^CLAUDE\.md$
 ^pkgdown$
 ^SKILL\.md$
 ^LICENSE\.md$
+^Makefile$
