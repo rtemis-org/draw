@@ -1,0 +1,35 @@
+Package: rtemis.draw
+Title: Interactive Visualization Using ECharts
+Version: 0.0.1
+Authors@R:
+    person(given = "E.D.", family = "Gennatas", role = c("aut", "cre", "cph"),
+           email = "gennatas@gmail.com",
+           comment = c(ORCID = "0000-0001-9280-3609"))
+Description: Provides a comprehensive R interface to Apache ECharts
+    (<https://echarts.apache.org>) for creating interactive charts and
+    visualizations. Offers type-checked, validated configuration objects
+    built with S7 classes that mirror the ECharts TypeScript API, with
+    convenience functions for common chart types and full htmlwidgets
+    integration for use in Quarto, Shiny, and IDE viewers.
+License: GPL (>= 3)
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.3
+Imports: 
+    htmlwidgets,
+    jsonlite,
+    S7
+Suggests: 
+    testthat (>= 3.0.0)
+Config/testthat/edition: 3
+Config/testthat/parallel: true
+Collate:
+    'utils.R'
+    'styles.R'
+    'label.R'
+    'axis.R'
+    'components.R'
+    'series.R'
+    'option.R'
+    'theme.R'
+    'widget.R'
