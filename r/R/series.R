@@ -19,7 +19,7 @@
 #' ECharts docs: \url{https://echarts.apache.org/en/option.html#series-line}
 #'
 #' @param name Series name for legend display.
-#' @param data Data values. Numeric vector, or list of [x,y] pairs.
+#' @param data Data values. Numeric vector, or list of (x, y) pairs.
 #' @param x_axis_index Index of the x axis to use.
 #' @param y_axis_index Index of the y axis to use.
 #' @param stack Stack group name for stacked area charts.
@@ -121,11 +121,11 @@ S7::method(to_list, LineSeries) <- function(x, ...) {
 #' @param y_axis_index Index of the y axis to use.
 #' @param stack Stack group name for stacked bars.
 #' @param clip Whether to clip overflow.
-#' @param bar_width Bar width. Number (px) or string (\%).
+#' @param bar_width Bar width. Number (px) or percent string.
 #' @param bar_max_width Maximum bar width.
 #' @param bar_min_width Minimum bar width.
 #' @param bar_min_height Minimum bar height.
-#' @param bar_gap Gap between bars in the same category. String (\%) or number.
+#' @param bar_gap Gap between bars in the same category. Percent string or number.
 #' @param bar_category_gap Gap between categories.
 #' @param round_cap Whether to use round cap (polar bar only).
 #' @param show_background Whether to show bar background.
@@ -182,7 +182,7 @@ S7::method(to_list, BarSeries) <- function(x, ...) {
 #' ECharts docs: \url{https://echarts.apache.org/en/option.html#series-scatter}
 #'
 #' @param name Series name for legend display.
-#' @param data Data values. List of [x,y] pairs or numeric vectors.
+#' @param data Data values. List of (x, y) pairs or numeric vectors.
 #' @param x_axis_index Index of the x axis to use.
 #' @param y_axis_index Index of the y axis to use.
 #' @param clip Whether to clip overflow.
@@ -249,7 +249,7 @@ S7::method(to_list, ScatterSeries) <- function(x, ...) {
 #' @param name Series name.
 #' @param data Pie data. A list of named lists with `value` and `name` fields,
 #'   or a numeric vector.
-#' @param center Pie center: length-2 vector of numbers or strings (e.g., `c("50\%", "50\%")`).
+#' @param center Pie center: length-2 vector of numbers or percent strings.
 #' @param radius Pie radius: a single value or `c(inner, outer)`.
 #' @param rose_type Nightingale chart type: `"radius"` or `"area"`.
 #' @param clockwise Whether to layout clockwise.

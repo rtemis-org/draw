@@ -18,11 +18,11 @@
 #' ECharts docs: \url{https://echarts.apache.org/en/option.html#grid}
 #'
 #' @param show Whether to show the grid border.
-#' @param left Distance from left side of container. Number (px) or string (\%).
+#' @param left Distance from left side of container. Number (px) or percent string.
 #' @param right Distance from right side.
 #' @param top Distance from top.
 #' @param bottom Distance from bottom.
-#' @param width Grid width. Number (px) or string (\%).
+#' @param width Grid width. Number (px) or percent string.
 #' @param height Grid height.
 #' @param contain_label Whether the grid region contains axis labels.
 #' @param background_color Grid background color.
@@ -87,7 +87,7 @@ S7::method(to_list, Grid) <- function(x, ...) {
 #' @param border_color Border color.
 #' @param border_width Border width.
 #' @param border_radius Border radius. Single number or length-4 vector.
-#' @param left,right,top,bottom Position. Number (px) or string (\%).
+#' @param left,right,top,bottom Position. Number (px) or percent string.
 #' @export
 Title <- S7::new_class(
   "Title",
