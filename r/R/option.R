@@ -1,0 +1,167 @@
+# option.R
+# Top-level EChartsOption S7 class
+#
+# TS sources:
+#   EChartsOption: src/export/option.ts (line 258)
+#   ECUnitOption:  src/util/types.ts (line 697)
+#   ECBasicOption: src/util/types.ts (line 756)
+
+#' ECharts Option
+#'
+#' The top-level configuration object passed to `echarts.setOption()`.
+#' Holds all chart components, series, and global settings.
+#'
+#' Corresponds to `EChartsOption` in `src/export/option.ts` (line 258)
+#' and `ECUnitOption` in `src/util/types.ts` (line 697).
+#'
+#' @param title A [Title] or list of Title objects.
+#' @param legend A [Legend] or list of Legend objects.
+#' @param grid A [Grid] or list of Grid objects.
+#' @param x_axis An [Axis] or list of Axis objects (xAxis).
+#' @param y_axis An [Axis] or list of Axis objects (yAxis).
+#' @param tooltip A [Tooltip] object.
+#' @param series A series object or list of series objects ([LineSeries],
+#'   [BarSeries], [ScatterSeries], [PieSeries], [BoxplotSeries]).
+#' @param color Color palette: character vector of color strings.
+#' @param background_color Chart background color.
+#' @param text_style Global [TextStyle] for default text appearance.
+#' @param animation Whether to enable animation.
+#' @param animation_threshold Threshold of data count to disable animation.
+#' @param animation_duration Duration of initial animation (ms).
+#' @param animation_easing Easing function name.
+#' @param animation_delay Delay before initial animation (ms).
+#' @param dark_mode Whether to use dark mode. TRUE, FALSE, or "auto".
+#' @param use_utc Whether to use UTC for time axis.
+#' @export
+EChartsOption <- S7::new_class(
+  "EChartsOption",
+  properties = list(
+    # Components (single or list)
+    title = S7::new_property(class = S7::class_any, default = NULL),
+    legend = S7::new_property(class = S7::class_any, default = NULL),
+    grid = S7::new_property(class = S7::class_any, default = NULL),
+    x_axis = S7::new_property(class = S7::class_any, default = NULL),
+    y_axis = S7::new_property(class = S7::class_any, default = NULL),
+    tooltip = class_or_null_property(Tooltip),
+    # Series (single or list)
+    series = S7::new_property(class = S7::class_any, default = NULL),
+    # Global settings
+    color = S7::new_property(
+      class = S7::class_any,
+      default = NULL,
+      validator = function(value) {
+        if (is.null(value)) return(NULL)
+        if (is.character(value)) return(NULL)
+        "must be a character vector of colors or NULL"
+      }
+    ),
+    background_color = color_property(),
+    text_style = class_or_null_property(TextStyle),
+    # Animation
+    animation = bool_or_null_property(),
+    animation_threshold = numeric_or_null_property(),
+    animation_duration = numeric_or_null_property(),
+    animation_easing = string_or_null_property(),
+    animation_delay = numeric_or_null_property(),
+    # Other
+    dark_mode = S7::new_property(
+      class = S7::class_any,
+      default = NULL,
+      validator = function(value) {
+        if (is.null(value)) return(NULL)
+        if (is.logical(value) && length(value) == 1L) return(NULL)
+        if (is.character(value) && length(value) == 1L && value == "auto") {
+          return(NULL)
+        }
+        "must be TRUE, FALSE, 'auto', or NULL"
+      }
+    ),
+    use_utc = bool_or_null_property()
+  )
+)
+
+#' Convert a component property that may be a single S7 object or a list of them.
+#' @noRd
+convert_component <- function(value) {
+  if (is.null(value)) return(NULL)
+  if (S7::S7_inherits(value)) return(to_list(value))
+  if (is.list(value)) {
+    return(lapply(value, function(v) {
+      if (S7::S7_inherits(v)) to_list(v) else v
+    }))
+  }
+  value
+}
+
+S7::method(to_list, EChartsOption) <- function(x, ...) {
+  out <- list()
+
+  # Components with rename mapping (snake_case property -> camelCase JSON key)
+  component_map <- list(
+    title = "title",
+    legend = "legend",
+    grid = "grid",
+    x_axis = "xAxis",
+    y_axis = "yAxis",
+    tooltip = "tooltip"
+  )
+
+  for (prop_name in names(component_map)) {
+    val <- S7::prop(x, prop_name)
+    converted <- convert_component(val)
+    if (!is.null(converted)) {
+      out[[component_map[[prop_name]]]] <- converted
+    }
+  }
+
+  # Series
+  series_val <- x@series
+  if (!is.null(series_val)) {
+    if (S7::S7_inherits(series_val)) {
+      out$series <- list(to_list(series_val))
+    } else if (is.list(series_val)) {
+      out$series <- lapply(series_val, function(s) {
+        if (S7::S7_inherits(s)) to_list(s) else s
+      })
+    }
+  }
+
+  # Simple properties
+  simple_props <- c(
+    "color", "background_color", "animation", "animation_threshold",
+    "animation_duration", "animation_easing", "animation_delay",
+    "dark_mode", "use_utc"
+  )
+  for (prop_name in simple_props) {
+    val <- S7::prop(x, prop_name)
+    if (!is.null(val)) {
+      json_name <- snake_to_camel(prop_name)
+      out[[json_name]] <- val
+    }
+  }
+
+  # text_style (S7 object)
+  if (!is.null(x@text_style)) {
+    out$textStyle <- to_list(x@text_style)
+  }
+
+  out
+}
+
+#' Convert EChartsOption to JSON
+#'
+#' @param x An [EChartsOption] object.
+#' @param pretty Whether to pretty-print the JSON.
+#' @param auto_unbox Whether to auto-unbox single-element vectors.
+#' @param ... Additional arguments passed to [jsonlite::toJSON()].
+#' @return A JSON string.
+#' @export
+to_json <- function(x, pretty = FALSE, auto_unbox = TRUE, ...) {
+  jsonlite::toJSON(
+    to_list(x),
+    pretty = pretty,
+    auto_unbox = auto_unbox,
+    null = "null",
+    ...
+  )
+}
