@@ -1,21 +1,29 @@
-.PHONY: install install-r test test-r
+.PHONY: document document-r install install-r test test-r
+
+# ── Document ─────────────────────────────────────────────────────────────────
+document: document-r
+
+document-r:
+	@echo "=> R: Documenting rtemis.draw"
+	cd r && Rscript -e "devtools::document()"
 
 # ── Document & Install ───────────────────────────────────────────────────────
 install: install-r
 
-install-r:
-	@echo "==> R"
-	cd r && Rscript -e "devtools::document()" && Rscript -e "devtools::install()"
+install-r: document-r
+	@echo "==> R: Installing rtemis.draw"
+	cd r && Rscript -e "devtools::install()"
 
 # ── Test ─────────────────────────────────────────────────────────────────────
 test: test-r
 
 test-r:
-	@echo "==> R"
+	@echo "==> R: Testing rtemis.draw"
 	cd r && Rscript -e "devtools::test(stop_on_failure = TRUE)"
 
 # ── Build Site ───────────────────────────────────────────────────────────────
 site: site-r
 
 site-r:
+	@echo "==> R: Building pkgdown site for rtemis.draw"
 	cd r && Rscript -e "pkgdown::build_site()"
