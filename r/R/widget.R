@@ -7,7 +7,11 @@
 #' renders it as an interactive htmlwidget.
 #'
 #' @param option An [EChartsOption] object or a named list.
-#' @param theme A [Theme] object, or NULL for the default theme.
+#' @param theme A [Theme] object, a plain list, `NULL` (default) for
+#'   auto-detection of light/dark mode, or `NA` for no theme (raw ECharts
+#'   defaults). When `NULL`, the widget detects dark mode from VS Code,
+#'   RStudio, or the browser's `prefers-color-scheme` and applies
+#'   [theme_light()] or [theme_dark()] accordingly.
 #' @param renderer Rendering engine: `"canvas"` (default) or `"svg"`.
 #' @param width Widget width (CSS units or NULL for auto).
 #' @param height Widget height (CSS units or NULL for auto).
@@ -26,8 +30,20 @@ draw <- function(
   if (S7::S7_inherits(option)) {
     option <- to_list(option)
   }
+
+  auto_theme <- FALSE
   theme_list <- NULL
-  if (!is.null(theme) && S7::S7_inherits(theme)) {
+  theme_dark_list <- NULL
+
+  if (identical(theme, NA)) {
+    # NA = no theme (raw ECharts defaults)
+    theme_list <- NULL
+  } else if (is.null(theme)) {
+    # NULL = auto-detect: send both themes, let JS pick based on dark mode
+    auto_theme <- TRUE
+    theme_list <- to_list(theme_light())
+    theme_dark_list <- to_list(theme_dark())
+  } else if (S7::S7_inherits(theme, Theme)) {
     theme_list <- to_list(theme)
   } else if (is.list(theme)) {
     theme_list <- theme
@@ -36,7 +52,9 @@ draw <- function(
   payload <- list(
     option = option,
     theme = theme_list,
-    renderer = renderer
+    renderer = renderer,
+    autoTheme = if (auto_theme) TRUE else NULL,
+    themeDark = theme_dark_list
   )
 
   htmlwidgets::createWidget(
@@ -44,6 +62,12 @@ draw <- function(
     x = payload,
     width = width,
     height = height,
+    sizingPolicy = htmlwidgets::sizingPolicy(
+      browser.fill = TRUE,
+      browser.padding = 0,
+      viewer.padding = 0,
+      fill = TRUE
+    ),
     package = "rtemis.draw",
     elementId = elementId
   )
@@ -106,13 +130,22 @@ draw_line <- function(
   # Determine axis type
   x_type <- if (is.numeric(x)) "value" else "category"
 
+  # Format series data: value axes need [x, y] pairs; category axes need y only
+  pair_xy <- function(y_vals) {
+    if (x_type == "value") {
+      mapply(c, x, y_vals, SIMPLIFY = FALSE)
+    } else {
+      y_vals
+    }
+  }
+
   # Build series
   if (is.list(y) && !is.null(names(y))) {
     series_names <- names(y)
     series <- lapply(seq_along(y), function(i) {
       LineSeries(
         name = series_names[i],
-        data = y[[i]],
+        data = pair_xy(y[[i]]),
         smooth = smooth,
         area_style = if (area) AreaStyle() else NULL
       )
@@ -122,14 +155,14 @@ draw_line <- function(
     series <- lapply(seq_along(y), function(i) {
       LineSeries(
         name = series_names[i],
-        data = y[[i]],
+        data = pair_xy(y[[i]]),
         smooth = smooth,
         area_style = if (area) AreaStyle() else NULL
       )
     })
   } else {
     series <- list(LineSeries(
-      data = y,
+      data = pair_xy(y),
       smooth = smooth,
       area_style = if (area) AreaStyle() else NULL
     ))
@@ -203,12 +236,19 @@ draw_bar <- function(
 
 #' Draw a Scatter Plot
 #'
-#' Quick scatter plot from x/y data.
+#' Quick scatter plot from x/y data with optional fitted line and
+#' confidence band.
 #'
 #' @param x Numeric x values.
 #' @param y Numeric y values.
 #' @param size Optional numeric vector for symbol sizes.
 #' @param group Optional grouping factor for multiple series.
+#' @param fit Fit method: `NULL` (no fit), `"glm"` for [stats::glm()], or
+#'   `"gam"` for [mgcv::gam()]. The fitted line and 95\% confidence band
+#'   are computed per group when `group` is provided.
+#' @param se Whether to show the confidence band around the fit line.
+#' @param fit_alpha Alpha (opacity) for the confidence band fill.
+#' @param n_fit Number of equally spaced points at which to evaluate the fit.
 #' @param title Chart title string.
 #' @param theme A [Theme] object or NULL.
 #' @param width,height Widget dimensions.
@@ -219,11 +259,81 @@ draw_scatter <- function(
   y,
   size = NULL,
   group = NULL,
+  fit = NULL,
+  se = TRUE,
+  fit_alpha = 0.25,
+  n_fit = 200,
   title = NULL,
   theme = NULL,
   width = NULL,
   height = NULL
 ) {
+  if (!is.null(fit)) {
+    fit <- match.arg(fit, c("glm", "gam"))
+  }
+
+  # Helper: compute fit line and CI band for one group
+  compute_fit <- function(xv, yv, fit_method, n_pts) {
+    df <- data.frame(.x = xv, .y = yv)
+    if (fit_method == "gam") {
+      if (!requireNamespace("mgcv", quietly = TRUE)) {
+        stop("Package 'mgcv' is required for fit = \"gam\"", call. = FALSE)
+      }
+      model <- mgcv::gam(.y ~ s(.x), data = df)
+    } else {
+      model <- stats::glm(.y ~ .x, data = df)
+    }
+    newdata <- data.frame(.x = seq(min(xv), max(xv), length.out = n_pts))
+    pred <- stats::predict(model, newdata = newdata, se.fit = TRUE)
+    list(
+      x = newdata$.x,
+      fitted = pred$fit,
+      lower = pred$fit - 1.96 * pred$se.fit,
+      upper = pred$fit + 1.96 * pred$se.fit
+    )
+  }
+
+  # Helper: build fit + CI series for one group
+  fit_series <- function(xv, yv, fit_method, n_pts, group_name, color) {
+    p <- compute_fit(xv, yv, fit_method, n_pts)
+    fit_data <- mapply(c, p$x, p$fitted, SIMPLIFY = FALSE)
+    fit_name <- if (!is.null(group_name)) {
+      paste0(group_name, " fit")
+    } else {
+      "fit"
+    }
+
+    out <- list()
+
+    if (se) {
+      # CI band as a closed polygon: upper bound L->R, lower bound R->L.
+      # areaStyle fills the enclosed region. No stacking needed.
+      upper <- mapply(c, p$x, p$upper, SIMPLIFY = FALSE)
+      lower <- mapply(c, rev(p$x), rev(p$lower), SIMPLIFY = FALSE)
+      ci_data <- c(upper, lower)
+      out$ci <- LineSeries(
+        name = paste0(fit_name, " CI"),
+        data = ci_data,
+        show_symbol = FALSE,
+        line_style = LineStyle(opacity = 0),
+        area_style = AreaStyle(color = color, opacity = fit_alpha),
+        silent = TRUE,
+        z = 0L,
+        legend_hover_link = FALSE
+      )
+    }
+
+    # Fit line (solid, on top)
+    out$fit <- LineSeries(
+      name = fit_name,
+      data = fit_data,
+      show_symbol = FALSE,
+      line_style = LineStyle(color = color)
+    )
+
+    out
+  }
+
   if (!is.null(group)) {
     groups <- unique(group)
     series <- lapply(groups, function(g) {
@@ -241,6 +351,24 @@ draw_scatter <- function(
       data = dat,
       symbol_size = size
     ))
+  }
+
+  # Add fit series
+  if (!is.null(fit)) {
+    if (!is.null(group)) {
+      groups <- unique(group)
+      for (i in seq_along(groups)) {
+        g <- groups[i]
+        idx <- group == g
+        color <- rtemis_colors[((i - 1L) %% length(rtemis_colors)) + 1L]
+        fs <- fit_series(x[idx], y[idx], fit, n_fit, as.character(g), color)
+        series <- c(series, unname(fs))
+      }
+    } else {
+      color <- rtemis_colors[[1]]
+      fs <- fit_series(x, y, fit, n_fit, NULL, color)
+      series <- c(series, unname(fs))
+    }
   }
 
   opt <- EChartsOption(
@@ -296,6 +424,134 @@ draw_pie <- function(
       rose_type = rose_type,
       avoid_label_overlap = TRUE
     )
+  )
+
+  draw(opt, theme = theme, width = width, height = height)
+}
+
+#' Draw a Density Plot
+#'
+#' Kernel density estimation plot from numeric data, with optional grouping
+#' for multiple traces.
+#'
+#' @param x Numeric vector of values.
+#' @param group Optional grouping factor for multiple density traces.
+#' @param n Number of equally spaced points for density estimation.
+#' @param bw Bandwidth for density estimation. Passed to [stats::density()].
+#' @param na.rm Logical: if `TRUE` (default), remove `NA` values before
+#'   computing densities.
+#' @param title Chart title string.
+#' @param theme A [Theme] object or NULL.
+#' @param width,height Widget dimensions.
+#' @param verbosity Integer: if > 0, print messages about removed `NA` values.
+#' @return An htmlwidget.
+#' @export
+draw_density <- function(
+  x,
+  group = NULL,
+  n = 512,
+  bw = "nrd0",
+  na.rm = TRUE,
+  title = NULL,
+  theme = NULL,
+  width = NULL,
+  height = NULL,
+  verbosity = 1L
+) {
+  if (na.rm) {
+    na_idx <- is.na(x)
+    n_na <- sum(na_idx)
+    if (n_na > 0L) {
+      msg("Removed", n_na, "NA", ngettext(n_na, "value", "values"),
+          "from x", verbosity = verbosity)
+      if (!is.null(group)) group <- group[!na_idx]
+      x <- x[!na_idx]
+    }
+  }
+
+  if (!is.null(group)) {
+    groups <- unique(group)
+    series <- lapply(groups, function(g) {
+      d <- stats::density(x[group == g], n = n, bw = bw)
+      dat <- mapply(c, d$x, d$y, SIMPLIFY = FALSE)
+      LineSeries(
+        name = as.character(g),
+        data = dat,
+        show_symbol = FALSE,
+        area_style = AreaStyle(opacity = 0.25)
+      )
+    })
+  } else {
+    d <- stats::density(x, n = n, bw = bw)
+    dat <- mapply(c, d$x, d$y, SIMPLIFY = FALSE)
+    series <- list(LineSeries(
+      data = dat,
+      show_symbol = FALSE,
+      area_style = AreaStyle(opacity = 0.25)
+    ))
+  }
+
+  opt <- EChartsOption(
+    title = if (!is.null(title)) Title(text = title) else NULL,
+    tooltip = Tooltip(trigger = "axis"),
+    legend = if (length(series) > 1L) Legend() else NULL,
+    x_axis = Axis(type = "value"),
+    y_axis = Axis(type = "value"),
+    series = series
+  )
+
+  draw(opt, theme = theme, width = width, height = height)
+}
+
+#' Draw a Histogram
+#'
+#' Histogram from numeric data, with optional grouping for multiple traces.
+#' Bins are computed using [graphics::hist()] with consistent break points
+#' across groups.
+#'
+#' @param x Numeric vector of values.
+#' @param group Optional grouping factor for multiple series.
+#' @param breaks Binning method. A single number (number of bins), a character
+#'   string naming an algorithm (e.g. `"Sturges"`, `"Scott"`, `"FD"`), or a
+#'   numeric vector of break points. Passed to [graphics::hist()].
+#' @param title Chart title string.
+#' @param theme A [Theme] object or NULL.
+#' @param width,height Widget dimensions.
+#' @return An htmlwidget.
+#' @export
+draw_histogram <- function(
+  x,
+  group = NULL,
+  breaks = "Sturges",
+  title = NULL,
+  theme = NULL,
+  width = NULL,
+  height = NULL
+) {
+  # Compute bin structure from full data for consistent breaks across groups
+  h <- graphics::hist(x, breaks = breaks, plot = FALSE)
+  bin_labels <- formatC(h$mids, format = "g")
+
+  if (!is.null(group)) {
+    groups <- unique(group)
+    series <- lapply(groups, function(g) {
+      hg <- graphics::hist(x[group == g], breaks = h$breaks, plot = FALSE)
+      BarSeries(name = as.character(g), data = hg$counts)
+    })
+  } else {
+    series <- list(BarSeries(
+      data = h$counts,
+      bar_category_gap = "0%"
+    ))
+  }
+
+  opt <- EChartsOption(
+    title = if (!is.null(title)) Title(text = title) else NULL,
+    tooltip = Tooltip(trigger = "axis"),
+    legend = if (length(series) > 1L) Legend() else NULL,
+    x_axis = Axis(type = "category", data = bin_labels),
+    y_axis = Axis(type = "value"),
+    series = series
   )
 
   draw(opt, theme = theme, width = width, height = height)
