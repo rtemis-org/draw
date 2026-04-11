@@ -127,53 +127,209 @@ S7::method(to_list, Theme) <- function(x, ...) {
 
 # -- Built-in theme constructors ------------------------------------------------
 
+#' Build a Theme from high-level parameters
+#'
+#' Internal helper shared by [theme_light()] and [theme_dark()].
+#' Resolves font sizes from `base_font_size`, derives `legend_color`
+#' and `tooltip_color` from `fg_color` when not set, and assembles
+#' the full [Theme] object.
+#'
+#' @keywords internal
+#' @noRd
+build_theme <- function(
+  base_font_size,
+  title_font_size,
+  subtitle_font_size,
+  legend_font_size,
+  tooltip_font_size,
+  font_family,
+  color,
+  bg_color,
+  fg_color,
+  title_color,
+  subtitle_color,
+  legend_color,
+  axis_color,
+  grid_color,
+  tooltip_bg,
+  tooltip_border_color,
+  tooltip_color
+) {
+  # Resolve font sizes from base
+  title_font_size <- title_font_size %||% round(base_font_size * 1.2)
+  subtitle_font_size <- subtitle_font_size %||% base_font_size
+  legend_font_size <- legend_font_size %||% base_font_size
+  tooltip_font_size <- tooltip_font_size %||% base_font_size
+
+  # Derive component text colors from fg_color when not set
+  legend_color <- legend_color %||% fg_color
+  tooltip_color <- tooltip_color %||% fg_color
+
+  # Tooltip config
+  tooltip_cfg <- drop_nulls(list(
+    backgroundColor = tooltip_bg,
+    borderColor = tooltip_border_color,
+    textStyle = drop_nulls(list(
+      color = tooltip_color,
+      fontSize = tooltip_font_size
+    ))
+  ))
+
+  # Axis configs
+  value_axis_cfg <- drop_nulls(list(
+    axisLine = if (!is.null(axis_color))
+      list(lineStyle = list(color = axis_color)),
+    splitLine = if (!is.null(grid_color))
+      list(lineStyle = list(color = grid_color))
+  ))
+
+  category_axis_cfg <- drop_nulls(list(
+    axisLine = if (!is.null(axis_color))
+      list(lineStyle = list(color = axis_color)),
+    splitLine = list(show = FALSE)
+  ))
+
+  Theme(
+    color = color,
+    background_color = bg_color,
+    text_style = TextStyle(
+      color = fg_color,
+      font_family = font_family,
+      font_size = base_font_size
+    ),
+    title = list(
+      textStyle = drop_nulls(list(
+        color = title_color,
+        fontSize = title_font_size
+      )),
+      subtextStyle = drop_nulls(list(
+        color = subtitle_color,
+        fontSize = subtitle_font_size
+      ))
+    ),
+    legend = list(
+      textStyle = drop_nulls(list(
+        color = legend_color,
+        fontSize = legend_font_size
+      ))
+    ),
+    tooltip = if (length(tooltip_cfg) > 0L) tooltip_cfg else NULL,
+    value_axis = if (length(value_axis_cfg) > 0L) value_axis_cfg else NULL,
+    category_axis = if (length(category_axis_cfg) > 0L) category_axis_cfg else NULL,
+    line = list(symbol = "circle")
+  )
+}
+
 #' Light Theme
 #'
-#' Returns the default light theme based on echarts defaults.
+#' Returns a light theme. All parameters have sensible defaults; most
+#' users only need `base_font_size`. Title font size defaults to 1.2x
+#' the base; all other text defaults to 1x.
 #'
+#' @param base_font_size Base font size in pixels for all text.
+#' @param title_font_size Title font size. Default: `round(base_font_size * 1.2)`.
+#' @param subtitle_font_size Subtitle font size. Default: `base_font_size`.
+#' @param legend_font_size Legend font size. Default: `base_font_size`.
+#' @param tooltip_font_size Tooltip font size. Default: `base_font_size`.
+#' @param font_family Font family string.
+#' @param color Color palette: character vector.
+#' @param bg_color Chart background color.
+#' @param fg_color Global text color.
+#' @param title_color Title text color.
+#' @param subtitle_color Subtitle text color.
+#' @param legend_color Legend text color. Default: inherits `fg_color`.
+#' @param axis_color Axis line color.
+#' @param grid_color Grid / split line color.
+#' @param tooltip_bg Tooltip background color.
+#' @param tooltip_border_color Tooltip border color.
+#' @param tooltip_color Tooltip text color. Default: inherits `fg_color`.
 #' @return A [Theme] object.
 #' @export
-theme_light <- function() {
-  Theme(
-    color = rtemis_colors,
-    text_style = TextStyle(
-      font_family = "sans-serif",
-      font_size = 12
-    )
+theme_light <- function(
+  base_font_size = 12,
+  title_font_size = NULL,
+  subtitle_font_size = NULL,
+  legend_font_size = NULL,
+  tooltip_font_size = NULL,
+  font_family = "sans-serif",
+  color = rtemis_colors,
+  bg_color = NULL,
+  fg_color = NULL,
+  title_color = NULL,
+  subtitle_color = NULL,
+  legend_color = NULL,
+  axis_color = NULL,
+  grid_color = NULL,
+  tooltip_bg = NULL,
+  tooltip_border_color = NULL,
+  tooltip_color = NULL
+) {
+  build_theme(
+    base_font_size = base_font_size,
+    title_font_size = title_font_size,
+    subtitle_font_size = subtitle_font_size,
+    legend_font_size = legend_font_size,
+    tooltip_font_size = tooltip_font_size,
+    font_family = font_family,
+    color = color,
+    bg_color = bg_color,
+    fg_color = fg_color,
+    title_color = title_color,
+    subtitle_color = subtitle_color,
+    legend_color = legend_color,
+    axis_color = axis_color,
+    grid_color = grid_color,
+    tooltip_bg = tooltip_bg,
+    tooltip_border_color = tooltip_border_color,
+    tooltip_color = tooltip_color
   )
 }
 
 #' Dark Theme
 #'
-#' Returns a dark theme based on the echarts built-in dark theme.
+#' Returns a dark theme. All parameters have sensible defaults; most
+#' users only need `base_font_size`. Title font size defaults to 1.2x
+#' the base; all other text defaults to 1x.
 #'
+#' @inheritParams theme_light
 #' @return A [Theme] object.
 #' @export
-theme_dark <- function() {
-  Theme(,
-    color = rtemis_colors,
-    background_color = "#181818",
-    text_style = TextStyle(color = "rgba(255, 255, 255, 0.7)"),
-    title = list(
-      textStyle = list(color = "rgba(255, 255, 255, 0.9)"),
-      subtextStyle = list(color = "rgba(255, 255, 255, 0.5)")
-    ),
-    legend = list(
-      textStyle = list(color = "rgba(255, 255, 255, 0.7)")
-    ),
-    tooltip = list(
-      backgroundColor = "rgba(20, 20, 20, 0.9)",
-      borderColor = "rgba(255, 255, 255, 0.1)",
-      textStyle = list(color = "rgba(255, 255, 255, 0.7)")
-    ),
-    value_axis = list(
-      axisLine = list(lineStyle = list(color = "rgba(255, 255, 255, 0.3)")),
-      splitLine = list(lineStyle = list(color = "rgba(255, 255, 255, 0.1)"))
-    ),
-    category_axis = list(
-      axisLine = list(lineStyle = list(color = "rgba(255, 255, 255, 0.3)")),
-      splitLine = list(show = FALSE)
-    ),
-    line = list(symbol = "circle")
+theme_dark <- function(
+  base_font_size = 12,
+  title_font_size = NULL,
+  subtitle_font_size = NULL,
+  legend_font_size = NULL,
+  tooltip_font_size = NULL,
+  font_family = "sans-serif",
+  color = rtemis_colors,
+  bg_color = "#181818",
+  fg_color = "rgba(255, 255, 255, 0.7)",
+  title_color = "rgba(255, 255, 255, 0.9)",
+  subtitle_color = "rgba(255, 255, 255, 0.5)",
+  legend_color = NULL,
+  axis_color = "rgba(255, 255, 255, 0.3)",
+  grid_color = "rgba(255, 255, 255, 0.1)",
+  tooltip_bg = "rgba(20, 20, 20, 0.9)",
+  tooltip_border_color = "rgba(255, 255, 255, 0.1)",
+  tooltip_color = NULL
+) {
+  build_theme(
+    base_font_size = base_font_size,
+    title_font_size = title_font_size,
+    subtitle_font_size = subtitle_font_size,
+    legend_font_size = legend_font_size,
+    tooltip_font_size = tooltip_font_size,
+    font_family = font_family,
+    color = color,
+    bg_color = bg_color,
+    fg_color = fg_color,
+    title_color = title_color,
+    subtitle_color = subtitle_color,
+    legend_color = legend_color,
+    axis_color = axis_color,
+    grid_color = grid_color,
+    tooltip_bg = tooltip_bg,
+    tooltip_border_color = tooltip_border_color,
+    tooltip_color = tooltip_color
   )
 }
