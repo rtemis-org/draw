@@ -147,7 +147,7 @@ S7::method(to_list, Theme) <- function(x, ...) {
 #'
 #' @return A [Theme] object.
 #' @export
-light_theme <- function() {
+theme_light <- function() {
   Theme(
     color = rtemis_colors,
     text_style = TextStyle(
@@ -163,7 +163,7 @@ light_theme <- function() {
 #'
 #' @return A [Theme] object.
 #' @export
-dark_theme <- function() {
+theme_dark <- function() {
   Theme(,
     color = rtemis_colors,
     background_color = "#181818",
@@ -176,7 +176,7 @@ dark_theme <- function() {
       textStyle = list(color = "rgba(255, 255, 255, 0.7)")
     ),
     tooltip = list(
-      backgroundColor = "rgba(20, 20, 40, 0.9)",
+      backgroundColor = "rgba(20, 20, 20, 0.9)",
       borderColor = "rgba(255, 255, 255, 0.1)",
       textStyle = list(color = "rgba(255, 255, 255, 0.7)")
     ),
