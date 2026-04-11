@@ -9,6 +9,10 @@ draw_scatter(
   y,
   size = NULL,
   group = NULL,
+  fit = NULL,
+  se = TRUE,
+  fit_alpha = 0.25,
+  n_fit = 200,
   title = NULL,
   theme = NULL,
   width = NULL,
@@ -24,6 +28,16 @@ draw_scatter(
 
 \item{group}{Optional grouping factor for multiple series.}
 
+\item{fit}{Fit method: \code{NULL} (no fit), \code{"glm"} for \code{\link[stats:glm]{stats::glm()}}, or
+\code{"gam"} for \code{\link[mgcv:gam]{mgcv::gam()}}. The fitted line and 95\\% confidence band
+are computed per group when \code{group} is provided.}
+
+\item{se}{Whether to show the confidence band around the fit line.}
+
+\item{fit_alpha}{Alpha (opacity) for the confidence band fill.}
+
+\item{n_fit}{Number of equally spaced points at which to evaluate the fit.}
+
 \item{title}{Chart title string.}
 
 \item{theme}{A \link{Theme} object or NULL.}
@@ -34,5 +48,6 @@ draw_scatter(
 An htmlwidget.
 }
 \description{
-Quick scatter plot from x/y data.
+Quick scatter plot from x/y data with optional fitted line and
+confidence band.
 }

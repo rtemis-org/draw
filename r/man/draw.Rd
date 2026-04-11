@@ -16,7 +16,11 @@ draw(
 \arguments{
 \item{option}{An \link{EChartsOption} object or a named list.}
 
-\item{theme}{A \link{Theme} object, or NULL for the default theme.}
+\item{theme}{A \link{Theme} object, a plain list, \code{NULL} (default) for
+auto-detection of light/dark mode, or \code{NA} for no theme (raw ECharts
+defaults). When \code{NULL}, the widget detects dark mode from VS Code,
+RStudio, or the browser's \code{prefers-color-scheme} and applies
+\code{\link[=theme_light]{theme_light()}} or \code{\link[=theme_dark]{theme_dark()}} accordingly.}
 
 \item{renderer}{Rendering engine: \code{"canvas"} (default) or \code{"svg"}.}
 
