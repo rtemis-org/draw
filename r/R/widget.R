@@ -31,6 +31,16 @@ draw <- function(
     option <- to_list(option)
   }
 
+  # Hide default axis tick marks for a clean look
+  for (axis_key in c("xAxis", "yAxis")) {
+    if (!is.null(option[[axis_key]])) {
+      if (is.null(option[[axis_key]]$axisTick)) {
+        option[[axis_key]]$axisTick <- list()
+      }
+      option[[axis_key]]$axisTick$show <- FALSE
+    }
+  }
+
   auto_theme <- FALSE
   theme_list <- NULL
   theme_dark_list <- NULL
