@@ -14,12 +14,14 @@
 #' @param elementId Optional explicit element ID.
 #' @return An htmlwidget object.
 #' @export
-draw <- function(option,
-                 theme = NULL,
-                 renderer = "canvas",
-                 width = NULL,
-                 height = NULL,
-                 elementId = NULL) {
+draw <- function(
+  option,
+  theme = NULL,
+  renderer = "canvas",
+  width = NULL,
+  height = NULL,
+  elementId = NULL
+) {
   # Convert S7 objects to plain lists
   if (S7::S7_inherits(option)) {
     option <- to_list(option)
@@ -53,9 +55,13 @@ draw <- function(option,
 #' @param height CSS height.
 #' @export
 drawOutput <- function(outputId, width = "100%", height = "400px") {
-  htmlwidgets::shinyWidgetOutput(outputId, "draw",
-                                 width = width, height = height,
-                                 package = "rtemis.draw")
+  htmlwidgets::shinyWidgetOutput(
+    outputId,
+    "draw",
+    width = width,
+    height = height,
+    package = "rtemis.draw"
+  )
 }
 
 #' Shiny render function for draw widget
@@ -64,7 +70,9 @@ drawOutput <- function(outputId, width = "100%", height = "400px") {
 #' @param quoted Whether expr is quoted.
 #' @export
 renderDraw <- function(expr, env = parent.frame(), quoted = FALSE) {
-  if (!quoted) expr <- substitute(expr)
+  if (!quoted) {
+    expr <- substitute(expr)
+  }
   htmlwidgets::shinyRenderWidget(expr, drawOutput, env, quoted = TRUE)
 }
 
@@ -84,14 +92,17 @@ renderDraw <- function(expr, env = parent.frame(), quoted = FALSE) {
 #' @param width,height Widget dimensions.
 #' @return An htmlwidget.
 #' @export
-draw_line <- function(x, y,
-                      names = NULL,
-                      smooth = FALSE,
-                      area = FALSE,
-                      title = NULL,
-                      theme = NULL,
-                      width = NULL,
-                      height = NULL) {
+draw_line <- function(
+  x,
+  y,
+  names = NULL,
+  smooth = FALSE,
+  area = FALSE,
+  title = NULL,
+  theme = NULL,
+  width = NULL,
+  height = NULL
+) {
   # Determine axis type
   x_type <- if (is.numeric(x)) "value" else "category"
 
@@ -149,13 +160,16 @@ draw_line <- function(x, y,
 #' @param width,height Widget dimensions.
 #' @return An htmlwidget.
 #' @export
-draw_bar <- function(x, y,
-                     stack = FALSE,
-                     horizontal = FALSE,
-                     title = NULL,
-                     theme = NULL,
-                     width = NULL,
-                     height = NULL) {
+draw_bar <- function(
+  x,
+  y,
+  stack = FALSE,
+  horizontal = FALSE,
+  title = NULL,
+  theme = NULL,
+  width = NULL,
+  height = NULL
+) {
   stack_group <- if (stack) "total" else NULL
 
   if (is.list(y) && !is.null(names(y))) {
@@ -200,13 +214,16 @@ draw_bar <- function(x, y,
 #' @param width,height Widget dimensions.
 #' @return An htmlwidget.
 #' @export
-draw_scatter <- function(x, y,
-                         size = NULL,
-                         group = NULL,
-                         title = NULL,
-                         theme = NULL,
-                         width = NULL,
-                         height = NULL) {
+draw_scatter <- function(
+  x,
+  y,
+  size = NULL,
+  group = NULL,
+  title = NULL,
+  theme = NULL,
+  width = NULL,
+  height = NULL
+) {
   if (!is.null(group)) {
     groups <- unique(group)
     series <- lapply(groups, function(g) {
@@ -251,15 +268,23 @@ draw_scatter <- function(x, y,
 #' @param width,height Widget dimensions.
 #' @return An htmlwidget.
 #' @export
-draw_pie <- function(values, labels,
-                     radius = "75%",
-                     rose_type = NULL,
-                     title = NULL,
-                     theme = NULL,
-                     width = NULL,
-                     height = NULL) {
-  data_items <- mapply(function(v, n) list(value = v, name = n),
-                       values, labels, SIMPLIFY = FALSE, USE.NAMES = FALSE)
+draw_pie <- function(
+  values,
+  labels,
+  radius = "75%",
+  rose_type = NULL,
+  title = NULL,
+  theme = NULL,
+  width = NULL,
+  height = NULL
+) {
+  data_items <- mapply(
+    function(v, n) list(value = v, name = n),
+    values,
+    labels,
+    SIMPLIFY = FALSE,
+    USE.NAMES = FALSE
+  )
 
   opt <- EChartsOption(
     title = if (!is.null(title)) Title(text = title, left = "center") else NULL,
@@ -278,24 +303,32 @@ draw_pie <- function(values, labels,
 
 #' Draw a Boxplot
 #'
-#' Quick boxplot from a list of numeric vectors.
+#' Quick boxplot from a list of numeric vectors. Uses an opaque color for box
+#' and whisker borders, and a semi-transparent version for the box fill.
 #'
 #' @param data A list of numeric vectors, one per box. Each should be
 #'   `c(min, Q1, median, Q3, max)`.
 #' @param labels Category labels for each box.
 #' @param horizontal Whether to draw horizontal boxplots.
+#' @param color Box color. Used at full opacity for borders and at `fill_alpha`
+#'   opacity for the box fill. Defaults to the first rtemis color.
+#' @param fill_alpha Alpha (opacity) for the box fill color, between 0 and 1.
 #' @param title Chart title string.
 #' @param theme A [Theme] object or NULL.
 #' @param width,height Widget dimensions.
 #' @return An htmlwidget.
 #' @export
-draw_boxplot <- function(data,
-                         labels = NULL,
-                         horizontal = FALSE,
-                         title = NULL,
-                         theme = NULL,
-                         width = NULL,
-                         height = NULL) {
+draw_boxplot <- function(
+  data,
+  labels = NULL,
+  horizontal = FALSE,
+  color = rtemis_colors[[1]],
+  fill_alpha = 0.25,
+  title = NULL,
+  theme = NULL,
+  width = NULL,
+  height = NULL
+) {
   if (horizontal) {
     x_ax <- Axis(type = "value")
     y_ax <- Axis(type = "category", data = labels)
@@ -306,12 +339,20 @@ draw_boxplot <- function(data,
     layout <- "vertical"
   }
 
+  # Opaque border, semi-transparent fill
+  fill_color <- color_with_alpha(color, fill_alpha)
+  item_style <- ItemStyle(color = fill_color, border_color = color)
+
   opt <- EChartsOption(
     title = if (!is.null(title)) Title(text = title) else NULL,
     tooltip = Tooltip(trigger = "item"),
     x_axis = x_ax,
     y_axis = y_ax,
-    series = BoxplotSeries(data = data, layout = layout)
+    series = BoxplotSeries(
+      data = data,
+      layout = layout,
+      item_style = item_style
+    )
   )
 
   draw(opt, theme = theme, width = width, height = height)
