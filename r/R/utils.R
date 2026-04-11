@@ -207,6 +207,22 @@ numeric_or_string_property <- function(default = NULL) {
 #' @param alpha Alpha value between 0 and 1.
 #' @return An `rgba()` color string.
 #' @keywords internal
+#' Calculate padded axis limits from data
+#'
+#' Computes `c(min, max)` from `values` with symmetric padding as a fraction
+#' of the data range.
+#'
+#' @param values Numeric vector of data values (NAs ignored).
+#' @param pad Fraction of the data range to add on each side.
+#' @return A length-2 numeric vector `c(min, max)`.
+#' @keywords internal
+calc_limits <- function(values, pad = 0.04) {
+  rng <- range(values, na.rm = TRUE)
+  span <- rng[2] - rng[1]
+  if (span == 0) span <- abs(rng[1]) * 0.1  # handle constant data
+  c(rng[1] - pad * span, rng[2] + pad * span)
+}
+
 color_with_alpha <- function(color, alpha) {
   rgb <- grDevices::col2rgb(color)[, 1]
   sprintf("rgba(%d, %d, %d, %g)", rgb[1], rgb[2], rgb[3], alpha)
