@@ -1,84 +1,15 @@
 # rtemis_color_system.R
 
-rtemis_light_teal <- "#00fdfd"
-rtemis_teal <- "#00b2b2"
-kaimana_red <- "#ff004c"
-rtemis_light_blue <- "#30cefe"
-kaimana_blue <- "#0067e0"
-kaimana_light_blue <- "#479cff"
-coastside_orange <- "#ff9f20"
-rtemis_orange <- "#ff4f36"
-kaimana_green <- "#00ffb3"
-kaimana_med_green <- "#00996b"
-rtemis_purple <- "#6125f7"
-rtemis_magenta <- "#912ac8"
-rtemis_magenta_light <- "#b25bd6"
-magenta <- "#ff00ff"
-lmd_burgundy <- "#a92459"
-
-rtms_dark_gray <- "#505050"
-
-rt_gray <- "#505050"
-rt_red <- "#ff004c"
-rt_blue <- "#479cff"
-rt_green <- "#00996b"
-rt_orange <- "#ff9f20"
-rt_teal <- "#00b2b2"
-rt_purple <- "#6125f7"
-rt_magenta <- "#b25bd6"
-
-# %% rtemis colors ----
-highlight_col <- rt_orange
-col_object <- rt_gray # object name in repr_S7name
-col_info <- highlight2_col <- lmd_burgundy
-col_outer <- rt_green
-col_tuner <- rt_blue
-col_calibrator <- rt_magenta
-
-
-#' rtemis Color System
-#'
-#' A named list of colors used consistently across all packages
-#' in the rtemis ecosystem.
-#'
-#' Colors are provided as hex strings.
-#'
-#' @format A named list with the following elements:
-#' \describe{
-#'   \item{red}{"kaimana red"}
-#'   \item{blue}{"kaimana light blue"}
-#'   \item{green}{"kaimana medium green"}
-#'   \item{orange}{"coastside orange"}
-#'   \item{teal}{"rtemis teal"}
-#'   \item{purple}{"rtemis purple"}
-#'   \item{magenta}{"rtemis magenta"}
-#'   \item{highlight_col}{"highlight color"}
-#'   \item{object}{"rtemis teal"}
-#'   \item{info}{"lmd burgundy"}
-#'   \item{outer}{"kaimana red"}
-#'   \item{tuner}{"coastside orange"}
-#' }
-#'
-#' @examples
-#' rtemis_colors[["orange"]]
-#'
-#' @author EDG
-#'
-#' @export
-#'
-#' @examples
-#' rtemis_colors[["teal"]]
-rtemis_colors <- list(
-  red = rt_red,
-  blue = rt_blue,
-  green = rt_green,
-  orange = rt_orange,
-  teal = rt_teal,
-  purple = rt_purple,
-  magenta = rt_magenta,
-  highlight_col = highlight_col,
-  object = col_object,
-  info = col_info,
-  outer = col_outer,
-  tuner = col_tuner
-) # /rtemis.utils::rtemis_colors
+# rtemis_colors
+rtemis_colors <- c(
+  "#6CA3A0",
+  "#F08904",
+  "#BE2E5F",
+  "#B3CFE8",
+  "#4F662A",
+  "#FDB808",
+  "#466D96",
+  "#EA384A",
+  "#ECBDC3",
+  "#F384FF"
+)
