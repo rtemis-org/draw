@@ -4,11 +4,69 @@
 \alias{theme_light}
 \title{Light Theme}
 \usage{
-theme_light()
+theme_light(
+  base_font_size = 12,
+  title_font_size = NULL,
+  subtitle_font_size = NULL,
+  axis_label_font_size = NULL,
+  legend_font_size = NULL,
+  tooltip_font_size = NULL,
+  font_family = "sans-serif",
+  color = rtemis_colors,
+  bg_color = NULL,
+  fg_color = NULL,
+  title_color = NULL,
+  subtitle_color = NULL,
+  legend_color = NULL,
+  axis_color = NULL,
+  grid_color = NULL,
+  tooltip_bg = NULL,
+  tooltip_border_color = NULL,
+  tooltip_color = NULL
+)
+}
+\arguments{
+\item{base_font_size}{Base font size in pixels for all text.}
+
+\item{title_font_size}{Title font size. Default: \code{round(base_font_size * 1.2)}.}
+
+\item{subtitle_font_size}{Subtitle font size. Default: \code{base_font_size}.}
+
+\item{axis_label_font_size}{Axis tick label font size. Default: \code{base_font_size}.}
+
+\item{legend_font_size}{Legend font size. Default: \code{base_font_size}.}
+
+\item{tooltip_font_size}{Tooltip font size. Default: \code{base_font_size}.}
+
+\item{font_family}{Font family string.}
+
+\item{color}{Color palette: character vector.}
+
+\item{bg_color}{Chart background color.}
+
+\item{fg_color}{Global text color.}
+
+\item{title_color}{Title text color.}
+
+\item{subtitle_color}{Subtitle text color.}
+
+\item{legend_color}{Legend text color. Default: inherits \code{fg_color}.}
+
+\item{axis_color}{Axis line color.}
+
+\item{grid_color}{Grid / split line color.}
+
+\item{tooltip_bg}{Tooltip background color.}
+
+\item{tooltip_border_color}{Tooltip border color.}
+
+\item{tooltip_color}{Tooltip text color. Default: inherits \code{fg_color}.}
 }
 \value{
 A \link{Theme} object.
 }
 \description{
-Returns the default light theme based on echarts defaults.
+Returns a light theme. All parameters have sensible defaults; most
+users only need \code{base_font_size}. Title font size defaults to 1.2x
+the base; all other text defaults to 1x.
 }
