@@ -26,10 +26,10 @@ test_that("draw() accepts a plain list", {
 
 test_that("draw() includes theme when provided", {
   opt <- EChartsOption(series = LineSeries(data = c(1, 2, 3)))
-  th <- dark_theme()
+  th <- theme_dark()
   w <- draw(opt, theme = th)
   expect_false(is.null(w$x$theme))
-  expect_equal(w$x$theme$backgroundColor, "#100C2A")
+  expect_equal(w$x$theme$backgroundColor, "#181818")
 })
 
 test_that("draw() passes renderer option", {
@@ -40,7 +40,7 @@ test_that("draw() passes renderer option", {
 
 # -- draw_line ------------------------------------------------------------------
 
-test_that("draw_line creates widget from vectors", {
+test_that("draw_line creates widget from category vectors", {
   w <- draw_line(
     x = c("Mon", "Tue", "Wed"),
     y = c(10, 20, 15)
@@ -48,6 +48,19 @@ test_that("draw_line creates widget from vectors", {
   expect_s3_class(w, "htmlwidget")
   expect_equal(w$x$option$xAxis$type, "category")
   expect_equal(w$x$option$series[[1]]$type, "line")
+  # Category axis: data is y values only
+  expect_equal(w$x$option$series[[1]]$data, c(10, 20, 15))
+})
+
+test_that("draw_line works with numeric x", {
+  w <- draw_line(
+    x = c(1, 2, 3, 4),
+    y = c(10, 20, 15, 25)
+  )
+  expect_equal(w$x$option$xAxis$type, "value")
+  # Value axis: data is [x, y] pairs
+  expect_equal(w$x$option$series[[1]]$data[[1]], c(1, 10))
+  expect_equal(w$x$option$series[[1]]$data[[4]], c(4, 25))
 })
 
 test_that("draw_line handles named list for multiple series", {
@@ -128,6 +141,71 @@ test_that("draw_scatter with groups", {
   expect_false(is.null(w$x$option$legend))
 })
 
+test_that("draw_scatter fit = 'glm' adds fit line and CI polygon", {
+  set.seed(1)
+  xv <- 1:20
+  yv <- 2 * xv + rnorm(20)
+  w <- draw_scatter(xv, yv, fit = "glm")
+  # 1 scatter + 1 CI polygon + 1 fit line = 3
+  expect_equal(length(w$x$option$series), 3L)
+  types <- sapply(w$x$option$series, "[[", "type")
+  expect_equal(types, c("scatter", "line", "line"))
+  # Fit line: 200 points, no symbols
+  fit_s <- w$x$option$series[[3]]
+  expect_equal(fit_s$name, "fit")
+  expect_equal(length(fit_s$data), 200L)
+  expect_equal(fit_s$showSymbol, FALSE)
+  # CI polygon: upper L->R + lower R->L = 400 points, has area fill
+  ci_s <- w$x$option$series[[2]]
+  expect_equal(length(ci_s$data), 400L)
+  expect_false(is.null(ci_s$areaStyle))
+  expect_equal(ci_s$lineStyle$opacity, 0)
+  expect_equal(ci_s$z, 0L)
+})
+
+test_that("draw_scatter fit = 'gam' works", {
+  set.seed(1)
+  xv <- seq(0, 4 * pi, length.out = 50)
+  yv <- sin(xv) + rnorm(50, sd = 0.3)
+  w <- draw_scatter(xv, yv, fit = "gam")
+  # 1 scatter + 1 CI polygon + 1 fit line = 3
+  expect_equal(length(w$x$option$series), 3L)
+  expect_equal(w$x$option$series[[3]]$name, "fit")
+})
+
+test_that("draw_scatter fit with se = FALSE omits CI band", {
+  set.seed(1)
+  xv <- 1:20
+  yv <- xv + rnorm(20)
+  w <- draw_scatter(xv, yv, fit = "glm", se = FALSE)
+  # 1 scatter + 1 fit line = 2
+  expect_equal(length(w$x$option$series), 2L)
+  types <- sapply(w$x$option$series, "[[", "type")
+  expect_equal(types, c("scatter", "line"))
+})
+
+test_that("draw_scatter fit with groups adds per-group fits", {
+  set.seed(1)
+  xv <- c(1:10, 1:10)
+  yv <- c(1:10 + rnorm(10), 20:11 + rnorm(10))
+  g <- rep(c("A", "B"), each = 10)
+  w <- draw_scatter(xv, yv, group = g, fit = "glm")
+  # 2 scatter + 2 * (CI polygon + fit line) = 6
+  expect_equal(length(w$x$option$series), 6L)
+  types <- sapply(w$x$option$series, "[[", "type")
+  expect_equal(sum(types == "scatter"), 2L)
+  expect_equal(sum(types == "line"), 4L)
+})
+
+test_that("draw_scatter fit respects n_fit", {
+  set.seed(1)
+  xv <- 1:20
+  yv <- xv + rnorm(20)
+  w <- draw_scatter(xv, yv, fit = "glm", n_fit = 50)
+  fit_s <- w$x$option$series[[3]]
+  expect_equal(length(fit_s$data), 50L)
+})
+
 # -- draw_pie -------------------------------------------------------------------
 
 test_that("draw_pie creates widget", {
@@ -151,23 +229,191 @@ test_that("draw_pie donut", {
 
 # -- draw_boxplot ---------------------------------------------------------------
 
-test_that("draw_boxplot creates widget", {
+test_that("draw_boxplot computes stats and creates widget", {
   w <- draw_boxplot(
-    data = list(c(1, 2, 3, 4, 5), c(2, 3, 4, 5, 6)),
+    data = list(c(1, 2, 3, 4, 5, 6, 7, 8, 9, 10),
+                c(5, 6, 7, 8, 9, 10, 11, 12, 13, 14)),
     labels = c("Group 1", "Group 2")
   )
   expect_s3_class(w, "htmlwidget")
   expect_equal(w$x$option$series[[1]]$type, "boxplot")
   expect_equal(w$x$option$xAxis$data, c("Group 1", "Group 2"))
+  # Stats computed: each box is a 5-number summary
+  expect_equal(length(w$x$option$series[[1]]$data[[1]]), 5L)
+  expect_equal(length(w$x$option$series[[1]]$data[[2]]), 5L)
+  # Default color: opaque border, semi-transparent fill (alpha 0.25)
+  is <- w$x$option$series[[1]]$itemStyle
+  expect_equal(is$borderColor, rtemis_colors[[1]])
+  expect_match(is$color, "^rgba\\(")
+})
+
+test_that("draw_boxplot fill_alpha controls fill opacity", {
+  w <- draw_boxplot(
+    data = list(c(1, 2, 3, 4, 5, 6, 7)),
+    labels = c("G1"),
+    color = "#ff0000",
+    fill_alpha = 0.5
+  )
+  is <- w$x$option$series[[1]]$itemStyle
+  expect_equal(is$borderColor, "#ff0000")
+  expect_equal(is$color, "rgba(255, 0, 0, 0.5)")
 })
 
 test_that("draw_boxplot horizontal", {
   w <- draw_boxplot(
-    data = list(c(1, 2, 3, 4, 5)),
+    data = list(c(1, 2, 3, 4, 5, 6, 7, 8)),
     labels = c("G1"),
     horizontal = TRUE
   )
   expect_equal(w$x$option$xAxis$type, "value")
   expect_equal(w$x$option$yAxis$type, "category")
   expect_equal(w$x$option$series[[1]]$layout, "horizontal")
+})
+
+test_that("draw_boxplot handles NAs in ungrouped data", {
+  expect_message(
+    w <- draw_boxplot(
+      data = list(c(1, 2, NA, 4, 5, 6, NA, 8, 9, 10)),
+      labels = c("G1"),
+      verbosity = 1L
+    ),
+    "Removed 2 NA values"
+  )
+  expect_s3_class(w, "htmlwidget")
+  expect_equal(length(w$x$option$series[[1]]$data[[1]]), 5L)
+})
+
+test_that("draw_boxplot with group computes stats and creates per-group series", {
+  set.seed(1)
+  vals <- c(rnorm(50, 10, 2), rnorm(50, 15, 3))
+  g <- rep(c("Control", "Treatment"), each = 50)
+  w <- draw_boxplot(data = vals, group = g)
+  expect_s3_class(w, "htmlwidget")
+  # One BoxplotSeries per group
+  expect_equal(length(w$x$option$series), 2L)
+  expect_equal(w$x$option$series[[1]]$name, "Control")
+  expect_equal(w$x$option$series[[2]]$name, "Treatment")
+  expect_equal(w$x$option$series[[1]]$type, "boxplot")
+  # Category axis uses group labels
+  expect_equal(w$x$option$xAxis$data, c("Control", "Treatment"))
+  # Legend present for multiple series
+  expect_false(is.null(w$x$option$legend))
+  # Each series has its own color from rtemis_colors
+  expect_equal(w$x$option$series[[1]]$itemStyle$borderColor, rtemis_colors[[1]])
+  expect_equal(w$x$option$series[[2]]$itemStyle$borderColor, rtemis_colors[[2]])
+  # 5-number summary at correct index; other positions are "-" (empty marker)
+  expect_equal(length(w$x$option$series[[1]]$data[[1]]), 5L)
+  expect_equal(w$x$option$series[[1]]$data[[2]], "-")
+  expect_equal(w$x$option$series[[2]]$data[[1]], "-")
+  expect_equal(length(w$x$option$series[[2]]$data[[2]]), 5L)
+})
+
+test_that("draw_boxplot with group horizontal", {
+  set.seed(1)
+  vals <- c(rnorm(30, 5), rnorm(30, 8))
+  g <- rep(c("A", "B"), each = 30)
+  w <- draw_boxplot(data = vals, group = g, horizontal = TRUE)
+  expect_equal(w$x$option$xAxis$type, "value")
+  expect_equal(w$x$option$yAxis$type, "category")
+  expect_equal(w$x$option$yAxis$data, c("A", "B"))
+  expect_equal(w$x$option$series[[1]]$layout, "horizontal")
+})
+
+# -- draw_density --------------------------------------------------------------
+
+test_that("draw_density creates widget", {
+  set.seed(1)
+  w <- draw_density(rnorm(100))
+  expect_s3_class(w, "htmlwidget")
+  expect_equal(w$x$option$series[[1]]$type, "line")
+  expect_equal(w$x$option$xAxis$type, "value")
+  # 512 density points by default, each an [x, y] pair
+  expect_equal(length(w$x$option$series[[1]]$data), 512L)
+  expect_equal(length(w$x$option$series[[1]]$data[[1]]), 2L)
+  # No symbols on density curves
+  expect_equal(w$x$option$series[[1]]$showSymbol, FALSE)
+  # Area fill enabled
+  expect_false(is.null(w$x$option$series[[1]]$areaStyle))
+})
+
+test_that("draw_density with groups", {
+  set.seed(1)
+  w <- draw_density(
+    x = c(rnorm(50, 0), rnorm(50, 3)),
+    group = rep(c("A", "B"), each = 50)
+  )
+  expect_equal(length(w$x$option$series), 2L)
+  expect_equal(w$x$option$series[[1]]$name, "A")
+  expect_equal(w$x$option$series[[2]]$name, "B")
+  expect_false(is.null(w$x$option$legend))
+})
+
+test_that("draw_density respects n parameter", {
+  set.seed(1)
+  w <- draw_density(rnorm(100), n = 256)
+  expect_equal(length(w$x$option$series[[1]]$data), 256L)
+})
+
+test_that("draw_density removes NAs and messages", {
+  set.seed(1)
+  xv <- c(rnorm(50), NA, NA)
+  expect_message(
+    w <- draw_density(xv, verbosity = 1L),
+    "Removed 2 NA values"
+  )
+  expect_s3_class(w, "htmlwidget")
+  expect_equal(length(w$x$option$series[[1]]$data), 512L)
+})
+
+test_that("draw_density removes NAs silently with verbosity = 0", {
+  set.seed(1)
+  xv <- c(rnorm(50), NA)
+  expect_no_message(
+    w <- draw_density(xv, verbosity = 0L)
+  )
+  expect_s3_class(w, "htmlwidget")
+})
+
+test_that("draw_density with group removes NAs and keeps group aligned", {
+  set.seed(1)
+  xv <- c(rnorm(20), NA, rnorm(20), NA, NA)
+  g <- c(rep("A", 21), rep("B", 22))
+  expect_message(
+    w <- draw_density(xv, group = g, verbosity = 1L),
+    "Removed 3 NA values"
+  )
+  expect_equal(length(w$x$option$series), 2L)
+  expect_equal(w$x$option$series[[1]]$name, "A")
+  expect_equal(w$x$option$series[[2]]$name, "B")
+})
+
+# -- draw_histogram ------------------------------------------------------------
+
+test_that("draw_histogram creates widget", {
+  set.seed(1)
+  w <- draw_histogram(rnorm(200))
+  expect_s3_class(w, "htmlwidget")
+  expect_equal(w$x$option$series[[1]]$type, "bar")
+  expect_equal(w$x$option$xAxis$type, "category")
+  # No gap between bars for histogram look
+  expect_equal(w$x$option$series[[1]]$barCategoryGap, "0%")
+})
+
+test_that("draw_histogram with groups", {
+  set.seed(1)
+  w <- draw_histogram(
+    x = c(rnorm(100, 0), rnorm(100, 3)),
+    group = rep(c("A", "B"), each = 100)
+  )
+  expect_equal(length(w$x$option$series), 2L)
+  expect_equal(w$x$option$series[[1]]$name, "A")
+  expect_equal(w$x$option$series[[2]]$name, "B")
+  expect_false(is.null(w$x$option$legend))
+})
+
+test_that("draw_histogram respects breaks parameter", {
+  set.seed(1)
+  w <- draw_histogram(rnorm(200), breaks = 20)
+  # More breaks = more bins = more category labels
+  expect_true(length(w$x$option$xAxis$data) >= 15L)
 })
