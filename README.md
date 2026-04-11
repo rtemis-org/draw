@@ -1,7 +1,11 @@
 # rtemis.draw
 
-Provides a comprehensive R interface to Apache ECharts
+![rtemis.draw logo](./man/figures/logomark-b-auto.svg)
+
+Comprehensive interface to Apache ECharts
 (<https://echarts.apache.org>) for creating interactive charts and
 visualizations. Offers type-checked, validated configuration objects
-that mirror the ECharts TypeScript API, with
-convenience functions for common chart types.
+that mirror the ECharts TypeScript API, with convenience functions for 
+common chart types.
+
+Allows cross-language support for arbitrarily complex visualizations with a common JSON configuration format. Language-specific high-level APIs provide a user-friendly interface to create and customize common chart types, while low-level APIs allow direct access to the full power of ECharts for advanced users.
