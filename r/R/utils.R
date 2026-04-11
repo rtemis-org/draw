@@ -198,6 +198,20 @@ numeric_or_string_property <- function(default = NULL) {
   )
 }
 
+#' Convert a color to an rgba string with specified alpha
+#'
+#' Parses any R color specification (hex, named color, etc.) and returns
+#' an `rgba()` CSS color string with the given alpha.
+#'
+#' @param color An R color string (e.g. `"#00b2b2"`, `"red"`).
+#' @param alpha Alpha value between 0 and 1.
+#' @return An `rgba()` color string.
+#' @keywords internal
+color_with_alpha <- function(color, alpha) {
+  rgb <- grDevices::col2rgb(color)[, 1]
+  sprintf("rgba(%d, %d, %d, %g)", rgb[1], rgb[2], rgb[3], alpha)
+}
+
 #' Property that accepts a color string, or NULL
 #'
 #' Currently accepts any string. Future versions may validate
@@ -205,6 +219,22 @@ numeric_or_string_property <- function(default = NULL) {
 #' @keywords internal
 color_property <- function(default = NULL) {
   string_or_null_property(default = default)
+}
+
+#' Property that accepts a character vector of colors, or NULL
+#'
+#' Used for color palettes (e.g. theme and option `color` fields).
+#' @keywords internal
+color_palette_property <- function(default = NULL) {
+  S7::new_property(
+    class = S7::class_any,
+    default = default,
+    validator = function(value) {
+      if (is.null(value)) return(NULL)
+      if (is.character(value)) return(NULL)
+      "must be a character vector of colors or NULL"
+    }
+  )
 }
 
 #' Property that accepts an S7 class instance or NULL
