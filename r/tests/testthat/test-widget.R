@@ -150,9 +150,9 @@ test_that("draw_scatter fit = 'glm' adds fit line and CI polygon", {
   expect_equal(length(w$x$option$series), 3L)
   types <- sapply(w$x$option$series, "[[", "type")
   expect_equal(types, c("scatter", "line", "line"))
-  # Fit line: 200 points, no symbols
+  # Fit line: 200 points, no symbols, no name (ungrouped)
   fit_s <- w$x$option$series[[3]]
-  expect_equal(fit_s$name, "fit")
+  expect_null(fit_s$name)
   expect_equal(length(fit_s$data), 200L)
   expect_equal(fit_s$showSymbol, FALSE)
   # CI polygon: upper L->R + lower R->L = 400 points, has area fill
@@ -170,7 +170,7 @@ test_that("draw_scatter fit = 'gam' works", {
   w <- draw_scatter(xv, yv, fit = "gam")
   # 1 scatter + 1 CI polygon + 1 fit line = 3
   expect_equal(length(w$x$option$series), 3L)
-  expect_equal(w$x$option$series[[3]]$name, "fit")
+  expect_null(w$x$option$series[[3]]$name)
 })
 
 test_that("draw_scatter fit with se = FALSE omits CI band", {
