@@ -14,12 +14,12 @@
 rtemis_colors <- c(
   teal = "#00b2b2",
   light_orange = "#ff9f20",
-  red = "#ff004c",
+  burgundy = "#a92459",
   light_blue = "#30cefe",
   green = "#00996b",
   orange = "#ff4f36",
-  burgundy = "#a92459",
   blue = "#479cff",
+  red = "#ff004c",
   light_magenta = "#b25bd6"
 ) |>
   unname()
