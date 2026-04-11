@@ -3,10 +3,12 @@ HTMLWidgets.widget({
   type: "output",
 
   factory: function(el, width, height) {
+    var currentWidth = width;
+    var currentHeight = height;
     var chart = echarts.init(el, null, {
       renderer: "canvas",
-      width: width,
-      height: height
+      width: currentWidth,
+      height: currentHeight
     });
 
     return {
@@ -17,8 +19,8 @@ HTMLWidgets.widget({
           chart.dispose();
           chart = echarts.init(el, "custom_theme", {
             renderer: x.renderer || "canvas",
-            width: el.offsetWidth,
-            height: el.offsetHeight
+            width: currentWidth,
+            height: currentHeight
           });
         }
 
@@ -27,6 +29,8 @@ HTMLWidgets.widget({
       },
 
       resize: function(width, height) {
+        currentWidth = width;
+        currentHeight = height;
         chart.resize({
           width: width,
           height: height
