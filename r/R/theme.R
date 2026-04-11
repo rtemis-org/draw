@@ -140,6 +140,7 @@ build_theme <- function(
   base_font_size,
   title_font_size,
   subtitle_font_size,
+  axis_label_font_size,
   legend_font_size,
   tooltip_font_size,
   font_family,
@@ -158,6 +159,7 @@ build_theme <- function(
   # Resolve font sizes from base
   title_font_size <- title_font_size %||% round(base_font_size * 1.2)
   subtitle_font_size <- subtitle_font_size %||% base_font_size
+  axis_label_font_size <- axis_label_font_size %||% base_font_size
   legend_font_size <- legend_font_size %||% base_font_size
   tooltip_font_size <- tooltip_font_size %||% base_font_size
 
@@ -175,8 +177,15 @@ build_theme <- function(
     ))
   ))
 
+  # Axis label style (fontSize + color for tick labels)
+  axis_label_style <- drop_nulls(list(
+    fontSize = axis_label_font_size,
+    color = fg_color
+  ))
+
   # Axis configs
   value_axis_cfg <- drop_nulls(list(
+    axisLabel = if (length(axis_label_style) > 0L) axis_label_style,
     axisLine = if (!is.null(axis_color))
       list(lineStyle = list(color = axis_color)),
     splitLine = if (!is.null(grid_color))
@@ -184,6 +193,7 @@ build_theme <- function(
   ))
 
   category_axis_cfg <- drop_nulls(list(
+    axisLabel = if (length(axis_label_style) > 0L) axis_label_style,
     axisLine = if (!is.null(axis_color))
       list(lineStyle = list(color = axis_color)),
     splitLine = list(show = FALSE)
@@ -229,6 +239,7 @@ build_theme <- function(
 #' @param base_font_size Base font size in pixels for all text.
 #' @param title_font_size Title font size. Default: `round(base_font_size * 1.2)`.
 #' @param subtitle_font_size Subtitle font size. Default: `base_font_size`.
+#' @param axis_label_font_size Axis tick label font size. Default: `base_font_size`.
 #' @param legend_font_size Legend font size. Default: `base_font_size`.
 #' @param tooltip_font_size Tooltip font size. Default: `base_font_size`.
 #' @param font_family Font family string.
@@ -249,6 +260,7 @@ theme_light <- function(
   base_font_size = 12,
   title_font_size = NULL,
   subtitle_font_size = NULL,
+  axis_label_font_size = NULL,
   legend_font_size = NULL,
   tooltip_font_size = NULL,
   font_family = "sans-serif",
@@ -268,6 +280,7 @@ theme_light <- function(
     base_font_size = base_font_size,
     title_font_size = title_font_size,
     subtitle_font_size = subtitle_font_size,
+    axis_label_font_size = axis_label_font_size,
     legend_font_size = legend_font_size,
     tooltip_font_size = tooltip_font_size,
     font_family = font_family,
@@ -298,6 +311,7 @@ theme_dark <- function(
   base_font_size = 12,
   title_font_size = NULL,
   subtitle_font_size = NULL,
+  axis_label_font_size = NULL,
   legend_font_size = NULL,
   tooltip_font_size = NULL,
   font_family = "sans-serif",
@@ -317,6 +331,7 @@ theme_dark <- function(
     base_font_size = base_font_size,
     title_font_size = title_font_size,
     subtitle_font_size = subtitle_font_size,
+    axis_label_font_size = axis_label_font_size,
     legend_font_size = legend_font_size,
     tooltip_font_size = tooltip_font_size,
     font_family = font_family,
