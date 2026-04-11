@@ -8,6 +8,8 @@ draw_boxplot(
   data,
   labels = NULL,
   horizontal = FALSE,
+  color = rtemis_colors[[1]],
+  fill_alpha = 0.25,
   title = NULL,
   theme = NULL,
   width = NULL,
@@ -22,6 +24,11 @@ draw_boxplot(
 
 \item{horizontal}{Whether to draw horizontal boxplots.}
 
+\item{color}{Box color. Used at full opacity for borders and at \code{fill_alpha}
+opacity for the box fill. Defaults to the first rtemis color.}
+
+\item{fill_alpha}{Alpha (opacity) for the box fill color, between 0 and 1.}
+
 \item{title}{Chart title string.}
 
 \item{theme}{A \link{Theme} object or NULL.}
@@ -32,5 +39,6 @@ draw_boxplot(
 An htmlwidget.
 }
 \description{
-Quick boxplot from a list of numeric vectors.
+Quick boxplot from a list of numeric vectors. Uses an opaque color for box
+and whisker borders, and a semi-transparent version for the box fill.
 }
