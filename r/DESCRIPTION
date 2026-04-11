@@ -18,12 +18,18 @@ RoxygenNote: 7.3.3
 Imports: 
     htmlwidgets,
     jsonlite,
+    rtemis.core,
     S7
-Suggests: 
+Suggests:
+    knitr,
+    rmarkdown,
     testthat (>= 3.0.0)
+VignetteBuilder: knitr
 Config/testthat/edition: 3
 Config/testthat/parallel: true
 Collate:
+    'rtemis.draw-package.R'
+    'rtemis_color_system.R'
     'utils.R'
     'styles.R'
     'label.R'
@@ -33,3 +39,4 @@ Collate:
     'option.R'
     'theme.R'
     'widget.R'
+    'zzz.R'
