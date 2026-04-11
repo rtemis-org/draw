@@ -172,8 +172,12 @@ draw_line <- function(
     title = if (!is.null(title)) Title(text = title) else NULL,
     tooltip = Tooltip(trigger = "axis"),
     legend = if (length(series) > 1L) Legend() else NULL,
-    x_axis = Axis(type = x_type, data = if (x_type == "category") x else NULL),
-    y_axis = Axis(type = "value"),
+    x_axis = Axis(
+      type = x_type,
+      data = if (x_type == "category") x else NULL,
+      scale = if (x_type == "value") TRUE else NULL
+    ),
+    y_axis = Axis(type = "value", scale = TRUE),
     series = series
   )
 
@@ -371,12 +375,31 @@ draw_scatter <- function(
     }
   }
 
+  # Tooltip formatter showing (x, y) with ddSci-style number formatting.
+  # Show series name only when there are multiple scatter groups.
+  show_name <- !is.null(group)
+  scatter_formatter <- htmlwidgets::JS(sprintf(
+    "function(p) {
+      function ddSci(x, dp) {
+        dp = dp || 2;
+        var a = Math.abs(x);
+        if (a === 0) return '0.' + '0'.repeat(dp);
+        if (a >= 1e6 || a < Math.pow(10, -dp)) return x.toExponential(1);
+        return x.toFixed(dp);
+      }
+      var m = p.marker || '';
+      var n = %s ? (p.seriesName + '<br/>') : '';
+      return m + n + ddSci(p.value[0]) + ', ' + ddSci(p.value[1]);
+    }",
+    if (show_name) "true" else "false"
+  ))
+
   opt <- EChartsOption(
     title = if (!is.null(title)) Title(text = title) else NULL,
-    tooltip = Tooltip(trigger = "item"),
+    tooltip = Tooltip(trigger = "item", formatter = scatter_formatter),
     legend = if (length(series) > 1L) Legend() else NULL,
-    x_axis = Axis(type = "value"),
-    y_axis = Axis(type = "value"),
+    x_axis = Axis(type = "value", scale = TRUE),
+    y_axis = Axis(type = "value", scale = TRUE),
     series = series
   )
 
@@ -462,9 +485,17 @@ draw_density <- function(
     na_idx <- is.na(x)
     n_na <- sum(na_idx)
     if (n_na > 0L) {
-      msg("Removed", n_na, "NA", ngettext(n_na, "value", "values"),
-          "from x", verbosity = verbosity)
-      if (!is.null(group)) group <- group[!na_idx]
+      msg(
+        "Removed",
+        n_na,
+        "NA",
+        ngettext(n_na, "value", "values"),
+        "from x",
+        verbosity = verbosity
+      )
+      if (!is.null(group)) {
+        group <- group[!na_idx]
+      }
       x <- x[!na_idx]
     }
   }
@@ -495,7 +526,7 @@ draw_density <- function(
     title = if (!is.null(title)) Title(text = title) else NULL,
     tooltip = Tooltip(trigger = "axis"),
     legend = if (length(series) > 1L) Legend() else NULL,
-    x_axis = Axis(type = "value"),
+    x_axis = Axis(type = "value", scale = TRUE),
     y_axis = Axis(type = "value"),
     series = series
   )
@@ -559,57 +590,162 @@ draw_histogram <- function(
 
 #' Draw a Boxplot
 #'
-#' Quick boxplot from a list of numeric vectors. Uses an opaque color for box
-#' and whisker borders, and a semi-transparent version for the box fill.
+#' Quick boxplot from raw data with optional grouping for multiple traces.
+#' Boxplot statistics (min, Q1, median, Q3, max) are computed automatically
+#' using [grDevices::boxplot.stats()].
 #'
-#' @param data A list of numeric vectors, one per box. Each should be
-#'   `c(min, Q1, median, Q3, max)`.
-#' @param labels Category labels for each box.
+#' @param data A list of numeric vectors (one per box), or a single numeric
+#'   vector when `group` is provided.
+#' @param labels Category labels for each box. Ignored when `group` is
+#'   provided (group levels are used instead).
+#' @param group Optional grouping factor. When provided, `data` must be a
+#'   numeric vector, and boxplot statistics are computed per group. Each group
+#'   gets its own colored series.
 #' @param horizontal Whether to draw horizontal boxplots.
-#' @param color Box color. Used at full opacity for borders and at `fill_alpha`
-#'   opacity for the box fill. Defaults to the first rtemis color.
+#' @param color Box color(s). For ungrouped boxplots, a single color used at
+#'   full opacity for borders and at `fill_alpha` opacity for the fill.
+#'   For grouped boxplots, defaults to `rtemis_colors`; recycled as needed.
 #' @param fill_alpha Alpha (opacity) for the box fill color, between 0 and 1.
+#' @param na.rm Logical: if `TRUE` (default), remove `NA` values before
+#'   computing boxplot statistics.
 #' @param title Chart title string.
 #' @param theme A [Theme] object or NULL.
 #' @param width,height Widget dimensions.
+#' @param verbosity Integer: if > 0, print messages about removed `NA` values.
 #' @return An htmlwidget.
 #' @export
 draw_boxplot <- function(
   data,
   labels = NULL,
+  group = NULL,
   horizontal = FALSE,
-  color = rtemis_colors[[1]],
+  color = NULL,
   fill_alpha = 0.25,
+  na.rm = TRUE,
   title = NULL,
   theme = NULL,
   width = NULL,
-  height = NULL
+  height = NULL,
+  verbosity = 1L
 ) {
-  if (horizontal) {
-    x_ax <- Axis(type = "value")
-    y_ax <- Axis(type = "category", data = labels)
-    layout <- "horizontal"
-  } else {
-    x_ax <- Axis(type = "category", data = labels)
-    y_ax <- Axis(type = "value")
-    layout <- "vertical"
+  layout <- if (horizontal) "horizontal" else "vertical"
+
+  # Bare numeric vector without group => single box
+  if (is.numeric(data) && is.null(group)) {
+    if (is.null(labels)) {
+      labels <- labelify(deparse(substitute(data)))
+    }
+    data <- list(data)
   }
 
-  # Opaque border, semi-transparent fill
-  fill_color <- color_with_alpha(color, fill_alpha)
-  item_style <- ItemStyle(color = fill_color, border_color = color)
+  # Ensure labels serialize as a JSON array, not a bare string
+  if (!is.null(labels) && length(labels) == 1L) {
+    labels <- as.list(labels)
+  }
 
-  opt <- EChartsOption(
-    title = if (!is.null(title)) Title(text = title) else NULL,
-    tooltip = Tooltip(trigger = "item"),
-    x_axis = x_ax,
-    y_axis = y_ax,
-    series = BoxplotSeries(
-      data = data,
-      layout = layout,
-      item_style = item_style
+  if (!is.null(group)) {
+    # Grouped: single numeric vector split by group factor
+    if (na.rm) {
+      na_idx <- is.na(data)
+      n_na <- sum(na_idx)
+      if (n_na > 0L) {
+        msg(
+          "Removed",
+          n_na,
+          "NA",
+          ngettext(n_na, "value", "values"),
+          "from data",
+          verbosity = verbosity
+        )
+        group <- group[!na_idx]
+        data <- data[!na_idx]
+      }
+    }
+
+    groups <- unique(group)
+    group_labels <- as.character(groups)
+    colors <- color %||% rtemis_colors
+    colors <- rep_len(colors, length(groups))
+
+    n_groups <- length(groups)
+    series <- lapply(seq_along(groups), function(i) {
+      g <- groups[i]
+      vals <- data[group == g]
+      bs <- grDevices::boxplot.stats(vals)
+      # Place summary at correct category index; use "-" (ECharts empty
+      # marker) at other positions so JSON serialization is correct
+      padded <- as.list(rep("-", n_groups))
+      padded[[i]] <- bs$stats
+      col <- colors[i]
+      fill <- color_with_alpha(col, fill_alpha)
+      BoxplotSeries(
+        name = group_labels[i],
+        data = padded,
+        layout = layout,
+        item_style = ItemStyle(color = fill, border_color = col)
+      )
+    })
+
+    if (horizontal) {
+      x_ax <- Axis(type = "value", scale = TRUE)
+      y_ax <- Axis(type = "category", data = group_labels)
+    } else {
+      x_ax <- Axis(type = "category", data = group_labels)
+      y_ax <- Axis(type = "value", scale = TRUE)
+    }
+
+    opt <- EChartsOption(
+      title = if (!is.null(title)) Title(text = title) else NULL,
+      tooltip = Tooltip(trigger = "item"),
+      legend = if (length(series) > 1L) Legend() else NULL,
+      x_axis = x_ax,
+      y_axis = y_ax,
+      series = series
     )
-  )
+  } else {
+    # Ungrouped: list of raw numeric vectors, one per box
+    col <- color %||% rtemis_colors[[1]]
+    fill <- color_with_alpha(col, fill_alpha)
+    item_style <- ItemStyle(color = fill, border_color = col)
+
+    # Compute boxplot stats from raw data, removing NAs per box
+    box_data <- lapply(data, function(v) {
+      if (na.rm) {
+        n_na <- sum(is.na(v))
+        if (n_na > 0L) {
+          msg(
+            "Removed",
+            n_na,
+            "NA",
+            ngettext(n_na, "value", "values"),
+            verbosity = verbosity
+          )
+          v <- v[!is.na(v)]
+        }
+      }
+      grDevices::boxplot.stats(v)$stats
+    })
+
+    if (horizontal) {
+      x_ax <- Axis(type = "value", scale = TRUE)
+      y_ax <- Axis(type = "category", data = labels)
+    } else {
+      x_ax <- Axis(type = "category", data = labels)
+      y_ax <- Axis(type = "value", scale = TRUE)
+    }
+
+    opt <- EChartsOption(
+      title = if (!is.null(title)) Title(text = title) else NULL,
+      tooltip = Tooltip(trigger = "item"),
+      x_axis = x_ax,
+      y_axis = y_ax,
+      series = BoxplotSeries(
+        data = box_data,
+        layout = layout,
+        item_style = item_style
+      )
+    )
+  }
 
   draw(opt, theme = theme, width = width, height = height)
 }
