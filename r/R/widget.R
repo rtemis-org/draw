@@ -31,13 +31,48 @@ draw <- function(
     option <- to_list(option)
   }
 
+  # Auto-add legend when multiple distinctly named series are present
+  if (is.null(option$legend) &&
+      is.list(option$series) && length(option$series) > 1L) {
+    series_names <- vapply(
+      option$series, function(s) s$name %||% "", character(1)
+    )
+    if (length(unique(series_names[series_names != ""])) > 1L) {
+      option$legend <- list()
+    }
+  }
+
+  # Ensure empty S7-derived lists serialize as JSON objects {} not arrays [].
+  # props_to_list() returns list() (unnamed) for objects with all-NULL
+  # properties (e.g. Legend(), AreaStyle()). jsonlite serializes unnamed
+  # list() as [] but named list() as {}. ECharts requires {}.
+  fix_empty_objects <- function(x) {
+    if (is.list(x)) {
+      if (length(x) == 0L && is.null(names(x))) {
+        return(setNames(list(), character(0)))
+      }
+      x[] <- lapply(x, fix_empty_objects)
+    }
+    x
+  }
+  option <- fix_empty_objects(option)
+
   # Hide default axis tick marks for a clean look
   for (axis_key in c("xAxis", "yAxis")) {
-    if (!is.null(option[[axis_key]])) {
-      if (is.null(option[[axis_key]]$axisTick)) {
-        option[[axis_key]]$axisTick <- list()
+    ax <- option[[axis_key]]
+    if (!is.null(ax)) {
+      if (is.null(names(ax))) {
+        # Array of axis configs (e.g. dual y-axes)
+        for (i in seq_along(ax)) {
+          if (is.null(ax[[i]]$axisTick)) ax[[i]]$axisTick <- list()
+          ax[[i]]$axisTick$show <- FALSE
+        }
+      } else {
+        # Single axis config
+        if (is.null(ax$axisTick)) ax$axisTick <- list()
+        ax$axisTick$show <- FALSE
       }
-      option[[axis_key]]$axisTick$show <- FALSE
+      option[[axis_key]] <- ax
     }
   }
 
@@ -307,15 +342,12 @@ draw_scatter <- function(
     )
   }
 
-  # Helper: build fit + CI series for one group
+  # Helper: build fit + CI series for one group.
+  # Uses the scatter group's name so ECharts groups them together in the
+  # legend — clicking a group toggles scatter + fit + CI as a unit.
   fit_series <- function(xv, yv, fit_method, n_pts, group_name, color) {
     p <- compute_fit(xv, yv, fit_method, n_pts)
     fit_data <- mapply(c, p$x, p$fitted, SIMPLIFY = FALSE)
-    fit_name <- if (!is.null(group_name)) {
-      paste0(group_name, " fit")
-    } else {
-      "fit"
-    }
 
     out <- list()
 
@@ -326,7 +358,7 @@ draw_scatter <- function(
       lower <- mapply(c, rev(p$x), rev(p$lower), SIMPLIFY = FALSE)
       ci_data <- c(upper, lower)
       out$ci <- LineSeries(
-        name = paste0(fit_name, " CI"),
+        name = group_name,
         data = ci_data,
         show_symbol = FALSE,
         line_style = LineStyle(opacity = 0),
@@ -339,10 +371,11 @@ draw_scatter <- function(
 
     # Fit line (solid, on top)
     out$fit <- LineSeries(
-      name = fit_name,
+      name = group_name,
       data = fit_data,
       show_symbol = FALSE,
-      line_style = LineStyle(color = color)
+      line_style = LineStyle(color = color),
+      silent = TRUE
     )
 
     out
@@ -350,13 +383,19 @@ draw_scatter <- function(
 
   if (!is.null(group)) {
     groups <- unique(group)
-    series <- lapply(groups, function(g) {
+    # Assign explicit colors so scatter and fit/CI match
+    group_colors <- rtemis_colors[
+      ((seq_along(groups) - 1L) %% length(rtemis_colors)) + 1L
+    ]
+    series <- lapply(seq_along(groups), function(i) {
+      g <- groups[i]
       idx <- group == g
       dat <- mapply(c, x[idx], y[idx], SIMPLIFY = FALSE)
       ScatterSeries(
         name = as.character(g),
         data = dat,
-        symbol_size = if (!is.null(size)) size[idx][1] else NULL
+        symbol_size = if (!is.null(size)) size[idx][1] else NULL,
+        item_style = ItemStyle(color = group_colors[i])
       )
     })
   } else {
@@ -367,15 +406,15 @@ draw_scatter <- function(
     ))
   }
 
-  # Add fit series
+  # Add fit series (share the scatter group name for legend grouping)
   if (!is.null(fit)) {
     if (!is.null(group)) {
-      groups <- unique(group)
       for (i in seq_along(groups)) {
         g <- groups[i]
         idx <- group == g
-        color <- rtemis_colors[((i - 1L) %% length(rtemis_colors)) + 1L]
-        fs <- fit_series(x[idx], y[idx], fit, n_fit, as.character(g), color)
+        fs <- fit_series(
+          x[idx], y[idx], fit, n_fit, as.character(g), group_colors[i]
+        )
         series <- c(series, unname(fs))
       }
     } else {
@@ -407,7 +446,7 @@ draw_scatter <- function(
   opt <- EChartsOption(
     title = if (!is.null(title)) Title(text = title) else NULL,
     tooltip = Tooltip(trigger = "item", formatter = scatter_formatter),
-    legend = if (length(series) > 1L) Legend() else NULL,
+    legend = if (!is.null(group)) Legend() else NULL,
     x_axis = Axis(type = "value", scale = TRUE),
     y_axis = Axis(type = "value", scale = TRUE),
     series = series
