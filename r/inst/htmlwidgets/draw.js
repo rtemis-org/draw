@@ -5,36 +5,42 @@ HTMLWidgets.widget({
   factory: function(el, width, height) {
     var currentWidth = width;
     var currentHeight = height;
-    var chart = echarts.init(el, null, {
-      renderer: "canvas",
-      width: currentWidth,
-      height: currentHeight
-    });
+    var chart = null;
 
     return {
       renderValue: function(x) {
-        // Register and apply theme if provided
-        if (x.theme) {
-          echarts.registerTheme("custom_theme", x.theme);
+        // Dispose previous instance if re-rendering
+        if (chart) {
           chart.dispose();
-          chart = echarts.init(el, "custom_theme", {
-            renderer: x.renderer || "canvas",
-            width: currentWidth,
-            height: currentHeight
-          });
+          chart = null;
         }
 
-        // Set the option
+        // Register theme if provided
+        var themeName = null;
+        if (x.theme) {
+          echarts.registerTheme("custom_theme", x.theme);
+          themeName = "custom_theme";
+        }
+
+        // Single initialization with the correct theme
+        chart = echarts.init(el, themeName, {
+          renderer: x.renderer || "canvas",
+          width: currentWidth,
+          height: currentHeight
+        });
+
         chart.setOption(x.option, true);
       },
 
       resize: function(width, height) {
         currentWidth = width;
         currentHeight = height;
-        chart.resize({
-          width: width,
-          height: height
-        });
+        if (chart) {
+          chart.resize({
+            width: width,
+            height: height
+          });
+        }
       },
 
       getChart: function() {
