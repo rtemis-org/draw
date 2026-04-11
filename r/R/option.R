@@ -46,15 +46,7 @@ EChartsOption <- S7::new_class(
     # Series (single or list)
     series = S7::new_property(class = S7::class_any, default = NULL),
     # Global settings
-    color = S7::new_property(
-      class = S7::class_any,
-      default = NULL,
-      validator = function(value) {
-        if (is.null(value)) return(NULL)
-        if (is.character(value)) return(NULL)
-        "must be a character vector of colors or NULL"
-      }
-    ),
+    color = color_palette_property(),
     background_color = color_property(),
     text_style = class_or_null_property(TextStyle),
     # Animation
