@@ -10,20 +10,6 @@
 # serializes to a named list that can be passed to echarts.init() or
 # merged into the option.
 
-# rtemis_colors
-rtemis_colors <- c(
-  teal = "#00b2b2",
-  light_orange = "#ff9f20",
-  burgundy = "#a92459",
-  light_blue = "#30cefe",
-  green = "#00996b",
-  orange = "#ff4f36",
-  blue = "#479cff",
-  red = "#ff004c",
-  light_magenta = "#b25bd6"
-) |>
-  unname()
-
 #' Theme
 #'
 #' A chart theme that controls default colors, text styles, and
