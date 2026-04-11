@@ -7,38 +7,53 @@
 draw_boxplot(
   data,
   labels = NULL,
+  group = NULL,
   horizontal = FALSE,
-  color = rtemis_colors[[1]],
+  color = NULL,
   fill_alpha = 0.25,
+  na.rm = TRUE,
   title = NULL,
   theme = NULL,
   width = NULL,
-  height = NULL
+  height = NULL,
+  verbosity = 1L
 )
 }
 \arguments{
-\item{data}{A list of numeric vectors, one per box. Each should be
-\code{c(min, Q1, median, Q3, max)}.}
+\item{data}{A list of numeric vectors (one per box), or a single numeric
+vector when \code{group} is provided.}
 
-\item{labels}{Category labels for each box.}
+\item{labels}{Category labels for each box. Ignored when \code{group} is
+provided (group levels are used instead).}
+
+\item{group}{Optional grouping factor. When provided, \code{data} must be a
+numeric vector, and boxplot statistics are computed per group. Each group
+gets its own colored series.}
 
 \item{horizontal}{Whether to draw horizontal boxplots.}
 
-\item{color}{Box color. Used at full opacity for borders and at \code{fill_alpha}
-opacity for the box fill. Defaults to the first rtemis color.}
+\item{color}{Box color(s). For ungrouped boxplots, a single color used at
+full opacity for borders and at \code{fill_alpha} opacity for the fill.
+For grouped boxplots, defaults to \code{rtemis_colors}; recycled as needed.}
 
 \item{fill_alpha}{Alpha (opacity) for the box fill color, between 0 and 1.}
+
+\item{na.rm}{Logical: if \code{TRUE} (default), remove \code{NA} values before
+computing boxplot statistics.}
 
 \item{title}{Chart title string.}
 
 \item{theme}{A \link{Theme} object or NULL.}
 
 \item{width, height}{Widget dimensions.}
+
+\item{verbosity}{Integer: if > 0, print messages about removed \code{NA} values.}
 }
 \value{
 An htmlwidget.
 }
 \description{
-Quick boxplot from a list of numeric vectors. Uses an opaque color for box
-and whisker borders, and a semi-transparent version for the box fill.
+Quick boxplot from raw data with optional grouping for multiple traces.
+Boxplot statistics (min, Q1, median, Q3, max) are computed automatically
+using \code{\link[grDevices:boxplot.stats]{grDevices::boxplot.stats()}}.
 }
