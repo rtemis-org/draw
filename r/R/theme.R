@@ -10,6 +10,20 @@
 # serializes to a named list that can be passed to echarts.init() or
 # merged into the option.
 
+# rtemis_colors
+rtemis_colors <- c(
+  teal = "#00b2b2",
+  light_orange = "#ff9f20",
+  red = "#ff004c",
+  light_blue = "#30cefe",
+  green = "#00996b",
+  orange = "#ff4f36",
+  burgundy = "#a92459",
+  blue = "#479cff",
+  light_magenta = "#b25bd6"
+) |>
+  unname()
+
 #' Theme
 #'
 #' A chart theme that controls default colors, text styles, and
@@ -37,15 +51,7 @@
 Theme <- S7::new_class(
   "Theme",
   properties = list(
-    color = S7::new_property(
-      class = S7::class_any,
-      default = NULL,
-      validator = function(value) {
-        if (is.null(value)) return(NULL)
-        if (is.character(value)) return(NULL)
-        "must be a character vector of colors or NULL"
-      }
-    ),
+    color = color_palette_property(),
     background_color = color_property(),
     text_style = class_or_null_property(TextStyle),
     # Component overrides (plain lists)
@@ -68,21 +74,65 @@ Theme <- S7::new_class(
 S7::method(to_list, Theme) <- function(x, ...) {
   out <- list()
 
-  if (!is.null(x@color)) out$color <- x@color
-  if (!is.null(x@background_color)) out$backgroundColor <- x@background_color
-  if (!is.null(x@text_style)) out$textStyle <- to_list(x@text_style)
+  if (!is.null(x@color)) {
+    out$color <- x@color
+  }
+  if (!is.null(x@background_color)) {
+    out$backgroundColor <- x@background_color
+  }
+  if (!is.null(x@text_style)) {
+    out$textStyle <- to_list(x@text_style)
+  }
 
   # Plain list properties with their JSON keys
   overrides <- list(
-    title = "title", legend = "legend", tooltip = "tooltip",
-    line = "line", bar = "bar", pie = "pie", scatter = "scatter",
-    category_axis = "categoryAxis", value_axis = "valueAxis",
-    log_axis = "logAxis", time_axis = "timeAxis"
+    title = "title",
+    legend = "legend",
+    tooltip = "tooltip",
+    line = "line",
+    bar = "bar",
+    pie = "pie",
+    scatter = "scatter",
+    category_axis = "categoryAxis",
+    value_axis = "valueAxis",
+    log_axis = "logAxis",
+    time_axis = "timeAxis"
   )
   for (prop_name in names(overrides)) {
     val <- S7::prop(x, prop_name)
     if (!is.null(val)) {
       out[[overrides[[prop_name]]]] <- val
+    }
+  }
+
+  # Propagate global textStyle to component defaults.
+  # ECharts component built-in defaults (e.g. title fontSize: 18) override the
+  # theme's global textStyle, so we merge the global textStyle into each
+  # component's textStyle as a fallback to ensure properties like fontSize
+  # actually take effect.
+  if (!is.null(out$textStyle)) {
+    ts <- out$textStyle
+    for (comp in c("title", "legend", "tooltip")) {
+      if (is.null(out[[comp]])) {
+        out[[comp]] <- list()
+      }
+      if (is.null(out[[comp]]$textStyle)) {
+        out[[comp]]$textStyle <- list()
+      }
+      for (key in names(ts)) {
+        if (is.null(out[[comp]]$textStyle[[key]])) {
+          out[[comp]]$textStyle[[key]] <- ts[[key]]
+        }
+      }
+    }
+    # Subtitle inherits from global textStyle too
+    if (is.null(out$title$subtextStyle)) {
+      out$title$subtextStyle <- list()
+    }
+    for (key in names(ts)) {
+      if (is.null(out$title$subtextStyle[[key]])) {
+        out$title$subtextStyle[[key]] <- ts[[key]]
+      }
     }
   }
 
@@ -99,10 +149,7 @@ S7::method(to_list, Theme) <- function(x, ...) {
 #' @export
 light_theme <- function() {
   Theme(
-    color = c(
-      "#5470c6", "#91cc75", "#fac858", "#ee6666",
-      "#73c0de", "#3ba272", "#fc8452", "#9a60b4", "#ea7ccc"
-    ),
+    color = rtemis_colors,
     text_style = TextStyle(
       font_family = "sans-serif",
       font_size = 12
@@ -117,12 +164,9 @@ light_theme <- function() {
 #' @return A [Theme] object.
 #' @export
 dark_theme <- function() {
-  Theme(
-    color = c(
-      "#4992ff", "#7cffb2", "#fddd60", "#ff6e76",
-      "#58d9f9", "#05c091", "#ff8a45", "#8d48e3", "#dd79ff"
-    ),
-    background_color = "#100C2A",
+  Theme(,
+    color = rtemis_colors,
+    background_color = "#181818",
     text_style = TextStyle(color = "rgba(255, 255, 255, 0.7)"),
     title = list(
       textStyle = list(color = "rgba(255, 255, 255, 0.9)"),
