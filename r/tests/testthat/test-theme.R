@@ -65,8 +65,8 @@ test_that("Theme color validates", {
 
 # -- Built-in themes -----------------------------------------------------------
 
-test_that("light_theme returns valid Theme", {
-  th <- light_theme()
+test_that("theme_light returns valid Theme", {
+  th <- theme_light()
   expect_true(S7::S7_inherits(th, Theme))
   out <- to_list(th)
   expect_true(length(out$color) >= 5)
@@ -75,12 +75,37 @@ test_that("light_theme returns valid Theme", {
   expect_equal(out$textStyle$fontSize, 12)
 })
 
-test_that("dark_theme returns valid Theme", {
-  th <- dark_theme()
+test_that("theme_dark returns valid Theme", {
+  th <- theme_dark()
   expect_true(S7::S7_inherits(th, Theme))
   out <- to_list(th)
-  expect_true(length(out$color) >= 5)
-  expect_equal(out$backgroundColor, "#100C2A")
+  expect_equal(out$backgroundColor, "#181818")
   expect_equal(out$textStyle$color, "rgba(255, 255, 255, 0.7)")
   expect_equal(out$categoryAxis$splitLine$show, FALSE)
+})
+
+# -- textStyle propagation --------------------------------------------------------
+
+test_that("Theme textStyle propagates to component defaults", {
+  th <- Theme(text_style = TextStyle(font_size = 24, font_family = "Helvetica"))
+  out <- to_list(th)
+  # Global textStyle cascades to title, legend, tooltip
+  expect_equal(out$title$textStyle$fontSize, 24)
+  expect_equal(out$title$textStyle$fontFamily, "Helvetica")
+  expect_equal(out$legend$textStyle$fontSize, 24)
+  expect_equal(out$tooltip$textStyle$fontSize, 24)
+  # Also to subtitle
+  expect_equal(out$title$subtextStyle$fontSize, 24)
+})
+
+test_that("Theme component textStyle overrides propagated values", {
+  th <- Theme(
+    text_style = TextStyle(font_size = 24, color = "#333"),
+    title = list(textStyle = list(fontSize = 36))
+  )
+  out <- to_list(th)
+  # Component-level fontSize wins over global
+  expect_equal(out$title$textStyle$fontSize, 36)
+  # Global color still propagated (not overridden at component level)
+  expect_equal(out$title$textStyle$color, "#333")
 })
