@@ -16,3 +16,9 @@ __dev/
 
 # Agents
 AGENTS.md
+docs
+
+# pkgdown
+_pkgdown.yml
+pkgdown/
+docs/
