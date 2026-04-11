@@ -13,3 +13,9 @@ test: test-r
 test-r:
 	@echo "==> R"
 	cd r && Rscript -e "devtools::test(stop_on_failure = TRUE)"
+
+# ── Build Site ───────────────────────────────────────────────────────────────
+site: site-r
+
+site-r:
+	cd r && Rscript -e "pkgdown::build_site()"
