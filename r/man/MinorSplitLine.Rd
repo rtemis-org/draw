@@ -7,9 +7,9 @@
 MinorSplitLine(show = NULL, line_style = NULL)
 }
 \arguments{
-\item{show}{Whether to show minor split lines.}
+\item{show}{Optional Logical: Whether to show minor split lines.}
 
-\item{line_style}{A \link{LineStyle} object.}
+\item{line_style}{Optional \link{LineStyle}: Line styling.}
 }
 \description{
 Configuration for minor split lines (between main split lines).

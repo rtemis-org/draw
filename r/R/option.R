@@ -14,24 +14,24 @@
 #' Corresponds to `EChartsOption` in `src/export/option.ts` (line 258)
 #' and `ECUnitOption` in `src/util/types.ts` (line 697).
 #'
-#' @param title A [Title] or list of Title objects.
-#' @param legend A [Legend] or list of Legend objects.
-#' @param grid A [Grid] or list of Grid objects.
-#' @param x_axis An [Axis] or list of Axis objects (xAxis).
-#' @param y_axis An [Axis] or list of Axis objects (yAxis).
-#' @param tooltip A [Tooltip] object.
-#' @param series A series object or list of series objects ([LineSeries],
+#' @param title Optional [Title] or list: Title configuration.
+#' @param legend Optional [Legend] or list: Legend configuration.
+#' @param grid Optional [Grid] or list: Grid configuration.
+#' @param x_axis Optional [Axis] or list: X-axis configuration (`xAxis`).
+#' @param y_axis Optional [Axis] or list: Y-axis configuration (`yAxis`).
+#' @param tooltip Optional [Tooltip]: Tooltip configuration.
+#' @param series Optional series object or list: Series configuration ([LineSeries],
 #'   [BarSeries], [ScatterSeries], [PieSeries], [BoxplotSeries]).
-#' @param color Color palette: character vector of color strings.
-#' @param background_color Chart background color.
-#' @param text_style Global [TextStyle] for default text appearance.
-#' @param animation Whether to enable animation.
-#' @param animation_threshold Threshold of data count to disable animation.
-#' @param animation_duration Duration of initial animation (ms).
-#' @param animation_easing Easing function name.
-#' @param animation_delay Delay before initial animation (ms).
-#' @param dark_mode Whether to use dark mode. TRUE, FALSE, or "auto".
-#' @param use_utc Whether to use UTC for time axis.
+#' @param color Optional Character: Color palette.
+#' @param background_color Optional Character: Chart background color.
+#' @param text_style Optional [TextStyle]: Global default text style.
+#' @param animation Optional Logical: Whether to enable animation.
+#' @param animation_threshold Optional Numeric `[0, Inf)`: Data-count threshold that disables animation.
+#' @param animation_duration Optional Numeric `[0, Inf)`: Initial animation duration in milliseconds.
+#' @param animation_easing Optional Character: Animation easing function name.
+#' @param animation_delay Optional Numeric `[0, Inf)`: Initial animation delay in milliseconds.
+#' @param dark_mode Optional Logical or Character \{"auto"\}: Dark-mode setting.
+#' @param use_utc Optional Logical: Whether to use UTC for time axes.
 #' @export
 EChartsOption <- S7::new_class(
   "EChartsOption",
@@ -73,6 +73,10 @@ EChartsOption <- S7::new_class(
 )
 
 #' Convert a component property that may be a single S7 object or a list of them.
+#'
+#' @param value Optional S7 object or list: Component value to convert.
+#' @return Optional list: Converted component value.
+#' @keywords internal
 #' @noRd
 convert_component <- function(value) {
   if (is.null(value)) return(NULL)
@@ -142,11 +146,11 @@ S7::method(to_list, EChartsOption) <- function(x, ...) {
 
 #' Convert EChartsOption to JSON
 #'
-#' @param x An [EChartsOption] object.
-#' @param pretty Whether to pretty-print the JSON.
-#' @param auto_unbox Whether to auto-unbox single-element vectors.
-#' @param ... Additional arguments passed to [jsonlite::toJSON()].
-#' @return A JSON string.
+#' @param x [EChartsOption]: Option object to serialize.
+#' @param pretty Logical: Whether to pretty-print the JSON.
+#' @param auto_unbox Logical: Whether to auto-unbox single-element vectors.
+#' @param ... Dots: Additional arguments passed to [jsonlite::toJSON()].
+#' @return Character: JSON string.
 #' @export
 to_json <- function(x, pretty = FALSE, auto_unbox = TRUE, ...) {
   jsonlite::toJSON(

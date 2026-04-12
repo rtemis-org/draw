@@ -36,56 +36,62 @@ PieSeries(
 )
 }
 \arguments{
-\item{name}{Series name.}
+\item{name}{Optional Character: Series name.}
 
-\item{data}{Pie data. A list of named lists with \code{value} and \code{name} fields,
+\item{data}{Optional Numeric or list: Pie data. A list of named lists with \code{value} and \code{name} fields,
 or a numeric vector.}
 
-\item{silent}{Whether this series is silent.}
+\item{silent}{Optional Logical: Whether the series is silent.}
 
-\item{legend_hover_link}{Whether to highlight related legends on hover.}
+\item{legend_hover_link}{Optional Logical: Whether to highlight related legends on hover.}
 
-\item{color}{Series color override.}
+\item{color}{Optional Character: Series color override.}
 
-\item{z_level}{Canvas layer index.}
+\item{z_level}{Optional Numeric: Canvas layer index.}
 
-\item{z}{Front-back order within the same layer.}
+\item{z}{Optional Numeric: Front-back order within the same layer.}
 
-\item{center}{Pie center: length-2 vector of numbers or percent strings.}
+\item{center}{Optional Numeric or Character: Pie center as a length-2 vector.}
 
-\item{radius}{Pie radius: a single value or \code{c(inner, outer)}.}
+\item{radius}{Optional Numeric or Character: Pie radius.}
 
-\item{rose_type}{Nightingale chart type: \code{"radius"} or \code{"area"}.}
+\item{rose_type}{Optional Character \{"radius", "area"\}: Nightingale chart type.}
 
-\item{clockwise}{Whether to layout clockwise.}
+\item{clockwise}{Optional Logical: Whether to lay out sectors clockwise.}
 
-\item{start_angle}{Starting angle in degrees.}
+\item{start_angle}{Optional Numeric: Starting angle in degrees.}
 
-\item{end_angle}{Ending angle in degrees or \code{"auto"}.}
+\item{end_angle}{Optional Numeric or Character \{"auto"\}: Ending angle in degrees.}
 
-\item{pad_angle}{Padding angle between sectors in degrees.}
+\item{pad_angle}{Optional Numeric \verb{[0, Inf)}: Padding angle between sectors in degrees.}
 
-\item{min_angle}{Minimum sector angle.}
+\item{min_angle}{Optional Numeric \verb{[0, Inf)}: Minimum sector angle.}
 
-\item{min_show_label_angle}{Minimum angle to show label.}
+\item{min_show_label_angle}{Optional Numeric \verb{[0, Inf)}: Minimum angle required to show labels.}
 
-\item{selected_offset}{Offset of selected sector.}
+\item{selected_offset}{Optional Numeric \verb{[0, Inf)}: Offset of a selected sector.}
 
-\item{avoid_label_overlap}{Whether to auto-avoid label overlap.}
+\item{avoid_label_overlap}{Optional Logical: Whether to avoid label overlap automatically.}
 
-\item{percent_precision}{Decimal precision for percentage.}
+\item{percent_precision}{Optional Numeric \verb{[0, Inf)}: Decimal precision for percentages.}
 
-\item{still_show_zero_sum}{Whether to show the pie when all values are 0.}
+\item{still_show_zero_sum}{Optional Logical: Whether to show the pie when all values are zero.}
 
-\item{animation_type}{Animation type on first render: \code{"expansion"} or \code{"scale"}.}
+\item{animation_type}{Optional Character \{"expansion", "scale"\}: First-render animation type.}
 
-\item{item_style}{An \link{ItemStyle} for pie sectors.}
+\item{item_style}{Optional \link{ItemStyle}: Pie-sector styling.}
 
-\item{label}{A \link{LabelOption} for data labels.}
+\item{label}{Optional \link{LabelOption}: Data-label configuration.}
 
-\item{label_line}{A \link{LabelLine} for label connector lines.}
+\item{label_line}{Optional \link{LabelLine}: Label connector line configuration.}
 
-\item{left, right, top, bottom}{Position for the pie chart.}
+\item{left}{Optional Numeric or Character: Left position.}
+
+\item{right}{Optional Numeric or Character: Right position.}
+
+\item{top}{Optional Numeric or Character: Top position.}
+
+\item{bottom}{Optional Numeric or Character: Bottom position.}
 }
 \description{
 Configuration for a pie chart series.

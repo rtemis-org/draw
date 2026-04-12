@@ -7,11 +7,11 @@
 drawOutput(outputId, width = "100\%", height = "400px")
 }
 \arguments{
-\item{outputId}{Shiny output ID.}
+\item{outputId}{Character: Shiny output ID.}
 
-\item{width}{CSS width.}
+\item{width}{Character or Numeric: CSS width.}
 
-\item{height}{CSS height.}
+\item{height}{Character or Numeric: CSS height.}
 }
 \description{
 Shiny output for draw widget

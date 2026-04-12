@@ -15,20 +15,20 @@ AxisLine(
 )
 }
 \arguments{
-\item{show}{Whether to show the axis line. TRUE, FALSE, or "auto".}
+\item{show}{Optional Logical or Character \{"auto"\}: Whether to show the axis line.}
 
-\item{on_zero}{Whether the axis line is on the zero position of the other axis.}
+\item{on_zero}{Optional Logical: Whether the axis line is on the zero position of the other axis.}
 
-\item{on_zero_axis_index}{The index of the other axis on whose zero position
+\item{on_zero_axis_index}{Optional Numeric \verb{[0, Inf)}: Index of the other axis on whose zero position
 this axis line is drawn.}
 
-\item{symbol}{Arrow symbols at both ends: a single string or length-2 vector.}
+\item{symbol}{Optional Character: Arrow symbols at both ends.}
 
-\item{symbol_size}{Arrow symbol size as numeric vector.}
+\item{symbol_size}{Optional Numeric: Arrow symbol size.}
 
-\item{symbol_offset}{Arrow symbol offset.}
+\item{symbol_offset}{Optional Numeric or Character: Arrow symbol offset.}
 
-\item{line_style}{A \link{LineStyle} object.}
+\item{line_style}{Optional \link{LineStyle}: Line styling.}
 }
 \description{
 Configuration for the axis line itself.

@@ -7,11 +7,11 @@
 SplitArea(show = NULL, interval = NULL, area_style = NULL)
 }
 \arguments{
-\item{show}{Whether to show the split area.}
+\item{show}{Optional Logical: Whether to show the split area.}
 
-\item{interval}{Interval of split areas. "auto", a number, or NULL.}
+\item{interval}{Optional Numeric or Character \{"auto"\}: Split-area interval.}
 
-\item{area_style}{An \link{AreaStyle} object.}
+\item{area_style}{Optional \link{AreaStyle}: Area styling.}
 }
 \description{
 Configuration for alternating colored bands between split lines.

@@ -16,22 +16,24 @@ draw_bar(
 )
 }
 \arguments{
-\item{x}{Category labels.}
+\item{x}{Character: Category labels.}
 
-\item{y}{Numeric vector or named list of numeric vectors.}
+\item{y}{Numeric or named list: Bar heights.}
 
-\item{stack}{Whether to stack bars. If TRUE, all series share a stack group.}
+\item{stack}{Logical: Whether to stack bars.}
 
-\item{horizontal}{Whether to draw horizontal bars.}
+\item{horizontal}{Logical: Whether to draw horizontal bars.}
 
-\item{title}{Chart title string.}
+\item{title}{Optional Character: Chart title.}
 
-\item{theme}{A \link{Theme} object or NULL.}
+\item{theme}{Optional \link{Theme}: Theme override.}
 
-\item{width, height}{Widget dimensions.}
+\item{width}{Optional Character or Numeric: Widget width.}
+
+\item{height}{Optional Character or Numeric: Widget height.}
 }
 \value{
-An htmlwidget.
+htmlwidget: Widget object.
 }
 \description{
 Quick bar chart from x/y data.

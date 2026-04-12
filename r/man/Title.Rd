@@ -30,43 +30,49 @@ Title(
 )
 }
 \arguments{
-\item{show}{Whether to show the title.}
+\item{show}{Optional Logical: Whether to show the title.}
 
-\item{text}{Main title text. Supports \verb{\\\\n} for newlines.}
+\item{text}{Optional Character: Main title text. Supports \verb{\\\\n} for newlines.}
 
-\item{link}{Hyperlink for main title.}
+\item{link}{Optional Character: Hyperlink for the main title.}
 
-\item{target}{Link target: \code{"self"} or \code{"blank"}.}
+\item{target}{Optional Character \{"self", "blank"\}: Link target.}
 
-\item{subtext}{Subtitle text.}
+\item{subtext}{Optional Character: Subtitle text.}
 
-\item{sublink}{Hyperlink for subtitle.}
+\item{sublink}{Optional Character: Hyperlink for the subtitle.}
 
-\item{subtarget}{Subtitle link target.}
+\item{subtarget}{Optional Character \{"self", "blank"\}: Subtitle link target.}
 
-\item{text_align}{Horizontal alignment: \code{"auto"}, \code{"left"}, \code{"center"}, \code{"right"}.}
+\item{text_align}{Optional Character \{"auto", "left", "center", "right"\}: Horizontal alignment.}
 
-\item{text_vertical_align}{Vertical alignment: \code{"auto"}, \code{"top"}, \code{"middle"}, \code{"bottom"}.}
+\item{text_vertical_align}{Optional Character \{"auto", "top", "middle", "bottom"\}: Vertical alignment.}
 
-\item{padding}{Padding inside the title box. Single number or length-4 vector.}
+\item{padding}{Optional Numeric: Padding inside the title box.}
 
-\item{item_gap}{Gap between title and subtitle in pixels.}
+\item{item_gap}{Optional Numeric \verb{[0, Inf)}: Gap between title and subtitle in pixels.}
 
-\item{text_style}{A \link{TextStyle} for the main title text.}
+\item{text_style}{Optional \link{TextStyle}: Main title text style.}
 
-\item{subtext_style}{A \link{TextStyle} for the subtitle text.}
+\item{subtext_style}{Optional \link{TextStyle}: Subtitle text style.}
 
-\item{trigger_event}{Whether title emits events.}
+\item{trigger_event}{Optional Logical: Whether the title emits events.}
 
-\item{background_color}{Background color of the title box.}
+\item{background_color}{Optional Character: Title-box background color.}
 
-\item{border_color}{Border color.}
+\item{border_color}{Optional Character: Border color.}
 
-\item{border_width}{Border width.}
+\item{border_width}{Optional Numeric \verb{[0, Inf)}: Border width.}
 
-\item{border_radius}{Border radius. Single number or length-4 vector.}
+\item{border_radius}{Optional Numeric: Border radius.}
 
-\item{left, right, top, bottom}{Position. Number (px) or percent string.}
+\item{left}{Optional Numeric or Character: Left position.}
+
+\item{right}{Optional Numeric or Character: Right position.}
+
+\item{top}{Optional Numeric or Character: Top position.}
+
+\item{bottom}{Optional Numeric or Character: Bottom position.}
 }
 \description{
 Chart title configuration with main text and optional subtext.

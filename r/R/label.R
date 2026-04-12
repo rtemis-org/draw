@@ -17,21 +17,20 @@
 #' (line 1283, 1348).
 #' ECharts docs: \url{https://echarts.apache.org/en/option.html#series-bar.label}
 #'
-#' @param show Whether to show the label.
-#' @param position Label position. One of: `"top"`, `"left"`, `"right"`,
+#' @param show Optional Logical: Whether to show the label.
+#' @param position Optional Character \{"top", "left", "right", "bottom", "inside", "insideLeft", "insideRight", "insideTop", "insideBottom", "insideTopLeft", "insideBottomLeft", "insideTopRight", "insideBottomRight", "outside"\} or Numeric: Label position.
 #'   `"bottom"`, `"inside"`, `"insideLeft"`, `"insideRight"`, `"insideTop"`,
 #'   `"insideBottom"`, `"insideTopLeft"`, `"insideBottomLeft"`,
 #'   `"insideTopRight"`, `"insideBottomRight"`, `"outside"`.
-#' @param distance Distance from the element.
-#' @param rotate Rotation angle in degrees.
-#' @param offset Offset `c(x, y)` in pixels.
-#' @param formatter Label text formatter. String template (e.g. `"{b}: {c}"`)
-#'   or an R function.
-#' @param silent Whether the label is silent (no mouse events).
-#' @param precision Number precision, or `"auto"`.
-#' @param value_animation Whether to animate value changes.
-#' @param min_margin Minimum margin between labels.
-#' @param text_style A [TextStyle] object for text appearance.
+#' @param distance Optional Numeric: Distance from the element.
+#' @param rotate Optional Numeric: Rotation angle in degrees.
+#' @param offset Optional Numeric: Offset `c(x, y)` in pixels.
+#' @param formatter Optional Character or function: Label text formatter.
+#' @param silent Optional Logical: Whether the label is silent.
+#' @param precision Optional Numeric or Character \{"auto"\}: Numeric precision.
+#' @param value_animation Optional Logical: Whether to animate value changes.
+#' @param min_margin Optional Numeric `[0, Inf)`: Minimum margin between labels.
+#' @param text_style Optional [TextStyle]: Text appearance.
 #' @export
 LabelOption <- S7::new_class(
   "LabelOption",
@@ -110,13 +109,13 @@ S7::method(to_list, LabelOption) <- function(x, ...) {
 #' Corresponds to `LabelLineOption` in `src/util/types.ts` (line 1379).
 #' ECharts docs: \url{https://echarts.apache.org/en/option.html#series-pie.labelLine}
 #'
-#' @param show Whether to show the label line.
-#' @param show_above Whether the line renders above other elements.
-#' @param length Length of the first segment.
-#' @param length2 Length of the second segment.
-#' @param smooth Smoothness (0-1), or TRUE/FALSE.
-#' @param min_turn_angle Minimum angle for turning the line.
-#' @param line_style A [LineStyle] object.
+#' @param show Optional Logical: Whether to show the label line.
+#' @param show_above Optional Logical: Whether the line renders above other elements.
+#' @param length Optional Numeric `[0, Inf)`: Length of the first segment.
+#' @param length2 Optional Numeric `[0, Inf)`: Length of the second segment.
+#' @param smooth Optional Numeric `[0, 1]` or Logical: Line smoothness.
+#' @param min_turn_angle Optional Numeric: Minimum angle for turning the line.
+#' @param line_style Optional [LineStyle]: Line styling.
 #' @export
 LabelLine <- S7::new_class(
   "LabelLine",

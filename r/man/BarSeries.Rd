@@ -29,47 +29,47 @@ BarSeries(
 )
 }
 \arguments{
-\item{name}{Series name for legend display.}
+\item{name}{Optional Character: Series name for legend display.}
 
-\item{data}{Data values.}
+\item{data}{Optional Vector or list: Data values.}
 
-\item{x_axis_index}{Index of the x axis to use.}
+\item{x_axis_index}{Optional Numeric \verb{[0, Inf)}: X-axis index.}
 
-\item{y_axis_index}{Index of the y axis to use.}
+\item{y_axis_index}{Optional Numeric \verb{[0, Inf)}: Y-axis index.}
 
-\item{stack}{Stack group name for stacked bars.}
+\item{stack}{Optional Character: Stack group name.}
 
-\item{silent}{Whether this series is silent.}
+\item{silent}{Optional Logical: Whether the series is silent.}
 
-\item{legend_hover_link}{Whether to highlight related legends on hover.}
+\item{legend_hover_link}{Optional Logical: Whether to highlight related legends on hover.}
 
-\item{color}{Series color override.}
+\item{color}{Optional Character: Series color override.}
 
-\item{z_level}{Canvas layer index.}
+\item{z_level}{Optional Numeric: Canvas layer index.}
 
-\item{z}{Front-back order within the same layer.}
+\item{z}{Optional Numeric: Front-back order within the same layer.}
 
-\item{clip}{Whether to clip overflow.}
+\item{clip}{Optional Logical: Whether to clip overflow.}
 
-\item{bar_width}{Bar width. Number (px) or percent string.}
+\item{bar_width}{Optional Numeric or Character: Bar width.}
 
-\item{bar_max_width}{Maximum bar width.}
+\item{bar_max_width}{Optional Numeric or Character: Maximum bar width.}
 
-\item{bar_min_width}{Minimum bar width.}
+\item{bar_min_width}{Optional Numeric or Character: Minimum bar width.}
 
-\item{bar_min_height}{Minimum bar height.}
+\item{bar_min_height}{Optional Numeric \verb{[0, Inf)}: Minimum bar height.}
 
-\item{bar_gap}{Gap between bars in the same category. Percent string or number.}
+\item{bar_gap}{Optional Numeric or Character: Gap between bars in the same category.}
 
-\item{bar_category_gap}{Gap between categories.}
+\item{bar_category_gap}{Optional Numeric or Character: Gap between categories.}
 
-\item{round_cap}{Whether to use round cap (polar bar only).}
+\item{round_cap}{Optional Logical: Whether to use a round cap.}
 
-\item{show_background}{Whether to show bar background.}
+\item{show_background}{Optional Logical: Whether to show the bar background.}
 
-\item{item_style}{An \link{ItemStyle} for bars.}
+\item{item_style}{Optional \link{ItemStyle}: Bar styling.}
 
-\item{label}{A \link{LabelOption} for data labels.}
+\item{label}{Optional \link{LabelOption}: Data-label configuration.}
 }
 \description{
 Configuration for a bar chart series.

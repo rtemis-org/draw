@@ -11,8 +11,8 @@
 #' Used internally by `to_list()` methods to convert R-idiomatic snake_case
 #' property names to echarts-expected camelCase JSON keys.
 #'
-#' @param x Character string in snake_case.
-#' @return Character string in camelCase.
+#' @param x Character: String in snake_case.
+#' @return Character: String in camelCase.
 #' @keywords internal
 #' @noRd
 #' @examples
@@ -30,8 +30,8 @@ snake_to_camel <- function(x) {
 #' Removes all NULL entries from a named list. Used by `to_list()` methods
 #' to produce clean JSON (echarts treats missing keys as defaults).
 #'
-#' @param x A named list.
-#' @return The list with NULL values removed.
+#' @param x List: Named list.
+#' @return List: Input list with `NULL` values removed.
 #' @keywords internal
 #' @noRd
 drop_nulls <- function(x) {
@@ -43,11 +43,11 @@ drop_nulls <- function(x) {
 #' Extracts all S7 properties, converts names from snake_case to camelCase,
 #' recursively converts nested S7 objects, and drops NULLs.
 #'
-#' @param obj An S7 object.
-#' @param rename Named character vector of exceptions where the R property name
+#' @param obj S7 object: Object to serialize.
+#' @param rename Optional Named character vector: Exceptions where the R property name
 #'   does not follow the standard snake_to_camel mapping. Format:
 #'   `c(r_name = "echartsName")`.
-#' @return A named list suitable for `jsonlite::toJSON()`.
+#' @return List: Named list suitable for `jsonlite::toJSON()`.
 #' @keywords internal
 #' @noRd
 props_to_list <- function(obj, rename = NULL) {
@@ -101,9 +101,9 @@ props_to_list <- function(obj, rename = NULL) {
 #' Generic function that converts an S7 object to a plain named list
 #' matching the ECharts JSON option structure.
 #'
-#' @param x An S7 object.
-#' @param ... Additional arguments (unused).
-#' @return A named list.
+#' @param x S7 object: Object to serialize.
+#' @param ... Dots: Unused.
+#' @return List: Named list.
 #' @export
 to_list <- S7::new_generic("to_list", "x")
 
@@ -120,10 +120,10 @@ nullable <- function(type) {
 #'
 #' Returns a custom S7 property object with validation.
 #'
-#' @param values Character vector of allowed values.
-#' @param default Default value (must be one of `values` or NULL).
-#' @param nullable If TRUE, NULL is accepted.
-#' @return An S7 property definition.
+#' @param values Character: Allowed values.
+#' @param default Optional Character: Default value.
+#' @param nullable Logical: Whether `NULL` is accepted.
+#' @return S7 property: Property definition.
 #' @keywords internal
 #' @noRd
 enum_property <- function(values, default = NULL, nullable = TRUE) {
@@ -224,9 +224,9 @@ numeric_or_string_property <- function(default = NULL) {
 #' Parses any R color specification (hex, named color, etc.) and returns
 #' an `rgba()` CSS color string with the given alpha.
 #'
-#' @param color An R color string (e.g. `"#00b2b2"`, `"red"`).
-#' @param alpha Alpha value between 0 and 1.
-#' @return An `rgba()` color string.
+#' @param color Character: R color string.
+#' @param alpha Numeric `[0, 1]`: Alpha value.
+#' @return Character: `rgba()` color string.
 #' @keywords internal
 #' @noRd
 color_with_alpha <- function(color, alpha) {
@@ -240,9 +240,9 @@ color_with_alpha <- function(color, alpha) {
 #' Computes `c(min, max)` from `values` with symmetric padding as a fraction
 #' of the data range.
 #'
-#' @param values Numeric vector of data values (NAs ignored).
-#' @param pad Fraction of the data range to add on each side.
-#' @return A length-2 numeric vector `c(min, max)`.
+#' @param values Numeric: Data values. `NA` values are ignored.
+#' @param pad Numeric `[0, Inf)`: Fraction of the data range added on each side.
+#' @return Numeric: Length-2 vector `c(min, max)`.
 #' @keywords internal
 #' @noRd
 calc_limits <- function(values, pad = 0.04) {

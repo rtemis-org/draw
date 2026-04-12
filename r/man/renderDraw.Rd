@@ -7,11 +7,11 @@
 renderDraw(expr, env = parent.frame(), quoted = FALSE)
 }
 \arguments{
-\item{expr}{Expression that returns a draw widget.}
+\item{expr}{Expression: Expression that returns a draw widget.}
 
-\item{env}{Environment.}
+\item{env}{Environment: Evaluation environment.}
 
-\item{quoted}{Whether expr is quoted.}
+\item{quoted}{Logical: Whether \code{expr} is quoted.}
 }
 \description{
 Shiny render function for draw widget

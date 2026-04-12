@@ -7,12 +7,12 @@
 to_list(x, ...)
 }
 \arguments{
-\item{x}{An S7 object.}
+\item{x}{S7 object: Object to serialize.}
 
-\item{...}{Additional arguments (unused).}
+\item{...}{Dots: Unused.}
 }
 \value{
-A named list.
+List: Named list.
 }
 \description{
 Generic function that converts an S7 object to a plain named list

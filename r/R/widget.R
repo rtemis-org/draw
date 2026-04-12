@@ -6,17 +6,17 @@
 #' Low-level function that takes an [EChartsOption] (or a plain list) and
 #' renders it as an interactive htmlwidget.
 #'
-#' @param option An [EChartsOption] object or a named list.
-#' @param theme A [Theme] object, a plain list, `NULL` (default) for
+#' @param option [EChartsOption] or named list: Option object to render.
+#' @param theme Optional [Theme], list, or `NA`: Theme override. `NULL` enables
 #'   auto-detection of light/dark mode, or `NA` for no theme (raw ECharts
 #'   defaults). When `NULL`, the widget detects dark mode from VS Code,
 #'   RStudio, or the browser's `prefers-color-scheme` and applies
 #'   [theme_light()] or [theme_dark()] accordingly.
-#' @param renderer Rendering engine: `"canvas"` (default) or `"svg"`.
-#' @param width Widget width (CSS units or NULL for auto).
-#' @param height Widget height (CSS units or NULL for auto).
-#' @param elementId Optional explicit element ID.
-#' @return An htmlwidget object.
+#' @param renderer Character \{"canvas", "svg"\}: Rendering engine.
+#' @param width Optional Character or Numeric: Widget width.
+#' @param height Optional Character or Numeric: Widget height.
+#' @param elementId Optional Character: Explicit element ID.
+#' @return htmlwidget: Widget object.
 #' @export
 draw <- function(
   option,
@@ -119,9 +119,9 @@ draw <- function(
 }
 
 #' Shiny output for draw widget
-#' @param outputId Shiny output ID.
-#' @param width CSS width.
-#' @param height CSS height.
+#' @param outputId Character: Shiny output ID.
+#' @param width Character or Numeric: CSS width.
+#' @param height Character or Numeric: CSS height.
 #' @export
 drawOutput <- function(outputId, width = "100%", height = "400px") {
   htmlwidgets::shinyWidgetOutput(
@@ -134,9 +134,9 @@ drawOutput <- function(outputId, width = "100%", height = "400px") {
 }
 
 #' Shiny render function for draw widget
-#' @param expr Expression that returns a draw widget.
-#' @param env Environment.
-#' @param quoted Whether expr is quoted.
+#' @param expr Expression: Expression that returns a draw widget.
+#' @param env Environment: Evaluation environment.
+#' @param quoted Logical: Whether `expr` is quoted.
 #' @export
 renderDraw <- function(expr, env = parent.frame(), quoted = FALSE) {
   if (!quoted) {
@@ -151,15 +151,16 @@ renderDraw <- function(expr, env = parent.frame(), quoted = FALSE) {
 #'
 #' Quick line chart from x/y data.
 #'
-#' @param x X-axis values (categories or numeric).
-#' @param y Numeric vector or named list of numeric vectors (for multiple series).
-#' @param names Series names (if y is a list).
-#' @param smooth Whether to smooth lines.
-#' @param area Whether to show area fill.
-#' @param title Chart title string.
-#' @param theme A [Theme] object or NULL.
-#' @param width,height Widget dimensions.
-#' @return An htmlwidget.
+#' @param x Vector: X-axis values.
+#' @param y Numeric or named list: Y values.
+#' @param names Optional Character: Series names used when `y` is an unnamed list.
+#' @param smooth Logical: Whether to smooth lines.
+#' @param area Logical: Whether to show area fill.
+#' @param title Optional Character: Chart title.
+#' @param theme Optional [Theme]: Theme override.
+#' @param width Optional Character or Numeric: Widget width.
+#' @param height Optional Character or Numeric: Widget height.
+#' @return htmlwidget: Widget object.
 #' @export
 draw_line <- function(
   x,
@@ -233,14 +234,15 @@ draw_line <- function(
 #'
 #' Quick bar chart from x/y data.
 #'
-#' @param x Category labels.
-#' @param y Numeric vector or named list of numeric vectors.
-#' @param stack Whether to stack bars. If TRUE, all series share a stack group.
-#' @param horizontal Whether to draw horizontal bars.
-#' @param title Chart title string.
-#' @param theme A [Theme] object or NULL.
-#' @param width,height Widget dimensions.
-#' @return An htmlwidget.
+#' @param x Character: Category labels.
+#' @param y Numeric or named list: Bar heights.
+#' @param stack Logical: Whether to stack bars.
+#' @param horizontal Logical: Whether to draw horizontal bars.
+#' @param title Optional Character: Chart title.
+#' @param theme Optional [Theme]: Theme override.
+#' @param width Optional Character or Numeric: Widget width.
+#' @param height Optional Character or Numeric: Widget height.
+#' @return htmlwidget: Widget object.
 #' @export
 draw_bar <- function(
   x,
@@ -288,20 +290,21 @@ draw_bar <- function(
 #' Quick scatter plot from x/y data with optional fitted line and
 #' confidence band.
 #'
-#' @param x Numeric x values.
-#' @param y Numeric y values.
-#' @param size Optional numeric vector for symbol sizes.
-#' @param group Optional grouping factor for multiple series.
-#' @param fit Fit method: `NULL` (no fit), `"glm"` for [stats::glm()], or
+#' @param x Numeric: X values.
+#' @param y Numeric: Y values.
+#' @param size Optional Numeric: Symbol sizes.
+#' @param group Optional Vector: Grouping variable for multiple series.
+#' @param fit Optional Character \{"glm", "gam"\}: Fit method. `NULL` disables fitting.
 #'   `"gam"` for [mgcv::gam()]. The fitted line and 95\% confidence band
 #'   are computed per group when `group` is provided.
-#' @param se Whether to show the confidence band around the fit line.
-#' @param fit_alpha Alpha (opacity) for the confidence band fill.
-#' @param n_fit Number of equally spaced points at which to evaluate the fit.
-#' @param title Chart title string.
-#' @param theme A [Theme] object or NULL.
-#' @param width,height Widget dimensions.
-#' @return An htmlwidget.
+#' @param se Logical: Whether to show the confidence band.
+#' @param fit_alpha Numeric `[0, 1]`: Opacity for the confidence-band fill.
+#' @param n_fit Numeric `[1, Inf)`: Number of evaluation points for the fit.
+#' @param title Optional Character: Chart title.
+#' @param theme Optional [Theme]: Theme override.
+#' @param width Optional Character or Numeric: Widget width.
+#' @param height Optional Character or Numeric: Widget height.
+#' @return htmlwidget: Widget object.
 #' @export
 draw_scatter <- function(
   x,
@@ -459,14 +462,15 @@ draw_scatter <- function(
 #'
 #' Quick pie chart from values and labels.
 #'
-#' @param values Numeric vector of values.
-#' @param labels Character vector of labels.
-#' @param radius Pie radius. Single value or c(inner, outer) for donut.
-#' @param rose_type Nightingale chart type: NULL, `"radius"`, or `"area"`.
-#' @param title Chart title string.
-#' @param theme A [Theme] object or NULL.
-#' @param width,height Widget dimensions.
-#' @return An htmlwidget.
+#' @param values Numeric: Slice values.
+#' @param labels Character: Slice labels.
+#' @param radius Numeric or Character: Pie radius.
+#' @param rose_type Optional Character \{"radius", "area"\}: Nightingale chart type.
+#' @param title Optional Character: Chart title.
+#' @param theme Optional [Theme]: Theme override.
+#' @param width Optional Character or Numeric: Widget width.
+#' @param height Optional Character or Numeric: Widget height.
+#' @return htmlwidget: Widget object.
 #' @export
 draw_pie <- function(
   values,
@@ -506,17 +510,18 @@ draw_pie <- function(
 #' Kernel density estimation plot from numeric data, with optional grouping
 #' for multiple traces.
 #'
-#' @param x Numeric vector of values.
-#' @param group Optional grouping factor for multiple density traces.
-#' @param n Number of equally spaced points for density estimation.
-#' @param bw Bandwidth for density estimation. Passed to [stats::density()].
-#' @param na.rm Logical: if `TRUE` (default), remove `NA` values before
+#' @param x Numeric: Values used for density estimation.
+#' @param group Optional Vector: Grouping variable for multiple density traces.
+#' @param n Numeric `[1, Inf)`: Number of equally spaced points for density estimation.
+#' @param bw Character or Numeric: Bandwidth passed to [stats::density()].
+#' @param na.rm Logical: Whether to remove `NA` values before
 #'   computing densities.
-#' @param title Chart title string.
-#' @param theme A [Theme] object or NULL.
-#' @param width,height Widget dimensions.
-#' @param verbosity Integer: if > 0, print messages about removed `NA` values.
-#' @return An htmlwidget.
+#' @param title Optional Character: Chart title.
+#' @param theme Optional [Theme]: Theme override.
+#' @param width Optional Character or Numeric: Widget width.
+#' @param height Optional Character or Numeric: Widget height.
+#' @param verbosity Integer `[0, Inf)`: Verbosity level for removed-`NA` messages.
+#' @return htmlwidget: Widget object.
 #' @export
 draw_density <- function(
   x,
@@ -589,15 +594,16 @@ draw_density <- function(
 #' Bins are computed using [graphics::hist()] with consistent break points
 #' across groups.
 #'
-#' @param x Numeric vector of values.
-#' @param group Optional grouping factor for multiple series.
-#' @param breaks Binning method. A single number (number of bins), a character
+#' @param x Numeric: Values used for histogram binning.
+#' @param group Optional Vector: Grouping variable for multiple series.
+#' @param breaks Numeric, Character, or Numeric vector: Binning method. A single number (number of bins), a character
 #'   string naming an algorithm (e.g. `"Sturges"`, `"Scott"`, `"FD"`), or a
 #'   numeric vector of break points. Passed to [graphics::hist()].
-#' @param title Chart title string.
-#' @param theme A [Theme] object or NULL.
-#' @param width,height Widget dimensions.
-#' @return An htmlwidget.
+#' @param title Optional Character: Chart title.
+#' @param theme Optional [Theme]: Theme override.
+#' @param width Optional Character or Numeric: Widget width.
+#' @param height Optional Character or Numeric: Widget height.
+#' @return htmlwidget: Widget object.
 #' @export
 draw_histogram <- function(
   x,
@@ -643,25 +649,26 @@ draw_histogram <- function(
 #' Boxplot statistics (min, Q1, median, Q3, max) are computed automatically
 #' using [grDevices::boxplot.stats()].
 #'
-#' @param data A list of numeric vectors (one per box), or a single numeric
+#' @param data Numeric or list: A list of numeric vectors (one per box), or a single numeric
 #'   vector when `group` is provided.
-#' @param labels Category labels for each box. Ignored when `group` is
+#' @param labels Optional Character: Category labels for each box. Ignored when `group` is
 #'   provided (group levels are used instead).
-#' @param group Optional grouping factor. When provided, `data` must be a
+#' @param group Optional Vector: Grouping variable. When provided, `data` must be a
 #'   numeric vector, and boxplot statistics are computed per group. Each group
 #'   gets its own colored series.
-#' @param horizontal Whether to draw horizontal boxplots.
-#' @param color Box color(s). For ungrouped boxplots, a single color used at
+#' @param horizontal Logical: Whether to draw horizontal boxplots.
+#' @param color Optional Character: Box color or colors. For ungrouped boxplots, a single color used at
 #'   full opacity for borders and at `fill_alpha` opacity for the fill.
 #'   For grouped boxplots, defaults to `rtemis_colors`; recycled as needed.
-#' @param fill_alpha Alpha (opacity) for the box fill color, between 0 and 1.
-#' @param na.rm Logical: if `TRUE` (default), remove `NA` values before
+#' @param fill_alpha Numeric `[0, 1]`: Opacity for the box fill color.
+#' @param na.rm Logical: Whether to remove `NA` values before
 #'   computing boxplot statistics.
-#' @param title Chart title string.
-#' @param theme A [Theme] object or NULL.
-#' @param width,height Widget dimensions.
-#' @param verbosity Integer: if > 0, print messages about removed `NA` values.
-#' @return An htmlwidget.
+#' @param title Optional Character: Chart title.
+#' @param theme Optional [Theme]: Theme override.
+#' @param width Optional Character or Numeric: Widget width.
+#' @param height Optional Character or Numeric: Widget height.
+#' @param verbosity Integer `[0, Inf)`: Verbosity level for removed-`NA` messages.
+#' @return htmlwidget: Widget object.
 #' @export
 draw_boxplot <- function(
   data,

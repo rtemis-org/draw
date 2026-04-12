@@ -22,33 +22,33 @@ Theme(
 )
 }
 \arguments{
-\item{color}{Color palette: character vector.}
+\item{color}{Optional Character: Color palette.}
 
-\item{background_color}{Chart background color.}
+\item{background_color}{Optional Character: Chart background color.}
 
-\item{text_style}{A \link{TextStyle} for global default text.}
+\item{text_style}{Optional \link{TextStyle}: Global default text style.}
 
-\item{title}{Named list of title overrides (e.g., \code{list(textStyle = list(...))}).}
+\item{title}{Optional Named list: Title overrides.}
 
-\item{legend}{Named list of legend overrides.}
+\item{legend}{Optional Named list: Legend overrides.}
 
-\item{tooltip}{Named list of tooltip overrides.}
+\item{tooltip}{Optional Named list: Tooltip overrides.}
 
-\item{line}{Named list of line series defaults.}
+\item{line}{Optional Named list: Line-series defaults.}
 
-\item{bar}{Named list of bar series defaults.}
+\item{bar}{Optional Named list: Bar-series defaults.}
 
-\item{pie}{Named list of pie series defaults.}
+\item{pie}{Optional Named list: Pie-series defaults.}
 
-\item{scatter}{Named list of scatter series defaults.}
+\item{scatter}{Optional Named list: Scatter-series defaults.}
 
-\item{category_axis}{Named list of category axis defaults.}
+\item{category_axis}{Optional Named list: Category-axis defaults.}
 
-\item{value_axis}{Named list of value axis defaults.}
+\item{value_axis}{Optional Named list: Value-axis defaults.}
 
-\item{log_axis}{Named list of log axis defaults.}
+\item{log_axis}{Optional Named list: Log-axis defaults.}
 
-\item{time_axis}{Named list of time axis defaults.}
+\item{time_axis}{Optional Named list: Time-axis defaults.}
 }
 \description{
 A chart theme that controls default colors, text styles, and

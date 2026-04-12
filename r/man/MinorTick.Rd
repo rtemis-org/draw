@@ -7,13 +7,13 @@
 MinorTick(show = NULL, split_number = NULL, length = NULL, line_style = NULL)
 }
 \arguments{
-\item{show}{Whether to show minor ticks.}
+\item{show}{Optional Logical: Whether to show minor ticks.}
 
-\item{split_number}{Number of minor ticks between two main ticks.}
+\item{split_number}{Optional Numeric \verb{[0, Inf)}: Number of minor ticks between two main ticks.}
 
-\item{length}{Minor tick length in pixels.}
+\item{length}{Optional Numeric \verb{[0, Inf)}: Minor tick length in pixels.}
 
-\item{line_style}{A \link{LineStyle} object.}
+\item{line_style}{Optional \link{LineStyle}: Line styling.}
 }
 \description{
 Configuration for minor axis tick marks (between main ticks).

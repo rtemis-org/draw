@@ -18,25 +18,25 @@ AxisLabel(
 )
 }
 \arguments{
-\item{show}{Whether to show axis labels.}
+\item{show}{Optional Logical: Whether to show axis labels.}
 
-\item{inside}{Whether labels are inside the grid.}
+\item{inside}{Optional Logical: Whether labels are inside the grid.}
 
-\item{rotate}{Rotation angle of labels in degrees.}
+\item{rotate}{Optional Numeric: Label rotation angle in degrees.}
 
-\item{margin}{Space between label and axis line in pixels.}
+\item{margin}{Optional Numeric \verb{[0, Inf)}: Space between the label and axis line in pixels.}
 
-\item{formatter}{Label text formatter. String template or function.}
+\item{formatter}{Optional Character or function: Label formatter.}
 
-\item{show_min_label}{Whether to show the label at the min end.}
+\item{show_min_label}{Optional Logical: Whether to show the label at the minimum end.}
 
-\item{show_max_label}{Whether to show the label at the max end.}
+\item{show_max_label}{Optional Logical: Whether to show the label at the maximum end.}
 
-\item{hide_overlap}{Whether to hide overlapping labels.}
+\item{hide_overlap}{Optional Logical: Whether to hide overlapping labels.}
 
-\item{interval}{Interval of labels. "auto", a number, or NULL.}
+\item{interval}{Optional Numeric or Character \{"auto"\}: Label interval.}
 
-\item{text_style}{A \link{TextStyle} object for text appearance.}
+\item{text_style}{Optional \link{TextStyle}: Text appearance.}
 }
 \description{
 Configuration for axis labels. Combines label-specific positioning with

@@ -35,51 +35,59 @@ Legend(
 )
 }
 \arguments{
-\item{show}{Whether to show the legend.}
+\item{show}{Optional Logical: Whether to show the legend.}
 
-\item{orient}{Layout orientation: \code{"horizontal"} or \code{"vertical"}.}
+\item{orient}{Optional Character \{"horizontal", "vertical"\}: Layout orientation.}
 
-\item{align}{Legend marker and text alignment: \code{"auto"}, \code{"left"}, \code{"right"}.}
+\item{align}{Optional Character \{"auto", "left", "right"\}: Marker and text alignment.}
 
-\item{left, right, top, bottom}{Position.}
+\item{left}{Optional Numeric or Character: Left position.}
 
-\item{width, height}{Legend box dimensions.}
+\item{right}{Optional Numeric or Character: Right position.}
 
-\item{padding}{Padding inside the legend box.}
+\item{top}{Optional Numeric or Character: Top position.}
 
-\item{item_gap}{Gap between legend items.}
+\item{bottom}{Optional Numeric or Character: Bottom position.}
 
-\item{item_width}{Width of legend symbol.}
+\item{width}{Optional Numeric or Character: Legend box width.}
 
-\item{item_height}{Height of legend symbol.}
+\item{height}{Optional Numeric or Character: Legend box height.}
 
-\item{icon}{Default legend icon.}
+\item{padding}{Optional Numeric: Padding inside the legend box.}
 
-\item{selected_mode}{Selection mode: TRUE, FALSE, \code{"single"}, or \code{"multiple"}.}
+\item{item_gap}{Optional Numeric \verb{[0, Inf)}: Gap between legend items.}
 
-\item{selected}{Named logical vector of pre-selected items.}
+\item{item_width}{Optional Numeric \verb{[0, Inf)}: Legend symbol width.}
 
-\item{formatter}{Label formatter: string template or function.}
+\item{item_height}{Optional Numeric \verb{[0, Inf)}: Legend symbol height.}
 
-\item{inactive_color}{Color for unselected items.}
+\item{icon}{Optional Character: Default legend icon.}
 
-\item{inactive_border_color}{Border color for unselected items.}
+\item{selected_mode}{Optional Logical or Character \{"single", "multiple"\}: Selection mode.}
 
-\item{text_style}{A \link{TextStyle} for legend labels.}
+\item{selected}{Optional Named logical vector: Pre-selected items.}
 
-\item{item_style}{An \link{ItemStyle} for legend icons.}
+\item{formatter}{Optional Character or function: Label formatter.}
 
-\item{background_color}{Background color.}
+\item{inactive_color}{Optional Character: Color for unselected items.}
 
-\item{border_color}{Border color.}
+\item{inactive_border_color}{Optional Character: Border color for unselected items.}
 
-\item{border_width}{Border width.}
+\item{text_style}{Optional \link{TextStyle}: Legend label text style.}
 
-\item{border_radius}{Border radius.}
+\item{item_style}{Optional \link{ItemStyle}: Legend icon style.}
 
-\item{trigger_event}{Whether legend emits events.}
+\item{background_color}{Optional Character: Background color.}
 
-\item{data}{Legend data items. Character vector or list.}
+\item{border_color}{Optional Character: Border color.}
+
+\item{border_width}{Optional Numeric \verb{[0, Inf)}: Border width.}
+
+\item{border_radius}{Optional Numeric: Border radius.}
+
+\item{trigger_event}{Optional Logical: Whether the legend emits events.}
+
+\item{data}{Optional Character vector or list: Legend data items.}
 }
 \description{
 Legend configuration for selecting/filtering series.

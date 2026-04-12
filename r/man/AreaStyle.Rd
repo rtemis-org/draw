@@ -15,19 +15,19 @@ AreaStyle(
 )
 }
 \arguments{
-\item{color}{Fill color. CSS color string.}
+\item{color}{Optional Character: CSS fill color.}
 
-\item{opacity}{Opacity (0-1).}
+\item{opacity}{Optional Numeric \verb{[0, 1]}: Fill opacity.}
 
-\item{origin}{Area origin: \code{"auto"}, \code{"start"}, or \code{"end"}.}
+\item{origin}{Optional Character \{"auto", "start", "end"\} or Numeric: Area origin.}
 
-\item{shadow_blur}{Shadow blur radius.}
+\item{shadow_blur}{Optional Numeric \verb{[0, Inf)}: Shadow blur radius.}
 
-\item{shadow_color}{Shadow color.}
+\item{shadow_color}{Optional Character: Shadow color.}
 
-\item{shadow_offset_x}{Shadow horizontal offset.}
+\item{shadow_offset_x}{Optional Numeric: Shadow horizontal offset.}
 
-\item{shadow_offset_y}{Shadow vertical offset.}
+\item{shadow_offset_y}{Optional Numeric: Shadow vertical offset.}
 }
 \description{
 Fill styling for areas (polygons, area under curves, etc.).

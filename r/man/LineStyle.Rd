@@ -20,29 +20,29 @@ LineStyle(
 )
 }
 \arguments{
-\item{color}{Line color. CSS color string.}
+\item{color}{Optional Character: CSS line color.}
 
-\item{width}{Line width in pixels.}
+\item{width}{Optional Numeric \verb{[0, Inf)}: Line width in pixels.}
 
-\item{opacity}{Opacity (0-1).}
+\item{opacity}{Optional Numeric \verb{[0, 1]}: Line opacity.}
 
-\item{type}{Line type: \code{"solid"}, \code{"dashed"}, or \code{"dotted"}.}
+\item{type}{Optional Character \{"solid", "dashed", "dotted"\}: Line type.}
 
-\item{cap}{Line cap: \code{"butt"}, \code{"round"}, or \code{"square"}.}
+\item{cap}{Optional Character \{"butt", "round", "square"\}: Line cap.}
 
-\item{join}{Line join: \code{"bevel"}, \code{"round"}, or \code{"miter"}.}
+\item{join}{Optional Character \{"bevel", "round", "miter"\}: Line join.}
 
-\item{dash_offset}{Dash offset for dashed lines.}
+\item{dash_offset}{Optional Numeric: Dash offset for dashed lines.}
 
-\item{miter_limit}{Miter limit for miter joins.}
+\item{miter_limit}{Optional Numeric \verb{[0, Inf)}: Miter limit for miter joins.}
 
-\item{shadow_blur}{Shadow blur radius.}
+\item{shadow_blur}{Optional Numeric \verb{[0, Inf)}: Shadow blur radius.}
 
-\item{shadow_color}{Shadow color.}
+\item{shadow_color}{Optional Character: Shadow color.}
 
-\item{shadow_offset_x}{Shadow horizontal offset.}
+\item{shadow_offset_x}{Optional Numeric: Shadow horizontal offset.}
 
-\item{shadow_offset_y}{Shadow vertical offset.}
+\item{shadow_offset_y}{Optional Numeric: Shadow vertical offset.}
 }
 \description{
 Stroke styling for lines in series, axes, and components.

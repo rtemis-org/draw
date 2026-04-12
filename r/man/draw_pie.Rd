@@ -16,22 +16,24 @@ draw_pie(
 )
 }
 \arguments{
-\item{values}{Numeric vector of values.}
+\item{values}{Numeric: Slice values.}
 
-\item{labels}{Character vector of labels.}
+\item{labels}{Character: Slice labels.}
 
-\item{radius}{Pie radius. Single value or c(inner, outer) for donut.}
+\item{radius}{Numeric or Character: Pie radius.}
 
-\item{rose_type}{Nightingale chart type: NULL, \code{"radius"}, or \code{"area"}.}
+\item{rose_type}{Optional Character \{"radius", "area"\}: Nightingale chart type.}
 
-\item{title}{Chart title string.}
+\item{title}{Optional Character: Chart title.}
 
-\item{theme}{A \link{Theme} object or NULL.}
+\item{theme}{Optional \link{Theme}: Theme override.}
 
-\item{width, height}{Widget dimensions.}
+\item{width}{Optional Character or Numeric: Widget width.}
+
+\item{height}{Optional Character or Numeric: Widget height.}
 }
 \value{
-An htmlwidget.
+htmlwidget: Widget object.
 }
 \description{
 Quick pie chart from values and labels.

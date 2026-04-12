@@ -15,19 +15,19 @@ LabelLine(
 )
 }
 \arguments{
-\item{show}{Whether to show the label line.}
+\item{show}{Optional Logical: Whether to show the label line.}
 
-\item{show_above}{Whether the line renders above other elements.}
+\item{show_above}{Optional Logical: Whether the line renders above other elements.}
 
-\item{length}{Length of the first segment.}
+\item{length}{Optional Numeric \verb{[0, Inf)}: Length of the first segment.}
 
-\item{length2}{Length of the second segment.}
+\item{length2}{Optional Numeric \verb{[0, Inf)}: Length of the second segment.}
 
-\item{smooth}{Smoothness (0-1), or TRUE/FALSE.}
+\item{smooth}{Optional Numeric \verb{[0, 1]} or Logical: Line smoothness.}
 
-\item{min_turn_angle}{Minimum angle for turning the line.}
+\item{min_turn_angle}{Optional Numeric: Minimum angle for turning the line.}
 
-\item{line_style}{A \link{LineStyle} object.}
+\item{line_style}{Optional \link{LineStyle}: Line styling.}
 }
 \description{
 Connecting line between a label and its chart element (e.g. pie label lines).

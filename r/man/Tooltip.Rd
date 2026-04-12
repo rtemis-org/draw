@@ -30,50 +30,50 @@ Tooltip(
 )
 }
 \arguments{
-\item{show}{Whether to show the tooltip.}
+\item{show}{Optional Logical: Whether to show the tooltip.}
 
-\item{trigger}{Trigger type: \code{"item"}, \code{"axis"}, or \code{"none"}.}
+\item{trigger}{Optional Character \{"item", "axis", "none"\}: Trigger type.}
 
-\item{trigger_on}{Trigger event: \code{"mousemove"}, \code{"click"}, \code{"none"},
+\item{trigger_on}{Optional Character \{"mousemove", "click", "none", "mousemove|click"\}: Trigger event.
 \code{"mousemove|click"}.}
 
-\item{show_content}{Whether to show the tooltip content.}
+\item{show_content}{Optional Logical: Whether to show tooltip content.}
 
-\item{always_show_content}{Whether to keep the tooltip visible.}
+\item{always_show_content}{Optional Logical: Whether to keep the tooltip visible.}
 
-\item{formatter}{Tooltip content formatter. String template or function.}
+\item{formatter}{Optional Character or function: Tooltip content formatter.}
 
-\item{value_formatter}{A function to format the value portion.}
+\item{value_formatter}{Optional function: Formatter for the value portion.}
 
-\item{position}{Tooltip position. String, numeric vector, or NULL.}
+\item{position}{Optional Character or Numeric: Tooltip position.}
 
-\item{confine}{Whether to confine tooltip within the chart container.}
+\item{confine}{Optional Logical: Whether to confine the tooltip within the chart container.}
 
-\item{enterable}{Whether the mouse can enter the tooltip.}
+\item{enterable}{Optional Logical: Whether the mouse can enter the tooltip.}
 
-\item{show_delay}{Delay (ms) before showing.}
+\item{show_delay}{Optional Numeric \verb{[0, Inf)}: Delay before showing, in milliseconds.}
 
-\item{hide_delay}{Delay (ms) before hiding.}
+\item{hide_delay}{Optional Numeric \verb{[0, Inf)}: Delay before hiding, in milliseconds.}
 
-\item{transition_duration}{Transition animation duration (s).}
+\item{transition_duration}{Optional Numeric \verb{[0, Inf)}: Transition duration in seconds.}
 
-\item{background_color}{Background color.}
+\item{background_color}{Optional Character: Background color.}
 
-\item{border_color}{Border color.}
+\item{border_color}{Optional Character: Border color.}
 
-\item{border_width}{Border width.}
+\item{border_width}{Optional Numeric \verb{[0, Inf)}: Border width.}
 
-\item{border_radius}{Border radius.}
+\item{border_radius}{Optional Numeric \verb{[0, Inf)}: Border radius.}
 
-\item{padding}{Padding inside tooltip.}
+\item{padding}{Optional Numeric: Padding inside the tooltip.}
 
-\item{text_style}{A \link{TextStyle} for tooltip text.}
+\item{text_style}{Optional \link{TextStyle}: Tooltip text style.}
 
-\item{extra_css_text}{Extra CSS for the tooltip (HTML render mode only).}
+\item{extra_css_text}{Optional Character: Extra CSS for HTML render mode.}
 
-\item{order}{Tooltip content order mode.}
+\item{order}{Optional Character \{"seriesAsc", "seriesDesc", "valueAsc", "valueDesc"\}: Tooltip content order.}
 
-\item{class_name}{CSS class name for tooltip element.}
+\item{class_name}{Optional Character: CSS class name for the tooltip element.}
 }
 \description{
 Tooltip configuration for showing data on hover/click.

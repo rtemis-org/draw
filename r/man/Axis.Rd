@@ -36,62 +36,62 @@ Axis(
 )
 }
 \arguments{
-\item{type}{Axis type: \code{"value"}, \code{"category"}, \code{"time"}, or \code{"log"}.}
+\item{type}{Optional Character \{"value", "category", "time", "log"\}: Axis type.}
 
-\item{show}{Whether to show the axis.}
+\item{show}{Optional Logical: Whether to show the axis.}
 
-\item{inverse}{Whether to invert the axis.}
+\item{inverse}{Optional Logical: Whether to invert the axis.}
 
-\item{name}{Axis name displayed alongside the axis.}
+\item{name}{Optional Character: Axis name.}
 
-\item{name_location}{Name position: \code{"start"}, \code{"middle"}, \code{"center"}, \code{"end"}.}
+\item{name_location}{Optional Character \{"start", "middle", "center", "end"\}: Axis name location.}
 
-\item{name_rotate}{Name rotation angle in degrees.}
+\item{name_rotate}{Optional Numeric: Axis name rotation angle in degrees.}
 
-\item{name_gap}{Gap between the axis name and the axis line.}
+\item{name_gap}{Optional Numeric \verb{[0, Inf)}: Gap between the axis name and axis line.}
 
-\item{name_text_style}{A \link{TextStyle} for the axis name.}
+\item{name_text_style}{Optional \link{TextStyle}: Axis name text style.}
 
-\item{silent}{Whether the axis is silent (no events).}
+\item{silent}{Optional Logical: Whether the axis is silent.}
 
-\item{trigger_event}{Whether the axis triggers events.}
+\item{trigger_event}{Optional Logical: Whether the axis triggers events.}
 
-\item{min}{Minimum axis value. Number, \code{"dataMin"}, or NULL.}
+\item{min}{Optional Numeric or Character \{"dataMin", "dataMax"\}: Minimum axis value.}
 
-\item{max}{Maximum axis value. Number, \code{"dataMax"}, or NULL.}
+\item{max}{Optional Numeric or Character \{"dataMin", "dataMax"\}: Maximum axis value.}
 
-\item{scale}{For value axis: whether to force axis to not contain zero.}
+\item{scale}{Optional Logical: Whether a value axis should avoid forcing zero.}
 
-\item{split_number}{Suggested number of split segments.}
+\item{split_number}{Optional Numeric \verb{[0, Inf)}: Suggested number of split segments.}
 
-\item{interval}{Mandatory interval between ticks.}
+\item{interval}{Optional Numeric \verb{[0, Inf)}: Tick interval.}
 
-\item{min_interval}{Minimum auto-calculated tick interval.}
+\item{min_interval}{Optional Numeric \verb{[0, Inf)}: Minimum auto-calculated tick interval.}
 
-\item{max_interval}{Maximum auto-calculated tick interval.}
+\item{max_interval}{Optional Numeric \verb{[0, Inf)}: Maximum auto-calculated tick interval.}
 
-\item{align_ticks}{Whether to align ticks with the first axis.}
+\item{align_ticks}{Optional Logical: Whether to align ticks with the first axis.}
 
-\item{log_base}{Log base for log axis.}
+\item{log_base}{Optional Numeric \verb{[0, Inf)}: Logarithm base for log axes.}
 
-\item{boundary_gap}{Gap at axis boundaries. Logical (category) or length-2
+\item{boundary_gap}{Optional Logical, Numeric, or Character: Gap at axis boundaries. Logical (category) or length-2
 vector of numbers/strings (numeric axes).}
 
-\item{data}{Category data vector.}
+\item{data}{Optional Vector: Category data.}
 
-\item{axis_line}{An \link{AxisLine} object.}
+\item{axis_line}{Optional \link{AxisLine}: Axis line configuration.}
 
-\item{axis_tick}{An \link{AxisTick} object.}
+\item{axis_tick}{Optional \link{AxisTick}: Axis tick configuration.}
 
-\item{minor_tick}{A \link{MinorTick} object.}
+\item{minor_tick}{Optional \link{MinorTick}: Minor tick configuration.}
 
-\item{axis_label}{An \link{AxisLabel} object.}
+\item{axis_label}{Optional \link{AxisLabel}: Axis label configuration.}
 
-\item{split_line}{A \link{SplitLine} object.}
+\item{split_line}{Optional \link{SplitLine}: Split line configuration.}
 
-\item{minor_split_line}{A \link{MinorSplitLine} object.}
+\item{minor_split_line}{Optional \link{MinorSplitLine}: Minor split line configuration.}
 
-\item{split_area}{A \link{SplitArea} object.}
+\item{split_area}{Optional \link{SplitArea}: Split area configuration.}
 }
 \description{
 Configuration for a cartesian axis (xAxis or yAxis). Combines fields from

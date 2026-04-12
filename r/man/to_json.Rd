@@ -7,16 +7,16 @@
 to_json(x, pretty = FALSE, auto_unbox = TRUE, ...)
 }
 \arguments{
-\item{x}{An \link{EChartsOption} object.}
+\item{x}{\link{EChartsOption}: Option object to serialize.}
 
-\item{pretty}{Whether to pretty-print the JSON.}
+\item{pretty}{Logical: Whether to pretty-print the JSON.}
 
-\item{auto_unbox}{Whether to auto-unbox single-element vectors.}
+\item{auto_unbox}{Logical: Whether to auto-unbox single-element vectors.}
 
-\item{...}{Additional arguments passed to \code{\link[jsonlite:fromJSON]{jsonlite::toJSON()}}.}
+\item{...}{Dots: Additional arguments passed to \code{\link[jsonlite:fromJSON]{jsonlite::toJSON()}}.}
 }
 \value{
-A JSON string.
+Character: JSON string.
 }
 \description{
 Convert EChartsOption to JSON

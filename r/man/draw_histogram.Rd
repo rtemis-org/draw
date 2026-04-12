@@ -15,22 +15,24 @@ draw_histogram(
 )
 }
 \arguments{
-\item{x}{Numeric vector of values.}
+\item{x}{Numeric: Values used for histogram binning.}
 
-\item{group}{Optional grouping factor for multiple series.}
+\item{group}{Optional Vector: Grouping variable for multiple series.}
 
-\item{breaks}{Binning method. A single number (number of bins), a character
+\item{breaks}{Numeric, Character, or Numeric vector: Binning method. A single number (number of bins), a character
 string naming an algorithm (e.g. \code{"Sturges"}, \code{"Scott"}, \code{"FD"}), or a
 numeric vector of break points. Passed to \code{\link[graphics:hist]{graphics::hist()}}.}
 
-\item{title}{Chart title string.}
+\item{title}{Optional Character: Chart title.}
 
-\item{theme}{A \link{Theme} object or NULL.}
+\item{theme}{Optional \link{Theme}: Theme override.}
 
-\item{width, height}{Widget dimensions.}
+\item{width}{Optional Character or Numeric: Widget width.}
+
+\item{height}{Optional Character or Numeric: Widget height.}
 }
 \value{
-An htmlwidget.
+htmlwidget: Widget object.
 }
 \description{
 Histogram from numeric data, with optional grouping for multiple traces.

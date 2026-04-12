@@ -23,35 +23,35 @@ ItemStyle(
 )
 }
 \arguments{
-\item{color}{Fill color. CSS color string.}
+\item{color}{Optional Character: CSS fill color.}
 
-\item{opacity}{Opacity (0-1).}
+\item{opacity}{Optional Numeric \verb{[0, 1]}: Fill opacity.}
 
-\item{border_color}{Border stroke color.}
+\item{border_color}{Optional Character: Border color.}
 
-\item{border_width}{Border width in pixels.}
+\item{border_width}{Optional Numeric \verb{[0, Inf)}: Border width in pixels.}
 
-\item{border_type}{Border line type: \code{"solid"}, \code{"dashed"}, or \code{"dotted"}.}
+\item{border_type}{Optional Character \{"solid", "dashed", "dotted"\}: Border line type.}
 
-\item{border_cap}{Border line cap: \code{"butt"}, \code{"round"}, or \code{"square"}.}
+\item{border_cap}{Optional Character \{"butt", "round", "square"\}: Border line cap.}
 
-\item{border_join}{Border line join: \code{"bevel"}, \code{"round"}, or \code{"miter"}.}
+\item{border_join}{Optional Character \{"bevel", "round", "miter"\}: Border line join.}
 
-\item{border_dash_offset}{Border dash offset.}
+\item{border_dash_offset}{Optional Numeric: Border dash offset.}
 
-\item{border_miter_limit}{Border miter limit.}
+\item{border_miter_limit}{Optional Numeric \verb{[0, Inf)}: Border miter limit.}
 
-\item{border_radius}{Corner border radius. Single number or vector of 4.}
+\item{border_radius}{Optional Numeric, Character, or Numeric vector: Corner border radius.}
 
-\item{decal}{Decal pattern for accessibility. \code{"none"} to disable.}
+\item{decal}{Optional Any: Decal pattern for accessibility.}
 
-\item{shadow_blur}{Shadow blur radius.}
+\item{shadow_blur}{Optional Numeric \verb{[0, Inf)}: Shadow blur radius.}
 
-\item{shadow_color}{Shadow color.}
+\item{shadow_color}{Optional Character: Shadow color.}
 
-\item{shadow_offset_x}{Shadow horizontal offset.}
+\item{shadow_offset_x}{Optional Numeric: Shadow horizontal offset.}
 
-\item{shadow_offset_y}{Shadow vertical offset.}
+\item{shadow_offset_y}{Optional Numeric: Shadow vertical offset.}
 }
 \description{
 Styling for graphical items (bar segments, scatter points, pie slices, etc.).

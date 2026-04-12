@@ -13,18 +13,18 @@
 #' Corresponds to `LineStyleOption` in `src/util/types.ts` (line 1154).
 #' ECharts docs: \url{https://echarts.apache.org/en/option.html#series-line.lineStyle}
 #'
-#' @param color Line color. CSS color string.
-#' @param width Line width in pixels.
-#' @param opacity Opacity (0-1).
-#' @param type Line type: `"solid"`, `"dashed"`, or `"dotted"`.
-#' @param cap Line cap: `"butt"`, `"round"`, or `"square"`.
-#' @param join Line join: `"bevel"`, `"round"`, or `"miter"`.
-#' @param dash_offset Dash offset for dashed lines.
-#' @param miter_limit Miter limit for miter joins.
-#' @param shadow_blur Shadow blur radius.
-#' @param shadow_color Shadow color.
-#' @param shadow_offset_x Shadow horizontal offset.
-#' @param shadow_offset_y Shadow vertical offset.
+#' @param color Optional Character: CSS line color.
+#' @param width Optional Numeric `[0, Inf)`: Line width in pixels.
+#' @param opacity Optional Numeric `[0, 1]`: Line opacity.
+#' @param type Optional Character \{"solid", "dashed", "dotted"\}: Line type.
+#' @param cap Optional Character \{"butt", "round", "square"\}: Line cap.
+#' @param join Optional Character \{"bevel", "round", "miter"\}: Line join.
+#' @param dash_offset Optional Numeric: Dash offset for dashed lines.
+#' @param miter_limit Optional Numeric `[0, Inf)`: Miter limit for miter joins.
+#' @param shadow_blur Optional Numeric `[0, Inf)`: Shadow blur radius.
+#' @param shadow_color Optional Character: Shadow color.
+#' @param shadow_offset_x Optional Numeric: Shadow horizontal offset.
+#' @param shadow_offset_y Optional Numeric: Shadow vertical offset.
 #' @export
 LineStyle <- S7::new_class(
   "LineStyle",
@@ -58,13 +58,13 @@ S7::method(to_list, LineStyle) <- function(x, ...) {
 #' Corresponds to `AreaStyleOption` in `src/util/types.ts` (line 1169).
 #' ECharts docs: \url{https://echarts.apache.org/en/option.html#series-line.areaStyle}
 #'
-#' @param color Fill color. CSS color string.
-#' @param opacity Opacity (0-1).
-#' @param origin Area origin: `"auto"`, `"start"`, or `"end"`.
-#' @param shadow_blur Shadow blur radius.
-#' @param shadow_color Shadow color.
-#' @param shadow_offset_x Shadow horizontal offset.
-#' @param shadow_offset_y Shadow vertical offset.
+#' @param color Optional Character: CSS fill color.
+#' @param opacity Optional Numeric `[0, 1]`: Fill opacity.
+#' @param origin Optional Character \{"auto", "start", "end"\} or Numeric: Area origin.
+#' @param shadow_blur Optional Numeric `[0, Inf)`: Shadow blur radius.
+#' @param shadow_color Optional Character: Shadow color.
+#' @param shadow_offset_x Optional Numeric: Shadow horizontal offset.
+#' @param shadow_offset_y Optional Numeric: Shadow vertical offset.
 #' @export
 AreaStyle <- S7::new_class(
   "AreaStyle",
@@ -103,21 +103,21 @@ S7::method(to_list, AreaStyle) <- function(x, ...) {
 #' Corresponds to `ItemStyleOption` in `src/util/types.ts` (line 1142).
 #' ECharts docs: \url{https://echarts.apache.org/en/option.html#series-bar.itemStyle}
 #'
-#' @param color Fill color. CSS color string.
-#' @param opacity Opacity (0-1).
-#' @param border_color Border stroke color.
-#' @param border_width Border width in pixels.
-#' @param border_type Border line type: `"solid"`, `"dashed"`, or `"dotted"`.
-#' @param border_cap Border line cap: `"butt"`, `"round"`, or `"square"`.
-#' @param border_join Border line join: `"bevel"`, `"round"`, or `"miter"`.
-#' @param border_dash_offset Border dash offset.
-#' @param border_miter_limit Border miter limit.
-#' @param border_radius Corner border radius. Single number or vector of 4.
-#' @param decal Decal pattern for accessibility. `"none"` to disable.
-#' @param shadow_blur Shadow blur radius.
-#' @param shadow_color Shadow color.
-#' @param shadow_offset_x Shadow horizontal offset.
-#' @param shadow_offset_y Shadow vertical offset.
+#' @param color Optional Character: CSS fill color.
+#' @param opacity Optional Numeric `[0, 1]`: Fill opacity.
+#' @param border_color Optional Character: Border color.
+#' @param border_width Optional Numeric `[0, Inf)`: Border width in pixels.
+#' @param border_type Optional Character \{"solid", "dashed", "dotted"\}: Border line type.
+#' @param border_cap Optional Character \{"butt", "round", "square"\}: Border line cap.
+#' @param border_join Optional Character \{"bevel", "round", "miter"\}: Border line join.
+#' @param border_dash_offset Optional Numeric: Border dash offset.
+#' @param border_miter_limit Optional Numeric `[0, Inf)`: Border miter limit.
+#' @param border_radius Optional Numeric, Character, or Numeric vector: Corner border radius.
+#' @param decal Optional Any: Decal pattern for accessibility.
+#' @param shadow_blur Optional Numeric `[0, Inf)`: Shadow blur radius.
+#' @param shadow_color Optional Character: Shadow color.
+#' @param shadow_offset_x Optional Numeric: Shadow horizontal offset.
+#' @param shadow_offset_y Optional Numeric: Shadow vertical offset.
 #' @export
 ItemStyle <- S7::new_class(
   "ItemStyle",
@@ -164,40 +164,39 @@ S7::method(to_list, ItemStyle) <- function(x, ...) {
 #' Corresponds to `TextCommonOption` in `src/util/types.ts` (line 1220).
 #' ECharts docs: \url{https://echarts.apache.org/en/option.html#title.textStyle}
 #'
-#' @param color Text color.
-#' @param font_style Font style: `"normal"`, `"italic"`, or `"oblique"`.
-#' @param font_weight Font weight: `"normal"`, `"bold"`, `"bolder"`, `"lighter"`,
-#'   or a number (100-900).
-#' @param font_family Font family name.
-#' @param font_size Font size in pixels (or string like `"20px"`).
-#' @param align Horizontal alignment: `"left"`, `"center"`, or `"right"`.
-#' @param vertical_align Vertical alignment: `"top"`, `"middle"`, or `"bottom"`.
-#' @param opacity Text opacity (0-1).
-#' @param line_height Line height in pixels.
-#' @param background_color Background color behind text.
-#' @param border_color Text box border color.
-#' @param border_width Text box border width.
-#' @param border_type Text box border type.
-#' @param border_dash_offset Text box border dash offset.
-#' @param border_radius Text box corner radius.
-#' @param padding Text box padding. Single number or vector of up to 4.
-#' @param width Text box width.
-#' @param height Text box height.
-#' @param text_border_color Stroke color around the text itself.
-#' @param text_border_width Stroke width around the text itself.
-#' @param text_border_type Stroke type around the text itself.
-#' @param text_border_dash_offset Stroke dash offset around the text itself.
-#' @param text_shadow_blur Text shadow blur radius.
-#' @param text_shadow_color Text shadow color.
-#' @param text_shadow_offset_x Text shadow horizontal offset.
-#' @param text_shadow_offset_y Text shadow vertical offset.
-#' @param overflow Text overflow behavior: `"truncate"`, `"break"`, `"breakAll"`.
-#' @param ellipsis Ellipsis string when overflow is `"truncate"`.
-#' @param rich Named list of rich text styles (each a TextStyle-like list).
-#' @param shadow_blur Box shadow blur (from ShadowOptionMixin).
-#' @param shadow_color Box shadow color.
-#' @param shadow_offset_x Box shadow horizontal offset.
-#' @param shadow_offset_y Box shadow vertical offset.
+#' @param color Optional Character: Text color.
+#' @param font_style Optional Character \{"normal", "italic", "oblique"\}: Font style.
+#' @param font_weight Optional Character \{"normal", "bold", "bolder", "lighter"\} or Numeric `[100, 900]`: Font weight.
+#' @param font_family Optional Character: Font family name.
+#' @param font_size Optional Numeric or Character: Font size.
+#' @param align Optional Character \{"left", "center", "right"\}: Horizontal alignment.
+#' @param vertical_align Optional Character \{"top", "middle", "bottom"\}: Vertical alignment.
+#' @param opacity Optional Numeric `[0, 1]`: Text opacity.
+#' @param line_height Optional Numeric `[0, Inf)`: Line height in pixels.
+#' @param background_color Optional Character: Background color behind text.
+#' @param border_color Optional Character: Text box border color.
+#' @param border_width Optional Numeric `[0, Inf)`: Text box border width.
+#' @param border_type Optional Character \{"solid", "dashed", "dotted"\}: Text box border type.
+#' @param border_dash_offset Optional Numeric: Text box border dash offset.
+#' @param border_radius Optional Numeric or Numeric vector: Text box corner radius.
+#' @param padding Optional Numeric or Numeric vector: Text box padding.
+#' @param width Optional Numeric or Character: Text box width.
+#' @param height Optional Numeric `[0, Inf)`: Text box height.
+#' @param text_border_color Optional Character: Stroke color around the text.
+#' @param text_border_width Optional Numeric `[0, Inf)`: Stroke width around the text.
+#' @param text_border_type Optional Character \{"solid", "dashed", "dotted"\}: Stroke type around the text.
+#' @param text_border_dash_offset Optional Numeric: Stroke dash offset around the text.
+#' @param text_shadow_blur Optional Numeric `[0, Inf)`: Text shadow blur radius.
+#' @param text_shadow_color Optional Character: Text shadow color.
+#' @param text_shadow_offset_x Optional Numeric: Text shadow horizontal offset.
+#' @param text_shadow_offset_y Optional Numeric: Text shadow vertical offset.
+#' @param overflow Optional Character \{"truncate", "break", "breakAll", "none"\}: Text overflow behavior.
+#' @param ellipsis Optional Character: Ellipsis string used when truncating.
+#' @param rich Optional Named list: Rich text styles.
+#' @param shadow_blur Optional Numeric `[0, Inf)`: Box shadow blur radius.
+#' @param shadow_color Optional Character: Box shadow color.
+#' @param shadow_offset_x Optional Numeric: Box shadow horizontal offset.
+#' @param shadow_offset_y Optional Numeric: Box shadow vertical offset.
 #' @export
 TextStyle <- S7::new_class(
   "TextStyle",

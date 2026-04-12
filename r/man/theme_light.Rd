@@ -26,44 +26,44 @@ theme_light(
 )
 }
 \arguments{
-\item{base_font_size}{Base font size in pixels for all text.}
+\item{base_font_size}{Numeric \verb{[0, Inf)}: Base font size in pixels for all text.}
 
-\item{title_font_size}{Title font size. Default: \code{round(base_font_size * 1.2)}.}
+\item{title_font_size}{Optional Numeric \verb{[0, Inf)}: Title font size.}
 
-\item{subtitle_font_size}{Subtitle font size. Default: \code{base_font_size}.}
+\item{subtitle_font_size}{Optional Numeric \verb{[0, Inf)}: Subtitle font size.}
 
-\item{axis_label_font_size}{Axis tick label font size. Default: \code{base_font_size}.}
+\item{axis_label_font_size}{Optional Numeric \verb{[0, Inf)}: Axis-label font size.}
 
-\item{legend_font_size}{Legend font size. Default: \code{base_font_size}.}
+\item{legend_font_size}{Optional Numeric \verb{[0, Inf)}: Legend font size.}
 
-\item{tooltip_font_size}{Tooltip font size. Default: \code{base_font_size}.}
+\item{tooltip_font_size}{Optional Numeric \verb{[0, Inf)}: Tooltip font size.}
 
-\item{font_family}{Font family string.}
+\item{font_family}{Character: Font family string.}
 
-\item{color}{Color palette: character vector.}
+\item{color}{Character: Color palette.}
 
-\item{bg_color}{Chart background color.}
+\item{bg_color}{Optional Character: Chart background color.}
 
-\item{fg_color}{Global text color.}
+\item{fg_color}{Optional Character: Global text color.}
 
-\item{title_color}{Title text color.}
+\item{title_color}{Optional Character: Title text color.}
 
-\item{subtitle_color}{Subtitle text color.}
+\item{subtitle_color}{Optional Character: Subtitle text color.}
 
-\item{legend_color}{Legend text color. Default: inherits \code{fg_color}.}
+\item{legend_color}{Optional Character: Legend text color.}
 
-\item{axis_color}{Axis line color.}
+\item{axis_color}{Optional Character: Axis line color.}
 
-\item{grid_color}{Grid / split line color.}
+\item{grid_color}{Optional Character: Grid or split-line color.}
 
-\item{tooltip_bg}{Tooltip background color.}
+\item{tooltip_bg}{Optional Character: Tooltip background color.}
 
-\item{tooltip_border_color}{Tooltip border color.}
+\item{tooltip_border_color}{Optional Character: Tooltip border color.}
 
-\item{tooltip_color}{Tooltip text color. Default: inherits \code{fg_color}.}
+\item{tooltip_color}{Optional Character: Tooltip text color.}
 }
 \value{
-A \link{Theme} object.
+\link{Theme}: Theme object.
 }
 \description{
 Returns a light theme. All parameters have sensible defaults; most

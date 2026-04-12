@@ -41,72 +41,71 @@ TextStyle(
 )
 }
 \arguments{
-\item{color}{Text color.}
+\item{color}{Optional Character: Text color.}
 
-\item{font_style}{Font style: \code{"normal"}, \code{"italic"}, or \code{"oblique"}.}
+\item{font_style}{Optional Character \{"normal", "italic", "oblique"\}: Font style.}
 
-\item{font_weight}{Font weight: \code{"normal"}, \code{"bold"}, \code{"bolder"}, \code{"lighter"},
-or a number (100-900).}
+\item{font_weight}{Optional Character \{"normal", "bold", "bolder", "lighter"\} or Numeric \verb{[100, 900]}: Font weight.}
 
-\item{font_family}{Font family name.}
+\item{font_family}{Optional Character: Font family name.}
 
-\item{font_size}{Font size in pixels (or string like \code{"20px"}).}
+\item{font_size}{Optional Numeric or Character: Font size.}
 
-\item{align}{Horizontal alignment: \code{"left"}, \code{"center"}, or \code{"right"}.}
+\item{align}{Optional Character \{"left", "center", "right"\}: Horizontal alignment.}
 
-\item{vertical_align}{Vertical alignment: \code{"top"}, \code{"middle"}, or \code{"bottom"}.}
+\item{vertical_align}{Optional Character \{"top", "middle", "bottom"\}: Vertical alignment.}
 
-\item{opacity}{Text opacity (0-1).}
+\item{opacity}{Optional Numeric \verb{[0, 1]}: Text opacity.}
 
-\item{line_height}{Line height in pixels.}
+\item{line_height}{Optional Numeric \verb{[0, Inf)}: Line height in pixels.}
 
-\item{background_color}{Background color behind text.}
+\item{background_color}{Optional Character: Background color behind text.}
 
-\item{border_color}{Text box border color.}
+\item{border_color}{Optional Character: Text box border color.}
 
-\item{border_width}{Text box border width.}
+\item{border_width}{Optional Numeric \verb{[0, Inf)}: Text box border width.}
 
-\item{border_type}{Text box border type.}
+\item{border_type}{Optional Character \{"solid", "dashed", "dotted"\}: Text box border type.}
 
-\item{border_dash_offset}{Text box border dash offset.}
+\item{border_dash_offset}{Optional Numeric: Text box border dash offset.}
 
-\item{border_radius}{Text box corner radius.}
+\item{border_radius}{Optional Numeric or Numeric vector: Text box corner radius.}
 
-\item{padding}{Text box padding. Single number or vector of up to 4.}
+\item{padding}{Optional Numeric or Numeric vector: Text box padding.}
 
-\item{width}{Text box width.}
+\item{width}{Optional Numeric or Character: Text box width.}
 
-\item{height}{Text box height.}
+\item{height}{Optional Numeric \verb{[0, Inf)}: Text box height.}
 
-\item{text_border_color}{Stroke color around the text itself.}
+\item{text_border_color}{Optional Character: Stroke color around the text.}
 
-\item{text_border_width}{Stroke width around the text itself.}
+\item{text_border_width}{Optional Numeric \verb{[0, Inf)}: Stroke width around the text.}
 
-\item{text_border_type}{Stroke type around the text itself.}
+\item{text_border_type}{Optional Character \{"solid", "dashed", "dotted"\}: Stroke type around the text.}
 
-\item{text_border_dash_offset}{Stroke dash offset around the text itself.}
+\item{text_border_dash_offset}{Optional Numeric: Stroke dash offset around the text.}
 
-\item{text_shadow_blur}{Text shadow blur radius.}
+\item{text_shadow_blur}{Optional Numeric \verb{[0, Inf)}: Text shadow blur radius.}
 
-\item{text_shadow_color}{Text shadow color.}
+\item{text_shadow_color}{Optional Character: Text shadow color.}
 
-\item{text_shadow_offset_x}{Text shadow horizontal offset.}
+\item{text_shadow_offset_x}{Optional Numeric: Text shadow horizontal offset.}
 
-\item{text_shadow_offset_y}{Text shadow vertical offset.}
+\item{text_shadow_offset_y}{Optional Numeric: Text shadow vertical offset.}
 
-\item{overflow}{Text overflow behavior: \code{"truncate"}, \code{"break"}, \code{"breakAll"}.}
+\item{overflow}{Optional Character \{"truncate", "break", "breakAll", "none"\}: Text overflow behavior.}
 
-\item{ellipsis}{Ellipsis string when overflow is \code{"truncate"}.}
+\item{ellipsis}{Optional Character: Ellipsis string used when truncating.}
 
-\item{rich}{Named list of rich text styles (each a TextStyle-like list).}
+\item{rich}{Optional Named list: Rich text styles.}
 
-\item{shadow_blur}{Box shadow blur (from ShadowOptionMixin).}
+\item{shadow_blur}{Optional Numeric \verb{[0, Inf)}: Box shadow blur radius.}
 
-\item{shadow_color}{Box shadow color.}
+\item{shadow_color}{Optional Character: Box shadow color.}
 
-\item{shadow_offset_x}{Box shadow horizontal offset.}
+\item{shadow_offset_x}{Optional Numeric: Box shadow horizontal offset.}
 
-\item{shadow_offset_y}{Box shadow vertical offset.}
+\item{shadow_offset_y}{Optional Numeric: Box shadow vertical offset.}
 }
 \description{
 Text styling used in labels, titles, tooltips, and other text elements.

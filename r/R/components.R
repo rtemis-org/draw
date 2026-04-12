@@ -17,21 +17,21 @@
 #' Corresponds to `GridOption` in `src/coord/cartesian/GridModel.ts` (line 37).
 #' ECharts docs: \url{https://echarts.apache.org/en/option.html#grid}
 #'
-#' @param show Whether to show the grid border.
-#' @param left Distance from left side of container. Number (px) or percent string.
-#' @param right Distance from right side.
-#' @param top Distance from top.
-#' @param bottom Distance from bottom.
-#' @param width Grid width. Number (px) or percent string.
-#' @param height Grid height.
-#' @param contain_label Whether the grid region contains axis labels.
-#' @param background_color Grid background color.
-#' @param border_width Grid border width.
-#' @param border_color Grid border color.
-#' @param shadow_blur Shadow blur size.
-#' @param shadow_color Shadow color.
-#' @param shadow_offset_x Shadow horizontal offset.
-#' @param shadow_offset_y Shadow vertical offset.
+#' @param show Optional Logical: Whether to show the grid border.
+#' @param left Optional Numeric or Character: Distance from the left side of the container.
+#' @param right Optional Numeric or Character: Distance from the right side of the container.
+#' @param top Optional Numeric or Character: Distance from the top of the container.
+#' @param bottom Optional Numeric or Character: Distance from the bottom of the container.
+#' @param width Optional Numeric or Character: Grid width.
+#' @param height Optional Numeric or Character: Grid height.
+#' @param contain_label Optional Logical: Whether the grid region contains axis labels.
+#' @param background_color Optional Character: Grid background color.
+#' @param border_width Optional Numeric `[0, Inf)`: Grid border width.
+#' @param border_color Optional Character: Grid border color.
+#' @param shadow_blur Optional Numeric `[0, Inf)`: Shadow blur radius.
+#' @param shadow_color Optional Character: Shadow color.
+#' @param shadow_offset_x Optional Numeric: Shadow horizontal offset.
+#' @param shadow_offset_y Optional Numeric: Shadow vertical offset.
 #' @export
 Grid <- S7::new_class(
   "Grid",
@@ -69,25 +69,28 @@ S7::method(to_list, Grid) <- function(x, ...) {
 #' Corresponds to `TitleOption` in `src/component/title/install.ts` (line 48).
 #' ECharts docs: \url{https://echarts.apache.org/en/option.html#title}
 #'
-#' @param show Whether to show the title.
-#' @param text Main title text. Supports `\\n` for newlines.
-#' @param link Hyperlink for main title.
-#' @param target Link target: `"self"` or `"blank"`.
-#' @param subtext Subtitle text.
-#' @param sublink Hyperlink for subtitle.
-#' @param subtarget Subtitle link target.
-#' @param text_align Horizontal alignment: `"auto"`, `"left"`, `"center"`, `"right"`.
-#' @param text_vertical_align Vertical alignment: `"auto"`, `"top"`, `"middle"`, `"bottom"`.
-#' @param padding Padding inside the title box. Single number or length-4 vector.
-#' @param item_gap Gap between title and subtitle in pixels.
-#' @param text_style A [TextStyle] for the main title text.
-#' @param subtext_style A [TextStyle] for the subtitle text.
-#' @param trigger_event Whether title emits events.
-#' @param background_color Background color of the title box.
-#' @param border_color Border color.
-#' @param border_width Border width.
-#' @param border_radius Border radius. Single number or length-4 vector.
-#' @param left,right,top,bottom Position. Number (px) or percent string.
+#' @param show Optional Logical: Whether to show the title.
+#' @param text Optional Character: Main title text. Supports `\\n` for newlines.
+#' @param link Optional Character: Hyperlink for the main title.
+#' @param target Optional Character \{"self", "blank"\}: Link target.
+#' @param subtext Optional Character: Subtitle text.
+#' @param sublink Optional Character: Hyperlink for the subtitle.
+#' @param subtarget Optional Character \{"self", "blank"\}: Subtitle link target.
+#' @param text_align Optional Character \{"auto", "left", "center", "right"\}: Horizontal alignment.
+#' @param text_vertical_align Optional Character \{"auto", "top", "middle", "bottom"\}: Vertical alignment.
+#' @param padding Optional Numeric: Padding inside the title box.
+#' @param item_gap Optional Numeric `[0, Inf)`: Gap between title and subtitle in pixels.
+#' @param text_style Optional [TextStyle]: Main title text style.
+#' @param subtext_style Optional [TextStyle]: Subtitle text style.
+#' @param trigger_event Optional Logical: Whether the title emits events.
+#' @param background_color Optional Character: Title-box background color.
+#' @param border_color Optional Character: Border color.
+#' @param border_width Optional Numeric `[0, Inf)`: Border width.
+#' @param border_radius Optional Numeric: Border radius.
+#' @param left Optional Numeric or Character: Left position.
+#' @param right Optional Numeric or Character: Right position.
+#' @param top Optional Numeric or Character: Top position.
+#' @param bottom Optional Numeric or Character: Bottom position.
 #' @export
 Title <- S7::new_class(
   "Title",
@@ -147,29 +150,33 @@ S7::method(to_list, Title) <- function(x, ...) {
 #' Corresponds to `LegendOption` in `src/component/legend/LegendModel.ts` (line 162).
 #' ECharts docs: \url{https://echarts.apache.org/en/option.html#legend}
 #'
-#' @param show Whether to show the legend.
-#' @param orient Layout orientation: `"horizontal"` or `"vertical"`.
-#' @param align Legend marker and text alignment: `"auto"`, `"left"`, `"right"`.
-#' @param left,right,top,bottom Position.
-#' @param width,height Legend box dimensions.
-#' @param padding Padding inside the legend box.
-#' @param item_gap Gap between legend items.
-#' @param item_width Width of legend symbol.
-#' @param item_height Height of legend symbol.
-#' @param icon Default legend icon.
-#' @param selected_mode Selection mode: TRUE, FALSE, `"single"`, or `"multiple"`.
-#' @param selected Named logical vector of pre-selected items.
-#' @param formatter Label formatter: string template or function.
-#' @param inactive_color Color for unselected items.
-#' @param inactive_border_color Border color for unselected items.
-#' @param text_style A [TextStyle] for legend labels.
-#' @param item_style An [ItemStyle] for legend icons.
-#' @param background_color Background color.
-#' @param border_color Border color.
-#' @param border_width Border width.
-#' @param border_radius Border radius.
-#' @param trigger_event Whether legend emits events.
-#' @param data Legend data items. Character vector or list.
+#' @param show Optional Logical: Whether to show the legend.
+#' @param orient Optional Character \{"horizontal", "vertical"\}: Layout orientation.
+#' @param align Optional Character \{"auto", "left", "right"\}: Marker and text alignment.
+#' @param left Optional Numeric or Character: Left position.
+#' @param right Optional Numeric or Character: Right position.
+#' @param top Optional Numeric or Character: Top position.
+#' @param bottom Optional Numeric or Character: Bottom position.
+#' @param width Optional Numeric or Character: Legend box width.
+#' @param height Optional Numeric or Character: Legend box height.
+#' @param padding Optional Numeric: Padding inside the legend box.
+#' @param item_gap Optional Numeric `[0, Inf)`: Gap between legend items.
+#' @param item_width Optional Numeric `[0, Inf)`: Legend symbol width.
+#' @param item_height Optional Numeric `[0, Inf)`: Legend symbol height.
+#' @param icon Optional Character: Default legend icon.
+#' @param selected_mode Optional Logical or Character \{"single", "multiple"\}: Selection mode.
+#' @param selected Optional Named logical vector: Pre-selected items.
+#' @param formatter Optional Character or function: Label formatter.
+#' @param inactive_color Optional Character: Color for unselected items.
+#' @param inactive_border_color Optional Character: Border color for unselected items.
+#' @param text_style Optional [TextStyle]: Legend label text style.
+#' @param item_style Optional [ItemStyle]: Legend icon style.
+#' @param background_color Optional Character: Background color.
+#' @param border_color Optional Character: Border color.
+#' @param border_width Optional Numeric `[0, Inf)`: Border width.
+#' @param border_radius Optional Numeric: Border radius.
+#' @param trigger_event Optional Logical: Whether the legend emits events.
+#' @param data Optional Character vector or list: Legend data items.
 #' @export
 Legend <- S7::new_class(
   "Legend",
@@ -255,29 +262,29 @@ S7::method(to_list, Legend) <- function(x, ...) {
 #' and `CommonTooltipOption` in `src/util/types.ts` (line 1527).
 #' ECharts docs: \url{https://echarts.apache.org/en/option.html#tooltip}
 #'
-#' @param show Whether to show the tooltip.
-#' @param trigger Trigger type: `"item"`, `"axis"`, or `"none"`.
-#' @param trigger_on Trigger event: `"mousemove"`, `"click"`, `"none"`,
+#' @param show Optional Logical: Whether to show the tooltip.
+#' @param trigger Optional Character \{"item", "axis", "none"\}: Trigger type.
+#' @param trigger_on Optional Character \{"mousemove", "click", "none", "mousemove|click"\}: Trigger event.
 #'   `"mousemove|click"`.
-#' @param show_content Whether to show the tooltip content.
-#' @param always_show_content Whether to keep the tooltip visible.
-#' @param formatter Tooltip content formatter. String template or function.
-#' @param value_formatter A function to format the value portion.
-#' @param position Tooltip position. String, numeric vector, or NULL.
-#' @param confine Whether to confine tooltip within the chart container.
-#' @param enterable Whether the mouse can enter the tooltip.
-#' @param show_delay Delay (ms) before showing.
-#' @param hide_delay Delay (ms) before hiding.
-#' @param transition_duration Transition animation duration (s).
-#' @param background_color Background color.
-#' @param border_color Border color.
-#' @param border_width Border width.
-#' @param border_radius Border radius.
-#' @param padding Padding inside tooltip.
-#' @param text_style A [TextStyle] for tooltip text.
-#' @param extra_css_text Extra CSS for the tooltip (HTML render mode only).
-#' @param order Tooltip content order mode.
-#' @param class_name CSS class name for tooltip element.
+#' @param show_content Optional Logical: Whether to show tooltip content.
+#' @param always_show_content Optional Logical: Whether to keep the tooltip visible.
+#' @param formatter Optional Character or function: Tooltip content formatter.
+#' @param value_formatter Optional function: Formatter for the value portion.
+#' @param position Optional Character or Numeric: Tooltip position.
+#' @param confine Optional Logical: Whether to confine the tooltip within the chart container.
+#' @param enterable Optional Logical: Whether the mouse can enter the tooltip.
+#' @param show_delay Optional Numeric `[0, Inf)`: Delay before showing, in milliseconds.
+#' @param hide_delay Optional Numeric `[0, Inf)`: Delay before hiding, in milliseconds.
+#' @param transition_duration Optional Numeric `[0, Inf)`: Transition duration in seconds.
+#' @param background_color Optional Character: Background color.
+#' @param border_color Optional Character: Border color.
+#' @param border_width Optional Numeric `[0, Inf)`: Border width.
+#' @param border_radius Optional Numeric `[0, Inf)`: Border radius.
+#' @param padding Optional Numeric: Padding inside the tooltip.
+#' @param text_style Optional [TextStyle]: Tooltip text style.
+#' @param extra_css_text Optional Character: Extra CSS for HTML render mode.
+#' @param order Optional Character \{"seriesAsc", "seriesDesc", "valueAsc", "valueDesc"\}: Tooltip content order.
+#' @param class_name Optional Character: CSS class name for the tooltip element.
 #' @export
 Tooltip <- S7::new_class(
   "Tooltip",

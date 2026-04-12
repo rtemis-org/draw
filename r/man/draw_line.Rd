@@ -17,24 +17,26 @@ draw_line(
 )
 }
 \arguments{
-\item{x}{X-axis values (categories or numeric).}
+\item{x}{Vector: X-axis values.}
 
-\item{y}{Numeric vector or named list of numeric vectors (for multiple series).}
+\item{y}{Numeric or named list: Y values.}
 
-\item{names}{Series names (if y is a list).}
+\item{names}{Optional Character: Series names used when \code{y} is an unnamed list.}
 
-\item{smooth}{Whether to smooth lines.}
+\item{smooth}{Logical: Whether to smooth lines.}
 
-\item{area}{Whether to show area fill.}
+\item{area}{Logical: Whether to show area fill.}
 
-\item{title}{Chart title string.}
+\item{title}{Optional Character: Chart title.}
 
-\item{theme}{A \link{Theme} object or NULL.}
+\item{theme}{Optional \link{Theme}: Theme override.}
 
-\item{width, height}{Widget dimensions.}
+\item{width}{Optional Character or Numeric: Widget width.}
+
+\item{height}{Optional Character or Numeric: Widget height.}
 }
 \value{
-An htmlwidget.
+htmlwidget: Widget object.
 }
 \description{
 Quick line chart from x/y data.

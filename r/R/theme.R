@@ -19,20 +19,20 @@
 #'
 #' TS source: `src/model/globalDefault.ts`, `src/theme/dark.ts`.
 #'
-#' @param color Color palette: character vector.
-#' @param background_color Chart background color.
-#' @param text_style A [TextStyle] for global default text.
-#' @param title Named list of title overrides (e.g., `list(textStyle = list(...))`).
-#' @param legend Named list of legend overrides.
-#' @param tooltip Named list of tooltip overrides.
-#' @param line Named list of line series defaults.
-#' @param bar Named list of bar series defaults.
-#' @param pie Named list of pie series defaults.
-#' @param scatter Named list of scatter series defaults.
-#' @param category_axis Named list of category axis defaults.
-#' @param value_axis Named list of value axis defaults.
-#' @param log_axis Named list of log axis defaults.
-#' @param time_axis Named list of time axis defaults.
+#' @param color Optional Character: Color palette.
+#' @param background_color Optional Character: Chart background color.
+#' @param text_style Optional [TextStyle]: Global default text style.
+#' @param title Optional Named list: Title overrides.
+#' @param legend Optional Named list: Legend overrides.
+#' @param tooltip Optional Named list: Tooltip overrides.
+#' @param line Optional Named list: Line-series defaults.
+#' @param bar Optional Named list: Bar-series defaults.
+#' @param pie Optional Named list: Pie-series defaults.
+#' @param scatter Optional Named list: Scatter-series defaults.
+#' @param category_axis Optional Named list: Category-axis defaults.
+#' @param value_axis Optional Named list: Value-axis defaults.
+#' @param log_axis Optional Named list: Log-axis defaults.
+#' @param time_axis Optional Named list: Time-axis defaults.
 #' @export
 Theme <- S7::new_class(
   "Theme",
@@ -236,25 +236,25 @@ build_theme <- function(
 #' users only need `base_font_size`. Title font size defaults to 1.2x
 #' the base; all other text defaults to 1x.
 #'
-#' @param base_font_size Base font size in pixels for all text.
-#' @param title_font_size Title font size. Default: `round(base_font_size * 1.2)`.
-#' @param subtitle_font_size Subtitle font size. Default: `base_font_size`.
-#' @param axis_label_font_size Axis tick label font size. Default: `base_font_size`.
-#' @param legend_font_size Legend font size. Default: `base_font_size`.
-#' @param tooltip_font_size Tooltip font size. Default: `base_font_size`.
-#' @param font_family Font family string.
-#' @param color Color palette: character vector.
-#' @param bg_color Chart background color.
-#' @param fg_color Global text color.
-#' @param title_color Title text color.
-#' @param subtitle_color Subtitle text color.
-#' @param legend_color Legend text color. Default: inherits `fg_color`.
-#' @param axis_color Axis line color.
-#' @param grid_color Grid / split line color.
-#' @param tooltip_bg Tooltip background color.
-#' @param tooltip_border_color Tooltip border color.
-#' @param tooltip_color Tooltip text color. Default: inherits `fg_color`.
-#' @return A [Theme] object.
+#' @param base_font_size Numeric `[0, Inf)`: Base font size in pixels for all text.
+#' @param title_font_size Optional Numeric `[0, Inf)`: Title font size.
+#' @param subtitle_font_size Optional Numeric `[0, Inf)`: Subtitle font size.
+#' @param axis_label_font_size Optional Numeric `[0, Inf)`: Axis-label font size.
+#' @param legend_font_size Optional Numeric `[0, Inf)`: Legend font size.
+#' @param tooltip_font_size Optional Numeric `[0, Inf)`: Tooltip font size.
+#' @param font_family Character: Font family string.
+#' @param color Character: Color palette.
+#' @param bg_color Optional Character: Chart background color.
+#' @param fg_color Optional Character: Global text color.
+#' @param title_color Optional Character: Title text color.
+#' @param subtitle_color Optional Character: Subtitle text color.
+#' @param legend_color Optional Character: Legend text color.
+#' @param axis_color Optional Character: Axis line color.
+#' @param grid_color Optional Character: Grid or split-line color.
+#' @param tooltip_bg Optional Character: Tooltip background color.
+#' @param tooltip_border_color Optional Character: Tooltip border color.
+#' @param tooltip_color Optional Character: Tooltip text color.
+#' @return [Theme]: Theme object.
 #' @export
 theme_light <- function(
   base_font_size = 12,
@@ -305,7 +305,7 @@ theme_light <- function(
 #' the base; all other text defaults to 1x.
 #'
 #' @inheritParams theme_light
-#' @return A [Theme] object.
+#' @return [Theme]: Theme object.
 #' @export
 theme_dark <- function(
   base_font_size = 12,

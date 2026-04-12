@@ -20,32 +20,34 @@ draw_scatter(
 )
 }
 \arguments{
-\item{x}{Numeric x values.}
+\item{x}{Numeric: X values.}
 
-\item{y}{Numeric y values.}
+\item{y}{Numeric: Y values.}
 
-\item{size}{Optional numeric vector for symbol sizes.}
+\item{size}{Optional Numeric: Symbol sizes.}
 
-\item{group}{Optional grouping factor for multiple series.}
+\item{group}{Optional Vector: Grouping variable for multiple series.}
 
-\item{fit}{Fit method: \code{NULL} (no fit), \code{"glm"} for \code{\link[stats:glm]{stats::glm()}}, or
+\item{fit}{Optional Character \{"glm", "gam"\}: Fit method. \code{NULL} disables fitting.
 \code{"gam"} for \code{\link[mgcv:gam]{mgcv::gam()}}. The fitted line and 95\\% confidence band
 are computed per group when \code{group} is provided.}
 
-\item{se}{Whether to show the confidence band around the fit line.}
+\item{se}{Logical: Whether to show the confidence band.}
 
-\item{fit_alpha}{Alpha (opacity) for the confidence band fill.}
+\item{fit_alpha}{Numeric \verb{[0, 1]}: Opacity for the confidence-band fill.}
 
-\item{n_fit}{Number of equally spaced points at which to evaluate the fit.}
+\item{n_fit}{Numeric \verb{[1, Inf)}: Number of evaluation points for the fit.}
 
-\item{title}{Chart title string.}
+\item{title}{Optional Character: Chart title.}
 
-\item{theme}{A \link{Theme} object or NULL.}
+\item{theme}{Optional \link{Theme}: Theme override.}
 
-\item{width, height}{Widget dimensions.}
+\item{width}{Optional Character or Numeric: Widget width.}
+
+\item{height}{Optional Character or Numeric: Widget height.}
 }
 \value{
-An htmlwidget.
+htmlwidget: Widget object.
 }
 \description{
 Quick scatter plot from x/y data with optional fitted line and

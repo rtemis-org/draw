@@ -18,27 +18,29 @@ draw_density(
 )
 }
 \arguments{
-\item{x}{Numeric vector of values.}
+\item{x}{Numeric: Values used for density estimation.}
 
-\item{group}{Optional grouping factor for multiple density traces.}
+\item{group}{Optional Vector: Grouping variable for multiple density traces.}
 
-\item{n}{Number of equally spaced points for density estimation.}
+\item{n}{Numeric \verb{[1, Inf)}: Number of equally spaced points for density estimation.}
 
-\item{bw}{Bandwidth for density estimation. Passed to \code{\link[stats:density]{stats::density()}}.}
+\item{bw}{Character or Numeric: Bandwidth passed to \code{\link[stats:density]{stats::density()}}.}
 
-\item{na.rm}{Logical: if \code{TRUE} (default), remove \code{NA} values before
+\item{na.rm}{Logical: Whether to remove \code{NA} values before
 computing densities.}
 
-\item{title}{Chart title string.}
+\item{title}{Optional Character: Chart title.}
 
-\item{theme}{A \link{Theme} object or NULL.}
+\item{theme}{Optional \link{Theme}: Theme override.}
 
-\item{width, height}{Widget dimensions.}
+\item{width}{Optional Character or Numeric: Widget width.}
 
-\item{verbosity}{Integer: if > 0, print messages about removed \code{NA} values.}
+\item{height}{Optional Character or Numeric: Widget height.}
+
+\item{verbosity}{Integer \verb{[0, Inf)}: Verbosity level for removed-\code{NA} messages.}
 }
 \value{
-An htmlwidget.
+htmlwidget: Widget object.
 }
 \description{
 Kernel density estimation plot from numeric data, with optional grouping

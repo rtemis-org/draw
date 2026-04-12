@@ -21,31 +21,31 @@ BoxplotSeries(
 )
 }
 \arguments{
-\item{name}{Series name.}
+\item{name}{Optional Character: Series name.}
 
-\item{data}{Boxplot data. Each element is \code{c(min, Q1, median, Q3, max)}.}
+\item{data}{Optional list: Boxplot data. Each element is \code{c(min, Q1, median, Q3, max)}.}
 
-\item{x_axis_index}{Index of the x axis to use.}
+\item{x_axis_index}{Optional Numeric \verb{[0, Inf)}: X-axis index.}
 
-\item{y_axis_index}{Index of the y axis to use.}
+\item{y_axis_index}{Optional Numeric \verb{[0, Inf)}: Y-axis index.}
 
-\item{silent}{Whether this series is silent.}
+\item{silent}{Optional Logical: Whether the series is silent.}
 
-\item{legend_hover_link}{Whether to highlight related legends on hover.}
+\item{legend_hover_link}{Optional Logical: Whether to highlight related legends on hover.}
 
-\item{color}{Series color override.}
+\item{color}{Optional Character: Series color override.}
 
-\item{z_level}{Canvas layer index.}
+\item{z_level}{Optional Numeric: Canvas layer index.}
 
-\item{z}{Front-back order within the same layer.}
+\item{z}{Optional Numeric: Front-back order within the same layer.}
 
-\item{layout}{Layout orientation: \code{"horizontal"} or \code{"vertical"}.}
+\item{layout}{Optional Character \{"horizontal", "vertical"\}: Layout orientation.}
 
-\item{box_width}{Box width range: length-2 vector of numbers or strings.}
+\item{box_width}{Optional Numeric or Character: Box-width range as a length-2 vector.}
 
-\item{item_style}{An \link{ItemStyle} for boxplot elements.}
+\item{item_style}{Optional \link{ItemStyle}: Boxplot styling.}
 
-\item{label}{A \link{LabelOption} for data labels.}
+\item{label}{Optional \link{LabelOption}: Data-label configuration.}
 }
 \description{
 Configuration for a boxplot chart series.

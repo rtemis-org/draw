@@ -14,24 +14,24 @@ draw(
 )
 }
 \arguments{
-\item{option}{An \link{EChartsOption} object or a named list.}
+\item{option}{\link{EChartsOption} or named list: Option object to render.}
 
-\item{theme}{A \link{Theme} object, a plain list, \code{NULL} (default) for
+\item{theme}{Optional \link{Theme}, list, or \code{NA}: Theme override. \code{NULL} enables
 auto-detection of light/dark mode, or \code{NA} for no theme (raw ECharts
 defaults). When \code{NULL}, the widget detects dark mode from VS Code,
 RStudio, or the browser's \code{prefers-color-scheme} and applies
 \code{\link[=theme_light]{theme_light()}} or \code{\link[=theme_dark]{theme_dark()}} accordingly.}
 
-\item{renderer}{Rendering engine: \code{"canvas"} (default) or \code{"svg"}.}
+\item{renderer}{Character \{"canvas", "svg"\}: Rendering engine.}
 
-\item{width}{Widget width (CSS units or NULL for auto).}
+\item{width}{Optional Character or Numeric: Widget width.}
 
-\item{height}{Widget height (CSS units or NULL for auto).}
+\item{height}{Optional Character or Numeric: Widget height.}
 
-\item{elementId}{Optional explicit element ID.}
+\item{elementId}{Optional Character: Explicit element ID.}
 }
 \value{
-An htmlwidget object.
+htmlwidget: Widget object.
 }
 \description{
 Low-level function that takes an \link{EChartsOption} (or a plain list) and

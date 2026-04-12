@@ -18,28 +18,28 @@
 #' Corresponds to `LineSeriesOption` in `src/chart/line/LineSeries.ts` (line 74).
 #' ECharts docs: \url{https://echarts.apache.org/en/option.html#series-line}
 #'
-#' @param name Series name for legend display.
-#' @param data Data values. Numeric vector, or list of (x, y) pairs.
-#' @param x_axis_index Index of the x axis to use.
-#' @param y_axis_index Index of the y axis to use.
-#' @param stack Stack group name for stacked area charts.
-#' @param smooth Whether to smooth the line. TRUE/FALSE or a number (0-1).
-#' @param step Step line mode: FALSE, `"start"`, `"end"`, or `"middle"`.
-#' @param connect_nulls Whether to connect across null points.
-#' @param clip Whether to clip overflow.
-#' @param show_symbol Whether to show symbols on data points.
-#' @param symbol Symbol type: `"circle"`, `"rect"`, `"roundRect"`, `"triangle"`,
+#' @param name Optional Character: Series name for legend display.
+#' @param data Optional Numeric or list: Data values.
+#' @param x_axis_index Optional Numeric `[0, Inf)`: X-axis index.
+#' @param y_axis_index Optional Numeric `[0, Inf)`: Y-axis index.
+#' @param stack Optional Character: Stack group name.
+#' @param smooth Optional Logical or Numeric `[0, 1]`: Line smoothing.
+#' @param step Optional Logical or Character \{"start", "end", "middle"\}: Step line mode.
+#' @param connect_nulls Optional Logical: Whether to connect across `NULL` points.
+#' @param clip Optional Logical: Whether to clip overflow.
+#' @param show_symbol Optional Logical: Whether to show data-point symbols.
+#' @param symbol Optional Character \{"circle", "rect", "roundRect", "triangle", "diamond", "pin", "arrow", "none"\}: Symbol type.
 #'   `"diamond"`, `"pin"`, `"arrow"`, `"none"`, or custom SVG path.
-#' @param symbol_size Symbol size in px. Number or length-2 vector.
-#' @param color Series color override.
-#' @param line_style A [LineStyle] object.
-#' @param area_style An [AreaStyle] object (enables area fill).
-#' @param item_style An [ItemStyle] for data point markers.
-#' @param label A [LabelOption] for data labels.
-#' @param legend_hover_link Whether to highlight related legends on hover.
-#' @param silent Whether this series is silent (no events).
-#' @param z_level Canvas layer index.
-#' @param z Front-back order within the same layer.
+#' @param symbol_size Optional Numeric: Symbol size in pixels.
+#' @param color Optional Character: Series color override.
+#' @param line_style Optional [LineStyle]: Line styling.
+#' @param area_style Optional [AreaStyle]: Area fill styling.
+#' @param item_style Optional [ItemStyle]: Data-point marker styling.
+#' @param label Optional [LabelOption]: Data-label configuration.
+#' @param legend_hover_link Optional Logical: Whether to highlight related legends on hover.
+#' @param silent Optional Logical: Whether the series is silent.
+#' @param z_level Optional Numeric: Canvas layer index.
+#' @param z Optional Numeric: Front-back order within the same layer.
 #' @export
 LineSeries <- S7::new_class(
   "LineSeries",
@@ -115,27 +115,27 @@ S7::method(to_list, LineSeries) <- function(x, ...) {
 #' and `BaseBarSeriesOption` in `src/chart/bar/BaseBarSeries.ts` (line 38).
 #' ECharts docs: \url{https://echarts.apache.org/en/option.html#series-bar}
 #'
-#' @param name Series name for legend display.
-#' @param data Data values.
-#' @param x_axis_index Index of the x axis to use.
-#' @param y_axis_index Index of the y axis to use.
-#' @param stack Stack group name for stacked bars.
-#' @param clip Whether to clip overflow.
-#' @param bar_width Bar width. Number (px) or percent string.
-#' @param bar_max_width Maximum bar width.
-#' @param bar_min_width Minimum bar width.
-#' @param bar_min_height Minimum bar height.
-#' @param bar_gap Gap between bars in the same category. Percent string or number.
-#' @param bar_category_gap Gap between categories.
-#' @param round_cap Whether to use round cap (polar bar only).
-#' @param show_background Whether to show bar background.
-#' @param color Series color override.
-#' @param item_style An [ItemStyle] for bars.
-#' @param label A [LabelOption] for data labels.
-#' @param legend_hover_link Whether to highlight related legends on hover.
-#' @param silent Whether this series is silent.
-#' @param z_level Canvas layer index.
-#' @param z Front-back order within the same layer.
+#' @param name Optional Character: Series name for legend display.
+#' @param data Optional Vector or list: Data values.
+#' @param x_axis_index Optional Numeric `[0, Inf)`: X-axis index.
+#' @param y_axis_index Optional Numeric `[0, Inf)`: Y-axis index.
+#' @param stack Optional Character: Stack group name.
+#' @param clip Optional Logical: Whether to clip overflow.
+#' @param bar_width Optional Numeric or Character: Bar width.
+#' @param bar_max_width Optional Numeric or Character: Maximum bar width.
+#' @param bar_min_width Optional Numeric or Character: Minimum bar width.
+#' @param bar_min_height Optional Numeric `[0, Inf)`: Minimum bar height.
+#' @param bar_gap Optional Numeric or Character: Gap between bars in the same category.
+#' @param bar_category_gap Optional Numeric or Character: Gap between categories.
+#' @param round_cap Optional Logical: Whether to use a round cap.
+#' @param show_background Optional Logical: Whether to show the bar background.
+#' @param color Optional Character: Series color override.
+#' @param item_style Optional [ItemStyle]: Bar styling.
+#' @param label Optional [LabelOption]: Data-label configuration.
+#' @param legend_hover_link Optional Logical: Whether to highlight related legends on hover.
+#' @param silent Optional Logical: Whether the series is silent.
+#' @param z_level Optional Numeric: Canvas layer index.
+#' @param z Optional Numeric: Front-back order within the same layer.
 #' @export
 BarSeries <- S7::new_class(
   "BarSeries",
@@ -181,22 +181,22 @@ S7::method(to_list, BarSeries) <- function(x, ...) {
 #' Corresponds to `ScatterSeriesOption` in `src/chart/scatter/ScatterSeries.ts` (line 64).
 #' ECharts docs: \url{https://echarts.apache.org/en/option.html#series-scatter}
 #'
-#' @param name Series name for legend display.
-#' @param data Data values. List of (x, y) pairs or numeric vectors.
-#' @param x_axis_index Index of the x axis to use.
-#' @param y_axis_index Index of the y axis to use.
-#' @param clip Whether to clip overflow.
-#' @param symbol Symbol type.
-#' @param symbol_size Symbol size. Number, length-2 vector, or NULL.
-#' @param color Series color override.
-#' @param item_style An [ItemStyle] for data point markers.
-#' @param label A [LabelOption] for data labels.
-#' @param large Whether to enable large data optimization.
-#' @param large_threshold Threshold for large mode.
-#' @param legend_hover_link Whether to highlight related legends on hover.
-#' @param silent Whether this series is silent.
-#' @param z_level Canvas layer index.
-#' @param z Front-back order within the same layer.
+#' @param name Optional Character: Series name for legend display.
+#' @param data Optional Vector or list: Data values.
+#' @param x_axis_index Optional Numeric `[0, Inf)`: X-axis index.
+#' @param y_axis_index Optional Numeric `[0, Inf)`: Y-axis index.
+#' @param clip Optional Logical: Whether to clip overflow.
+#' @param symbol Optional Character: Symbol type.
+#' @param symbol_size Optional Numeric or function: Symbol size.
+#' @param color Optional Character: Series color override.
+#' @param item_style Optional [ItemStyle]: Data-point marker styling.
+#' @param label Optional [LabelOption]: Data-label configuration.
+#' @param large Optional Logical: Whether to enable large-data optimization.
+#' @param large_threshold Optional Numeric `[0, Inf)`: Threshold for large mode.
+#' @param legend_hover_link Optional Logical: Whether to highlight related legends on hover.
+#' @param silent Optional Logical: Whether the series is silent.
+#' @param z_level Optional Numeric: Canvas layer index.
+#' @param z Optional Numeric: Front-back order within the same layer.
 #' @export
 ScatterSeries <- S7::new_class(
   "ScatterSeries",
@@ -246,32 +246,35 @@ S7::method(to_list, ScatterSeries) <- function(x, ...) {
 #' Corresponds to `PieSeriesOption` in `src/chart/pie/PieSeries.ts` (line 105).
 #' ECharts docs: \url{https://echarts.apache.org/en/option.html#series-pie}
 #'
-#' @param name Series name.
-#' @param data Pie data. A list of named lists with `value` and `name` fields,
+#' @param name Optional Character: Series name.
+#' @param data Optional Numeric or list: Pie data. A list of named lists with `value` and `name` fields,
 #'   or a numeric vector.
-#' @param center Pie center: length-2 vector of numbers or percent strings.
-#' @param radius Pie radius: a single value or `c(inner, outer)`.
-#' @param rose_type Nightingale chart type: `"radius"` or `"area"`.
-#' @param clockwise Whether to layout clockwise.
-#' @param start_angle Starting angle in degrees.
-#' @param end_angle Ending angle in degrees or `"auto"`.
-#' @param pad_angle Padding angle between sectors in degrees.
-#' @param min_angle Minimum sector angle.
-#' @param min_show_label_angle Minimum angle to show label.
-#' @param selected_offset Offset of selected sector.
-#' @param avoid_label_overlap Whether to auto-avoid label overlap.
-#' @param percent_precision Decimal precision for percentage.
-#' @param still_show_zero_sum Whether to show the pie when all values are 0.
-#' @param animation_type Animation type on first render: `"expansion"` or `"scale"`.
-#' @param color Series color override.
-#' @param item_style An [ItemStyle] for pie sectors.
-#' @param label A [LabelOption] for data labels.
-#' @param label_line A [LabelLine] for label connector lines.
-#' @param legend_hover_link Whether to highlight related legends on hover.
-#' @param silent Whether this series is silent.
-#' @param z_level Canvas layer index.
-#' @param z Front-back order within the same layer.
-#' @param left,right,top,bottom Position for the pie chart.
+#' @param center Optional Numeric or Character: Pie center as a length-2 vector.
+#' @param radius Optional Numeric or Character: Pie radius.
+#' @param rose_type Optional Character \{"radius", "area"\}: Nightingale chart type.
+#' @param clockwise Optional Logical: Whether to lay out sectors clockwise.
+#' @param start_angle Optional Numeric: Starting angle in degrees.
+#' @param end_angle Optional Numeric or Character \{"auto"\}: Ending angle in degrees.
+#' @param pad_angle Optional Numeric `[0, Inf)`: Padding angle between sectors in degrees.
+#' @param min_angle Optional Numeric `[0, Inf)`: Minimum sector angle.
+#' @param min_show_label_angle Optional Numeric `[0, Inf)`: Minimum angle required to show labels.
+#' @param selected_offset Optional Numeric `[0, Inf)`: Offset of a selected sector.
+#' @param avoid_label_overlap Optional Logical: Whether to avoid label overlap automatically.
+#' @param percent_precision Optional Numeric `[0, Inf)`: Decimal precision for percentages.
+#' @param still_show_zero_sum Optional Logical: Whether to show the pie when all values are zero.
+#' @param animation_type Optional Character \{"expansion", "scale"\}: First-render animation type.
+#' @param color Optional Character: Series color override.
+#' @param item_style Optional [ItemStyle]: Pie-sector styling.
+#' @param label Optional [LabelOption]: Data-label configuration.
+#' @param label_line Optional [LabelLine]: Label connector line configuration.
+#' @param legend_hover_link Optional Logical: Whether to highlight related legends on hover.
+#' @param silent Optional Logical: Whether the series is silent.
+#' @param z_level Optional Numeric: Canvas layer index.
+#' @param z Optional Numeric: Front-back order within the same layer.
+#' @param left Optional Numeric or Character: Left position.
+#' @param right Optional Numeric or Character: Right position.
+#' @param top Optional Numeric or Character: Top position.
+#' @param bottom Optional Numeric or Character: Bottom position.
 #' @export
 PieSeries <- S7::new_class(
   "PieSeries",
@@ -356,19 +359,19 @@ S7::method(to_list, PieSeries) <- function(x, ...) {
 #' Corresponds to `BoxplotSeriesOption` in `src/chart/boxplot/BoxplotSeries.ts` (line 59).
 #' ECharts docs: \url{https://echarts.apache.org/en/option.html#series-boxplot}
 #'
-#' @param name Series name.
-#' @param data Boxplot data. Each element is `c(min, Q1, median, Q3, max)`.
-#' @param x_axis_index Index of the x axis to use.
-#' @param y_axis_index Index of the y axis to use.
-#' @param layout Layout orientation: `"horizontal"` or `"vertical"`.
-#' @param box_width Box width range: length-2 vector of numbers or strings.
-#' @param color Series color override.
-#' @param item_style An [ItemStyle] for boxplot elements.
-#' @param label A [LabelOption] for data labels.
-#' @param legend_hover_link Whether to highlight related legends on hover.
-#' @param silent Whether this series is silent.
-#' @param z_level Canvas layer index.
-#' @param z Front-back order within the same layer.
+#' @param name Optional Character: Series name.
+#' @param data Optional list: Boxplot data. Each element is `c(min, Q1, median, Q3, max)`.
+#' @param x_axis_index Optional Numeric `[0, Inf)`: X-axis index.
+#' @param y_axis_index Optional Numeric `[0, Inf)`: Y-axis index.
+#' @param layout Optional Character \{"horizontal", "vertical"\}: Layout orientation.
+#' @param box_width Optional Numeric or Character: Box-width range as a length-2 vector.
+#' @param color Optional Character: Series color override.
+#' @param item_style Optional [ItemStyle]: Boxplot styling.
+#' @param label Optional [LabelOption]: Data-label configuration.
+#' @param legend_hover_link Optional Logical: Whether to highlight related legends on hover.
+#' @param silent Optional Logical: Whether the series is silent.
+#' @param z_level Optional Numeric: Canvas layer index.
+#' @param z Optional Numeric: Front-back order within the same layer.
 #' @export
 BoxplotSeries <- S7::new_class(
   "BoxplotSeries",

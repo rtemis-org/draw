@@ -19,31 +19,30 @@ LabelOption(
 )
 }
 \arguments{
-\item{show}{Whether to show the label.}
+\item{show}{Optional Logical: Whether to show the label.}
 
-\item{position}{Label position. One of: \code{"top"}, \code{"left"}, \code{"right"},
+\item{position}{Optional Character \{"top", "left", "right", "bottom", "inside", "insideLeft", "insideRight", "insideTop", "insideBottom", "insideTopLeft", "insideBottomLeft", "insideTopRight", "insideBottomRight", "outside"\} or Numeric: Label position.
 \code{"bottom"}, \code{"inside"}, \code{"insideLeft"}, \code{"insideRight"}, \code{"insideTop"},
 \code{"insideBottom"}, \code{"insideTopLeft"}, \code{"insideBottomLeft"},
 \code{"insideTopRight"}, \code{"insideBottomRight"}, \code{"outside"}.}
 
-\item{distance}{Distance from the element.}
+\item{distance}{Optional Numeric: Distance from the element.}
 
-\item{rotate}{Rotation angle in degrees.}
+\item{rotate}{Optional Numeric: Rotation angle in degrees.}
 
-\item{offset}{Offset \code{c(x, y)} in pixels.}
+\item{offset}{Optional Numeric: Offset \code{c(x, y)} in pixels.}
 
-\item{formatter}{Label text formatter. String template (e.g. \code{"{b}: {c}"})
-or an R function.}
+\item{formatter}{Optional Character or function: Label text formatter.}
 
-\item{silent}{Whether the label is silent (no mouse events).}
+\item{silent}{Optional Logical: Whether the label is silent.}
 
-\item{precision}{Number precision, or \code{"auto"}.}
+\item{precision}{Optional Numeric or Character \{"auto"\}: Numeric precision.}
 
-\item{value_animation}{Whether to animate value changes.}
+\item{value_animation}{Optional Logical: Whether to animate value changes.}
 
-\item{min_margin}{Minimum margin between labels.}
+\item{min_margin}{Optional Numeric \verb{[0, Inf)}: Minimum margin between labels.}
 
-\item{text_style}{A \link{TextStyle} object for text appearance.}
+\item{text_style}{Optional \link{TextStyle}: Text appearance.}
 }
 \description{
 Text label configuration for chart elements. Combines label-specific

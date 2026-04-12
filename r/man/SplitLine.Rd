@@ -13,15 +13,15 @@ SplitLine(
 )
 }
 \arguments{
-\item{show}{Whether to show split lines.}
+\item{show}{Optional Logical: Whether to show split lines.}
 
-\item{interval}{Interval of split lines. "auto", a number, or NULL.}
+\item{interval}{Optional Numeric or Character \{"auto"\}: Split-line interval.}
 
-\item{show_min_line}{Whether to show the split line at the min end.}
+\item{show_min_line}{Optional Logical: Whether to show the split line at the minimum end.}
 
-\item{show_max_line}{Whether to show the split line at the max end.}
+\item{show_max_line}{Optional Logical: Whether to show the split line at the maximum end.}
 
-\item{line_style}{A \link{LineStyle} object.}
+\item{line_style}{Optional \link{LineStyle}: Line styling.}
 }
 \description{
 Configuration for grid split lines perpendicular to the axis.

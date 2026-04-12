@@ -25,40 +25,40 @@ EChartsOption(
 )
 }
 \arguments{
-\item{title}{A \link{Title} or list of Title objects.}
+\item{title}{Optional \link{Title} or list: Title configuration.}
 
-\item{legend}{A \link{Legend} or list of Legend objects.}
+\item{legend}{Optional \link{Legend} or list: Legend configuration.}
 
-\item{grid}{A \link{Grid} or list of Grid objects.}
+\item{grid}{Optional \link{Grid} or list: Grid configuration.}
 
-\item{x_axis}{An \link{Axis} or list of Axis objects (xAxis).}
+\item{x_axis}{Optional \link{Axis} or list: X-axis configuration (\code{xAxis}).}
 
-\item{y_axis}{An \link{Axis} or list of Axis objects (yAxis).}
+\item{y_axis}{Optional \link{Axis} or list: Y-axis configuration (\code{yAxis}).}
 
-\item{tooltip}{A \link{Tooltip} object.}
+\item{tooltip}{Optional \link{Tooltip}: Tooltip configuration.}
 
-\item{series}{A series object or list of series objects (\link{LineSeries},
+\item{series}{Optional series object or list: Series configuration (\link{LineSeries},
 \link{BarSeries}, \link{ScatterSeries}, \link{PieSeries}, \link{BoxplotSeries}).}
 
-\item{color}{Color palette: character vector of color strings.}
+\item{color}{Optional Character: Color palette.}
 
-\item{background_color}{Chart background color.}
+\item{background_color}{Optional Character: Chart background color.}
 
-\item{text_style}{Global \link{TextStyle} for default text appearance.}
+\item{text_style}{Optional \link{TextStyle}: Global default text style.}
 
-\item{animation}{Whether to enable animation.}
+\item{animation}{Optional Logical: Whether to enable animation.}
 
-\item{animation_threshold}{Threshold of data count to disable animation.}
+\item{animation_threshold}{Optional Numeric \verb{[0, Inf)}: Data-count threshold that disables animation.}
 
-\item{animation_duration}{Duration of initial animation (ms).}
+\item{animation_duration}{Optional Numeric \verb{[0, Inf)}: Initial animation duration in milliseconds.}
 
-\item{animation_easing}{Easing function name.}
+\item{animation_easing}{Optional Character: Animation easing function name.}
 
-\item{animation_delay}{Delay before initial animation (ms).}
+\item{animation_delay}{Optional Numeric \verb{[0, Inf)}: Initial animation delay in milliseconds.}
 
-\item{dark_mode}{Whether to use dark mode. TRUE, FALSE, or "auto".}
+\item{dark_mode}{Optional Logical or Character \{"auto"\}: Dark-mode setting.}
 
-\item{use_utc}{Whether to use UTC for time axis.}
+\item{use_utc}{Optional Logical: Whether to use UTC for time axes.}
 }
 \description{
 The top-level configuration object passed to \code{echarts.setOption()}.

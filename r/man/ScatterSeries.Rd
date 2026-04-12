@@ -24,37 +24,37 @@ ScatterSeries(
 )
 }
 \arguments{
-\item{name}{Series name for legend display.}
+\item{name}{Optional Character: Series name for legend display.}
 
-\item{data}{Data values. List of (x, y) pairs or numeric vectors.}
+\item{data}{Optional Vector or list: Data values.}
 
-\item{x_axis_index}{Index of the x axis to use.}
+\item{x_axis_index}{Optional Numeric \verb{[0, Inf)}: X-axis index.}
 
-\item{y_axis_index}{Index of the y axis to use.}
+\item{y_axis_index}{Optional Numeric \verb{[0, Inf)}: Y-axis index.}
 
-\item{silent}{Whether this series is silent.}
+\item{silent}{Optional Logical: Whether the series is silent.}
 
-\item{legend_hover_link}{Whether to highlight related legends on hover.}
+\item{legend_hover_link}{Optional Logical: Whether to highlight related legends on hover.}
 
-\item{color}{Series color override.}
+\item{color}{Optional Character: Series color override.}
 
-\item{z_level}{Canvas layer index.}
+\item{z_level}{Optional Numeric: Canvas layer index.}
 
-\item{z}{Front-back order within the same layer.}
+\item{z}{Optional Numeric: Front-back order within the same layer.}
 
-\item{clip}{Whether to clip overflow.}
+\item{clip}{Optional Logical: Whether to clip overflow.}
 
-\item{symbol}{Symbol type.}
+\item{symbol}{Optional Character: Symbol type.}
 
-\item{symbol_size}{Symbol size. Number, length-2 vector, or NULL.}
+\item{symbol_size}{Optional Numeric or function: Symbol size.}
 
-\item{large}{Whether to enable large data optimization.}
+\item{large}{Optional Logical: Whether to enable large-data optimization.}
 
-\item{large_threshold}{Threshold for large mode.}
+\item{large_threshold}{Optional Numeric \verb{[0, Inf)}: Threshold for large mode.}
 
-\item{item_style}{An \link{ItemStyle} for data point markers.}
+\item{item_style}{Optional \link{ItemStyle}: Data-point marker styling.}
 
-\item{label}{A \link{LabelOption} for data labels.}
+\item{label}{Optional \link{LabelOption}: Data-label configuration.}
 }
 \description{
 Configuration for a scatter (point) chart series.

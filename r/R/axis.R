@@ -13,14 +13,14 @@
 #' Corresponds to `AxisLineOption` in `src/coord/axisCommonTypes.ts` (line 231).
 #' ECharts docs: \url{https://echarts.apache.org/en/option.html#xAxis.axisLine}
 #'
-#' @param show Whether to show the axis line. TRUE, FALSE, or "auto".
-#' @param on_zero Whether the axis line is on the zero position of the other axis.
-#' @param on_zero_axis_index The index of the other axis on whose zero position
+#' @param show Optional Logical or Character \{"auto"\}: Whether to show the axis line.
+#' @param on_zero Optional Logical: Whether the axis line is on the zero position of the other axis.
+#' @param on_zero_axis_index Optional Numeric `[0, Inf)`: Index of the other axis on whose zero position
 #'   this axis line is drawn.
-#' @param symbol Arrow symbols at both ends: a single string or length-2 vector.
-#' @param symbol_size Arrow symbol size as numeric vector.
-#' @param symbol_offset Arrow symbol offset.
-#' @param line_style A [LineStyle] object.
+#' @param symbol Optional Character: Arrow symbols at both ends.
+#' @param symbol_size Optional Numeric: Arrow symbol size.
+#' @param symbol_offset Optional Numeric or Character: Arrow symbol offset.
+#' @param line_style Optional [LineStyle]: Line styling.
 #' @export
 AxisLine <- S7::new_class(
   "AxisLine",
@@ -83,11 +83,11 @@ S7::method(to_list, AxisLine) <- function(x, ...) {
 #' Corresponds to `AxisTickOption` in `src/coord/axisCommonTypes.ts` (line 244).
 #' ECharts docs: \url{https://echarts.apache.org/en/option.html#xAxis.axisTick}
 #'
-#' @param show Whether to show ticks. TRUE, FALSE, or "auto".
-#' @param inside Whether ticks are inside the grid.
-#' @param length Tick mark length in pixels.
-#' @param align_with_label Whether to align tick with label (category axis).
-#' @param line_style A [LineStyle] object.
+#' @param show Optional Logical or Character \{"auto"\}: Whether to show ticks.
+#' @param inside Optional Logical: Whether ticks are inside the grid.
+#' @param length Optional Numeric `[0, Inf)`: Tick mark length in pixels.
+#' @param align_with_label Optional Logical: Whether to align ticks with labels.
+#' @param line_style Optional [LineStyle]: Line styling.
 #' @export
 AxisTick <- S7::new_class(
   "AxisTick",
@@ -124,10 +124,10 @@ S7::method(to_list, AxisTick) <- function(x, ...) {
 #' Corresponds to `MinorTickOption` in `src/coord/axisCommonTypes.ts` (line 346).
 #' ECharts docs: \url{https://echarts.apache.org/en/option.html#xAxis.minorTick}
 #'
-#' @param show Whether to show minor ticks.
-#' @param split_number Number of minor ticks between two main ticks.
-#' @param length Minor tick length in pixels.
-#' @param line_style A [LineStyle] object.
+#' @param show Optional Logical: Whether to show minor ticks.
+#' @param split_number Optional Numeric `[0, Inf)`: Number of minor ticks between two main ticks.
+#' @param length Optional Numeric `[0, Inf)`: Minor tick length in pixels.
+#' @param line_style Optional [LineStyle]: Line styling.
 #' @export
 MinorTick <- S7::new_class(
   "MinorTick",
@@ -152,11 +152,11 @@ S7::method(to_list, MinorTick) <- function(x, ...) {
 #' Corresponds to `SplitLineOption` in `src/coord/axisCommonTypes.ts` (line 353).
 #' ECharts docs: \url{https://echarts.apache.org/en/option.html#xAxis.splitLine}
 #'
-#' @param show Whether to show split lines.
-#' @param interval Interval of split lines. "auto", a number, or NULL.
-#' @param show_min_line Whether to show the split line at the min end.
-#' @param show_max_line Whether to show the split line at the max end.
-#' @param line_style A [LineStyle] object.
+#' @param show Optional Logical: Whether to show split lines.
+#' @param interval Optional Numeric or Character \{"auto"\}: Split-line interval.
+#' @param show_min_line Optional Logical: Whether to show the split line at the minimum end.
+#' @param show_max_line Optional Logical: Whether to show the split line at the maximum end.
+#' @param line_style Optional [LineStyle]: Line styling.
 #' @export
 SplitLine <- S7::new_class(
   "SplitLine",
@@ -193,8 +193,8 @@ S7::method(to_list, SplitLine) <- function(x, ...) {
 #' Corresponds to `MinorSplitLineOption` in `src/coord/axisCommonTypes.ts` (line 364).
 #' ECharts docs: \url{https://echarts.apache.org/en/option.html#xAxis.minorSplitLine}
 #'
-#' @param show Whether to show minor split lines.
-#' @param line_style A [LineStyle] object.
+#' @param show Optional Logical: Whether to show minor split lines.
+#' @param line_style Optional [LineStyle]: Line styling.
 #' @export
 MinorSplitLine <- S7::new_class(
   "MinorSplitLine",
@@ -217,9 +217,9 @@ S7::method(to_list, MinorSplitLine) <- function(x, ...) {
 #' Corresponds to `SplitAreaOption` in `src/coord/axisCommonTypes.ts` (line 369).
 #' ECharts docs: \url{https://echarts.apache.org/en/option.html#xAxis.splitArea}
 #'
-#' @param show Whether to show the split area.
-#' @param interval Interval of split areas. "auto", a number, or NULL.
-#' @param area_style An [AreaStyle] object.
+#' @param show Optional Logical: Whether to show the split area.
+#' @param interval Optional Numeric or Character \{"auto"\}: Split-area interval.
+#' @param area_style Optional [AreaStyle]: Area styling.
 #' @export
 SplitArea <- S7::new_class(
   "SplitArea",
@@ -255,16 +255,16 @@ S7::method(to_list, SplitArea) <- function(x, ...) {
 #' Corresponds to `AxisLabelBaseOption` in `src/coord/axisCommonTypes.ts` (line 312).
 #' ECharts docs: \url{https://echarts.apache.org/en/option.html#xAxis.axisLabel}
 #'
-#' @param show Whether to show axis labels.
-#' @param inside Whether labels are inside the grid.
-#' @param rotate Rotation angle of labels in degrees.
-#' @param margin Space between label and axis line in pixels.
-#' @param formatter Label text formatter. String template or function.
-#' @param show_min_label Whether to show the label at the min end.
-#' @param show_max_label Whether to show the label at the max end.
-#' @param hide_overlap Whether to hide overlapping labels.
-#' @param interval Interval of labels. "auto", a number, or NULL.
-#' @param text_style A [TextStyle] object for text appearance.
+#' @param show Optional Logical: Whether to show axis labels.
+#' @param inside Optional Logical: Whether labels are inside the grid.
+#' @param rotate Optional Numeric: Label rotation angle in degrees.
+#' @param margin Optional Numeric `[0, Inf)`: Space between the label and axis line in pixels.
+#' @param formatter Optional Character or function: Label formatter.
+#' @param show_min_label Optional Logical: Whether to show the label at the minimum end.
+#' @param show_max_label Optional Logical: Whether to show the label at the maximum end.
+#' @param hide_overlap Optional Logical: Whether to hide overlapping labels.
+#' @param interval Optional Numeric or Character \{"auto"\}: Label interval.
+#' @param text_style Optional [TextStyle]: Text appearance.
 #' @export
 AxisLabel <- S7::new_class(
   "AxisLabel",
@@ -316,35 +316,35 @@ S7::method(to_list, AxisLabel) <- function(x, ...) {
 #' Corresponds to `AxisBaseOption` in `src/coord/axisCommonTypes.ts` (line 376).
 #' ECharts docs: \url{https://echarts.apache.org/en/option.html#xAxis}
 #'
-#' @param type Axis type: `"value"`, `"category"`, `"time"`, or `"log"`.
-#' @param show Whether to show the axis.
-#' @param inverse Whether to invert the axis.
-#' @param name Axis name displayed alongside the axis.
-#' @param name_location Name position: `"start"`, `"middle"`, `"center"`, `"end"`.
-#' @param name_rotate Name rotation angle in degrees.
-#' @param name_gap Gap between the axis name and the axis line.
-#' @param name_text_style A [TextStyle] for the axis name.
-#' @param silent Whether the axis is silent (no events).
-#' @param trigger_event Whether the axis triggers events.
-#' @param min Minimum axis value. Number, `"dataMin"`, or NULL.
-#' @param max Maximum axis value. Number, `"dataMax"`, or NULL.
-#' @param scale For value axis: whether to force axis to not contain zero.
-#' @param split_number Suggested number of split segments.
-#' @param interval Mandatory interval between ticks.
-#' @param min_interval Minimum auto-calculated tick interval.
-#' @param max_interval Maximum auto-calculated tick interval.
-#' @param log_base Log base for log axis.
-#' @param boundary_gap Gap at axis boundaries. Logical (category) or length-2
+#' @param type Optional Character \{"value", "category", "time", "log"\}: Axis type.
+#' @param show Optional Logical: Whether to show the axis.
+#' @param inverse Optional Logical: Whether to invert the axis.
+#' @param name Optional Character: Axis name.
+#' @param name_location Optional Character \{"start", "middle", "center", "end"\}: Axis name location.
+#' @param name_rotate Optional Numeric: Axis name rotation angle in degrees.
+#' @param name_gap Optional Numeric `[0, Inf)`: Gap between the axis name and axis line.
+#' @param name_text_style Optional [TextStyle]: Axis name text style.
+#' @param silent Optional Logical: Whether the axis is silent.
+#' @param trigger_event Optional Logical: Whether the axis triggers events.
+#' @param min Optional Numeric or Character \{"dataMin", "dataMax"\}: Minimum axis value.
+#' @param max Optional Numeric or Character \{"dataMin", "dataMax"\}: Maximum axis value.
+#' @param scale Optional Logical: Whether a value axis should avoid forcing zero.
+#' @param split_number Optional Numeric `[0, Inf)`: Suggested number of split segments.
+#' @param interval Optional Numeric `[0, Inf)`: Tick interval.
+#' @param min_interval Optional Numeric `[0, Inf)`: Minimum auto-calculated tick interval.
+#' @param max_interval Optional Numeric `[0, Inf)`: Maximum auto-calculated tick interval.
+#' @param log_base Optional Numeric `[0, Inf)`: Logarithm base for log axes.
+#' @param boundary_gap Optional Logical, Numeric, or Character: Gap at axis boundaries. Logical (category) or length-2
 #'   vector of numbers/strings (numeric axes).
-#' @param align_ticks Whether to align ticks with the first axis.
-#' @param data Category data vector.
-#' @param axis_line An [AxisLine] object.
-#' @param axis_tick An [AxisTick] object.
-#' @param minor_tick A [MinorTick] object.
-#' @param axis_label An [AxisLabel] object.
-#' @param split_line A [SplitLine] object.
-#' @param minor_split_line A [MinorSplitLine] object.
-#' @param split_area A [SplitArea] object.
+#' @param align_ticks Optional Logical: Whether to align ticks with the first axis.
+#' @param data Optional Vector: Category data.
+#' @param axis_line Optional [AxisLine]: Axis line configuration.
+#' @param axis_tick Optional [AxisTick]: Axis tick configuration.
+#' @param minor_tick Optional [MinorTick]: Minor tick configuration.
+#' @param axis_label Optional [AxisLabel]: Axis label configuration.
+#' @param split_line Optional [SplitLine]: Split line configuration.
+#' @param minor_split_line Optional [MinorSplitLine]: Minor split line configuration.
+#' @param split_area Optional [SplitArea]: Split area configuration.
 #' @export
 Axis <- S7::new_class(
   "Axis",

@@ -13,15 +13,15 @@ AxisTick(
 )
 }
 \arguments{
-\item{show}{Whether to show ticks. TRUE, FALSE, or "auto".}
+\item{show}{Optional Logical or Character \{"auto"\}: Whether to show ticks.}
 
-\item{inside}{Whether ticks are inside the grid.}
+\item{inside}{Optional Logical: Whether ticks are inside the grid.}
 
-\item{length}{Tick mark length in pixels.}
+\item{length}{Optional Numeric \verb{[0, Inf)}: Tick mark length in pixels.}
 
-\item{align_with_label}{Whether to align tick with label (category axis).}
+\item{align_with_label}{Optional Logical: Whether to align ticks with labels.}
 
-\item{line_style}{A \link{LineStyle} object.}
+\item{line_style}{Optional \link{LineStyle}: Line styling.}
 }
 \description{
 Configuration for axis tick marks.

@@ -23,35 +23,35 @@ Grid(
 )
 }
 \arguments{
-\item{show}{Whether to show the grid border.}
+\item{show}{Optional Logical: Whether to show the grid border.}
 
-\item{left}{Distance from left side of container. Number (px) or percent string.}
+\item{left}{Optional Numeric or Character: Distance from the left side of the container.}
 
-\item{right}{Distance from right side.}
+\item{right}{Optional Numeric or Character: Distance from the right side of the container.}
 
-\item{top}{Distance from top.}
+\item{top}{Optional Numeric or Character: Distance from the top of the container.}
 
-\item{bottom}{Distance from bottom.}
+\item{bottom}{Optional Numeric or Character: Distance from the bottom of the container.}
 
-\item{width}{Grid width. Number (px) or percent string.}
+\item{width}{Optional Numeric or Character: Grid width.}
 
-\item{height}{Grid height.}
+\item{height}{Optional Numeric or Character: Grid height.}
 
-\item{contain_label}{Whether the grid region contains axis labels.}
+\item{contain_label}{Optional Logical: Whether the grid region contains axis labels.}
 
-\item{background_color}{Grid background color.}
+\item{background_color}{Optional Character: Grid background color.}
 
-\item{border_width}{Grid border width.}
+\item{border_width}{Optional Numeric \verb{[0, Inf)}: Grid border width.}
 
-\item{border_color}{Grid border color.}
+\item{border_color}{Optional Character: Grid border color.}
 
-\item{shadow_blur}{Shadow blur size.}
+\item{shadow_blur}{Optional Numeric \verb{[0, Inf)}: Shadow blur radius.}
 
-\item{shadow_color}{Shadow color.}
+\item{shadow_color}{Optional Character: Shadow color.}
 
-\item{shadow_offset_x}{Shadow horizontal offset.}
+\item{shadow_offset_x}{Optional Numeric: Shadow horizontal offset.}
 
-\item{shadow_offset_y}{Shadow vertical offset.}
+\item{shadow_offset_y}{Optional Numeric: Shadow vertical offset.}
 }
 \description{
 Configuration for the cartesian coordinate grid container.

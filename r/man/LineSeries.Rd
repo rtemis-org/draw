@@ -29,48 +29,48 @@ LineSeries(
 )
 }
 \arguments{
-\item{name}{Series name for legend display.}
+\item{name}{Optional Character: Series name for legend display.}
 
-\item{data}{Data values. Numeric vector, or list of (x, y) pairs.}
+\item{data}{Optional Numeric or list: Data values.}
 
-\item{x_axis_index}{Index of the x axis to use.}
+\item{x_axis_index}{Optional Numeric \verb{[0, Inf)}: X-axis index.}
 
-\item{y_axis_index}{Index of the y axis to use.}
+\item{y_axis_index}{Optional Numeric \verb{[0, Inf)}: Y-axis index.}
 
-\item{stack}{Stack group name for stacked area charts.}
+\item{stack}{Optional Character: Stack group name.}
 
-\item{silent}{Whether this series is silent (no events).}
+\item{silent}{Optional Logical: Whether the series is silent.}
 
-\item{legend_hover_link}{Whether to highlight related legends on hover.}
+\item{legend_hover_link}{Optional Logical: Whether to highlight related legends on hover.}
 
-\item{color}{Series color override.}
+\item{color}{Optional Character: Series color override.}
 
-\item{z_level}{Canvas layer index.}
+\item{z_level}{Optional Numeric: Canvas layer index.}
 
-\item{z}{Front-back order within the same layer.}
+\item{z}{Optional Numeric: Front-back order within the same layer.}
 
-\item{smooth}{Whether to smooth the line. TRUE/FALSE or a number (0-1).}
+\item{smooth}{Optional Logical or Numeric \verb{[0, 1]}: Line smoothing.}
 
-\item{step}{Step line mode: FALSE, \code{"start"}, \code{"end"}, or \code{"middle"}.}
+\item{step}{Optional Logical or Character \{"start", "end", "middle"\}: Step line mode.}
 
-\item{connect_nulls}{Whether to connect across null points.}
+\item{connect_nulls}{Optional Logical: Whether to connect across \code{NULL} points.}
 
-\item{clip}{Whether to clip overflow.}
+\item{clip}{Optional Logical: Whether to clip overflow.}
 
-\item{show_symbol}{Whether to show symbols on data points.}
+\item{show_symbol}{Optional Logical: Whether to show data-point symbols.}
 
-\item{symbol}{Symbol type: \code{"circle"}, \code{"rect"}, \code{"roundRect"}, \code{"triangle"},
+\item{symbol}{Optional Character \{"circle", "rect", "roundRect", "triangle", "diamond", "pin", "arrow", "none"\}: Symbol type.
 \code{"diamond"}, \code{"pin"}, \code{"arrow"}, \code{"none"}, or custom SVG path.}
 
-\item{symbol_size}{Symbol size in px. Number or length-2 vector.}
+\item{symbol_size}{Optional Numeric: Symbol size in pixels.}
 
-\item{line_style}{A \link{LineStyle} object.}
+\item{line_style}{Optional \link{LineStyle}: Line styling.}
 
-\item{area_style}{An \link{AreaStyle} object (enables area fill).}
+\item{area_style}{Optional \link{AreaStyle}: Area fill styling.}
 
-\item{item_style}{An \link{ItemStyle} for data point markers.}
+\item{item_style}{Optional \link{ItemStyle}: Data-point marker styling.}
 
-\item{label}{A \link{LabelOption} for data labels.}
+\item{label}{Optional \link{LabelOption}: Data-label configuration.}
 }
 \description{
 Configuration for a line chart series.
