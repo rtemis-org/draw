@@ -49,7 +49,7 @@ draw <- function(
   fix_empty_objects <- function(x) {
     if (is.list(x)) {
       if (length(x) == 0L && is.null(names(x))) {
-        return(setNames(list(), character(0)))
+        return(stats::setNames(list(), character(0)))
       }
       x[] <- lapply(x, fix_empty_objects)
     }
