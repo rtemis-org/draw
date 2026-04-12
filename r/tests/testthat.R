@@ -7,6 +7,6 @@
 # * https://testthat.r-lib.org/articles/special-files.html
 
 library(testthat)
-library(draw)
+library(rtemis.draw)
 
-test_check("draw")
+test_check("rtemis.draw")
