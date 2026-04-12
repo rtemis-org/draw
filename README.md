@@ -1,3 +1,5 @@
+[![R CI](https://github.com/rtemis-org/draw/actions/workflows/r-ci.yml/badge.svg)](https://github.com/rtemis-org/draw/actions/workflows/r-ci.yml)
+
 # rtemis.draw
 
 ![rtemis.draw logo](./man/figures/logomark-b-auto.svg)
