@@ -14,6 +14,7 @@
 #' @param x Character string in snake_case.
 #' @return Character string in camelCase.
 #' @keywords internal
+#' @noRd
 #' @examples
 #' snake_to_camel("border_width")   # "borderWidth"
 #' snake_to_camel("font_size")      # "fontSize"
@@ -32,6 +33,7 @@ snake_to_camel <- function(x) {
 #' @param x A named list.
 #' @return The list with NULL values removed.
 #' @keywords internal
+#' @noRd
 drop_nulls <- function(x) {
   x[!vapply(x, is.null, logical(1))]
 }
@@ -47,6 +49,7 @@ drop_nulls <- function(x) {
 #'   `c(r_name = "echartsName")`.
 #' @return A named list suitable for `jsonlite::toJSON()`.
 #' @keywords internal
+#' @noRd
 props_to_list <- function(obj, rename = NULL) {
   pnames <- names(S7::S7_class(obj)@properties)
   vals <- lapply(pnames, function(nm) S7::prop(obj, nm))
@@ -55,7 +58,9 @@ props_to_list <- function(obj, rename = NULL) {
   # Drop NULLs
   vals <- drop_nulls(vals)
 
-  if (length(vals) == 0L) return(list())
+  if (length(vals) == 0L) {
+    return(list())
+  }
 
   # Convert names: apply explicit renames first, then snake_to_camel
   out_names <- names(vals)
@@ -106,6 +111,7 @@ to_list <- S7::new_generic("to_list", "x")
 # These return validator functions or S7 class unions.
 
 #' @keywords internal
+#' @noRd
 nullable <- function(type) {
   type | S7::class_missing | NULL
 }
@@ -119,12 +125,15 @@ nullable <- function(type) {
 #' @param nullable If TRUE, NULL is accepted.
 #' @return An S7 property definition.
 #' @keywords internal
+#' @noRd
 enum_property <- function(values, default = NULL, nullable = TRUE) {
   S7::new_property(
     class = if (nullable) S7::class_any else S7::class_character,
     default = default,
     validator = function(value) {
-      if (is.null(value) && nullable) return(NULL)
+      if (is.null(value) && nullable) {
+        return(NULL)
+      }
       if (!is.character(value) || length(value) != 1L || !(value %in% values)) {
         paste0("must be one of: ", paste(dQuote(values), collapse = ", "))
       }
@@ -134,12 +143,15 @@ enum_property <- function(values, default = NULL, nullable = TRUE) {
 
 #' Property that accepts a number or NULL
 #' @keywords internal
+#' @noRd
 numeric_or_null_property <- function(default = NULL) {
   S7::new_property(
     class = S7::class_any,
     default = default,
     validator = function(value) {
-      if (is.null(value)) return(NULL)
+      if (is.null(value)) {
+        return(NULL)
+      }
       if (!is.numeric(value) || length(value) != 1L) {
         "must be a single number or NULL"
       }
@@ -149,12 +161,15 @@ numeric_or_null_property <- function(default = NULL) {
 
 #' Property that accepts a string or NULL
 #' @keywords internal
+#' @noRd
 string_or_null_property <- function(default = NULL) {
   S7::new_property(
     class = S7::class_any,
     default = default,
     validator = function(value) {
-      if (is.null(value)) return(NULL)
+      if (is.null(value)) {
+        return(NULL)
+      }
       if (!is.character(value) || length(value) != 1L) {
         "must be a single string or NULL"
       }
@@ -164,12 +179,15 @@ string_or_null_property <- function(default = NULL) {
 
 #' Property that accepts a logical or NULL
 #' @keywords internal
+#' @noRd
 bool_or_null_property <- function(default = NULL) {
   S7::new_property(
     class = S7::class_any,
     default = default,
     validator = function(value) {
-      if (is.null(value)) return(NULL)
+      if (is.null(value)) {
+        return(NULL)
+      }
       if (!is.logical(value) || length(value) != 1L) {
         "must be TRUE, FALSE, or NULL"
       }
@@ -182,12 +200,15 @@ bool_or_null_property <- function(default = NULL) {
 #' Used for echarts fields that accept both pixel values (number) and
 #' percentage strings (e.g. "50%").
 #' @keywords internal
+#' @noRd
 numeric_or_string_property <- function(default = NULL) {
   S7::new_property(
     class = S7::class_any,
     default = default,
     validator = function(value) {
-      if (is.null(value)) return(NULL)
+      if (is.null(value)) {
+        return(NULL)
+      }
       if (!is.numeric(value) && !is.character(value)) {
         "must be a number, string, or NULL"
       }
@@ -207,6 +228,13 @@ numeric_or_string_property <- function(default = NULL) {
 #' @param alpha Alpha value between 0 and 1.
 #' @return An `rgba()` color string.
 #' @keywords internal
+#' @noRd
+color_with_alpha <- function(color, alpha) {
+  rgb <- grDevices::col2rgb(color)[, 1]
+  sprintf("rgba(%d, %d, %d, %g)", rgb[1], rgb[2], rgb[3], alpha)
+}
+
+
 #' Calculate padded axis limits from data
 #'
 #' Computes `c(min, max)` from `values` with symmetric padding as a fraction
@@ -216,23 +244,23 @@ numeric_or_string_property <- function(default = NULL) {
 #' @param pad Fraction of the data range to add on each side.
 #' @return A length-2 numeric vector `c(min, max)`.
 #' @keywords internal
+#' @noRd
 calc_limits <- function(values, pad = 0.04) {
   rng <- range(values, na.rm = TRUE)
   span <- rng[2] - rng[1]
-  if (span == 0) span <- abs(rng[1]) * 0.1  # handle constant data
+  if (span == 0) {
+    span <- abs(rng[1]) * 0.1
+  } # handle constant data
   c(rng[1] - pad * span, rng[2] + pad * span)
 }
 
-color_with_alpha <- function(color, alpha) {
-  rgb <- grDevices::col2rgb(color)[, 1]
-  sprintf("rgba(%d, %d, %d, %g)", rgb[1], rgb[2], rgb[3], alpha)
-}
 
 #' Property that accepts a color string, or NULL
 #'
 #' Currently accepts any string. Future versions may validate
 #' hex, rgb(), rgba(), hsl(), or named CSS colors.
 #' @keywords internal
+#' @noRd
 color_property <- function(default = NULL) {
   string_or_null_property(default = default)
 }
@@ -241,13 +269,18 @@ color_property <- function(default = NULL) {
 #'
 #' Used for color palettes (e.g. theme and option `color` fields).
 #' @keywords internal
+#' @noRd
 color_palette_property <- function(default = NULL) {
   S7::new_property(
     class = S7::class_any,
     default = default,
     validator = function(value) {
-      if (is.null(value)) return(NULL)
-      if (is.character(value)) return(NULL)
+      if (is.null(value)) {
+        return(NULL)
+      }
+      if (is.character(value)) {
+        return(NULL)
+      }
       "must be a character vector of colors or NULL"
     }
   )
@@ -255,12 +288,15 @@ color_palette_property <- function(default = NULL) {
 
 #' Property that accepts an S7 class instance or NULL
 #' @keywords internal
+#' @noRd
 class_or_null_property <- function(s7_class) {
   S7::new_property(
     class = S7::class_any,
     default = NULL,
     validator = function(value) {
-      if (is.null(value)) return(NULL)
+      if (is.null(value)) {
+        return(NULL)
+      }
       if (!S7::S7_inherits(value, s7_class)) {
         paste0("must be a ", s7_class@name, " object or NULL")
       }
