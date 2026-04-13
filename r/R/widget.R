@@ -375,6 +375,10 @@ draw_scatter <- function(
 
   # Helper: compute fit line and CI band for one group
   compute_fit <- function(xv, yv, fit_method, n_pts) {
+    # Drop NA pairs before fitting
+    ok <- !is.na(xv) & !is.na(yv)
+    xv <- xv[ok]
+    yv <- yv[ok]
     df <- data.frame(.x = xv, .y = yv)
     if (fit_method == "gam") {
       if (!requireNamespace("mgcv", quietly = TRUE)) {
