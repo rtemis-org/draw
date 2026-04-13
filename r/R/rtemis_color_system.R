@@ -1,6 +1,9 @@
 # rtemis_color_system.R
 
-# rtemis_colors
+#' rtemis Color Palette
+#'
+#' @author EDG
+#' @export
 rtemis_colors <- c(
   "#6CA3A0",
   "#F08904",
