@@ -11,7 +11,7 @@ theme_light(
   axis_label_font_size = NULL,
   legend_font_size = NULL,
   tooltip_font_size = NULL,
-  font_family = "sans-serif",
+  font_family = "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
   color = rtemis_colors,
   bg_color = "#ffffff",
   fg_color = "rgba(0, 0, 0, 0.7)",
