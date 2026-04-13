@@ -72,7 +72,10 @@ test_that("theme_light returns valid Theme", {
   expect_true(length(out$color) >= 5)
   expect_equal(out$backgroundColor, "#ffffff")
   expect_equal(out$textStyle$color, "rgba(0, 0, 0, 0.7)")
-  expect_equal(out$textStyle$fontFamily, "sans-serif")
+  expect_equal(
+    out$textStyle$fontFamily,
+    "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
+  )
   expect_equal(out$textStyle$fontSize, 12)
 })
 
