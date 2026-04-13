@@ -173,8 +173,12 @@ renderDraw <- function(expr, env = parent.frame(), quoted = FALSE) {
 #' @param names Optional Character: Series names used when `y` is an unnamed list.
 #' @param smooth Logical: Whether to smooth lines.
 #' @param area Logical: Whether to show area fill.
+#' @param color Optional Character: Series color palette — a single color string or
+#'   character vector that overrides the theme palette for this chart.
+#'   `color` takes precedence over the theme palette (it sets `option.color`).
 #' @param title Optional Character: Chart title.
-#' @param theme Optional [Theme]: Theme override.
+#' @param theme Optional [Theme]: Theme override. The palette inside the theme can be
+#'   overridden per-chart with the `color` argument.
 #' @param width Optional Character or Numeric: Widget width.
 #' @param height Optional Character or Numeric: Widget height.
 #' @param filename Optional Character: If provided, save the widget to this file via
@@ -187,6 +191,7 @@ draw_line <- function(
   names = NULL,
   smooth = FALSE,
   area = FALSE,
+  color = NULL,
   title = NULL,
   theme = NULL,
   width = NULL,
@@ -244,6 +249,7 @@ draw_line <- function(
       scale = if (x_type == "value") TRUE else NULL
     ),
     y_axis = Axis(type = "value", scale = TRUE),
+    color = color,
     series = series
   )
 
@@ -259,11 +265,12 @@ draw_line <- function(
 #' @param color Optional Character: Bar color or colors. For multiple series,
 #'   colors are applied per series and recycled as needed. For a single series,
 #'   a single color styles the whole series; multiple colors are recycled
-#'   across individual bars.
+#'   across individual bars. `color` takes precedence over the theme palette.
 #' @param stack Logical: Whether to stack bars.
 #' @param horizontal Logical: Whether to draw horizontal bars.
 #' @param title Optional Character: Chart title.
-#' @param theme Optional [Theme]: Theme override.
+#' @param theme Optional [Theme]: Theme override. The palette inside the theme can be
+#'   overridden per-chart with the `color` argument.
 #' @param width Optional Character or Numeric: Widget width.
 #' @param height Optional Character or Numeric: Widget height.
 #' @param filename Optional Character: If provided, save the widget to this file via
@@ -346,8 +353,13 @@ draw_bar <- function(
 #' @param se Logical: Whether to show the confidence band.
 #' @param fit_alpha Numeric `[0, 1]`: Opacity for the confidence-band fill.
 #' @param n_fit Numeric `[1, Inf)`: Number of evaluation points for the fit.
+#' @param color Optional Character: Series color palette — a single color string or
+#'   character vector that overrides the theme palette for this chart.
+#'   When `group` is set, colors are assigned per group in order. `color` takes
+#'   precedence over the theme palette.
 #' @param title Optional Character: Chart title.
-#' @param theme Optional [Theme]: Theme override.
+#' @param theme Optional [Theme]: Theme override. The palette inside the theme can be
+#'   overridden per-chart with the `color` argument.
 #' @param width Optional Character or Numeric: Widget width.
 #' @param height Optional Character or Numeric: Widget height.
 #' @param filename Optional Character: If provided, save the widget to this file via
@@ -363,6 +375,7 @@ draw_scatter <- function(
   se = TRUE,
   fit_alpha = 0.25,
   n_fit = 200,
+  color = NULL,
   title = NULL,
   theme = NULL,
   width = NULL,
@@ -439,10 +452,10 @@ draw_scatter <- function(
 
   if (!is.null(group)) {
     groups <- unique(group)
-    # Assign explicit colors so scatter and fit/CI match
-    group_colors <- rtemis_colors[
-      ((seq_along(groups) - 1L) %% length(rtemis_colors)) + 1L
-    ]
+    # Assign explicit colors so scatter and fit/CI match.
+    # Use the caller-supplied palette when provided, else fall back to rtemis_colors.
+    palette <- color %||% rtemis_colors
+    group_colors <- palette[((seq_along(groups) - 1L) %% length(palette)) + 1L]
     series <- lapply(seq_along(groups), function(i) {
       g <- groups[i]
       idx <- group == g
@@ -505,6 +518,7 @@ draw_scatter <- function(
     legend = if (!is.null(group)) Legend() else NULL,
     x_axis = Axis(type = "value", scale = TRUE),
     y_axis = Axis(type = "value", scale = TRUE),
+    color = if (is.null(group)) color else NULL,
     series = series
   )
 
@@ -519,8 +533,12 @@ draw_scatter <- function(
 #' @param labels Character: Slice labels.
 #' @param radius Numeric or Character: Pie radius.
 #' @param rose_type Optional Character \{"radius", "area"\}: Nightingale chart type.
+#' @param color Optional Character: Series color palette — a single color string or
+#'   character vector that overrides the theme palette for this chart.
+#'   `color` takes precedence over the theme palette (it sets `option.color`).
 #' @param title Optional Character: Chart title.
-#' @param theme Optional [Theme]: Theme override.
+#' @param theme Optional [Theme]: Theme override. The palette inside the theme can be
+#'   overridden per-chart with the `color` argument.
 #' @param width Optional Character or Numeric: Widget width.
 #' @param height Optional Character or Numeric: Widget height.
 #' @param filename Optional Character: If provided, save the widget to this file via
@@ -532,6 +550,7 @@ draw_pie <- function(
   labels,
   radius = "75%",
   rose_type = NULL,
+  color = NULL,
   title = NULL,
   theme = NULL,
   width = NULL,
@@ -550,6 +569,7 @@ draw_pie <- function(
     title = if (!is.null(title)) Title(text = title, left = "center") else NULL,
     tooltip = Tooltip(trigger = "item"),
     legend = Legend(orient = "vertical", left = "left"),
+    color = color,
     series = PieSeries(
       data = data_items,
       radius = radius,
