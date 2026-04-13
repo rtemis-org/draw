@@ -19,7 +19,9 @@ draw_density(
 )
 }
 \arguments{
-\item{x}{Numeric: Values used for density estimation.}
+\item{x}{Numeric or list: Values used for density estimation. An ungrouped
+list creates one density trace per element; with \code{group}, each list
+element is split by group into separate traces.}
 
 \item{group}{Optional Vector: Grouping variable for multiple density traces.}
 
@@ -48,5 +50,7 @@ htmlwidget: Widget object.
 }
 \description{
 Kernel density estimation plot from numeric data, with optional grouping
-for multiple traces.
+for multiple traces. A list input creates one density trace per vector when
+ungrouped, or one trace per variable/group combination when \code{group} is
+supplied.
 }
