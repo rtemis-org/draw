@@ -102,6 +102,26 @@ test_that("draw_bar creates widget", {
   expect_equal(w$x$option$series[[1]]$type, "bar")
 })
 
+test_that("draw_bar applies a single color to a single series", {
+  w <- draw_bar(
+    x = c("Q1", "Q2", "Q3"),
+    y = c(100, 200, 150),
+    color = "#ff0000"
+  )
+  expect_equal(w$x$option$series[[1]]$color, "#ff0000")
+})
+
+test_that("draw_bar recycles colors across individual bars", {
+  w <- draw_bar(
+    x = c("Q1", "Q2", "Q3"),
+    y = c(100, 200, 150),
+    color = c("#ff0000", "#00ff00")
+  )
+  expect_equal(w$x$option$series[[1]]$data[[1]]$itemStyle$color, "#ff0000")
+  expect_equal(w$x$option$series[[1]]$data[[2]]$itemStyle$color, "#00ff00")
+  expect_equal(w$x$option$series[[1]]$data[[3]]$itemStyle$color, "#ff0000")
+})
+
 test_that("draw_bar stacked", {
   w <- draw_bar(
     x = c("A", "B"),
@@ -110,6 +130,17 @@ test_that("draw_bar stacked", {
   )
   expect_equal(w$x$option$series[[1]]$stack, "total")
   expect_equal(w$x$option$series[[2]]$stack, "total")
+})
+
+test_that("draw_bar recycles colors across multiple series", {
+  w <- draw_bar(
+    x = c("A", "B"),
+    y = list("X" = c(10, 20), "Y" = c(5, 15), "Z" = c(7, 9)),
+    color = c("#ff0000", "#00ff00")
+  )
+  expect_equal(w$x$option$series[[1]]$color, "#ff0000")
+  expect_equal(w$x$option$series[[2]]$color, "#00ff00")
+  expect_equal(w$x$option$series[[3]]$color, "#ff0000")
 })
 
 test_that("draw_bar horizontal", {
