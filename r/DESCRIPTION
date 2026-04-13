@@ -11,6 +11,7 @@ Description: Provides a comprehensive R interface to Apache ECharts
     built with S7 classes that mirror the ECharts TypeScript API, with
     convenience functions for common chart types and full htmlwidgets
     integration for use in Quarto, Shiny, and IDE viewers.
+URL: https://www.rtemis.org, https://docs.rtemis.org/draw/r, https://docs.rtemis.org/draw/r-api
 License: GPL (>= 3)
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
