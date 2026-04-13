@@ -406,6 +406,99 @@ test_that("draw_density with groups", {
   expect_false(is.null(w$x$option$legend))
 })
 
+test_that("draw_density with a named list creates one series per variable", {
+  set.seed(1)
+  w <- draw_density(
+    list(
+      "Flipper Length" = rnorm(50, 200, 10),
+      "Bill Length" = rnorm(50, 45, 4)
+    )
+  )
+  expect_equal(length(w$x$option$series), 2L)
+  expect_equal(w$x$option$series[[1]]$name, "Flipper Length")
+  expect_equal(w$x$option$series[[2]]$name, "Bill Length")
+  expect_equal(length(w$x$option$series[[1]]$data), 512L)
+  expect_equal(length(w$x$option$series[[2]]$data), 512L)
+  expect_false(is.null(w$x$option$legend))
+})
+
+test_that("draw_density with a list removes NAs per variable", {
+  expect_message(
+    w <- draw_density(
+      list(
+        "Flipper Length" = c(200, 202, NA, 205, 207),
+        "Bill Length" = c(40, 41, 42, NA, 44)
+      ),
+      verbosity = 1L
+    ),
+    "Removed 1 NA value from Flipper Length"
+  )
+  expect_equal(length(w$x$option$series), 2L)
+  expect_equal(w$x$option$series[[1]]$name, "Flipper Length")
+  expect_equal(w$x$option$series[[2]]$name, "Bill Length")
+})
+
+test_that("draw_density with grouped list creates variable-group series", {
+  w <- draw_density(
+    list(
+      "Flipper Length" = c(200, 202, 205, 207, 210, 212),
+      "Bill Length" = c(40, 41, 42, 44, 45, 46)
+    ),
+    group = rep(c("A", "B"), each = 3)
+  )
+
+  expect_equal(length(w$x$option$series), 4L)
+  expect_equal(
+    vapply(w$x$option$series, `[[`, character(1), "name"),
+    c(
+      "Flipper Length - A",
+      "Flipper Length - B",
+      "Bill Length - A",
+      "Bill Length - B"
+    )
+  )
+  expect_false(is.null(w$x$option$legend))
+})
+
+test_that("draw_density with grouped list drops missing group values", {
+  w <- draw_density(
+    list(
+      "Flipper Length" = c(200, 202, 205, 207, 210, 212),
+      "Bill Length" = c(40, 41, 42, 44, 45, 46)
+    ),
+    group = c("A", "A", NA, "B", "B", NA)
+  )
+
+  expect_equal(length(w$x$option$series), 4L)
+  expect_equal(
+    vapply(w$x$option$series, `[[`, character(1), "name"),
+    c(
+      "Flipper Length - A",
+      "Flipper Length - B",
+      "Bill Length - A",
+      "Bill Length - B"
+    )
+  )
+})
+
+test_that("draw_density with grouped list removes NAs per variable and keeps groups aligned", {
+  expect_message(
+    w <- draw_density(
+      list(
+        "Flipper Length" = c(200, 202, NA, 207, 210, 212),
+        "Bill Length" = c(40, 41, 42, 44, NA, 46)
+      ),
+      group = rep(c("A", "B"), each = 3),
+      verbosity = 1L
+    ),
+    "Removed 1 NA value from Flipper Length"
+  )
+
+  expect_equal(length(w$x$option$series), 4L)
+  expect_equal(w$x$option$series[[1]]$name, "Flipper Length - A")
+  expect_equal(w$x$option$series[[4]]$name, "Bill Length - B")
+})
+
 test_that("draw_density respects n parameter", {
   set.seed(1)
   w <- draw_density(rnorm(100), n = 256)
