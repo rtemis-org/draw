@@ -14,7 +14,8 @@ draw_density(
   theme = NULL,
   width = NULL,
   height = NULL,
-  verbosity = 1L
+  verbosity = 1L,
+  filename = NULL
 )
 }
 \arguments{
@@ -38,6 +39,9 @@ computing densities.}
 \item{height}{Optional Character or Numeric: Widget height.}
 
 \item{verbosity}{Integer \verb{[0, Inf)}: Verbosity level for removed-\code{NA} messages.}
+
+\item{filename}{Optional Character: If provided, save the widget to this file via
+\code{\link[=save_drawing]{save_drawing()}}.}
 }
 \value{
 htmlwidget: Widget object.

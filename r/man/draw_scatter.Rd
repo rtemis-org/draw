@@ -16,7 +16,8 @@ draw_scatter(
   title = NULL,
   theme = NULL,
   width = NULL,
-  height = NULL
+  height = NULL,
+  filename = NULL
 )
 }
 \arguments{
@@ -45,6 +46,9 @@ are computed per group when \code{group} is provided.}
 \item{width}{Optional Character or Numeric: Widget width.}
 
 \item{height}{Optional Character or Numeric: Widget height.}
+
+\item{filename}{Optional Character: If provided, save the widget to this file via
+\code{\link[=save_drawing]{save_drawing()}}.}
 }
 \value{
 htmlwidget: Widget object.

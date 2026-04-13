@@ -16,15 +16,18 @@ draw_boxplot(
   theme = NULL,
   width = NULL,
   height = NULL,
-  verbosity = 1L
+  verbosity = 1L,
+  filename = NULL
 )
 }
 \arguments{
 \item{data}{Numeric or list: A list of numeric vectors (one per box), or a single numeric
-vector when \code{group} is provided.}
+vector when \code{group} is provided. For ungrouped named lists, \code{names(data)}
+are used as labels when \code{labels} is not supplied.}
 
 \item{labels}{Optional Character: Category labels for each box. Ignored when \code{group} is
-provided (group levels are used instead).}
+provided (group levels are used instead). When omitted for ungrouped named
+lists, \code{names(data)} are used.}
 
 \item{group}{Optional Vector: Grouping variable. When provided, \code{data} must be a
 numeric vector, and boxplot statistics are computed per group. Each group
@@ -50,6 +53,9 @@ computing boxplot statistics.}
 \item{height}{Optional Character or Numeric: Widget height.}
 
 \item{verbosity}{Integer \verb{[0, Inf)}: Verbosity level for removed-\code{NA} messages.}
+
+\item{filename}{Optional Character: If provided, save the widget to this file via
+\code{\link[=save_drawing]{save_drawing()}}.}
 }
 \value{
 htmlwidget: Widget object.

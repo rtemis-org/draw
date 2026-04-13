@@ -10,7 +10,8 @@ draw(
   renderer = "canvas",
   width = NULL,
   height = NULL,
-  elementId = NULL
+  elementId = NULL,
+  filename = NULL
 )
 }
 \arguments{
@@ -29,6 +30,10 @@ RStudio, or the browser's \code{prefers-color-scheme} and applies
 \item{height}{Optional Character or Numeric: Widget height.}
 
 \item{elementId}{Optional Character: Explicit element ID.}
+
+\item{filename}{Optional Character: If provided, the widget is also written to
+this file via \code{\link[=save_drawing]{save_drawing()}}. Extension determines the format (currently
+only \code{.svg} is supported).}
 }
 \value{
 htmlwidget: Widget object.
