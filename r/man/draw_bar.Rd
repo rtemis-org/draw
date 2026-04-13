@@ -7,6 +7,7 @@
 draw_bar(
   x,
   y,
+  color = NULL,
   stack = FALSE,
   horizontal = FALSE,
   title = NULL,
@@ -20,6 +21,11 @@ draw_bar(
 \item{x}{Character: Category labels.}
 
 \item{y}{Numeric or named list: Bar heights.}
+
+\item{color}{Optional Character: Bar color or colors. For multiple series,
+colors are applied per series and recycled as needed. For a single series,
+a single color styles the whole series; multiple colors are recycled
+across individual bars.}
 
 \item{stack}{Logical: Whether to stack bars.}
 
