@@ -16,6 +16,9 @@
 #' @param width Optional Character or Numeric: Widget width.
 #' @param height Optional Character or Numeric: Widget height.
 #' @param elementId Optional Character: Explicit element ID.
+#' @param filename Optional Character: If provided, the widget is also written to
+#'   this file via [save_drawing()]. Extension determines the format (currently
+#'   only `.svg` is supported).
 #' @return htmlwidget: Widget object.
 #' @export
 draw <- function(
@@ -24,7 +27,8 @@ draw <- function(
   renderer = "canvas",
   width = NULL,
   height = NULL,
-  elementId = NULL
+  elementId = NULL,
+  filename = NULL
 ) {
   # Convert S7 objects to plain lists
   if (S7::S7_inherits(option)) {
@@ -102,7 +106,7 @@ draw <- function(
     themeDark = theme_dark_list
   )
 
-  htmlwidgets::createWidget(
+  widget <- htmlwidgets::createWidget(
     name = "draw",
     x = payload,
     width = width,
@@ -116,6 +120,12 @@ draw <- function(
     package = "rtemis.draw",
     elementId = elementId
   )
+
+  if (!is.null(filename)) {
+    save_drawing(widget, filename)
+  }
+
+  widget
 }
 
 #' Shiny output for draw widget
@@ -160,6 +170,8 @@ renderDraw <- function(expr, env = parent.frame(), quoted = FALSE) {
 #' @param theme Optional [Theme]: Theme override.
 #' @param width Optional Character or Numeric: Widget width.
 #' @param height Optional Character or Numeric: Widget height.
+#' @param filename Optional Character: If provided, save the widget to this file via
+#'   [save_drawing()].
 #' @return htmlwidget: Widget object.
 #' @export
 draw_line <- function(
@@ -171,7 +183,8 @@ draw_line <- function(
   title = NULL,
   theme = NULL,
   width = NULL,
-  height = NULL
+  height = NULL,
+  filename = NULL
 ) {
   # Determine axis type
   x_type <- if (is.numeric(x)) "value" else "category"
@@ -227,7 +240,7 @@ draw_line <- function(
     series = series
   )
 
-  draw(opt, theme = theme, width = width, height = height)
+  draw(opt, theme = theme, width = width, height = height, filename = filename)
 }
 
 #' Draw a Bar Chart
@@ -242,6 +255,8 @@ draw_line <- function(
 #' @param theme Optional [Theme]: Theme override.
 #' @param width Optional Character or Numeric: Widget width.
 #' @param height Optional Character or Numeric: Widget height.
+#' @param filename Optional Character: If provided, save the widget to this file via
+#'   [save_drawing()].
 #' @return htmlwidget: Widget object.
 #' @export
 draw_bar <- function(
@@ -252,7 +267,8 @@ draw_bar <- function(
   title = NULL,
   theme = NULL,
   width = NULL,
-  height = NULL
+  height = NULL,
+  filename = NULL
 ) {
   stack_group <- if (stack) "total" else NULL
 
@@ -282,7 +298,7 @@ draw_bar <- function(
     series = series
   )
 
-  draw(opt, theme = theme, width = width, height = height)
+  draw(opt, theme = theme, width = width, height = height, filename = filename)
 }
 
 #' Draw a Scatter Plot
@@ -304,6 +320,8 @@ draw_bar <- function(
 #' @param theme Optional [Theme]: Theme override.
 #' @param width Optional Character or Numeric: Widget width.
 #' @param height Optional Character or Numeric: Widget height.
+#' @param filename Optional Character: If provided, save the widget to this file via
+#'   [save_drawing()].
 #' @return htmlwidget: Widget object.
 #' @export
 draw_scatter <- function(
@@ -318,7 +336,8 @@ draw_scatter <- function(
   title = NULL,
   theme = NULL,
   width = NULL,
-  height = NULL
+  height = NULL,
+  filename = NULL
 ) {
   if (!is.null(fit)) {
     fit <- match.arg(fit, c("glm", "gam"))
@@ -455,7 +474,7 @@ draw_scatter <- function(
     series = series
   )
 
-  draw(opt, theme = theme, width = width, height = height)
+  draw(opt, theme = theme, width = width, height = height, filename = filename)
 }
 
 #' Draw a Pie Chart
@@ -470,6 +489,8 @@ draw_scatter <- function(
 #' @param theme Optional [Theme]: Theme override.
 #' @param width Optional Character or Numeric: Widget width.
 #' @param height Optional Character or Numeric: Widget height.
+#' @param filename Optional Character: If provided, save the widget to this file via
+#'   [save_drawing()].
 #' @return htmlwidget: Widget object.
 #' @export
 draw_pie <- function(
@@ -480,7 +501,8 @@ draw_pie <- function(
   title = NULL,
   theme = NULL,
   width = NULL,
-  height = NULL
+  height = NULL,
+  filename = NULL
 ) {
   data_items <- mapply(
     function(v, n) list(value = v, name = n),
@@ -502,7 +524,7 @@ draw_pie <- function(
     )
   )
 
-  draw(opt, theme = theme, width = width, height = height)
+  draw(opt, theme = theme, width = width, height = height, filename = filename)
 }
 
 #' Draw a Density Plot
@@ -521,6 +543,8 @@ draw_pie <- function(
 #' @param width Optional Character or Numeric: Widget width.
 #' @param height Optional Character or Numeric: Widget height.
 #' @param verbosity Integer `[0, Inf)`: Verbosity level for removed-`NA` messages.
+#' @param filename Optional Character: If provided, save the widget to this file via
+#'   [save_drawing()].
 #' @return htmlwidget: Widget object.
 #' @export
 draw_density <- function(
@@ -533,7 +557,8 @@ draw_density <- function(
   theme = NULL,
   width = NULL,
   height = NULL,
-  verbosity = 1L
+  verbosity = 1L,
+  filename = NULL
 ) {
   if (na.rm) {
     na_idx <- is.na(x)
@@ -585,7 +610,7 @@ draw_density <- function(
     series = series
   )
 
-  draw(opt, theme = theme, width = width, height = height)
+  draw(opt, theme = theme, width = width, height = height, filename = filename)
 }
 
 #' Draw a Histogram
@@ -603,6 +628,8 @@ draw_density <- function(
 #' @param theme Optional [Theme]: Theme override.
 #' @param width Optional Character or Numeric: Widget width.
 #' @param height Optional Character or Numeric: Widget height.
+#' @param filename Optional Character: If provided, save the widget to this file via
+#'   [save_drawing()].
 #' @return htmlwidget: Widget object.
 #' @export
 draw_histogram <- function(
@@ -612,7 +639,8 @@ draw_histogram <- function(
   title = NULL,
   theme = NULL,
   width = NULL,
-  height = NULL
+  height = NULL,
+  filename = NULL
 ) {
   # Compute bin structure from full data for consistent breaks across groups
   h <- graphics::hist(x, breaks = breaks, plot = FALSE)
@@ -640,7 +668,7 @@ draw_histogram <- function(
     series = series
   )
 
-  draw(opt, theme = theme, width = width, height = height)
+  draw(opt, theme = theme, width = width, height = height, filename = filename)
 }
 
 #' Draw a Boxplot
@@ -670,6 +698,8 @@ draw_histogram <- function(
 #' @param width Optional Character or Numeric: Widget width.
 #' @param height Optional Character or Numeric: Widget height.
 #' @param verbosity Integer `[0, Inf)`: Verbosity level for removed-`NA` messages.
+#' @param filename Optional Character: If provided, save the widget to this file via
+#'   [save_drawing()].
 #' @return htmlwidget: Widget object.
 #' @export
 draw_boxplot <- function(
@@ -684,7 +714,8 @@ draw_boxplot <- function(
   theme = NULL,
   width = NULL,
   height = NULL,
-  verbosity = 1L
+  verbosity = 1L,
+  filename = NULL
 ) {
   layout <- if (horizontal) "horizontal" else "vertical"
 
@@ -817,5 +848,5 @@ draw_boxplot <- function(
     )
   }
 
-  draw(opt, theme = theme, width = width, height = height)
+  draw(opt, theme = theme, width = width, height = height, filename = filename)
 }
