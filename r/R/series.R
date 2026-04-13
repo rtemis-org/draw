@@ -102,6 +102,7 @@ LineSeries <- S7::new_class(
 S7::method(to_list, LineSeries) <- function(x, ...) {
   out <- props_to_list(x)
   out$type <- "line"
+  if (is.list(out$data)) out$data <- unname(out$data)
   out
 }
 
@@ -169,6 +170,7 @@ BarSeries <- S7::new_class(
 S7::method(to_list, BarSeries) <- function(x, ...) {
   out <- props_to_list(x)
   out$type <- "bar"
+  if (is.list(out$data)) out$data <- unname(out$data)
   out
 }
 
@@ -234,6 +236,7 @@ ScatterSeries <- S7::new_class(
 S7::method(to_list, ScatterSeries) <- function(x, ...) {
   out <- props_to_list(x)
   out$type <- "scatter"
+  if (is.list(out$data)) out$data <- unname(out$data)
   out
 }
 
@@ -347,6 +350,7 @@ PieSeries <- S7::new_class(
 S7::method(to_list, PieSeries) <- function(x, ...) {
   out <- props_to_list(x)
   out$type <- "pie"
+  if (is.list(out$data)) out$data <- unname(out$data)
   out
 }
 
@@ -407,5 +411,6 @@ BoxplotSeries <- S7::new_class(
 S7::method(to_list, BoxplotSeries) <- function(x, ...) {
   out <- props_to_list(x)
   out$type <- "boxplot"
+  if (is.list(out$data)) out$data <- unname(out$data)
   out
 }
