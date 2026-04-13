@@ -717,7 +717,20 @@ draw_boxplot <- function(
   verbosity = 1L,
   filename = NULL
 ) {
-  layout <- if (horizontal) "horizontal" else "vertical"
+  # Note: BoxplotSeries `layout` is auto-detected from the category axis
+  # orientation, so we do not set it explicitly. (Our previous mapping
+  # was inverted relative to ECharts conventions.)
+
+  # Grouped + single-element (possibly named) list => unwrap to numeric.
+  # Lets callers write draw_boxplot(list(`Body Mass` = x), group = g) and
+  # have the list name label the value axis.
+  value_axis_name <- NULL
+  if (!is.null(group) && is.list(data) && length(data) == 1L) {
+    if (!is.null(names(data)) && nzchar(names(data)[[1]])) {
+      value_axis_name <- names(data)[[1]]
+    }
+    data <- data[[1]]
+  }
 
   # Bare numeric vector without group => single box
   if (is.numeric(data) && is.null(group)) {
@@ -743,8 +756,81 @@ draw_boxplot <- function(
     labels <- as.list(labels)
   }
 
-  if (!is.null(group)) {
+  if (!is.null(group) && is.list(data)) {
+    # Multi-variable grouped: categories = variable names, one series per
+    # group level. Each series has one box per variable; ECharts dodges
+    # boxes within each variable's slot — exactly what we want here.
+    var_labels <- names(data)
+    if (is.null(var_labels) || !all(nzchar(var_labels))) {
+      var_labels <- paste0("Var ", seq_along(data))
+    }
+    data <- unname(data)
+
+    lens <- vapply(data, length, integer(1))
+    if (any(lens != length(group))) {
+      stop(
+        "All elements of `data` must match length(group) when `group` is provided.",
+        call. = FALSE
+      )
+    }
+
+    # Exclude observations with missing group assignments so they do not
+    # create an extra boxplot series and shift the visible groups off-center.
+    group_ok <- !is.na(group)
+    if (any(!group_ok)) {
+      group <- group[group_ok]
+      data <- lapply(data, function(v) v[group_ok])
+    }
+
+    groups <- unique(group)
+    group_labels <- as.character(groups)
+    colors <- color %||% rtemis_colors
+    colors <- rep_len(colors, length(groups))
+
+    # One series per group level. Each series has length(var_labels)
+    # data points (one box per variable). NAs are dropped per (variable,
+    # group) cell so different variables with different NA patterns are
+    # handled correctly.
+    series <- lapply(seq_along(groups), function(i) {
+      g_idx <- group == groups[i]
+      stats_per_var <- lapply(data, function(v) {
+        vals <- v[g_idx]
+        if (na.rm) vals <- vals[!is.na(vals)]
+        grDevices::boxplot.stats(vals)$stats
+      })
+      col <- colors[i]
+      fill <- color_with_alpha(col, fill_alpha)
+      BoxplotSeries(
+        name = group_labels[i],
+        data = stats_per_var,
+        item_style = ItemStyle(color = fill, border_color = col)
+      )
+    })
+
+    if (horizontal) {
+      x_ax <- Axis(type = "value", scale = TRUE)
+      y_ax <- Axis(type = "category", data = var_labels)
+    } else {
+      x_ax <- Axis(type = "category", data = var_labels)
+      y_ax <- Axis(type = "value", scale = TRUE)
+    }
+
+    opt <- EChartsOption(
+      title = if (!is.null(title)) Title(text = title) else NULL,
+      tooltip = Tooltip(trigger = "item"),
+      legend = Legend(),
+      x_axis = x_ax,
+      y_axis = y_ax,
+      series = series
+    )
+  } else if (!is.null(group)) {
     # Grouped: single numeric vector split by group factor
+    group_ok <- !is.na(group)
+    if (any(!group_ok)) {
+      group <- group[group_ok]
+      data <- data[group_ok]
+    }
+
     if (na.rm) {
       na_idx <- is.na(data)
       n_na <- sum(na_idx)
@@ -767,37 +853,34 @@ draw_boxplot <- function(
     colors <- color %||% rtemis_colors
     colors <- rep_len(colors, length(groups))
 
-    n_groups <- length(groups)
-    series <- lapply(seq_along(groups), function(i) {
-      g <- groups[i]
-      vals <- data[group == g]
+    # Single boxplot series with per-item colors. Using one series per
+    # group would cause ECharts to dodge them like grouped bars, shifting
+    # each box away from its category tick.
+    box_items <- lapply(seq_along(groups), function(i) {
+      vals <- data[group == groups[i]]
       bs <- grDevices::boxplot.stats(vals)
-      # Place summary at correct category index; use "-" (ECharts empty
-      # marker) at other positions so JSON serialization is correct
-      padded <- as.list(rep("-", n_groups))
-      padded[[i]] <- bs$stats
       col <- colors[i]
       fill <- color_with_alpha(col, fill_alpha)
-      BoxplotSeries(
+      list(
         name = group_labels[i],
-        data = padded,
-        layout = layout,
-        item_style = ItemStyle(color = fill, border_color = col)
+        value = bs$stats,
+        itemStyle = list(color = fill, borderColor = col)
       )
     })
 
+    series <- BoxplotSeries(data = box_items)
+
     if (horizontal) {
-      x_ax <- Axis(type = "value", scale = TRUE)
+      x_ax <- Axis(type = "value", scale = TRUE, name = value_axis_name)
       y_ax <- Axis(type = "category", data = group_labels)
     } else {
       x_ax <- Axis(type = "category", data = group_labels)
-      y_ax <- Axis(type = "value", scale = TRUE)
+      y_ax <- Axis(type = "value", scale = TRUE, name = value_axis_name)
     }
 
     opt <- EChartsOption(
       title = if (!is.null(title)) Title(text = title) else NULL,
       tooltip = Tooltip(trigger = "item"),
-      legend = if (length(series) > 1L) Legend() else NULL,
       x_axis = x_ax,
       y_axis = y_ax,
       series = series
@@ -842,7 +925,6 @@ draw_boxplot <- function(
       y_axis = y_ax,
       series = BoxplotSeries(
         data = box_data,
-        layout = layout,
         item_style = item_style
       )
     )
