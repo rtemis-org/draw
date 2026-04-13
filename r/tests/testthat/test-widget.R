@@ -247,6 +247,30 @@ test_that("draw_boxplot computes stats and creates widget", {
   expect_match(is$color, "^rgba\\(")
 })
 
+test_that("draw_boxplot uses names from an ungrouped named list as labels", {
+  w <- draw_boxplot(
+    data = list(
+      "Control" = c(1, 2, 3, 4, 5, 6, 7),
+      "Treatment" = c(3, 4, 5, 6, 7, 8, 9)
+    )
+  )
+  expect_equal(w$x$option$xAxis$data, c("Control", "Treatment"))
+  expect_null(names(w$x$option$series[[1]]$data))
+  expect_equal(length(w$x$option$series[[1]]$data[[1]]), 5L)
+  expect_equal(length(w$x$option$series[[1]]$data[[2]]), 5L)
+})
+
+test_that("draw_boxplot respects explicit labels over named-list labels", {
+  w <- draw_boxplot(
+    data = list(
+      "Control" = c(1, 2, 3, 4, 5, 6, 7),
+      "Treatment" = c(3, 4, 5, 6, 7, 8, 9)
+    ),
+    labels = c("Group 1", "Group 2")
+  )
+  expect_equal(w$x$option$xAxis$data, c("Group 1", "Group 2"))
+})
+
 test_that("draw_boxplot fill_alpha controls fill opacity", {
   w <- draw_boxplot(
     data = list(c(1, 2, 3, 4, 5, 6, 7)),
@@ -267,7 +291,7 @@ test_that("draw_boxplot horizontal", {
   )
   expect_equal(w$x$option$xAxis$type, "value")
   expect_equal(w$x$option$yAxis$type, "category")
-  expect_equal(w$x$option$series[[1]]$layout, "horizontal")
+  expect_null(w$x$option$series[[1]]$layout)
 })
 
 test_that("draw_boxplot handles NAs in ungrouped data", {
@@ -283,29 +307,63 @@ test_that("draw_boxplot handles NAs in ungrouped data", {
   expect_equal(length(w$x$option$series[[1]]$data[[1]]), 5L)
 })
 
-test_that("draw_boxplot with group computes stats and creates per-group series", {
+test_that("draw_boxplot with group computes stats in a single series", {
   set.seed(1)
   vals <- c(rnorm(50, 10, 2), rnorm(50, 15, 3))
   g <- rep(c("Control", "Treatment"), each = 50)
   w <- draw_boxplot(data = vals, group = g)
   expect_s3_class(w, "htmlwidget")
-  # One BoxplotSeries per group
-  expect_equal(length(w$x$option$series), 2L)
-  expect_equal(w$x$option$series[[1]]$name, "Control")
-  expect_equal(w$x$option$series[[2]]$name, "Treatment")
+  # Single BoxplotSeries with one data item per group
+  expect_equal(length(w$x$option$series), 1L)
   expect_equal(w$x$option$series[[1]]$type, "boxplot")
   # Category axis uses group labels
   expect_equal(w$x$option$xAxis$data, c("Control", "Treatment"))
-  # Legend present for multiple series
-  expect_false(is.null(w$x$option$legend))
-  # Each series has its own color from rtemis_colors
-  expect_equal(w$x$option$series[[1]]$itemStyle$borderColor, rtemis_colors[[1]])
-  expect_equal(w$x$option$series[[2]]$itemStyle$borderColor, rtemis_colors[[2]])
-  # 5-number summary at correct index; other positions are "-" (empty marker)
-  expect_equal(length(w$x$option$series[[1]]$data[[1]]), 5L)
-  expect_equal(w$x$option$series[[1]]$data[[2]], "-")
-  expect_equal(w$x$option$series[[2]]$data[[1]], "-")
-  expect_equal(length(w$x$option$series[[2]]$data[[2]]), 5L)
+  expect_null(w$x$option$legend)
+  expect_equal(
+    vapply(w$x$option$series[[1]]$data, `[[`, character(1), "name"),
+    c("Control", "Treatment")
+  )
+  expect_equal(
+    vapply(w$x$option$series[[1]]$data, function(item) length(item$value), integer(1)),
+    c(5L, 5L)
+  )
+  expect_equal(
+    vapply(w$x$option$series[[1]]$data, function(item) item$itemStyle$borderColor, character(1)),
+    rtemis_colors[1:2]
+  )
+})
+
+test_that("draw_boxplot with group drops missing group values", {
+  vals <- c(10, 11, 12, 20, 21, 22, 30)
+  g <- c("Control", "Control", NA, "Treatment", "Treatment", NA, "Control")
+
+  w <- draw_boxplot(data = vals, group = g)
+
+  expect_equal(w$x$option$xAxis$data, c("Control", "Treatment"))
+  expect_equal(length(w$x$option$series), 1L)
+  expect_equal(length(w$x$option$series[[1]]$data), 2L)
+  expect_equal(
+    vapply(w$x$option$series[[1]]$data, `[[`, character(1), "name"),
+    c("Control", "Treatment")
+  )
+  expect_false(any(is.na(vapply(w$x$option$series[[1]]$data, `[[`, character(1), "name"))))
+})
+
+test_that("draw_boxplot with grouped variables drops missing group values", {
+  data <- list(
+    "Bill Length" = c(40, 42, 41, 38, 39, 37),
+    "Bill Depth" = c(18, 19, 18.5, 15, 14.5, 15.5)
+  )
+  g <- c("male", "male", NA, "female", "female", NA)
+
+  w <- draw_boxplot(data = data, group = g)
+
+  expect_equal(length(w$x$option$series), 2L)
+  expect_equal(vapply(w$x$option$series, `[[`, character(1), "name"), c("male", "female"))
+  expect_false(any(is.na(vapply(w$x$option$series, `[[`, character(1), "name"))))
+  expect_equal(w$x$option$xAxis$data, c("Bill Length", "Bill Depth"))
+  expect_equal(length(w$x$option$series[[1]]$data), 2L)
+  expect_equal(length(w$x$option$series[[2]]$data), 2L)
 })
 
 test_that("draw_boxplot with group horizontal", {
@@ -316,7 +374,7 @@ test_that("draw_boxplot with group horizontal", {
   expect_equal(w$x$option$xAxis$type, "value")
   expect_equal(w$x$option$yAxis$type, "category")
   expect_equal(w$x$option$yAxis$data, c("A", "B"))
-  expect_equal(w$x$option$series[[1]]$layout, "horizontal")
+  expect_null(w$x$option$series[[1]]$layout)
 })
 
 # -- draw_density --------------------------------------------------------------
