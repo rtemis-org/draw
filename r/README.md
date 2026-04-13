@@ -1,3 +1,5 @@
+[![R CI](https://github.com/rtemis-org/draw/actions/workflows/r-ci.yml/badge.svg)](https://github.com/rtemis-org/draw/actions/workflows/r-ci.yml) [![rtemis.draw status badge](https://rtemis-org.r-universe.dev/rtemis.draw/badges/version)](https://rtemis-org.r-universe.dev/rtemis.draw)
+
 # rtemis.draw
 
 Comprehensive R interface to Apache ECharts (<https://echarts.apache.org>) for creating interactive 
