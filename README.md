@@ -2,7 +2,7 @@
 
 # rtemis.draw
 
-![rtemis.draw logo](./man/figures/logomark-b-auto.svg)
+![rtemis.draw cover](https://docs.rtemis.org/draw/r/assets/cover.avif)
 
 Interface to Apache ECharts
 (<https://echarts.apache.org>) for creating interactive charts and
