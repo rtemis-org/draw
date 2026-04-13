@@ -21,6 +21,13 @@ test-r:
 	@echo "==> R: Testing rtemis.draw"
 	cd r && Rscript -e "devtools::test(stop_on_failure = TRUE)"
 
+# ── Check ────────────────────────────────────────────────────────────────────
+check: check-r
+
+check-r:
+	@echo "==> R: Checking rtemis.draw"
+	cd r && Rscript -e "devtools::check()"
+
 # ── Build Site ───────────────────────────────────────────────────────────────
 site: site-r
 
