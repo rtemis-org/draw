@@ -725,9 +725,28 @@ draw_density <- function(
     }
   }
 
+  density_formatter <- htmlwidgets::JS(
+    "function(params) {
+      function ddSci(x, dp) {
+        dp = dp || 2;
+        var a = Math.abs(x);
+        if (a === 0) return '0.' + '0'.repeat(dp);
+        if (a >= 1e6 || a < Math.pow(10, -dp)) return x.toExponential(1);
+        return x.toFixed(dp);
+      }
+      var out = ddSci(params[0].value[0]) + '<br/>';
+      for (var i = 0; i < params.length; i++) {
+        var p = params[i];
+        var name = p.seriesName ? p.seriesName + ': ' : '';
+        out += p.marker + name + ddSci(p.value[1]) + '<br/>';
+      }
+      return out;
+    }"
+  )
+
   opt <- EChartsOption(
     title = if (!is.null(title)) Title(text = title) else NULL,
-    tooltip = Tooltip(trigger = "axis"),
+    tooltip = Tooltip(trigger = "axis", formatter = density_formatter),
     legend = if (length(series) > 1L) Legend() else NULL,
     x_axis = Axis(type = "value", scale = TRUE),
     y_axis = Axis(type = "value"),
