@@ -80,6 +80,13 @@ draw <- function(
     }
   }
 
+  # Default grid: containLabel keeps axis labels inside the drawing area.
+  if (!is.null(option$xAxis) || !is.null(option$yAxis)) {
+    if (is.null(option$grid)) {
+      option$grid <- list(containLabel = TRUE)
+    }
+  }
+
   auto_theme <- FALSE
   theme_list <- NULL
   theme_dark_list <- NULL
@@ -249,6 +256,10 @@ draw_line <- function(
 #'
 #' @param x Character: Category labels.
 #' @param y Numeric or named list: Bar heights.
+#' @param color Optional Character: Bar color or colors. For multiple series,
+#'   colors are applied per series and recycled as needed. For a single series,
+#'   a single color styles the whole series; multiple colors are recycled
+#'   across individual bars.
 #' @param stack Logical: Whether to stack bars.
 #' @param horizontal Logical: Whether to draw horizontal bars.
 #' @param title Optional Character: Chart title.
@@ -262,6 +273,7 @@ draw_line <- function(
 draw_bar <- function(
   x,
   y,
+  color = NULL,
   stack = FALSE,
   horizontal = FALSE,
   title = NULL,
@@ -274,11 +286,29 @@ draw_bar <- function(
 
   if (is.list(y) && !is.null(names(y))) {
     series_names <- names(y)
+    colors <- color %||% rtemis_colors
+    colors <- rep_len(colors, length(y))
     series <- lapply(seq_along(y), function(i) {
-      BarSeries(name = series_names[i], data = y[[i]], stack = stack_group)
+      BarSeries(
+        name = series_names[i],
+        data = y[[i]],
+        stack = stack_group,
+        color = colors[i]
+      )
     })
   } else {
-    series <- list(BarSeries(data = y, stack = stack_group))
+    if (is.null(color) || length(color) <= 1L) {
+      series <- list(BarSeries(data = y, stack = stack_group, color = color))
+    } else {
+      colors <- rep_len(color, length(y))
+      data_items <- lapply(seq_along(y), function(i) {
+        list(
+          value = y[[i]],
+          itemStyle = list(color = colors[[i]])
+        )
+      })
+      series <- list(BarSeries(data = data_items, stack = stack_group))
+    }
   }
 
   if (horizontal) {
