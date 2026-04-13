@@ -530,9 +530,13 @@ draw_pie <- function(
 #' Draw a Density Plot
 #'
 #' Kernel density estimation plot from numeric data, with optional grouping
-#' for multiple traces.
+#' for multiple traces. A list input creates one density trace per vector when
+#' ungrouped, or one trace per variable/group combination when `group` is
+#' supplied.
 #'
-#' @param x Numeric: Values used for density estimation.
+#' @param x Numeric or list: Values used for density estimation. An ungrouped
+#'   list creates one density trace per element; with `group`, each list
+#'   element is split by group into separate traces.
 #' @param group Optional Vector: Grouping variable for multiple density traces.
 #' @param n Numeric `[1, Inf)`: Number of equally spaced points for density estimation.
 #' @param bw Character or Numeric: Bandwidth passed to [stats::density()].
@@ -560,45 +564,135 @@ draw_density <- function(
   verbosity = 1L,
   filename = NULL
 ) {
-  if (na.rm) {
-    na_idx <- is.na(x)
-    n_na <- sum(na_idx)
-    if (n_na > 0L) {
-      msg(
-        "Removed",
-        n_na,
-        "NA",
-        ngettext(n_na, "value", "values"),
-        "from x",
-        verbosity = verbosity
-      )
-      if (!is.null(group)) {
-        group <- group[!na_idx]
-      }
-      x <- x[!na_idx]
+  if (is.list(x)) {
+    series_names <- names(x)
+    if (is.null(series_names) || !all(nzchar(series_names))) {
+      series_names <- paste0("Series ", seq_along(x))
     }
-  }
 
-  if (!is.null(group)) {
-    groups <- unique(group)
-    series <- lapply(groups, function(g) {
-      d <- stats::density(x[group == g], n = n, bw = bw)
+    if (!is.null(group)) {
+      lens <- vapply(x, length, integer(1))
+      if (any(lens != length(group))) {
+        stop(
+          "All elements of `x` must match length(group) when `group` is provided.",
+          call. = FALSE
+        )
+      }
+
+      group_ok <- !is.na(group)
+      if (any(!group_ok)) {
+        group <- group[group_ok]
+        x <- lapply(x, function(vals) vals[group_ok])
+      }
+
+      groups <- unique(group)
+      group_labels <- as.character(groups)
+      series <- unlist(lapply(seq_along(x), function(i) {
+        vals <- x[[i]]
+        group_i <- group
+
+        if (na.rm) {
+          na_idx <- is.na(vals)
+          n_na <- sum(na_idx)
+          if (n_na > 0L) {
+            msg(
+              "Removed",
+              n_na,
+              "NA",
+              ngettext(n_na, "value", "values"),
+              "from",
+              series_names[[i]],
+              verbosity = verbosity
+            )
+            vals <- vals[!na_idx]
+            group_i <- group_i[!na_idx]
+          }
+        }
+
+        lapply(seq_along(groups), function(j) {
+          g <- groups[[j]]
+          d <- stats::density(vals[group_i == g], n = n, bw = bw)
+          dat <- mapply(c, d$x, d$y, SIMPLIFY = FALSE)
+          LineSeries(
+            name = paste(series_names[[i]], group_labels[[j]], sep = " - "),
+            data = dat,
+            show_symbol = FALSE,
+            area_style = AreaStyle(opacity = 0.25)
+          )
+        })
+      }), recursive = FALSE)
+    } else {
+      series <- lapply(seq_along(x), function(i) {
+        vals <- x[[i]]
+
+        if (na.rm) {
+          na_idx <- is.na(vals)
+          n_na <- sum(na_idx)
+          if (n_na > 0L) {
+            msg(
+              "Removed",
+              n_na,
+              "NA",
+              ngettext(n_na, "value", "values"),
+              "from",
+              series_names[[i]],
+              verbosity = verbosity
+            )
+            vals <- vals[!na_idx]
+          }
+        }
+
+        d <- stats::density(vals, n = n, bw = bw)
+        dat <- mapply(c, d$x, d$y, SIMPLIFY = FALSE)
+        LineSeries(
+          name = series_names[[i]],
+          data = dat,
+          show_symbol = FALSE,
+          area_style = AreaStyle(opacity = 0.25)
+        )
+      })
+    }
+  } else {
+    if (na.rm) {
+      na_idx <- is.na(x)
+      n_na <- sum(na_idx)
+      if (n_na > 0L) {
+        msg(
+          "Removed",
+          n_na,
+          "NA",
+          ngettext(n_na, "value", "values"),
+          "from x",
+          verbosity = verbosity
+        )
+        if (!is.null(group)) {
+          group <- group[!na_idx]
+        }
+        x <- x[!na_idx]
+      }
+    }
+
+    if (!is.null(group)) {
+      groups <- unique(group)
+      series <- lapply(groups, function(g) {
+        d <- stats::density(x[group == g], n = n, bw = bw)
+        dat <- mapply(c, d$x, d$y, SIMPLIFY = FALSE)
+        LineSeries(
+          name = as.character(g),
+          data = dat,
+          show_symbol = FALSE,
+          area_style = AreaStyle(opacity = 0.25)
+        )
+      })
+    } else {
+      d <- stats::density(x, n = n, bw = bw)
       dat <- mapply(c, d$x, d$y, SIMPLIFY = FALSE)
-      LineSeries(
-        name = as.character(g),
+      series <- list(LineSeries(
         data = dat,
         show_symbol = FALSE,
         area_style = AreaStyle(opacity = 0.25)
-      )
-    })
-  } else {
-    d <- stats::density(x, n = n, bw = bw)
-    dat <- mapply(c, d$x, d$y, SIMPLIFY = FALSE)
-    series <- list(LineSeries(
-      data = dat,
-      show_symbol = FALSE,
-      area_style = AreaStyle(opacity = 0.25)
-    ))
+      ))
+    }
   }
 
   opt <- EChartsOption(
