@@ -186,16 +186,19 @@ build_theme <- function(
   # Axis configs
   value_axis_cfg <- drop_nulls(list(
     axisLabel = if (length(axis_label_style) > 0L) axis_label_style,
-    axisLine = if (!is.null(axis_color))
-      list(lineStyle = list(color = axis_color)),
-    splitLine = if (!is.null(grid_color))
+    axisLine = if (!is.null(axis_color)) {
+      list(lineStyle = list(color = axis_color))
+    },
+    splitLine = if (!is.null(grid_color)) {
       list(lineStyle = list(color = grid_color))
+    }
   ))
 
   category_axis_cfg <- drop_nulls(list(
     axisLabel = if (length(axis_label_style) > 0L) axis_label_style,
-    axisLine = if (!is.null(axis_color))
-      list(lineStyle = list(color = axis_color)),
+    axisLine = if (!is.null(axis_color)) {
+      list(lineStyle = list(color = axis_color))
+    },
     splitLine = list(show = FALSE)
   ))
 
@@ -225,7 +228,11 @@ build_theme <- function(
     ),
     tooltip = if (length(tooltip_cfg) > 0L) tooltip_cfg else NULL,
     value_axis = if (length(value_axis_cfg) > 0L) value_axis_cfg else NULL,
-    category_axis = if (length(category_axis_cfg) > 0L) category_axis_cfg else NULL,
+    category_axis = if (length(category_axis_cfg) > 0L) {
+      category_axis_cfg
+    } else {
+      NULL
+    },
     line = list(symbol = "circle")
   )
 }
@@ -265,8 +272,8 @@ theme_light <- function(
   tooltip_font_size = NULL,
   font_family = "sans-serif",
   color = rtemis_colors,
-  bg_color = NULL,
-  fg_color = NULL,
+  bg_color = "#ffffff",
+  fg_color = "rgba(0, 0, 0, 0.7)",
   title_color = NULL,
   subtitle_color = NULL,
   legend_color = NULL,
