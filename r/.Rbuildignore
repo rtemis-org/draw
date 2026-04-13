@@ -1,8 +1,6 @@
 ^draw\.Rproj$
 ^\.Rproj\.user$
-
 ^__dev$
-^__validation$
 ^_pkgdown\.yml$
 ^.*\.code-workspace$
 ^.*\.Rcheck$
@@ -19,6 +17,7 @@
 ^specs$
 ^AGENTS\.md$
 ^CLAUDE\.md$
+^README\.md$
 ^pkgdown$
 ^SKILL\.md$
 ^LICENSE\.md$
