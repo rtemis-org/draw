@@ -41,6 +41,6 @@ Collate:
     'series.R'
     'option.R'
     'theme.R'
-    'widget.R'
+    'draw.R'
     'export.R'
     'zzz.R'
