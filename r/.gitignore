@@ -22,3 +22,6 @@ docs
 _pkgdown.yml
 pkgdown/
 docs/
+
+# HTML
+*.html
