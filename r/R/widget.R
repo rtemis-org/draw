@@ -650,9 +650,11 @@ draw_histogram <- function(
 #' using [grDevices::boxplot.stats()].
 #'
 #' @param data Numeric or list: A list of numeric vectors (one per box), or a single numeric
-#'   vector when `group` is provided.
+#'   vector when `group` is provided. For ungrouped named lists, `names(data)`
+#'   are used as labels when `labels` is not supplied.
 #' @param labels Optional Character: Category labels for each box. Ignored when `group` is
-#'   provided (group levels are used instead).
+#'   provided (group levels are used instead). When omitted for ungrouped named
+#'   lists, `names(data)` are used.
 #' @param group Optional Vector: Grouping variable. When provided, `data` must be a
 #'   numeric vector, and boxplot statistics are computed per group. Each group
 #'   gets its own colored series.
@@ -692,6 +694,17 @@ draw_boxplot <- function(
       labels <- labelify(deparse(substitute(data)))
     }
     data <- list(data)
+  }
+
+  # Use names from an ungrouped named list as category labels unless
+  # labels are supplied explicitly.
+  if (is.null(group) &&
+      is.list(data) &&
+      is.null(labels) &&
+      !is.null(names(data)) &&
+      all(nzchar(names(data)))) {
+    labels <- names(data)
+    data <- unname(data)
   }
 
   # Ensure labels serialize as a JSON array, not a bare string
@@ -781,6 +794,7 @@ draw_boxplot <- function(
       }
       grDevices::boxplot.stats(v)$stats
     })
+    box_data <- unname(box_data)
 
     if (horizontal) {
       x_ax <- Axis(type = "value", scale = TRUE)
