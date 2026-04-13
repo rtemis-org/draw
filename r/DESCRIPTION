@@ -42,4 +42,5 @@ Collate:
     'option.R'
     'theme.R'
     'widget.R'
+    'export.R'
     'zzz.R'
