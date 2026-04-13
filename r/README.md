@@ -4,3 +4,5 @@ Comprehensive R interface to Apache ECharts (<https://echarts.apache.org>) for c
 charts and visualizations. Offers type-checked, validated configuration objects built with S7 
 classes that mirror the ECharts TypeScript API, with convenience functions for common chart types 
 and full htmlwidgets integration for use in Quarto, Shiny, and IDE viewers.
+
+[R API docs](https://docs.rtemis.org/draw/r-api)
