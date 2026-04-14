@@ -1,12 +1,13 @@
 # components.R
-# Component S7 classes: Grid, Title, Legend, Tooltip
+# Component S7 classes: Grid, Title, Legend, Tooltip, VisualMap
 #
 # TS sources:
-#   Grid:    src/coord/cartesian/GridModel.ts (GridOption, line 37)
-#   Title:   src/component/title/install.ts (TitleOption, line 48)
-#   Legend:  src/component/legend/LegendModel.ts (LegendOption, line 162)
-#   Tooltip: src/component/tooltip/TooltipModel.ts (TooltipOption, line 36)
-#            + src/util/types.ts (CommonTooltipOption, line 1527)
+#   Grid:      src/coord/cartesian/GridModel.ts (GridOption, line 37)
+#   Title:     src/component/title/install.ts (TitleOption, line 48)
+#   Legend:    src/component/legend/LegendModel.ts (LegendOption, line 162)
+#   Tooltip:   src/component/tooltip/TooltipModel.ts (TooltipOption, line 36)
+#              + src/util/types.ts (CommonTooltipOption, line 1527)
+#   VisualMap: src/component/visualMap/ContinuousModel.ts (ContinuousVisualMapOption)
 
 # -- Grid -----------------------------------------------------------------------
 
@@ -368,5 +369,58 @@ Tooltip <- S7::new_class(
 S7::method(to_list, Tooltip) <- function(x, ...) {
   # class_name -> className (handled by snake_to_camel)
   # but we need the rename for class_name since className is the correct echarts key
+  props_to_list(x)
+}
+
+# -- VisualMap ------------------------------------------------------------------
+
+#' Visual Map
+#'
+#' Continuous visual map component that maps data values to visual properties
+#' (typically color). Required for heatmaps.
+#'
+#' Corresponds to `ContinuousVisualMapOption` in
+#' `src/component/visualMap/ContinuousModel.ts`.
+#' ECharts docs: \url{https://echarts.apache.org/en/option.html#visualMap-continuous}
+#'
+#' @param type Character \{"continuous", "piecewise"\}: Visual map type.
+#' @param min Optional Numeric: Minimum value of the mapped data range.
+#' @param max Optional Numeric: Maximum value of the mapped data range.
+#' @param precision Optional Integer `[0, Inf)`: Decimal places shown in colorbar
+#'   labels and the draggable-handle tooltip. ECharts defaults to `0`, which
+#'   rounds labels to whole numbers — set this to match `value_digits` for
+#'   accurate display.
+#' @param calculable Optional Logical: Whether to show drag handles for interactive range selection.
+#' @param show Optional Logical: Whether to display the visual map legend.
+#' @param orient Optional Character \{"vertical", "horizontal"\}: Orientation of the color bar.
+#' @param in_range Optional list: Visual encoding for in-range values.
+#'   Typically `list(color = c("blue", "white", "red"))`.
+#' @param out_of_range Optional list: Visual encoding for out-of-range values.
+#' @param left Optional Numeric or Character: Distance from the left of the container.
+#' @param right Optional Numeric or Character: Distance from the right of the container.
+#' @param top Optional Numeric or Character: Distance from the top of the container.
+#' @param bottom Optional Numeric or Character: Distance from the bottom of the container.
+#' @export
+VisualMap <- S7::new_class(
+  "VisualMap",
+  properties = list(
+    type = enum_property(c("continuous", "piecewise"), default = "continuous"),
+    min = numeric_or_null_property(),
+    max = numeric_or_null_property(),
+    precision = numeric_or_null_property(),
+    calculable = bool_or_null_property(),
+    show = bool_or_null_property(),
+    orient = enum_property(c("vertical", "horizontal")),
+    in_range = S7::new_property(class = S7::class_any, default = NULL),
+    out_of_range = S7::new_property(class = S7::class_any, default = NULL),
+    # BoxLayoutOptionMixin
+    left = numeric_or_string_property(),
+    right = numeric_or_string_property(),
+    top = numeric_or_string_property(),
+    bottom = numeric_or_string_property()
+  )
+)
+
+S7::method(to_list, VisualMap) <- function(x, ...) {
   props_to_list(x)
 }
