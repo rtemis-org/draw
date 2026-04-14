@@ -98,7 +98,7 @@ S7::method(to_list, Theme) <- function(x, ...) {
   # actually take effect.
   if (!is.null(out$textStyle)) {
     ts <- out$textStyle
-    for (comp in c("title", "legend", "tooltip")) {
+    for (comp in c("title", "legend", "tooltip", "visualMap")) {
       if (is.null(out[[comp]])) {
         out[[comp]] <- list()
       }
