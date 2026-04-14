@@ -30,6 +30,14 @@ HTMLWidgets.widget({
       return false;
     }
 
+    // For square-cell heatmaps: compute the required height given a container
+    // width, so that grid cells are perfectly square.
+    function squareCellHeight(x, containerWidth) {
+      var gridWidth = containerWidth - x.leftPx - x.rightPx;
+      var cellPx = gridWidth / x.nCols;
+      return Math.round(x.nRows * cellPx + x.topPx + x.botPx);
+    }
+
     function renderChart(x) {
       if (chart) {
         chart.dispose();
@@ -47,6 +55,19 @@ HTMLWidgets.widget({
       }
 
       if (themeObj) {
+        // Propagate the global theme text color to visualMap labels.
+        // ECharts does not automatically inherit global textStyle into
+        // visualMap.textStyle, so we inject it here before registering.
+        var fgColor = themeObj.textStyle && themeObj.textStyle.color;
+        if (fgColor && x.option.visualMap) {
+          if (!x.option.visualMap.textStyle) {
+            x.option.visualMap.textStyle = {};
+          }
+          if (!x.option.visualMap.textStyle.color) {
+            x.option.visualMap.textStyle.color = fgColor;
+          }
+        }
+
         echarts.registerTheme("custom_theme", themeObj);
         themeName = "custom_theme";
       }
@@ -78,17 +99,32 @@ HTMLWidgets.widget({
     return {
       renderValue: function(x) {
         currentPayload = x;
+
+        // Square-cell heatmaps: enforce the correct height by deriving it
+        // from the actual container width and the layout margins passed from R.
+        // This overrides whatever height htmlwidgets allocated for the container,
+        // ensuring cells are always square regardless of viewer window dimensions.
+        if (x.squareCells) {
+          var newHeight = squareCellHeight(x, currentWidth);
+          el.style.height = newHeight + "px";
+          currentHeight = newHeight;
+        }
+
         renderChart(x);
       },
 
       resize: function(width, height) {
         currentWidth = width;
         currentHeight = height;
-        if (chart) {
-          chart.resize({
-            width: width,
-            height: height
-          });
+
+        if (currentPayload && currentPayload.squareCells) {
+          // Recompute height to keep cells square at the new width
+          var newHeight = squareCellHeight(currentPayload, width);
+          el.style.height = newHeight + "px";
+          currentHeight = newHeight;
+          if (chart) chart.resize({ width: width, height: newHeight });
+        } else {
+          if (chart) chart.resize({ width: width, height: height });
         }
       },
 
