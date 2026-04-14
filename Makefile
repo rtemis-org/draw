@@ -1,4 +1,4 @@
-.PHONY: document document-r install install-r test test-r
+.PHONY: format format-r document document-r install install-r test test-r
 
 # ── Format ───────────────────────────────────────────────────────────────────
 format: format-r
