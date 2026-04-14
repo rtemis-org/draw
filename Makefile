@@ -1,5 +1,12 @@
 .PHONY: document document-r install install-r test test-r
 
+# ── Format ───────────────────────────────────────────────────────────────────
+format: format-r
+
+format-r:
+	@echo "==> R: Formatting rtemis.draw"
+	cd r && air format .
+
 # ── Document ─────────────────────────────────────────────────────────────────
 document: document-r
 
