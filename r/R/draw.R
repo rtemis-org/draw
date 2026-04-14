@@ -1152,9 +1152,9 @@ draw_boxplot <- function(
 #'   `"1"`, `"2"`, ... when row names are absent.
 #' @param col_names Optional Character: Column labels. Defaults to `colnames(x)`.
 #' @param triangle Optional Character \{"upper", "lower"\}: Mask one triangle of the
-#'   matrix to `NA`. `"upper"` keeps only the upper triangle (and diagonal);
-#'   `"lower"` keeps only the lower triangle (and diagonal). Useful for symmetric
-#'   matrices such as correlation matrices.
+#'   matrix to `NA`. `"upper"` keeps only the upper triangle; `"lower"` keeps
+#'   only the lower triangle. The diagonal is always masked, as it is
+#'   uninformative for symmetric matrices (e.g. always 1 for correlations).
 #' @param cluster_rows Logical: Whether to reorder rows via hierarchical clustering.
 #' @param cluster_cols Logical: Whether to reorder columns via hierarchical clustering.
 #' @param dist_method Character: Distance method passed to [stats::dist()].
@@ -1225,9 +1225,22 @@ draw_heatmap <- function(
   cn <- col_names %||% colnames(x) %||% as.character(seq_len(n_cols))
 
   # -- 3. Triangle masking -------------------------------------------------------
+  # For symmetric matrices (e.g. correlation), the diagonal is uninformative
+  # (always 1 for correlations), so mask it along with the hidden triangle.
+  # After masking, drop any rows/cols that are entirely NA — these are the
+  # "outer" labels (first variable on y-axis, last on x-axis for lower triangle)
+  # that have no visible cells and would otherwise float label-only in the plot.
   if (!is.null(triangle)) {
     mask <- if (triangle == "upper") lower.tri(x) else upper.tri(x)
     x[mask] <- NA
+    diag(x) <- NA
+    rows_keep <- apply(x, 1L, function(r) any(!is.na(r)))
+    cols_keep <- apply(x, 2L, function(c) any(!is.na(c)))
+    x  <- x[rows_keep, cols_keep, drop = FALSE]
+    rn <- rn[rows_keep]
+    cn <- cn[cols_keep]
+    n_rows <- nrow(x)
+    n_cols <- ncol(x)
   }
 
   # -- 4. Hierarchical clustering (reorders matrix in place) ---------------------
@@ -1359,6 +1372,7 @@ draw_heatmap <- function(
       type = "category",
       data = as.list(cn),
       split_area = SplitArea(show = FALSE),
+      axis_line = AxisLine(show = FALSE),
       axis_label = AxisLabel(rotate = rotate),
       boundary_gap = TRUE
     ),
@@ -1367,6 +1381,7 @@ draw_heatmap <- function(
       data = as.list(rn),
       inverse = TRUE,
       split_area = SplitArea(show = FALSE),
+      axis_line = AxisLine(show = FALSE),
       boundary_gap = TRUE
     ),
     visual_map = VisualMap(

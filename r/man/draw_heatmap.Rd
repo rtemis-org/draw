@@ -37,9 +37,9 @@ to x-axis categories.}
 \item{col_names}{Optional Character: Column labels. Defaults to \code{colnames(x)}.}
 
 \item{triangle}{Optional Character \{"upper", "lower"\}: Mask one triangle of the
-matrix to \code{NA}. \code{"upper"} keeps only the upper triangle (and diagonal);
-\code{"lower"} keeps only the lower triangle (and diagonal). Useful for symmetric
-matrices such as correlation matrices.}
+matrix to \code{NA}. \code{"upper"} keeps only the upper triangle; \code{"lower"} keeps
+only the lower triangle. The diagonal is always masked, as it is
+uninformative for symmetric matrices (e.g. always 1 for correlations).}
 
 \item{cluster_rows}{Logical: Whether to reorder rows via hierarchical clustering.}
 
