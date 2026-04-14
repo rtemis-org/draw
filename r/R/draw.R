@@ -19,6 +19,9 @@
 #' @param filename Optional Character: If provided, the widget is also written to
 #'   this file via [save_drawing()]. Extension determines the format (currently
 #'   only `.svg` is supported).
+#' @param meta Optional named list: Extra fields merged into the widget payload.
+#'   Used internally (e.g. by [draw_heatmap()] to pass square-cell layout
+#'   parameters to the JS binding).
 #' @return htmlwidget: Widget object.
 #' @export
 draw <- function(
@@ -28,7 +31,8 @@ draw <- function(
   width = NULL,
   height = NULL,
   elementId = NULL,
-  filename = NULL
+  filename = NULL,
+  meta = list()
 ) {
   # Convert S7 objects to plain lists
   if (S7::S7_inherits(option)) {
@@ -114,13 +118,21 @@ draw <- function(
     theme_list <- theme
   }
 
-  payload <- list(
-    option = option,
-    theme = theme_list,
-    renderer = renderer,
-    autoTheme = if (auto_theme) TRUE else NULL,
-    themeDark = theme_dark_list
+  payload <- c(
+    list(
+      option = option,
+      theme = theme_list,
+      renderer = renderer,
+      autoTheme = if (auto_theme) TRUE else NULL,
+      themeDark = theme_dark_list
+    ),
+    meta
   )
+
+  # Respect explicit pixel dimensions: when a numeric width/height is given,
+  # disable browser.fill/viewer.fill so the widget keeps the computed size
+  # instead of expanding to fill the container.
+  should_fill <- is.null(width) || is.character(width)
 
   widget <- htmlwidgets::createWidget(
     name = "draw",
@@ -128,10 +140,11 @@ draw <- function(
     width = width,
     height = height,
     sizingPolicy = htmlwidgets::sizingPolicy(
-      browser.fill = TRUE,
+      browser.fill = should_fill,
       browser.padding = 0,
+      viewer.fill = should_fill,
       viewer.padding = 0,
-      fill = TRUE
+      fill = should_fill
     ),
     package = "rtemis.draw",
     elementId = elementId
@@ -375,15 +388,6 @@ draw_bar <- function(
 #'   [save_drawing()].
 #' @return htmlwidget: Widget object.
 #' @export
-bs <- grDevices::boxplot.stats(na.omit(penguins$body_mass))$stats
-
-draw(EChartsOption(
-  title = Title(text = "Body Mass"),
-  tooltip = Tooltip(trigger = "item"),
-  x_axis = Axis(type = "category", data = list("Body Mass")),
-  y_axis = Axis(type = "value", scale = TRUE),
-  series = BoxplotSeries(data = list(bs))
-))
 draw_scatter <- function(
   x,
   y,
@@ -1128,4 +1132,290 @@ draw_boxplot <- function(
   }
 
   draw(opt, theme = theme, width = width, height = height, filename = filename)
+}
+
+# -- draw_heatmap ---------------------------------------------------------------
+
+#' Draw a Heatmap
+#'
+#' Quick heatmap from a numeric matrix. Designed to handle all common use cases
+#' including correlation matrices (square cells, diverging color scale),
+#' general rectangular heatmaps, and clustered heatmaps.
+#'
+#' Color encoding is driven by a continuous [VisualMap] component.
+#' Hierarchical clustering is performed in R via [hclust()]; rows and columns
+#' are reordered accordingly (dendrogram rendering is not yet supported).
+#'
+#' @param x Numeric matrix: Input data. Rows map to y-axis categories and columns
+#'   to x-axis categories.
+#' @param row_names Optional Character: Row labels. Defaults to `rownames(x)`, or
+#'   `"1"`, `"2"`, ... when row names are absent.
+#' @param col_names Optional Character: Column labels. Defaults to `colnames(x)`.
+#' @param triangle Optional Character \{"upper", "lower"\}: Mask one triangle of the
+#'   matrix to `NA`. `"upper"` keeps only the upper triangle (and diagonal);
+#'   `"lower"` keeps only the lower triangle (and diagonal). Useful for symmetric
+#'   matrices such as correlation matrices.
+#' @param cluster_rows Logical: Whether to reorder rows via hierarchical clustering.
+#' @param cluster_cols Logical: Whether to reorder columns via hierarchical clustering.
+#' @param dist_method Character: Distance method passed to [stats::dist()].
+#'   Common values: `"euclidean"`, `"manhattan"`.
+#' @param hclust_method Character: Linkage method passed to [stats::hclust()].
+#'   Common values: `"complete"`, `"ward.D2"`, `"average"`.
+#' @param square_cells Optional Logical: Whether to compute widget dimensions so
+#'   cells are square. `NULL` (default) enables this automatically for square
+#'   matrices (e.g. correlation matrices). When `TRUE`, both `width` and `height`
+#'   are calculated from the number of cells; supply explicit `width`/`height` to
+#'   override.
+#' @param color Optional Character: Color palette — a vector of 2 or more colors
+#'   defining the continuous color scale from `zlim[1]` to `zlim[2]`. When `NULL`
+#'   (default) a diverging teal–white–orange palette is used when data spans zero,
+#'   otherwise a sequential single-hue palette is used.
+#' @param zlim Optional Numeric: Length-2 vector `c(min, max)` for the color scale.
+#'   Defaults to the observed data range. For correlation matrices, `c(-1, 1)` is
+#'   recommended.
+#' @param show_values Logical: Whether to print the cell value as a label inside
+#'   each cell.
+#' @param value_digits Integer: Decimal places used in cell labels and the tooltip.
+#' @param show_colorbar Logical: Whether to display the continuous color-scale bar.
+#' @param colorbar_orient Character \{"vertical", "horizontal"\}: Orientation of the
+#'   color bar.
+#' @param title Optional Character: Chart title.
+#' @param theme Optional [Theme]: Theme override. `NULL` auto-detects light/dark mode.
+#' @param width Optional Character or Numeric: Widget width.
+#' @param height Optional Character or Numeric: Widget height.
+#' @param filename Optional Character: If provided, save the widget to this file via
+#'   [save_drawing()].
+#' @return htmlwidget: Widget object.
+#' @export
+draw_heatmap <- function(
+  x,
+  row_names = NULL,
+  col_names = NULL,
+  triangle = NULL,
+  cluster_rows = FALSE,
+  cluster_cols = FALSE,
+  dist_method = "euclidean",
+  hclust_method = "complete",
+  square_cells = NULL,
+  color = NULL,
+  zlim = NULL,
+  show_values = FALSE,
+  value_digits = 2L,
+  show_colorbar = TRUE,
+  colorbar_orient = "vertical",
+  title = NULL,
+  theme = NULL,
+  width = NULL,
+  height = NULL,
+  filename = NULL
+) {
+  # -- 1. Validate & coerce ------------------------------------------------------
+  if (!is.matrix(x)) x <- as.matrix(x)
+  if (!is.numeric(x)) cli::cli_abort("{.arg x} must be a numeric matrix.")
+  if (!is.null(triangle)) {
+    triangle <- match.arg(triangle, c("upper", "lower"))
+  }
+  colorbar_orient <- match.arg(colorbar_orient, c("vertical", "horizontal"))
+
+  n_rows <- nrow(x)
+  n_cols <- ncol(x)
+
+  # -- 2. Row / column labels ----------------------------------------------------
+  rn <- row_names %||% rownames(x) %||% as.character(seq_len(n_rows))
+  cn <- col_names %||% colnames(x) %||% as.character(seq_len(n_cols))
+
+  # -- 3. Triangle masking -------------------------------------------------------
+  if (!is.null(triangle)) {
+    mask <- if (triangle == "upper") lower.tri(x) else upper.tri(x)
+    x[mask] <- NA
+  }
+
+  # -- 4. Hierarchical clustering (reorders matrix in place) ---------------------
+  if (cluster_rows && n_rows > 1L) {
+    complete <- !apply(x, 1L, function(r) all(is.na(r)))
+    if (sum(complete) > 1L) {
+      d <- stats::dist(x[complete, , drop = FALSE], method = dist_method)
+      h <- stats::hclust(d, method = hclust_method)
+      ord <- seq_len(n_rows)
+      ord[complete] <- which(complete)[h$order]
+      x  <- x[ord, , drop = FALSE]
+      rn <- rn[ord]
+    }
+  }
+  if (cluster_cols && n_cols > 1L) {
+    complete <- !apply(x, 2L, function(cv) all(is.na(cv)))
+    if (sum(complete) > 1L) {
+      d <- stats::dist(t(x[, complete, drop = FALSE]), method = dist_method)
+      h <- stats::hclust(d, method = hclust_method)
+      ord <- seq_len(n_cols)
+      ord[complete] <- which(complete)[h$order]
+      x  <- x[, ord, drop = FALSE]
+      cn <- cn[ord]
+    }
+  }
+
+  # -- 5. Color limits -----------------------------------------------------------
+  if (is.null(zlim)) {
+    zlim <- range(x, na.rm = TRUE)
+  }
+
+  # -- 6. Color palette ----------------------------------------------------------
+  if (is.null(color)) {
+    if (zlim[1L] < 0 && zlim[2L] > 0) {
+      # Diverging: teal -> white -> orange
+      color <- c(rtemis_colors[[1L]], "#ffffff", rtemis_colors[[2L]])
+    } else if (zlim[2L] <= 0) {
+      # All non-positive: orange -> white
+      color <- c(rtemis_colors[[2L]], "#ffffff")
+    } else {
+      # All non-negative: white -> teal
+      color <- c("#ffffff", rtemis_colors[[1L]])
+    }
+  }
+
+  # -- 7. Heatmap data: list of [col_idx, row_idx, value] ------------------------
+  # x index = column (j-1), y index = row (i-1).
+  # With inverse = TRUE on the y-axis, row 0 appears at the top (matrix convention).
+  # NA values become NULL so ECharts leaves those cells uncolored.
+  data_list <- vector("list", n_rows * n_cols)
+  k <- 1L
+  for (i in seq_len(n_rows)) {
+    for (j in seq_len(n_cols)) {
+      val <- x[i, j]
+      data_list[[k]] <- list(j - 1L, i - 1L, if (is.na(val)) NULL else val)
+      k <- k + 1L
+    }
+  }
+
+  # -- 8. Layout margins (always computed; used for grid, title, and dimensions) -
+  # These margins define the space outside the plot area:
+  #   left_px  — room for y-axis (row) labels; ~8px per character + padding
+  #   right_px — room for the vertical colorbar, or minimal padding otherwise
+  #   top_px   — room for the chart title, or minimal padding otherwise
+  #   bot_px   — room for x-axis (column) labels; may be rotated 45°
+  # With containLabel = FALSE (explicit grid), grid.left IS the plot-area origin,
+  # so title.left = left_px gives pixel-precise alignment with the first column.
+  rotate   <- if (n_cols > 8L || max(nchar(cn)) > 6L) 45L else 0L
+  left_px  <- min(20L + max(nchar(rn)) * 8L, 200L)
+  right_px <- if (show_colorbar && colorbar_orient == "vertical") 90L else 20L
+  top_px   <- if (!is.null(title)) 40L else 10L
+  bot_px   <- if (rotate > 0L) min(20L + max(nchar(cn)) * 5L, 140L) else 36L
+
+  if (is.null(square_cells)) square_cells <- (n_rows == n_cols)
+
+  # For square-cell heatmaps, compute R-side dimensions as a static fallback
+  # (e.g. knitr/quarto output where JS resize callbacks may not run).
+  # The JS binding also enforces square cells dynamically on init and resize,
+  # so these pixel values are used as the initial widget allocation.
+  if (square_cells && is.null(width) && is.null(height)) {
+    cell_px <- 40L
+    width   <- n_cols * cell_px + left_px + right_px
+    height  <- n_rows * cell_px + top_px + bot_px
+  }
+
+  # -- 9. Tooltip: shows "row x col: value" -------------------------------------
+  cols_json <- jsonlite::toJSON(cn, auto_unbox = FALSE)
+  rows_json <- jsonlite::toJSON(rn, auto_unbox = FALSE)
+  tooltip_fmt <- htmlwidgets::JS(paste0(
+    "(function(){",
+    "var cn=", cols_json, ";",
+    "var rn=", rows_json, ";",
+    "return function(p){",
+    "if(!p.value||p.value[2]===null||p.value[2]===undefined)return'NA';",
+    "return rn[p.value[1]]+' \u00d7 '+cn[p.value[0]]+': '+p.value[2].toFixed(", value_digits, ");",
+    "}})()"
+  ))
+
+  # -- 10. Optional in-cell value labels -----------------------------------------
+  label_opt <- if (show_values) {
+    LabelOption(
+      show = TRUE,
+      formatter = htmlwidgets::JS(paste0(
+        "function(p){",
+        "if(!p.value||p.value[2]===null||p.value[2]===undefined)return'';",
+        "return p.value[2].toFixed(", value_digits, ");",
+        "}"
+      ))
+    )
+  } else {
+    NULL
+  }
+
+  # -- 11. Assemble and render ---------------------------------------------------
+  opt <- EChartsOption(
+    title = if (!is.null(title)) Title(text = title, left = left_px) else NULL,
+    tooltip = Tooltip(trigger = "item", formatter = tooltip_fmt),
+    # Explicit grid with containLabel = FALSE so that left_px is the exact
+    # distance from the container edge to the plot-area left edge, enabling
+    # pixel-precise title alignment (title.left = left_px).
+    grid = Grid(
+      left = left_px,
+      right = right_px,
+      top = top_px,
+      bottom = bot_px,
+      contain_label = FALSE
+    ),
+    x_axis = Axis(
+      type = "category",
+      data = as.list(cn),
+      split_area = SplitArea(show = FALSE),
+      axis_label = AxisLabel(rotate = rotate),
+      boundary_gap = TRUE
+    ),
+    y_axis = Axis(
+      type = "category",
+      data = as.list(rn),
+      inverse = TRUE,
+      split_area = SplitArea(show = FALSE),
+      boundary_gap = TRUE
+    ),
+    visual_map = VisualMap(
+      type = "continuous",
+      min = zlim[[1L]],
+      max = zlim[[2L]],
+      # Match colorbar label precision to the cell-value precision so that the
+      # min/max labels and the draggable-handle tooltip are never rounded to
+      # whole numbers (ECharts default precision = 0).
+      precision = value_digits,
+      calculable = TRUE,
+      show = show_colorbar,
+      orient = colorbar_orient,
+      in_range = list(color = as.list(color)),
+      # Vertical: pin to the right edge, centered with the plot area.
+      # Horizontal: centered at the bottom.
+      right  = if (colorbar_orient == "vertical")   "right"  else NULL,
+      top    = if (colorbar_orient == "vertical")   "middle" else NULL,
+      left   = if (colorbar_orient == "horizontal") "center" else NULL,
+      bottom = if (colorbar_orient == "horizontal") "bottom" else NULL
+    ),
+    series = HeatmapSeries(
+      data  = data_list,
+      label = label_opt
+    )
+  )
+
+  # Pass square-cell layout parameters to the JS binding so it can enforce
+  # square cells dynamically on init and resize (viewer/browser resize events).
+  heatmap_meta <- if (square_cells) {
+    list(
+      squareCells = TRUE,
+      nRows = n_rows,
+      nCols = n_cols,
+      leftPx = left_px,
+      rightPx = right_px,
+      topPx = top_px,
+      botPx = bot_px
+    )
+  } else {
+    list()
+  }
+
+  draw(
+    opt,
+    theme = theme,
+    width = width,
+    height = height,
+    filename = filename,
+    meta = heatmap_meta
+  )
 }
