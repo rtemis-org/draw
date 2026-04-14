@@ -11,6 +11,15 @@ interactive charts and visualizations. Offers type-checked, validated configurat
 built with S7 classes that mirror the ECharts TypeScript API, with convenience functions for
 common chart types and full htmlwidgets integration for use in Quarto, Shiny, and IDE viewers.
 }
+\seealso{
+Useful links:
+\itemize{
+  \item \url{https://www.rtemis.org}
+  \item \url{https://docs.rtemis.org/draw/r}
+  \item \url{https://docs.rtemis.org/draw/r-api}
+}
+
+}
 \author{
 \strong{Maintainer}: E.D. Gennatas \email{gennatas@gmail.com} (\href{https://orcid.org/0000-0001-9280-3609}{ORCID}) [copyright holder]
 
