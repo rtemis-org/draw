@@ -29,8 +29,12 @@ AxisLine <- S7::new_class(
       class = S7::class_any,
       default = NULL,
       validator = function(value) {
-        if (is.null(value)) return(NULL)
-        if (is.logical(value) && length(value) == 1L) return(NULL)
+        if (is.null(value)) {
+          return(NULL)
+        }
+        if (is.logical(value) && length(value) == 1L) {
+          return(NULL)
+        }
         if (is.character(value) && length(value) == 1L && value == "auto") {
           return(NULL)
         }
@@ -43,8 +47,12 @@ AxisLine <- S7::new_class(
       class = S7::class_any,
       default = NULL,
       validator = function(value) {
-        if (is.null(value)) return(NULL)
-        if (is.character(value) && length(value) <= 2L) return(NULL)
+        if (is.null(value)) {
+          return(NULL)
+        }
+        if (is.character(value) && length(value) <= 2L) {
+          return(NULL)
+        }
         "must be a string or length-2 character vector, or NULL"
       }
     ),
@@ -52,8 +60,12 @@ AxisLine <- S7::new_class(
       class = S7::class_any,
       default = NULL,
       validator = function(value) {
-        if (is.null(value)) return(NULL)
-        if (is.numeric(value)) return(NULL)
+        if (is.null(value)) {
+          return(NULL)
+        }
+        if (is.numeric(value)) {
+          return(NULL)
+        }
         "must be a numeric vector or NULL"
       }
     ),
@@ -61,8 +73,12 @@ AxisLine <- S7::new_class(
       class = S7::class_any,
       default = NULL,
       validator = function(value) {
-        if (is.null(value)) return(NULL)
-        if (is.numeric(value) || is.character(value)) return(NULL)
+        if (is.null(value)) {
+          return(NULL)
+        }
+        if (is.numeric(value) || is.character(value)) {
+          return(NULL)
+        }
         "must be a number, string, vector, or NULL"
       }
     ),
@@ -96,8 +112,12 @@ AxisTick <- S7::new_class(
       class = S7::class_any,
       default = NULL,
       validator = function(value) {
-        if (is.null(value)) return(NULL)
-        if (is.logical(value) && length(value) == 1L) return(NULL)
+        if (is.null(value)) {
+          return(NULL)
+        }
+        if (is.logical(value) && length(value) == 1L) {
+          return(NULL)
+        }
         if (is.character(value) && length(value) == 1L && value == "auto") {
           return(NULL)
         }
@@ -166,8 +186,12 @@ SplitLine <- S7::new_class(
       class = S7::class_any,
       default = NULL,
       validator = function(value) {
-        if (is.null(value)) return(NULL)
-        if (is.numeric(value) && length(value) == 1L) return(NULL)
+        if (is.null(value)) {
+          return(NULL)
+        }
+        if (is.numeric(value) && length(value) == 1L) {
+          return(NULL)
+        }
         if (is.character(value) && length(value) == 1L && value == "auto") {
           return(NULL)
         }
@@ -229,8 +253,12 @@ SplitArea <- S7::new_class(
       class = S7::class_any,
       default = NULL,
       validator = function(value) {
-        if (is.null(value)) return(NULL)
-        if (is.numeric(value) && length(value) == 1L) return(NULL)
+        if (is.null(value)) {
+          return(NULL)
+        }
+        if (is.numeric(value) && length(value) == 1L) {
+          return(NULL)
+        }
         if (is.character(value) && length(value) == 1L && value == "auto") {
           return(NULL)
         }
@@ -281,8 +309,12 @@ AxisLabel <- S7::new_class(
       class = S7::class_any,
       default = NULL,
       validator = function(value) {
-        if (is.null(value)) return(NULL)
-        if (is.numeric(value) && length(value) == 1L) return(NULL)
+        if (is.null(value)) {
+          return(NULL)
+        }
+        if (is.numeric(value) && length(value) == 1L) {
+          return(NULL)
+        }
         if (is.character(value) && length(value) == 1L && value == "auto") {
           return(NULL)
         }
@@ -365,10 +397,17 @@ Axis <- S7::new_class(
       class = S7::class_any,
       default = NULL,
       validator = function(value) {
-        if (is.null(value)) return(NULL)
-        if (is.numeric(value) && length(value) == 1L) return(NULL)
-        if (is.character(value) && length(value) == 1L &&
-            value %in% c("dataMin", "dataMax")) {
+        if (is.null(value)) {
+          return(NULL)
+        }
+        if (is.numeric(value) && length(value) == 1L) {
+          return(NULL)
+        }
+        if (
+          is.character(value) &&
+            length(value) == 1L &&
+            value %in% c("dataMin", "dataMax")
+        ) {
           return(NULL)
         }
         "must be a number, 'dataMin', 'dataMax', or NULL"
@@ -378,10 +417,17 @@ Axis <- S7::new_class(
       class = S7::class_any,
       default = NULL,
       validator = function(value) {
-        if (is.null(value)) return(NULL)
-        if (is.numeric(value) && length(value) == 1L) return(NULL)
-        if (is.character(value) && length(value) == 1L &&
-            value %in% c("dataMin", "dataMax")) {
+        if (is.null(value)) {
+          return(NULL)
+        }
+        if (is.numeric(value) && length(value) == 1L) {
+          return(NULL)
+        }
+        if (
+          is.character(value) &&
+            length(value) == 1L &&
+            value %in% c("dataMin", "dataMax")
+        ) {
           return(NULL)
         }
         "must be a number, 'dataMin', 'dataMax', or NULL"
@@ -403,8 +449,12 @@ Axis <- S7::new_class(
       class = S7::class_any,
       default = NULL,
       validator = function(value) {
-        if (is.null(value)) return(NULL)
-        if (is.logical(value) && length(value) == 1L) return(NULL)
+        if (is.null(value)) {
+          return(NULL)
+        }
+        if (is.logical(value) && length(value) == 1L) {
+          return(NULL)
+        }
         if ((is.numeric(value) || is.character(value)) && length(value) == 2L) {
           return(NULL)
         }

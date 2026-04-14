@@ -60,8 +60,12 @@ EChartsOption <- S7::new_class(
       class = S7::class_any,
       default = NULL,
       validator = function(value) {
-        if (is.null(value)) return(NULL)
-        if (is.logical(value) && length(value) == 1L) return(NULL)
+        if (is.null(value)) {
+          return(NULL)
+        }
+        if (is.logical(value) && length(value) == 1L) {
+          return(NULL)
+        }
         if (is.character(value) && length(value) == 1L && value == "auto") {
           return(NULL)
         }
@@ -79,8 +83,12 @@ EChartsOption <- S7::new_class(
 #' @keywords internal
 #' @noRd
 convert_component <- function(value) {
-  if (is.null(value)) return(NULL)
-  if (S7::S7_inherits(value)) return(to_list(value))
+  if (is.null(value)) {
+    return(NULL)
+  }
+  if (S7::S7_inherits(value)) {
+    return(to_list(value))
+  }
   if (is.list(value)) {
     return(lapply(value, function(v) {
       if (S7::S7_inherits(v)) to_list(v) else v
@@ -124,9 +132,15 @@ S7::method(to_list, EChartsOption) <- function(x, ...) {
 
   # Simple properties
   simple_props <- c(
-    "color", "background_color", "animation", "animation_threshold",
-    "animation_duration", "animation_easing", "animation_delay",
-    "dark_mode", "use_utc"
+    "color",
+    "background_color",
+    "animation",
+    "animation_threshold",
+    "animation_duration",
+    "animation_easing",
+    "animation_delay",
+    "dark_mode",
+    "use_utc"
   )
   for (prop_name in simple_props) {
     val <- S7::prop(x, prop_name)

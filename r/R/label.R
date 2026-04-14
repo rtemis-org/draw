@@ -40,20 +40,37 @@ LabelOption <- S7::new_class(
       class = S7::class_any,
       default = NULL,
       validator = function(value) {
-        if (is.null(value)) return(NULL)
+        if (is.null(value)) {
+          return(NULL)
+        }
         valid <- c(
-          "top", "left", "right", "bottom", "inside",
-          "insideLeft", "insideRight", "insideTop", "insideBottom",
-          "insideTopLeft", "insideBottomLeft", "insideTopRight",
-          "insideBottomRight", "outside"
+          "top",
+          "left",
+          "right",
+          "bottom",
+          "inside",
+          "insideLeft",
+          "insideRight",
+          "insideTop",
+          "insideBottom",
+          "insideTopLeft",
+          "insideBottomLeft",
+          "insideTopRight",
+          "insideBottomRight",
+          "outside"
         )
         if (is.character(value) && length(value) == 1L && value %in% valid) {
           return(NULL)
         }
         # Also accept numeric array [x, y] for absolute positioning
-        if (is.numeric(value)) return(NULL)
-        paste0("must be one of: ", paste(dQuote(valid), collapse = ", "),
-               ", or a numeric position")
+        if (is.numeric(value)) {
+          return(NULL)
+        }
+        paste0(
+          "must be one of: ",
+          paste(dQuote(valid), collapse = ", "),
+          ", or a numeric position"
+        )
       }
     ),
     distance = numeric_or_null_property(),
@@ -62,8 +79,12 @@ LabelOption <- S7::new_class(
       class = S7::class_any,
       default = NULL,
       validator = function(value) {
-        if (is.null(value)) return(NULL)
-        if (is.numeric(value)) return(NULL)
+        if (is.null(value)) {
+          return(NULL)
+        }
+        if (is.numeric(value)) {
+          return(NULL)
+        }
         "must be a numeric vector or NULL"
       }
     ),
@@ -73,8 +94,12 @@ LabelOption <- S7::new_class(
       class = S7::class_any,
       default = NULL,
       validator = function(value) {
-        if (is.null(value)) return(NULL)
-        if (is.numeric(value) && length(value) == 1L) return(NULL)
+        if (is.null(value)) {
+          return(NULL)
+        }
+        if (is.numeric(value) && length(value) == 1L) {
+          return(NULL)
+        }
         if (is.character(value) && length(value) == 1L && value == "auto") {
           return(NULL)
         }
@@ -128,9 +153,15 @@ LabelLine <- S7::new_class(
       class = S7::class_any,
       default = NULL,
       validator = function(value) {
-        if (is.null(value)) return(NULL)
-        if (is.logical(value) && length(value) == 1L) return(NULL)
-        if (is.numeric(value) && length(value) == 1L) return(NULL)
+        if (is.null(value)) {
+          return(NULL)
+        }
+        if (is.logical(value) && length(value) == 1L) {
+          return(NULL)
+        }
+        if (is.numeric(value) && length(value) == 1L) {
+          return(NULL)
+        }
         "must be TRUE/FALSE, a number, or NULL"
       }
     ),

@@ -75,9 +75,15 @@ AreaStyle <- S7::new_class(
       class = S7::class_any,
       default = NULL,
       validator = function(value) {
-        if (is.null(value)) return(NULL)
-        if (is.character(value) && value %in% c("auto", "start", "end")) return(NULL)
-        if (is.numeric(value) && length(value) == 1L) return(NULL)
+        if (is.null(value)) {
+          return(NULL)
+        }
+        if (is.character(value) && value %in% c("auto", "start", "end")) {
+          return(NULL)
+        }
+        if (is.numeric(value) && length(value) == 1L) {
+          return(NULL)
+        }
         "must be 'auto', 'start', 'end', a number, or NULL"
       }
     ),
@@ -136,9 +142,15 @@ ItemStyle <- S7::new_class(
       class = S7::class_any,
       default = NULL,
       validator = function(value) {
-        if (is.null(value)) return(NULL)
-        if (is.numeric(value)) return(NULL)
-        if (is.character(value) && length(value) == 1L) return(NULL)
+        if (is.null(value)) {
+          return(NULL)
+        }
+        if (is.numeric(value)) {
+          return(NULL)
+        }
+        if (is.character(value) && length(value) == 1L) {
+          return(NULL)
+        }
         "must be a number, numeric vector, string, or NULL"
       }
     ),
@@ -207,9 +219,16 @@ TextStyle <- S7::new_class(
       class = S7::class_any,
       default = NULL,
       validator = function(value) {
-        if (is.null(value)) return(NULL)
-        if (is.numeric(value) && length(value) == 1L) return(NULL)
-        if (is.character(value) && value %in% c("normal", "bold", "bolder", "lighter")) {
+        if (is.null(value)) {
+          return(NULL)
+        }
+        if (is.numeric(value) && length(value) == 1L) {
+          return(NULL)
+        }
+        if (
+          is.character(value) &&
+            value %in% c("normal", "bold", "bolder", "lighter")
+        ) {
           return(NULL)
         }
         "must be 'normal', 'bold', 'bolder', 'lighter', a number, or NULL"
@@ -230,8 +249,12 @@ TextStyle <- S7::new_class(
       class = S7::class_any,
       default = NULL,
       validator = function(value) {
-        if (is.null(value)) return(NULL)
-        if (is.numeric(value)) return(NULL)
+        if (is.null(value)) {
+          return(NULL)
+        }
+        if (is.numeric(value)) {
+          return(NULL)
+        }
         "must be a number, numeric vector, or NULL"
       }
     ),
@@ -239,8 +262,12 @@ TextStyle <- S7::new_class(
       class = S7::class_any,
       default = NULL,
       validator = function(value) {
-        if (is.null(value)) return(NULL)
-        if (is.numeric(value)) return(NULL)
+        if (is.null(value)) {
+          return(NULL)
+        }
+        if (is.numeric(value)) {
+          return(NULL)
+        }
         "must be a number, numeric vector, or NULL"
       }
     ),

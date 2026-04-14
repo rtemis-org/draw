@@ -8,7 +8,7 @@ test_that("LineSeries creates with defaults", {
   expect_true(S7::S7_inherits(ls, LineSeries))
   out <- to_list(ls)
   expect_equal(out$type, "line")
-  expect_equal(length(out), 1L)  # only type
+  expect_equal(length(out), 1L) # only type
 })
 
 test_that("LineSeries to_list() converts names", {
@@ -261,7 +261,10 @@ test_that("PieSeries label_line nests correctly", {
 })
 
 test_that("PieSeries animation_type validation", {
-  expect_equal(PieSeries(animation_type = "expansion")@animation_type, "expansion")
+  expect_equal(
+    PieSeries(animation_type = "expansion")@animation_type,
+    "expansion"
+  )
   expect_equal(PieSeries(animation_type = "scale")@animation_type, "scale")
   expect_error(PieSeries(animation_type = "fade"))
 })
@@ -278,8 +281,7 @@ test_that("BoxplotSeries creates with defaults", {
 test_that("BoxplotSeries to_list() converts names", {
   bp <- BoxplotSeries(
     name = "Distribution",
-    data = list(c(850, 940, 960, 980, 1070),
-                c(750, 800, 840, 890, 1020)),
+    data = list(c(850, 940, 960, 980, 1070), c(750, 800, 840, 890, 1020)),
     layout = "horizontal"
   )
   out <- to_list(bp)
@@ -299,12 +301,16 @@ test_that("BoxplotSeries box_width validation", {
   expect_equal(bp@box_width, c(7, 50))
   bp2 <- BoxplotSeries(box_width = c("10%", "50%"))
   expect_equal(bp2@box_width, c("10%", "50%"))
-  expect_error(BoxplotSeries(box_width = 30))  # must be length 2
+  expect_error(BoxplotSeries(box_width = 30)) # must be length 2
 })
 
 test_that("BoxplotSeries item_style nests", {
   bp <- BoxplotSeries(
-    item_style = ItemStyle(color = "#fff", border_color = "#333", border_width = 2)
+    item_style = ItemStyle(
+      color = "#fff",
+      border_color = "#333",
+      border_width = 2
+    )
   )
   out <- to_list(bp)
   expect_equal(out$itemStyle$color, "#fff")
@@ -317,7 +323,7 @@ test_that("BoxplotSeries item_style nests", {
 test_that("Series z_level and z work", {
   ls <- LineSeries(z_level = 1, z = 2)
   out <- to_list(ls)
-  expect_equal(out$zLevel, 1)  # snake_to_camel should not touch this (zLevel)
+  expect_equal(out$zLevel, 1) # snake_to_camel should not touch this (zLevel)
   expect_equal(out$z, 2)
 })
 

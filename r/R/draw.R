@@ -36,10 +36,15 @@ draw <- function(
   }
 
   # Auto-add legend when multiple distinctly named series are present
-  if (is.null(option$legend) &&
-      is.list(option$series) && length(option$series) > 1L) {
+  if (
+    is.null(option$legend) &&
+      is.list(option$series) &&
+      length(option$series) > 1L
+  ) {
     series_names <- vapply(
-      option$series, function(s) s$name %||% "", character(1)
+      option$series,
+      function(s) s$name %||% "",
+      character(1)
     )
     if (length(unique(series_names[series_names != ""])) > 1L) {
       option$legend <- list()
@@ -68,12 +73,16 @@ draw <- function(
       if (is.null(names(ax))) {
         # Array of axis configs (e.g. dual y-axes)
         for (i in seq_along(ax)) {
-          if (is.null(ax[[i]]$axisTick)) ax[[i]]$axisTick <- list()
+          if (is.null(ax[[i]]$axisTick)) {
+            ax[[i]]$axisTick <- list()
+          }
           ax[[i]]$axisTick$show <- FALSE
         }
       } else {
         # Single axis config
-        if (is.null(ax$axisTick)) ax$axisTick <- list()
+        if (is.null(ax$axisTick)) {
+          ax$axisTick <- list()
+        }
         ax$axisTick$show <- FALSE
       }
       option[[axis_key]] <- ax
@@ -366,6 +375,15 @@ draw_bar <- function(
 #'   [save_drawing()].
 #' @return htmlwidget: Widget object.
 #' @export
+bs <- grDevices::boxplot.stats(na.omit(penguins$body_mass))$stats
+
+draw(EChartsOption(
+  title = Title(text = "Body Mass"),
+  tooltip = Tooltip(trigger = "item"),
+  x_axis = Axis(type = "category", data = list("Body Mass")),
+  y_axis = Axis(type = "value", scale = TRUE),
+  series = BoxplotSeries(data = list(bs))
+))
 draw_scatter <- function(
   x,
   y,
@@ -482,7 +500,12 @@ draw_scatter <- function(
         g <- groups[i]
         idx <- group == g
         fs <- fit_series(
-          x[idx], y[idx], fit, n_fit, as.character(g), group_colors[i]
+          x[idx],
+          y[idx],
+          fit,
+          n_fit,
+          as.character(g),
+          group_colors[i]
         )
         series <- c(series, unname(fs))
       }
@@ -641,40 +664,43 @@ draw_density <- function(
 
       groups <- unique(group)
       group_labels <- as.character(groups)
-      series <- unlist(lapply(seq_along(x), function(i) {
-        vals <- x[[i]]
-        group_i <- group
+      series <- unlist(
+        lapply(seq_along(x), function(i) {
+          vals <- x[[i]]
+          group_i <- group
 
-        if (na.rm) {
-          na_idx <- is.na(vals)
-          n_na <- sum(na_idx)
-          if (n_na > 0L) {
-            msg(
-              "Removed",
-              n_na,
-              "NA",
-              ngettext(n_na, "value", "values"),
-              "from",
-              series_names[[i]],
-              verbosity = verbosity
-            )
-            vals <- vals[!na_idx]
-            group_i <- group_i[!na_idx]
+          if (na.rm) {
+            na_idx <- is.na(vals)
+            n_na <- sum(na_idx)
+            if (n_na > 0L) {
+              msg(
+                "Removed",
+                n_na,
+                "NA",
+                ngettext(n_na, "value", "values"),
+                "from",
+                series_names[[i]],
+                verbosity = verbosity
+              )
+              vals <- vals[!na_idx]
+              group_i <- group_i[!na_idx]
+            }
           }
-        }
 
-        lapply(seq_along(groups), function(j) {
-          g <- groups[[j]]
-          d <- stats::density(vals[group_i == g], n = n, bw = bw)
-          dat <- mapply(c, d$x, d$y, SIMPLIFY = FALSE)
-          LineSeries(
-            name = paste(series_names[[i]], group_labels[[j]], sep = " - "),
-            data = dat,
-            show_symbol = FALSE,
-            area_style = AreaStyle(opacity = 0.25)
-          )
-        })
-      }), recursive = FALSE)
+          lapply(seq_along(groups), function(j) {
+            g <- groups[[j]]
+            d <- stats::density(vals[group_i == g], n = n, bw = bw)
+            dat <- mapply(c, d$x, d$y, SIMPLIFY = FALSE)
+            LineSeries(
+              name = paste(series_names[[i]], group_labels[[j]], sep = " - "),
+              data = dat,
+              show_symbol = FALSE,
+              area_style = AreaStyle(opacity = 0.25)
+            )
+          })
+        }),
+        recursive = FALSE
+      )
     } else {
       series <- lapply(seq_along(x), function(i) {
         vals <- x[[i]]
@@ -909,11 +935,13 @@ draw_boxplot <- function(
 
   # Use names from an ungrouped named list as category labels unless
   # labels are supplied explicitly.
-  if (is.null(group) &&
+  if (
+    is.null(group) &&
       is.list(data) &&
       is.null(labels) &&
       !is.null(names(data)) &&
-      all(nzchar(names(data)))) {
+      all(nzchar(names(data)))
+  ) {
     labels <- names(data)
     data <- unname(data)
   }
@@ -962,7 +990,9 @@ draw_boxplot <- function(
       g_idx <- group == groups[i]
       stats_per_var <- lapply(data, function(v) {
         vals <- v[g_idx]
-        if (na.rm) vals <- vals[!is.na(vals)]
+        if (na.rm) {
+          vals <- vals[!is.na(vals)]
+        }
         grDevices::boxplot.stats(vals)$stats
       })
       col <- colors[i]

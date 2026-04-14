@@ -42,7 +42,9 @@ save_drawing <- function(widget, filename, width = 800, height = 600) {
     save_svg_ssr(option, theme, filename, width, height)
   } else {
     stop(
-      "save_drawing() currently only supports .svg (got .", ext, "). ",
+      "save_drawing() currently only supports .svg (got .",
+      ext,
+      "). ",
       "PNG/PDF/WEBP support is planned.",
       call. = FALSE
     )
@@ -55,8 +57,12 @@ save_drawing <- function(widget, filename, width = 800, height = 600) {
 # JavaScript snippets (e.g. custom tooltip formatters) that cannot be
 # serialized into a static SVG.
 strip_js <- function(x) {
-  if (is.null(x)) return(NULL)
-  if (inherits(x, "JS_EVAL")) return(NULL)
+  if (is.null(x)) {
+    return(NULL)
+  }
+  if (inherits(x, "JS_EVAL")) {
+    return(NULL)
+  }
   if (is.list(x)) {
     x <- lapply(x, strip_js)
     x <- x[!vapply(x, is.null, logical(1))]
@@ -113,9 +119,13 @@ save_svg_ssr <- function(option, theme, filename, width, height) {
   )
 
   if (!identical(status, 0L)) {
-    err <- tryCatch(readLines(err_file, warn = FALSE), error = function(e) character())
+    err <- tryCatch(readLines(err_file, warn = FALSE), error = function(e) {
+      character()
+    })
     stop(
-      "SVG export failed (node exit status ", status, ").",
+      "SVG export failed (node exit status ",
+      status,
+      ").",
       if (length(err)) paste0("\n", paste(err, collapse = "\n")) else "",
       call. = FALSE
     )

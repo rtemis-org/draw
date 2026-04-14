@@ -60,9 +60,15 @@ LineSeries <- S7::new_class(
       class = S7::class_any,
       default = NULL,
       validator = function(value) {
-        if (is.null(value)) return(NULL)
-        if (is.logical(value) && length(value) == 1L) return(NULL)
-        if (is.numeric(value) && length(value) == 1L) return(NULL)
+        if (is.null(value)) {
+          return(NULL)
+        }
+        if (is.logical(value) && length(value) == 1L) {
+          return(NULL)
+        }
+        if (is.numeric(value) && length(value) == 1L) {
+          return(NULL)
+        }
         "must be TRUE/FALSE, a number, or NULL"
       }
     ),
@@ -70,10 +76,17 @@ LineSeries <- S7::new_class(
       class = S7::class_any,
       default = NULL,
       validator = function(value) {
-        if (is.null(value)) return(NULL)
-        if (is.logical(value) && length(value) == 1L && !value) return(NULL)
-        if (is.character(value) && length(value) == 1L &&
-            value %in% c("start", "end", "middle")) {
+        if (is.null(value)) {
+          return(NULL)
+        }
+        if (is.logical(value) && length(value) == 1L && !value) {
+          return(NULL)
+        }
+        if (
+          is.character(value) &&
+            length(value) == 1L &&
+            value %in% c("start", "end", "middle")
+        ) {
           return(NULL)
         }
         "must be FALSE, 'start', 'end', 'middle', or NULL"
@@ -87,8 +100,12 @@ LineSeries <- S7::new_class(
       class = S7::class_any,
       default = NULL,
       validator = function(value) {
-        if (is.null(value)) return(NULL)
-        if (is.numeric(value) && length(value) <= 2L) return(NULL)
+        if (is.null(value)) {
+          return(NULL)
+        }
+        if (is.numeric(value) && length(value) <= 2L) {
+          return(NULL)
+        }
         "must be a number, length-2 numeric vector, or NULL"
       }
     ),
@@ -102,7 +119,9 @@ LineSeries <- S7::new_class(
 S7::method(to_list, LineSeries) <- function(x, ...) {
   out <- props_to_list(x)
   out$type <- "line"
-  if (is.list(out$data)) out$data <- unname(out$data)
+  if (is.list(out$data)) {
+    out$data <- unname(out$data)
+  }
   out
 }
 
@@ -170,7 +189,9 @@ BarSeries <- S7::new_class(
 S7::method(to_list, BarSeries) <- function(x, ...) {
   out <- props_to_list(x)
   out$type <- "bar"
-  if (is.list(out$data)) out$data <- unname(out$data)
+  if (is.list(out$data)) {
+    out$data <- unname(out$data)
+  }
   out
 }
 
@@ -220,9 +241,15 @@ ScatterSeries <- S7::new_class(
       class = S7::class_any,
       default = NULL,
       validator = function(value) {
-        if (is.null(value)) return(NULL)
-        if (is.numeric(value) && length(value) <= 2L) return(NULL)
-        if (is.function(value)) return(NULL)
+        if (is.null(value)) {
+          return(NULL)
+        }
+        if (is.numeric(value) && length(value) <= 2L) {
+          return(NULL)
+        }
+        if (is.function(value)) {
+          return(NULL)
+        }
         "must be a number, length-2 numeric vector, function, or NULL"
       }
     ),
@@ -236,7 +263,9 @@ ScatterSeries <- S7::new_class(
 S7::method(to_list, ScatterSeries) <- function(x, ...) {
   out <- props_to_list(x)
   out$type <- "scatter"
-  if (is.list(out$data)) out$data <- unname(out$data)
+  if (is.list(out$data)) {
+    out$data <- unname(out$data)
+  }
   out
 }
 
@@ -295,7 +324,9 @@ PieSeries <- S7::new_class(
       class = S7::class_any,
       default = NULL,
       validator = function(value) {
-        if (is.null(value)) return(NULL)
+        if (is.null(value)) {
+          return(NULL)
+        }
         if (length(value) == 2L && (is.numeric(value) || is.character(value))) {
           return(NULL)
         }
@@ -306,7 +337,9 @@ PieSeries <- S7::new_class(
       class = S7::class_any,
       default = NULL,
       validator = function(value) {
-        if (is.null(value)) return(NULL)
+        if (is.null(value)) {
+          return(NULL)
+        }
         if ((is.numeric(value) || is.character(value)) && length(value) <= 2L) {
           return(NULL)
         }
@@ -320,8 +353,12 @@ PieSeries <- S7::new_class(
       class = S7::class_any,
       default = NULL,
       validator = function(value) {
-        if (is.null(value)) return(NULL)
-        if (is.numeric(value) && length(value) == 1L) return(NULL)
+        if (is.null(value)) {
+          return(NULL)
+        }
+        if (is.numeric(value) && length(value) == 1L) {
+          return(NULL)
+        }
         if (is.character(value) && length(value) == 1L && value == "auto") {
           return(NULL)
         }
@@ -350,7 +387,9 @@ PieSeries <- S7::new_class(
 S7::method(to_list, PieSeries) <- function(x, ...) {
   out <- props_to_list(x)
   out$type <- "pie"
-  if (is.list(out$data)) out$data <- unname(out$data)
+  if (is.list(out$data)) {
+    out$data <- unname(out$data)
+  }
   out
 }
 
@@ -396,7 +435,9 @@ BoxplotSeries <- S7::new_class(
       class = S7::class_any,
       default = NULL,
       validator = function(value) {
-        if (is.null(value)) return(NULL)
+        if (is.null(value)) {
+          return(NULL)
+        }
         if (length(value) == 2L && (is.numeric(value) || is.character(value))) {
           return(NULL)
         }
@@ -411,6 +452,8 @@ BoxplotSeries <- S7::new_class(
 S7::method(to_list, BoxplotSeries) <- function(x, ...) {
   out <- props_to_list(x)
   out$type <- "boxplot"
-  if (is.list(out$data)) out$data <- unname(out$data)
+  if (is.list(out$data)) {
+    out$data <- unname(out$data)
+  }
   out
 }

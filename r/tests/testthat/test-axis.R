@@ -356,10 +356,15 @@ test_that("Axis sub-components nest correctly", {
     axis_line = AxisLine(show = TRUE, line_style = LineStyle(color = "#000")),
     axis_tick = AxisTick(show = TRUE, length = 5),
     minor_tick = MinorTick(show = TRUE, split_number = 3),
-    axis_label = AxisLabel(show = TRUE, rotate = 45,
-                           text_style = TextStyle(font_size = 11)),
-    split_line = SplitLine(show = TRUE,
-                           line_style = LineStyle(type = "dashed")),
+    axis_label = AxisLabel(
+      show = TRUE,
+      rotate = 45,
+      text_style = TextStyle(font_size = 11)
+    ),
+    split_line = SplitLine(
+      show = TRUE,
+      line_style = LineStyle(type = "dashed")
+    ),
     minor_split_line = MinorSplitLine(show = FALSE),
     split_area = SplitArea(show = FALSE)
   )

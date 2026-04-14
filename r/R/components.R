@@ -108,8 +108,12 @@ Title <- S7::new_class(
       class = S7::class_any,
       default = NULL,
       validator = function(value) {
-        if (is.null(value)) return(NULL)
-        if (is.numeric(value) && length(value) %in% c(1L, 2L, 4L)) return(NULL)
+        if (is.null(value)) {
+          return(NULL)
+        }
+        if (is.numeric(value) && length(value) %in% c(1L, 2L, 4L)) {
+          return(NULL)
+        }
         "must be a number, or length-2/4 numeric vector, or NULL"
       }
     ),
@@ -124,8 +128,12 @@ Title <- S7::new_class(
       class = S7::class_any,
       default = NULL,
       validator = function(value) {
-        if (is.null(value)) return(NULL)
-        if (is.numeric(value) && length(value) %in% c(1L, 4L)) return(NULL)
+        if (is.null(value)) {
+          return(NULL)
+        }
+        if (is.numeric(value) && length(value) %in% c(1L, 4L)) {
+          return(NULL)
+        }
         "must be a number or length-4 numeric vector, or NULL"
       }
     ),
@@ -195,8 +203,12 @@ Legend <- S7::new_class(
       class = S7::class_any,
       default = NULL,
       validator = function(value) {
-        if (is.null(value)) return(NULL)
-        if (is.numeric(value) && length(value) %in% c(1L, 2L, 4L)) return(NULL)
+        if (is.null(value)) {
+          return(NULL)
+        }
+        if (is.numeric(value) && length(value) %in% c(1L, 2L, 4L)) {
+          return(NULL)
+        }
         "must be a number, or length-2/4 numeric vector, or NULL"
       }
     ),
@@ -208,10 +220,17 @@ Legend <- S7::new_class(
       class = S7::class_any,
       default = NULL,
       validator = function(value) {
-        if (is.null(value)) return(NULL)
-        if (is.logical(value) && length(value) == 1L) return(NULL)
-        if (is.character(value) && length(value) == 1L &&
-            value %in% c("single", "multiple")) {
+        if (is.null(value)) {
+          return(NULL)
+        }
+        if (is.logical(value) && length(value) == 1L) {
+          return(NULL)
+        }
+        if (
+          is.character(value) &&
+            length(value) == 1L &&
+            value %in% c("single", "multiple")
+        ) {
           return(NULL)
         }
         "must be TRUE/FALSE, 'single', 'multiple', or NULL"
@@ -221,8 +240,12 @@ Legend <- S7::new_class(
       class = S7::class_any,
       default = NULL,
       validator = function(value) {
-        if (is.null(value)) return(NULL)
-        if (is.logical(value) && !is.null(names(value))) return(NULL)
+        if (is.null(value)) {
+          return(NULL)
+        }
+        if (is.logical(value) && !is.null(names(value))) {
+          return(NULL)
+        }
         "must be a named logical vector or NULL"
       }
     ),
@@ -238,8 +261,12 @@ Legend <- S7::new_class(
       class = S7::class_any,
       default = NULL,
       validator = function(value) {
-        if (is.null(value)) return(NULL)
-        if (is.numeric(value) && length(value) %in% c(1L, 4L)) return(NULL)
+        if (is.null(value)) {
+          return(NULL)
+        }
+        if (is.numeric(value) && length(value) %in% c(1L, 4L)) {
+          return(NULL)
+        }
         "must be a number or length-4 numeric vector, or NULL"
       }
     ),
@@ -292,7 +319,12 @@ Tooltip <- S7::new_class(
     # CommonTooltipOption
     show = bool_or_null_property(),
     trigger = enum_property(c("item", "axis", "none")),
-    trigger_on = enum_property(c("mousemove", "click", "none", "mousemove|click")),
+    trigger_on = enum_property(c(
+      "mousemove",
+      "click",
+      "none",
+      "mousemove|click"
+    )),
     show_content = bool_or_null_property(),
     always_show_content = bool_or_null_property(),
     formatter = S7::new_property(class = S7::class_any, default = NULL),
@@ -311,15 +343,24 @@ Tooltip <- S7::new_class(
       class = S7::class_any,
       default = NULL,
       validator = function(value) {
-        if (is.null(value)) return(NULL)
-        if (is.numeric(value) && length(value) %in% c(1L, 2L, 4L)) return(NULL)
+        if (is.null(value)) {
+          return(NULL)
+        }
+        if (is.numeric(value) && length(value) %in% c(1L, 2L, 4L)) {
+          return(NULL)
+        }
         "must be a number, or length-2/4 numeric vector, or NULL"
       }
     ),
     text_style = class_or_null_property(TextStyle),
     extra_css_text = string_or_null_property(),
     # TooltipOption-specific
-    order = enum_property(c("seriesAsc", "seriesDesc", "valueAsc", "valueDesc")),
+    order = enum_property(c(
+      "seriesAsc",
+      "seriesDesc",
+      "valueAsc",
+      "valueDesc"
+    )),
     class_name = string_or_null_property()
   )
 )

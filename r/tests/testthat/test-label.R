@@ -72,10 +72,20 @@ test_that("LabelOption flattens text_style into same level", {
 
 test_that("LabelOption position accepts valid strings", {
   valid_positions <- c(
-    "top", "left", "right", "bottom", "inside",
-    "insideLeft", "insideRight", "insideTop", "insideBottom",
-    "insideTopLeft", "insideBottomLeft", "insideTopRight",
-    "insideBottomRight", "outside"
+    "top",
+    "left",
+    "right",
+    "bottom",
+    "inside",
+    "insideLeft",
+    "insideRight",
+    "insideTop",
+    "insideBottom",
+    "insideTopLeft",
+    "insideBottomLeft",
+    "insideTopRight",
+    "insideBottomRight",
+    "outside"
   )
   for (pos in valid_positions) {
     lab <- LabelOption(position = pos)

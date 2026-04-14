@@ -262,8 +262,10 @@ test_that("draw_pie donut", {
 
 test_that("draw_boxplot computes stats and creates widget", {
   w <- draw_boxplot(
-    data = list(c(1, 2, 3, 4, 5, 6, 7, 8, 9, 10),
-                c(5, 6, 7, 8, 9, 10, 11, 12, 13, 14)),
+    data = list(
+      c(1, 2, 3, 4, 5, 6, 7, 8, 9, 10),
+      c(5, 6, 7, 8, 9, 10, 11, 12, 13, 14)
+    ),
     labels = c("Group 1", "Group 2")
   )
   expect_s3_class(w, "htmlwidget")
@@ -355,11 +357,19 @@ test_that("draw_boxplot with group computes stats in a single series", {
     c("Control", "Treatment")
   )
   expect_equal(
-    vapply(w$x$option$series[[1]]$data, function(item) length(item$value), integer(1)),
+    vapply(
+      w$x$option$series[[1]]$data,
+      function(item) length(item$value),
+      integer(1)
+    ),
     c(5L, 5L)
   )
   expect_equal(
-    vapply(w$x$option$series[[1]]$data, function(item) item$itemStyle$borderColor, character(1)),
+    vapply(
+      w$x$option$series[[1]]$data,
+      function(item) item$itemStyle$borderColor,
+      character(1)
+    ),
     rtemis_colors[1:2]
   )
 })
@@ -377,7 +387,12 @@ test_that("draw_boxplot with group drops missing group values", {
     vapply(w$x$option$series[[1]]$data, `[[`, character(1), "name"),
     c("Control", "Treatment")
   )
-  expect_false(any(is.na(vapply(w$x$option$series[[1]]$data, `[[`, character(1), "name"))))
+  expect_false(any(is.na(vapply(
+    w$x$option$series[[1]]$data,
+    `[[`,
+    character(1),
+    "name"
+  ))))
 })
 
 test_that("draw_boxplot with grouped variables drops missing group values", {
@@ -390,8 +405,16 @@ test_that("draw_boxplot with grouped variables drops missing group values", {
   w <- draw_boxplot(data = data, group = g)
 
   expect_equal(length(w$x$option$series), 2L)
-  expect_equal(vapply(w$x$option$series, `[[`, character(1), "name"), c("male", "female"))
-  expect_false(any(is.na(vapply(w$x$option$series, `[[`, character(1), "name"))))
+  expect_equal(
+    vapply(w$x$option$series, `[[`, character(1), "name"),
+    c("male", "female")
+  )
+  expect_false(any(is.na(vapply(
+    w$x$option$series,
+    `[[`,
+    character(1),
+    "name"
+  ))))
   expect_equal(w$x$option$xAxis$data, c("Bill Length", "Bill Depth"))
   expect_equal(length(w$x$option$series[[1]]$data), 2L)
   expect_equal(length(w$x$option$series[[2]]$data), 2L)
