@@ -17,6 +17,7 @@ air.toml
 
 # Agents
 AGENTS.md
+CLAUDE.md
 docs
 
 # pkgdown
