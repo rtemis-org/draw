@@ -12,6 +12,7 @@
 ^\.github$
 ^\.lintr$
 ^\.vscode$
+^air\.toml$
 ^dev$
 ^docs$
 ^specs$
