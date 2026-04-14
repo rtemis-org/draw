@@ -20,8 +20,10 @@
 #' @param x_axis Optional [Axis] or list: X-axis configuration (`xAxis`).
 #' @param y_axis Optional [Axis] or list: Y-axis configuration (`yAxis`).
 #' @param tooltip Optional [Tooltip]: Tooltip configuration.
+#' @param visual_map Optional [VisualMap] or list: Visual map configuration (`visualMap`).
+#'   Required for heatmaps to map data values to colors.
 #' @param series Optional series object or list: Series configuration ([LineSeries],
-#'   [BarSeries], [ScatterSeries], [PieSeries], [BoxplotSeries]).
+#'   [BarSeries], [ScatterSeries], [PieSeries], [BoxplotSeries], [HeatmapSeries]).
 #' @param color Optional Character: Color palette.
 #' @param background_color Optional Character: Chart background color.
 #' @param text_style Optional [TextStyle]: Global default text style.
@@ -43,6 +45,7 @@ EChartsOption <- S7::new_class(
     x_axis = S7::new_property(class = S7::class_any, default = NULL),
     y_axis = S7::new_property(class = S7::class_any, default = NULL),
     tooltip = class_or_null_property(Tooltip),
+    visual_map = S7::new_property(class = S7::class_any, default = NULL),
     # Series (single or list)
     series = S7::new_property(class = S7::class_any, default = NULL),
     # Global settings
@@ -107,7 +110,8 @@ S7::method(to_list, EChartsOption) <- function(x, ...) {
     grid = "grid",
     x_axis = "xAxis",
     y_axis = "yAxis",
-    tooltip = "tooltip"
+    tooltip = "tooltip",
+    visual_map = "visualMap"
   )
 
   for (prop_name in names(component_map)) {
