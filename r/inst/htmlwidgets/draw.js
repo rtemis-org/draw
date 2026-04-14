@@ -2,15 +2,15 @@ HTMLWidgets.widget({
   name: "draw",
   type: "output",
 
-  factory: function(el, width, height) {
-    var currentWidth = width;
-    var currentHeight = height;
-    var chart = null;
-    var currentPayload = null;
+  factory: (el, width, height) => {
+    let currentWidth = width;
+    let currentHeight = height;
+    let chart = null;
+    let currentPayload = null;
 
     // Detect dark mode from VS Code, RStudio, or browser preference
-    function isDarkMode() {
-      var body = document.body;
+    const isDarkMode = () => {
+      const body = document.body;
       // VS Code webview
       if (body.classList.contains("vscode-dark") ||
           body.classList.contains("vscode-high-contrast")) {
@@ -28,24 +28,24 @@ HTMLWidgets.widget({
         return window.matchMedia("(prefers-color-scheme: dark)").matches;
       }
       return false;
-    }
+    };
 
     // For square-cell heatmaps: compute the required height given a container
     // width, so that grid cells are perfectly square.
-    function squareCellHeight(x, containerWidth) {
-      var gridWidth = containerWidth - x.leftPx - x.rightPx;
-      var cellPx = gridWidth / x.nCols;
+    const squareCellHeight = (x, containerWidth) => {
+      const gridWidth = containerWidth - x.leftPx - x.rightPx;
+      const cellPx = gridWidth / x.nCols;
       return Math.round(x.nRows * cellPx + x.topPx + x.botPx);
-    }
+    };
 
-    function renderChart(x) {
+    const renderChart = (x) => {
       if (chart) {
         chart.dispose();
         chart = null;
       }
 
-      var themeName = null;
-      var themeObj = null;
+      let themeName = null;
+      let themeObj = null;
 
       if (x.autoTheme) {
         // Auto-detect: pick light or dark theme
@@ -58,7 +58,7 @@ HTMLWidgets.widget({
         // Propagate the global theme text color to visualMap labels.
         // ECharts does not automatically inherit global textStyle into
         // visualMap.textStyle, so we inject it here before registering.
-        var fgColor = themeObj.textStyle && themeObj.textStyle.color;
+        const fgColor = themeObj.textStyle?.color;
         if (fgColor && x.option.visualMap) {
           if (!x.option.visualMap.textStyle) {
             x.option.visualMap.textStyle = {};
@@ -79,13 +79,13 @@ HTMLWidgets.widget({
       });
 
       chart.setOption(x.option, true);
-    }
+    };
 
     // Listen for system color scheme changes
     if (window.matchMedia) {
-      var mq = window.matchMedia("(prefers-color-scheme: dark)");
-      var onChange = function() {
-        if (currentPayload && currentPayload.autoTheme) {
+      const mq = window.matchMedia("(prefers-color-scheme: dark)");
+      const onChange = () => {
+        if (currentPayload?.autoTheme) {
           renderChart(currentPayload);
         }
       };
@@ -97,7 +97,7 @@ HTMLWidgets.widget({
     }
 
     return {
-      renderValue: function(x) {
+      renderValue: (x) => {
         currentPayload = x;
 
         // Square-cell heatmaps: enforce the correct height by deriving it
@@ -105,32 +105,30 @@ HTMLWidgets.widget({
         // This overrides whatever height htmlwidgets allocated for the container,
         // ensuring cells are always square regardless of viewer window dimensions.
         if (x.squareCells) {
-          var newHeight = squareCellHeight(x, currentWidth);
-          el.style.height = newHeight + "px";
+          const newHeight = squareCellHeight(x, currentWidth);
+          el.style.height = `${newHeight}px`;
           currentHeight = newHeight;
         }
 
         renderChart(x);
       },
 
-      resize: function(width, height) {
+      resize: (width, height) => {
         currentWidth = width;
         currentHeight = height;
 
-        if (currentPayload && currentPayload.squareCells) {
+        if (currentPayload?.squareCells) {
           // Recompute height to keep cells square at the new width
-          var newHeight = squareCellHeight(currentPayload, width);
-          el.style.height = newHeight + "px";
+          const newHeight = squareCellHeight(currentPayload, width);
+          el.style.height = `${newHeight}px`;
           currentHeight = newHeight;
-          if (chart) chart.resize({ width: width, height: newHeight });
+          if (chart) chart.resize({ width, height: newHeight });
         } else {
-          if (chart) chart.resize({ width: width, height: height });
+          if (chart) chart.resize({ width, height });
         }
       },
 
-      getChart: function() {
-        return chart;
-      }
+      getChart: () => chart
     };
   }
 });
