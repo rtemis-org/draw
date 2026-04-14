@@ -11,7 +11,8 @@ draw(
   width = NULL,
   height = NULL,
   elementId = NULL,
-  filename = NULL
+  filename = NULL,
+  meta = list()
 )
 }
 \arguments{
@@ -34,6 +35,10 @@ RStudio, or the browser's \code{prefers-color-scheme} and applies
 \item{filename}{Optional Character: If provided, the widget is also written to
 this file via \code{\link[=save_drawing]{save_drawing()}}. Extension determines the format (currently
 only \code{.svg} is supported).}
+
+\item{meta}{Optional named list: Extra fields merged into the widget payload.
+Used internally (e.g. by \code{\link[=draw_heatmap]{draw_heatmap()}} to pass square-cell layout
+parameters to the JS binding).}
 }
 \value{
 htmlwidget: Widget object.

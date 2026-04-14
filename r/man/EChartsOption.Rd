@@ -11,6 +11,7 @@ EChartsOption(
   x_axis = NULL,
   y_axis = NULL,
   tooltip = NULL,
+  visual_map = NULL,
   series = NULL,
   color = NULL,
   background_color = NULL,
@@ -37,8 +38,11 @@ EChartsOption(
 
 \item{tooltip}{Optional \link{Tooltip}: Tooltip configuration.}
 
+\item{visual_map}{Optional \link{VisualMap} or list: Visual map configuration (\code{visualMap}).
+Required for heatmaps to map data values to colors.}
+
 \item{series}{Optional series object or list: Series configuration (\link{LineSeries},
-\link{BarSeries}, \link{ScatterSeries}, \link{PieSeries}, \link{BoxplotSeries}).}
+\link{BarSeries}, \link{ScatterSeries}, \link{PieSeries}, \link{BoxplotSeries}, \link{HeatmapSeries}).}
 
 \item{color}{Optional Character: Color palette.}
 
