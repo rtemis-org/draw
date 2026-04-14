@@ -12,6 +12,7 @@ __dev/
 .zed/
 
 # R
+.lintr
 air.toml
 
 # Agents
