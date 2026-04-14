@@ -1,13 +1,15 @@
 # series.R
-# Series S7 classes: LineSeries, BarSeries, ScatterSeries, PieSeries, BoxplotSeries
+# Series S7 classes: LineSeries, BarSeries, ScatterSeries, PieSeries,
+#                    BoxplotSeries, HeatmapSeries
 #
 # TS sources:
-#   SeriesOption:        src/util/types.ts (line 1867)
-#   LineSeriesOption:    src/chart/line/LineSeries.ts (line 74)
-#   BarSeriesOption:     src/chart/bar/BarSeries.ts (line 68)
-#   ScatterSeriesOption: src/chart/scatter/ScatterSeries.ts (line 64)
-#   PieSeriesOption:     src/chart/pie/PieSeries.ts (line 105)
-#   BoxplotSeriesOption: src/chart/boxplot/BoxplotSeries.ts (line 59)
+#   SeriesOption:         src/util/types.ts (line 1867)
+#   LineSeriesOption:     src/chart/line/LineSeries.ts (line 74)
+#   BarSeriesOption:      src/chart/bar/BarSeries.ts (line 68)
+#   ScatterSeriesOption:  src/chart/scatter/ScatterSeries.ts (line 64)
+#   PieSeriesOption:      src/chart/pie/PieSeries.ts (line 105)
+#   BoxplotSeriesOption:  src/chart/boxplot/BoxplotSeries.ts (line 59)
+#   HeatmapSeriesOption:  src/chart/heatmap/HeatmapSeries.ts
 
 # -- LineSeries -----------------------------------------------------------------
 
@@ -452,6 +454,59 @@ BoxplotSeries <- S7::new_class(
 S7::method(to_list, BoxplotSeries) <- function(x, ...) {
   out <- props_to_list(x)
   out$type <- "boxplot"
+  if (is.list(out$data)) {
+    out$data <- unname(out$data)
+  }
+  out
+}
+
+# -- HeatmapSeries --------------------------------------------------------------
+
+#' Heatmap Series
+#'
+#' Configuration for a heatmap chart series on Cartesian coordinates.
+#' Each data point is a triple `[col_index, row_index, value]` and color
+#' encoding is driven by a [VisualMap] component.
+#'
+#' Corresponds to `HeatmapSeriesOption` in `src/chart/heatmap/HeatmapSeries.ts`.
+#' ECharts docs: \url{https://echarts.apache.org/en/option.html#series-heatmap}
+#'
+#' @param name Optional Character: Series name.
+#' @param data Optional list: Heatmap data. Each element is a length-3 list
+#'   `list(col_index, row_index, value)`.
+#' @param x_axis_index Optional Numeric `[0, Inf)`: X-axis index.
+#' @param y_axis_index Optional Numeric `[0, Inf)`: Y-axis index.
+#' @param label Optional [LabelOption]: Cell label configuration (e.g. show the value).
+#' @param item_style Optional [ItemStyle]: Cell styling (e.g. border color/width).
+#' @param emphasis Optional list: Emphasis (hover) styling. A plain list passed
+#'   through to ECharts, e.g. `list(itemStyle = list(shadowBlur = 10))`.
+#' @param legend_hover_link Optional Logical: Whether to link hover with the legend.
+#' @param silent Optional Logical: Whether the series is silent (no events).
+#' @param z_level Optional Numeric: Canvas layer index.
+#' @param z Optional Numeric: Front-back order within the same layer.
+#' @export
+HeatmapSeries <- S7::new_class(
+  "HeatmapSeries",
+  properties = list(
+    # Common series fields
+    name = string_or_null_property(),
+    data = S7::new_property(class = S7::class_any, default = NULL),
+    x_axis_index = numeric_or_null_property(),
+    y_axis_index = numeric_or_null_property(),
+    silent = bool_or_null_property(),
+    legend_hover_link = bool_or_null_property(),
+    z_level = numeric_or_null_property(),
+    z = numeric_or_null_property(),
+    # Heatmap-specific
+    label = class_or_null_property(LabelOption),
+    item_style = class_or_null_property(ItemStyle),
+    emphasis = S7::new_property(class = S7::class_any, default = NULL)
+  )
+)
+
+S7::method(to_list, HeatmapSeries) <- function(x, ...) {
+  out <- props_to_list(x)
+  out$type <- "heatmap"
   if (is.list(out$data)) {
     out$data <- unname(out$data)
   }
