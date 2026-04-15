@@ -15,9 +15,10 @@ draw_heatmap(
   hclust_method = "complete",
   show_row_dendro = TRUE,
   show_col_dendro = TRUE,
-  dendro_row_width = 80,
-  dendro_col_height = 80,
+  dendro_row_width = 60,
+  dendro_col_height = 60,
   dendro_color = NULL,
+  dendro_uniform = FALSE,
   dendro_row_side = "right",
   dendro_col_side = "top",
   square_cells = NULL,
@@ -74,6 +75,11 @@ col dendrogram panel (between the chart title and the heatmap grid).}
 \item{dendro_color}{Optional Character: Stroke color for dendrogram branch
 lines. \code{NULL} (default) uses a semi-transparent grey (\code{"#99999988"}),
 which works in both light and dark themes.}
+
+\item{dendro_uniform}{Logical: Whether to render dendrograms with uniform level
+heights — each merge step occupies equal visual space — rather than heights
+proportional to actual merge distances. \code{TRUE} (default) produces a cleaner
+display when merge distances span a wide range.}
 
 \item{dendro_row_side}{Character \{"right", "left"\}: Side of the heatmap on which
 the row dendrogram is placed. \code{"right"} (default) keeps row labels on the left
