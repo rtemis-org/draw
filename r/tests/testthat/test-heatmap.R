@@ -41,13 +41,21 @@ test_that("hclust_to_dendro_data leaf positions cover 0 .. n-1", {
   m <- make_mat(5L)
   h <- stats::hclust(stats::dist(m))
   out <- hclust_to_dendro_data(h)
-  # Collect all leaf-level positions (segments where left_h or right_h == 0)
-  all_pos <- unique(c(
-    vapply(out[["data"]], `[[`, numeric(1L), 1L),
-    vapply(out[["data"]], `[[`, numeric(1L), 2L)
-  ))
-  # Midpoints (internal nodes) are 0.5, 1.5, etc.; leaf positions are integers 0..n-1
-  leaf_pos <- all_pos[all_pos == floor(all_pos)]
+  # Leaf positions: left_pos values from segments where left_h == 0 (leaf on left),
+  # and right_pos values from segments where right_h == 0 (leaf on right).
+  left_leaf_pos <- vapply(
+    out[["data"]][vapply(out[["data"]], function(seg) seg[[3L]] == 0, logical(1L))],
+    `[[`,
+    numeric(1L),
+    1L
+  )
+  right_leaf_pos <- vapply(
+    out[["data"]][vapply(out[["data"]], function(seg) seg[[4L]] == 0, logical(1L))],
+    `[[`,
+    numeric(1L),
+    2L
+  )
+  leaf_pos <- unique(c(left_leaf_pos, right_leaf_pos))
   expect_setequal(leaf_pos, seq(0, nrow(m) - 1L))
 })
 
