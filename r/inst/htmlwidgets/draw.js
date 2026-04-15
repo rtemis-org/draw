@@ -72,6 +72,30 @@ HTMLWidgets.widget({
         themeName = "custom_theme";
       }
 
+      // Sync page and container background to the chart background so there
+      // is no white gutter around the canvas in dark-themed viewers.
+      const bgColor =
+        themeObj?.backgroundColor ||
+        x.option?.backgroundColor ||
+        null;
+      if (bgColor) {
+        document.body.style.backgroundColor = bgColor;
+        el.style.backgroundColor = bgColor;
+      }
+
+      // Substitute the theme-matched heatmap colour palette when R has
+      // pre-computed both light and dark variants.  The dark palette places
+      // the theme background colour exactly at 0 for diverging scales.
+      if (x.option.visualMap && (x.colorLight || x.colorDark)) {
+        const hmColors = x.colorDark
+          ? (isDarkMode() ? x.colorDark : x.colorLight)
+          : x.colorLight;
+        if (hmColors) {
+          if (!x.option.visualMap.inRange) x.option.visualMap.inRange = {};
+          x.option.visualMap.inRange.color = hmColors;
+        }
+      }
+
       chart = echarts.init(el, themeName, {
         renderer: x.renderer || "canvas",
         width: currentWidth,

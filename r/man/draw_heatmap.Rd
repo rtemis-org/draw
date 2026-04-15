@@ -13,6 +13,14 @@ draw_heatmap(
   cluster_cols = FALSE,
   dist_method = "euclidean",
   hclust_method = "complete",
+  show_row_dendro = TRUE,
+  show_col_dendro = TRUE,
+  dendro_row_width = 60,
+  dendro_col_height = 60,
+  dendro_color = NULL,
+  dendro_uniform = FALSE,
+  dendro_row_side = "right",
+  dendro_col_side = "top",
   square_cells = NULL,
   color = NULL,
   zlim = NULL,
@@ -51,6 +59,36 @@ Common values: \code{"euclidean"}, \code{"manhattan"}.}
 \item{hclust_method}{Character: Linkage method passed to \code{\link[stats:hclust]{stats::hclust()}}.
 Common values: \code{"complete"}, \code{"ward.D2"}, \code{"average"}.}
 
+\item{show_row_dendro}{Logical: Whether to render the row dendrogram panel
+when \code{cluster_rows = TRUE}. Set to \code{FALSE} to reorder rows but suppress the
+visual dendrogram.}
+
+\item{show_col_dendro}{Logical: Whether to render the col dendrogram panel
+when \code{cluster_cols = TRUE}.}
+
+\item{dendro_row_width}{Optional Numeric \verb{[1, Inf)}: Pixel width of the row
+dendrogram panel (between row labels and the heatmap grid).}
+
+\item{dendro_col_height}{Optional Numeric \verb{[1, Inf)}: Pixel height of the
+col dendrogram panel (between the chart title and the heatmap grid).}
+
+\item{dendro_color}{Optional Character: Stroke color for dendrogram branch
+lines. \code{NULL} (default) uses a semi-transparent grey (\code{"#99999988"}),
+which works in both light and dark themes.}
+
+\item{dendro_uniform}{Logical: Whether to render dendrograms with uniform level
+heights — each merge step occupies equal visual space — rather than heights
+proportional to actual merge distances. \code{TRUE} (default) produces a cleaner
+display when merge distances span a wide range.}
+
+\item{dendro_row_side}{Character \{"right", "left"\}: Side of the heatmap on which
+the row dendrogram is placed. \code{"right"} (default) keeps row labels on the left
+with the dendrogram on the right for a clean, symmetric layout.}
+
+\item{dendro_col_side}{Character \{"top", "bottom"\}: Side of the heatmap on which
+the column dendrogram is placed. \code{"top"} (default) places it above the heatmap.
+\code{"bottom"} automatically moves column labels to the top.}
+
 \item{square_cells}{Optional Logical: Whether to compute widget dimensions so
 cells are square. \code{NULL} (default) enables this automatically for square
 matrices (e.g. correlation matrices). When \code{TRUE}, both \code{width} and \code{height}
@@ -59,8 +97,11 @@ override.}
 
 \item{color}{Optional Character: Color palette — a vector of 2 or more colors
 defining the continuous color scale from \code{zlim[1]} to \code{zlim[2]}. When \code{NULL}
-(default) a diverging teal–white–orange palette is used when data spans zero,
-otherwise a sequential single-hue palette is used.}
+(default) a diverging teal–background–orange palette is used when data spans
+zero (with the background colour pinned exactly at 0, even for asymmetric
+ranges), otherwise a sequential single-hue palette is used. Two variants
+(light / dark) are computed automatically and the JS binding selects the
+correct one based on the active theme.}
 
 \item{zlim}{Optional Numeric: Length-2 vector \code{c(min, max)} for the color scale.
 Defaults to the observed data range. For correlation matrices, \code{c(-1, 1)} is
@@ -98,5 +139,7 @@ general rectangular heatmaps, and clustered heatmaps.
 \details{
 Color encoding is driven by a continuous \link{VisualMap} component.
 Hierarchical clustering is performed in R via \code{\link[=hclust]{hclust()}}; rows and columns
-are reordered accordingly (dendrogram rendering is not yet supported).
+are reordered accordingly.  When \code{cluster_rows} or \code{cluster_cols} is \code{TRUE}
+(and the corresponding \verb{show_*_dendro} flag is not \code{FALSE}), a dendrogram
+panel is rendered alongside the heatmap as an ECharts custom series.
 }

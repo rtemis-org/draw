@@ -377,6 +377,10 @@ S7::method(to_list, AxisLabel) <- function(x, ...) {
 #' @param split_line Optional [SplitLine]: Split line configuration.
 #' @param minor_split_line Optional [MinorSplitLine]: Minor split line configuration.
 #' @param split_area Optional [SplitArea]: Split area configuration.
+#' @param position Optional Character \{"left", "right", "top", "bottom"\}: Axis position.
+#'   For `yAxis`: `"left"` (default) or `"right"`. For `xAxis`: `"bottom"` (default) or `"top"`.
+#' @param grid_index Optional Numeric `[0, Inf)`: Index of the grid this axis belongs to.
+#'   Used when the chart has multiple grids (e.g. heatmap + dendrogram panels).
 #' @export
 Axis <- S7::new_class(
   "Axis",
@@ -470,7 +474,11 @@ Axis <- S7::new_class(
     axis_label = class_or_null_property(AxisLabel),
     split_line = class_or_null_property(SplitLine),
     minor_split_line = class_or_null_property(MinorSplitLine),
-    split_area = class_or_null_property(SplitArea)
+    split_area = class_or_null_property(SplitArea),
+    # Axis position: "left"/"right" for yAxis, "top"/"bottom" for xAxis
+    position = enum_property(c("left", "right", "top", "bottom")),
+    # Multi-grid support: index of the grid this axis belongs to
+    grid_index = numeric_or_null_property()
   )
 )
 
