@@ -72,15 +72,18 @@ HTMLWidgets.widget({
         themeName = "custom_theme";
       }
 
-      // Sync page and container background to the chart background so there
-      // is no white gutter around the canvas in dark-themed viewers.
+      // Sync the widget container (and its immediate parent) background to the
+      // chart background so there is no white gutter around the canvas in
+      // dark-themed viewers, without mutating global body styles.
       const bgColor =
         themeObj?.backgroundColor ||
         x.option?.backgroundColor ||
         null;
       if (bgColor) {
-        document.body.style.backgroundColor = bgColor;
         el.style.backgroundColor = bgColor;
+        if (el.parentElement) {
+          el.parentElement.style.backgroundColor = bgColor;
+        }
       }
 
       // Substitute the theme-matched heatmap colour palette when R has
