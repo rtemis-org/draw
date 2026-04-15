@@ -1134,6 +1134,55 @@ draw_boxplot <- function(
   draw(opt, theme = theme, width = width, height = height, filename = filename)
 }
 
+# -- hclust_to_dendro_data ------------------------------------------------------
+
+#' Convert an hclust object to ECharts custom-series segment data
+#'
+#' Extracts the merge tree from an `hclust` result and returns a list of
+#' 5-element tuples `[left_pos, right_pos, left_h, right_h, merge_h]`, one per
+#' internal merge.  Each tuple encodes the four-point L/U polyline drawn by the
+#' ECharts `custom` renderItem for that merge.
+#'
+#' @param h `hclust` object returned by [stats::hclust()].
+#' @return Named list with two elements:
+#'   \describe{
+#'     \item{`data`}{Length `n - 1` list of 5-element numeric lists.}
+#'     \item{`max_height`}{Numeric: height of the root merge (used for axis scaling).}
+#'   }
+#' @keywords internal
+#' @noRd
+hclust_to_dendro_data <- function(h) {
+  n <- length(h[["order"]])
+
+  # leaf_pos[i] = 0-based position of leaf i in the reordered sequence
+  leaf_pos <- numeric(n)
+  for (p in seq_len(n)) leaf_pos[h[["order"]][p]] <- p - 1L
+
+  # node_pos[k] = midpoint position of internal node k
+  node_pos <- numeric(n - 1L)
+  for (k in seq_len(n - 1L)) {
+    l  <- h[["merge"]][k, 1L]
+    r  <- h[["merge"]][k, 2L]
+    lp <- if (l < 0L) leaf_pos[-l] else node_pos[l]
+    rp <- if (r < 0L) leaf_pos[-r] else node_pos[r]
+    node_pos[k] <- (lp + rp) / 2.0
+  }
+
+  # Build one 5-tuple per merge: [left_pos, right_pos, left_h, right_h, merge_h]
+  data <- vector("list", n - 1L)
+  for (k in seq_len(n - 1L)) {
+    l  <- h[["merge"]][k, 1L]
+    r  <- h[["merge"]][k, 2L]
+    lp <- if (l < 0L) leaf_pos[-l] else node_pos[l]
+    rp <- if (r < 0L) leaf_pos[-r] else node_pos[r]
+    lh <- if (l < 0L) 0.0 else h[["height"]][l]
+    rh <- if (r < 0L) 0.0 else h[["height"]][r]
+    data[[k]] <- list(lp, rp, lh, rh, h[["height"]][k])
+  }
+
+  list(data = data, max_height = h[["height"]][n - 1L])
+}
+
 # -- draw_heatmap ---------------------------------------------------------------
 
 #' Draw a Heatmap
@@ -1144,7 +1193,9 @@ draw_boxplot <- function(
 #'
 #' Color encoding is driven by a continuous [VisualMap] component.
 #' Hierarchical clustering is performed in R via [hclust()]; rows and columns
-#' are reordered accordingly (dendrogram rendering is not yet supported).
+#' are reordered accordingly.  When `cluster_rows` or `cluster_cols` is `TRUE`
+#' (and the corresponding `show_*_dendro` flag is not `FALSE`), a dendrogram
+#' panel is rendered alongside the heatmap as an ECharts custom series.
 #'
 #' @param x Numeric matrix: Input data. Rows map to y-axis categories and columns
 #'   to x-axis categories.
@@ -1161,6 +1212,18 @@ draw_boxplot <- function(
 #'   Common values: `"euclidean"`, `"manhattan"`.
 #' @param hclust_method Character: Linkage method passed to [stats::hclust()].
 #'   Common values: `"complete"`, `"ward.D2"`, `"average"`.
+#' @param show_row_dendro Logical: Whether to render the row dendrogram panel
+#'   when `cluster_rows = TRUE`. Set to `FALSE` to reorder rows but suppress the
+#'   visual dendrogram.
+#' @param show_col_dendro Logical: Whether to render the col dendrogram panel
+#'   when `cluster_cols = TRUE`.
+#' @param dendro_row_width Optional Numeric `[1, Inf)`: Pixel width of the row
+#'   dendrogram panel (between row labels and the heatmap grid).
+#' @param dendro_col_height Optional Numeric `[1, Inf)`: Pixel height of the
+#'   col dendrogram panel (between the chart title and the heatmap grid).
+#' @param dendro_color Optional Character: Stroke color for dendrogram branch
+#'   lines. `NULL` (default) uses a semi-transparent grey (`"#99999988"`),
+#'   which works in both light and dark themes.
 #' @param square_cells Optional Logical: Whether to compute widget dimensions so
 #'   cells are square. `NULL` (default) enables this automatically for square
 #'   matrices (e.g. correlation matrices). When `TRUE`, both `width` and `height`
@@ -1196,6 +1259,11 @@ draw_heatmap <- function(
   cluster_cols = FALSE,
   dist_method = "euclidean",
   hclust_method = "complete",
+  show_row_dendro = TRUE,
+  show_col_dendro = TRUE,
+  dendro_row_width = 80,
+  dendro_col_height = 80,
+  dendro_color = NULL,
   square_cells = NULL,
   color = NULL,
   zlim = NULL,
@@ -1244,13 +1312,16 @@ draw_heatmap <- function(
   }
 
   # -- 4. Hierarchical clustering (reorders matrix in place) ---------------------
+  # hclust objects are retained so dendrograms can be rendered (when requested).
+  row_h <- NULL
+  col_h <- NULL
   if (cluster_rows && n_rows > 1L) {
     complete <- !apply(x, 1L, function(r) all(is.na(r)))
     if (sum(complete) > 1L) {
-      d <- stats::dist(x[complete, , drop = FALSE], method = dist_method)
-      h <- stats::hclust(d, method = hclust_method)
-      ord <- seq_len(n_rows)
-      ord[complete] <- which(complete)[h$order]
+      d     <- stats::dist(x[complete, , drop = FALSE], method = dist_method)
+      row_h <- stats::hclust(d, method = hclust_method)
+      ord   <- seq_len(n_rows)
+      ord[complete] <- which(complete)[row_h[["order"]]]
       x  <- x[ord, , drop = FALSE]
       rn <- rn[ord]
     }
@@ -1258,10 +1329,10 @@ draw_heatmap <- function(
   if (cluster_cols && n_cols > 1L) {
     complete <- !apply(x, 2L, function(cv) all(is.na(cv)))
     if (sum(complete) > 1L) {
-      d <- stats::dist(t(x[, complete, drop = FALSE]), method = dist_method)
-      h <- stats::hclust(d, method = hclust_method)
-      ord <- seq_len(n_cols)
-      ord[complete] <- which(complete)[h$order]
+      d     <- stats::dist(t(x[, complete, drop = FALSE]), method = dist_method)
+      col_h <- stats::hclust(d, method = hclust_method)
+      ord   <- seq_len(n_cols)
+      ord[complete] <- which(complete)[col_h[["order"]]]
       x  <- x[, ord, drop = FALSE]
       cn <- cn[ord]
     }
@@ -1306,13 +1377,26 @@ draw_heatmap <- function(
   #   right_px — room for the vertical colorbar, or minimal padding otherwise
   #   top_px   — room for the chart title, or minimal padding otherwise
   #   bot_px   — room for x-axis (column) labels; may be rotated 45°
+  # When dendrograms are shown, additional panels are inserted between the
+  # labels/title and the heatmap grid:
+  #   left_px_main = left_px + dendro_row_width  (row dendro panel on left)
+  #   top_px_main  = top_px  + dendro_col_height  (col dendro panel on top)
   # With containLabel = FALSE (explicit grid), grid.left IS the plot-area origin,
-  # so title.left = left_px gives pixel-precise alignment with the first column.
+  # so title.left = left_px_main gives pixel-precise title alignment.
   rotate   <- if (n_cols > 8L || max(nchar(cn)) > 6L) 45L else 0L
   left_px  <- min(20L + max(nchar(rn)) * 8L, 200L)
   right_px <- if (show_colorbar && colorbar_orient == "vertical") 90L else 20L
   top_px   <- if (!is.null(title)) 40L else 10L
   bot_px   <- if (rotate > 0L) min(20L + max(nchar(cn)) * 5L, 140L) else 36L
+
+  # Determine which dendrogram panels to show
+  # (only possible when there are enough rows/cols to cluster)
+  dendro_rows_shown <- !is.null(row_h) && show_row_dendro
+  dendro_cols_shown <- !is.null(col_h) && show_col_dendro
+
+  # Effective left/top margins for the heatmap grid, accounting for dendro panels
+  left_px_main <- left_px + if (dendro_rows_shown) dendro_row_width else 0L
+  top_px_main  <- top_px  + if (dendro_cols_shown) dendro_col_height else 0L
 
   if (is.null(square_cells)) square_cells <- (n_rows == n_cols)
 
@@ -1320,10 +1404,11 @@ draw_heatmap <- function(
   # (e.g. knitr/quarto output where JS resize callbacks may not run).
   # The JS binding also enforces square cells dynamically on init and resize,
   # so these pixel values are used as the initial widget allocation.
+  # left_px_main / top_px_main include dendrogram panel space.
   if (square_cells && is.null(width) && is.null(height)) {
     cell_px <- 40L
-    width   <- n_cols * cell_px + left_px + right_px
-    height  <- n_rows * cell_px + top_px + bot_px
+    width   <- n_cols * cell_px + left_px_main + right_px
+    height  <- n_rows * cell_px + top_px_main + bot_px
   }
 
   # -- 9. Tooltip: shows "row x col: value" -------------------------------------
@@ -1354,36 +1439,300 @@ draw_heatmap <- function(
     NULL
   }
 
-  # -- 11. Assemble and render ---------------------------------------------------
-  opt <- EChartsOption(
-    title = if (!is.null(title)) Title(text = title, left = left_px) else NULL,
-    tooltip = Tooltip(trigger = "item", formatter = tooltip_fmt),
-    # Explicit grid with containLabel = FALSE so that left_px is the exact
-    # distance from the container edge to the plot-area left edge, enabling
-    # pixel-precise title alignment (title.left = left_px).
-    grid = Grid(
-      left = left_px,
-      right = right_px,
-      top = top_px,
-      bottom = bot_px,
+  # -- 11. Assemble multi-grid ECharts option ------------------------------------
+  # Grid index assignments (depends on which dendro panels are shown):
+  #   both:     grid[0]=row dendro, grid[1]=col dendro, grid[2]=heatmap
+  #   row only: grid[0]=row dendro, grid[1]=heatmap
+  #   col only: grid[0]=col dendro, grid[1]=heatmap
+  #   neither:  grid[0]=heatmap (no gridIndex needed)
+
+  dcolor <- dendro_color %||% "#99999988"
+
+  if (!dendro_rows_shown && !dendro_cols_shown) {
+    # ── No dendrograms: single grid, unchanged from original logic ───────────
+    grids  <- Grid(
+      left          = left_px,
+      right         = right_px,
+      top           = top_px,
+      bottom        = bot_px,
       contain_label = FALSE
-    ),
-    x_axis = Axis(
-      type = "category",
-      data = as.list(cn),
+    )
+    x_axes <- Axis(
+      type       = "category",
+      data       = as.list(cn),
       split_area = SplitArea(show = FALSE),
-      axis_line = AxisLine(show = FALSE),
+      axis_line  = AxisLine(show = FALSE),
       axis_label = AxisLabel(rotate = rotate),
       boundary_gap = TRUE
-    ),
-    y_axis = Axis(
-      type = "category",
-      data = as.list(rn),
-      inverse = TRUE,
+    )
+    y_axes <- Axis(
+      type       = "category",
+      data       = as.list(rn),
+      inverse    = TRUE,
       split_area = SplitArea(show = FALSE),
-      axis_line = AxisLine(show = FALSE),
+      axis_line  = AxisLine(show = FALSE),
       boundary_gap = TRUE
-    ),
+    )
+    series_list <- list(HeatmapSeries(data = data_list, label = label_opt))
+  } else {
+    # ── One or two dendrogram panels: multiple grids ─────────────────────────
+    # Compute dendrogram segment data (needed for custom series renderItem)
+    row_dendro <- if (dendro_rows_shown) hclust_to_dendro_data(row_h) else NULL
+    col_dendro <- if (dendro_cols_shown) hclust_to_dendro_data(col_h) else NULL
+
+    # Determine ECharts axis/grid indices for the heatmap series
+    hm_grid_idx  <- if (dendro_rows_shown && dendro_cols_shown) 2L else 1L
+    hm_x_ax_idx  <- hm_grid_idx   # xAxis array mirrors grid ordering
+    hm_y_ax_idx  <- hm_grid_idx   # yAxis array mirrors grid ordering
+
+    # Build the heatmap grid
+    hm_grid <- Grid(
+      left          = left_px_main,
+      right         = right_px,
+      top           = top_px_main,
+      bottom        = bot_px,
+      contain_label = FALSE
+    )
+
+    # Axes for the heatmap grid (always last in their respective arrays)
+    hm_x_axis <- Axis(
+      type         = "category",
+      data         = as.list(cn),
+      split_area   = SplitArea(show = FALSE),
+      axis_line    = AxisLine(show = FALSE),
+      axis_label   = AxisLabel(rotate = rotate),
+      boundary_gap = TRUE,
+      grid_index   = hm_grid_idx
+    )
+    hm_y_axis <- Axis(
+      type         = "category",
+      data         = as.list(rn),
+      inverse      = TRUE,
+      split_area   = SplitArea(show = FALSE),
+      axis_line    = AxisLine(show = FALSE),
+      boundary_gap = TRUE,
+      grid_index   = hm_grid_idx
+    )
+
+    # renderItem JS for row dendrogram (x-axis = height, y-axis = row position)
+    # Each datum: [left_pos, right_pos, left_h, right_h, merge_h]
+    # The U-shape: (left_h, lp) → (merge_h, lp) → (merge_h, rp) → (right_h, rp)
+    row_render_js <- htmlwidgets::JS(paste0(
+      "function(params,api){",
+      "var lp=api.value(0),rp=api.value(1),",
+      "lh=api.value(2),rh=api.value(3),mh=api.value(4);",
+      "return{type:'polyline',",
+      "shape:{points:[api.coord([lh,lp]),api.coord([mh,lp]),",
+      "api.coord([mh,rp]),api.coord([rh,rp])]},",
+      "style:{stroke:'", dcolor, "',lineWidth:1,fill:null}};}"
+    ))
+
+    # renderItem JS for col dendrogram (x-axis = col position, y-axis = height)
+    # Each datum: [left_pos, right_pos, left_h, right_h, merge_h]
+    # The U-shape: (lp, left_h) → (lp, merge_h) → (rp, merge_h) → (rp, right_h)
+    col_render_js <- htmlwidgets::JS(paste0(
+      "function(params,api){",
+      "var lp=api.value(0),rp=api.value(1),",
+      "lh=api.value(2),rh=api.value(3),mh=api.value(4);",
+      "return{type:'polyline',",
+      "shape:{points:[api.coord([lp,lh]),api.coord([lp,mh]),",
+      "api.coord([rp,mh]),api.coord([rp,rh])]},",
+      "style:{stroke:'", dcolor, "',lineWidth:1,fill:null}};}"
+    ))
+
+    # Assemble grids, axes, and series lists depending on which panels are shown
+    if (dendro_rows_shown && dendro_cols_shown) {
+      # grid[0]=row dendro, grid[1]=col dendro, grid[2]=heatmap
+      grids <- list(
+        Grid(
+          left   = left_px,
+          width  = dendro_row_width,
+          top    = top_px_main,
+          bottom = bot_px
+        ),
+        Grid(
+          left   = left_px_main,
+          right  = right_px,
+          top    = top_px,
+          height = dendro_col_height
+        ),
+        hm_grid
+      )
+      x_axes <- list(
+        # [0] row dendro: height axis (inverse so root is on left)
+        Axis(
+          type       = "value",
+          inverse    = TRUE,
+          show       = FALSE,
+          min        = 0,
+          max        = row_dendro[["max_height"]],
+          grid_index = 0L
+        ),
+        # [1] col dendro: col position axis (value, min/max chosen so that integer
+        # positions 0..n-1 land on category cell centers in the heatmap grid)
+        Axis(
+          type       = "value",
+          min        = -0.5,
+          max        = n_cols - 0.5,
+          show       = FALSE,
+          grid_index = 1L
+        ),
+        hm_x_axis
+      )
+      y_axes <- list(
+        # [0] row dendro: row position axis (value, min/max chosen so that integer
+        # positions 0..n-1 land on category cell centers in the heatmap grid)
+        Axis(
+          type       = "value",
+          min        = -0.5,
+          max        = n_rows - 0.5,
+          inverse    = TRUE,
+          show       = FALSE,
+          grid_index = 0L
+        ),
+        # [1] col dendro: height axis (higher = further from heatmap)
+        Axis(
+          type       = "value",
+          show       = FALSE,
+          min        = 0,
+          max        = col_dendro[["max_height"]],
+          grid_index = 1L
+        ),
+        hm_y_axis
+      )
+      series_list <- list(
+        list(
+          type        = "custom",
+          xAxisIndex  = 0L,
+          yAxisIndex  = 0L,
+          data        = row_dendro[["data"]],
+          silent      = TRUE,
+          animation   = FALSE,
+          renderItem  = row_render_js
+        ),
+        list(
+          type        = "custom",
+          xAxisIndex  = 1L,
+          yAxisIndex  = 1L,
+          data        = col_dendro[["data"]],
+          silent      = TRUE,
+          animation   = FALSE,
+          renderItem  = col_render_js
+        ),
+        HeatmapSeries(
+          data        = data_list,
+          label       = label_opt,
+          x_axis_index = hm_x_ax_idx,
+          y_axis_index = hm_y_ax_idx
+        )
+      )
+    } else if (dendro_rows_shown) {
+      # grid[0]=row dendro, grid[1]=heatmap
+      grids <- list(
+        Grid(
+          left   = left_px,
+          width  = dendro_row_width,
+          top    = top_px_main,
+          bottom = bot_px
+        ),
+        hm_grid
+      )
+      x_axes <- list(
+        Axis(
+          type       = "value",
+          inverse    = TRUE,
+          show       = FALSE,
+          min        = 0,
+          max        = row_dendro[["max_height"]],
+          grid_index = 0L
+        ),
+        hm_x_axis
+      )
+      y_axes <- list(
+        Axis(
+          type       = "value",
+          min        = -0.5,
+          max        = n_rows - 0.5,
+          inverse    = TRUE,
+          show       = FALSE,
+          grid_index = 0L
+        ),
+        hm_y_axis
+      )
+      series_list <- list(
+        list(
+          type        = "custom",
+          xAxisIndex  = 0L,
+          yAxisIndex  = 0L,
+          data        = row_dendro[["data"]],
+          silent      = TRUE,
+          animation   = FALSE,
+          renderItem  = row_render_js
+        ),
+        HeatmapSeries(
+          data         = data_list,
+          label        = label_opt,
+          x_axis_index = hm_x_ax_idx,
+          y_axis_index = hm_y_ax_idx
+        )
+      )
+    } else {
+      # grid[0]=col dendro, grid[1]=heatmap
+      grids <- list(
+        Grid(
+          left   = left_px_main,
+          right  = right_px,
+          top    = top_px,
+          height = dendro_col_height
+        ),
+        hm_grid
+      )
+      x_axes <- list(
+        Axis(
+          type       = "value",
+          min        = -0.5,
+          max        = n_cols - 0.5,
+          show       = FALSE,
+          grid_index = 0L
+        ),
+        hm_x_axis
+      )
+      y_axes <- list(
+        Axis(
+          type       = "value",
+          show       = FALSE,
+          min        = 0,
+          max        = col_dendro[["max_height"]],
+          grid_index = 0L
+        ),
+        hm_y_axis
+      )
+      series_list <- list(
+        list(
+          type        = "custom",
+          xAxisIndex  = 0L,
+          yAxisIndex  = 0L,
+          data        = col_dendro[["data"]],
+          silent      = TRUE,
+          animation   = FALSE,
+          renderItem  = col_render_js
+        ),
+        HeatmapSeries(
+          data         = data_list,
+          label        = label_opt,
+          x_axis_index = hm_x_ax_idx,
+          y_axis_index = hm_y_ax_idx
+        )
+      )
+    }
+  }
+
+  opt <- EChartsOption(
+    title = if (!is.null(title)) Title(text = title, left = left_px_main) else NULL,
+    tooltip = Tooltip(trigger = "item", formatter = tooltip_fmt),
+    grid     = grids,
+    x_axis   = x_axes,
+    y_axis   = y_axes,
     visual_map = VisualMap(
       type = "continuous",
       min = zlim[[1L]],
@@ -1403,23 +1752,22 @@ draw_heatmap <- function(
       left   = if (colorbar_orient == "horizontal") "center" else NULL,
       bottom = if (colorbar_orient == "horizontal") "bottom" else NULL
     ),
-    series = HeatmapSeries(
-      data  = data_list,
-      label = label_opt
-    )
+    series = series_list
   )
 
   # Pass square-cell layout parameters to the JS binding so it can enforce
   # square cells dynamically on init and resize (viewer/browser resize events).
+  # left_px_main / top_px_main include dendrogram panel space, so the JS
+  # squareCellHeight() function correctly targets only the heatmap grid width.
   heatmap_meta <- if (square_cells) {
     list(
       squareCells = TRUE,
-      nRows = n_rows,
-      nCols = n_cols,
-      leftPx = left_px,
-      rightPx = right_px,
-      topPx = top_px,
-      botPx = bot_px
+      nRows       = n_rows,
+      nCols       = n_cols,
+      leftPx      = left_px_main,
+      rightPx     = right_px,
+      topPx       = top_px_main,
+      botPx       = bot_px
     )
   } else {
     list()
