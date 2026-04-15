@@ -1151,36 +1151,47 @@ draw_boxplot <- function(
 #'   }
 #' @keywords internal
 #' @noRd
-hclust_to_dendro_data <- function(h) {
+hclust_to_dendro_data <- function(h, uniform = FALSE) {
   n <- length(h[["order"]])
 
   # leaf_pos[i] = 0-based position of leaf i in the reordered sequence
   leaf_pos <- numeric(n)
-  for (p in seq_len(n)) leaf_pos[h[["order"]][p]] <- p - 1L
+  for (p in seq_len(n)) {
+    leaf_pos[h[["order"]][p]] <- p - 1L
+  }
 
   # node_pos[k] = midpoint position of internal node k
   node_pos <- numeric(n - 1L)
   for (k in seq_len(n - 1L)) {
-    l  <- h[["merge"]][k, 1L]
-    r  <- h[["merge"]][k, 2L]
+    l <- h[["merge"]][k, 1L]
+    r <- h[["merge"]][k, 2L]
     lp <- if (l < 0L) leaf_pos[-l] else node_pos[l]
     rp <- if (r < 0L) leaf_pos[-r] else node_pos[r]
     node_pos[k] <- (lp + rp) / 2.0
   }
 
+  # Heights used for rendering: actual merge distances or uniform levels 1..n-1.
+  # Uniform heights give each merge step equal visual height, making the
+  # dendrogram easier to read when merge distances span a wide range.
+  heights <- if (uniform) seq_len(n - 1L) else h[["height"]]
+
   # Build one 5-tuple per merge: [left_pos, right_pos, left_h, right_h, merge_h]
   data <- vector("list", n - 1L)
   for (k in seq_len(n - 1L)) {
-    l  <- h[["merge"]][k, 1L]
-    r  <- h[["merge"]][k, 2L]
+    l <- h[["merge"]][k, 1L]
+    r <- h[["merge"]][k, 2L]
     lp <- if (l < 0L) leaf_pos[-l] else node_pos[l]
     rp <- if (r < 0L) leaf_pos[-r] else node_pos[r]
-    lh <- if (l < 0L) 0.0 else h[["height"]][l]
-    rh <- if (r < 0L) 0.0 else h[["height"]][r]
-    data[[k]] <- list(lp, rp, lh, rh, h[["height"]][k])
+    lh <- if (l < 0L) 0.0 else heights[l]
+    rh <- if (r < 0L) 0.0 else heights[r]
+    data[[k]] <- list(lp, rp, lh, rh, heights[k])
   }
 
-  list(data = data, max_height = h[["height"]][n - 1L])
+  list(
+    data = data,
+    min_height = heights[1L],
+    max_height = heights[n - 1L]
+  )
 }
 
 # Build a diverging colour palette where the midpoint colour falls exactly at
@@ -1197,7 +1208,7 @@ hclust_to_dendro_data <- function(h) {
 # @keywords internal
 # @noRd
 diverging_palette <- function(neg_color, mid_color, pos_color, zlim, n = 101L) {
-  span  <- zlim[[2L]] - zlim[[1L]]
+  span <- zlim[[2L]] - zlim[[1L]]
   n_neg <- round(abs(zlim[[1L]]) / span * (n - 1L)) + 1L
   n_neg <- max(2L, min(n - 1L, n_neg))
   n_pos <- n - n_neg + 1L
@@ -1206,6 +1217,24 @@ diverging_palette <- function(neg_color, mid_color, pos_color, zlim, n = 101L) {
   pos_ramp <- grDevices::colorRampPalette(c(mid_color, pos_color))(n_pos)
   # Remove the duplicated midpoint that both ramps share
   c(neg_ramp, pos_ramp[-1L])
+}
+
+# Compute the axis minimum for a dendrogram height axis so that leaf stubs
+# occupy `stub_frac` of the visible range rather than spanning all the way
+# to zero.  When every merge is in a tight band near the top, this prevents
+# the stems from dominating the panel with empty space.
+#
+# @param min_h Numeric: height of the lowest merge.
+# @param max_h Numeric: height of the root merge.
+# @param stub_frac Numeric `(0, 1)`: fraction of visible range allocated to stubs.
+# @return Numeric: axis min value (may be negative for very compressed ranges).
+# @keywords internal
+# @noRd
+dendro_axis_min <- function(min_h, max_h, stub_frac = 0.1) {
+  if (min_h >= max_h) {
+    return(min_h * (1 - stub_frac))
+  }
+  (min_h - stub_frac * max_h) / (1 - stub_frac)
 }
 
 # -- draw_heatmap ---------------------------------------------------------------
@@ -1249,6 +1278,10 @@ diverging_palette <- function(neg_color, mid_color, pos_color, zlim, n = 101L) {
 #' @param dendro_color Optional Character: Stroke color for dendrogram branch
 #'   lines. `NULL` (default) uses a semi-transparent grey (`"#99999988"`),
 #'   which works in both light and dark themes.
+#' @param dendro_uniform Logical: Whether to render dendrograms with uniform level
+#'   heights — each merge step occupies equal visual space — rather than heights
+#'   proportional to actual merge distances. `TRUE` (default) produces a cleaner
+#'   display when merge distances span a wide range.
 #' @param dendro_row_side Character \{"right", "left"\}: Side of the heatmap on which
 #'   the row dendrogram is placed. `"right"` (default) keeps row labels on the left
 #'   with the dendrogram on the right for a clean, symmetric layout.
@@ -1295,9 +1328,10 @@ draw_heatmap <- function(
   hclust_method = "complete",
   show_row_dendro = TRUE,
   show_col_dendro = TRUE,
-  dendro_row_width = 80,
-  dendro_col_height = 80,
+  dendro_row_width = 60,
+  dendro_col_height = 60,
   dendro_color = NULL,
+  dendro_uniform = FALSE,
   dendro_row_side = "right",
   dendro_col_side = "top",
   square_cells = NULL,
@@ -1314,8 +1348,12 @@ draw_heatmap <- function(
   filename = NULL
 ) {
   # -- 1. Validate & coerce ------------------------------------------------------
-  if (!is.matrix(x)) x <- as.matrix(x)
-  if (!is.numeric(x)) cli::cli_abort("{.arg x} must be a numeric matrix.")
+  if (!is.matrix(x)) {
+    x <- as.matrix(x)
+  }
+  if (!is.numeric(x)) {
+    cli::cli_abort("{.arg x} must be a numeric matrix.")
+  }
   if (!is.null(triangle)) {
     triangle <- match.arg(triangle, c("upper", "lower"))
   }
@@ -1342,7 +1380,7 @@ draw_heatmap <- function(
     diag(x) <- NA
     rows_keep <- apply(x, 1L, function(r) any(!is.na(r)))
     cols_keep <- apply(x, 2L, function(c) any(!is.na(c)))
-    x  <- x[rows_keep, cols_keep, drop = FALSE]
+    x <- x[rows_keep, cols_keep, drop = FALSE]
     rn <- rn[rows_keep]
     cn <- cn[cols_keep]
     n_rows <- nrow(x)
@@ -1356,22 +1394,22 @@ draw_heatmap <- function(
   if (cluster_rows && n_rows > 1L) {
     complete <- !apply(x, 1L, function(r) all(is.na(r)))
     if (sum(complete) > 1L) {
-      d     <- stats::dist(x[complete, , drop = FALSE], method = dist_method)
+      d <- stats::dist(x[complete, , drop = FALSE], method = dist_method)
       row_h <- stats::hclust(d, method = hclust_method)
-      ord   <- seq_len(n_rows)
+      ord <- seq_len(n_rows)
       ord[complete] <- which(complete)[row_h[["order"]]]
-      x  <- x[ord, , drop = FALSE]
+      x <- x[ord, , drop = FALSE]
       rn <- rn[ord]
     }
   }
   if (cluster_cols && n_cols > 1L) {
     complete <- !apply(x, 2L, function(cv) all(is.na(cv)))
     if (sum(complete) > 1L) {
-      d     <- stats::dist(t(x[, complete, drop = FALSE]), method = dist_method)
+      d <- stats::dist(t(x[, complete, drop = FALSE]), method = dist_method)
       col_h <- stats::hclust(d, method = hclust_method)
-      ord   <- seq_len(n_cols)
+      ord <- seq_len(n_cols)
       ord[complete] <- which(complete)[col_h[["order"]]]
-      x  <- x[, ord, drop = FALSE]
+      x <- x[, ord, drop = FALSE]
       cn <- cn[ord]
     }
   }
@@ -1390,26 +1428,38 @@ draw_heatmap <- function(
 
   if (color_auto) {
     bg_light <- "#ffffff"
-    bg_dark  <- "#181818" # default bg from theme_dark()
+    bg_dark <- "#181818" # default bg from theme_dark()
 
     if (zlim[1L] < 0 && zlim[2L] > 0) {
       # Diverging: teal(neg) -> bg -> orange(pos), midpoint pinned to 0
       color_light <- diverging_palette(
-        rtemis_colors[[1L]], bg_light, rtemis_colors[[2L]], zlim)
+        rtemis_colors[[1L]],
+        bg_light,
+        rtemis_colors[[2L]],
+        zlim
+      )
       color_dark <- diverging_palette(
-        rtemis_colors[[1L]], bg_dark, rtemis_colors[[2L]], zlim)
+        rtemis_colors[[1L]],
+        bg_dark,
+        rtemis_colors[[2L]],
+        zlim
+      )
     } else if (zlim[2L] <= 0) {
       # All non-positive: orange -> bg
       color_light <- grDevices::colorRampPalette(
-        c(rtemis_colors[[2L]], bg_light))(101L)
+        c(rtemis_colors[[2L]], bg_light)
+      )(101L)
       color_dark <- grDevices::colorRampPalette(
-        c(rtemis_colors[[2L]], bg_dark))(101L)
+        c(rtemis_colors[[2L]], bg_dark)
+      )(101L)
     } else {
       # All non-negative: bg -> teal
       color_light <- grDevices::colorRampPalette(
-        c(bg_light, rtemis_colors[[1L]]))(101L)
+        c(bg_light, rtemis_colors[[1L]])
+      )(101L)
       color_dark <- grDevices::colorRampPalette(
-        c(bg_dark, rtemis_colors[[1L]]))(101L)
+        c(bg_dark, rtemis_colors[[1L]])
+      )(101L)
     }
 
     # Embed the light palette in the option; JS substitutes the dark one
@@ -1417,7 +1467,7 @@ draw_heatmap <- function(
     color <- color_light
   } else {
     color_light <- NULL
-    color_dark  <- NULL
+    color_dark <- NULL
   }
 
   # -- 7. Heatmap data: list of [col_idx, row_idx, value] ------------------------
@@ -1458,11 +1508,11 @@ draw_heatmap <- function(
   #
   # With containLabel = FALSE (explicit pixel grids), title.left = hm_left gives
   # pixel-precise alignment with the heatmap's left edge.
-  rotate   <- if (max(nchar(cn)) > 4L) 45L else 0L
-  left_px  <- min(20L + max(nchar(rn)) * 8L, 200L)
+  rotate <- if (max(nchar(cn)) > 4L) 45L else 0L
+  left_px <- min(20L + max(nchar(rn)) * 8L, 200L)
   right_px <- if (show_colorbar && colorbar_orient == "vertical") 90L else 20L
-  top_px   <- if (!is.null(title)) 40L else 10L
-  bot_px   <- if (rotate > 0L) min(20L + max(nchar(cn)) * 5L, 140L) else 36L
+  top_px <- if (!is.null(title)) 40L else 10L
+  bot_px <- if (rotate > 0L) min(20L + max(nchar(cn)) * 5L, 140L) else 36L
 
   # Determine which dendrogram panels to show
   # (only possible when there are enough rows/cols to cluster)
@@ -1473,15 +1523,35 @@ draw_heatmap <- function(
   # When col dendro is on bottom, col labels migrate to the top so that
   # the dendro panel sits cleanly between the heatmap and the chart edge.
   col_labels_top <- dendro_cols_shown && dendro_col_side == "bottom"
-  hm_left   <- left_px  + if (dendro_rows_shown && dendro_row_side == "left")   dendro_row_width  else 0L
-  hm_right  <- right_px + if (dendro_rows_shown && dendro_row_side == "right")  dendro_row_width  else 0L
-  hm_top    <- top_px   +
-    (if (dendro_cols_shown && dendro_col_side == "top")    dendro_col_height else 0L) +
-    (if (col_labels_top)                                    bot_px            else 0L)
-  hm_bottom <- if (col_labels_top) dendro_col_height
-               else bot_px + if (dendro_cols_shown && dendro_col_side == "bottom") dendro_col_height else 0L
+  hm_left <- left_px +
+    if (dendro_rows_shown && dendro_row_side == "left") dendro_row_width else 0L
+  hm_right <- right_px +
+    if (dendro_rows_shown && dendro_row_side == "right") {
+      dendro_row_width
+    } else {
+      0L
+    }
+  hm_top <- top_px +
+    (if (dendro_cols_shown && dendro_col_side == "top") {
+      dendro_col_height
+    } else {
+      0L
+    }) +
+    (if (col_labels_top) bot_px else 0L)
+  hm_bottom <- if (col_labels_top) {
+    dendro_col_height
+  } else {
+    bot_px +
+      if (dendro_cols_shown && dendro_col_side == "bottom") {
+        dendro_col_height
+      } else {
+        0L
+      }
+  }
 
-  if (is.null(square_cells)) square_cells <- (n_rows == n_cols)
+  if (is.null(square_cells)) {
+    square_cells <- (n_rows == n_cols)
+  }
 
   # For square-cell heatmaps, compute R-side dimensions as a static fallback
   # (e.g. knitr/quarto output where JS resize callbacks may not run).
@@ -1489,8 +1559,8 @@ draw_heatmap <- function(
   # so these pixel values are used as the initial widget allocation.
   if (square_cells && is.null(width) && is.null(height)) {
     cell_px <- 40L
-    width   <- n_cols * cell_px + hm_left + hm_right
-    height  <- n_rows * cell_px + hm_top + hm_bottom
+    width <- n_cols * cell_px + hm_left + hm_right
+    height <- n_rows * cell_px + hm_top + hm_bottom
   }
 
   # -- 9. Tooltip: shows "row x col: value" -------------------------------------
@@ -1498,11 +1568,17 @@ draw_heatmap <- function(
   rows_json <- jsonlite::toJSON(rn, auto_unbox = FALSE)
   tooltip_fmt <- htmlwidgets::JS(paste0(
     "(function(){",
-    "var cn=", cols_json, ";",
-    "var rn=", rows_json, ";",
+    "var cn=",
+    cols_json,
+    ";",
+    "var rn=",
+    rows_json,
+    ";",
     "return function(p){",
     "if(!p.value||p.value[2]===null||p.value[2]===undefined)return'NA';",
-    "return rn[p.value[1]]+' \u00d7 '+cn[p.value[0]]+': '+p.value[2].toFixed(", value_digits, ");",
+    "return rn[p.value[1]]+' \u00d7 '+cn[p.value[0]]+': '+p.value[2].toFixed(",
+    value_digits,
+    ");",
     "}})()"
   ))
 
@@ -1513,7 +1589,9 @@ draw_heatmap <- function(
       formatter = htmlwidgets::JS(paste0(
         "function(p){",
         "if(!p.value||p.value[2]===null||p.value[2]===undefined)return'';",
-        "return p.value[2].toFixed(", value_digits, ");",
+        "return p.value[2].toFixed(",
+        value_digits,
+        ");",
         "}"
       ))
     )
@@ -1532,47 +1610,55 @@ draw_heatmap <- function(
 
   if (!dendro_rows_shown && !dendro_cols_shown) {
     # ── No dendrograms: single grid, unchanged from original logic ───────────
-    grids  <- Grid(
-      left          = left_px,
-      right         = right_px,
-      top           = top_px,
-      bottom        = bot_px,
+    grids <- Grid(
+      left = left_px,
+      right = right_px,
+      top = top_px,
+      bottom = bot_px,
       contain_label = FALSE
     )
     x_axes <- Axis(
-      type       = "category",
-      data       = as.list(cn),
+      type = "category",
+      data = as.list(cn),
       split_area = SplitArea(show = FALSE),
-      axis_line  = AxisLine(show = FALSE),
+      axis_line = AxisLine(show = FALSE),
       axis_label = AxisLabel(rotate = rotate),
       boundary_gap = TRUE
     )
     y_axes <- Axis(
-      type       = "category",
-      data       = as.list(rn),
-      inverse    = TRUE,
+      type = "category",
+      data = as.list(rn),
+      inverse = TRUE,
       split_area = SplitArea(show = FALSE),
-      axis_line  = AxisLine(show = FALSE),
+      axis_line = AxisLine(show = FALSE),
       boundary_gap = TRUE
     )
     series_list <- list(HeatmapSeries(data = data_list, label = label_opt))
   } else {
     # ── One or two dendrogram panels: multiple grids ─────────────────────────
     # Compute dendrogram segment data (needed for custom series renderItem)
-    row_dendro <- if (dendro_rows_shown) hclust_to_dendro_data(row_h) else NULL
-    col_dendro <- if (dendro_cols_shown) hclust_to_dendro_data(col_h) else NULL
+    row_dendro <- if (dendro_rows_shown) {
+      hclust_to_dendro_data(row_h, uniform = dendro_uniform)
+    } else {
+      NULL
+    }
+    col_dendro <- if (dendro_cols_shown) {
+      hclust_to_dendro_data(col_h, uniform = dendro_uniform)
+    } else {
+      NULL
+    }
 
     # Determine ECharts axis/grid indices for the heatmap series
-    hm_grid_idx  <- if (dendro_rows_shown && dendro_cols_shown) 2L else 1L
-    hm_x_ax_idx  <- hm_grid_idx   # xAxis array mirrors grid ordering
-    hm_y_ax_idx  <- hm_grid_idx   # yAxis array mirrors grid ordering
+    hm_grid_idx <- if (dendro_rows_shown && dendro_cols_shown) 2L else 1L
+    hm_x_ax_idx <- hm_grid_idx # xAxis array mirrors grid ordering
+    hm_y_ax_idx <- hm_grid_idx # yAxis array mirrors grid ordering
 
     # Build the heatmap grid
     hm_grid <- Grid(
-      left          = hm_left,
-      right         = hm_right,
-      top           = hm_top,
-      bottom        = hm_bottom,
+      left = hm_left,
+      right = hm_right,
+      top = hm_top,
+      bottom = hm_bottom,
       contain_label = FALSE
     )
 
@@ -1580,23 +1666,23 @@ draw_heatmap <- function(
     # When col labels migrate to the top (dendro_col_side = "bottom"), the
     # x-axis position is "top" so labels appear above the heatmap grid.
     hm_x_axis <- Axis(
-      type         = "category",
-      data         = as.list(cn),
-      split_area   = SplitArea(show = FALSE),
-      axis_line    = AxisLine(show = FALSE),
-      axis_label   = AxisLabel(rotate = if (col_labels_top) 0L else rotate),
-      position     = if (col_labels_top) "top" else NULL,
+      type = "category",
+      data = as.list(cn),
+      split_area = SplitArea(show = FALSE),
+      axis_line = AxisLine(show = FALSE),
+      axis_label = AxisLabel(rotate = if (col_labels_top) 0L else rotate),
+      position = if (col_labels_top) "top" else NULL,
       boundary_gap = TRUE,
-      grid_index   = hm_grid_idx
+      grid_index = hm_grid_idx
     )
     hm_y_axis <- Axis(
-      type         = "category",
-      data         = as.list(rn),
-      inverse      = TRUE,
-      split_area   = SplitArea(show = FALSE),
-      axis_line    = AxisLine(show = FALSE),
+      type = "category",
+      data = as.list(rn),
+      inverse = TRUE,
+      split_area = SplitArea(show = FALSE),
+      axis_line = AxisLine(show = FALSE),
       boundary_gap = TRUE,
-      grid_index   = hm_grid_idx
+      grid_index = hm_grid_idx
     )
 
     # renderItem JS for row dendrogram (x-axis = height, y-axis = row position)
@@ -1609,7 +1695,9 @@ draw_heatmap <- function(
       "return{type:'polyline',",
       "shape:{points:[api.coord([lh,lp]),api.coord([mh,lp]),",
       "api.coord([mh,rp]),api.coord([rh,rp])]},",
-      "style:{stroke:'", dcolor, "',lineWidth:1,fill:null}};}"
+      "style:{stroke:'",
+      dcolor,
+      "',lineWidth:1,fill:null}};}"
     ))
 
     # renderItem JS for col dendrogram (x-axis = col position, y-axis = height)
@@ -1622,7 +1710,9 @@ draw_heatmap <- function(
       "return{type:'polyline',",
       "shape:{points:[api.coord([lp,lh]),api.coord([lp,mh]),",
       "api.coord([rp,mh]),api.coord([rp,rh])]},",
-      "style:{stroke:'", dcolor, "',lineWidth:1,fill:null}};}"
+      "style:{stroke:'",
+      dcolor,
+      "',lineWidth:1,fill:null}};}"
     ))
 
     # Build reusable dendro grids and position axes.
@@ -1631,17 +1721,30 @@ draw_heatmap <- function(
     # or right (leaves adj. to heatmap, root far-right). The height x-axis is
     # inverse=TRUE for "left" so the root is on the far-left side.
     row_dendro_grid <- if (dendro_row_side == "right") {
-      Grid(right = right_px, width = dendro_row_width, top = hm_top, bottom = hm_bottom)
+      Grid(
+        right = right_px,
+        width = dendro_row_width,
+        top = hm_top,
+        bottom = hm_bottom
+      )
     } else {
-      Grid(left = 0L, width = dendro_row_width, top = hm_top, bottom = hm_bottom)
+      Grid(
+        left = 0L,
+        width = dendro_row_width,
+        top = hm_top,
+        bottom = hm_bottom
+      )
     }
     row_height_x_axis <- function(idx) {
       Axis(
-        type       = "value",
-        inverse    = (dendro_row_side == "left"),
-        show       = FALSE,
-        min        = 0,
-        max        = row_dendro[["max_height"]],
+        type = "value",
+        inverse = (dendro_row_side == "left"),
+        show = FALSE,
+        min = dendro_axis_min(
+          row_dendro[["min_height"]],
+          row_dendro[["max_height"]]
+        ),
+        max = row_dendro[["max_height"]],
         grid_index = idx
       )
     }
@@ -1650,17 +1753,30 @@ draw_heatmap <- function(
     # or bottom (leaves adj. to heatmap, root far-bottom). The height y-axis is
     # inverse=TRUE for "bottom" so the root is at the bottom.
     col_dendro_grid <- if (dendro_col_side == "top") {
-      Grid(left = hm_left, right = hm_right, top = top_px, height = dendro_col_height)
+      Grid(
+        left = hm_left,
+        right = hm_right,
+        top = top_px,
+        height = dendro_col_height
+      )
     } else {
-      Grid(left = hm_left, right = hm_right, bottom = 0L, height = dendro_col_height)
+      Grid(
+        left = hm_left,
+        right = hm_right,
+        bottom = 0L,
+        height = dendro_col_height
+      )
     }
     col_height_y_axis <- function(idx) {
       Axis(
-        type       = "value",
-        show       = FALSE,
-        inverse    = (dendro_col_side == "bottom"),
-        min        = 0,
-        max        = col_dendro[["max_height"]],
+        type = "value",
+        show = FALSE,
+        inverse = (dendro_col_side == "bottom"),
+        min = dendro_axis_min(
+          col_dendro[["min_height"]],
+          col_dendro[["max_height"]]
+        ),
+        max = col_dendro[["max_height"]],
         grid_index = idx
       )
     }
@@ -1675,10 +1791,10 @@ draw_heatmap <- function(
         # [1] col dendro: col position axis (integer positions 0..n-1 align
         # with category cell centers in the heatmap grid)
         Axis(
-          type       = "value",
-          min        = -0.5,
-          max        = n_cols - 0.5,
-          show       = FALSE,
+          type = "value",
+          min = -0.5,
+          max = n_cols - 0.5,
+          show = FALSE,
           grid_index = 1L
         ),
         hm_x_axis
@@ -1687,11 +1803,11 @@ draw_heatmap <- function(
         # [0] row dendro: row position axis (integer positions 0..n-1 align
         # with category cell centers in the heatmap grid)
         Axis(
-          type       = "value",
-          min        = -0.5,
-          max        = n_rows - 0.5,
-          inverse    = TRUE,
-          show       = FALSE,
+          type = "value",
+          min = -0.5,
+          max = n_rows - 0.5,
+          inverse = TRUE,
+          show = FALSE,
           grid_index = 0L
         ),
         # [1] col dendro: height axis
@@ -1700,26 +1816,26 @@ draw_heatmap <- function(
       )
       series_list <- list(
         list(
-          type        = "custom",
-          xAxisIndex  = 0L,
-          yAxisIndex  = 0L,
-          data        = row_dendro[["data"]],
-          silent      = TRUE,
-          animation   = FALSE,
-          renderItem  = row_render_js
+          type = "custom",
+          xAxisIndex = 0L,
+          yAxisIndex = 0L,
+          data = row_dendro[["data"]],
+          silent = TRUE,
+          animation = FALSE,
+          renderItem = row_render_js
         ),
         list(
-          type        = "custom",
-          xAxisIndex  = 1L,
-          yAxisIndex  = 1L,
-          data        = col_dendro[["data"]],
-          silent      = TRUE,
-          animation   = FALSE,
-          renderItem  = col_render_js
+          type = "custom",
+          xAxisIndex = 1L,
+          yAxisIndex = 1L,
+          data = col_dendro[["data"]],
+          silent = TRUE,
+          animation = FALSE,
+          renderItem = col_render_js
         ),
         HeatmapSeries(
-          data        = data_list,
-          label       = label_opt,
+          data = data_list,
+          label = label_opt,
           x_axis_index = hm_x_ax_idx,
           y_axis_index = hm_y_ax_idx
         )
@@ -1730,28 +1846,28 @@ draw_heatmap <- function(
       x_axes <- list(row_height_x_axis(0L), hm_x_axis)
       y_axes <- list(
         Axis(
-          type       = "value",
-          min        = -0.5,
-          max        = n_rows - 0.5,
-          inverse    = TRUE,
-          show       = FALSE,
+          type = "value",
+          min = -0.5,
+          max = n_rows - 0.5,
+          inverse = TRUE,
+          show = FALSE,
           grid_index = 0L
         ),
         hm_y_axis
       )
       series_list <- list(
         list(
-          type        = "custom",
-          xAxisIndex  = 0L,
-          yAxisIndex  = 0L,
-          data        = row_dendro[["data"]],
-          silent      = TRUE,
-          animation   = FALSE,
-          renderItem  = row_render_js
+          type = "custom",
+          xAxisIndex = 0L,
+          yAxisIndex = 0L,
+          data = row_dendro[["data"]],
+          silent = TRUE,
+          animation = FALSE,
+          renderItem = row_render_js
         ),
         HeatmapSeries(
-          data         = data_list,
-          label        = label_opt,
+          data = data_list,
+          label = label_opt,
           x_axis_index = hm_x_ax_idx,
           y_axis_index = hm_y_ax_idx
         )
@@ -1761,10 +1877,10 @@ draw_heatmap <- function(
       grids <- list(col_dendro_grid, hm_grid)
       x_axes <- list(
         Axis(
-          type       = "value",
-          min        = -0.5,
-          max        = n_cols - 0.5,
-          show       = FALSE,
+          type = "value",
+          min = -0.5,
+          max = n_cols - 0.5,
+          show = FALSE,
           grid_index = 0L
         ),
         hm_x_axis
@@ -1772,17 +1888,17 @@ draw_heatmap <- function(
       y_axes <- list(col_height_y_axis(0L), hm_y_axis)
       series_list <- list(
         list(
-          type        = "custom",
-          xAxisIndex  = 0L,
-          yAxisIndex  = 0L,
-          data        = col_dendro[["data"]],
-          silent      = TRUE,
-          animation   = FALSE,
-          renderItem  = col_render_js
+          type = "custom",
+          xAxisIndex = 0L,
+          yAxisIndex = 0L,
+          data = col_dendro[["data"]],
+          silent = TRUE,
+          animation = FALSE,
+          renderItem = col_render_js
         ),
         HeatmapSeries(
-          data         = data_list,
-          label        = label_opt,
+          data = data_list,
+          label = label_opt,
           x_axis_index = hm_x_ax_idx,
           y_axis_index = hm_y_ax_idx
         )
@@ -1793,9 +1909,9 @@ draw_heatmap <- function(
   opt <- EChartsOption(
     title = if (!is.null(title)) Title(text = title, left = hm_left) else NULL,
     tooltip = Tooltip(trigger = "item", formatter = tooltip_fmt),
-    grid     = grids,
-    x_axis   = x_axes,
-    y_axis   = y_axes,
+    grid = grids,
+    x_axis = x_axes,
+    y_axis = y_axes,
     visual_map = VisualMap(
       type = "continuous",
       min = zlim[[1L]],
@@ -1810,9 +1926,9 @@ draw_heatmap <- function(
       in_range = list(color = as.list(color)),
       # Vertical: pin to the right edge, centered with the plot area.
       # Horizontal: centered at the bottom.
-      right  = if (colorbar_orient == "vertical")   "right"  else NULL,
-      top    = if (colorbar_orient == "vertical")   "middle" else NULL,
-      left   = if (colorbar_orient == "horizontal") "center" else NULL,
+      right = if (colorbar_orient == "vertical") "right" else NULL,
+      top = if (colorbar_orient == "vertical") "middle" else NULL,
+      left = if (colorbar_orient == "horizontal") "center" else NULL,
       bottom = if (colorbar_orient == "horizontal") "bottom" else NULL
     ),
     series = series_list
@@ -1824,22 +1940,28 @@ draw_heatmap <- function(
   # squareCellHeight() measures only the heatmap grid, not the dendro panels.
   heatmap_meta <- list()
   if (square_cells) {
-    heatmap_meta <- c(heatmap_meta, list(
-      squareCells = TRUE,
-      nRows       = n_rows,
-      nCols       = n_cols,
-      leftPx      = hm_left,
-      rightPx     = hm_right,
-      topPx       = hm_top,
-      botPx       = hm_bottom
-    ))
+    heatmap_meta <- c(
+      heatmap_meta,
+      list(
+        squareCells = TRUE,
+        nRows = n_rows,
+        nCols = n_cols,
+        leftPx = hm_left,
+        rightPx = hm_right,
+        topPx = hm_top,
+        botPx = hm_bottom
+      )
+    )
   }
   # Pass both theme-matched colour arrays so JS can select the right one.
   if (color_auto) {
-    heatmap_meta <- c(heatmap_meta, list(
-      colorLight = as.list(color_light),
-      colorDark  = as.list(color_dark)
-    ))
+    heatmap_meta <- c(
+      heatmap_meta,
+      list(
+        colorLight = as.list(color_light),
+        colorDark = as.list(color_dark)
+      )
+    )
   }
 
   draw(
