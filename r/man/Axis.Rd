@@ -32,7 +32,9 @@ Axis(
   axis_label = NULL,
   split_line = NULL,
   minor_split_line = NULL,
-  split_area = NULL
+  split_area = NULL,
+  position = NULL,
+  grid_index = NULL
 )
 }
 \arguments{
@@ -92,6 +94,12 @@ vector of numbers/strings (numeric axes).}
 \item{minor_split_line}{Optional \link{MinorSplitLine}: Minor split line configuration.}
 
 \item{split_area}{Optional \link{SplitArea}: Split area configuration.}
+
+\item{position}{Optional Character \{"left", "right", "top", "bottom"\}: Axis position.
+For \code{yAxis}: \code{"left"} (default) or \code{"right"}. For \code{xAxis}: \code{"bottom"} (default) or \code{"top"}.}
+
+\item{grid_index}{Optional Numeric \verb{[0, Inf)}: Index of the grid this axis belongs to.
+Used when the chart has multiple grids (e.g. heatmap + dendrogram panels).}
 }
 \description{
 Configuration for a cartesian axis (xAxis or yAxis). Combines fields from
