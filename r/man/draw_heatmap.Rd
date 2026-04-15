@@ -78,8 +78,8 @@ which works in both light and dark themes.}
 
 \item{dendro_uniform}{Logical: Whether to render dendrograms with uniform level
 heights — each merge step occupies equal visual space — rather than heights
-proportional to actual merge distances. \code{TRUE} (default) produces a cleaner
-display when merge distances span a wide range.}
+proportional to actual merge distances. \code{FALSE} (default) preserves merge
+distances in the visual scaling.}
 
 \item{dendro_row_side}{Character \{"right", "left"\}: Side of the heatmap on which
 the row dendrogram is placed. \code{"right"} (default) keeps row labels on the left
