@@ -21,7 +21,7 @@ test_that("hclust_to_dendro_data returns n-1 segments and correct max_height", {
   out <- hclust_to_dendro_data(h)
 
   n <- nrow(m)
-  expect_named(out, c("data", "max_height"))
+  expect_named(out, c("data", "min_height", "max_height"))
   expect_length(out[["data"]], n - 1L)
   expect_equal(out[["max_height"]], h[["height"]][n - 1L])
 })
@@ -124,8 +124,8 @@ test_that("draw_heatmap with cluster_rows and cluster_cols produces 3 grids", {
   expect_length(opt$xAxis, 3L)
   expect_length(opt$yAxis, 3L)
   expect_length(opt$series, 3L)
-  expect_equal(opt$series[[1]]$type, "custom")  # row dendro
-  expect_equal(opt$series[[2]]$type, "custom")  # col dendro
+  expect_equal(opt$series[[1]]$type, "custom") # row dendro
+  expect_equal(opt$series[[2]]$type, "custom") # col dendro
   expect_equal(opt$series[[3]]$type, "heatmap")
   # Heatmap series uses axis index 2
   expect_equal(opt$series[[3]]$xAxisIndex, 2L)
@@ -135,7 +135,7 @@ test_that("draw_heatmap with cluster_rows and cluster_cols produces 3 grids", {
 # -- draw_heatmap(): show_row_dendro = FALSE -----------------------------------
 
 test_that("show_row_dendro=FALSE reorders rows but does not add a dendro panel", {
-  m  <- make_mat()
+  m <- make_mat()
   w0 <- draw_heatmap(m, cluster_rows = TRUE, show_row_dendro = FALSE)
   opt <- w0$x$option
 
@@ -158,7 +158,7 @@ test_that("square_cells meta leftPx includes dendro_row_width when cluster_rows"
 
   # With row dendro on the right (default), rightPx is larger by dendro_row_width
   expect_true(w_dendro$x$rightPx > w_plain$x$rightPx)
-  expect_equal(w_dendro$x$rightPx - w_plain$x$rightPx, 80L)
+  expect_equal(w_dendro$x$rightPx - w_plain$x$rightPx, 60L)
 })
 
 # -- draw_heatmap(): triangle masking + clustering ----------------------------
@@ -167,7 +167,12 @@ test_that("triangle masking with cluster_rows does not error", {
   set.seed(1L)
   m <- cor(matrix(rnorm(100L), 10L, 10L))
   expect_no_error(
-    draw_heatmap(m, cluster_rows = TRUE, cluster_cols = TRUE, triangle = "lower")
+    draw_heatmap(
+      m,
+      cluster_rows = TRUE,
+      cluster_cols = TRUE,
+      triangle = "lower"
+    )
   )
 })
 
@@ -186,14 +191,20 @@ test_that("draw_heatmap with clustering returns a valid htmlwidget", {
   m <- make_mat()
   expect_s3_class(draw_heatmap(m, cluster_rows = TRUE), "htmlwidget")
   expect_s3_class(draw_heatmap(m, cluster_cols = TRUE), "htmlwidget")
-  expect_s3_class(draw_heatmap(m, cluster_rows = TRUE, cluster_cols = TRUE), "htmlwidget")
+  expect_s3_class(
+    draw_heatmap(m, cluster_rows = TRUE, cluster_cols = TRUE),
+    "htmlwidget"
+  )
 })
 
 # -- draw_heatmap(): small matrix edge case ------------------------------------
 
 test_that("draw_heatmap with 2 rows and cluster_rows works", {
-  m <- matrix(c(1, 2, 3, 4), nrow = 2L,
-              dimnames = list(c("A", "B"), c("X", "Y")))
+  m <- matrix(
+    c(1, 2, 3, 4),
+    nrow = 2L,
+    dimnames = list(c("A", "B"), c("X", "Y"))
+  )
   expect_no_error(draw_heatmap(m, cluster_rows = TRUE))
 })
 
