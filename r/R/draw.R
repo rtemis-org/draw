@@ -1144,9 +1144,11 @@ draw_boxplot <- function(
 #' ECharts `custom` renderItem for that merge.
 #'
 #' @param h `hclust` object returned by [stats::hclust()].
-#' @return Named list with two elements:
+#' @param uniform Logical: Whether to use uniform heights for rendering.
+#' @return Named list with three elements:
 #'   \describe{
 #'     \item{`data`}{Length `n - 1` list of 5-element numeric lists.}
+#'     \item{`min_height`}{Numeric: height of the lowest merge.}
 #'     \item{`max_height`}{Numeric: height of the root merge (used for axis scaling).}
 #'   }
 #' @keywords internal
@@ -1280,8 +1282,8 @@ dendro_axis_min <- function(min_h, max_h, stub_frac = 0.1) {
 #'   which works in both light and dark themes.
 #' @param dendro_uniform Logical: Whether to render dendrograms with uniform level
 #'   heights — each merge step occupies equal visual space — rather than heights
-#'   proportional to actual merge distances. `TRUE` (default) produces a cleaner
-#'   display when merge distances span a wide range.
+#'   proportional to actual merge distances. `FALSE` (default) preserves merge
+#'   distances in the visual scaling.
 #' @param dendro_row_side Character \{"right", "left"\}: Side of the heatmap on which
 #'   the row dendrogram is placed. `"right"` (default) keeps row labels on the left
 #'   with the dendrogram on the right for a clean, symmetric layout.
@@ -1392,7 +1394,7 @@ draw_heatmap <- function(
   row_h <- NULL
   col_h <- NULL
   if (cluster_rows && n_rows > 1L) {
-    complete <- !apply(x, 1L, function(r) all(is.na(r)))
+    complete <- rowSums(!is.na(x)) > 0L
     if (sum(complete) > 1L) {
       d <- stats::dist(x[complete, , drop = FALSE], method = dist_method)
       row_h <- stats::hclust(d, method = hclust_method)
@@ -1403,7 +1405,7 @@ draw_heatmap <- function(
     }
   }
   if (cluster_cols && n_cols > 1L) {
-    complete <- !apply(x, 2L, function(cv) all(is.na(cv)))
+    complete <- colSums(!is.na(x)) > 0L
     if (sum(complete) > 1L) {
       d <- stats::dist(t(x[, complete, drop = FALSE]), method = dist_method)
       col_h <- stats::hclust(d, method = hclust_method)
@@ -1670,7 +1672,7 @@ draw_heatmap <- function(
       data = as.list(cn),
       split_area = SplitArea(show = FALSE),
       axis_line = AxisLine(show = FALSE),
-      axis_label = AxisLabel(rotate = if (col_labels_top) 0L else rotate),
+      axis_label = AxisLabel(rotate = rotate),
       position = if (col_labels_top) "top" else NULL,
       boundary_gap = TRUE,
       grid_index = hm_grid_idx
@@ -1695,9 +1697,9 @@ draw_heatmap <- function(
       "return{type:'polyline',",
       "shape:{points:[api.coord([lh,lp]),api.coord([mh,lp]),",
       "api.coord([mh,rp]),api.coord([rh,rp])]},",
-      "style:{stroke:'",
-      dcolor,
-      "',lineWidth:1,fill:null}};}"
+      "style:{stroke:",
+      jsonlite::toJSON(dcolor, auto_unbox = TRUE),
+      ",lineWidth:1,fill:null}};}"
     ))
 
     # renderItem JS for col dendrogram (x-axis = col position, y-axis = height)
@@ -1710,9 +1712,9 @@ draw_heatmap <- function(
       "return{type:'polyline',",
       "shape:{points:[api.coord([lp,lh]),api.coord([lp,mh]),",
       "api.coord([rp,mh]),api.coord([rp,rh])]},",
-      "style:{stroke:'",
-      dcolor,
-      "',lineWidth:1,fill:null}};}"
+      "style:{stroke:",
+      jsonlite::toJSON(dcolor, auto_unbox = TRUE),
+      ",lineWidth:1,fill:null}};}"
     ))
 
     # Build reusable dendro grids and position axes.
