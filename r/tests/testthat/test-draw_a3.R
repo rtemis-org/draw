@@ -164,12 +164,12 @@ test_that("draw_a3 title is included in option", {
   expect_equal(w$x$option$title$text, "MAPT")
 })
 
-test_that("draw_a3 legend is scrollable and vertical", {
+test_that("draw_a3 legend is plain and vertical", {
   skip_if_not_installed("rtemis.a3")
   a <- rtemis.a3::create_A3("MAEPRQEFEVMEDHAGTYGLGDRK")
   w <- draw_a3(a)
   legend <- w$x$option$legend
-  expect_equal(legend$type, "scroll")
+  expect_equal(legend$type, "plain")
   expect_equal(legend$orient, "vertical")
 })
 
