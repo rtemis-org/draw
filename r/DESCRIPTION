@@ -20,13 +20,13 @@ Imports:
     cli,
     htmlwidgets,
     jsonlite,
-    rtemis.a3,
     rtemis.core,
     S7
 Suggests:
     knitr,
     mgcv,
     rmarkdown,
+    rtemis.a3,
     testthat (>= 3.0.0)
 Additional_repositories:
     https://rtemis-org.r-universe.dev
