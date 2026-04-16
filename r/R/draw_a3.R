@@ -243,6 +243,11 @@ a3_flex_positions <- function(index) {
 #'   variant residues (takes precedence over `variant_color`).
 #' @param enable_zoom Logical: Whether to enable Shift+scroll zoom.
 #' @param title Optional Character: Chart title.
+#' @param grid Optional [Grid]: Override any plot-area margin. The defaults
+#'   (`left = 24`, `top` auto, `right` driven by legend width, `bottom = 24`)
+#'   are merged with the properties of the supplied `Grid` object, so only
+#'   the fields you set are changed — e.g. `Grid(left = 8, top = 8)`.
+#'   `legend_top` is re-derived from the final grid top automatically.
 #' @param theme Optional [Theme]: Theme override. `NULL` auto-detects
 #'   light/dark mode; `NA` uses raw ECharts defaults.
 #' @param width Optional Numeric or Character: Widget width.
@@ -288,6 +293,7 @@ draw_a3 <- function(
   disease_variant_color = "#E266AE",
   enable_zoom = TRUE,
   title = NULL,
+  grid = NULL,
   theme = NULL,
   width = NULL,
   height = NULL,
@@ -323,6 +329,12 @@ draw_a3 <- function(
         "{.arg position_every} must be a positive integer or {.val NULL}."
       )
     }
+  }
+  if (!is.null(grid) && !S7::S7_inherits(grid, Grid)) {
+    cli::cli_abort(
+      "{.arg grid} must be a {.cls Grid} object or {.val NULL}. \\
+      Use {.fn Grid} to create one, e.g. {.code Grid(left = 8, top = 8)}."
+    )
   }
 
   # ── Extract data via the A3 [[ method ──────────────────────────────────────
@@ -691,26 +703,36 @@ draw_a3 <- function(
   legend_gap         <- 90
   title_margin_top   <- if (!is.null(title)) max(64L, 32L + font_size + 14L) else 24L
 
-  # Align the legend's first item with the first sequence row.
-  # The y-axis spans [min_y-1, max_y+1] over a grid of height
-  # marker_size*(2*vertical_span+1) px.  The first row sits at
-  # y=min_y=1, which is 1/(vertical_span+2) of the way down.
+  # Build default grid margins, then apply any user overrides from a Grid object.
   vertical_span  <- max_y - min_y
   grid_height_px <- marker_size * (2 * vertical_span + 1)
-  legend_top     <- title_margin_top +
+
+  grid_list <- list(
+    left         = 24,
+    right        = legend_right_inset + legend_rail_width + legend_gap,
+    top          = title_margin_top,
+    bottom       = 24,
+    containLabel = FALSE
+  )
+  if (!is.null(grid)) {
+    # to_list() converts snake_case props → camelCase keys, dropping NULLs.
+    for (nm in names(to_list(grid))) {
+      grid_list[[nm]] <- to_list(grid)[[nm]]
+    }
+  }
+
+  # Align the legend's first item with the first sequence row.
+  # Re-derived from the actual grid top so a user override keeps legend in sync.
+  # The y-axis spans [min_y-1, max_y+1] over grid_height_px, so the first row
+  # (y=1) sits 1/(vertical_span+2) of the way down.
+  legend_top <- grid_list[["top"]] +
     round(grid_height_px / (vertical_span + 2))
 
   option <- list(
     animation               = TRUE,
     animationDuration       = 220,
     animationDurationUpdate = 140,
-    grid = list(
-      left         = 24,
-      right        = legend_right_inset + legend_rail_width + legend_gap,
-      top          = title_margin_top,
-      bottom       = 24,
-      containLabel = FALSE
-    ),
+    grid = grid_list,
     xAxis = list(
       type     = "value",
       min      = min_x - 1,
