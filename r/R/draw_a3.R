@@ -3,7 +3,7 @@
 # Renders an `A3` object (rtemis.a3) as an interactive ECharts diagram: the
 # amino-acid sequence is wrapped in a meander/serpentine path, with optional
 # site, region, PTM, processing, and variant annotations overlaid as separate
-# series with a scrollable vertical legend.
+# series with a vertical legend.
 #
 # Layout and series logic translated from:
 #   ~/Code/rtemislive-draw/src/lib/a3/visualization/layout.ts
@@ -150,9 +150,12 @@ a3_with_alpha <- function(color, alpha) {
 #' Compute a 2-D circular offset in pixels
 #'
 #' Places annotation symbols at evenly-spaced positions around a clock face.
-#' `index` is 1-based; angle 0 maps to the top (positive y on screen = down).
+#' `index` is 1-based. With `x = sin(angle)` and `y = cos(angle)` (screen
+#' coords, y increases downward): index 1 of 4 yields the 3-o'clock position
+#' (x = gap, y ≈ 0); index 2 of 4 yields the 6-o'clock position
+#' (x ≈ 0, y = gap); and so on.
 #'
-#' @param index Integer `[1, count]`: 1-based position in the clock face.
+#' @param index Integer `[1, count]`: 1-based position on the clock face.
 #' @param count Integer `[1, Inf)`: Total number of positions.
 #' @param gap Numeric: Radius in pixels.
 #' @return Named list with numeric `x` and `y` pixel offsets.
@@ -207,7 +210,7 @@ a3_flex_positions <- function(index) {
 #' amino-acid sequence diagram. The sequence is wrapped into rows in a
 #' meander/serpentine path, with optional site, region, PTM, processing, and
 #' variant annotations overlaid as distinct series and collected in a
-#' scrollable legend.
+#' vertical legend.
 #'
 #' Corresponds to `createA3EChartsOption()` in
 #' `src/lib/a3/visualization/echarts.ts`.
@@ -312,6 +315,15 @@ draw_a3 <- function(
   if (!is.numeric(residue_spacing) || residue_spacing <= 0) {
     cli::cli_abort("{.arg residue_spacing} must be a positive number.")
   }
+  if (!is.null(position_every)) {
+    position_every <- as.integer(position_every)
+    if (length(position_every) != 1L || is.na(position_every) ||
+        position_every < 1L) {
+      cli::cli_abort(
+        "{.arg position_every} must be a positive integer or {.val NULL}."
+      )
+    }
+  }
 
   # ── Extract data via the A3 [[ method ──────────────────────────────────────
   # x[["sequence"]] calls to_base(prop(x, "sequence")), returning character(1)
@@ -337,28 +349,26 @@ draw_a3 <- function(
   max_y <- max(ys)
 
   # ── Residue label color assignment ─────────────────────────────────────────
-  # Disease-associated variant positions override generic variant positions.
-  disease_pos <- integer(0L)
-  for (nm in names(site_anns)) {
+  # Vectorised: pre-fill with default, then overwrite by index.
+  # Disease-associated variant positions take precedence over generic variants.
+  disease_pos <- unlist(lapply(names(site_anns), function(nm) {
     if (tolower(gsub("[-[:space:]]", "_", nm)) == "disease_associated_variant") {
-      disease_pos <- c(disease_pos, as.integer(site_anns[[nm]][["index"]]))
+      as.integer(site_anns[[nm]][["index"]])
     }
-  }
+  }), use.names = FALSE)
+  if (is.null(disease_pos)) disease_pos <- integer(0L)
+
   variant_pos <- if (length(variant_anns) > 0L) {
     vapply(variant_anns, function(v) as.integer(v[["position"]]), integer(1L))
   } else {
     integer(0L)
   }
 
-  label_cols <- vapply(seq_len(seq_length), function(i) {
-    if (i %in% disease_pos) {
-      disease_variant_color
-    } else if (i %in% variant_pos) {
-      variant_color
-    } else {
-      label_color
-    }
-  }, character(1L))
+  label_cols <- rep(label_color, seq_length)
+  v_idx <- variant_pos[variant_pos >= 1L & variant_pos <= seq_length]
+  if (length(v_idx) > 0L) label_cols[v_idx] <- variant_color
+  d_idx <- disease_pos[disease_pos >= 1L & disease_pos <= seq_length]
+  if (length(d_idx) > 0L) label_cols[d_idx] <- disease_variant_color
 
   # ── Auto-compute height ────────────────────────────────────────────────────
   if (is.null(height)) {
@@ -385,7 +395,7 @@ draw_a3 <- function(
   if (show_markers) {
     backbone_data <- lapply(seq_len(seq_length), function(i) {
       res      <- seq_chars[[i]]
-      res_name <- .A3_AA_NAMES[[res]] %||% res
+      res_name <- if (res %in% names(.A3_AA_NAMES)) .A3_AA_NAMES[[res]] else res
       list(
         value   = list(xs[[i]], ys[[i]]),
         tooltip = list(formatter = sprintf("%d: %s", i, res_name))
@@ -415,17 +425,22 @@ draw_a3 <- function(
     color <- .A3_REGION_PALETTE[((i - 1L) %% length(.A3_REGION_PALETTE)) + 1L]
     fill  <- a3_with_alpha(color, region_opacity)
 
-    # Expand [start, end] pairs; insert [null, null] breaks between ranges
-    idx_mat     <- entry[["index"]] # 2-column integer matrix
-    region_data <- list()
-    for (j in seq_len(nrow(idx_mat))) {
-      for (pos in seq.int(idx_mat[j, 1L], idx_mat[j, 2L])) {
-        if (pos >= 1L && pos <= seq_length) {
-          region_data <- c(region_data, list(list(xs[[pos]], ys[[pos]])))
-        }
+    # Expand [start, end] pairs; insert [null, null] breaks between ranges.
+    # Preallocate to avoid O(n²) copying from repeated c() calls.
+    idx_mat   <- entry[["index"]] # 2-column integer matrix
+    n_ranges  <- nrow(idx_mat)
+    starts    <- pmax(idx_mat[, 1L], 1L)
+    ends      <- pmin(idx_mat[, 2L], seq_length)
+    range_len <- pmax(ends - starts + 1L, 0L)
+    region_data <- vector("list", sum(range_len) + n_ranges)
+    wi <- 1L
+    for (j in seq_len(n_ranges)) {
+      for (pos in seq_len(range_len[[j]]) + starts[[j]] - 1L) {
+        region_data[[wi]] <- list(xs[[pos]], ys[[pos]])
+        wi <- wi + 1L
       }
-      # Null break to disconnect consecutive ranges
-      region_data <- c(region_data, list(list(NULL, NULL)))
+      region_data[[wi]] <- list(NULL, NULL) # null break between ranges
+      wi <- wi + 1L
     }
 
     series <- c(series, list(list(
