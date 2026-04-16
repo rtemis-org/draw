@@ -676,6 +676,15 @@ draw_a3 <- function(
   legend_gap         <- 90
   title_margin_top   <- if (!is.null(title)) max(64L, 32L + font_size + 14L) else 24L
 
+  # Align the legend's first item with the first sequence row.
+  # The y-axis spans [min_y-1, max_y+1] over a grid of height
+  # marker_size*(2*vertical_span+1) px.  The first row sits at
+  # y=min_y=1, which is 1/(vertical_span+2) of the way down.
+  vertical_span  <- max_y - min_y
+  grid_height_px <- marker_size * (2 * vertical_span + 1)
+  legend_top     <- title_margin_top +
+    round(grid_height_px / (vertical_span + 2))
+
   option <- list(
     animation               = TRUE,
     animationDuration       = 220,
@@ -704,9 +713,9 @@ draw_a3 <- function(
       axisTick = list(show = FALSE)
     ),
     legend = list(
-      type      = "scroll",
+      type      = "plain",
       orient    = "vertical",
-      top       = if (!is.null(title)) title_margin_top + 8L else 24L,
+      top       = legend_top,
       right     = legend_right_inset,
       bottom    = 24,
       width     = legend_rail_width,
