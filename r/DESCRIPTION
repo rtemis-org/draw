@@ -26,6 +26,7 @@ Suggests:
     knitr,
     mgcv,
     rmarkdown,
+    rtemis.a3,
     testthat (>= 3.0.0)
 Additional_repositories:
     https://rtemis-org.r-universe.dev
@@ -44,5 +45,6 @@ Collate:
     'option.R'
     'theme.R'
     'draw.R'
+    'draw_a3.R'
     'export.R'
     'zzz.R'
