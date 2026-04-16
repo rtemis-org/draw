@@ -20,6 +20,7 @@ Imports:
     cli,
     htmlwidgets,
     jsonlite,
+    rtemis.a3,
     rtemis.core,
     S7
 Suggests:
@@ -44,5 +45,6 @@ Collate:
     'option.R'
     'theme.R'
     'draw.R'
+    'draw_a3.R'
     'export.R'
     'zzz.R'
