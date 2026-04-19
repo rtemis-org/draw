@@ -91,6 +91,63 @@ test_that("draw_line with title", {
   expect_equal(w$x$option$title$text, "My Line")
 })
 
+test_that("draw_line points = TRUE is the default and leaves symbols visible", {
+  w <- draw_line(x = 1:5, y = 1:5)
+  # Default: showSymbol is not set (echarts treats missing as TRUE)
+  expect_null(w$x$option$series[[1]]$showSymbol)
+})
+
+test_that("draw_line points = FALSE hides symbols across all series", {
+  w1 <- draw_line(x = 1:5, y = 1:5, points = FALSE)
+  expect_equal(w1$x$option$series[[1]]$showSymbol, FALSE)
+
+  w2 <- draw_line(
+    x = c("A", "B", "C"),
+    y = list("S1" = c(1, 2, 3), "S2" = c(3, 2, 1)),
+    points = FALSE
+  )
+  expect_equal(w2$x$option$series[[1]]$showSymbol, FALSE)
+  expect_equal(w2$x$option$series[[2]]$showSymbol, FALSE)
+})
+
+test_that("draw_line zoom = FALSE omits dataZoom", {
+  w <- draw_line(x = c(1, 2, 3), y = c(1, 2, 3))
+  expect_null(w$x$option$dataZoom)
+})
+
+test_that("draw_line zoom = TRUE emits slider + inside x-axis zooms", {
+  w <- draw_line(x = 1:10, y = 1:10, zoom = TRUE)
+  dz <- w$x$option$dataZoom
+  expect_true(is.list(dz))
+  expect_equal(length(dz), 2L)
+  expect_equal(dz[[1]]$type, "slider")
+  expect_equal(dz[[1]]$xAxisIndex, 0)
+  expect_equal(dz[[1]]$start, 0)
+  expect_equal(dz[[1]]$end, 100)
+  expect_equal(dz[[2]]$type, "inside")
+  expect_equal(dz[[2]]$xAxisIndex, 0)
+  expect_equal(dz[[2]]$zoomOnMouseWheel, TRUE)
+  expect_equal(dz[[2]]$moveOnMouseMove, TRUE)
+})
+
+test_that("draw_line accepts a single DataZoom for zoom", {
+  w <- draw_line(
+    x = 1:5,
+    y = 1:5,
+    zoom = DataZoom(type = "slider", x_axis_index = 0, start = 40, end = 60)
+  )
+  dz <- w$x$option$dataZoom
+  expect_equal(length(dz), 1L)
+  expect_equal(dz[[1]]$type, "slider")
+  expect_equal(dz[[1]]$start, 40)
+  expect_equal(dz[[1]]$end, 60)
+})
+
+test_that("draw_line rejects invalid zoom values", {
+  expect_error(draw_line(x = 1:3, y = 1:3, zoom = "yes"))
+  expect_error(draw_line(x = 1:3, y = 1:3, zoom = 1))
+})
+
 # -- draw_bar -------------------------------------------------------------------
 
 test_that("draw_bar creates widget", {
