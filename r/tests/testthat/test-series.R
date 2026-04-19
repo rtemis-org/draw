@@ -338,3 +338,84 @@ test_that("Series color works", {
   out <- to_list(ss)
   expect_equal(out$color, "#FF5722")
 })
+
+# -- MarkArea / MarkAreaDataPoint ------------------------------------------------
+
+test_that("MarkAreaDataPoint creates with defaults and drops NULLs", {
+  p <- MarkAreaDataPoint()
+  expect_true(S7::S7_inherits(p, MarkAreaDataPoint))
+  expect_equal(to_list(p), list())
+})
+
+test_that("MarkAreaDataPoint to_list() converts names", {
+  p <- MarkAreaDataPoint(
+    x_axis = 10,
+    y_axis = "A",
+    name = "region",
+    value = 42,
+    item_style = ItemStyle(color = "red", opacity = 0.2)
+  )
+  out <- to_list(p)
+  expect_equal(out$xAxis, 10)
+  expect_equal(out$yAxis, "A")
+  expect_equal(out$name, "region")
+  expect_equal(out$value, 42)
+  expect_equal(out$itemStyle$color, "red")
+  expect_equal(out$itemStyle$opacity, 0.2)
+})
+
+test_that("MarkAreaDataPoint x_axis/y_axis validate", {
+  expect_error(MarkAreaDataPoint(x_axis = c(1, 2)))
+  expect_error(MarkAreaDataPoint(y_axis = TRUE))
+})
+
+test_that("MarkArea creates empty", {
+  ma <- MarkArea()
+  expect_true(S7::S7_inherits(ma, MarkArea))
+  expect_equal(to_list(ma), list())
+})
+
+test_that("MarkArea serializes data as list of length-2 point lists", {
+  ma <- MarkArea(
+    silent = TRUE,
+    data = list(
+      list(
+        MarkAreaDataPoint(
+          x_axis = 1,
+          item_style = ItemStyle(color = "red", opacity = 0.2)
+        ),
+        MarkAreaDataPoint(x_axis = 3)
+      ),
+      list(
+        MarkAreaDataPoint(x_axis = 5),
+        MarkAreaDataPoint(x_axis = 7)
+      )
+    )
+  )
+  out <- to_list(ma)
+  expect_equal(out$silent, TRUE)
+  expect_equal(length(out$data), 2L)
+  expect_equal(length(out$data[[1]]), 2L)
+  expect_equal(out$data[[1]][[1]]$xAxis, 1)
+  expect_equal(out$data[[1]][[1]]$itemStyle$color, "red")
+  expect_equal(out$data[[1]][[2]]$xAxis, 3)
+  expect_equal(out$data[[2]][[1]]$xAxis, 5)
+  expect_equal(out$data[[2]][[2]]$xAxis, 7)
+})
+
+test_that("LineSeries mark_area serializes to markArea", {
+  ls <- LineSeries(
+    data = c(1, 2, 3),
+    mark_area = MarkArea(
+      data = list(list(
+        MarkAreaDataPoint(x_axis = 1),
+        MarkAreaDataPoint(x_axis = 2)
+      ))
+    )
+  )
+  out <- to_list(ls)
+  expect_false(is.null(out$markArea))
+  expect_equal(length(out$markArea$data), 1L)
+  expect_equal(out$markArea$data[[1]][[1]]$xAxis, 1)
+  expect_equal(out$markArea$data[[1]][[2]]$xAxis, 2)
+})
