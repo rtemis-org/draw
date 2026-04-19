@@ -195,12 +195,19 @@ renderDraw <- function(expr, env = parent.frame(), quoted = FALSE) {
 #' @param names Optional Character: Series names used when `y` is an unnamed list.
 #' @param smooth Logical: Whether to smooth lines.
 #' @param area Logical: Whether to show area fill.
+#' @param points Logical: Whether to show point markers on each data value.
+#'   Defaults to `TRUE`; set to `FALSE` on long time-series where the symbols
+#'   add visual noise.
 #' @param color Optional Character: Series color palette — a single color string or
 #'   character vector that overrides the theme palette for this chart.
 #'   `color` takes precedence over the theme palette (it sets `option.color`).
 #' @param title Optional Character: Chart title.
 #' @param theme Optional [Theme]: Theme override. The palette inside the theme can be
 #'   overridden per-chart with the `color` argument.
+#' @param zoom Logical, [DataZoom], or list of [DataZoom]: Enable x-axis zoom.
+#'   `TRUE` adds a slider plus mouse-wheel/drag zoom on the x-axis; `FALSE`
+#'   (default) disables zoom. Pass [DataZoom] objects (or a list of them) for
+#'   full control over zoom behavior and styling.
 #' @param width Optional Character or Numeric: Widget width.
 #' @param height Optional Character or Numeric: Widget height.
 #' @param filename Optional Character: If provided, save the widget to this file via
@@ -213,9 +220,11 @@ draw_line <- function(
   names = NULL,
   smooth = FALSE,
   area = FALSE,
+  points = TRUE,
   color = NULL,
   title = NULL,
   theme = NULL,
+  zoom = FALSE,
   width = NULL,
   height = NULL,
   filename = NULL
@@ -232,6 +241,9 @@ draw_line <- function(
     }
   }
 
+  # ECharts treats missing `showSymbol` as TRUE; only pass FALSE when hiding.
+  show_symbol <- if (isTRUE(points)) NULL else FALSE
+
   # Build series
   if (is.list(y) && !is.null(names(y))) {
     series_names <- names(y)
@@ -240,6 +252,7 @@ draw_line <- function(
         name = series_names[i],
         data = pair_xy(y[[i]]),
         smooth = smooth,
+        show_symbol = show_symbol,
         area_style = if (area) AreaStyle() else NULL
       )
     })
@@ -250,6 +263,7 @@ draw_line <- function(
         name = series_names[i],
         data = pair_xy(y[[i]]),
         smooth = smooth,
+        show_symbol = show_symbol,
         area_style = if (area) AreaStyle() else NULL
       )
     })
@@ -257,9 +271,13 @@ draw_line <- function(
     series <- list(LineSeries(
       data = pair_xy(y),
       smooth = smooth,
+      show_symbol = show_symbol,
       area_style = if (area) AreaStyle() else NULL
     ))
   }
+
+  # Resolve `zoom` argument into an (optional) list of DataZoom specs.
+  data_zoom <- resolve_zoom(zoom, axis = "x")
 
   opt <- EChartsOption(
     title = if (!is.null(title)) Title(text = title) else NULL,
@@ -272,10 +290,64 @@ draw_line <- function(
     ),
     y_axis = Axis(type = "value", scale = TRUE),
     color = color,
+    data_zoom = data_zoom,
     series = series
   )
 
   draw(opt, theme = theme, width = width, height = height, filename = filename)
+}
+
+#' Resolve the `zoom` argument of `draw_*` functions
+#'
+#' Translates the ergonomic `zoom` argument into a list of [DataZoom] specs (or
+#' `NULL`). Accepts `FALSE`/`NULL` (no zoom), `TRUE` (default slider + inside
+#' pair on the given axis), a single [DataZoom], or a list of [DataZoom] /
+#' plain named lists (passed through untouched).
+#'
+#' @param zoom Logical, [DataZoom], or list: User-facing `zoom` argument.
+#' @param axis Character \{"x", "y"\}: Which axis the default `TRUE` preset
+#'   should target.
+#' @return Optional list of [DataZoom] specs (or plain lists): Value suitable
+#'   for `EChartsOption(data_zoom = ...)`.
+#' @keywords internal
+#' @noRd
+resolve_zoom <- function(zoom, axis = "x") {
+  if (is.null(zoom) || isFALSE(zoom)) {
+    return(NULL)
+  }
+  if (isTRUE(zoom)) {
+    axis_args <- if (identical(axis, "y")) {
+      list(y_axis_index = 0)
+    } else {
+      list(x_axis_index = 0)
+    }
+    return(list(
+      do.call(
+        DataZoom,
+        c(list(type = "slider", start = 0, end = 100), axis_args)
+      ),
+      do.call(
+        DataZoom,
+        c(
+          list(
+            type = "inside",
+            zoom_on_mouse_wheel = TRUE,
+            move_on_mouse_move = TRUE
+          ),
+          axis_args
+        )
+      )
+    ))
+  }
+  if (S7::S7_inherits(zoom, DataZoom)) {
+    return(list(zoom))
+  }
+  if (is.list(zoom)) {
+    return(zoom)
+  }
+  cli::cli_abort(
+    "{.arg zoom} must be {.code TRUE}, {.code FALSE}, a {.cls DataZoom} object, or a list; got {.cls {class(zoom)[1]}}."
+  )
 }
 
 #' Draw a Bar Chart
