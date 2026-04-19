@@ -271,9 +271,9 @@ validate_axis_lim <- function(value, arg) {
   if (is.null(value)) {
     return(invisible(value))
   }
-  if (!is.numeric(value) || length(value) != 2L || anyNA(value)) {
+  if (!is.numeric(value) || length(value) != 2L || !all(is.finite(value))) {
     cli::cli_abort(
-      "{.arg {arg}} must be a length-2 numeric vector (no {.val NA}) or {.code NULL}."
+      "{.arg {arg}} must be a length-2 finite numeric vector or {.code NULL}."
     )
   }
   invisible(value)
