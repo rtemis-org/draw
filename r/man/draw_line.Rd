@@ -58,8 +58,8 @@ character vector that overrides the theme palette for this chart.
 \code{color} takes precedence over the theme palette (it sets \code{option.color}).}
 
 \item{xlim}{Optional Numeric [length 2]: X-axis limits \code{c(min, max)}.
-Ignored when \code{x} is not numeric. Defaults to \code{range(x)} (no padding) when
-\code{x} is numeric.}
+Only supported when \code{x} is numeric; passing \code{xlim} with a non-numeric \code{x}
+errors. Defaults to \code{range(x)} (no padding) when \code{x} is numeric.}
 
 \item{ylim}{Optional Numeric [length 2]: Y-axis limits \code{c(min, max)}.
 Defaults to the range of all \code{y} values across series (no padding).}
