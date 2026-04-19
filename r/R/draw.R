@@ -335,13 +335,23 @@ draw_line <- function(
       data = if (x_type == "category") x else NULL,
       scale = if (x_type == "value") TRUE else NULL,
       min = if (!is.null(x_lim)) x_lim[[1L]] else NULL,
-      max = if (!is.null(x_lim)) x_lim[[2L]] else NULL
+      max = if (!is.null(x_lim)) x_lim[[2L]] else NULL,
+      split_line = if (x_type == "value") no_corner_split_line() else NULL,
+      axis_label = if (x_type == "value") no_corner_axis_label() else NULL,
+      axis_line = if (x_type == "value") {
+        axis_line_for_orthogonal(y_lim)
+      } else {
+        NULL
+      }
     ),
     y_axis = Axis(
       type = "value",
       scale = TRUE,
       min = y_lim[[1L]],
-      max = y_lim[[2L]]
+      max = y_lim[[2L]],
+      split_line = no_corner_split_line(),
+      axis_label = no_corner_axis_label(),
+      axis_line = axis_line_for_orthogonal(x_lim)
     ),
     color = color,
     data_zoom = data_zoom,
@@ -349,6 +359,54 @@ draw_line <- function(
   )
 
   draw(opt, theme = theme, width = width, height = height, filename = filename)
+}
+
+#' Default split-line configuration suppressing corner grid lines
+#'
+#' Returns a [SplitLine] with `show_min_line = FALSE` and `show_max_line = FALSE`
+#' so the first and last split lines (which sit on the plot border) are not
+#' drawn. Used as the default for value axes in `draw_line` and `draw_scatter`.
+#'
+#' @return [SplitLine]: Split-line configuration.
+#' @keywords internal
+#' @noRd
+no_corner_split_line <- function() {
+  SplitLine(show_min_line = FALSE, show_max_line = FALSE)
+}
+
+#' Default axis-label configuration suppressing min/max endpoint labels
+#'
+#' Returns an [AxisLabel] with `show_min_label = FALSE` and `show_max_label = FALSE`
+#' so echarts does not render unrounded endpoint labels (e.g. `0.64`, `30.36`)
+#' that arise when `min`/`max` are pinned to padded data ranges. Used as the
+#' default for value axes in `draw_line` and `draw_scatter`.
+#'
+#' @return [AxisLabel]: Axis-label configuration.
+#' @keywords internal
+#' @noRd
+no_corner_axis_label <- function() {
+  AxisLabel(show_min_label = FALSE, show_max_label = FALSE)
+}
+
+#' Axis line configuration with `onZero` keyed off the orthogonal axis limits
+#'
+#' Returns an [AxisLine] with `on_zero = TRUE` when the orthogonal axis's
+#' visible range includes 0 (so this axis sits on the zero line of the other,
+#' visually emphasizing zero), and `on_zero = FALSE` otherwise (so it sits at
+#' the plot edge). Returns `NULL` when `ortho_lim` is `NULL` (e.g. category
+#' orthogonal axis) to leave echarts' default behavior in place.
+#'
+#' @param ortho_lim Optional Numeric \[length 2\]: `c(min, max)` of the
+#'   *orthogonal* axis — for an x-axis config this is the y-axis limits, and
+#'   vice versa.
+#' @return Optional [AxisLine]: Axis-line configuration.
+#' @keywords internal
+#' @noRd
+axis_line_for_orthogonal <- function(ortho_lim) {
+  if (is.null(ortho_lim)) {
+    return(NULL)
+  }
+  AxisLine(on_zero = ortho_lim[[1L]] <= 0 && ortho_lim[[2L]] >= 0)
 }
 
 #' Build a `MarkArea` from `blocks` + `block_color` arguments
@@ -376,10 +434,14 @@ build_block_mark_area <- function(x, blocks, block_color, block_opacity) {
     )
   }
   if (!is.atomic(blocks)) {
-    cli::cli_abort("{.arg blocks} must be an atomic vector (factor, integer, character, or logical).")
+    cli::cli_abort(
+      "{.arg blocks} must be an atomic vector (factor, integer, character, or logical)."
+    )
   }
   if (is.null(block_color)) {
-    cli::cli_abort("{.arg block_color} must be provided when {.arg blocks} is set.")
+    cli::cli_abort(
+      "{.arg block_color} must be provided when {.arg blocks} is set."
+    )
   }
   if (!is.numeric(block_opacity) || length(block_opacity) != 1L) {
     cli::cli_abort("{.arg block_opacity} must be a single number.")
@@ -449,7 +511,9 @@ build_block_mark_area <- function(x, blocks, block_color, block_opacity) {
 
   pairs <- list()
   for (i in seq_len(n_runs)) {
-    if (!drawn[i]) next
+    if (!drawn[i]) {
+      next
+    }
     key <- r[["values"]][i]
     col <- color_for(key)
     x0 <- x[run_start[i]]
@@ -629,9 +693,9 @@ draw_bar <- function(
 #'   When `group` is set, colors are assigned per group in order. `color` takes
 #'   precedence over the theme palette.
 #' @param xlim Optional Numeric \[length 2\]: X-axis limits `c(min, max)`.
-#'   Defaults to `range(x)` padded by 4\% of the span on each side.
+#'   Defaults to `range(x)` padded by 4\\% of the span on each side.
 #' @param ylim Optional Numeric \[length 2\]: Y-axis limits `c(min, max)`.
-#'   Defaults to `range(y)` padded by 4\% of the span on each side.
+#'   Defaults to `range(y)` padded by 4\\% of the span on each side.
 #' @param title Optional Character: Chart title.
 #' @param theme Optional [Theme]: Theme override. The palette inside the theme can be
 #'   overridden per-chart with the `color` argument.
@@ -810,13 +874,19 @@ draw_scatter <- function(
       type = "value",
       scale = TRUE,
       min = x_lim[[1L]],
-      max = x_lim[[2L]]
+      max = x_lim[[2L]],
+      split_line = no_corner_split_line(),
+      axis_label = no_corner_axis_label(),
+      axis_line = axis_line_for_orthogonal(y_lim)
     ),
     y_axis = Axis(
       type = "value",
       scale = TRUE,
       min = y_lim[[1L]],
-      max = y_lim[[2L]]
+      max = y_lim[[2L]],
+      split_line = no_corner_split_line(),
+      axis_label = no_corner_axis_label(),
+      axis_line = axis_line_for_orthogonal(x_lim)
     ),
     color = if (is.null(group)) color else NULL,
     series = series
