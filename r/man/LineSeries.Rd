@@ -25,7 +25,8 @@ LineSeries(
   line_style = NULL,
   area_style = NULL,
   item_style = NULL,
-  label = NULL
+  label = NULL,
+  mark_area = NULL
 )
 }
 \arguments{
@@ -71,6 +72,9 @@ LineSeries(
 \item{item_style}{Optional \link{ItemStyle}: Data-point marker styling.}
 
 \item{label}{Optional \link{LabelOption}: Data-label configuration.}
+
+\item{mark_area}{Optional \link{MarkArea}: Shaded bands (e.g. vertical
+highlight regions across x-ranges).}
 }
 \description{
 Configuration for a line chart series.

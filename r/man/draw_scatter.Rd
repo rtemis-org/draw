@@ -14,6 +14,8 @@ draw_scatter(
   fit_alpha = 0.25,
   n_fit = 200,
   color = NULL,
+  xlim = NULL,
+  ylim = NULL,
   title = NULL,
   theme = NULL,
   width = NULL,
@@ -44,6 +46,12 @@ are computed per group when \code{group} is provided.}
 character vector that overrides the theme palette for this chart.
 When \code{group} is set, colors are assigned per group in order. \code{color} takes
 precedence over the theme palette.}
+
+\item{xlim}{Optional Numeric [length 2]: X-axis limits \code{c(min, max)}.
+Defaults to \code{range(x)} padded by 4\\% of the span on each side.}
+
+\item{ylim}{Optional Numeric [length 2]: Y-axis limits \code{c(min, max)}.
+Defaults to \code{range(y)} padded by 4\\% of the span on each side.}
 
 \item{title}{Optional Character: Chart title.}
 
