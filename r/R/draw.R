@@ -93,10 +93,14 @@ draw <- function(
     }
   }
 
-  # Default grid: containLabel keeps axis labels inside the drawing area.
+  # Default grid: echarts 6's outerBoundsMode = "same" makes the grid rect
+  # (left/right/top/bottom) the *outer* bounds — axis labels and names must fit
+  # inside, so the grid auto-shrinks to contain them. This replaces the
+  # deprecated `containLabel = TRUE` and yields tighter margins with no dead
+  # space on the sides.
   if (!is.null(option$xAxis) || !is.null(option$yAxis)) {
     if (is.null(option$grid)) {
-      option$grid <- list(containLabel = TRUE)
+      option$grid <- list(outerBoundsMode = "same")
     }
   }
 
@@ -195,12 +199,34 @@ renderDraw <- function(expr, env = parent.frame(), quoted = FALSE) {
 #' @param names Optional Character: Series names used when `y` is an unnamed list.
 #' @param smooth Logical: Whether to smooth lines.
 #' @param area Logical: Whether to show area fill.
+#' @param points Logical: Whether to show point markers on each data value.
+#'   Defaults to `TRUE`; set to `FALSE` on long time-series where the symbols
+#'   add visual noise.
+#' @param blocks Optional factor, integer, character, or logical of length
+#'   `length(x)`: Per-x-value group label used to shade vertical background
+#'   bands. Contiguous runs of the same level become one band. `NA` entries
+#'   produce no band.
+#' @param block_color Optional Character vector or list of length k, where
+#'   k is the number of unique levels in `blocks`: Fill color for each level.
+#'   Match by name to factor levels if named, else positional. `NA`, `NULL`,
+#'   or `"transparent"` entries skip that level.
+#' @param block_opacity Numeric \[0, 1\]: Fill opacity applied to all bands.
+#'   Defaults to `0.2`.
 #' @param color Optional Character: Series color palette — a single color string or
 #'   character vector that overrides the theme palette for this chart.
 #'   `color` takes precedence over the theme palette (it sets `option.color`).
+#' @param xlim Optional Numeric \[length 2\]: X-axis limits `c(min, max)`.
+#'   Ignored when `x` is not numeric. Defaults to `range(x)` (no padding) when
+#'   `x` is numeric.
+#' @param ylim Optional Numeric \[length 2\]: Y-axis limits `c(min, max)`.
+#'   Defaults to the range of all `y` values across series (no padding).
 #' @param title Optional Character: Chart title.
 #' @param theme Optional [Theme]: Theme override. The palette inside the theme can be
 #'   overridden per-chart with the `color` argument.
+#' @param zoom Logical, [DataZoom], or list of [DataZoom]: Enable x-axis zoom.
+#'   `TRUE` adds a slider plus mouse-wheel/drag zoom on the x-axis; `FALSE`
+#'   (default) disables zoom. Pass [DataZoom] objects (or a list of them) for
+#'   full control over zoom behavior and styling.
 #' @param width Optional Character or Numeric: Widget width.
 #' @param height Optional Character or Numeric: Widget height.
 #' @param filename Optional Character: If provided, save the widget to this file via
@@ -213,15 +239,36 @@ draw_line <- function(
   names = NULL,
   smooth = FALSE,
   area = FALSE,
+  points = TRUE,
+  blocks = NULL,
+  block_color = NULL,
+  block_opacity = 0.2,
   color = NULL,
+  xlim = NULL,
+  ylim = NULL,
   title = NULL,
   theme = NULL,
+  zoom = FALSE,
   width = NULL,
   height = NULL,
   filename = NULL
 ) {
+  validate_axis_lim(xlim, "xlim")
+  validate_axis_lim(ylim, "ylim")
+
   # Determine axis type
   x_type <- if (is.numeric(x)) "value" else "category"
+
+  # `xlim` only makes sense on a numeric (value) x-axis.
+  if (!is.null(xlim) && x_type != "value") {
+    cli::cli_abort("{.arg xlim} only applies when {.arg x} is numeric.")
+  }
+
+  # Resolve axis limits. Defaults: exact data range (no padding) so bands and
+  # lines fill the plot width; users can pass `xlim`/`ylim` for explicit bounds.
+  y_all <- if (is.list(y)) unlist(y, use.names = FALSE) else y
+  x_lim <- if (x_type == "value") (xlim %||% range(x, na.rm = TRUE)) else NULL
+  y_lim <- ylim %||% range(y_all, na.rm = TRUE)
 
   # Format series data: value axes need [x, y] pairs; category axes need y only
   pair_xy <- function(y_vals) {
@@ -232,6 +279,9 @@ draw_line <- function(
     }
   }
 
+  # ECharts treats missing `showSymbol` as TRUE; only pass FALSE when hiding.
+  show_symbol <- if (isTRUE(points)) NULL else FALSE
+
   # Build series
   if (is.list(y) && !is.null(names(y))) {
     series_names <- names(y)
@@ -240,6 +290,7 @@ draw_line <- function(
         name = series_names[i],
         data = pair_xy(y[[i]]),
         smooth = smooth,
+        show_symbol = show_symbol,
         area_style = if (area) AreaStyle() else NULL
       )
     })
@@ -250,6 +301,7 @@ draw_line <- function(
         name = series_names[i],
         data = pair_xy(y[[i]]),
         smooth = smooth,
+        show_symbol = show_symbol,
         area_style = if (area) AreaStyle() else NULL
       )
     })
@@ -257,9 +309,26 @@ draw_line <- function(
     series <- list(LineSeries(
       data = pair_xy(y),
       smooth = smooth,
+      show_symbol = show_symbol,
       area_style = if (area) AreaStyle() else NULL
     ))
   }
+
+  # Optional vertical background bands from `blocks` + `block_color`.
+  if (!is.null(blocks)) {
+    mark_area <- build_block_mark_area(
+      x = x,
+      blocks = blocks,
+      block_color = block_color,
+      block_opacity = block_opacity
+    )
+    if (!is.null(mark_area)) {
+      series[[1]]@mark_area <- mark_area
+    }
+  }
+
+  # Resolve `zoom` argument into an (optional) list of DataZoom specs.
+  data_zoom <- resolve_zoom(zoom, axis = "x")
 
   opt <- EChartsOption(
     title = if (!is.null(title)) Title(text = title) else NULL,
@@ -268,14 +337,269 @@ draw_line <- function(
     x_axis = Axis(
       type = x_type,
       data = if (x_type == "category") x else NULL,
-      scale = if (x_type == "value") TRUE else NULL
+      scale = if (x_type == "value") TRUE else NULL,
+      min = if (!is.null(x_lim)) x_lim[[1L]] else NULL,
+      max = if (!is.null(x_lim)) x_lim[[2L]] else NULL,
+      split_line = if (x_type == "value") no_corner_split_line() else NULL,
+      axis_label = if (x_type == "value") no_corner_axis_label() else NULL,
+      axis_line = if (x_type == "value") {
+        axis_line_for_orthogonal(y_lim)
+      } else {
+        NULL
+      }
     ),
-    y_axis = Axis(type = "value", scale = TRUE),
+    y_axis = Axis(
+      type = "value",
+      scale = TRUE,
+      min = y_lim[[1L]],
+      max = y_lim[[2L]],
+      split_line = no_corner_split_line(),
+      axis_label = no_corner_axis_label(),
+      axis_line = axis_line_for_orthogonal(x_lim)
+    ),
     color = color,
+    data_zoom = data_zoom,
     series = series
   )
 
   draw(opt, theme = theme, width = width, height = height, filename = filename)
+}
+
+#' Default split-line configuration suppressing corner grid lines
+#'
+#' Returns a [SplitLine] with `show_min_line = FALSE` and `show_max_line = FALSE`
+#' so the first and last split lines (which sit on the plot border) are not
+#' drawn. Used as the default for value axes in `draw_line` and `draw_scatter`.
+#'
+#' @return [SplitLine]: Split-line configuration.
+#' @keywords internal
+#' @noRd
+no_corner_split_line <- function() {
+  SplitLine(show_min_line = FALSE, show_max_line = FALSE)
+}
+
+#' Default axis-label configuration suppressing min/max endpoint labels
+#'
+#' Returns an [AxisLabel] with `show_min_label = FALSE` and `show_max_label = FALSE`
+#' so echarts does not render unrounded endpoint labels (e.g. `0.64`, `30.36`)
+#' that arise when `min`/`max` are pinned to padded data ranges. Used as the
+#' default for value axes in `draw_line` and `draw_scatter`.
+#'
+#' @return [AxisLabel]: Axis-label configuration.
+#' @keywords internal
+#' @noRd
+no_corner_axis_label <- function() {
+  AxisLabel(show_min_label = FALSE, show_max_label = FALSE)
+}
+
+#' Axis line configuration emphasizing zero only when zero is visible
+#'
+#' Returns an [AxisLine] with `on_zero = TRUE` (so the axis sits at 0 of the
+#' orthogonal axis when possible) and `show` gated on whether 0 is inside the
+#' orthogonal range:
+#'   - `show = TRUE` when `0 ∈ ortho_lim` — the axis line is drawn at the
+#'     zero position, giving the "bold zero line" effect;
+#'   - `show = FALSE` otherwise — echarts would otherwise fall back to the
+#'     lowest orthogonal value and draw an unwanted emphasis line at the plot
+#'     edge, which we suppress entirely.
+#'
+#' Returns `NULL` when `ortho_lim` is `NULL` (e.g. category orthogonal axis) to
+#' leave echarts' default behavior in place.
+#'
+#' @param ortho_lim Optional Numeric \[length 2\]: `c(min, max)` of the
+#'   *orthogonal* axis — for an x-axis config this is the y-axis limits, and
+#'   vice versa.
+#' @return Optional [AxisLine]: Axis-line configuration.
+#' @keywords internal
+#' @noRd
+axis_line_for_orthogonal <- function(ortho_lim) {
+  if (is.null(ortho_lim)) {
+    return(NULL)
+  }
+  zero_in_range <- ortho_lim[[1L]] <= 0 && ortho_lim[[2L]] >= 0
+  AxisLine(show = zero_in_range, on_zero = TRUE)
+}
+
+#' Build a `MarkArea` from `blocks` + `block_color` arguments
+#'
+#' Run-length-encodes `blocks` along `x` and produces one [MarkAreaDataPoint]
+#' pair per contiguous run whose level has a drawable color. Levels whose
+#' color is `NA`, `NULL`, or `"transparent"` are skipped.
+#'
+#' @param x Vector: X-axis values (numeric or character).
+#' @param blocks Atomic vector of length `length(x)`: Per-x-value group label.
+#'   `NA` entries break runs and produce no band.
+#' @param block_color Character vector or list, length equal to the number of
+#'   unique levels in `blocks`: Color per level. If named, matched to level
+#'   names; else positional (factor levels for factors, `sort(unique(...))`
+#'   otherwise).
+#' @param block_opacity Numeric \[0, 1\]: Fill opacity applied via ItemStyle.
+#' @return Optional [MarkArea]: `MarkArea` object, or `NULL` if there are no
+#'   bands to draw.
+#' @keywords internal
+#' @noRd
+build_block_mark_area <- function(x, blocks, block_color, block_opacity) {
+  if (length(blocks) != length(x)) {
+    cli::cli_abort(
+      "{.arg blocks} must have the same length as {.arg x} ({length(x)}); got {length(blocks)}."
+    )
+  }
+  if (!is.atomic(blocks)) {
+    cli::cli_abort(
+      "{.arg blocks} must be an atomic vector (factor, integer, character, or logical)."
+    )
+  }
+  if (is.null(block_color)) {
+    cli::cli_abort(
+      "{.arg block_color} must be provided when {.arg blocks} is set."
+    )
+  }
+  if (!is.numeric(block_opacity) || length(block_opacity) != 1L) {
+    cli::cli_abort("{.arg block_opacity} must be a single number.")
+  }
+
+  # Determine level order so positional matching is stable.
+  levels_vec <- if (is.factor(blocks)) {
+    levels(blocks)
+  } else {
+    sort(unique(blocks[!is.na(blocks)]))
+  }
+  k <- length(levels_vec)
+  as_key <- function(v) as.character(v)
+  level_keys <- as_key(levels_vec)
+
+  # Resolve color-per-level lookup.
+  bc_names <- names(block_color)
+  if (!is.null(bc_names) && !any(bc_names == "")) {
+    missing_levels <- setdiff(level_keys, bc_names)
+    if (length(missing_levels) > 0L) {
+      cli::cli_abort(
+        "{.arg block_color} is missing entries for {.val {missing_levels}}."
+      )
+    }
+    color_for <- function(lvl) block_color[[as_key(lvl)]]
+  } else {
+    if (length(block_color) != k) {
+      cli::cli_abort(
+        "{.arg block_color} must have length {k} (one per level of {.arg blocks})."
+      )
+    }
+    color_for <- function(lvl) {
+      block_color[[match(as_key(lvl), level_keys)]]
+    }
+  }
+
+  # Skip predicate: NA, NULL, "transparent" -> no band.
+  is_blank <- function(v) {
+    is.null(v) ||
+      (length(v) == 1L && is.na(v)) ||
+      (is.character(v) && identical(v, "transparent"))
+  }
+
+  # Run-length-encode over blocks, skipping NA-level runs.
+  keys <- ifelse(is.na(blocks), NA_character_, as_key(blocks))
+  r <- rle(keys)
+  n_runs <- length(r[["values"]])
+  run_end <- cumsum(r[["lengths"]])
+  run_start <- c(1L, utils::head(run_end, -1L) + 1L)
+
+  # Which runs will be drawn (non-NA level, non-blank color).
+  drawn <- vapply(
+    seq_len(n_runs),
+    function(i) {
+      key <- r[["values"]][i]
+      !is.na(key) && !is_blank(color_for(key))
+    },
+    logical(1)
+  )
+
+  # On a value (numeric) x-axis a band drawn from x[first] to x[last] leaves
+  # an unshaded strip between adjacent runs (e.g. x=8 to x=9). Extend each
+  # drawn run's end to the next drawn run's start so they meet exactly. On a
+  # category axis, echarts shades full cells inclusive of both endpoints, so
+  # extending would overlap — keep the simple per-run endpoints there.
+  extend_to_next <- is.numeric(x)
+
+  pairs <- list()
+  for (i in seq_len(n_runs)) {
+    if (!drawn[i]) {
+      next
+    }
+    key <- r[["values"]][i]
+    col <- color_for(key)
+    x0 <- x[run_start[i]]
+    x1 <- if (extend_to_next && i < n_runs && drawn[i + 1L]) {
+      x[run_start[i + 1L]]
+    } else {
+      x[run_end[i]]
+    }
+    pairs[[length(pairs) + 1L]] <- list(
+      MarkAreaDataPoint(
+        x_axis = x0,
+        name = key,
+        item_style = ItemStyle(color = col, opacity = block_opacity)
+      ),
+      MarkAreaDataPoint(x_axis = x1)
+    )
+  }
+
+  if (length(pairs) == 0L) {
+    return(NULL)
+  }
+  MarkArea(data = pairs, silent = TRUE)
+}
+
+#' Resolve the `zoom` argument of `draw_*` functions
+#'
+#' Translates the ergonomic `zoom` argument into a list of [DataZoom] specs (or
+#' `NULL`). Accepts `FALSE`/`NULL` (no zoom), `TRUE` (default slider + inside
+#' pair on the given axis), a single [DataZoom], or a list of [DataZoom] /
+#' plain named lists (passed through untouched).
+#'
+#' @param zoom Logical, [DataZoom], or list: User-facing `zoom` argument.
+#' @param axis Character \{"x", "y"\}: Which axis the default `TRUE` preset
+#'   should target.
+#' @return Optional list of [DataZoom] specs (or plain lists): Value suitable
+#'   for `EChartsOption(data_zoom = ...)`.
+#' @keywords internal
+#' @noRd
+resolve_zoom <- function(zoom, axis = "x") {
+  if (is.null(zoom) || isFALSE(zoom)) {
+    return(NULL)
+  }
+  if (isTRUE(zoom)) {
+    axis_args <- if (identical(axis, "y")) {
+      list(y_axis_index = 0)
+    } else {
+      list(x_axis_index = 0)
+    }
+    return(list(
+      do.call(
+        DataZoom,
+        c(list(type = "slider", start = 0, end = 100), axis_args)
+      ),
+      do.call(
+        DataZoom,
+        c(
+          list(
+            type = "inside",
+            zoom_on_mouse_wheel = TRUE,
+            move_on_mouse_move = TRUE
+          ),
+          axis_args
+        )
+      )
+    ))
+  }
+  if (S7::S7_inherits(zoom, DataZoom)) {
+    return(list(zoom))
+  }
+  if (is.list(zoom)) {
+    return(zoom)
+  }
+  cli::cli_abort(
+    "{.arg zoom} must be {.code TRUE}, {.code FALSE}, a {.cls DataZoom} object, or a list; got {.cls {class(zoom)[1]}}."
+  )
 }
 
 #' Draw a Bar Chart
@@ -379,6 +703,10 @@ draw_bar <- function(
 #'   character vector that overrides the theme palette for this chart.
 #'   When `group` is set, colors are assigned per group in order. `color` takes
 #'   precedence over the theme palette.
+#' @param xlim Optional Numeric \[length 2\]: X-axis limits `c(min, max)`.
+#'   Defaults to `range(x)` padded by 4\\% of the span on each side.
+#' @param ylim Optional Numeric \[length 2\]: Y-axis limits `c(min, max)`.
+#'   Defaults to `range(y)` padded by 4\\% of the span on each side.
 #' @param title Optional Character: Chart title.
 #' @param theme Optional [Theme]: Theme override. The palette inside the theme can be
 #'   overridden per-chart with the `color` argument.
@@ -398,12 +726,22 @@ draw_scatter <- function(
   fit_alpha = 0.25,
   n_fit = 200,
   color = NULL,
+  xlim = NULL,
+  ylim = NULL,
   title = NULL,
   theme = NULL,
   width = NULL,
   height = NULL,
   filename = NULL
 ) {
+  validate_axis_lim(xlim, "xlim")
+  validate_axis_lim(ylim, "ylim")
+
+  # Resolve axis limits. Defaults apply 4% symmetric padding so points aren't
+  # drawn on the axis edges — matches base R `xaxs = "r"` and ggplot2 ~5%.
+  x_lim <- xlim %||% calc_limits(x)
+  y_lim <- ylim %||% calc_limits(y)
+
   if (!is.null(fit)) {
     fit <- match.arg(fit, c("glm", "gam"))
   }
@@ -543,8 +881,24 @@ draw_scatter <- function(
     title = if (!is.null(title)) Title(text = title) else NULL,
     tooltip = Tooltip(trigger = "item", formatter = scatter_formatter),
     legend = if (!is.null(group)) Legend() else NULL,
-    x_axis = Axis(type = "value", scale = TRUE),
-    y_axis = Axis(type = "value", scale = TRUE),
+    x_axis = Axis(
+      type = "value",
+      scale = TRUE,
+      min = x_lim[[1L]],
+      max = x_lim[[2L]],
+      split_line = no_corner_split_line(),
+      axis_label = no_corner_axis_label(),
+      axis_line = axis_line_for_orthogonal(y_lim)
+    ),
+    y_axis = Axis(
+      type = "value",
+      scale = TRUE,
+      min = y_lim[[1L]],
+      max = y_lim[[2L]],
+      split_line = no_corner_split_line(),
+      axis_label = no_corner_axis_label(),
+      axis_line = axis_line_for_orthogonal(x_lim)
+    ),
     color = if (is.null(group)) color else NULL,
     series = series
   )

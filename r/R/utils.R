@@ -255,6 +255,31 @@ calc_limits <- function(values, pad = 0.04) {
 }
 
 
+#' Validate an axis-limits argument
+#'
+#' Checks that a user-supplied `xlim`/`ylim`/`zlim` value is either `NULL` or a
+#' length-2 numeric vector. Errors with a corrective [cli::cli_abort()] message
+#' otherwise. Returns the value invisibly so callers can chain if desired.
+#'
+#' @param value Any: User-supplied limits value.
+#' @param arg Character: Name of the caller argument (e.g. `"xlim"`) used in
+#'   the error message.
+#' @return Invisibly, `value`.
+#' @keywords internal
+#' @noRd
+validate_axis_lim <- function(value, arg) {
+  if (is.null(value)) {
+    return(invisible(value))
+  }
+  if (!is.numeric(value) || length(value) != 2L || anyNA(value)) {
+    cli::cli_abort(
+      "{.arg {arg}} must be a length-2 numeric vector (no {.val NA}) or {.code NULL}."
+    )
+  }
+  invisible(value)
+}
+
+
 #' Property that accepts a color string, or NULL
 #'
 #' Currently accepts any string. Future versions may validate

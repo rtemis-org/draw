@@ -168,6 +168,53 @@ test_that("to_json pretty works", {
   expect_true(nchar(json_pretty) > nchar(json_compact))
 })
 
+test_that("EChartsOption data_zoom wraps a single DataZoom into an array", {
+  opt <- EChartsOption(
+    x_axis = Axis(type = "value"),
+    y_axis = Axis(type = "value"),
+    series = LineSeries(data = list(c(1, 1), c(2, 2))),
+    data_zoom = DataZoom(type = "slider", x_axis_index = 0, start = 0, end = 50)
+  )
+  out <- to_list(opt)
+  expect_true(is.list(out$dataZoom))
+  expect_equal(length(out$dataZoom), 1L)
+  expect_equal(out$dataZoom[[1]]$type, "slider")
+  expect_equal(out$dataZoom[[1]]$xAxisIndex, 0)
+  expect_equal(out$dataZoom[[1]]$start, 0)
+  expect_equal(out$dataZoom[[1]]$end, 50)
+})
+
+test_that("EChartsOption data_zoom passes a list through as array", {
+  opt <- EChartsOption(
+    x_axis = Axis(type = "value"),
+    y_axis = Axis(type = "value"),
+    series = LineSeries(data = list(c(1, 1), c(2, 2))),
+    data_zoom = list(
+      DataZoom(type = "slider", x_axis_index = 0),
+      DataZoom(
+        type = "inside",
+        x_axis_index = 0,
+        zoom_on_mouse_wheel = TRUE
+      )
+    )
+  )
+  out <- to_list(opt)
+  expect_equal(length(out$dataZoom), 2L)
+  expect_equal(out$dataZoom[[1]]$type, "slider")
+  expect_equal(out$dataZoom[[2]]$type, "inside")
+  expect_equal(out$dataZoom[[2]]$zoomOnMouseWheel, TRUE)
+})
+
+test_that("EChartsOption omits dataZoom when data_zoom is NULL", {
+  opt <- EChartsOption(
+    x_axis = Axis(type = "value"),
+    y_axis = Axis(type = "value"),
+    series = LineSeries(data = list(c(1, 1)))
+  )
+  out <- to_list(opt)
+  expect_null(out$dataZoom)
+})
+
 test_that("EChartsOption full stacked bar chart", {
   opt <- EChartsOption(
     title = Title(text = "Stacked Bar"),

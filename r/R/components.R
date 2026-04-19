@@ -424,3 +424,203 @@ VisualMap <- S7::new_class(
 S7::method(to_list, VisualMap) <- function(x, ...) {
   props_to_list(x)
 }
+
+# -- DataZoom -------------------------------------------------------------------
+
+#' Axis-index property validator
+#'
+#' Accepts a single number, numeric vector, the literal `"all"`, or `NULL`.
+#' Used by `DataZoom` axis-index slots.
+#' @keywords internal
+#' @noRd
+axis_index_property <- function() {
+  S7::new_property(
+    class = S7::class_any,
+    default = NULL,
+    validator = function(value) {
+      if (is.null(value)) {
+        return(NULL)
+      }
+      if (is.numeric(value)) {
+        return(NULL)
+      }
+      if (
+        is.character(value) &&
+          length(value) == 1L &&
+          identical(value, "all")
+      ) {
+        return(NULL)
+      }
+      "must be a number, numeric vector, 'all', or NULL"
+    }
+  )
+}
+
+#' Mouse-modifier property validator
+#'
+#' Accepts `TRUE`, `FALSE`, or one of `"shift"`, `"ctrl"`, `"alt"`, or `NULL`.
+#' Used by the inside-zoom mouse-control slots of `DataZoom`.
+#' @keywords internal
+#' @noRd
+mouse_modifier_property <- function() {
+  S7::new_property(
+    class = S7::class_any,
+    default = NULL,
+    validator = function(value) {
+      if (is.null(value)) {
+        return(NULL)
+      }
+      if (is.logical(value) && length(value) == 1L) {
+        return(NULL)
+      }
+      if (
+        is.character(value) &&
+          length(value) == 1L &&
+          value %in% c("shift", "ctrl", "alt")
+      ) {
+        return(NULL)
+      }
+      "must be TRUE, FALSE, 'shift', 'ctrl', 'alt', or NULL"
+    }
+  )
+}
+
+#' Data Zoom
+#'
+#' Axis-range zoom component. ECharts renders `dataZoom` as an array; common
+#' usage pairs a `"slider"` (visible scrollbar) with an `"inside"` (mouse-wheel
+#' / drag) entry targeting the same axis. Unused styling / mouse-behavior
+#' fields stay `NULL` and are dropped from the serialized output.
+#'
+#' Corresponds to `DataZoomOption` in
+#' `src/component/dataZoom/DataZoomModel.ts` (line 38),
+#' `SliderDataZoomOption` in `src/component/dataZoom/SliderZoomModel.ts`
+#' (line 38), and `InsideDataZoomOption` in
+#' `src/component/dataZoom/InsideZoomModel.ts` (line 23).
+#' ECharts docs: \url{https://echarts.apache.org/en/option.html#dataZoom}
+#'
+#' @param type Character \{"slider", "inside"\}: Zoom type. `"slider"` shows a
+#'   draggable handle; `"inside"` enables zoom/drag directly on the coordinate
+#'   system.
+#' @param id Optional Character: Component identifier used for updates.
+#' @param disabled Optional Logical: Whether the component is disabled.
+#' @param x_axis_index Optional Numeric, numeric vector, or Character \{"all"\}:
+#'   Index of the x-axis (or axes) this zoom targets.
+#' @param y_axis_index Optional Numeric, numeric vector, or Character \{"all"\}:
+#'   Index of the y-axis (or axes) this zoom targets.
+#' @param radius_axis_index Optional Numeric, numeric vector, or Character
+#'   \{"all"\}: Polar radius axis index.
+#' @param angle_axis_index Optional Numeric, numeric vector, or Character
+#'   \{"all"\}: Polar angle axis index.
+#' @param single_axis_index Optional Numeric, numeric vector, or Character
+#'   \{"all"\}: Single-axis index.
+#' @param filter_mode Optional Character \{"filter", "weakFilter", "empty",
+#'   "none"\}: How out-of-window data points are handled.
+#' @param start Optional Numeric \[0, 100\]: Left/start position as a
+#'   percentage of the full data range.
+#' @param end Optional Numeric \[0, 100\]: Right/end position as a percentage
+#'   of the full data range.
+#' @param start_value Optional Numeric, Character, or Date: Absolute start
+#'   value (alternative to `start`).
+#' @param end_value Optional Numeric, Character, or Date: Absolute end value
+#'   (alternative to `end`).
+#' @param min_span Optional Numeric \[0, 100\]: Minimum window size, as a
+#'   percentage.
+#' @param max_span Optional Numeric \[0, 100\]: Maximum window size, as a
+#'   percentage.
+#' @param min_value_span Optional Numeric or Character: Minimum window size in
+#'   data units.
+#' @param max_value_span Optional Numeric or Character: Maximum window size in
+#'   data units.
+#' @param orient Optional Character \{"horizontal", "vertical"\}: Layout
+#'   orientation. Defaults are inferred from the axis the zoom targets.
+#' @param throttle Optional Numeric \[0, Inf): Throttle delay in milliseconds
+#'   for zoom events.
+#' @param range_mode Optional length-2 Character vector of \{"value",
+#'   "percent"\}: Per-boundary interpretation for start/end.
+#' @param show Optional Logical: Whether the slider is visible
+#'   (slider type only).
+#' @param background_color Optional Character: Slider background color.
+#' @param left Optional Numeric or Character: Slider left position.
+#' @param right Optional Numeric or Character: Slider right position.
+#' @param top Optional Numeric or Character: Slider top position.
+#' @param bottom Optional Numeric or Character: Slider bottom position.
+#' @param width Optional Numeric or Character: Slider width.
+#' @param height Optional Numeric or Character: Slider height.
+#' @param zoom_lock Optional Logical: Whether to lock the window size
+#'   (allow move but not zoom).
+#' @param zoom_on_mouse_wheel Optional Logical or Character \{"shift", "ctrl",
+#'   "alt"\}: Whether/how the mouse wheel zooms (inside type only).
+#' @param move_on_mouse_move Optional Logical or Character \{"shift", "ctrl",
+#'   "alt"\}: Whether/how mouse drag pans (inside type only).
+#' @param move_on_mouse_wheel Optional Logical or Character \{"shift", "ctrl",
+#'   "alt"\}: Whether/how the mouse wheel pans (inside type only).
+#' @param prevent_default_mouse_move Optional Logical: Whether to call
+#'   `event.preventDefault()` on drag (inside type only).
+#' @export
+DataZoom <- S7::new_class(
+  "DataZoom",
+  properties = list(
+    # Common (DataZoomOption)
+    type = enum_property(c("slider", "inside"), default = "slider"),
+    id = string_or_null_property(),
+    disabled = bool_or_null_property(),
+    x_axis_index = axis_index_property(),
+    y_axis_index = axis_index_property(),
+    radius_axis_index = axis_index_property(),
+    angle_axis_index = axis_index_property(),
+    single_axis_index = axis_index_property(),
+    filter_mode = enum_property(c(
+      "filter",
+      "weakFilter",
+      "empty",
+      "none"
+    )),
+    start = numeric_or_null_property(),
+    end = numeric_or_null_property(),
+    start_value = S7::new_property(class = S7::class_any, default = NULL),
+    end_value = S7::new_property(class = S7::class_any, default = NULL),
+    min_span = numeric_or_null_property(),
+    max_span = numeric_or_null_property(),
+    min_value_span = numeric_or_string_property(),
+    max_value_span = numeric_or_string_property(),
+    orient = enum_property(c("horizontal", "vertical")),
+    throttle = numeric_or_null_property(),
+    range_mode = S7::new_property(
+      class = S7::class_any,
+      default = NULL,
+      validator = function(value) {
+        if (is.null(value)) {
+          return(NULL)
+        }
+        if (
+          is.character(value) &&
+            length(value) == 2L &&
+            all(value %in% c("value", "percent"))
+        ) {
+          return(NULL)
+        }
+        "must be a length-2 character vector of 'value'/'percent', or NULL"
+      }
+    ),
+    # SliderDataZoomOption-specific
+    show = bool_or_null_property(),
+    background_color = color_property(),
+    left = numeric_or_string_property(),
+    right = numeric_or_string_property(),
+    top = numeric_or_string_property(),
+    bottom = numeric_or_string_property(),
+    width = numeric_or_string_property(),
+    height = numeric_or_string_property(),
+    zoom_lock = bool_or_null_property(),
+    # InsideDataZoomOption-specific
+    zoom_on_mouse_wheel = mouse_modifier_property(),
+    move_on_mouse_move = mouse_modifier_property(),
+    move_on_mouse_wheel = mouse_modifier_property(),
+    prevent_default_mouse_move = bool_or_null_property()
+  )
+)
+
+S7::method(to_list, DataZoom) <- function(x, ...) {
+  props_to_list(x)
+}

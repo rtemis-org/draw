@@ -91,6 +91,282 @@ test_that("draw_line with title", {
   expect_equal(w$x$option$title$text, "My Line")
 })
 
+test_that("draw_line points = TRUE is the default and leaves symbols visible", {
+  w <- draw_line(x = 1:5, y = 1:5)
+  # Default: showSymbol is not set (echarts treats missing as TRUE)
+  expect_null(w$x$option$series[[1]]$showSymbol)
+})
+
+test_that("draw_line points = FALSE hides symbols across all series", {
+  w1 <- draw_line(x = 1:5, y = 1:5, points = FALSE)
+  expect_equal(w1$x$option$series[[1]]$showSymbol, FALSE)
+
+  w2 <- draw_line(
+    x = c("A", "B", "C"),
+    y = list("S1" = c(1, 2, 3), "S2" = c(3, 2, 1)),
+    points = FALSE
+  )
+  expect_equal(w2$x$option$series[[1]]$showSymbol, FALSE)
+  expect_equal(w2$x$option$series[[2]]$showSymbol, FALSE)
+})
+
+test_that("draw_line blocks attaches markArea to the first series", {
+  w <- draw_line(
+    x = 1:8,
+    y = c(1, 2, 3, 4, 5, 6, 7, 8),
+    blocks = factor(c("A", "A", "A", "B", "B", "A", "A", "A")),
+    block_color = c(A = "red", B = "blue"),
+    block_opacity = 0.3
+  )
+  s <- w$x$option$series[[1]]
+  expect_false(is.null(s$markArea))
+  # Three runs: A(1-3), B(4-5), A(6-8). On a value axis, each run's end is
+  # extended to the next drawn run's start so bands meet with no gap.
+  expect_equal(length(s$markArea$data), 3L)
+  expect_equal(s$markArea$data[[1]][[1]]$xAxis, 1)
+  expect_equal(s$markArea$data[[1]][[2]]$xAxis, 4) # extended to B's start
+  expect_equal(s$markArea$data[[1]][[1]]$itemStyle$color, "red")
+  expect_equal(s$markArea$data[[1]][[1]]$itemStyle$opacity, 0.3)
+  expect_equal(s$markArea$data[[2]][[1]]$xAxis, 4)
+  expect_equal(s$markArea$data[[2]][[2]]$xAxis, 6) # extended to next A's start
+  expect_equal(s$markArea$data[[2]][[1]]$itemStyle$color, "blue")
+  expect_equal(s$markArea$data[[3]][[1]]$xAxis, 6)
+  expect_equal(s$markArea$data[[3]][[2]]$xAxis, 8) # last run: own end
+})
+
+test_that("draw_line blocks leaves gap when a skipped run sits between", {
+  # B is transparent, so runs either side should NOT extend across it.
+  w <- draw_line(
+    x = 1:6,
+    y = 1:6,
+    blocks = c("A", "A", "B", "B", "C", "C"),
+    block_color = c(A = "red", B = "transparent", C = "blue")
+  )
+  data <- w$x$option$series[[1]]$markArea$data
+  expect_equal(length(data), 2L)
+  expect_equal(data[[1]][[1]]$xAxis, 1)
+  expect_equal(data[[1]][[2]]$xAxis, 2) # not extended, next drawn run is C
+  expect_equal(data[[2]][[1]]$xAxis, 5)
+  expect_equal(data[[2]][[2]]$xAxis, 6)
+})
+
+test_that("draw_line blocks does not extend on category x-axis", {
+  w <- draw_line(
+    x = c("Mon", "Tue", "Wed", "Thu", "Fri"),
+    y = c(1, 2, 3, 4, 5),
+    blocks = c("A", "A", "A", "B", "B"),
+    block_color = c(A = "red", B = "blue")
+  )
+  data <- w$x$option$series[[1]]$markArea$data
+  expect_equal(length(data), 2L)
+  expect_equal(data[[1]][[1]]$xAxis, "Mon")
+  expect_equal(data[[1]][[2]]$xAxis, "Wed") # own last category, not Thu
+  expect_equal(data[[2]][[1]]$xAxis, "Thu")
+  expect_equal(data[[2]][[2]]$xAxis, "Fri")
+})
+
+test_that("draw_line blocks skips NA-level and transparent entries", {
+  w <- draw_line(
+    x = 1:6,
+    y = c(1, 2, 3, 4, 5, 6),
+    blocks = c("A", "A", NA, "B", "B", "C"),
+    block_color = c(A = "red", B = "transparent", C = NA)
+  )
+  data <- w$x$option$series[[1]]$markArea$data
+  # A run kept, NA-run skipped, B "transparent" skipped, C NA skipped.
+  expect_equal(length(data), 1L)
+  expect_equal(data[[1]][[1]]$xAxis, 1)
+  expect_equal(data[[1]][[2]]$xAxis, 2)
+  expect_equal(data[[1]][[1]]$itemStyle$color, "red")
+})
+
+test_that("draw_line blocks accepts positional block_color", {
+  w <- draw_line(
+    x = c("Mon", "Tue", "Wed", "Thu"),
+    y = c(1, 2, 3, 4),
+    blocks = c(1L, 1L, 2L, 2L),
+    block_color = c("#111", "#222")
+  )
+  data <- w$x$option$series[[1]]$markArea$data
+  expect_equal(length(data), 2L)
+  expect_equal(data[[1]][[1]]$xAxis, "Mon")
+  expect_equal(data[[1]][[2]]$xAxis, "Tue")
+  expect_equal(data[[1]][[1]]$itemStyle$color, "#111")
+  expect_equal(data[[2]][[1]]$xAxis, "Wed")
+  expect_equal(data[[2]][[2]]$xAxis, "Thu")
+  expect_equal(data[[2]][[1]]$itemStyle$color, "#222")
+})
+
+test_that("draw_line blocks errors on length / missing color", {
+  expect_error(
+    draw_line(x = 1:3, y = 1:3, blocks = c("A", "B"), block_color = "red")
+  )
+  expect_error(
+    draw_line(x = 1:3, y = 1:3, blocks = c("A", "A", "B"))
+  )
+  expect_error(
+    draw_line(
+      x = 1:3,
+      y = 1:3,
+      blocks = c("A", "A", "B"),
+      block_color = c(A = "red") # missing B
+    )
+  )
+})
+
+test_that("draw_line blocks attaches only to first series for multi-series y", {
+  w <- draw_line(
+    x = 1:4,
+    y = list("S1" = c(1, 2, 3, 4), "S2" = c(4, 3, 2, 1)),
+    blocks = c("A", "A", "B", "B"),
+    block_color = c(A = "red", B = "blue")
+  )
+  expect_false(is.null(w$x$option$series[[1]]$markArea))
+  expect_null(w$x$option$series[[2]]$markArea)
+})
+
+test_that("draw_line zoom = FALSE omits dataZoom", {
+  w <- draw_line(x = c(1, 2, 3), y = c(1, 2, 3))
+  expect_null(w$x$option$dataZoom)
+})
+
+test_that("draw_line zoom = TRUE emits slider + inside x-axis zooms", {
+  w <- draw_line(x = 1:10, y = 1:10, zoom = TRUE)
+  dz <- w$x$option$dataZoom
+  expect_true(is.list(dz))
+  expect_equal(length(dz), 2L)
+  expect_equal(dz[[1]]$type, "slider")
+  expect_equal(dz[[1]]$xAxisIndex, 0)
+  expect_equal(dz[[1]]$start, 0)
+  expect_equal(dz[[1]]$end, 100)
+  expect_equal(dz[[2]]$type, "inside")
+  expect_equal(dz[[2]]$xAxisIndex, 0)
+  expect_equal(dz[[2]]$zoomOnMouseWheel, TRUE)
+  expect_equal(dz[[2]]$moveOnMouseMove, TRUE)
+})
+
+test_that("draw_line accepts a single DataZoom for zoom", {
+  w <- draw_line(
+    x = 1:5,
+    y = 1:5,
+    zoom = DataZoom(type = "slider", x_axis_index = 0, start = 40, end = 60)
+  )
+  dz <- w$x$option$dataZoom
+  expect_equal(length(dz), 1L)
+  expect_equal(dz[[1]]$type, "slider")
+  expect_equal(dz[[1]]$start, 40)
+  expect_equal(dz[[1]]$end, 60)
+})
+
+test_that("draw_line rejects invalid zoom values", {
+  expect_error(draw_line(x = 1:3, y = 1:3, zoom = "yes"))
+  expect_error(draw_line(x = 1:3, y = 1:3, zoom = 1))
+})
+
+test_that("draw_line defaults xlim/ylim to exact data range (no padding)", {
+  w <- draw_line(x = c(1, 2, 3, 4), y = c(10, 20, 15, 25))
+  expect_equal(w$x$option$xAxis$min, 1)
+  expect_equal(w$x$option$xAxis$max, 4)
+  expect_equal(w$x$option$yAxis$min, 10)
+  expect_equal(w$x$option$yAxis$max, 25)
+})
+
+test_that("draw_line honors explicit xlim and ylim", {
+  w <- draw_line(
+    x = c(1, 2, 3, 4),
+    y = c(10, 20, 15, 25),
+    xlim = c(0, 5),
+    ylim = c(-5, 30)
+  )
+  expect_equal(w$x$option$xAxis$min, 0)
+  expect_equal(w$x$option$xAxis$max, 5)
+  expect_equal(w$x$option$yAxis$min, -5)
+  expect_equal(w$x$option$yAxis$max, 30)
+})
+
+test_that("draw_line ylim spans all series in a list", {
+  w <- draw_line(
+    x = c("A", "B", "C"),
+    y = list(S1 = c(1, 2, 3), S2 = c(10, 20, 30))
+  )
+  expect_equal(w$x$option$yAxis$min, 1)
+  expect_equal(w$x$option$yAxis$max, 30)
+})
+
+test_that("draw_line omits x-axis min/max when x is non-numeric", {
+  w <- draw_line(x = c("A", "B", "C"), y = c(1, 2, 3))
+  expect_null(w$x$option$xAxis$min)
+  expect_null(w$x$option$xAxis$max)
+})
+
+test_that("draw_line rejects xlim on non-numeric x", {
+  expect_error(
+    draw_line(x = c("A", "B"), y = c(1, 2), xlim = c(0, 3)),
+    "xlim"
+  )
+})
+
+test_that("draw_line rejects malformed xlim/ylim", {
+  expect_error(draw_line(x = 1:3, y = 1:3, xlim = 1))
+  expect_error(draw_line(x = 1:3, y = 1:3, ylim = c(1, NA)))
+  expect_error(draw_line(x = 1:3, y = 1:3, ylim = "bad"))
+})
+
+test_that("draw_line suppresses corner split lines on value axes", {
+  w <- draw_line(x = 1:4, y = c(10, 20, 15, 25))
+  expect_equal(w$x$option$xAxis$splitLine$showMinLine, FALSE)
+  expect_equal(w$x$option$xAxis$splitLine$showMaxLine, FALSE)
+  expect_equal(w$x$option$yAxis$splitLine$showMinLine, FALSE)
+  expect_equal(w$x$option$yAxis$splitLine$showMaxLine, FALSE)
+})
+
+test_that("draw_line omits split_line on category x-axis", {
+  # Category axes have splitLine.show = false by default, so no override needed.
+  w <- draw_line(x = c("A", "B", "C"), y = c(1, 2, 3))
+  expect_null(w$x$option$xAxis$splitLine)
+  expect_equal(w$x$option$yAxis$splitLine$showMinLine, FALSE)
+})
+
+test_that("draw_line suppresses min/max endpoint axis labels on value axes", {
+  w <- draw_line(x = 1:4, y = c(10, 20, 15, 25))
+  expect_equal(w$x$option$xAxis$axisLabel$showMinLabel, FALSE)
+  expect_equal(w$x$option$xAxis$axisLabel$showMaxLabel, FALSE)
+  expect_equal(w$x$option$yAxis$axisLabel$showMinLabel, FALSE)
+  expect_equal(w$x$option$yAxis$axisLabel$showMaxLabel, FALSE)
+})
+
+test_that("draw_line omits axis_label on category x-axis (uses echarts default)", {
+  w <- draw_line(x = c("A", "B", "C"), y = c(1, 2, 3))
+  expect_null(w$x$option$xAxis$axisLabel)
+  expect_equal(w$x$option$yAxis$axisLabel$showMinLabel, FALSE)
+})
+
+test_that("draw_line axisLine: on_zero always TRUE; show gated on 0 in orthogonal range", {
+  # x: 1..4 (no 0), y: [-5, 5] (contains 0).
+  #   xAxis: orthogonal = y -> 0 in range -> show = TRUE.
+  #   yAxis: orthogonal = x -> 0 NOT in range -> show = FALSE.
+  w1 <- draw_line(x = 1:4, y = c(-5, 2, 0, 5))
+  expect_equal(w1$x$option$xAxis$axisLine$onZero, TRUE)
+  expect_equal(w1$x$option$xAxis$axisLine$show, TRUE)
+  expect_equal(w1$x$option$yAxis$axisLine$onZero, TRUE)
+  expect_equal(w1$x$option$yAxis$axisLine$show, FALSE)
+
+  # 0 outside both ranges -> show = FALSE on both.
+  w2 <- draw_line(x = 10:13, y = c(100, 200, 300, 400))
+  expect_equal(w2$x$option$xAxis$axisLine$show, FALSE)
+  expect_equal(w2$x$option$yAxis$axisLine$show, FALSE)
+  expect_equal(w2$x$option$xAxis$axisLine$onZero, TRUE)
+  expect_equal(w2$x$option$yAxis$axisLine$onZero, TRUE)
+})
+
+test_that("draw_line omits axis_line on category x-axis", {
+  w <- draw_line(x = c("A", "B", "C"), y = c(-1, 0, 1))
+  # Category x-axis: no explicit axis_line override.
+  expect_null(w$x$option$xAxis$axisLine)
+  # yAxis.axis_line sentinel is x_lim, which is NULL for category x -> NULL.
+  expect_null(w$x$option$yAxis$axisLine)
+})
+
 # -- draw_bar -------------------------------------------------------------------
 
 test_that("draw_bar creates widget", {
@@ -235,6 +511,68 @@ test_that("draw_scatter fit respects n_fit", {
   w <- draw_scatter(xv, yv, fit = "glm", n_fit = 50)
   fit_s <- w$x$option$series[[3]]
   expect_equal(length(fit_s$data), 50L)
+})
+
+test_that("draw_scatter defaults xlim/ylim to range + 4% padding", {
+  w <- draw_scatter(x = c(0, 10), y = c(0, 100))
+  # 4% of span (10) = 0.4; 4% of span (100) = 4
+  expect_equal(w$x$option$xAxis$min, -0.4)
+  expect_equal(w$x$option$xAxis$max, 10.4)
+  expect_equal(w$x$option$yAxis$min, -4)
+  expect_equal(w$x$option$yAxis$max, 104)
+})
+
+test_that("draw_scatter honors explicit xlim and ylim (no padding)", {
+  w <- draw_scatter(
+    x = c(0, 10),
+    y = c(0, 100),
+    xlim = c(0, 10),
+    ylim = c(0, 100)
+  )
+  expect_equal(w$x$option$xAxis$min, 0)
+  expect_equal(w$x$option$xAxis$max, 10)
+  expect_equal(w$x$option$yAxis$min, 0)
+  expect_equal(w$x$option$yAxis$max, 100)
+})
+
+test_that("draw_scatter rejects malformed xlim/ylim", {
+  expect_error(draw_scatter(x = 1:3, y = 1:3, xlim = 1))
+  expect_error(draw_scatter(x = 1:3, y = 1:3, ylim = c(NA, 1)))
+  expect_error(draw_scatter(x = 1:3, y = 1:3, xlim = "bad"))
+})
+
+test_that("draw_scatter suppresses corner split lines on both axes", {
+  w <- draw_scatter(x = 1:5, y = 1:5)
+  expect_equal(w$x$option$xAxis$splitLine$showMinLine, FALSE)
+  expect_equal(w$x$option$xAxis$splitLine$showMaxLine, FALSE)
+  expect_equal(w$x$option$yAxis$splitLine$showMinLine, FALSE)
+  expect_equal(w$x$option$yAxis$splitLine$showMaxLine, FALSE)
+})
+
+test_that("draw_scatter suppresses min/max endpoint axis labels on both axes", {
+  w <- draw_scatter(x = 1:5, y = 1:5)
+  expect_equal(w$x$option$xAxis$axisLabel$showMinLabel, FALSE)
+  expect_equal(w$x$option$xAxis$axisLabel$showMaxLabel, FALSE)
+  expect_equal(w$x$option$yAxis$axisLabel$showMinLabel, FALSE)
+  expect_equal(w$x$option$yAxis$axisLabel$showMaxLabel, FALSE)
+})
+
+test_that("draw_scatter axisLine: on_zero always TRUE; show gated on 0 in orthogonal range", {
+  # x: [-2, 2] (0 in padded range), y: [10, 20] (no 0).
+  #   xAxis.show <- (0 in y) -> FALSE.
+  #   yAxis.show <- (0 in x) -> TRUE.
+  w1 <- draw_scatter(x = c(-2, -1, 0, 1, 2), y = c(10, 12, 15, 18, 20))
+  expect_equal(w1$x$option$xAxis$axisLine$show, FALSE)
+  expect_equal(w1$x$option$yAxis$axisLine$show, TRUE)
+  expect_equal(w1$x$option$xAxis$axisLine$onZero, TRUE)
+  expect_equal(w1$x$option$yAxis$axisLine$onZero, TRUE)
+
+  # Neither axis contains 0 -> show = FALSE on both; onZero still TRUE.
+  w2 <- draw_scatter(x = c(10, 11, 12), y = c(100, 200, 300))
+  expect_equal(w2$x$option$xAxis$axisLine$show, FALSE)
+  expect_equal(w2$x$option$yAxis$axisLine$show, FALSE)
+  expect_equal(w2$x$option$xAxis$axisLine$onZero, TRUE)
+  expect_equal(w2$x$option$yAxis$axisLine$onZero, TRUE)
 })
 
 # -- draw_pie -------------------------------------------------------------------

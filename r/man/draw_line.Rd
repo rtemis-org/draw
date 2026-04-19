@@ -10,9 +10,16 @@ draw_line(
   names = NULL,
   smooth = FALSE,
   area = FALSE,
+  points = TRUE,
+  blocks = NULL,
+  block_color = NULL,
+  block_opacity = 0.2,
   color = NULL,
+  xlim = NULL,
+  ylim = NULL,
   title = NULL,
   theme = NULL,
+  zoom = FALSE,
   width = NULL,
   height = NULL,
   filename = NULL
@@ -29,14 +36,43 @@ draw_line(
 
 \item{area}{Logical: Whether to show area fill.}
 
+\item{points}{Logical: Whether to show point markers on each data value.
+Defaults to \code{TRUE}; set to \code{FALSE} on long time-series where the symbols
+add visual noise.}
+
+\item{blocks}{Optional factor, integer, character, or logical of length
+\code{length(x)}: Per-x-value group label used to shade vertical background
+bands. Contiguous runs of the same level become one band. \code{NA} entries
+produce no band.}
+
+\item{block_color}{Optional Character vector or list of length k, where
+k is the number of unique levels in \code{blocks}: Fill color for each level.
+Match by name to factor levels if named, else positional. \code{NA}, \code{NULL},
+or \code{"transparent"} entries skip that level.}
+
+\item{block_opacity}{Numeric [0, 1]: Fill opacity applied to all bands.
+Defaults to \code{0.2}.}
+
 \item{color}{Optional Character: Series color palette — a single color string or
 character vector that overrides the theme palette for this chart.
 \code{color} takes precedence over the theme palette (it sets \code{option.color}).}
+
+\item{xlim}{Optional Numeric [length 2]: X-axis limits \code{c(min, max)}.
+Ignored when \code{x} is not numeric. Defaults to \code{range(x)} (no padding) when
+\code{x} is numeric.}
+
+\item{ylim}{Optional Numeric [length 2]: Y-axis limits \code{c(min, max)}.
+Defaults to the range of all \code{y} values across series (no padding).}
 
 \item{title}{Optional Character: Chart title.}
 
 \item{theme}{Optional \link{Theme}: Theme override. The palette inside the theme can be
 overridden per-chart with the \code{color} argument.}
+
+\item{zoom}{Logical, \link{DataZoom}, or list of \link{DataZoom}: Enable x-axis zoom.
+\code{TRUE} adds a slider plus mouse-wheel/drag zoom on the x-axis; \code{FALSE}
+(default) disables zoom. Pass \link{DataZoom} objects (or a list of them) for
+full control over zoom behavior and styling.}
 
 \item{width}{Optional Character or Numeric: Widget width.}
 

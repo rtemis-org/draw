@@ -12,6 +12,7 @@ EChartsOption(
   y_axis = NULL,
   tooltip = NULL,
   visual_map = NULL,
+  data_zoom = NULL,
   series = NULL,
   color = NULL,
   background_color = NULL,
@@ -40,6 +41,10 @@ EChartsOption(
 
 \item{visual_map}{Optional \link{VisualMap} or list: Visual map configuration (\code{visualMap}).
 Required for heatmaps to map data values to colors.}
+
+\item{data_zoom}{Optional \link{DataZoom} or list of \link{DataZoom}: Axis zoom
+component(s) (\code{dataZoom}). Pass a list to combine, e.g., a \code{"slider"} with
+an \code{"inside"} zoom.}
 
 \item{series}{Optional series object or list: Series configuration (\link{LineSeries},
 \link{BarSeries}, \link{ScatterSeries}, \link{PieSeries}, \link{BoxplotSeries}, \link{HeatmapSeries}).}
