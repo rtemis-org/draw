@@ -10,9 +10,11 @@ draw_line(
   names = NULL,
   smooth = FALSE,
   area = FALSE,
+  points = TRUE,
   color = NULL,
   title = NULL,
   theme = NULL,
+  zoom = FALSE,
   width = NULL,
   height = NULL,
   filename = NULL
@@ -29,6 +31,10 @@ draw_line(
 
 \item{area}{Logical: Whether to show area fill.}
 
+\item{points}{Logical: Whether to show point markers on each data value.
+Defaults to \code{TRUE}; set to \code{FALSE} on long time-series where the symbols
+add visual noise.}
+
 \item{color}{Optional Character: Series color palette — a single color string or
 character vector that overrides the theme palette for this chart.
 \code{color} takes precedence over the theme palette (it sets \code{option.color}).}
@@ -37,6 +43,11 @@ character vector that overrides the theme palette for this chart.
 
 \item{theme}{Optional \link{Theme}: Theme override. The palette inside the theme can be
 overridden per-chart with the \code{color} argument.}
+
+\item{zoom}{Logical, \link{DataZoom}, or list of \link{DataZoom}: Enable x-axis zoom.
+\code{TRUE} adds a slider plus mouse-wheel/drag zoom on the x-axis; \code{FALSE}
+(default) disables zoom. Pass \link{DataZoom} objects (or a list of them) for
+full control over zoom behavior and styling.}
 
 \item{width}{Optional Character or Numeric: Widget width.}
 
