@@ -205,6 +205,31 @@ test_that("EChartsOption data_zoom passes a list through as array", {
   expect_equal(out$dataZoom[[2]]$zoomOnMouseWheel, TRUE)
 })
 
+test_that("EChartsOption data_zoom strips names so JSON emits an array", {
+  opt <- EChartsOption(
+    x_axis = Axis(type = "value"),
+    y_axis = Axis(type = "value"),
+    series = LineSeries(data = list(c(1, 1))),
+    data_zoom = list(
+      slider = DataZoom(type = "slider"),
+      inside = DataZoom(type = "inside")
+    )
+  )
+  out <- to_list(opt)
+  expect_null(names(out$dataZoom))
+  expect_equal(length(out$dataZoom), 2L)
+})
+
+test_that("EChartsOption errors on invalid data_zoom value", {
+  opt <- EChartsOption(
+    x_axis = Axis(type = "value"),
+    y_axis = Axis(type = "value"),
+    series = LineSeries(data = list(c(1, 1))),
+    data_zoom = "slider"
+  )
+  expect_error(to_list(opt), "DataZoom")
+})
+
 test_that("EChartsOption omits dataZoom when data_zoom is NULL", {
   opt <- EChartsOption(
     x_axis = Axis(type = "value"),

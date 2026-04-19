@@ -110,6 +110,58 @@ test_that("draw_line points = FALSE hides symbols across all series", {
   expect_equal(w2$x$option$series[[2]]$showSymbol, FALSE)
 })
 
+test_that("draw_line points errors on invalid values", {
+  expect_error(draw_line(x = 1:3, y = 1:3, points = NA), "points")
+  expect_error(draw_line(x = 1:3, y = 1:3, points = c(TRUE, FALSE)), "points")
+  expect_error(draw_line(x = 1:3, y = 1:3, points = "yes"), "points")
+})
+
+test_that("draw_line block_opacity rejects out-of-range values", {
+  expect_error(
+    draw_line(
+      x = 1:3, y = 1:3,
+      blocks = factor(c("A", "A", "B")),
+      block_color = c(A = "red", B = "blue"),
+      block_opacity = -0.1
+    ),
+    "block_opacity"
+  )
+  expect_error(
+    draw_line(
+      x = 1:3, y = 1:3,
+      blocks = factor(c("A", "A", "B")),
+      block_color = c(A = "red", B = "blue"),
+      block_opacity = 1.5
+    ),
+    "block_opacity"
+  )
+})
+
+test_that("draw_line drops unused factor levels in blocks", {
+  # Factor has levels A, B, C but only A and B appear. block_color has only
+  # A and B — should succeed (unused C dropped).
+  w <- draw_line(
+    x = 1:4,
+    y = c(1, 2, 3, 4),
+    blocks = factor(c("A", "A", "B", "B"), levels = c("A", "B", "C")),
+    block_color = c(A = "red", B = "blue")
+  )
+  s <- w$x$option$series[[1]]
+  expect_false(is.null(s$markArea))
+  expect_equal(length(s$markArea$data), 2L)
+})
+
+test_that("draw_line rejects non-finite xlim/ylim", {
+  expect_error(
+    draw_line(x = 1:3, y = 1:3, xlim = c(-Inf, Inf)),
+    "xlim"
+  )
+  expect_error(
+    draw_line(x = 1:3, y = 1:3, ylim = c(0, Inf)),
+    "ylim"
+  )
+})
+
 test_that("draw_line blocks attaches markArea to the first series", {
   w <- draw_line(
     x = 1:8,
