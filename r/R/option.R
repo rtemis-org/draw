@@ -22,6 +22,9 @@
 #' @param tooltip Optional [Tooltip]: Tooltip configuration.
 #' @param visual_map Optional [VisualMap] or list: Visual map configuration (`visualMap`).
 #'   Required for heatmaps to map data values to colors.
+#' @param data_zoom Optional [DataZoom] or list of [DataZoom]: Axis zoom
+#'   component(s) (`dataZoom`). Pass a list to combine, e.g., a `"slider"` with
+#'   an `"inside"` zoom.
 #' @param series Optional series object or list: Series configuration ([LineSeries],
 #'   [BarSeries], [ScatterSeries], [PieSeries], [BoxplotSeries], [HeatmapSeries]).
 #' @param color Optional Character: Color palette.
@@ -46,6 +49,7 @@ EChartsOption <- S7::new_class(
     y_axis = S7::new_property(class = S7::class_any, default = NULL),
     tooltip = class_or_null_property(Tooltip),
     visual_map = S7::new_property(class = S7::class_any, default = NULL),
+    data_zoom = S7::new_property(class = S7::class_any, default = NULL),
     # Series (single or list)
     series = S7::new_property(class = S7::class_any, default = NULL),
     # Global settings
@@ -130,6 +134,18 @@ S7::method(to_list, EChartsOption) <- function(x, ...) {
     } else if (is.list(series_val)) {
       out$series <- lapply(series_val, function(s) {
         if (S7::S7_inherits(s)) to_list(s) else s
+      })
+    }
+  }
+
+  # dataZoom — always serialize as an array (matches echarts conventions)
+  data_zoom_val <- x@data_zoom
+  if (!is.null(data_zoom_val)) {
+    if (S7::S7_inherits(data_zoom_val)) {
+      out$dataZoom <- list(to_list(data_zoom_val))
+    } else if (is.list(data_zoom_val)) {
+      out$dataZoom <- lapply(data_zoom_val, function(dz) {
+        if (S7::S7_inherits(dz)) to_list(dz) else dz
       })
     }
   }
