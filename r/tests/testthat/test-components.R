@@ -375,3 +375,110 @@ test_that("Tooltip extra_css_text and class_name", {
 test_that("Tooltip padding rejects invalid", {
   expect_error(Tooltip(padding = "bad"))
 })
+
+# -- DataZoom -------------------------------------------------------------------
+
+test_that("DataZoom creates with defaults (type = slider)", {
+  dz <- DataZoom()
+  expect_true(S7::S7_inherits(dz, DataZoom))
+  # Only the default `type` should serialize; everything else is NULL.
+  expect_equal(to_list(dz), list(type = "slider"))
+})
+
+test_that("DataZoom type validates", {
+  for (t in c("slider", "inside")) {
+    expect_equal(DataZoom(type = t)@type, t)
+  }
+  expect_error(DataZoom(type = "continuous"))
+})
+
+test_that("DataZoom slider fields convert to camelCase", {
+  dz <- DataZoom(
+    type = "slider",
+    x_axis_index = 0,
+    start = 10,
+    end = 80,
+    show = TRUE,
+    background_color = "#eee",
+    left = "10%",
+    right = "10%",
+    top = 20,
+    bottom = 10,
+    width = "80%",
+    height = 30,
+    zoom_lock = FALSE,
+    filter_mode = "filter",
+    throttle = 100
+  )
+  out <- to_list(dz)
+  expect_equal(out$type, "slider")
+  expect_equal(out$xAxisIndex, 0)
+  expect_equal(out$start, 10)
+  expect_equal(out$end, 80)
+  expect_equal(out$show, TRUE)
+  expect_equal(out$backgroundColor, "#eee")
+  expect_equal(out$left, "10%")
+  expect_equal(out$right, "10%")
+  expect_equal(out$top, 20)
+  expect_equal(out$bottom, 10)
+  expect_equal(out$width, "80%")
+  expect_equal(out$height, 30)
+  expect_equal(out$zoomLock, FALSE)
+  expect_equal(out$filterMode, "filter")
+  expect_equal(out$throttle, 100)
+})
+
+test_that("DataZoom inside mouse-modifier fields work", {
+  dz <- DataZoom(
+    type = "inside",
+    x_axis_index = 0,
+    zoom_on_mouse_wheel = "shift",
+    move_on_mouse_move = TRUE,
+    move_on_mouse_wheel = FALSE,
+    prevent_default_mouse_move = TRUE
+  )
+  out <- to_list(dz)
+  expect_equal(out$type, "inside")
+  expect_equal(out$zoomOnMouseWheel, "shift")
+  expect_equal(out$moveOnMouseMove, TRUE)
+  expect_equal(out$moveOnMouseWheel, FALSE)
+  expect_equal(out$preventDefaultMouseMove, TRUE)
+})
+
+test_that("DataZoom axis index accepts number, vector, or 'all'", {
+  expect_equal(DataZoom(x_axis_index = 0)@x_axis_index, 0)
+  expect_equal(DataZoom(x_axis_index = c(0, 1))@x_axis_index, c(0, 1))
+  expect_equal(DataZoom(y_axis_index = "all")@y_axis_index, "all")
+  expect_error(DataZoom(x_axis_index = "first"))
+})
+
+test_that("DataZoom filter_mode validates", {
+  for (f in c("filter", "weakFilter", "empty", "none")) {
+    expect_equal(DataZoom(filter_mode = f)@filter_mode, f)
+  }
+  expect_error(DataZoom(filter_mode = "strict"))
+})
+
+test_that("DataZoom mouse modifier rejects invalid strings", {
+  expect_error(DataZoom(zoom_on_mouse_wheel = "meta"))
+})
+
+test_that("DataZoom range_mode requires length-2 value/percent vector", {
+  dz <- DataZoom(range_mode = c("percent", "value"))
+  expect_equal(dz@range_mode, c("percent", "value"))
+  expect_error(DataZoom(range_mode = "percent"))
+  expect_error(DataZoom(range_mode = c("bad", "value")))
+})
+
+test_that("DataZoom orient validates", {
+  for (o in c("horizontal", "vertical")) {
+    expect_equal(DataZoom(orient = o)@orient, o)
+  }
+  expect_error(DataZoom(orient = "diagonal"))
+})
+
+test_that("DataZoom start/end must be single numeric", {
+  expect_equal(DataZoom(start = 25)@start, 25)
+  expect_error(DataZoom(start = "25%"))
+  expect_error(DataZoom(end = c(10, 90)))
+})
