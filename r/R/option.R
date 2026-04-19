@@ -138,15 +138,20 @@ S7::method(to_list, EChartsOption) <- function(x, ...) {
     }
   }
 
-  # dataZoom — always serialize as an array (matches echarts conventions)
+  # dataZoom — always serialize as an unnamed array (matches echarts conventions;
+  # named lists would serialize as a JSON object and be silently ignored).
   data_zoom_val <- x@data_zoom
   if (!is.null(data_zoom_val)) {
-    if (S7::S7_inherits(data_zoom_val)) {
+    if (S7::S7_inherits(data_zoom_val, DataZoom)) {
       out$dataZoom <- list(to_list(data_zoom_val))
     } else if (is.list(data_zoom_val)) {
-      out$dataZoom <- lapply(data_zoom_val, function(dz) {
+      out$dataZoom <- unname(lapply(data_zoom_val, function(dz) {
         if (S7::S7_inherits(dz)) to_list(dz) else dz
-      })
+      }))
+    } else {
+      cli::cli_abort(
+        "{.arg data_zoom} must be a {.cls DataZoom} object or a list of them."
+      )
     }
   }
 
