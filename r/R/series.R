@@ -1,6 +1,7 @@
 # series.R
 # Series S7 classes: LineSeries, BarSeries, ScatterSeries, PieSeries,
 #                    BoxplotSeries, HeatmapSeries
+# Plus series-attached marker classes: MarkAreaDataPoint, MarkArea
 #
 # TS sources:
 #   SeriesOption:         src/util/types.ts (line 1867)
@@ -10,6 +11,137 @@
 #   PieSeriesOption:      src/chart/pie/PieSeries.ts (line 105)
 #   BoxplotSeriesOption:  src/chart/boxplot/BoxplotSeries.ts (line 59)
 #   HeatmapSeriesOption:  src/chart/heatmap/HeatmapSeries.ts
+#   MarkAreaOption:       src/component/marker/MarkAreaModel.ts (line 60)
+
+# -- MarkArea -------------------------------------------------------------------
+
+#' Mark Area Data Point
+#'
+#' One endpoint of a `markArea` band. Two of these — wrapped in a length-2 list
+#' — define the opposite corners of a shaded rectangle. Supplying only
+#' `x_axis` on both endpoints produces a full-height vertical band (useful for
+#' highlighting x-ranges of a time series); supplying only `y_axis` produces a
+#' full-width horizontal band.
+#'
+#' Corresponds to `MarkArea2DDataItemDimOption` in
+#' `src/component/marker/MarkAreaModel.ts` (line 49).
+#' ECharts docs:
+#' \url{https://echarts.apache.org/en/option.html#series-line.markArea.data}
+#'
+#' @param x_axis Optional Numeric or Character: Position on the x-axis.
+#' @param y_axis Optional Numeric or Character: Position on the y-axis.
+#' @param name Optional Character: Label text for the band.
+#' @param value Optional Numeric or Character: Fallback label value when
+#'   `name` is not set.
+#' @param item_style Optional [ItemStyle]: Fill and border styling. Styling
+#'   set on the first endpoint of a pair applies to the whole band.
+#' @param label Optional [LabelOption]: Label configuration.
+#' @export
+MarkAreaDataPoint <- S7::new_class(
+  "MarkAreaDataPoint",
+  properties = list(
+    x_axis = S7::new_property(
+      class = S7::class_any,
+      default = NULL,
+      validator = function(value) {
+        if (is.null(value)) {
+          return(NULL)
+        }
+        if (
+          (is.numeric(value) || is.character(value)) && length(value) == 1L
+        ) {
+          return(NULL)
+        }
+        "must be a single number, string, or NULL"
+      }
+    ),
+    y_axis = S7::new_property(
+      class = S7::class_any,
+      default = NULL,
+      validator = function(value) {
+        if (is.null(value)) {
+          return(NULL)
+        }
+        if (
+          (is.numeric(value) || is.character(value)) && length(value) == 1L
+        ) {
+          return(NULL)
+        }
+        "must be a single number, string, or NULL"
+      }
+    ),
+    name = string_or_null_property(),
+    value = S7::new_property(
+      class = S7::class_any,
+      default = NULL,
+      validator = function(value) {
+        if (is.null(value)) {
+          return(NULL)
+        }
+        if (
+          (is.numeric(value) || is.character(value)) && length(value) == 1L
+        ) {
+          return(NULL)
+        }
+        "must be a single number, string, or NULL"
+      }
+    ),
+    item_style = class_or_null_property(ItemStyle),
+    label = class_or_null_property(LabelOption)
+  )
+)
+
+S7::method(to_list, MarkAreaDataPoint) <- function(x, ...) {
+  props_to_list(x)
+}
+
+#' Mark Area
+#'
+#' Container for `markArea` bands attached to a series. `data` is a list where
+#' each element is a length-2 list of [MarkAreaDataPoint] (or plain named list)
+#' defining the two opposite corners of one band.
+#'
+#' Corresponds to `MarkAreaOption` in
+#' `src/component/marker/MarkAreaModel.ts` (line 60).
+#' ECharts docs:
+#' \url{https://echarts.apache.org/en/option.html#series-line.markArea}
+#'
+#' @param data Optional list: List of length-2 lists of [MarkAreaDataPoint] /
+#'   plain named list. Each inner pair defines one band.
+#' @param silent Optional Logical: Whether hover / tooltip are disabled.
+#' @param precision Optional Integer `[0, Inf)`: Decimal precision used by
+#'   statistical methods (`"min"`, `"max"`, etc.).
+#' @param item_style Optional [ItemStyle]: Default fill/border styling for all
+#'   bands. Per-band overrides go on the first [MarkAreaDataPoint] of a pair.
+#' @param label Optional [LabelOption]: Default label configuration.
+#' @param z2 Optional Numeric: Front-back order among markers.
+#' @export
+MarkArea <- S7::new_class(
+  "MarkArea",
+  properties = list(
+    data = S7::new_property(class = S7::class_any, default = NULL),
+    silent = bool_or_null_property(),
+    precision = numeric_or_null_property(),
+    item_style = class_or_null_property(ItemStyle),
+    label = class_or_null_property(LabelOption),
+    z2 = numeric_or_null_property()
+  )
+)
+
+S7::method(to_list, MarkArea) <- function(x, ...) {
+  out <- props_to_list(x)
+  # `data` is a list of length-2 inner lists of MarkAreaDataPoint / plain lists.
+  # `props_to_list()` only recurses one level into lists, so convert explicitly.
+  if (!is.null(out$data)) {
+    out$data <- lapply(out$data, function(pair) {
+      lapply(pair, function(pt) {
+        if (S7::S7_inherits(pt)) to_list(pt) else pt
+      })
+    })
+    out$data <- unname(out$data)
+  }
+  out
+}
 
 # -- LineSeries -----------------------------------------------------------------
 
@@ -38,6 +170,8 @@
 #' @param area_style Optional [AreaStyle]: Area fill styling.
 #' @param item_style Optional [ItemStyle]: Data-point marker styling.
 #' @param label Optional [LabelOption]: Data-label configuration.
+#' @param mark_area Optional [MarkArea]: Shaded bands (e.g. vertical
+#'   highlight regions across x-ranges).
 #' @param legend_hover_link Optional Logical: Whether to highlight related legends on hover.
 #' @param silent Optional Logical: Whether the series is silent.
 #' @param z_level Optional Numeric: Canvas layer index.
@@ -114,7 +248,8 @@ LineSeries <- S7::new_class(
     line_style = class_or_null_property(LineStyle),
     area_style = class_or_null_property(AreaStyle),
     item_style = class_or_null_property(ItemStyle),
-    label = class_or_null_property(LabelOption)
+    label = class_or_null_property(LabelOption),
+    mark_area = class_or_null_property(MarkArea)
   )
 )
 
