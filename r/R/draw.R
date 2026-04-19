@@ -216,8 +216,8 @@ renderDraw <- function(expr, env = parent.frame(), quoted = FALSE) {
 #'   character vector that overrides the theme palette for this chart.
 #'   `color` takes precedence over the theme palette (it sets `option.color`).
 #' @param xlim Optional Numeric \[length 2\]: X-axis limits `c(min, max)`.
-#'   Ignored when `x` is not numeric. Defaults to `range(x)` (no padding) when
-#'   `x` is numeric.
+#'   Only supported when `x` is numeric; passing `xlim` with a non-numeric `x`
+#'   errors. Defaults to `range(x)` (no padding) when `x` is numeric.
 #' @param ylim Optional Numeric \[length 2\]: Y-axis limits `c(min, max)`.
 #'   Defaults to the range of all `y` values across series (no padding).
 #' @param title Optional Character: Chart title.
@@ -279,8 +279,11 @@ draw_line <- function(
     }
   }
 
+  if (!is.logical(points) || length(points) != 1L || is.na(points)) {
+    cli::cli_abort("{.arg points} must be a single non-missing logical value.")
+  }
   # ECharts treats missing `showSymbol` as TRUE; only pass FALSE when hiding.
-  show_symbol <- if (isTRUE(points)) NULL else FALSE
+  show_symbol <- if (points) NULL else FALSE
 
   # Build series
   if (is.list(y) && !is.null(names(y))) {
@@ -454,13 +457,20 @@ build_block_mark_area <- function(x, blocks, block_color, block_opacity) {
       "{.arg block_color} must be provided when {.arg blocks} is set."
     )
   }
-  if (!is.numeric(block_opacity) || length(block_opacity) != 1L) {
-    cli::cli_abort("{.arg block_opacity} must be a single number.")
+  if (
+    !is.numeric(block_opacity) ||
+      length(block_opacity) != 1L ||
+      !is.finite(block_opacity) ||
+      block_opacity < 0 ||
+      block_opacity > 1
+  ) {
+    cli::cli_abort("{.arg block_opacity} must be a single number in [0, 1].")
   }
 
-  # Determine level order so positional matching is stable.
+  # Determine level order so positional matching is stable. For factors, drop
+  # unused levels so `block_color` doesn't need entries for absent categories.
   levels_vec <- if (is.factor(blocks)) {
-    levels(blocks)
+    levels(droplevels(blocks))
   } else {
     sort(unique(blocks[!is.na(blocks)]))
   }
