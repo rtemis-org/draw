@@ -312,6 +312,59 @@ test_that("draw_line rejects malformed xlim/ylim", {
   expect_error(draw_line(x = 1:3, y = 1:3, ylim = "bad"))
 })
 
+test_that("draw_line suppresses corner split lines on value axes", {
+  w <- draw_line(x = 1:4, y = c(10, 20, 15, 25))
+  expect_equal(w$x$option$xAxis$splitLine$showMinLine, FALSE)
+  expect_equal(w$x$option$xAxis$splitLine$showMaxLine, FALSE)
+  expect_equal(w$x$option$yAxis$splitLine$showMinLine, FALSE)
+  expect_equal(w$x$option$yAxis$splitLine$showMaxLine, FALSE)
+})
+
+test_that("draw_line omits split_line on category x-axis", {
+  # Category axes have splitLine.show = false by default, so no override needed.
+  w <- draw_line(x = c("A", "B", "C"), y = c(1, 2, 3))
+  expect_null(w$x$option$xAxis$splitLine)
+  expect_equal(w$x$option$yAxis$splitLine$showMinLine, FALSE)
+})
+
+test_that("draw_line suppresses min/max endpoint axis labels on value axes", {
+  w <- draw_line(x = 1:4, y = c(10, 20, 15, 25))
+  expect_equal(w$x$option$xAxis$axisLabel$showMinLabel, FALSE)
+  expect_equal(w$x$option$xAxis$axisLabel$showMaxLabel, FALSE)
+  expect_equal(w$x$option$yAxis$axisLabel$showMinLabel, FALSE)
+  expect_equal(w$x$option$yAxis$axisLabel$showMaxLabel, FALSE)
+})
+
+test_that("draw_line omits axis_label on category x-axis (uses echarts default)", {
+  w <- draw_line(x = c("A", "B", "C"), y = c(1, 2, 3))
+  expect_null(w$x$option$xAxis$axisLabel)
+  expect_equal(w$x$option$yAxis$axisLabel$showMinLabel, FALSE)
+})
+
+test_that("draw_line sets axisLine.onZero = TRUE when 0 is within orthogonal range", {
+  # x: 1..4 (no 0), y spans [-5, 5] (contains 0).
+  #   xAxis.onZero depends on yAxis range -> TRUE (y contains 0).
+  #   yAxis.onZero depends on xAxis range -> FALSE (x does not contain 0).
+  w <- draw_line(x = 1:4, y = c(-5, 2, 0, 5))
+  expect_equal(w$x$option$xAxis$axisLine$onZero, TRUE)
+  expect_equal(w$x$option$yAxis$axisLine$onZero, FALSE)
+})
+
+test_that("draw_line sets axisLine.onZero = FALSE when 0 is outside orthogonal range", {
+  # x: 10..13 (no 0), y: 100..400 (no 0) -> both axisLines have onZero = FALSE.
+  w <- draw_line(x = 10:13, y = c(100, 200, 300, 400))
+  expect_equal(w$x$option$xAxis$axisLine$onZero, FALSE)
+  expect_equal(w$x$option$yAxis$axisLine$onZero, FALSE)
+})
+
+test_that("draw_line omits axis_line on category x-axis", {
+  w <- draw_line(x = c("A", "B", "C"), y = c(-1, 0, 1))
+  # Category x-axis: no explicit axis_line override.
+  expect_null(w$x$option$xAxis$axisLine)
+  # yAxis.onZero depends on x_lim, which is NULL for category x -> helper returns NULL.
+  expect_null(w$x$option$yAxis$axisLine)
+})
+
 # -- draw_bar -------------------------------------------------------------------
 
 test_that("draw_bar creates widget", {
@@ -484,6 +537,38 @@ test_that("draw_scatter rejects malformed xlim/ylim", {
   expect_error(draw_scatter(x = 1:3, y = 1:3, xlim = 1))
   expect_error(draw_scatter(x = 1:3, y = 1:3, ylim = c(NA, 1)))
   expect_error(draw_scatter(x = 1:3, y = 1:3, xlim = "bad"))
+})
+
+test_that("draw_scatter suppresses corner split lines on both axes", {
+  w <- draw_scatter(x = 1:5, y = 1:5)
+  expect_equal(w$x$option$xAxis$splitLine$showMinLine, FALSE)
+  expect_equal(w$x$option$xAxis$splitLine$showMaxLine, FALSE)
+  expect_equal(w$x$option$yAxis$splitLine$showMinLine, FALSE)
+  expect_equal(w$x$option$yAxis$splitLine$showMaxLine, FALSE)
+})
+
+test_that("draw_scatter suppresses min/max endpoint axis labels on both axes", {
+  w <- draw_scatter(x = 1:5, y = 1:5)
+  expect_equal(w$x$option$xAxis$axisLabel$showMinLabel, FALSE)
+  expect_equal(w$x$option$xAxis$axisLabel$showMaxLabel, FALSE)
+  expect_equal(w$x$option$yAxis$axisLabel$showMinLabel, FALSE)
+  expect_equal(w$x$option$yAxis$axisLabel$showMaxLabel, FALSE)
+})
+
+test_that("draw_scatter axisLine.onZero follows the orthogonal axis limits", {
+  # x: [-2, 2] (contains 0), y: [10, 20] (no 0).
+  #   xAxis.onZero <- (0 in yLim) -> FALSE.
+  #   yAxis.onZero <- (0 in xLim) -> TRUE.
+  # Default padding is 4% so 0 remains inside padded x_lim.
+  w <- draw_scatter(x = c(-2, -1, 0, 1, 2), y = c(10, 12, 15, 18, 20))
+  expect_equal(w$x$option$xAxis$axisLine$onZero, FALSE)
+  expect_equal(w$x$option$yAxis$axisLine$onZero, TRUE)
+})
+
+test_that("draw_scatter axisLine.onZero FALSE when neither axis contains 0", {
+  w <- draw_scatter(x = c(10, 11, 12), y = c(100, 200, 300))
+  expect_equal(w$x$option$xAxis$axisLine$onZero, FALSE)
+  expect_equal(w$x$option$yAxis$axisLine$onZero, FALSE)
 })
 
 # -- draw_pie -------------------------------------------------------------------
