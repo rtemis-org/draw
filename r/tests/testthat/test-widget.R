@@ -341,27 +341,29 @@ test_that("draw_line omits axis_label on category x-axis (uses echarts default)"
   expect_equal(w$x$option$yAxis$axisLabel$showMinLabel, FALSE)
 })
 
-test_that("draw_line sets axisLine.onZero = TRUE when 0 is within orthogonal range", {
-  # x: 1..4 (no 0), y spans [-5, 5] (contains 0).
-  #   xAxis.onZero depends on yAxis range -> TRUE (y contains 0).
-  #   yAxis.onZero depends on xAxis range -> FALSE (x does not contain 0).
-  w <- draw_line(x = 1:4, y = c(-5, 2, 0, 5))
-  expect_equal(w$x$option$xAxis$axisLine$onZero, TRUE)
-  expect_equal(w$x$option$yAxis$axisLine$onZero, FALSE)
-})
+test_that("draw_line axisLine: on_zero always TRUE; show gated on 0 in orthogonal range", {
+  # x: 1..4 (no 0), y: [-5, 5] (contains 0).
+  #   xAxis: orthogonal = y -> 0 in range -> show = TRUE.
+  #   yAxis: orthogonal = x -> 0 NOT in range -> show = FALSE.
+  w1 <- draw_line(x = 1:4, y = c(-5, 2, 0, 5))
+  expect_equal(w1$x$option$xAxis$axisLine$onZero, TRUE)
+  expect_equal(w1$x$option$xAxis$axisLine$show, TRUE)
+  expect_equal(w1$x$option$yAxis$axisLine$onZero, TRUE)
+  expect_equal(w1$x$option$yAxis$axisLine$show, FALSE)
 
-test_that("draw_line sets axisLine.onZero = FALSE when 0 is outside orthogonal range", {
-  # x: 10..13 (no 0), y: 100..400 (no 0) -> both axisLines have onZero = FALSE.
-  w <- draw_line(x = 10:13, y = c(100, 200, 300, 400))
-  expect_equal(w$x$option$xAxis$axisLine$onZero, FALSE)
-  expect_equal(w$x$option$yAxis$axisLine$onZero, FALSE)
+  # 0 outside both ranges -> show = FALSE on both.
+  w2 <- draw_line(x = 10:13, y = c(100, 200, 300, 400))
+  expect_equal(w2$x$option$xAxis$axisLine$show, FALSE)
+  expect_equal(w2$x$option$yAxis$axisLine$show, FALSE)
+  expect_equal(w2$x$option$xAxis$axisLine$onZero, TRUE)
+  expect_equal(w2$x$option$yAxis$axisLine$onZero, TRUE)
 })
 
 test_that("draw_line omits axis_line on category x-axis", {
   w <- draw_line(x = c("A", "B", "C"), y = c(-1, 0, 1))
   # Category x-axis: no explicit axis_line override.
   expect_null(w$x$option$xAxis$axisLine)
-  # yAxis.onZero depends on x_lim, which is NULL for category x -> helper returns NULL.
+  # yAxis.axis_line sentinel is x_lim, which is NULL for category x -> NULL.
   expect_null(w$x$option$yAxis$axisLine)
 })
 
@@ -555,20 +557,22 @@ test_that("draw_scatter suppresses min/max endpoint axis labels on both axes", {
   expect_equal(w$x$option$yAxis$axisLabel$showMaxLabel, FALSE)
 })
 
-test_that("draw_scatter axisLine.onZero follows the orthogonal axis limits", {
-  # x: [-2, 2] (contains 0), y: [10, 20] (no 0).
-  #   xAxis.onZero <- (0 in yLim) -> FALSE.
-  #   yAxis.onZero <- (0 in xLim) -> TRUE.
-  # Default padding is 4% so 0 remains inside padded x_lim.
-  w <- draw_scatter(x = c(-2, -1, 0, 1, 2), y = c(10, 12, 15, 18, 20))
-  expect_equal(w$x$option$xAxis$axisLine$onZero, FALSE)
-  expect_equal(w$x$option$yAxis$axisLine$onZero, TRUE)
-})
+test_that("draw_scatter axisLine: on_zero always TRUE; show gated on 0 in orthogonal range", {
+  # x: [-2, 2] (0 in padded range), y: [10, 20] (no 0).
+  #   xAxis.show <- (0 in y) -> FALSE.
+  #   yAxis.show <- (0 in x) -> TRUE.
+  w1 <- draw_scatter(x = c(-2, -1, 0, 1, 2), y = c(10, 12, 15, 18, 20))
+  expect_equal(w1$x$option$xAxis$axisLine$show, FALSE)
+  expect_equal(w1$x$option$yAxis$axisLine$show, TRUE)
+  expect_equal(w1$x$option$xAxis$axisLine$onZero, TRUE)
+  expect_equal(w1$x$option$yAxis$axisLine$onZero, TRUE)
 
-test_that("draw_scatter axisLine.onZero FALSE when neither axis contains 0", {
-  w <- draw_scatter(x = c(10, 11, 12), y = c(100, 200, 300))
-  expect_equal(w$x$option$xAxis$axisLine$onZero, FALSE)
-  expect_equal(w$x$option$yAxis$axisLine$onZero, FALSE)
+  # Neither axis contains 0 -> show = FALSE on both; onZero still TRUE.
+  w2 <- draw_scatter(x = c(10, 11, 12), y = c(100, 200, 300))
+  expect_equal(w2$x$option$xAxis$axisLine$show, FALSE)
+  expect_equal(w2$x$option$yAxis$axisLine$show, FALSE)
+  expect_equal(w2$x$option$xAxis$axisLine$onZero, TRUE)
+  expect_equal(w2$x$option$yAxis$axisLine$onZero, TRUE)
 })
 
 # -- draw_pie -------------------------------------------------------------------

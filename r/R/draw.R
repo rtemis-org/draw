@@ -388,13 +388,19 @@ no_corner_axis_label <- function() {
   AxisLabel(show_min_label = FALSE, show_max_label = FALSE)
 }
 
-#' Axis line configuration with `onZero` keyed off the orthogonal axis limits
+#' Axis line configuration emphasizing zero only when zero is visible
 #'
-#' Returns an [AxisLine] with `on_zero = TRUE` when the orthogonal axis's
-#' visible range includes 0 (so this axis sits on the zero line of the other,
-#' visually emphasizing zero), and `on_zero = FALSE` otherwise (so it sits at
-#' the plot edge). Returns `NULL` when `ortho_lim` is `NULL` (e.g. category
-#' orthogonal axis) to leave echarts' default behavior in place.
+#' Returns an [AxisLine] with `on_zero = TRUE` (so the axis sits at 0 of the
+#' orthogonal axis when possible) and `show` gated on whether 0 is inside the
+#' orthogonal range:
+#'   - `show = TRUE` when `0 ∈ ortho_lim` — the axis line is drawn at the
+#'     zero position, giving the "bold zero line" effect;
+#'   - `show = FALSE` otherwise — echarts would otherwise fall back to the
+#'     lowest orthogonal value and draw an unwanted emphasis line at the plot
+#'     edge, which we suppress entirely.
+#'
+#' Returns `NULL` when `ortho_lim` is `NULL` (e.g. category orthogonal axis) to
+#' leave echarts' default behavior in place.
 #'
 #' @param ortho_lim Optional Numeric \[length 2\]: `c(min, max)` of the
 #'   *orthogonal* axis — for an x-axis config this is the y-axis limits, and
@@ -406,7 +412,8 @@ axis_line_for_orthogonal <- function(ortho_lim) {
   if (is.null(ortho_lim)) {
     return(NULL)
   }
-  AxisLine(on_zero = ortho_lim[[1L]] <= 0 && ortho_lim[[2L]] >= 0)
+  zero_in_range <- ortho_lim[[1L]] <= 0 && ortho_lim[[2L]] >= 0
+  AxisLine(show = zero_in_range, on_zero = TRUE)
 }
 
 #' Build a `MarkArea` from `blocks` + `block_color` arguments
