@@ -93,10 +93,14 @@ draw <- function(
     }
   }
 
-  # Default grid: containLabel keeps axis labels inside the drawing area.
+  # Default grid: echarts 6's outerBoundsMode = "same" makes the grid rect
+  # (left/right/top/bottom) the *outer* bounds — axis labels and names must fit
+  # inside, so the grid auto-shrinks to contain them. This replaces the
+  # deprecated `containLabel = TRUE` and yields tighter margins with no dead
+  # space on the sides.
   if (!is.null(option$xAxis) || !is.null(option$yAxis)) {
     if (is.null(option$grid)) {
-      option$grid <- list(containLabel = TRUE)
+      option$grid <- list(outerBoundsMode = "same")
     }
   }
 
