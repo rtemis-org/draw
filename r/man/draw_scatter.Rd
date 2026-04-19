@@ -48,10 +48,10 @@ When \code{group} is set, colors are assigned per group in order. \code{color} t
 precedence over the theme palette.}
 
 \item{xlim}{Optional Numeric [length 2]: X-axis limits \code{c(min, max)}.
-Defaults to \code{range(x)} padded by 4\\% of the span on each side.}
+Defaults to \code{range(x)} padded by 4\\\% of the span on each side.}
 
 \item{ylim}{Optional Numeric [length 2]: Y-axis limits \code{c(min, max)}.
-Defaults to \code{range(y)} padded by 4\\% of the span on each side.}
+Defaults to \code{range(y)} padded by 4\\\% of the span on each side.}
 
 \item{title}{Optional Character: Chart title.}
 
