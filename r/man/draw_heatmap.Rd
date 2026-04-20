@@ -30,6 +30,7 @@ draw_heatmap(
   colorbar_orient = "vertical",
   title = NULL,
   theme = NULL,
+  margins = NULL,
   width = NULL,
   height = NULL,
   filename = NULL
@@ -120,6 +121,13 @@ color bar.}
 \item{title}{Optional Character: Chart title.}
 
 \item{theme}{Optional \link{Theme}: Theme override. \code{NULL} auto-detects light/dark mode.}
+
+\item{margins}{Optional Named numeric vector or named list: Override the
+auto-computed heatmap plot-area margins in pixels (or percentage strings)
+for any of \code{"top"}, \code{"right"}, \code{"bottom"}, \code{"left"} — e.g.
+\code{c(left = 200)} to widen the left gutter for long row labels. Unspecified
+sides use the values computed from label lengths, title, colorbar, and
+dendrogram panels. See \code{\link[=draw_line]{draw_line()}} for the general convention.}
 
 \item{width}{Optional Character or Numeric: Widget width.}
 

@@ -20,6 +20,7 @@ draw_line(
   title = NULL,
   theme = NULL,
   zoom = FALSE,
+  margins = NULL,
   width = NULL,
   height = NULL,
   filename = NULL
@@ -73,6 +74,13 @@ overridden per-chart with the \code{color} argument.}
 \code{TRUE} adds a slider plus mouse-wheel/drag zoom on the x-axis; \code{FALSE}
 (default) disables zoom. Pass \link{DataZoom} objects (or a list of them) for
 full control over zoom behavior and styling.}
+
+\item{margins}{Optional Named numeric vector or named list: Plot margins in
+pixels (or percentage strings) for any of \code{"top"}, \code{"right"},
+\code{"bottom"}, \code{"left"} — e.g. \code{c(left = 80, right = 20)} or
+\code{list(left = 80, right = "10\%")}. Unspecified sides keep echarts' default
+auto-sizing (\code{outerBoundsMode = "same"}), which shrinks the grid to fit
+axis labels and names with no dead space.}
 
 \item{width}{Optional Character or Numeric: Widget width.}
 

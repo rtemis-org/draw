@@ -12,6 +12,7 @@ draw_density(
   na.rm = TRUE,
   title = NULL,
   theme = NULL,
+  margins = NULL,
   width = NULL,
   height = NULL,
   verbosity = 1L,
@@ -35,6 +36,11 @@ computing densities.}
 \item{title}{Optional Character: Chart title.}
 
 \item{theme}{Optional \link{Theme}: Theme override.}
+
+\item{margins}{Optional Named numeric vector or named list: Plot margins in
+pixels (or percentage strings) for any of \code{"top"}, \code{"right"},
+\code{"bottom"}, \code{"left"}. Unspecified sides keep echarts' default auto-sizing.
+See \code{\link[=draw_line]{draw_line()}} for details.}
 
 \item{width}{Optional Character or Numeric: Widget width.}
 

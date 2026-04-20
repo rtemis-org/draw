@@ -18,6 +18,7 @@ draw_scatter(
   ylim = NULL,
   title = NULL,
   theme = NULL,
+  margins = NULL,
   width = NULL,
   height = NULL,
   filename = NULL
@@ -57,6 +58,11 @@ Defaults to \code{range(y)} padded by 4\\\% of the span on each side.}
 
 \item{theme}{Optional \link{Theme}: Theme override. The palette inside the theme can be
 overridden per-chart with the \code{color} argument.}
+
+\item{margins}{Optional Named numeric vector or named list: Plot margins in
+pixels (or percentage strings) for any of \code{"top"}, \code{"right"},
+\code{"bottom"}, \code{"left"}. Unspecified sides keep echarts' default auto-sizing.
+See \code{\link[=draw_line]{draw_line()}} for details.}
 
 \item{width}{Optional Character or Numeric: Widget width.}
 
