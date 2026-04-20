@@ -1012,3 +1012,115 @@ test_that("draw_histogram respects breaks parameter", {
   # More breaks = more bins = more category labels
   expect_true(length(w$x$option$xAxis$data) >= 15L)
 })
+
+# -- margins -------------------------------------------------------------------
+
+test_that("draw_* default grid is outerBoundsMode = 'same' with no side bounds", {
+  w <- draw_line(x = 1:3, y = 1:3)
+  expect_equal(w$x$option$grid$outerBoundsMode, "same")
+  expect_null(w$x$option$grid$left)
+  expect_null(w$x$option$grid$right)
+  expect_null(w$x$option$grid$top)
+  expect_null(w$x$option$grid$bottom)
+})
+
+test_that("draw_line applies margins and keeps outerBoundsMode = 'same'", {
+  w <- draw_line(
+    x = 1:3, y = 1:3,
+    margins = c(left = 80, right = 20)
+  )
+  expect_equal(w$x$option$grid$left, 80)
+  expect_equal(w$x$option$grid$right, 20)
+  expect_null(w$x$option$grid$top)
+  expect_null(w$x$option$grid$bottom)
+  expect_equal(w$x$option$grid$outerBoundsMode, "same")
+})
+
+test_that("draw_line accepts percentage strings via list()", {
+  w <- draw_line(
+    x = 1:3, y = 1:3,
+    margins = list(left = 80, right = "10%")
+  )
+  expect_equal(w$x$option$grid$left, 80)
+  expect_equal(w$x$option$grid$right, "10%")
+})
+
+test_that("draw_line rejects unrecognised margin side", {
+  expect_error(
+    draw_line(x = 1:3, y = 1:3, margins = c(foo = 10)),
+    "margins"
+  )
+})
+
+test_that("draw_bar applies margins", {
+  w <- draw_bar(x = c("A", "B"), y = c(1, 2), margins = c(top = 50))
+  expect_equal(w$x$option$grid$top, 50)
+})
+
+test_that("draw_scatter applies margins", {
+  w <- draw_scatter(x = 1:3, y = 1:3, margins = c(bottom = 60))
+  expect_equal(w$x$option$grid$bottom, 60)
+})
+
+test_that("draw_density applies margins", {
+  set.seed(1)
+  w <- draw_density(rnorm(50), margins = c(left = 100))
+  expect_equal(w$x$option$grid$left, 100)
+})
+
+test_that("draw_histogram applies margins", {
+  set.seed(1)
+  w <- draw_histogram(rnorm(50), margins = c(right = 15))
+  expect_equal(w$x$option$grid$right, 15)
+})
+
+test_that("draw_boxplot applies margins across grouped/ungrouped branches", {
+  # Ungrouped list
+  w1 <- draw_boxplot(
+    data = list(c(1, 2, 3, 4, 5)),
+    labels = "A",
+    margins = c(left = 70)
+  )
+  expect_equal(w1$x$option$grid$left, 70)
+
+  # Grouped single vector
+  w2 <- draw_boxplot(
+    data = c(1, 2, 3, 4, 5, 6),
+    group = rep(c("A", "B"), each = 3),
+    margins = c(left = 70)
+  )
+  expect_equal(w2$x$option$grid$left, 70)
+
+  # Grouped named list
+  w3 <- draw_boxplot(
+    data = list(v1 = c(1, 2, 3, 4), v2 = c(2, 3, 4, 5)),
+    group = rep(c("A", "B"), each = 2),
+    margins = c(left = 70)
+  )
+  expect_equal(w3$x$option$grid$left, 70)
+})
+
+test_that("draw_heatmap margins override auto-computed left gutter", {
+  m <- matrix(1:16, 4, 4)
+  rownames(m) <- c("r1", "r2", "r3", "r4")
+  colnames(m) <- c("c1", "c2", "c3", "c4")
+
+  w_default <- draw_heatmap(m)
+  w_wide <- draw_heatmap(m, margins = c(left = 180))
+
+  # Default: left = 20 + 2*8 = 36
+  expect_equal(w_default$x$option$grid$left, 36)
+  # User override: 180
+  expect_equal(w_wide$x$option$grid$left, 180)
+  # Other sides unchanged between the two
+  expect_equal(w_wide$x$option$grid$right, w_default$x$option$grid$right)
+  expect_equal(w_wide$x$option$grid$top, w_default$x$option$grid$top)
+})
+
+test_that("draw_heatmap margins cascade to square-cell meta", {
+  m <- matrix(1:16, 4, 4)
+  rownames(m) <- c("r1", "r2", "r3", "r4")
+  colnames(m) <- c("c1", "c2", "c3", "c4")
+  w <- draw_heatmap(m, margins = c(left = 180), square_cells = TRUE)
+  expect_equal(w$x$leftPx, 180)
+})
