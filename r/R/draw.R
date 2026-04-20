@@ -1,4 +1,4 @@
-# widget.R
+# draw.R
 # htmlwidget binding and Tier 1 draw_* functions
 
 #' Render an ECharts option as an htmlwidget
@@ -98,9 +98,26 @@ draw <- function(
   # inside, so the grid auto-shrinks to contain them. This replaces the
   # deprecated `containLabel = TRUE` and yields tighter margins with no dead
   # space on the sides.
+  #
+  # When a user-supplied grid is already present (e.g. via `margins`), we still
+  # inject `outerBoundsMode = "same"` so that unspecified sides auto-fit — but
+  # skip when `containLabel` is set explicitly (heatmap uses `containLabel =
+  # FALSE` for exact pixel margins).
   if (!is.null(option$xAxis) || !is.null(option$yAxis)) {
+    inject_obm <- function(g) {
+      if (is.null(g[["containLabel"]]) && is.null(g[["outerBoundsMode"]])) {
+        g[["outerBoundsMode"]] <- "same"
+      }
+      g
+    }
     if (is.null(option$grid)) {
       option$grid <- list(outerBoundsMode = "same")
+    } else if (is.list(option$grid) && !is.null(names(option$grid))) {
+      # Single grid (named list).
+      option$grid <- inject_obm(option$grid)
+    } else if (is.list(option$grid)) {
+      # List of grids.
+      option$grid <- lapply(option$grid, inject_obm)
     }
   }
 
@@ -227,6 +244,12 @@ renderDraw <- function(expr, env = parent.frame(), quoted = FALSE) {
 #'   `TRUE` adds a slider plus mouse-wheel/drag zoom on the x-axis; `FALSE`
 #'   (default) disables zoom. Pass [DataZoom] objects (or a list of them) for
 #'   full control over zoom behavior and styling.
+#' @param margins Optional Named numeric vector or named list: Plot margins in
+#'   pixels (or percentage strings) for any of `"top"`, `"right"`,
+#'   `"bottom"`, `"left"` — e.g. `c(left = 80, right = 20)` or
+#'   `list(left = 80, right = "10%")`. Unspecified sides keep echarts' default
+#'   auto-sizing (`outerBoundsMode = "same"`), which shrinks the grid to fit
+#'   axis labels and names with no dead space.
 #' @param width Optional Character or Numeric: Widget width.
 #' @param height Optional Character or Numeric: Widget height.
 #' @param filename Optional Character: If provided, save the widget to this file via
@@ -249,6 +272,7 @@ draw_line <- function(
   title = NULL,
   theme = NULL,
   zoom = FALSE,
+  margins = NULL,
   width = NULL,
   height = NULL,
   filename = NULL
@@ -362,6 +386,7 @@ draw_line <- function(
     ),
     color = color,
     data_zoom = data_zoom,
+    grid = resolve_margins(margins),
     series = series
   )
 
@@ -627,6 +652,10 @@ resolve_zoom <- function(zoom, axis = "x") {
 #' @param title Optional Character: Chart title.
 #' @param theme Optional [Theme]: Theme override. The palette inside the theme can be
 #'   overridden per-chart with the `color` argument.
+#' @param margins Optional Named numeric vector or named list: Plot margins in
+#'   pixels (or percentage strings) for any of `"top"`, `"right"`,
+#'   `"bottom"`, `"left"`. Unspecified sides keep echarts' default auto-sizing.
+#'   See [draw_line()] for details.
 #' @param width Optional Character or Numeric: Widget width.
 #' @param height Optional Character or Numeric: Widget height.
 #' @param filename Optional Character: If provided, save the widget to this file via
@@ -641,6 +670,7 @@ draw_bar <- function(
   horizontal = FALSE,
   title = NULL,
   theme = NULL,
+  margins = NULL,
   width = NULL,
   height = NULL,
   filename = NULL
@@ -688,6 +718,7 @@ draw_bar <- function(
     legend = if (length(series) > 1L) Legend() else NULL,
     x_axis = x_ax,
     y_axis = y_ax,
+    grid = resolve_margins(margins),
     series = series
   )
 
@@ -720,6 +751,10 @@ draw_bar <- function(
 #' @param title Optional Character: Chart title.
 #' @param theme Optional [Theme]: Theme override. The palette inside the theme can be
 #'   overridden per-chart with the `color` argument.
+#' @param margins Optional Named numeric vector or named list: Plot margins in
+#'   pixels (or percentage strings) for any of `"top"`, `"right"`,
+#'   `"bottom"`, `"left"`. Unspecified sides keep echarts' default auto-sizing.
+#'   See [draw_line()] for details.
 #' @param width Optional Character or Numeric: Widget width.
 #' @param height Optional Character or Numeric: Widget height.
 #' @param filename Optional Character: If provided, save the widget to this file via
@@ -740,6 +775,7 @@ draw_scatter <- function(
   ylim = NULL,
   title = NULL,
   theme = NULL,
+  margins = NULL,
   width = NULL,
   height = NULL,
   filename = NULL
@@ -910,6 +946,7 @@ draw_scatter <- function(
       axis_line = axis_line_for_orthogonal(x_lim)
     ),
     color = if (is.null(group)) color else NULL,
+    grid = resolve_margins(margins),
     series = series
   )
 
@@ -989,6 +1026,10 @@ draw_pie <- function(
 #'   computing densities.
 #' @param title Optional Character: Chart title.
 #' @param theme Optional [Theme]: Theme override.
+#' @param margins Optional Named numeric vector or named list: Plot margins in
+#'   pixels (or percentage strings) for any of `"top"`, `"right"`,
+#'   `"bottom"`, `"left"`. Unspecified sides keep echarts' default auto-sizing.
+#'   See [draw_line()] for details.
 #' @param width Optional Character or Numeric: Widget width.
 #' @param height Optional Character or Numeric: Widget height.
 #' @param verbosity Integer `[0, Inf)`: Verbosity level for removed-`NA` messages.
@@ -1004,6 +1045,7 @@ draw_density <- function(
   na.rm = TRUE,
   title = NULL,
   theme = NULL,
+  margins = NULL,
   width = NULL,
   height = NULL,
   verbosity = 1L,
@@ -1168,6 +1210,7 @@ draw_density <- function(
     legend = if (length(series) > 1L) Legend() else NULL,
     x_axis = Axis(type = "value", scale = TRUE),
     y_axis = Axis(type = "value"),
+    grid = resolve_margins(margins),
     series = series
   )
 
@@ -1187,6 +1230,10 @@ draw_density <- function(
 #'   numeric vector of break points. Passed to [graphics::hist()].
 #' @param title Optional Character: Chart title.
 #' @param theme Optional [Theme]: Theme override.
+#' @param margins Optional Named numeric vector or named list: Plot margins in
+#'   pixels (or percentage strings) for any of `"top"`, `"right"`,
+#'   `"bottom"`, `"left"`. Unspecified sides keep echarts' default auto-sizing.
+#'   See [draw_line()] for details.
 #' @param width Optional Character or Numeric: Widget width.
 #' @param height Optional Character or Numeric: Widget height.
 #' @param filename Optional Character: If provided, save the widget to this file via
@@ -1199,6 +1246,7 @@ draw_histogram <- function(
   breaks = "Sturges",
   title = NULL,
   theme = NULL,
+  margins = NULL,
   width = NULL,
   height = NULL,
   filename = NULL
@@ -1226,6 +1274,7 @@ draw_histogram <- function(
     legend = if (length(series) > 1L) Legend() else NULL,
     x_axis = Axis(type = "category", data = bin_labels),
     y_axis = Axis(type = "value"),
+    grid = resolve_margins(margins),
     series = series
   )
 
@@ -1256,6 +1305,10 @@ draw_histogram <- function(
 #'   computing boxplot statistics.
 #' @param title Optional Character: Chart title.
 #' @param theme Optional [Theme]: Theme override.
+#' @param margins Optional Named numeric vector or named list: Plot margins in
+#'   pixels (or percentage strings) for any of `"top"`, `"right"`,
+#'   `"bottom"`, `"left"`. Unspecified sides keep echarts' default auto-sizing.
+#'   See [draw_line()] for details.
 #' @param width Optional Character or Numeric: Widget width.
 #' @param height Optional Character or Numeric: Widget height.
 #' @param verbosity Integer `[0, Inf)`: Verbosity level for removed-`NA` messages.
@@ -1273,6 +1326,7 @@ draw_boxplot <- function(
   na.rm = TRUE,
   title = NULL,
   theme = NULL,
+  margins = NULL,
   width = NULL,
   height = NULL,
   verbosity = 1L,
@@ -1281,6 +1335,9 @@ draw_boxplot <- function(
   # Note: BoxplotSeries `layout` is auto-detected from the category axis
   # orientation, so we do not set it explicitly. (Our previous mapping
   # was inverted relative to ECharts conventions.)
+
+  # Resolve user-supplied margins once; reused in every branch below.
+  grid <- resolve_margins(margins)
 
   # Grouped + single-element (possibly named) list => unwrap to numeric.
   # Lets callers write draw_boxplot(list(`Body Mass` = x), group = g) and
@@ -1386,6 +1443,7 @@ draw_boxplot <- function(
       legend = Legend(),
       x_axis = x_ax,
       y_axis = y_ax,
+      grid = grid,
       series = series
     )
   } else if (!is.null(group)) {
@@ -1448,6 +1506,7 @@ draw_boxplot <- function(
       tooltip = Tooltip(trigger = "item"),
       x_axis = x_ax,
       y_axis = y_ax,
+      grid = grid,
       series = series
     )
   } else {
@@ -1488,6 +1547,7 @@ draw_boxplot <- function(
       tooltip = Tooltip(trigger = "item"),
       x_axis = x_ax,
       y_axis = y_ax,
+      grid = grid,
       series = BoxplotSeries(
         data = box_data,
         item_style = item_style
@@ -1677,6 +1737,12 @@ dendro_axis_min <- function(min_h, max_h, stub_frac = 0.1) {
 #'   color bar.
 #' @param title Optional Character: Chart title.
 #' @param theme Optional [Theme]: Theme override. `NULL` auto-detects light/dark mode.
+#' @param margins Optional Named numeric vector or named list: Override the
+#'   auto-computed heatmap plot-area margins in pixels (or percentage strings)
+#'   for any of `"top"`, `"right"`, `"bottom"`, `"left"` — e.g.
+#'   `c(left = 200)` to widen the left gutter for long row labels. Unspecified
+#'   sides use the values computed from label lengths, title, colorbar, and
+#'   dendrogram panels. See [draw_line()] for the general convention.
 #' @param width Optional Character or Numeric: Widget width.
 #' @param height Optional Character or Numeric: Widget height.
 #' @param filename Optional Character: If provided, save the widget to this file via
@@ -1709,6 +1775,7 @@ draw_heatmap <- function(
   colorbar_orient = "vertical",
   title = NULL,
   theme = NULL,
+  margins = NULL,
   width = NULL,
   height = NULL,
   filename = NULL
@@ -1879,6 +1946,16 @@ draw_heatmap <- function(
   right_px <- if (show_colorbar && colorbar_orient == "vertical") 90L else 20L
   top_px <- if (!is.null(title)) 40L else 10L
   bot_px <- if (rotate > 0L) min(20L + max(nchar(cn)) * 5L, 140L) else 36L
+
+  # User-supplied margins override the auto-computed base values per-side. The
+  # downstream hm_left/hm_right/hm_top/hm_bottom and dendro-panel math compose
+  # on top of these, so overriding e.g. left widens the row-label gutter while
+  # keeping row dendro placement correct.
+  user_margins <- parse_margins(margins)
+  if (!is.null(user_margins[["left"]])) left_px <- user_margins[["left"]]
+  if (!is.null(user_margins[["right"]])) right_px <- user_margins[["right"]]
+  if (!is.null(user_margins[["top"]])) top_px <- user_margins[["top"]]
+  if (!is.null(user_margins[["bottom"]])) bot_px <- user_margins[["bottom"]]
 
   # Determine which dendrogram panels to show
   # (only possible when there are enough rows/cols to cluster)
