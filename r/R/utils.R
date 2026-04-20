@@ -255,6 +255,98 @@ calc_limits <- function(values, pad = 0.04) {
 }
 
 
+#' Parse a user-supplied `margins` argument into a named list of per-side values
+#'
+#' Validates a named `margins` argument supplied to `draw_*` functions and
+#' returns a list with elements `top`, `right`, `bottom`, `left`, each either
+#' the user-supplied value (numeric or character) or `NULL` when the user did
+#' not specify that side. Accepts a named numeric vector
+#' (e.g. `c(left = 80, right = 20)`) or a named list
+#' (e.g. `list(left = 80, right = "10%")`). The list form is required when any
+#' side is a percentage string. Sides are matched by name; unrecognised names
+#' error with a corrective message.
+#'
+#' @param margins Optional Named numeric vector or named list: User-supplied
+#'   margins argument. Valid names are `"top"`, `"right"`, `"bottom"`, `"left"`.
+#' @return Named list with elements `top`, `right`, `bottom`, `left`, each
+#'   either the user-supplied value or `NULL`.
+#' @keywords internal
+#' @noRd
+parse_margins <- function(margins) {
+  empty <- list(top = NULL, right = NULL, bottom = NULL, left = NULL)
+  if (is.null(margins)) {
+    return(empty)
+  }
+  # Accept a named atomic vector (numeric / character) or a named list.
+  if (!is.list(margins) && !is.atomic(margins)) {
+    cli::cli_abort(
+      "{.arg margins} must be a named numeric vector or named list."
+    )
+  }
+  nms <- names(margins)
+  if (is.null(nms) || any(!nzchar(nms))) {
+    cli::cli_abort(
+      "{.arg margins} must be named with any of {.val top}, {.val right}, {.val bottom}, {.val left}."
+    )
+  }
+  valid_sides <- c("top", "right", "bottom", "left")
+  bad <- setdiff(nms, valid_sides)
+  if (length(bad) > 0L) {
+    cli::cli_abort(
+      c(
+        "{.arg margins} has unrecognised name{?s}: {.val {bad}}.",
+        "i" = "Valid names are {.val {valid_sides}}."
+      )
+    )
+  }
+  if (any(duplicated(nms))) {
+    cli::cli_abort(
+      "{.arg margins} has duplicate name{?s}: {.val {nms[duplicated(nms)]}}."
+    )
+  }
+  for (side in valid_sides) {
+    if (!(side %in% nms)) {
+      next
+    }
+    val <- margins[[side]]
+    if (is.null(val) || (length(val) == 1L && is.na(val))) {
+      next
+    }
+    if (
+      !((is.numeric(val) && length(val) == 1L) ||
+        (is.character(val) && length(val) == 1L))
+    ) {
+      cli::cli_abort(
+        "{.arg margins} element {.val {side}} must be a single number or string (e.g. {.val 10%}); got {.cls {class(val)[1]}} of length {length(val)}."
+      )
+    }
+    empty[[side]] <- val
+  }
+  empty
+}
+
+#' Resolve a user-supplied `margins` argument into a [Grid] (or `NULL`)
+#'
+#' Convenience wrapper around `parse_margins()` that builds a [Grid] with the
+#' specified sides set (other sides left `NULL` so echarts' default behaviour
+#' still applies to them). Returns `NULL` when `margins` is `NULL` so callers
+#' can pass the result straight to `EChartsOption(grid = ...)`.
+#'
+#' @param margins Optional Named numeric vector or named list: User-supplied
+#'   margins argument. Valid names are `"top"`, `"right"`, `"bottom"`, `"left"`.
+#' @return Optional [Grid]: `Grid` object with the specified sides set, or
+#'   `NULL` when `margins` is `NULL`.
+#' @keywords internal
+#' @noRd
+resolve_margins <- function(margins) {
+  if (is.null(margins)) {
+    return(NULL)
+  }
+  m <- parse_margins(margins)
+  Grid(top = m[["top"]], right = m[["right"]], bottom = m[["bottom"]], left = m[["left"]])
+}
+
+
 #' Validate an axis-limits argument
 #'
 #' Checks that a user-supplied `xlim`/`ylim`/`zlim` value is either `NULL` or a
