@@ -2,7 +2,7 @@
 
 # rtemis.draw
 
-![rtemis.draw cover](https://docs.rtemis.org/draw/r/assets/cover.avif)
+![rtemis.draw cover](https://docs.rtemis.org/r/draw/assets/cover.avif)
 
 R interface to Apache ECharts (<https://echarts.apache.org>) for creating interactive 
 charts and visualizations. Offers type-checked, validated configuration objects built with S7 
