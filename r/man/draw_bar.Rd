@@ -10,6 +10,8 @@ draw_bar(
   color = NULL,
   stack = FALSE,
   horizontal = FALSE,
+  xlab = NULL,
+  ylab = NULL,
   title = NULL,
   theme = NULL,
   margins = NULL,
@@ -31,6 +33,10 @@ across individual bars. \code{color} takes precedence over the theme palette.}
 \item{stack}{Logical: Whether to stack bars.}
 
 \item{horizontal}{Logical: Whether to draw horizontal bars.}
+
+\item{xlab}{Optional Character: X-axis title (bottom axis).}
+
+\item{ylab}{Optional Character: Y-axis title (left axis).}
 
 \item{title}{Optional Character: Chart title.}
 

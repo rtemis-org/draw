@@ -17,6 +17,8 @@ draw_line(
   color = NULL,
   xlim = NULL,
   ylim = NULL,
+  xlab = NULL,
+  ylab = NULL,
   title = NULL,
   theme = NULL,
   zoom = FALSE,
@@ -64,6 +66,10 @@ errors. Defaults to \code{range(x)} (no padding) when \code{x} is numeric.}
 
 \item{ylim}{Optional Numeric [length 2]: Y-axis limits \code{c(min, max)}.
 Defaults to the range of all \code{y} values across series (no padding).}
+
+\item{xlab}{Optional Character: X-axis title.}
+
+\item{ylab}{Optional Character: Y-axis title.}
 
 \item{title}{Optional Character: Chart title.}
 

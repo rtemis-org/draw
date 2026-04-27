@@ -16,6 +16,8 @@ draw_scatter(
   color = NULL,
   xlim = NULL,
   ylim = NULL,
+  xlab = NULL,
+  ylab = NULL,
   title = NULL,
   theme = NULL,
   margins = NULL,
@@ -53,6 +55,10 @@ Defaults to \code{range(x)} padded by 4\\\% of the span on each side.}
 
 \item{ylim}{Optional Numeric [length 2]: Y-axis limits \code{c(min, max)}.
 Defaults to \code{range(y)} padded by 4\\\% of the span on each side.}
+
+\item{xlab}{Optional Character: X-axis title.}
+
+\item{ylab}{Optional Character: Y-axis title.}
 
 \item{title}{Optional Character: Chart title.}
 

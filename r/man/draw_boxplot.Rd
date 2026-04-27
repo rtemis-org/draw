@@ -12,6 +12,8 @@ draw_boxplot(
   color = NULL,
   fill_alpha = 0.25,
   na.rm = TRUE,
+  xlab = NULL,
+  ylab = NULL,
   title = NULL,
   theme = NULL,
   margins = NULL,
@@ -44,6 +46,12 @@ For grouped boxplots, defaults to \code{rtemis_colors}; recycled as needed.}
 
 \item{na.rm}{Logical: Whether to remove \code{NA} values before
 computing boxplot statistics.}
+
+\item{xlab}{Optional Character: X-axis title (bottom axis). Overrides the
+value-axis name inferred from a single-element named list passed as \code{data}.}
+
+\item{ylab}{Optional Character: Y-axis title (left axis). Overrides the
+value-axis name inferred from a single-element named list passed as \code{data}.}
 
 \item{title}{Optional Character: Chart title.}
 

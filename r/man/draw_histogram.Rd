@@ -8,6 +8,8 @@ draw_histogram(
   x,
   group = NULL,
   breaks = "Sturges",
+  xlab = NULL,
+  ylab = NULL,
   title = NULL,
   theme = NULL,
   margins = NULL,
@@ -24,6 +26,10 @@ draw_histogram(
 \item{breaks}{Numeric, Character, or Numeric vector: Binning method. A single number (number of bins), a character
 string naming an algorithm (e.g. \code{"Sturges"}, \code{"Scott"}, \code{"FD"}), or a
 numeric vector of break points. Passed to \code{\link[graphics:hist]{graphics::hist()}}.}
+
+\item{xlab}{Optional Character: X-axis title.}
+
+\item{ylab}{Optional Character: Y-axis title.}
 
 \item{title}{Optional Character: Chart title.}
 

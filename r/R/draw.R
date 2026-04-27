@@ -1,6 +1,9 @@
 # draw.R
 # htmlwidget binding and Tier 1 draw_* functions
 
+# Constants ----
+m <- 36
+
 #' Render an ECharts option as an htmlwidget
 #'
 #' Low-level function that takes an [EChartsOption] (or a plain list) and
@@ -237,6 +240,8 @@ renderDraw <- function(expr, env = parent.frame(), quoted = FALSE) {
 #'   errors. Defaults to `range(x)` (no padding) when `x` is numeric.
 #' @param ylim Optional Numeric \[length 2\]: Y-axis limits `c(min, max)`.
 #'   Defaults to the range of all `y` values across series (no padding).
+#' @param xlab Optional Character: X-axis title.
+#' @param ylab Optional Character: Y-axis title.
 #' @param title Optional Character: Chart title.
 #' @param theme Optional [Theme]: Theme override. The palette inside the theme can be
 #'   overridden per-chart with the `color` argument.
@@ -269,6 +274,8 @@ draw_line <- function(
   color = NULL,
   xlim = NULL,
   ylim = NULL,
+  xlab = NULL,
+  ylab = NULL,
   title = NULL,
   theme = NULL,
   zoom = FALSE,
@@ -363,6 +370,8 @@ draw_line <- function(
     legend = if (length(series) > 1L) Legend() else NULL,
     x_axis = Axis(
       type = x_type,
+      name = xlab,
+      name_location = "middle",
       data = if (x_type == "category") x else NULL,
       scale = if (x_type == "value") TRUE else NULL,
       min = if (!is.null(x_lim)) x_lim[[1L]] else NULL,
@@ -377,6 +386,8 @@ draw_line <- function(
     ),
     y_axis = Axis(
       type = "value",
+      name = ylab,
+      name_location = "middle",
       scale = TRUE,
       min = y_lim[[1L]],
       max = y_lim[[2L]],
@@ -649,6 +660,8 @@ resolve_zoom <- function(zoom, axis = "x") {
 #'   across individual bars. `color` takes precedence over the theme palette.
 #' @param stack Logical: Whether to stack bars.
 #' @param horizontal Logical: Whether to draw horizontal bars.
+#' @param xlab Optional Character: X-axis title (bottom axis).
+#' @param ylab Optional Character: Y-axis title (left axis).
 #' @param title Optional Character: Chart title.
 #' @param theme Optional [Theme]: Theme override. The palette inside the theme can be
 #'   overridden per-chart with the `color` argument.
@@ -668,6 +681,8 @@ draw_bar <- function(
   color = NULL,
   stack = FALSE,
   horizontal = FALSE,
+  xlab = NULL,
+  ylab = NULL,
   title = NULL,
   theme = NULL,
   margins = NULL,
@@ -705,11 +720,11 @@ draw_bar <- function(
   }
 
   if (horizontal) {
-    x_ax <- Axis(type = "value")
-    y_ax <- Axis(type = "category", data = x)
+    x_ax <- Axis(type = "value", name = xlab)
+    y_ax <- Axis(type = "category", data = x, name = ylab)
   } else {
-    x_ax <- Axis(type = "category", data = x)
-    y_ax <- Axis(type = "value")
+    x_ax <- Axis(type = "category", data = x, name = xlab)
+    y_ax <- Axis(type = "value", name = ylab)
   }
 
   opt <- EChartsOption(
@@ -748,6 +763,8 @@ draw_bar <- function(
 #'   Defaults to `range(x)` padded by 4\\% of the span on each side.
 #' @param ylim Optional Numeric \[length 2\]: Y-axis limits `c(min, max)`.
 #'   Defaults to `range(y)` padded by 4\\% of the span on each side.
+#' @param xlab Optional Character: X-axis title.
+#' @param ylab Optional Character: Y-axis title.
 #' @param title Optional Character: Chart title.
 #' @param theme Optional [Theme]: Theme override. The palette inside the theme can be
 #'   overridden per-chart with the `color` argument.
@@ -759,7 +776,9 @@ draw_bar <- function(
 #' @param height Optional Character or Numeric: Widget height.
 #' @param filename Optional Character: If provided, save the widget to this file via
 #'   [save_drawing()].
+#'
 #' @return htmlwidget: Widget object.
+#'
 #' @export
 draw_scatter <- function(
   x,
@@ -773,6 +792,8 @@ draw_scatter <- function(
   color = NULL,
   xlim = NULL,
   ylim = NULL,
+  xlab = NULL,
+  ylab = NULL,
   title = NULL,
   theme = NULL,
   margins = NULL,
@@ -929,6 +950,8 @@ draw_scatter <- function(
     legend = if (!is.null(group)) Legend() else NULL,
     x_axis = Axis(
       type = "value",
+      name = xlab,
+      name_location = "middle",
       scale = TRUE,
       min = x_lim[[1L]],
       max = x_lim[[2L]],
@@ -938,6 +961,8 @@ draw_scatter <- function(
     ),
     y_axis = Axis(
       type = "value",
+      name = ylab,
+      name_location = "middle",
       scale = TRUE,
       min = y_lim[[1L]],
       max = y_lim[[2L]],
@@ -1024,6 +1049,8 @@ draw_pie <- function(
 #' @param bw Character or Numeric: Bandwidth passed to [stats::density()].
 #' @param na.rm Logical: Whether to remove `NA` values before
 #'   computing densities.
+#' @param xlab Optional Character: X-axis title.
+#' @param ylab Optional Character: Y-axis title.
 #' @param title Optional Character: Chart title.
 #' @param theme Optional [Theme]: Theme override.
 #' @param margins Optional Named numeric vector or named list: Plot margins in
@@ -1043,6 +1070,8 @@ draw_density <- function(
   n = 512,
   bw = "nrd0",
   na.rm = TRUE,
+  xlab = NULL,
+  ylab = NULL,
   title = NULL,
   theme = NULL,
   margins = NULL,
@@ -1208,8 +1237,13 @@ draw_density <- function(
     title = if (!is.null(title)) Title(text = title) else NULL,
     tooltip = Tooltip(trigger = "axis", formatter = density_formatter),
     legend = if (length(series) > 1L) Legend() else NULL,
-    x_axis = Axis(type = "value", scale = TRUE),
-    y_axis = Axis(type = "value"),
+    x_axis = Axis(
+      type = "value",
+      name = xlab,
+      name_location = "middle",
+      scale = TRUE
+    ),
+    y_axis = Axis(type = "value", name = ylab),
     grid = resolve_margins(margins),
     series = series
   )
@@ -1228,6 +1262,8 @@ draw_density <- function(
 #' @param breaks Numeric, Character, or Numeric vector: Binning method. A single number (number of bins), a character
 #'   string naming an algorithm (e.g. `"Sturges"`, `"Scott"`, `"FD"`), or a
 #'   numeric vector of break points. Passed to [graphics::hist()].
+#' @param xlab Optional Character: X-axis title.
+#' @param ylab Optional Character: Y-axis title.
 #' @param title Optional Character: Chart title.
 #' @param theme Optional [Theme]: Theme override.
 #' @param margins Optional Named numeric vector or named list: Plot margins in
@@ -1244,6 +1280,8 @@ draw_histogram <- function(
   x,
   group = NULL,
   breaks = "Sturges",
+  xlab = NULL,
+  ylab = NULL,
   title = NULL,
   theme = NULL,
   margins = NULL,
@@ -1272,8 +1310,17 @@ draw_histogram <- function(
     title = if (!is.null(title)) Title(text = title) else NULL,
     tooltip = Tooltip(trigger = "axis"),
     legend = if (length(series) > 1L) Legend() else NULL,
-    x_axis = Axis(type = "category", data = bin_labels),
-    y_axis = Axis(type = "value"),
+    x_axis = Axis(
+      type = "category",
+      data = bin_labels,
+      name = xlab,
+      name_location = "middle",
+    ),
+    y_axis = Axis(
+      type = "value",
+      name = ylab,
+      name_location = "middle"
+    ),
     grid = resolve_margins(margins),
     series = series
   )
@@ -1303,6 +1350,10 @@ draw_histogram <- function(
 #' @param fill_alpha Numeric `[0, 1]`: Opacity for the box fill color.
 #' @param na.rm Logical: Whether to remove `NA` values before
 #'   computing boxplot statistics.
+#' @param xlab Optional Character: X-axis title (bottom axis). Overrides the
+#'   value-axis name inferred from a single-element named list passed as `data`.
+#' @param ylab Optional Character: Y-axis title (left axis). Overrides the
+#'   value-axis name inferred from a single-element named list passed as `data`.
 #' @param title Optional Character: Chart title.
 #' @param theme Optional [Theme]: Theme override.
 #' @param margins Optional Named numeric vector or named list: Plot margins in
@@ -1324,6 +1375,8 @@ draw_boxplot <- function(
   color = NULL,
   fill_alpha = 0.25,
   na.rm = TRUE,
+  xlab = NULL,
+  ylab = NULL,
   title = NULL,
   theme = NULL,
   margins = NULL,
@@ -1349,6 +1402,12 @@ draw_boxplot <- function(
     }
     data <- data[[1]]
   }
+
+  # Axis titles: explicit `xlab`/`ylab` win over the inferred `value_axis_name`.
+  # The value axis is y when vertical and x when horizontal; the opposite side
+  # is the category axis and never receives `value_axis_name`.
+  x_name <- xlab %||% (if (horizontal) value_axis_name else NULL)
+  y_name <- ylab %||% (if (!horizontal) value_axis_name else NULL)
 
   # Bare numeric vector without group => single box
   if (is.numeric(data) && is.null(group)) {
@@ -1430,11 +1489,11 @@ draw_boxplot <- function(
     })
 
     if (horizontal) {
-      x_ax <- Axis(type = "value", scale = TRUE)
-      y_ax <- Axis(type = "category", data = var_labels)
+      x_ax <- Axis(type = "value", scale = TRUE, name = x_name)
+      y_ax <- Axis(type = "category", data = var_labels, name = y_name)
     } else {
-      x_ax <- Axis(type = "category", data = var_labels)
-      y_ax <- Axis(type = "value", scale = TRUE)
+      x_ax <- Axis(type = "category", data = var_labels, name = x_name)
+      y_ax <- Axis(type = "value", scale = TRUE, name = y_name)
     }
 
     opt <- EChartsOption(
@@ -1494,11 +1553,11 @@ draw_boxplot <- function(
     series <- BoxplotSeries(data = box_items)
 
     if (horizontal) {
-      x_ax <- Axis(type = "value", scale = TRUE, name = value_axis_name)
-      y_ax <- Axis(type = "category", data = group_labels)
+      x_ax <- Axis(type = "value", scale = TRUE, name = x_name)
+      y_ax <- Axis(type = "category", data = group_labels, name = y_name)
     } else {
-      x_ax <- Axis(type = "category", data = group_labels)
-      y_ax <- Axis(type = "value", scale = TRUE, name = value_axis_name)
+      x_ax <- Axis(type = "category", data = group_labels, name = x_name)
+      y_ax <- Axis(type = "value", scale = TRUE, name = y_name)
     }
 
     opt <- EChartsOption(
@@ -1535,11 +1594,11 @@ draw_boxplot <- function(
     box_data <- unname(box_data)
 
     if (horizontal) {
-      x_ax <- Axis(type = "value", scale = TRUE)
-      y_ax <- Axis(type = "category", data = labels)
+      x_ax <- Axis(type = "value", scale = TRUE, name = x_name)
+      y_ax <- Axis(type = "category", data = labels, name = y_name)
     } else {
-      x_ax <- Axis(type = "category", data = labels)
-      y_ax <- Axis(type = "value", scale = TRUE)
+      x_ax <- Axis(type = "category", data = labels, name = x_name)
+      y_ax <- Axis(type = "value", scale = TRUE, name = y_name)
     }
 
     opt <- EChartsOption(
@@ -1952,10 +2011,18 @@ draw_heatmap <- function(
   # on top of these, so overriding e.g. left widens the row-label gutter while
   # keeping row dendro placement correct.
   user_margins <- parse_margins(margins)
-  if (!is.null(user_margins[["left"]])) left_px <- user_margins[["left"]]
-  if (!is.null(user_margins[["right"]])) right_px <- user_margins[["right"]]
-  if (!is.null(user_margins[["top"]])) top_px <- user_margins[["top"]]
-  if (!is.null(user_margins[["bottom"]])) bot_px <- user_margins[["bottom"]]
+  if (!is.null(user_margins[["left"]])) {
+    left_px <- user_margins[["left"]]
+  }
+  if (!is.null(user_margins[["right"]])) {
+    right_px <- user_margins[["right"]]
+  }
+  if (!is.null(user_margins[["top"]])) {
+    top_px <- user_margins[["top"]]
+  }
+  if (!is.null(user_margins[["bottom"]])) {
+    bot_px <- user_margins[["bottom"]]
+  }
 
   # Determine which dendrogram panels to show
   # (only possible when there are enough rows/cols to cluster)

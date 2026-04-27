@@ -10,6 +10,8 @@ draw_density(
   n = 512,
   bw = "nrd0",
   na.rm = TRUE,
+  xlab = NULL,
+  ylab = NULL,
   title = NULL,
   theme = NULL,
   margins = NULL,
@@ -32,6 +34,10 @@ element is split by group into separate traces.}
 
 \item{na.rm}{Logical: Whether to remove \code{NA} values before
 computing densities.}
+
+\item{xlab}{Optional Character: X-axis title.}
+
+\item{ylab}{Optional Character: Y-axis title.}
 
 \item{title}{Optional Character: Chart title.}
 
