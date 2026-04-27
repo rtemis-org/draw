@@ -371,7 +371,7 @@ draw_line <- function(
     x_axis = Axis(
       type = x_type,
       name = xlab,
-      name_location = "middle",
+      name_location = if (!is.null(xlab)) "middle" else NULL,
       data = if (x_type == "category") x else NULL,
       scale = if (x_type == "value") TRUE else NULL,
       min = if (!is.null(x_lim)) x_lim[[1L]] else NULL,
@@ -387,7 +387,7 @@ draw_line <- function(
     y_axis = Axis(
       type = "value",
       name = ylab,
-      name_location = "middle",
+      name_location = if (!is.null(ylab)) "middle" else NULL,
       scale = TRUE,
       min = y_lim[[1L]],
       max = y_lim[[2L]],
@@ -951,7 +951,7 @@ draw_scatter <- function(
     x_axis = Axis(
       type = "value",
       name = xlab,
-      name_location = "middle",
+      name_location = if (!is.null(xlab)) "middle" else NULL,
       scale = TRUE,
       min = x_lim[[1L]],
       max = x_lim[[2L]],
@@ -962,7 +962,7 @@ draw_scatter <- function(
     y_axis = Axis(
       type = "value",
       name = ylab,
-      name_location = "middle",
+      name_location = if (!is.null(ylab)) "middle" else NULL,
       scale = TRUE,
       min = y_lim[[1L]],
       max = y_lim[[2L]],
@@ -1240,10 +1240,10 @@ draw_density <- function(
     x_axis = Axis(
       type = "value",
       name = xlab,
-      name_location = "middle",
+      name_location = if (!is.null(xlab)) "middle" else NULL,
       scale = TRUE
     ),
-    y_axis = Axis(type = "value", name = ylab),
+    y_axis = Axis(type = "value", name = ylab, name_location = if (!is.null(ylab)) "middle" else NULL),
     grid = resolve_margins(margins),
     series = series
   )
@@ -1314,12 +1314,12 @@ draw_histogram <- function(
       type = "category",
       data = bin_labels,
       name = xlab,
-      name_location = "middle",
+      name_location = if (!is.null(xlab)) "middle" else NULL
     ),
     y_axis = Axis(
       type = "value",
       name = ylab,
-      name_location = "middle"
+      name_location = if (!is.null(ylab)) "middle" else NULL
     ),
     grid = resolve_margins(margins),
     series = series

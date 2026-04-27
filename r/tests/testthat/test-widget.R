@@ -1129,20 +1129,20 @@ test_that("draw_heatmap margins cascade to square-cell meta", {
 
 test_that("draw_line applies xlab and ylab to x and y axes", {
   w <- draw_line(x = 1:3, y = 1:3, xlab = "Time", ylab = "Value")
-  expect_equal(w$x$option$xAxis$name, "Time")
-  expect_equal(w$x$option$yAxis$name, "Value")
+  expect_equal(w$x$option$xAxis[["name"]], "Time")
+  expect_equal(w$x$option$yAxis[["name"]], "Value")
 })
 
 test_that("draw_line omits axis name when xlab/ylab are NULL", {
   w <- draw_line(x = 1:3, y = 1:3)
-  expect_null(w$x$option$xAxis$name)
-  expect_null(w$x$option$yAxis$name)
+  expect_null(w$x$option$xAxis[["name"]])
+  expect_null(w$x$option$yAxis[["name"]])
 })
 
 test_that("draw_bar applies xlab/ylab in vertical orientation", {
   w <- draw_bar(x = c("A", "B"), y = c(1, 2), xlab = "Group", ylab = "Count")
-  expect_equal(w$x$option$xAxis$name, "Group")
-  expect_equal(w$x$option$yAxis$name, "Count")
+  expect_equal(w$x$option$xAxis[["name"]], "Group")
+  expect_equal(w$x$option$yAxis[["name"]], "Count")
 })
 
 test_that("draw_bar xlab stays on the bottom axis in horizontal orientation", {
@@ -1153,28 +1153,28 @@ test_that("draw_bar xlab stays on the bottom axis in horizontal orientation", {
     xlab = "Count",
     ylab = "Group"
   )
-  expect_equal(w$x$option$xAxis$name, "Count")
-  expect_equal(w$x$option$yAxis$name, "Group")
+  expect_equal(w$x$option$xAxis[["name"]], "Count")
+  expect_equal(w$x$option$yAxis[["name"]], "Group")
 })
 
 test_that("draw_scatter applies xlab and ylab", {
   w <- draw_scatter(x = 1:3, y = 1:3, xlab = "X", ylab = "Y")
-  expect_equal(w$x$option$xAxis$name, "X")
-  expect_equal(w$x$option$yAxis$name, "Y")
+  expect_equal(w$x$option$xAxis[["name"]], "X")
+  expect_equal(w$x$option$yAxis[["name"]], "Y")
 })
 
 test_that("draw_density applies xlab and ylab", {
   set.seed(1)
   w <- draw_density(rnorm(50), xlab = "Value", ylab = "Density")
-  expect_equal(w$x$option$xAxis$name, "Value")
-  expect_equal(w$x$option$yAxis$name, "Density")
+  expect_equal(w$x$option$xAxis[["name"]], "Value")
+  expect_equal(w$x$option$yAxis[["name"]], "Density")
 })
 
 test_that("draw_histogram applies xlab and ylab", {
   set.seed(1)
   w <- draw_histogram(rnorm(50), xlab = "Bin", ylab = "Count")
-  expect_equal(w$x$option$xAxis$name, "Bin")
-  expect_equal(w$x$option$yAxis$name, "Count")
+  expect_equal(w$x$option$xAxis[["name"]], "Bin")
+  expect_equal(w$x$option$yAxis[["name"]], "Count")
 })
 
 test_that("draw_boxplot applies xlab and ylab (ungrouped)", {
@@ -1183,8 +1183,8 @@ test_that("draw_boxplot applies xlab and ylab (ungrouped)", {
     xlab = "Group",
     ylab = "Value"
   )
-  expect_equal(w$x$option$xAxis$name, "Group")
-  expect_equal(w$x$option$yAxis$name, "Value")
+  expect_equal(w$x$option$xAxis[["name"]], "Group")
+  expect_equal(w$x$option$yAxis[["name"]], "Value")
 })
 
 test_that("draw_boxplot inferred value_axis_name goes on y when vertical", {
@@ -1192,8 +1192,8 @@ test_that("draw_boxplot inferred value_axis_name goes on y when vertical", {
     data = list(`Body Mass` = c(1, 2, 3, 4, 5, 6)),
     group = rep(c("A", "B"), each = 3)
   )
-  expect_equal(w$x$option$yAxis$name, "Body Mass")
-  expect_null(w$x$option$xAxis$name)
+  expect_equal(w$x$option$yAxis[["name"]], "Body Mass")
+  expect_null(w$x$option$xAxis[["name"]])
 })
 
 test_that("draw_boxplot inferred value_axis_name goes on x when horizontal", {
@@ -1202,8 +1202,8 @@ test_that("draw_boxplot inferred value_axis_name goes on x when horizontal", {
     group = rep(c("A", "B"), each = 3),
     horizontal = TRUE
   )
-  expect_equal(w$x$option$xAxis$name, "Body Mass")
-  expect_null(w$x$option$yAxis$name)
+  expect_equal(w$x$option$xAxis[["name"]], "Body Mass")
+  expect_null(w$x$option$yAxis[["name"]])
 })
 
 test_that("draw_boxplot ylab overrides inferred value_axis_name", {
@@ -1212,7 +1212,7 @@ test_that("draw_boxplot ylab overrides inferred value_axis_name", {
     group = rep(c("A", "B"), each = 3),
     ylab = "Mass (g)"
   )
-  expect_equal(w$x$option$yAxis$name, "Mass (g)")
+  expect_equal(w$x$option$yAxis[["name"]], "Mass (g)")
 })
 
 test_that("draw_boxplot xlab applies in grouped multi-variable branch", {
@@ -1222,6 +1222,6 @@ test_that("draw_boxplot xlab applies in grouped multi-variable branch", {
     xlab = "Variable",
     ylab = "Value"
   )
-  expect_equal(w$x$option$xAxis$name, "Variable")
-  expect_equal(w$x$option$yAxis$name, "Value")
+  expect_equal(w$x$option$xAxis[["name"]], "Variable")
+  expect_equal(w$x$option$yAxis[["name"]], "Value")
 })
