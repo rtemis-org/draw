@@ -650,7 +650,7 @@ draw_spectrogram <- function(
       type = "category",
       data = as.list(freq_fmt),
       name = ylab,
-      name_location = if (!is.null(xlab)) "middle" else NULL,
+      name_location = if (!is.null(ylab)) "middle" else NULL,
       boundary_gap = TRUE,
       split_area = SplitArea(show = FALSE),
       axis_line = AxisLine(show = FALSE)
