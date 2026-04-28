@@ -10,7 +10,7 @@ format-r:
 # ── Document ─────────────────────────────────────────────────────────────────
 document: document-r
 
-document-r:
+document-r: format-r
 	@echo "=> R: Documenting rtemis.draw"
 	cd r && Rscript -e "devtools::document()"
 
