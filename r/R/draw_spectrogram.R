@@ -142,14 +142,14 @@
 
 #' Draw a Spectrogram
 #'
-#' Renders an interactive time–frequency spectrogram as an ECharts heatmap
+#' Renders an interactive time-frequency spectrogram as an ECharts heatmap
 #' widget. Accepts either a raw signal vector (STFT is computed internally via
-#' [signal::specgram()]) or a pre-computed spectrogram matrix (freq × time).
+#' [signal::specgram()]) or a pre-computed spectrogram matrix (freq x time).
 #'
 #' Corresponds to `HeatmapSeriesOption` in `src/chart/heatmap/HeatmapSeries.ts`.
 #' ECharts docs: \url{https://echarts.apache.org/en/option.html#series-heatmap}
 #'
-#' @param x Numeric matrix (freq × time) or numeric vector (raw signal).
+#' @param x Numeric matrix (freq x time) or numeric vector (raw signal).
 #'   A matrix is used directly; `time` and `frequency` vectors supply axis
 #'   values (defaults to sample indices when absent). A complex matrix (raw
 #'   STFT output, e.g. from [signal::specgram()]\code{$S}) is also accepted.
@@ -188,7 +188,7 @@
 #' @param palette Character: Colour palette. Accepts a \pkg{viridisLite} palette
 #'   name (`"magma"` (default), `"inferno"`, `"plasma"`,
 #'   `"viridis"`, `"cividis"`, `"mako"`, `"rocket"`, `"turbo"`), `"diverging"`
-#'   for the rtemis teal–background–orange scale (suitable for signed data
+#'   for the rtemis teal-background-orange scale (suitable for signed data
 #'   such as EEG/MEG amplitudes), or a character vector of >= 2 hex colours for a
 #'   custom ramp.
 #' @param palette_reverse Logical: Reverse the palette direction.
@@ -254,7 +254,7 @@ draw_spectrogram <- function(
   # -- 1. Validate scalar arguments ---------------------------------------------
   if (!is.numeric(x) && !is.complex(x)) {
     cli::cli_abort(
-      "{.arg x} must be a numeric or complex matrix (freq × time) \\
+      "{.arg x} must be a numeric or complex matrix (freq x time) \\
        or a numeric vector (raw signal)."
     )
   }
@@ -380,7 +380,7 @@ draw_spectrogram <- function(
     ovlp <- as.integer(overlap %||% ceiling(n_fft / 2L))
     if (ovlp < 0L || ovlp >= n_fft) {
       cli::cli_abort(
-        "{.arg overlap} must be in [0, n_fft − 1] = [0, {n_fft - 1L}]. \\
+        "{.arg overlap} must be in [0, n_fft - 1] = [0, {n_fft - 1L}]. \\
          Got {ovlp}."
       )
     }
@@ -399,7 +399,7 @@ draw_spectrogram <- function(
     # Pre-computed matrix (real or complex)
     if (!is.matrix(x)) {
       cli::cli_abort(
-        "{.arg x} must be a numeric or complex matrix (freq × time) \\
+        "{.arg x} must be a numeric or complex matrix (freq x time) \\
          or a numeric vector (raw signal)."
       )
     }
@@ -459,7 +459,7 @@ draw_spectrogram <- function(
       )
     }
     eps <- .Machine[["double.eps"]]
-    # 10*log10 for power, 20*log10 for amplitude — see @param power docs.
+    # 10*log10 for power, 20*log10 for amplitude - see @param power docs.
     spec <- if (power) 10 * log10(spec + eps) else 20 * log10(spec + eps)
 
     peak <- max(spec, na.rm = TRUE)
@@ -509,7 +509,7 @@ draw_spectrogram <- function(
 
   # -- 7. Log-frequency resampling ---------------------------------------------
   # ECharts heatmap sizing is driven by getBandWidth(), which for category axes
-  # divides canvas pixels by the number of categories — giving correctly sized
+  # divides canvas pixels by the number of categories - giving correctly sized
   # cells.  For value axes it divides by the axis value range, producing cells
   # orders of magnitude too large or too small.  We therefore always use
   # category axes (integer-indexed data), matching draw_heatmap's approach.
@@ -593,7 +593,7 @@ draw_spectrogram <- function(
   # Category-axis convention: x = time column index (0-based),
   #                           y = frequency row index (0-based).
   # Low frequencies (row 0) map to category 0, which ECharts places at the
-  # bottom of a category y-axis — the conventional spectrogram orientation.
+  # bottom of a category y-axis - the conventional spectrogram orientation.
   col_idx <- rep(seq_len(n_time_disp) - 1L, each = n_freq_disp)
   row_idx <- rep(seq_len(n_freq_disp) - 1L, times = n_time_disp)
   vals <- as.vector(spec)
@@ -620,13 +620,13 @@ draw_spectrogram <- function(
     ";",
     "return function(p){",
     "if(!p.value||p.value[2]===null||p.value[2]===undefined)return'N/A';",
-    "return 'Time: '+t[p.value[0]]+' ",
+    "return 'Time:\\u00A0'+t[p.value[0]]+'\\u00A0",
     time_unit,
-    "<br/>Freq: '+f[p.value[1]]+' ",
+    "<br/>Freq:\\u00A0'+f[p.value[1]]+'\\u00A0",
     freq_unit,
     "<br/>'+p.value[2].toFixed(",
     val_digits,
-    ")+' ",
+    ")+'\\u00A0",
     colorbar_title,
     "';",
     "}})()"

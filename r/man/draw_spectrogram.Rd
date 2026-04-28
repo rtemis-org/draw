@@ -37,7 +37,7 @@ draw_spectrogram(
 )
 }
 \arguments{
-\item{x}{Numeric matrix (freq × time) or numeric vector (raw signal).
+\item{x}{Numeric matrix (freq x time) or numeric vector (raw signal).
 A matrix is used directly; \code{time} and \code{frequency} vectors supply axis
 values (defaults to sample indices when absent). A complex matrix (raw
 STFT output, e.g. from \code{\link[signal:specgram]{signal::specgram()}}\code{$S}) is also accepted.
@@ -91,7 +91,7 @@ e.g. \code{c(20, 8000)}. Applied after STFT computation.}
 \item{palette}{Character: Colour palette. Accepts a \pkg{viridisLite} palette
 name (\code{"magma"} (default), \code{"inferno"}, \code{"plasma"},
 \code{"viridis"}, \code{"cividis"}, \code{"mako"}, \code{"rocket"}, \code{"turbo"}), \code{"diverging"}
-for the rtemis teal–background–orange scale (suitable for signed data
+for the rtemis teal-background-orange scale (suitable for signed data
 such as EEG/MEG amplitudes), or a character vector of >= 2 hex colours for a
 custom ramp.}
 
@@ -133,9 +133,9 @@ margins in pixels. Valid names: \code{"top"}, \code{"right"}, \code{"bottom"}, \
 htmlwidget
 }
 \description{
-Renders an interactive time–frequency spectrogram as an ECharts heatmap
+Renders an interactive time-frequency spectrogram as an ECharts heatmap
 widget. Accepts either a raw signal vector (STFT is computed internally via
-\code{\link[signal:specgram]{signal::specgram()}}) or a pre-computed spectrogram matrix (freq × time).
+\code{\link[signal:specgram]{signal::specgram()}}) or a pre-computed spectrogram matrix (freq x time).
 }
 \details{
 Corresponds to \code{HeatmapSeriesOption} in \code{src/chart/heatmap/HeatmapSeries.ts}.
