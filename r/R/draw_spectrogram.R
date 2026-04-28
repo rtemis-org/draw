@@ -1,9 +1,3 @@
-# draw_spectrogram.R
-# Tier-1 spectrogram drawing function.
-#
-# Uses signal::specgram() for STFT computation and ECharts heatmap series on a
-# cartesian2d coordinate system with continuous value axes.
-
 # -- Internal helpers -----------------------------------------------------------
 
 # Map a window name string to the corresponding signal-package window vector.
@@ -175,8 +169,11 @@
 #' @param overlap Optional Integer `[0, n_fft)`: Overlap between consecutive
 #'   frames in samples. Defaults to `n_fft / 2`. Only used when `x` is a raw
 #'   signal.
-#' @param power Logical: Compute power spectrum (`TRUE`, `|S|^2`) or amplitude
-#'   spectrum (`FALSE`, `|S|`). Applied only when `x` is complex.
+#' @param power Logical: Treat spectral values as power (`TRUE`) or amplitude
+#'   (`FALSE`). When `x` is complex, controls whether the STFT magnitude is
+#'   squared (`|S|^2`) or left as-is (`|S|`). When `db = TRUE`, also determines
+#'   the dB scaling for real matrices: `10 * log10()` for power, `20 * log10()`
+#'   for amplitude.
 #' @param db Logical: Convert to dB. For power: `10 * log10()`; for amplitude:
 #'   `20 * log10()`. Set `FALSE` when passing a pre-computed dB matrix.
 #' @param db_range Numeric `(0, Inf)`: Dynamic range to display in dB below the
@@ -188,8 +185,8 @@
 #' @param freq_unit Character \{"Hz", "kHz"\}: Unit for the frequency axis.
 #' @param time_range Optional Numeric\[2\]: Time range to display in seconds.
 #' @param time_unit Character \{"s", "ms"\}: Unit for the time axis.
-#' @param palette Character or Numeric: Colour palette. Accepts a
-#'   a \pkg{viridisLite} palette name (`"magma"` (default), `"inferno"`, `"plasma"`,
+#' @param palette Character: Colour palette. Accepts a \pkg{viridisLite} palette
+#'   name (`"magma"` (default), `"inferno"`, `"plasma"`,
 #'   `"viridis"`, `"cividis"`, `"mako"`, `"rocket"`, `"turbo"`), `"diverging"`
 #'   for the rtemis teal–background–orange scale (suitable for signed data
 #'   such as EEG/MEG amplitudes), or a character vector of ≥ 2 hex colours for a
@@ -262,8 +259,17 @@ draw_spectrogram <- function(
     )
   }
 
-  # Distinguish raw signal (vector) from pre-computed matrix
-  is_raw_signal <- !is.matrix(x) && is.vector(x)
+  if (is.complex(x) && !is.matrix(x)) {
+    cli::cli_abort(
+      c(
+        "{.arg x} is a complex vector, which is not a valid raw signal.",
+        "i" = "Pass the STFT output as a complex matrix (freq x time), \\
+               e.g. {.code signal::specgram(x)$S}."
+      )
+    )
+  }
+
+  is_raw_signal <- is.numeric(x) && is.vector(x) && !is.matrix(x)
 
   freq_scale <- match.arg(freq_scale, c("linear", "log"))
   freq_unit <- match.arg(freq_unit, c("Hz", "kHz"))
@@ -345,6 +351,11 @@ draw_spectrogram <- function(
          Got {.val {sample_rate}}."
       )
     }
+    if (!is.numeric(n_fft) || length(n_fft) != 1L || is.na(n_fft)) {
+      cli::cli_abort(
+        "{.arg n_fft} must be a single integer ≥ 2. Got {.val {n_fft}}."
+      )
+    }
     n_fft <- as.integer(n_fft)
     if (n_fft < 2L) {
       cli::cli_abort("{.arg n_fft} must be ≥ 2. Got {n_fft}.")
@@ -357,6 +368,15 @@ draw_spectrogram <- function(
     }
 
     win_vec <- .specgram_window(window, n_fft)
+    if (
+      !is.null(overlap) &&
+        (!is.numeric(overlap) || length(overlap) != 1L || is.na(overlap))
+    ) {
+      cli::cli_abort(
+        "{.arg overlap} must be a single non-negative integer or NULL. \\
+         Got {.val {overlap}}."
+      )
+    }
     ovlp <- as.integer(overlap %||% ceiling(n_fft / 2L))
     if (ovlp < 0L || ovlp >= n_fft) {
       cli::cli_abort(
@@ -428,13 +448,20 @@ draw_spectrogram <- function(
 
   # -- 4. dB conversion --------------------------------------------------------
   if (db) {
+    if (!is.complex(S) && any(spec < 0, na.rm = TRUE)) {
+      cli::cli_warn(
+        c(
+          "Pre-computed matrix contains negative values; {.code db = TRUE} \\
+           will produce {.val NaN} for those entries.",
+          "i" = "Pass {.code db = FALSE} if the matrix is already in dB, \\
+                 or ensure values are non-negative before dB conversion."
+        )
+      )
+    }
     eps <- .Machine[["double.eps"]]
-    # Determine dB scale: 10*log10 for power, 20*log10 for amplitude.
-    # When the user passes a real matrix with db = TRUE we use the power flag
-    # to decide which formula to apply.
+    # 10*log10 for power, 20*log10 for amplitude — see @param power docs.
     spec <- if (power) 10 * log10(spec + eps) else 20 * log10(spec + eps)
 
-    # Clip to dynamic range below spectral peak
     peak <- max(spec, na.rm = TRUE)
     spec <- pmax(spec, peak - db_range)
   }
@@ -514,6 +541,14 @@ draw_spectrogram <- function(
 
   # -- 9. Colour-scale limits --------------------------------------------------
   if (is.null(zlim)) {
+    if (!any(is.finite(spec))) {
+      cli::cli_abort(
+        c(
+          "Cannot determine colour-scale limits: spectrogram contains no finite values.",
+          "i" = "Check the input signal, or supply {.arg zlim} explicitly."
+        )
+      )
+    }
     zlim <- range(spec, na.rm = TRUE)
   }
 
@@ -559,19 +594,17 @@ draw_spectrogram <- function(
   #                           y = frequency row index (0-based).
   # Low frequencies (row 0) map to category 0, which ECharts places at the
   # bottom of a category y-axis — the conventional spectrogram orientation.
-  data_list <- vector("list", n_cells)
-  k <- 1L
-  for (i in seq_len(n_freq_disp)) {
-    for (j in seq_len(n_time_disp)) {
-      val <- spec[i, j]
-      data_list[[k]] <- list(
-        j - 1L,
-        i - 1L,
-        if (is.finite(val)) val else NULL
-      )
-      k <- k + 1L
-    }
-  }
+  col_idx <- rep(seq_len(n_time_disp) - 1L, each = n_freq_disp)
+  row_idx <- rep(seq_len(n_freq_disp) - 1L, times = n_time_disp)
+  vals <- as.vector(spec)
+  vals[!is.finite(vals)] <- NA_real_
+  data_list <- mapply(
+    function(ci, ri, v) list(ci, ri, if (is.na(v)) NULL else v),
+    col_idx,
+    row_idx,
+    vals,
+    SIMPLIFY = FALSE
+  )
 
   # -- 14. Tooltip formatter ---------------------------------------------------
   # Embed label arrays so the formatter can look up display values by index.

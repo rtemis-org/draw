@@ -64,7 +64,8 @@ test_that(".spectrogram_palette diverging returns dark_variant attribute", {
 })
 
 test_that(".spectrogram_palette diverging symmetrises zlim around 0", {
-  # Symmetric zlim vs asymmetric — midpoint colour should be identical
+  # c(-1.5, 2) is asymmetric but both endpoints have |max| = 2, so after
+  # symmetrisation both calls produce the same palette as c(-2, 2).
   sym <- rtemis.draw:::.spectrogram_palette("diverging", 101L, FALSE, c(-2, 2))
   asym <- rtemis.draw:::.spectrogram_palette(
     "diverging",
@@ -72,9 +73,11 @@ test_that(".spectrogram_palette diverging symmetrises zlim around 0", {
     FALSE,
     c(-1.5, 2)
   )
-  # Both should have a dark_variant and equal length
-  expect_length(sym, 101L)
-  expect_length(asym, 101L)
+  expect_identical(sym, asym)
+  expect_identical(
+    attr(sym, "dark_variant"),
+    attr(asym, "dark_variant")
+  )
 })
 
 test_that(".spectrogram_palette accepts custom hex vector", {
@@ -100,6 +103,13 @@ test_that(".spectrogram_palette errors on unknown name", {
 
 test_that("draw_spectrogram errors when x is not numeric", {
   expect_error(draw_spectrogram("hello"), class = "rlang_error")
+})
+
+test_that("draw_spectrogram errors when x is a complex vector (not matrix)", {
+  expect_error(
+    draw_spectrogram(complex(real = 1:10, imaginary = 1:10)),
+    class = "rlang_error"
+  )
 })
 
 test_that("draw_spectrogram errors when raw signal missing sample_rate", {

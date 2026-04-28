@@ -64,8 +64,11 @@ vector. Passed to \code{\link[signal:specgram]{signal::specgram()}}. Only used w
 frames in samples. Defaults to \code{n_fft / 2}. Only used when \code{x} is a raw
 signal.}
 
-\item{power}{Logical: Compute power spectrum (\code{TRUE}, \verb{|S|^2}) or amplitude
-spectrum (\code{FALSE}, \verb{|S|}). Applied only when \code{x} is complex.}
+\item{power}{Logical: Treat spectral values as power (\code{TRUE}) or amplitude
+(\code{FALSE}). When \code{x} is complex, controls whether the STFT magnitude is
+squared (\verb{|S|^2}) or left as-is (\verb{|S|}). When \code{db = TRUE}, also determines
+the dB scaling for real matrices: \code{10 * log10()} for power, \code{20 * log10()}
+for amplitude.}
 
 \item{db}{Logical: Convert to dB. For power: \code{10 * log10()}; for amplitude:
 \code{20 * log10()}. Set \code{FALSE} when passing a pre-computed dB matrix.}
@@ -85,8 +88,8 @@ e.g. \code{c(20, 8000)}. Applied after STFT computation.}
 
 \item{time_unit}{Character \{"s", "ms"\}: Unit for the time axis.}
 
-\item{palette}{Character or Numeric: Colour palette. Accepts a
-a \pkg{viridisLite} palette name (\code{"magma"} (default), \code{"inferno"}, \code{"plasma"},
+\item{palette}{Character: Colour palette. Accepts a \pkg{viridisLite} palette
+name (\code{"magma"} (default), \code{"inferno"}, \code{"plasma"},
 \code{"viridis"}, \code{"cividis"}, \code{"mako"}, \code{"rocket"}, \code{"turbo"}), \code{"diverging"}
 for the rtemis teal–background–orange scale (suitable for signed data
 such as EEG/MEG amplitudes), or a character vector of ≥ 2 hex colours for a
