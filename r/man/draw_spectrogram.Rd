@@ -27,8 +27,8 @@ draw_spectrogram(
   show_colorbar = TRUE,
   colorbar_title = NULL,
   title = NULL,
-  x_lab = NULL,
-  y_lab = NULL,
+  xlab = NULL,
+  ylab = NULL,
   theme = NULL,
   margins = DEFAULT_MARGINS,
   width = NULL,
@@ -110,10 +110,10 @@ transformations (dB clipping, unit conversion). Defaults to the data range.}
 
 \item{title}{Optional Character: Chart title.}
 
-\item{x_lab}{Optional Character: X-axis label. Default: \code{"Time (s)"} or
+\item{xlab}{Optional Character: X-axis label. Default: \code{"Time (s)"} or
 \code{"Time (ms)"} depending on \code{time_unit}.}
 
-\item{y_lab}{Optional Character: Y-axis label. Default: \code{"Frequency (Hz)"}
+\item{ylab}{Optional Character: Y-axis label. Default: \code{"Frequency (Hz)"}
 or \code{"Frequency (kHz)"} depending on \code{freq_unit}.}
 
 \item{theme}{Optional \link{Theme}, list, or \code{NA}: Theme override passed to
