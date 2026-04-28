@@ -235,6 +235,8 @@ renderDraw <- function(expr, env = parent.frame(), quoted = FALSE) {
 #' @param color Optional Character: Series color palette — a single color string or
 #'   character vector that overrides the theme palette for this chart.
 #'   `color` takes precedence over the theme palette (it sets `option.color`).
+#' @param line_style Optional Character \{"solid", "dashed", "dotted"\}: Line dash
+#'   style — one value per series, recycled to match the number of series.
 #' @param xlim Optional Numeric \[length 2\]: X-axis limits `c(min, max)`.
 #'   Only supported when `x` is numeric; passing `xlim` with a non-numeric `x`
 #'   errors. Defaults to `range(x)` (no padding) when `x` is numeric.
@@ -272,6 +274,7 @@ draw_line <- function(
   block_color = NULL,
   block_opacity = 0.2,
   color = NULL,
+  line_style = NULL,
   xlim = NULL,
   ylim = NULL,
   xlab = NULL,
@@ -316,6 +319,25 @@ draw_line <- function(
   # ECharts treats missing `showSymbol` as TRUE; only pass FALSE when hiding.
   show_symbol <- if (points) NULL else FALSE
 
+  valid_line_styles <- c("solid", "dashed", "dotted")
+  if (!is.null(line_style)) {
+    if (
+      !is.character(line_style) ||
+        any(!line_style %in% valid_line_styles)
+    ) {
+      cli::cli_abort(
+        "{.arg line_style} must be {.val NULL} or a character vector of \\
+        {.val solid}, {.val dashed}, or {.val dotted}."
+      )
+    }
+  }
+  # Returns a LineStyle for series i, recycling line_style; NULL if unset.
+  resolve_line_style <- function(i) {
+    if (is.null(line_style)) return(NULL)
+    n <- length(line_style)
+    LineStyle(type = line_style[((i - 1L) %% n) + 1L])
+  }
+
   # Build series
   if (is.list(y) && !is.null(names(y))) {
     series_names <- names(y)
@@ -325,6 +347,7 @@ draw_line <- function(
         data = pair_xy(y[[i]]),
         smooth = smooth,
         show_symbol = show_symbol,
+        line_style = resolve_line_style(i),
         area_style = if (area) AreaStyle() else NULL
       )
     })
@@ -336,6 +359,7 @@ draw_line <- function(
         data = pair_xy(y[[i]]),
         smooth = smooth,
         show_symbol = show_symbol,
+        line_style = resolve_line_style(i),
         area_style = if (area) AreaStyle() else NULL
       )
     })
@@ -344,6 +368,7 @@ draw_line <- function(
       data = pair_xy(y),
       smooth = smooth,
       show_symbol = show_symbol,
+      line_style = resolve_line_style(1L),
       area_style = if (area) AreaStyle() else NULL
     ))
   }
