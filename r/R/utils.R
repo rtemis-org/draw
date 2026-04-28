@@ -343,7 +343,12 @@ resolve_margins <- function(margins) {
     return(NULL)
   }
   m <- parse_margins(margins)
-  Grid(top = m[["top"]], right = m[["right"]], bottom = m[["bottom"]], left = m[["left"]])
+  Grid(
+    top = m[["top"]],
+    right = m[["right"]],
+    bottom = m[["bottom"]],
+    left = m[["left"]]
+  )
 }
 
 

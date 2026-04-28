@@ -36,7 +36,10 @@ test_that("a3_scale_x scales correctly", {
 })
 
 test_that("a3_with_alpha converts hex to rgba", {
-  expect_equal(rtemis.draw:::a3_with_alpha("#0F766E", 0.35), "rgba(15, 118, 110, 0.35)")
+  expect_equal(
+    rtemis.draw:::a3_with_alpha("#0F766E", 0.35),
+    "rgba(15, 118, 110, 0.35)"
+  )
   # Short hex
   expect_equal(rtemis.draw:::a3_with_alpha("#F00", 1), "rgba(255, 0, 0, 1)")
   # Non-hex passthrough
@@ -93,7 +96,11 @@ test_that("draw_a3 backbone series is present when show_markers = TRUE", {
   a <- rtemis.a3::create_A3("MAEPR")
   w <- draw_a3(a, show_markers = TRUE)
   series_types <- vapply(w$x$option$series, `[[`, character(1L), "type")
-  series_names <- vapply(w$x$option$series, function(s) s$name %||% "", character(1L))
+  series_names <- vapply(
+    w$x$option$series,
+    function(s) s$name %||% "",
+    character(1L)
+  )
   expect_true("Primary structure" %in% series_names)
   backbone_idx <- which(series_names == "Primary structure")
   expect_equal(series_types[[backbone_idx]], "line")
@@ -103,7 +110,11 @@ test_that("draw_a3 backbone series is absent when show_markers = FALSE", {
   skip_if_not_installed("rtemis.a3")
   a <- rtemis.a3::create_A3("MAEPR")
   w <- draw_a3(a, show_markers = FALSE)
-  series_names <- vapply(w$x$option$series, function(s) s$name %||% "", character(1L))
+  series_names <- vapply(
+    w$x$option$series,
+    function(s) s$name %||% "",
+    character(1L)
+  )
   expect_false("Primary structure" %in% series_names)
 })
 
@@ -118,7 +129,11 @@ test_that("draw_a3 includes region series for annotated A3", {
     )
   )
   w <- draw_a3(a)
-  series_names <- vapply(w$x$option$series, function(s) s$name %||% "", character(1L))
+  series_names <- vapply(
+    w$x$option$series,
+    function(s) s$name %||% "",
+    character(1L)
+  )
   expect_true("Domain_A" %in% series_names)
   region_idx <- which(series_names == "Domain_A")
   expect_equal(w$x$option$series[[region_idx]]$type, "line")
@@ -133,7 +148,11 @@ test_that("draw_a3 includes site series for annotated A3", {
     )
   )
   w <- draw_a3(a)
-  series_names <- vapply(w$x$option$series, function(s) s$name %||% "", character(1L))
+  series_names <- vapply(
+    w$x$option$series,
+    function(s) s$name %||% "",
+    character(1L)
+  )
   expect_true("Active_site" %in% series_names)
   site_idx <- which(series_names == "Active_site")
   expect_equal(w$x$option$series[[site_idx]]$type, "scatter")
@@ -145,7 +164,11 @@ test_that("draw_a3 residue labels series is present when show_labels = TRUE", {
   skip_if_not_installed("rtemis.a3")
   a <- rtemis.a3::create_A3("MAEPR")
   w <- draw_a3(a, show_labels = TRUE)
-  series_names <- vapply(w$x$option$series, function(s) s$name %||% "", character(1L))
+  series_names <- vapply(
+    w$x$option$series,
+    function(s) s$name %||% "",
+    character(1L)
+  )
   expect_true("Residue labels" %in% series_names)
 })
 
@@ -153,7 +176,11 @@ test_that("draw_a3 position labels series absent when position_every = NULL", {
   skip_if_not_installed("rtemis.a3")
   a <- rtemis.a3::create_A3("MAEPRQEFEVMEDHAGTYGLGDRK")
   w <- draw_a3(a, position_every = NULL)
-  series_names <- vapply(w$x$option$series, function(s) s$name %||% "", character(1L))
+  series_names <- vapply(
+    w$x$option$series,
+    function(s) s$name %||% "",
+    character(1L)
+  )
   expect_false("Position labels" %in% series_names)
 })
 

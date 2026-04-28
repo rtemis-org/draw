@@ -44,13 +44,21 @@ test_that("hclust_to_dendro_data leaf positions cover 0 .. n-1", {
   # Leaf positions: left_pos values from segments where left_h == 0 (leaf on left),
   # and right_pos values from segments where right_h == 0 (leaf on right).
   left_leaf_pos <- vapply(
-    out[["data"]][vapply(out[["data"]], function(seg) seg[[3L]] == 0, logical(1L))],
+    out[["data"]][vapply(
+      out[["data"]],
+      function(seg) seg[[3L]] == 0,
+      logical(1L)
+    )],
     `[[`,
     numeric(1L),
     1L
   )
   right_leaf_pos <- vapply(
-    out[["data"]][vapply(out[["data"]], function(seg) seg[[4L]] == 0, logical(1L))],
+    out[["data"]][vapply(
+      out[["data"]],
+      function(seg) seg[[4L]] == 0,
+      logical(1L)
+    )],
     `[[`,
     numeric(1L),
     2L

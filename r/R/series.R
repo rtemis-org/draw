@@ -47,9 +47,7 @@ MarkAreaDataPoint <- S7::new_class(
         if (is.null(value)) {
           return(NULL)
         }
-        if (
-          (is.numeric(value) || is.character(value)) && length(value) == 1L
-        ) {
+        if ((is.numeric(value) || is.character(value)) && length(value) == 1L) {
           return(NULL)
         }
         "must be a single number, string, or NULL"
@@ -62,9 +60,7 @@ MarkAreaDataPoint <- S7::new_class(
         if (is.null(value)) {
           return(NULL)
         }
-        if (
-          (is.numeric(value) || is.character(value)) && length(value) == 1L
-        ) {
+        if ((is.numeric(value) || is.character(value)) && length(value) == 1L) {
           return(NULL)
         }
         "must be a single number, string, or NULL"
@@ -78,9 +74,7 @@ MarkAreaDataPoint <- S7::new_class(
         if (is.null(value)) {
           return(NULL)
         }
-        if (
-          (is.numeric(value) || is.character(value)) && length(value) == 1L
-        ) {
+        if ((is.numeric(value) || is.character(value)) && length(value) == 1L) {
           return(NULL)
         }
         "must be a single number, string, or NULL"
