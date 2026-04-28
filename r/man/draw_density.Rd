@@ -14,7 +14,7 @@ draw_density(
   ylab = NULL,
   title = NULL,
   theme = NULL,
-  margins = NULL,
+  margins = DEFAULT_MARGINS,
   width = NULL,
   height = NULL,
   verbosity = 1L,

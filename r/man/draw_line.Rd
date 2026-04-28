@@ -23,7 +23,7 @@ draw_line(
   title = NULL,
   theme = NULL,
   zoom = FALSE,
-  margins = NULL,
+  margins = DEFAULT_MARGINS,
   width = NULL,
   height = NULL,
   filename = NULL

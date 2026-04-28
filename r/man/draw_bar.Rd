@@ -14,7 +14,7 @@ draw_bar(
   ylab = NULL,
   title = NULL,
   theme = NULL,
-  margins = NULL,
+  margins = DEFAULT_MARGINS,
   width = NULL,
   height = NULL,
   filename = NULL
