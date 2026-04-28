@@ -9,6 +9,7 @@
 #' common chart types and full htmlwidgets integration for use in Quarto, Shiny, and IDE viewers.
 #'
 #' @import S7 rtemis.core
+#' @importFrom stats approx
 "_PACKAGE"
 
 NULL

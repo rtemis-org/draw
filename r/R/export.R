@@ -93,7 +93,11 @@ save_svg_ssr <- function(option, theme, filename, width, height) {
     option = option,
     theme = theme,
     width = width,
-    height = height
+    height = height,
+    creator = paste0(
+      "rtemis.draw ",
+      utils::packageVersion("rtemis.draw")
+    )
   )
   json <- jsonlite::toJSON(
     payload,

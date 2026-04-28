@@ -41,10 +41,11 @@ process.stdin.on("end", () => {
 		process.exit(2);
 	}
 
-	const width = payload.width || 800;
-	const height = payload.height || 600;
-	const option = payload.option;
-	const theme = payload.theme || null;
+	const width   = payload.width   || 800;
+	const height  = payload.height  || 600;
+	const option  = payload.option;
+	const theme   = payload.theme   || null;
+	const creator = payload.creator || "rtemis.draw";
 
 	if (!option) {
 		process.stderr.write("render_svg: payload.option is missing\n");
@@ -67,5 +68,7 @@ process.stdin.on("end", () => {
 	const svg = chart.renderToSVGString();
 	chart.dispose();
 
-	process.stdout.write(svg);
+	// Inject creator comment immediately after the opening <svg ...> tag.
+	const svgOut = svg.replace(/(<svg[^>]*>)/, `$1<!-- Created by ${creator} -->`);
+	process.stdout.write(svgOut);
 });
