@@ -200,9 +200,9 @@
 #' @param colorbar_title Optional Character: Colorbar label. Default: `"dB"`,
 #'   `"Power"`, or `"Amplitude"` derived from `db` and `power`.
 #' @param title Optional Character: Chart title.
-#' @param x_lab Optional Character: X-axis label. Default: `"Time (s)"` or
+#' @param xlab Optional Character: X-axis label. Default: `"Time (s)"` or
 #'   `"Time (ms)"` depending on `time_unit`.
-#' @param y_lab Optional Character: Y-axis label. Default: `"Frequency (Hz)"`
+#' @param ylab Optional Character: Y-axis label. Default: `"Frequency (Hz)"`
 #'   or `"Frequency (kHz)"` depending on `freq_unit`.
 #' @param theme Optional [Theme], list, or `NA`: Theme override passed to
 #'   [draw()].
@@ -243,8 +243,8 @@ draw_spectrogram <- function(
   show_colorbar = TRUE,
   colorbar_title = NULL,
   title = NULL,
-  x_lab = NULL,
-  y_lab = NULL,
+  xlab = NULL,
+  ylab = NULL,
   theme = NULL,
   margins = DEFAULT_MARGINS,
   width = NULL,
@@ -574,8 +574,8 @@ draw_spectrogram <- function(
   freq_digits <- if (freq_unit == "kHz") 3L else 1L
   val_digits <- if (db) 1L else 3L
 
-  x_lab <- x_lab %||% paste0("Time (", time_unit, ")")
-  y_lab <- y_lab %||% paste0("Frequency (", freq_unit, ")")
+  xlab <- xlab %||% paste0("Time (", time_unit, ")")
+  ylab <- ylab %||% paste0("Frequency (", freq_unit, ")")
   colorbar_title <- colorbar_title %||%
     if (db) {
       "dB"
@@ -640,7 +640,8 @@ draw_spectrogram <- function(
     x_axis = Axis(
       type = "category",
       data = as.list(time_fmt),
-      name = x_lab,
+      name = xlab,
+      name_location = if (!is.null(xlab)) "middle" else NULL,
       boundary_gap = TRUE,
       split_area = SplitArea(show = FALSE),
       axis_line = AxisLine(show = FALSE)
@@ -648,7 +649,8 @@ draw_spectrogram <- function(
     y_axis = Axis(
       type = "category",
       data = as.list(freq_fmt),
-      name = y_lab,
+      name = ylab,
+      name_location = if (!is.null(xlab)) "middle" else NULL,
       boundary_gap = TRUE,
       split_area = SplitArea(show = FALSE),
       axis_line = AxisLine(show = FALSE)
