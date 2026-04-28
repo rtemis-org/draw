@@ -2,7 +2,7 @@
 # htmlwidget binding and Tier 1 draw_* functions
 
 # Constants ----
-m <- 36
+DEFAULT_MARGINS <- c(top = 36, right = 36, bottom = 36, left = 36)
 
 #' Render an ECharts option as an htmlwidget
 #'
@@ -159,7 +159,7 @@ draw <- function(
   should_fill <- is.null(width) || is.character(width)
 
   widget <- htmlwidgets::createWidget(
-    name = "draw",
+    name = "rtemis.draw",
     x = payload,
     width = width,
     height = height,
@@ -189,7 +189,7 @@ draw <- function(
 drawOutput <- function(outputId, width = "100%", height = "400px") {
   htmlwidgets::shinyWidgetOutput(
     outputId,
-    "draw",
+    "rtemis.draw",
     width = width,
     height = height,
     package = "rtemis.draw"
@@ -282,7 +282,7 @@ draw_line <- function(
   title = NULL,
   theme = NULL,
   zoom = FALSE,
-  margins = NULL,
+  margins = DEFAULT_MARGINS,
   width = NULL,
   height = NULL,
   filename = NULL
@@ -333,7 +333,9 @@ draw_line <- function(
   }
   # Returns a LineStyle for series i, recycling line_style; NULL if unset.
   resolve_line_style <- function(i) {
-    if (is.null(line_style)) return(NULL)
+    if (is.null(line_style)) {
+      return(NULL)
+    }
     n <- length(line_style)
     LineStyle(type = line_style[((i - 1L) %% n) + 1L])
   }
@@ -710,7 +712,7 @@ draw_bar <- function(
   ylab = NULL,
   title = NULL,
   theme = NULL,
-  margins = NULL,
+  margins = DEFAULT_MARGINS,
   width = NULL,
   height = NULL,
   filename = NULL
@@ -821,7 +823,7 @@ draw_scatter <- function(
   ylab = NULL,
   title = NULL,
   theme = NULL,
-  margins = NULL,
+  margins = DEFAULT_MARGINS,
   width = NULL,
   height = NULL,
   filename = NULL
@@ -1099,7 +1101,7 @@ draw_density <- function(
   ylab = NULL,
   title = NULL,
   theme = NULL,
-  margins = NULL,
+  margins = DEFAULT_MARGINS,
   width = NULL,
   height = NULL,
   verbosity = 1L,
@@ -1268,7 +1270,11 @@ draw_density <- function(
       name_location = if (!is.null(xlab)) "middle" else NULL,
       scale = TRUE
     ),
-    y_axis = Axis(type = "value", name = ylab, name_location = if (!is.null(ylab)) "middle" else NULL),
+    y_axis = Axis(
+      type = "value",
+      name = ylab,
+      name_location = if (!is.null(ylab)) "middle" else NULL
+    ),
     grid = resolve_margins(margins),
     series = series
   )
@@ -1309,7 +1315,7 @@ draw_histogram <- function(
   ylab = NULL,
   title = NULL,
   theme = NULL,
-  margins = NULL,
+  margins = DEFAULT_MARGINS,
   width = NULL,
   height = NULL,
   filename = NULL
@@ -1404,7 +1410,7 @@ draw_boxplot <- function(
   ylab = NULL,
   title = NULL,
   theme = NULL,
-  margins = NULL,
+  margins = DEFAULT_MARGINS,
   width = NULL,
   height = NULL,
   verbosity = 1L,
