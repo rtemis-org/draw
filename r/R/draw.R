@@ -159,7 +159,7 @@ draw <- function(
   should_fill <- is.null(width) || is.character(width)
 
   widget <- htmlwidgets::createWidget(
-    name = "rtemis.draw",
+    name = "draw",
     x = payload,
     width = width,
     height = height,
@@ -189,7 +189,7 @@ draw <- function(
 drawOutput <- function(outputId, width = "100%", height = "400px") {
   htmlwidgets::shinyWidgetOutput(
     outputId,
-    "rtemis.draw",
+    "draw",
     width = width,
     height = height,
     package = "rtemis.draw"

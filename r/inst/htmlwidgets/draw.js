@@ -1,5 +1,5 @@
 HTMLWidgets.widget({
-  name: "rtemis.draw",
+  name: "draw",
   type: "output",
 
   factory: (el, width, height) => {
