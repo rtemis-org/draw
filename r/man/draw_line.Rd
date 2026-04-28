@@ -15,6 +15,7 @@ draw_line(
   block_color = NULL,
   block_opacity = 0.2,
   color = NULL,
+  line_style = NULL,
   xlim = NULL,
   ylim = NULL,
   xlab = NULL,
@@ -59,6 +60,9 @@ Defaults to \code{0.2}.}
 \item{color}{Optional Character: Series color palette — a single color string or
 character vector that overrides the theme palette for this chart.
 \code{color} takes precedence over the theme palette (it sets \code{option.color}).}
+
+\item{line_style}{Optional Character \{"solid", "dashed", "dotted"\}: Line dash
+style — one value per series, recycled to match the number of series.}
 
 \item{xlim}{Optional Numeric [length 2]: X-axis limits \code{c(min, max)}.
 Only supported when \code{x} is numeric; passing \code{xlim} with a non-numeric \code{x}
