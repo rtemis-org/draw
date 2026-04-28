@@ -92,7 +92,7 @@ e.g. \code{c(20, 8000)}. Applied after STFT computation.}
 name (\code{"magma"} (default), \code{"inferno"}, \code{"plasma"},
 \code{"viridis"}, \code{"cividis"}, \code{"mako"}, \code{"rocket"}, \code{"turbo"}), \code{"diverging"}
 for the rtemis teal–background–orange scale (suitable for signed data
-such as EEG/MEG amplitudes), or a character vector of ≥ 2 hex colours for a
+such as EEG/MEG amplitudes), or a character vector of >= 2 hex colours for a
 custom ramp.}
 
 \item{palette_reverse}{Logical: Reverse the palette direction.}

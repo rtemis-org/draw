@@ -113,7 +113,7 @@
           "Named options: {.val ",
           paste(names(viridis_opts), collapse = "}, {.val "),
           "}}, {.val diverging}.",
-          " Or supply a character vector of ≥ 2 hex colours."
+          " Or supply a character vector of >= 2 hex colours."
         )
       ),
       call = NULL
@@ -132,7 +132,7 @@
   cli::cli_abort(
     paste0(
       "{.arg palette} must be a named palette string or a character vector \\
-       of ≥ 2 hex colours."
+       of >= 2 hex colours."
     ),
     call = NULL
   )
@@ -189,7 +189,7 @@
 #'   name (`"magma"` (default), `"inferno"`, `"plasma"`,
 #'   `"viridis"`, `"cividis"`, `"mako"`, `"rocket"`, `"turbo"`), `"diverging"`
 #'   for the rtemis teal–background–orange scale (suitable for signed data
-#'   such as EEG/MEG amplitudes), or a character vector of ≥ 2 hex colours for a
+#'   such as EEG/MEG amplitudes), or a character vector of >= 2 hex colours for a
 #'   custom ramp.
 #' @param palette_reverse Logical: Reverse the palette direction.
 #' @param n_colors Integer `[2, Inf)`: Number of discrete colours in the
@@ -310,7 +310,7 @@ draw_spectrogram <- function(
       is.na(n_colors) ||
       n_colors < 2L
   ) {
-    cli::cli_abort("{.arg n_colors} must be an integer ≥ 2.")
+    cli::cli_abort("{.arg n_colors} must be an integer >= 2.")
   }
   n_colors <- as.integer(n_colors)
 
@@ -353,12 +353,12 @@ draw_spectrogram <- function(
     }
     if (!is.numeric(n_fft) || length(n_fft) != 1L || is.na(n_fft)) {
       cli::cli_abort(
-        "{.arg n_fft} must be a single integer ≥ 2. Got {.val {n_fft}}."
+        "{.arg n_fft} must be a single integer >= 2. Got {.val {n_fft}}."
       )
     }
     n_fft <- as.integer(n_fft)
     if (n_fft < 2L) {
-      cli::cli_abort("{.arg n_fft} must be ≥ 2. Got {n_fft}.")
+      cli::cli_abort("{.arg n_fft} must be >= 2. Got {n_fft}.")
     }
     if (n_fft > length(x)) {
       cli::cli_abort(
