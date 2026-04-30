@@ -2,7 +2,7 @@
 
 # rtemis.draw
 
-![rtemis.draw cover](https://docs.rtemis.org/draw/r/assets/cover.avif)
+![rtemis.draw cover](https://docs.rtemis.org/r/draw/assets/cover.avif)
 
 Interface to Apache ECharts
 (<https://echarts.apache.org>) for creating interactive charts and
