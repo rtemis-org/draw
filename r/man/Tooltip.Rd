@@ -6,8 +6,8 @@
 \usage{
 Tooltip(
   show = NULL,
-  trigger = NULL,
-  trigger_on = NULL,
+  trigger = character(0),
+  trigger_on = character(0),
   show_content = NULL,
   always_show_content = NULL,
   formatter = NULL,
@@ -25,7 +25,7 @@ Tooltip(
   padding = NULL,
   text_style = NULL,
   extra_css_text = NULL,
-  order = NULL,
+  order = character(0),
   class_name = NULL
 )
 }

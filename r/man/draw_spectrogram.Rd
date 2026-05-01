@@ -30,7 +30,7 @@ draw_spectrogram(
   xlab = NULL,
   ylab = NULL,
   theme = NULL,
-  margins = DEFAULT_MARGINS,
+  margins = NULL,
   width = NULL,
   height = NULL,
   filename = NULL

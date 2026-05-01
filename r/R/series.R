@@ -66,7 +66,7 @@ MarkAreaDataPoint <- S7::new_class(
         "must be a single number, string, or NULL"
       }
     ),
-    name = string_or_null_property(),
+    name = optional_character_scalar,
     value = S7::new_property(
       class = S7::class_any,
       default = NULL,
@@ -114,7 +114,7 @@ MarkArea <- S7::new_class(
   "MarkArea",
   properties = list(
     data = S7::new_property(class = S7::class_any, default = NULL),
-    silent = bool_or_null_property(),
+    silent = optional_logical_scalar,
     precision = numeric_or_null_property(),
     item_style = class_or_null_property(ItemStyle),
     label = class_or_null_property(LabelOption),
@@ -175,14 +175,14 @@ LineSeries <- S7::new_class(
   "LineSeries",
   properties = list(
     # Common series fields
-    name = string_or_null_property(),
+    name = optional_character_scalar,
     data = S7::new_property(class = S7::class_any, default = NULL),
     x_axis_index = numeric_or_null_property(),
     y_axis_index = numeric_or_null_property(),
-    stack = string_or_null_property(),
-    silent = bool_or_null_property(),
-    legend_hover_link = bool_or_null_property(),
-    color = color_property(),
+    stack = optional_character_scalar,
+    silent = optional_logical_scalar,
+    legend_hover_link = optional_logical_scalar,
+    color = optional_character_scalar,
     z_level = numeric_or_null_property(),
     z = numeric_or_null_property(),
     # Line-specific
@@ -222,10 +222,10 @@ LineSeries <- S7::new_class(
         "must be FALSE, 'start', 'end', 'middle', or NULL"
       }
     ),
-    connect_nulls = bool_or_null_property(),
-    clip = bool_or_null_property(),
-    show_symbol = bool_or_null_property(),
-    symbol = string_or_null_property(),
+    connect_nulls = optional_logical_scalar,
+    clip = optional_logical_scalar,
+    show_symbol = optional_logical_scalar,
+    symbol = optional_character_scalar,
     symbol_size = S7::new_property(
       class = S7::class_any,
       default = NULL,
@@ -292,26 +292,26 @@ BarSeries <- S7::new_class(
   "BarSeries",
   properties = list(
     # Common series fields
-    name = string_or_null_property(),
+    name = optional_character_scalar,
     data = S7::new_property(class = S7::class_any, default = NULL),
     x_axis_index = numeric_or_null_property(),
     y_axis_index = numeric_or_null_property(),
-    stack = string_or_null_property(),
-    silent = bool_or_null_property(),
-    legend_hover_link = bool_or_null_property(),
-    color = color_property(),
+    stack = optional_character_scalar,
+    silent = optional_logical_scalar,
+    legend_hover_link = optional_logical_scalar,
+    color = optional_character_scalar,
     z_level = numeric_or_null_property(),
     z = numeric_or_null_property(),
     # Bar-specific
-    clip = bool_or_null_property(),
+    clip = optional_logical_scalar,
     bar_width = numeric_or_string_property(),
     bar_max_width = numeric_or_string_property(),
     bar_min_width = numeric_or_string_property(),
     bar_min_height = numeric_or_null_property(),
     bar_gap = numeric_or_string_property(),
     bar_category_gap = numeric_or_string_property(),
-    round_cap = bool_or_null_property(),
-    show_background = bool_or_null_property(),
+    round_cap = optional_logical_scalar,
+    show_background = optional_logical_scalar,
     item_style = class_or_null_property(ItemStyle),
     label = class_or_null_property(LabelOption)
   )
@@ -356,18 +356,18 @@ ScatterSeries <- S7::new_class(
   "ScatterSeries",
   properties = list(
     # Common series fields
-    name = string_or_null_property(),
+    name = optional_character_scalar,
     data = S7::new_property(class = S7::class_any, default = NULL),
     x_axis_index = numeric_or_null_property(),
     y_axis_index = numeric_or_null_property(),
-    silent = bool_or_null_property(),
-    legend_hover_link = bool_or_null_property(),
-    color = color_property(),
+    silent = optional_logical_scalar,
+    legend_hover_link = optional_logical_scalar,
+    color = optional_character_scalar,
     z_level = numeric_or_null_property(),
     z = numeric_or_null_property(),
     # Scatter-specific
-    clip = bool_or_null_property(),
-    symbol = string_or_null_property(),
+    clip = optional_logical_scalar,
+    symbol = optional_character_scalar,
     symbol_size = S7::new_property(
       class = S7::class_any,
       default = NULL,
@@ -384,7 +384,7 @@ ScatterSeries <- S7::new_class(
         "must be a number, length-2 numeric vector, function, or NULL"
       }
     ),
-    large = bool_or_null_property(),
+    large = optional_logical_scalar,
     large_threshold = numeric_or_null_property(),
     item_style = class_or_null_property(ItemStyle),
     label = class_or_null_property(LabelOption)
@@ -443,11 +443,11 @@ PieSeries <- S7::new_class(
   "PieSeries",
   properties = list(
     # Common series fields
-    name = string_or_null_property(),
+    name = optional_character_scalar,
     data = S7::new_property(class = S7::class_any, default = NULL),
-    silent = bool_or_null_property(),
-    legend_hover_link = bool_or_null_property(),
-    color = color_property(),
+    silent = optional_logical_scalar,
+    legend_hover_link = optional_logical_scalar,
+    color = optional_character_scalar,
     z_level = numeric_or_null_property(),
     z = numeric_or_null_property(),
     # Pie-specific
@@ -477,8 +477,8 @@ PieSeries <- S7::new_class(
         "must be a number/string or length-2 vector, or NULL"
       }
     ),
-    rose_type = enum_property(c("radius", "area")),
-    clockwise = bool_or_null_property(),
+    rose_type = enum(c("radius", "area"), nullable = TRUE),
+    clockwise = optional_logical_scalar,
     start_angle = numeric_or_null_property(),
     end_angle = S7::new_property(
       class = S7::class_any,
@@ -500,10 +500,10 @@ PieSeries <- S7::new_class(
     min_angle = numeric_or_null_property(),
     min_show_label_angle = numeric_or_null_property(),
     selected_offset = numeric_or_null_property(),
-    avoid_label_overlap = bool_or_null_property(),
+    avoid_label_overlap = optional_logical_scalar,
     percent_precision = numeric_or_null_property(),
-    still_show_zero_sum = bool_or_null_property(),
-    animation_type = enum_property(c("expansion", "scale")),
+    still_show_zero_sum = optional_logical_scalar,
+    animation_type = enum(c("expansion", "scale"), nullable = TRUE),
     item_style = class_or_null_property(ItemStyle),
     label = class_or_null_property(LabelOption),
     label_line = class_or_null_property(LabelLine),
@@ -551,17 +551,17 @@ BoxplotSeries <- S7::new_class(
   "BoxplotSeries",
   properties = list(
     # Common series fields
-    name = string_or_null_property(),
+    name = optional_character_scalar,
     data = S7::new_property(class = S7::class_any, default = NULL),
     x_axis_index = numeric_or_null_property(),
     y_axis_index = numeric_or_null_property(),
-    silent = bool_or_null_property(),
-    legend_hover_link = bool_or_null_property(),
-    color = color_property(),
+    silent = optional_logical_scalar,
+    legend_hover_link = optional_logical_scalar,
+    color = optional_character_scalar,
     z_level = numeric_or_null_property(),
     z = numeric_or_null_property(),
     # Boxplot-specific
-    layout = enum_property(c("horizontal", "vertical")),
+    layout = enum(c("horizontal", "vertical"), nullable = TRUE),
     box_width = S7::new_property(
       class = S7::class_any,
       default = NULL,
@@ -618,12 +618,12 @@ HeatmapSeries <- S7::new_class(
   "HeatmapSeries",
   properties = list(
     # Common series fields
-    name = string_or_null_property(),
+    name = optional_character_scalar,
     data = S7::new_property(class = S7::class_any, default = NULL),
     x_axis_index = numeric_or_null_property(),
     y_axis_index = numeric_or_null_property(),
-    silent = bool_or_null_property(),
-    legend_hover_link = bool_or_null_property(),
+    silent = optional_logical_scalar,
+    legend_hover_link = optional_logical_scalar,
     z_level = numeric_or_null_property(),
     z = numeric_or_null_property(),
     # Heatmap-specific

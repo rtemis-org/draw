@@ -29,17 +29,17 @@
 LineStyle <- S7::new_class(
   "LineStyle",
   properties = list(
-    color = color_property(),
+    color = optional_character_scalar,
     width = numeric_or_null_property(),
     opacity = numeric_or_null_property(),
-    type = enum_property(c("solid", "dashed", "dotted")),
-    cap = enum_property(c("butt", "round", "square")),
-    join = enum_property(c("bevel", "round", "miter")),
+    type = enum(c("solid", "dashed", "dotted"), nullable = TRUE),
+    cap = enum(c("butt", "round", "square"), nullable = TRUE),
+    join = enum(c("bevel", "round", "miter"), nullable = TRUE),
     dash_offset = numeric_or_null_property(),
     miter_limit = numeric_or_null_property(),
     # ShadowOptionMixin
     shadow_blur = numeric_or_null_property(),
-    shadow_color = color_property(),
+    shadow_color = optional_character_scalar,
     shadow_offset_x = numeric_or_null_property(),
     shadow_offset_y = numeric_or_null_property()
   )
@@ -69,7 +69,7 @@ S7::method(to_list, LineStyle) <- function(x, ...) {
 AreaStyle <- S7::new_class(
   "AreaStyle",
   properties = list(
-    color = color_property(),
+    color = optional_character_scalar,
     opacity = numeric_or_null_property(),
     origin = S7::new_property(
       class = S7::class_any,
@@ -89,7 +89,7 @@ AreaStyle <- S7::new_class(
     ),
     # ShadowOptionMixin
     shadow_blur = numeric_or_null_property(),
-    shadow_color = color_property(),
+    shadow_color = optional_character_scalar,
     shadow_offset_x = numeric_or_null_property(),
     shadow_offset_y = numeric_or_null_property()
   )
@@ -128,14 +128,14 @@ S7::method(to_list, AreaStyle) <- function(x, ...) {
 ItemStyle <- S7::new_class(
   "ItemStyle",
   properties = list(
-    color = color_property(),
+    color = optional_character_scalar,
     opacity = numeric_or_null_property(),
     # BorderOptionMixin
-    border_color = color_property(),
+    border_color = optional_character_scalar,
     border_width = numeric_or_null_property(),
-    border_type = enum_property(c("solid", "dashed", "dotted")),
-    border_cap = enum_property(c("butt", "round", "square")),
-    border_join = enum_property(c("bevel", "round", "miter")),
+    border_type = enum(c("solid", "dashed", "dotted"), nullable = TRUE),
+    border_cap = enum(c("butt", "round", "square"), nullable = TRUE),
+    border_join = enum(c("bevel", "round", "miter"), nullable = TRUE),
     border_dash_offset = numeric_or_null_property(),
     border_miter_limit = numeric_or_null_property(),
     border_radius = S7::new_property(
@@ -157,7 +157,7 @@ ItemStyle <- S7::new_class(
     decal = S7::new_property(class = S7::class_any, default = NULL),
     # ShadowOptionMixin
     shadow_blur = numeric_or_null_property(),
-    shadow_color = color_property(),
+    shadow_color = optional_character_scalar,
     shadow_offset_x = numeric_or_null_property(),
     shadow_offset_y = numeric_or_null_property()
   )
@@ -213,8 +213,8 @@ S7::method(to_list, ItemStyle) <- function(x, ...) {
 TextStyle <- S7::new_class(
   "TextStyle",
   properties = list(
-    color = color_property(),
-    font_style = enum_property(c("normal", "italic", "oblique")),
+    color = optional_character_scalar,
+    font_style = enum(c("normal", "italic", "oblique"), nullable = TRUE),
     font_weight = S7::new_property(
       class = S7::class_any,
       default = NULL,
@@ -234,16 +234,16 @@ TextStyle <- S7::new_class(
         "must be 'normal', 'bold', 'bolder', 'lighter', a number, or NULL"
       }
     ),
-    font_family = string_or_null_property(),
+    font_family = optional_character_scalar,
     font_size = numeric_or_string_property(),
-    align = enum_property(c("left", "center", "right")),
-    vertical_align = enum_property(c("top", "middle", "bottom")),
+    align = enum(c("left", "center", "right"), nullable = TRUE),
+    vertical_align = enum(c("top", "middle", "bottom"), nullable = TRUE),
     opacity = numeric_or_null_property(),
     line_height = numeric_or_null_property(),
-    background_color = color_property(),
-    border_color = color_property(),
+    background_color = optional_character_scalar,
+    border_color = optional_character_scalar,
     border_width = numeric_or_null_property(),
-    border_type = enum_property(c("solid", "dashed", "dotted")),
+    border_type = enum(c("solid", "dashed", "dotted"), nullable = TRUE),
     border_dash_offset = numeric_or_null_property(),
     border_radius = S7::new_property(
       class = S7::class_any,
@@ -273,20 +273,23 @@ TextStyle <- S7::new_class(
     ),
     width = numeric_or_string_property(),
     height = numeric_or_null_property(),
-    text_border_color = color_property(),
+    text_border_color = optional_character_scalar,
     text_border_width = numeric_or_null_property(),
-    text_border_type = enum_property(c("solid", "dashed", "dotted")),
+    text_border_type = enum(c("solid", "dashed", "dotted"), nullable = TRUE),
     text_border_dash_offset = numeric_or_null_property(),
     text_shadow_blur = numeric_or_null_property(),
-    text_shadow_color = color_property(),
+    text_shadow_color = optional_character_scalar,
     text_shadow_offset_x = numeric_or_null_property(),
     text_shadow_offset_y = numeric_or_null_property(),
-    overflow = enum_property(c("truncate", "break", "breakAll", "none")),
-    ellipsis = string_or_null_property(),
+    overflow = enum(
+      c("truncate", "break", "breakAll", "none"),
+      nullable = TRUE
+    ),
+    ellipsis = optional_character_scalar,
     rich = S7::new_property(class = S7::class_any, default = NULL),
     # ShadowOptionMixin (box-level shadow)
     shadow_blur = numeric_or_null_property(),
-    shadow_color = color_property(),
+    shadow_color = optional_character_scalar,
     shadow_offset_x = numeric_or_null_property(),
     shadow_offset_y = numeric_or_null_property()
   )

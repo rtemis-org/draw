@@ -313,9 +313,7 @@ draw_line <- function(
     }
   }
 
-  if (!is.logical(points) || length(points) != 1L || is.na(points)) {
-    cli::cli_abort("{.arg points} must be a single non-missing logical value.")
-  }
+  check_logical_scalar(points)
   # ECharts treats missing `showSymbol` as TRUE; only pass FALSE when hiding.
   show_symbol <- if (points) NULL else FALSE
 
@@ -520,15 +518,7 @@ build_block_mark_area <- function(x, blocks, block_color, block_opacity) {
       "{.arg block_color} must be provided when {.arg blocks} is set."
     )
   }
-  if (
-    !is.numeric(block_opacity) ||
-      length(block_opacity) != 1L ||
-      !is.finite(block_opacity) ||
-      block_opacity < 0 ||
-      block_opacity > 1
-  ) {
-    cli::cli_abort("{.arg block_opacity} must be a single number in [0, 1].")
-  }
+  check_prob_scalar(block_opacity)
 
   # Determine level order so positional matching is stable. For factors, drop
   # unused levels so `block_color` doesn't need entries for absent categories.
@@ -848,9 +838,7 @@ draw_scatter <- function(
     yv <- yv[ok]
     df <- data.frame(.x = xv, .y = yv)
     if (fit_method == "gam") {
-      if (!requireNamespace("mgcv", quietly = TRUE)) {
-        stop("Package 'mgcv' is required for fit = \"gam\"", call. = FALSE)
-      }
+      check_dependencies("mgcv")
       model <- mgcv::gam(.y ~ s(.x), data = df)
     } else {
       model <- stats::glm(.y ~ .x, data = df)

@@ -6,8 +6,8 @@
 \usage{
 Legend(
   show = NULL,
-  orient = NULL,
-  align = NULL,
+  orient = character(0),
+  align = character(0),
   left = NULL,
   right = NULL,
   top = NULL,
