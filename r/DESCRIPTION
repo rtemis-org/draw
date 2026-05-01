@@ -20,7 +20,7 @@ Imports:
     cli,
     htmlwidgets,
     jsonlite,
-    rtemis.core,
+    rtemis.core (>= 0.1.0),
     S7,
     signal,
     viridisLite
