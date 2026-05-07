@@ -8,7 +8,7 @@ msg = @printf '\033[38;2;108;163;160m[%s] %s\033[0m\n' "$$(date -u '+%Y-%m-%d %H
 .DEFAULT_GOAL := help
 
 .PHONY: help format format-r document document-r install install-r test test-r \
-        build build-r check check-r check-cran site site-r clean clean-r
+        build build-r check check-r check-cran manual-r site site-r clean clean-r
 
 # ── Help ─────────────────────────────────────────────────────────────────────
 help:
@@ -81,6 +81,12 @@ check-cran: build-r
 	$(call msg,─── Running R CMD check --as-cran on $(PKG) [R]... ───)
 	cd $(R_DIR) && $(R) CMD check $(PKG)_*.tar.gz --as-cran
 	rm -f $(R_DIR)/$(PKG)_*.tar.gz
+	$(call msg,Done)
+
+# ── Manual ───────────────────────────────────────────────────────────────────
+manual-r:
+	$(call msg,─── Building manual for $(PKG)... ───)
+	cd $(R_DIR) && $(R) CMD Rd2pdf . --output=$(PKG).pdf
 	$(call msg,Done)
 
 # ── Site ──────────────────────────────────────────────────────────────────────
