@@ -14,7 +14,7 @@ BoxplotSeries(
   color = NULL,
   z_level = NULL,
   z = NULL,
-  layout = character(0),
+  layout = NULL,
   box_width = NULL,
   item_style = NULL,
   label = NULL

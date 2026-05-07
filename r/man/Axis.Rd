@@ -5,11 +5,11 @@
 \title{Axis}
 \usage{
 Axis(
-  type = character(0),
+  type = NULL,
   show = NULL,
   inverse = NULL,
   name = NULL,
-  name_location = character(0),
+  name_location = NULL,
   name_rotate = NULL,
   name_gap = NULL,
   name_text_style = NULL,
@@ -33,7 +33,7 @@ Axis(
   split_line = NULL,
   minor_split_line = NULL,
   split_area = NULL,
-  position = character(0),
+  position = NULL,
   grid_index = NULL
 )
 }

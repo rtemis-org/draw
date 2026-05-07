@@ -11,7 +11,7 @@ VisualMap(
   precision = NULL,
   calculable = NULL,
   show = NULL,
-  orient = character(0),
+  orient = NULL,
   in_range = NULL,
   out_of_range = NULL,
   left = NULL,
