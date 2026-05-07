@@ -2502,3 +2502,89 @@ draw_heatmap <- function(
     meta = heatmap_meta
   )
 }
+
+# -- draw_sankey ----------------------------------------------------------------
+
+#' Draw a Sankey Diagram
+#'
+#' Sankey diagram from a data frame of directed links. Node names are derived
+#' automatically from the unique values in the `source` and `target` columns;
+#' no separate node list is required.
+#'
+#' @param links data.frame: Directed links with columns `source` (Character),
+#'   `target` (Character), and `value` (Numeric).
+#' @param orient Optional Character \{"horizontal", "vertical"\}: Flow direction.
+#' @param node_width Optional Numeric `[0, Inf)`: Node rectangle width in pixels.
+#' @param node_gap Optional Numeric `[0, Inf)`: Vertical gap between nodes in pixels.
+#' @param node_align Optional Character \{"justify", "left", "right"\}: Node
+#'   alignment within each column.
+#' @param title Optional Character: Chart title.
+#' @param color Optional Character: Node color palette — a single color string or
+#'   a character vector that overrides the theme palette for this chart.
+#' @param theme Optional [Theme]: Theme override.
+#' @param width Optional Character or Numeric: Widget width.
+#' @param height Optional Character or Numeric: Widget height.
+#' @param filename Optional Character: If provided, save the widget to this file
+#'   via [save_drawing()].
+#' @return htmlwidget: Widget object.
+#' @examples
+#' links <- data.frame(
+#'   source = c("A", "A", "B", "C"),
+#'   target = c("B", "C", "D", "D"),
+#'   value  = c(8, 4, 6, 3)
+#' )
+#' draw_sankey(links)
+#' @export
+draw_sankey <- function(
+  links,
+  orient = "horizontal",
+  node_width = NULL,
+  node_gap = NULL,
+  node_align = NULL,
+  title = NULL,
+  color = NULL,
+  theme = NULL,
+  width = NULL,
+  height = NULL,
+  filename = NULL
+) {
+  required_cols <- c("source", "target", "value")
+  missing_cols <- setdiff(required_cols, names(links))
+  if (length(missing_cols) > 0L) {
+    cli::cli_abort(
+      "{.arg links} must have columns {.val {required_cols}}; missing: {.val {missing_cols}}."
+    )
+  }
+
+  # Derive unique node names from source and target columns
+  node_names <- unique(c(links[["source"]], links[["target"]]))
+  nodes <- lapply(node_names, function(n) list(name = n))
+
+  # Convert links data.frame rows to a list of named lists
+  edge_list <- lapply(seq_len(nrow(links)), function(i) {
+    list(
+      source = links[["source"]][[i]],
+      target = links[["target"]][[i]],
+      value = links[["value"]][[i]]
+    )
+  })
+
+  # ECharts ignores a palette longer than the node count; trim (or cycle) to
+  # exactly one entry per node.
+  palette <- rep_len(color %||% rtemis_colors, length(node_names))
+  opt <- EChartsOption(
+    title = if (!is.null(title)) Title(text = title, left = "center") else NULL,
+    tooltip = Tooltip(trigger = "item"),
+    color = palette,
+    series = SankeySeries(
+      data = nodes,
+      links = edge_list,
+      orient = orient,
+      node_width = node_width,
+      node_gap = node_gap,
+      node_align = node_align
+    )
+  )
+
+  draw(opt, theme = theme, width = width, height = height, filename = filename)
+}
