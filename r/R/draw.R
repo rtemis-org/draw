@@ -313,9 +313,7 @@ draw_line <- function(
     }
   }
 
-  if (!is.logical(points) || length(points) != 1L || is.na(points)) {
-    cli::cli_abort("{.arg points} must be a single non-missing logical value.")
-  }
+  check_logical_scalar(points)
   # ECharts treats missing `showSymbol` as TRUE; only pass FALSE when hiding.
   show_symbol <- if (points) NULL else FALSE
 
@@ -520,15 +518,7 @@ build_block_mark_area <- function(x, blocks, block_color, block_opacity) {
       "{.arg block_color} must be provided when {.arg blocks} is set."
     )
   }
-  if (
-    !is.numeric(block_opacity) ||
-      length(block_opacity) != 1L ||
-      !is.finite(block_opacity) ||
-      block_opacity < 0 ||
-      block_opacity > 1
-  ) {
-    cli::cli_abort("{.arg block_opacity} must be a single number in [0, 1].")
-  }
+  check_prob_scalar(block_opacity)
 
   # Determine level order so positional matching is stable. For factors, drop
   # unused levels so `block_color` doesn't need entries for absent categories.
@@ -848,9 +838,7 @@ draw_scatter <- function(
     yv <- yv[ok]
     df <- data.frame(.x = xv, .y = yv)
     if (fit_method == "gam") {
-      if (!requireNamespace("mgcv", quietly = TRUE)) {
-        stop("Package 'mgcv' is required for fit = \"gam\"", call. = FALSE)
-      }
+      check_dependencies("mgcv")
       model <- mgcv::gam(.y ~ s(.x), data = df)
     } else {
       model <- stats::glm(.y ~ .x, data = df)
@@ -2513,4 +2501,95 @@ draw_heatmap <- function(
     filename = filename,
     meta = heatmap_meta
   )
+}
+
+# -- draw_sankey ----------------------------------------------------------------
+
+#' Draw a Sankey Diagram
+#'
+#' Sankey diagram from a data frame of directed links. Node names are derived
+#' automatically from the unique values in the `source` and `target` columns;
+#' no separate node list is required.
+#'
+#' @param links data.frame: Directed links with columns `source` (Character),
+#'   `target` (Character), and `value` (Numeric).
+#' @param orient Optional Character \{"horizontal", "vertical"\}: Flow direction.
+#' @param node_width Optional Numeric `[0, Inf)`: Node rectangle width in pixels.
+#' @param node_gap Optional Numeric `[0, Inf)`: Vertical gap between nodes in pixels.
+#' @param node_align Optional Character \{"justify", "left", "right"\}: Node
+#'   alignment within each column.
+#' @param title Optional Character: Chart title.
+#' @param color Optional Character: Node color palette — a single color string or
+#'   a character vector that overrides the theme palette for this chart.
+#' @param theme Optional [Theme]: Theme override.
+#' @param width Optional Character or Numeric: Widget width.
+#' @param height Optional Character or Numeric: Widget height.
+#' @param filename Optional Character: If provided, save the widget to this file
+#'   via [save_drawing()].
+#' @return htmlwidget: Widget object.
+#' @examples
+#' links <- data.frame(
+#'   source = c("A", "A", "B", "C"),
+#'   target = c("B", "C", "D", "D"),
+#'   value  = c(8, 4, 6, 3)
+#' )
+#' draw_sankey(links)
+#' @export
+draw_sankey <- function(
+  links,
+  orient = "horizontal",
+  node_width = NULL,
+  node_gap = NULL,
+  node_align = NULL,
+  title = NULL,
+  color = NULL,
+  theme = NULL,
+  width = NULL,
+  height = NULL,
+  filename = NULL
+) {
+  rtemis.core::check_tabular(links)
+  required_cols <- c("source", "target", "value")
+  missing_cols <- setdiff(required_cols, names(links))
+  if (length(missing_cols) > 0L) {
+    cli::cli_abort(
+      "{.arg links} must have columns {.val {required_cols}}; missing: {.val {missing_cols}}."
+    )
+  }
+
+  # Coerce to character: factor columns with different levels produce an
+  # integer vector when concatenated with c().
+  node_names <- unique(
+    c(as.character(links[["source"]]), as.character(links[["target"]]))
+  )
+  nodes <- lapply(node_names, function(n) list(name = n))
+
+  # Convert links data.frame rows to a list of named lists
+  edge_list <- lapply(seq_len(nrow(links)), function(i) {
+    list(
+      source = as.character(links[["source"]][[i]]),
+      target = as.character(links[["target"]][[i]]),
+      value = links[["value"]][[i]]
+    )
+  })
+
+  # ECharts ignores a palette longer than the node count; trim (or cycle) to
+  # exactly one entry per node. unname() prevents named vectors from
+  # serializing as a JSON object instead of an array.
+  palette <- unname(rep_len(color %||% rtemis_colors, length(node_names)))
+  opt <- EChartsOption(
+    title = if (!is.null(title)) Title(text = title, left = "center") else NULL,
+    tooltip = Tooltip(trigger = "item"),
+    color = palette,
+    series = SankeySeries(
+      data = nodes,
+      links = edge_list,
+      orient = orient,
+      node_width = node_width,
+      node_gap = node_gap,
+      node_align = node_align
+    )
+  )
+
+  draw(opt, theme = theme, width = width, height = height, filename = filename)
 }

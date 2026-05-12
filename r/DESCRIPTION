@@ -1,6 +1,6 @@
 Package: rtemis.draw
 Title: Interactive Visualization Using ECharts
-Version: 0.1.0
+Version: 0.2.1
 Authors@R:
     person(given = "E.D.", family = "Gennatas", role = c("aut", "cre", "cph"),
            email = "gennatas@gmail.com",
@@ -15,12 +15,11 @@ URL: https://www.rtemis.org, https://docs.rtemis.org/draw/r, https://docs.rtemis
 License: GPL (>= 3)
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.3.3
 Imports:
     cli,
     htmlwidgets,
     jsonlite,
-    rtemis.core,
+    rtemis.core (>= 0.1.0),
     S7,
     signal,
     viridisLite
@@ -36,6 +35,7 @@ VignetteBuilder: knitr
 Config/testthat/edition: 3
 Config/testthat/parallel: true
 Collate:
+    '00_init.R'
     'rtemis.draw-package.R'
     'rtemis_color_system.R'
     'utils.R'
@@ -44,6 +44,7 @@ Collate:
     'axis.R'
     'components.R'
     'series.R'
+    'series_sankey.R'
     'option.R'
     'theme.R'
     'draw.R'
@@ -51,3 +52,4 @@ Collate:
     'draw_spectrogram.R'
     'export.R'
     'zzz.R'
+Config/roxygen2/version: 8.0.0

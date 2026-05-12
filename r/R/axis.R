@@ -41,7 +41,7 @@ AxisLine <- S7::new_class(
         "must be TRUE, FALSE, 'auto', or NULL"
       }
     ),
-    on_zero = bool_or_null_property(),
+    on_zero = optional_logical_scalar,
     on_zero_axis_index = numeric_or_null_property(),
     symbol = S7::new_property(
       class = S7::class_any,
@@ -124,9 +124,9 @@ AxisTick <- S7::new_class(
         "must be TRUE, FALSE, 'auto', or NULL"
       }
     ),
-    inside = bool_or_null_property(),
+    inside = optional_logical_scalar,
     length = numeric_or_null_property(),
-    align_with_label = bool_or_null_property(),
+    align_with_label = optional_logical_scalar,
     line_style = class_or_null_property(LineStyle)
   )
 )
@@ -152,7 +152,7 @@ S7::method(to_list, AxisTick) <- function(x, ...) {
 MinorTick <- S7::new_class(
   "MinorTick",
   properties = list(
-    show = bool_or_null_property(),
+    show = optional_logical_scalar,
     split_number = numeric_or_null_property(),
     length = numeric_or_null_property(),
     line_style = class_or_null_property(LineStyle)
@@ -181,7 +181,7 @@ S7::method(to_list, MinorTick) <- function(x, ...) {
 SplitLine <- S7::new_class(
   "SplitLine",
   properties = list(
-    show = bool_or_null_property(),
+    show = optional_logical_scalar,
     interval = S7::new_property(
       class = S7::class_any,
       default = NULL,
@@ -198,8 +198,8 @@ SplitLine <- S7::new_class(
         "must be a number, 'auto', or NULL"
       }
     ),
-    show_min_line = bool_or_null_property(),
-    show_max_line = bool_or_null_property(),
+    show_min_line = optional_logical_scalar,
+    show_max_line = optional_logical_scalar,
     line_style = class_or_null_property(LineStyle)
   )
 )
@@ -223,7 +223,7 @@ S7::method(to_list, SplitLine) <- function(x, ...) {
 MinorSplitLine <- S7::new_class(
   "MinorSplitLine",
   properties = list(
-    show = bool_or_null_property(),
+    show = optional_logical_scalar,
     line_style = class_or_null_property(LineStyle)
   )
 )
@@ -248,7 +248,7 @@ S7::method(to_list, MinorSplitLine) <- function(x, ...) {
 SplitArea <- S7::new_class(
   "SplitArea",
   properties = list(
-    show = bool_or_null_property(),
+    show = optional_logical_scalar,
     interval = S7::new_property(
       class = S7::class_any,
       default = NULL,
@@ -297,14 +297,14 @@ S7::method(to_list, SplitArea) <- function(x, ...) {
 AxisLabel <- S7::new_class(
   "AxisLabel",
   properties = list(
-    show = bool_or_null_property(),
-    inside = bool_or_null_property(),
+    show = optional_logical_scalar,
+    inside = optional_logical_scalar,
     rotate = numeric_or_null_property(),
     margin = numeric_or_null_property(),
     formatter = S7::new_property(class = S7::class_any, default = NULL),
-    show_min_label = bool_or_null_property(),
-    show_max_label = bool_or_null_property(),
-    hide_overlap = bool_or_null_property(),
+    show_min_label = optional_logical_scalar,
+    show_max_label = optional_logical_scalar,
+    hide_overlap = optional_logical_scalar,
     interval = S7::new_property(
       class = S7::class_any,
       default = NULL,
@@ -386,16 +386,19 @@ Axis <- S7::new_class(
   "Axis",
   properties = list(
     # AxisBaseOptionCommon
-    type = enum_property(c("value", "category", "time", "log")),
-    show = bool_or_null_property(),
-    inverse = bool_or_null_property(),
-    name = string_or_null_property(),
-    name_location = enum_property(c("start", "middle", "center", "end")),
+    type = enum(c("value", "category", "time", "log"), nullable = TRUE),
+    show = optional_logical_scalar,
+    inverse = optional_logical_scalar,
+    name = optional_character_scalar,
+    name_location = enum(
+      c("start", "middle", "center", "end"),
+      nullable = TRUE
+    ),
     name_rotate = numeric_or_null_property(),
     name_gap = numeric_or_null_property(),
     name_text_style = class_or_null_property(TextStyle),
-    silent = bool_or_null_property(),
-    trigger_event = bool_or_null_property(),
+    silent = optional_logical_scalar,
+    trigger_event = optional_logical_scalar,
     # Min/max: number, string ("dataMin"/"dataMax"), or NULL
     min = S7::new_property(
       class = S7::class_any,
@@ -438,13 +441,13 @@ Axis <- S7::new_class(
       }
     ),
     # ValueAxisBaseOption
-    scale = bool_or_null_property(),
+    scale = optional_logical_scalar,
     # NumericAxisBaseOptionCommon
     split_number = numeric_or_null_property(),
     interval = numeric_or_null_property(),
     min_interval = numeric_or_null_property(),
     max_interval = numeric_or_null_property(),
-    align_ticks = bool_or_null_property(),
+    align_ticks = optional_logical_scalar,
     # LogAxisBaseOption
     log_base = numeric_or_null_property(),
     # CategoryAxisBaseOption: boundaryGap is boolean
@@ -476,7 +479,7 @@ Axis <- S7::new_class(
     minor_split_line = class_or_null_property(MinorSplitLine),
     split_area = class_or_null_property(SplitArea),
     # Axis position: "left"/"right" for yAxis, "top"/"bottom" for xAxis
-    position = enum_property(c("left", "right", "top", "bottom")),
+    position = enum(c("left", "right", "top", "bottom"), nullable = TRUE),
     # Multi-grid support: index of the grid this axis belongs to
     grid_index = numeric_or_null_property()
   )

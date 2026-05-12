@@ -37,7 +37,7 @@
 Grid <- S7::new_class(
   "Grid",
   properties = list(
-    show = bool_or_null_property(),
+    show = optional_logical_scalar,
     # BoxLayoutOptionMixin
     left = numeric_or_string_property(),
     right = numeric_or_string_property(),
@@ -45,13 +45,13 @@ Grid <- S7::new_class(
     bottom = numeric_or_string_property(),
     width = numeric_or_string_property(),
     height = numeric_or_string_property(),
-    contain_label = bool_or_null_property(),
-    background_color = color_property(),
+    contain_label = optional_logical_scalar,
+    background_color = optional_character_scalar,
     border_width = numeric_or_null_property(),
-    border_color = color_property(),
+    border_color = optional_character_scalar,
     # ShadowOptionMixin
     shadow_blur = numeric_or_null_property(),
-    shadow_color = color_property(),
+    shadow_color = optional_character_scalar,
     shadow_offset_x = numeric_or_null_property(),
     shadow_offset_y = numeric_or_null_property()
   )
@@ -96,15 +96,18 @@ S7::method(to_list, Grid) <- function(x, ...) {
 Title <- S7::new_class(
   "Title",
   properties = list(
-    show = bool_or_null_property(),
-    text = string_or_null_property(),
-    link = string_or_null_property(),
-    target = enum_property(c("self", "blank")),
-    subtext = string_or_null_property(),
-    sublink = string_or_null_property(),
-    subtarget = enum_property(c("self", "blank")),
-    text_align = enum_property(c("auto", "left", "center", "right")),
-    text_vertical_align = enum_property(c("auto", "top", "middle", "bottom")),
+    show = optional_logical_scalar,
+    text = optional_character_scalar,
+    link = optional_character_scalar,
+    target = enum(c("self", "blank"), nullable = TRUE),
+    subtext = optional_character_scalar,
+    sublink = optional_character_scalar,
+    subtarget = enum(c("self", "blank"), nullable = TRUE),
+    text_align = enum(c("auto", "left", "center", "right"), nullable = TRUE),
+    text_vertical_align = enum(
+      c("auto", "top", "middle", "bottom"),
+      nullable = TRUE
+    ),
     padding = S7::new_property(
       class = S7::class_any,
       default = NULL,
@@ -121,9 +124,9 @@ Title <- S7::new_class(
     item_gap = numeric_or_null_property(),
     text_style = class_or_null_property(TextStyle),
     subtext_style = class_or_null_property(TextStyle),
-    trigger_event = bool_or_null_property(),
-    background_color = color_property(),
-    border_color = color_property(),
+    trigger_event = optional_logical_scalar,
+    background_color = optional_character_scalar,
+    border_color = optional_character_scalar,
     border_width = numeric_or_null_property(),
     border_radius = S7::new_property(
       class = S7::class_any,
@@ -190,9 +193,9 @@ S7::method(to_list, Title) <- function(x, ...) {
 Legend <- S7::new_class(
   "Legend",
   properties = list(
-    show = bool_or_null_property(),
-    orient = enum_property(c("horizontal", "vertical")),
-    align = enum_property(c("auto", "left", "right")),
+    show = optional_logical_scalar,
+    orient = enum(c("horizontal", "vertical"), nullable = TRUE),
+    align = enum(c("auto", "left", "right"), nullable = TRUE),
     # BoxLayoutOptionMixin
     left = numeric_or_string_property(),
     right = numeric_or_string_property(),
@@ -216,7 +219,7 @@ Legend <- S7::new_class(
     item_gap = numeric_or_null_property(),
     item_width = numeric_or_null_property(),
     item_height = numeric_or_null_property(),
-    icon = string_or_null_property(),
+    icon = optional_character_scalar,
     selected_mode = S7::new_property(
       class = S7::class_any,
       default = NULL,
@@ -251,12 +254,12 @@ Legend <- S7::new_class(
       }
     ),
     formatter = S7::new_property(class = S7::class_any, default = NULL),
-    inactive_color = color_property(),
-    inactive_border_color = color_property(),
+    inactive_color = optional_character_scalar,
+    inactive_border_color = optional_character_scalar,
     text_style = class_or_null_property(TextStyle),
     item_style = class_or_null_property(ItemStyle),
-    background_color = color_property(),
-    border_color = color_property(),
+    background_color = optional_character_scalar,
+    border_color = optional_character_scalar,
     border_width = numeric_or_null_property(),
     border_radius = S7::new_property(
       class = S7::class_any,
@@ -271,7 +274,7 @@ Legend <- S7::new_class(
         "must be a number or length-4 numeric vector, or NULL"
       }
     ),
-    trigger_event = bool_or_null_property(),
+    trigger_event = optional_logical_scalar,
     data = S7::new_property(class = S7::class_any, default = NULL)
   )
 )
@@ -318,26 +321,29 @@ Tooltip <- S7::new_class(
   "Tooltip",
   properties = list(
     # CommonTooltipOption
-    show = bool_or_null_property(),
-    trigger = enum_property(c("item", "axis", "none")),
-    trigger_on = enum_property(c(
-      "mousemove",
-      "click",
-      "none",
-      "mousemove|click"
-    )),
-    show_content = bool_or_null_property(),
-    always_show_content = bool_or_null_property(),
+    show = optional_logical_scalar,
+    trigger = enum(c("item", "axis", "none"), nullable = TRUE),
+    trigger_on = enum(
+      c(
+        "mousemove",
+        "click",
+        "none",
+        "mousemove|click"
+      ),
+      nullable = TRUE
+    ),
+    show_content = optional_logical_scalar,
+    always_show_content = optional_logical_scalar,
     formatter = S7::new_property(class = S7::class_any, default = NULL),
     value_formatter = S7::new_property(class = S7::class_any, default = NULL),
     position = S7::new_property(class = S7::class_any, default = NULL),
-    confine = bool_or_null_property(),
-    enterable = bool_or_null_property(),
+    confine = optional_logical_scalar,
+    enterable = optional_logical_scalar,
     show_delay = numeric_or_null_property(),
     hide_delay = numeric_or_null_property(),
     transition_duration = numeric_or_null_property(),
-    background_color = color_property(),
-    border_color = color_property(),
+    background_color = optional_character_scalar,
+    border_color = optional_character_scalar,
     border_width = numeric_or_null_property(),
     border_radius = numeric_or_null_property(),
     padding = S7::new_property(
@@ -354,15 +360,18 @@ Tooltip <- S7::new_class(
       }
     ),
     text_style = class_or_null_property(TextStyle),
-    extra_css_text = string_or_null_property(),
+    extra_css_text = optional_character_scalar,
     # TooltipOption-specific
-    order = enum_property(c(
-      "seriesAsc",
-      "seriesDesc",
-      "valueAsc",
-      "valueDesc"
-    )),
-    class_name = string_or_null_property()
+    order = enum(
+      c(
+        "seriesAsc",
+        "seriesDesc",
+        "valueAsc",
+        "valueDesc"
+      ),
+      nullable = TRUE
+    ),
+    class_name = optional_character_scalar
   )
 )
 
@@ -404,13 +413,17 @@ S7::method(to_list, Tooltip) <- function(x, ...) {
 VisualMap <- S7::new_class(
   "VisualMap",
   properties = list(
-    type = enum_property(c("continuous", "piecewise"), default = "continuous"),
+    type = enum(
+      c("continuous", "piecewise"),
+      default = "continuous",
+      nullable = TRUE
+    ),
     min = numeric_or_null_property(),
     max = numeric_or_null_property(),
     precision = numeric_or_null_property(),
-    calculable = bool_or_null_property(),
-    show = bool_or_null_property(),
-    orient = enum_property(c("vertical", "horizontal")),
+    calculable = optional_logical_scalar,
+    show = optional_logical_scalar,
+    orient = enum(c("vertical", "horizontal"), nullable = TRUE),
     in_range = S7::new_property(class = S7::class_any, default = NULL),
     out_of_range = S7::new_property(class = S7::class_any, default = NULL),
     # BoxLayoutOptionMixin
@@ -562,20 +575,23 @@ DataZoom <- S7::new_class(
   "DataZoom",
   properties = list(
     # Common (DataZoomOption)
-    type = enum_property(c("slider", "inside"), default = "slider"),
-    id = string_or_null_property(),
-    disabled = bool_or_null_property(),
+    type = enum(c("slider", "inside"), default = "slider", nullable = TRUE),
+    id = optional_character_scalar,
+    disabled = optional_logical_scalar,
     x_axis_index = axis_index_property(),
     y_axis_index = axis_index_property(),
     radius_axis_index = axis_index_property(),
     angle_axis_index = axis_index_property(),
     single_axis_index = axis_index_property(),
-    filter_mode = enum_property(c(
-      "filter",
-      "weakFilter",
-      "empty",
-      "none"
-    )),
+    filter_mode = enum(
+      c(
+        "filter",
+        "weakFilter",
+        "empty",
+        "none"
+      ),
+      nullable = TRUE
+    ),
     start = numeric_or_null_property(),
     end = numeric_or_null_property(),
     start_value = S7::new_property(class = S7::class_any, default = NULL),
@@ -584,7 +600,7 @@ DataZoom <- S7::new_class(
     max_span = numeric_or_null_property(),
     min_value_span = numeric_or_string_property(),
     max_value_span = numeric_or_string_property(),
-    orient = enum_property(c("horizontal", "vertical")),
+    orient = enum(c("horizontal", "vertical"), nullable = TRUE),
     throttle = numeric_or_null_property(),
     range_mode = S7::new_property(
       class = S7::class_any,
@@ -604,20 +620,20 @@ DataZoom <- S7::new_class(
       }
     ),
     # SliderDataZoomOption-specific
-    show = bool_or_null_property(),
-    background_color = color_property(),
+    show = optional_logical_scalar,
+    background_color = optional_character_scalar,
     left = numeric_or_string_property(),
     right = numeric_or_string_property(),
     top = numeric_or_string_property(),
     bottom = numeric_or_string_property(),
     width = numeric_or_string_property(),
     height = numeric_or_string_property(),
-    zoom_lock = bool_or_null_property(),
+    zoom_lock = optional_logical_scalar,
     # InsideDataZoomOption-specific
     zoom_on_mouse_wheel = mouse_modifier_property(),
     move_on_mouse_move = mouse_modifier_property(),
     move_on_mouse_wheel = mouse_modifier_property(),
-    prevent_default_mouse_move = bool_or_null_property()
+    prevent_default_mouse_move = optional_logical_scalar
   )
 )
 

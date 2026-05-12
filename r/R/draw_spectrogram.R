@@ -246,7 +246,7 @@ draw_spectrogram <- function(
   xlab = NULL,
   ylab = NULL,
   theme = NULL,
-  margins = DEFAULT_MARGINS,
+  margins = NULL,
   width = NULL,
   height = NULL,
   filename = NULL
@@ -329,6 +329,15 @@ draw_spectrogram <- function(
   validate_range(freq_range, "freq_range")
   validate_range(time_range, "time_range")
   validate_range(zlim, "zlim")
+
+  # Auto margins if title is set
+  if (is.null(margins)) {
+    margins <- DEFAULT_MARGINS
+    margins[["right"]] <- "90"
+    if (!is.null(title)) {
+      margins[["top"]] <- "50"
+    }
+  }
 
   # -- 2. STFT (raw signal) or matrix input ------------------------------------
   if (is_raw_signal) {

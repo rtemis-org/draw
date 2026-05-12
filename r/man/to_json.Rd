@@ -13,7 +13,7 @@ to_json(x, pretty = FALSE, auto_unbox = TRUE, ...)
 
 \item{auto_unbox}{Logical: Whether to auto-unbox single-element vectors.}
 
-\item{...}{Dots: Additional arguments passed to \code{\link[jsonlite:fromJSON]{jsonlite::toJSON()}}.}
+\item{...}{Dots: Additional arguments passed to \code{\link[jsonlite:toJSON]{jsonlite::toJSON()}}.}
 }
 \value{
 Character: JSON string.

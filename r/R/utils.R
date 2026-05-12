@@ -35,7 +35,9 @@ snake_to_camel <- function(x) {
 #' @keywords internal
 #' @noRd
 drop_nulls <- function(x) {
-  x[!vapply(x, is.null, logical(1))]
+  # Also drop zero-length values: S7 0.2.2 stores empty prototypes (e.g. logical(0))
+  # instead of NULL for new_union(type, NULL) properties with default = NULL.
+  x[!vapply(x, function(v) is.null(v) || length(v) == 0L, logical(1))]
 }
 
 #' Convert an S7 object to an echarts-compatible named list
@@ -110,37 +112,6 @@ to_list <- S7::new_generic("to_list", "x")
 # -- Type validators for S7 properties -------------------------------------------
 # These return validator functions or S7 class unions.
 
-#' @keywords internal
-#' @noRd
-nullable <- function(type) {
-  type | S7::class_missing | NULL
-}
-
-#' Validate that a value is one of the allowed choices
-#'
-#' Returns a custom S7 property object with validation.
-#'
-#' @param values Character: Allowed values.
-#' @param default Optional Character: Default value.
-#' @param nullable Logical: Whether `NULL` is accepted.
-#' @return S7 property: Property definition.
-#' @keywords internal
-#' @noRd
-enum_property <- function(values, default = NULL, nullable = TRUE) {
-  S7::new_property(
-    class = if (nullable) S7::class_any else S7::class_character,
-    default = default,
-    validator = function(value) {
-      if (is.null(value) && nullable) {
-        return(NULL)
-      }
-      if (!is.character(value) || length(value) != 1L || !(value %in% values)) {
-        paste0("must be one of: ", paste(dQuote(values), collapse = ", "))
-      }
-    }
-  )
-}
-
 #' Property that accepts a number or NULL
 #' @keywords internal
 #' @noRd
@@ -154,42 +125,6 @@ numeric_or_null_property <- function(default = NULL) {
       }
       if (!is.numeric(value) || length(value) != 1L) {
         "must be a single number or NULL"
-      }
-    }
-  )
-}
-
-#' Property that accepts a string or NULL
-#' @keywords internal
-#' @noRd
-string_or_null_property <- function(default = NULL) {
-  S7::new_property(
-    class = S7::class_any,
-    default = default,
-    validator = function(value) {
-      if (is.null(value)) {
-        return(NULL)
-      }
-      if (!is.character(value) || length(value) != 1L) {
-        "must be a single string or NULL"
-      }
-    }
-  )
-}
-
-#' Property that accepts a logical or NULL
-#' @keywords internal
-#' @noRd
-bool_or_null_property <- function(default = NULL) {
-  S7::new_property(
-    class = S7::class_any,
-    default = default,
-    validator = function(value) {
-      if (is.null(value)) {
-        return(NULL)
-      }
-      if (!is.logical(value) || length(value) != 1L) {
-        "must be TRUE, FALSE, or NULL"
       }
     }
   )
@@ -376,16 +311,6 @@ validate_axis_lim <- function(value, arg) {
   invisible(value)
 }
 
-
-#' Property that accepts a color string, or NULL
-#'
-#' Currently accepts any string. Future versions may validate
-#' hex, rgb(), rgba(), hsl(), or named CSS colors.
-#' @keywords internal
-#' @noRd
-color_property <- function(default = NULL) {
-  string_or_null_property(default = default)
-}
 
 #' Property that accepts a character vector of colors, or NULL
 #'
