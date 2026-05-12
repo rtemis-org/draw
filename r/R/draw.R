@@ -2548,6 +2548,7 @@ draw_sankey <- function(
   height = NULL,
   filename = NULL
 ) {
+  rtemis.core::check_tabular(links)
   required_cols <- c("source", "target", "value")
   missing_cols <- setdiff(required_cols, names(links))
   if (length(missing_cols) > 0L) {
@@ -2556,22 +2557,26 @@ draw_sankey <- function(
     )
   }
 
-  # Derive unique node names from source and target columns
-  node_names <- unique(c(links[["source"]], links[["target"]]))
+  # Coerce to character: factor columns with different levels produce an
+  # integer vector when concatenated with c().
+  node_names <- unique(
+    c(as.character(links[["source"]]), as.character(links[["target"]]))
+  )
   nodes <- lapply(node_names, function(n) list(name = n))
 
   # Convert links data.frame rows to a list of named lists
   edge_list <- lapply(seq_len(nrow(links)), function(i) {
     list(
-      source = links[["source"]][[i]],
-      target = links[["target"]][[i]],
+      source = as.character(links[["source"]][[i]]),
+      target = as.character(links[["target"]][[i]]),
       value = links[["value"]][[i]]
     )
   })
 
   # ECharts ignores a palette longer than the node count; trim (or cycle) to
-  # exactly one entry per node.
-  palette <- rep_len(color %||% rtemis_colors, length(node_names))
+  # exactly one entry per node. unname() prevents named vectors from
+  # serializing as a JSON object instead of an array.
+  palette <- unname(rep_len(color %||% rtemis_colors, length(node_names)))
   opt <- EChartsOption(
     title = if (!is.null(title)) Title(text = title, left = "center") else NULL,
     tooltip = Tooltip(trigger = "item"),

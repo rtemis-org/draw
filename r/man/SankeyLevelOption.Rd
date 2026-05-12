@@ -5,7 +5,7 @@
 \title{Sankey Level Option}
 \usage{
 SankeyLevelOption(
-  depth = NULL,
+  depth = integer(0),
   label = NULL,
   item_style = NULL,
   line_style = NULL

@@ -37,7 +37,7 @@ SankeyNodeItem <- S7::new_class(
   properties = list(
     name = optional_character_scalar,
     value = numeric_or_null_property(),
-    depth = numeric_or_null_property(),
+    depth = optional_nonneg_integer_scalar,
     draggable = optional_logical_scalar,
     local_x = numeric_or_null_property(),
     local_y = numeric_or_null_property(),
@@ -154,19 +154,7 @@ S7::method(to_list, SankeyEdgeItem) <- function(x, ...) {
 SankeyLevelOption <- S7::new_class(
   "SankeyLevelOption",
   properties = list(
-    depth = S7::new_property(
-      class = S7::class_any,
-      default = NULL,
-      validator = function(value) {
-        if (is.null(value)) {
-          return("depth is required and must be a non-negative integer")
-        }
-        if (is.numeric(value) && length(value) == 1L && value >= 0) {
-          return(NULL)
-        }
-        "must be a non-negative number"
-      }
-    ),
+    depth = nonneg_integer_scalar,
     label = class_or_null_property(LabelOption),
     item_style = class_or_null_property(ItemStyle),
     line_style = S7::new_property(class = S7::class_any, default = NULL)

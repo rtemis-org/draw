@@ -15,7 +15,7 @@ test_that("SankeyNodeItem to_list() converts names correctly", {
   n <- SankeyNodeItem(
     name = "A",
     value = 10,
-    depth = 1,
+    depth = 1L,
     draggable = FALSE,
     local_x = 0.1,
     local_y = 0.5
@@ -23,7 +23,7 @@ test_that("SankeyNodeItem to_list() converts names correctly", {
   out <- to_list(n)
   expect_equal(out[["name"]], "A")
   expect_equal(out[["value"]], 10)
-  expect_equal(out[["depth"]], 1)
+  expect_equal(out[["depth"]], 1L)
   expect_equal(out[["draggable"]], FALSE)
   expect_equal(out[["localX"]], 0.1)
   expect_equal(out[["localY"]], 0.5)
@@ -48,6 +48,13 @@ test_that("SankeyNodeItem focus_node_adjacency validation", {
   )
   expect_error(SankeyNodeItem(focus_node_adjacency = "bad"))
   expect_error(SankeyNodeItem(focus_node_adjacency = 1))
+})
+
+test_that("SankeyNodeItem depth validates non-negative integer scalar", {
+  expect_equal(SankeyNodeItem(depth = 0L)@depth, 0L)
+  expect_equal(SankeyNodeItem(depth = 2L)@depth, 2L)
+  expect_error(SankeyNodeItem(depth = -1L))
+  expect_error(SankeyNodeItem(depth = 1.5))
 })
 
 test_that("SankeyNodeItem NULL fields are dropped", {
@@ -101,10 +108,10 @@ test_that("SankeyEdgeItem accepts LineStyle S7 object for line_style", {
 # -- SankeyLevelOption ----------------------------------------------------------
 
 test_that("SankeyLevelOption creates with depth", {
-  lv <- SankeyLevelOption(depth = 0)
+  lv <- SankeyLevelOption(depth = 0L)
   expect_true(S7::S7_inherits(lv, SankeyLevelOption))
   out <- to_list(lv)
-  expect_equal(out[["depth"]], 0)
+  expect_equal(out[["depth"]], 0L)
 })
 
 test_that("SankeyLevelOption depth is required", {
@@ -115,13 +122,18 @@ test_that("SankeyLevelOption depth rejects negative", {
   expect_error(SankeyLevelOption(depth = -1))
 })
 
+test_that("SankeyLevelOption depth rejects non-integer and negative", {
+  expect_error(SankeyLevelOption(depth = 1.5))
+  expect_error(SankeyLevelOption(depth = -1L))
+})
+
 test_that("SankeyLevelOption to_list() includes item_style", {
   lv <- SankeyLevelOption(
-    depth = 1,
+    depth = 1L,
     item_style = ItemStyle(color = "#f00")
   )
   out <- to_list(lv)
-  expect_equal(out[["depth"]], 1)
+  expect_equal(out[["depth"]], 1L)
   expect_equal(out[["itemStyle"]][["color"]], "#f00")
 })
 
@@ -166,12 +178,12 @@ test_that("SankeySeries data and links serialize as unnamed arrays", {
 
 test_that("SankeySeries data accepts SankeyNodeItem objects", {
   s <- SankeySeries(
-    data = list(SankeyNodeItem(name = "X", depth = 0)),
+    data = list(SankeyNodeItem(name = "X", depth = 0L)),
     links = list(list(source = "X", target = "Y", value = 1))
   )
   out <- to_list(s)
   expect_equal(out[["data"]][[1L]][["name"]], "X")
-  expect_equal(out[["data"]][[1L]][["depth"]], 0)
+  expect_equal(out[["data"]][[1L]][["depth"]], 0L)
 })
 
 test_that("SankeySeries orient validation", {
@@ -196,8 +208,8 @@ test_that("SankeySeries roam validation", {
 test_that("SankeySeries levels serialize as unnamed array", {
   s <- SankeySeries(
     levels = list(
-      SankeyLevelOption(depth = 0, item_style = ItemStyle(color = "#f00")),
-      SankeyLevelOption(depth = 1)
+      SankeyLevelOption(depth = 0L, item_style = ItemStyle(color = "#f00")),
+      SankeyLevelOption(depth = 1L)
     )
   )
   out <- to_list(s)
@@ -247,9 +259,26 @@ test_that("draw_sankey derives nodes from links automatically", {
   expect_setequal(node_names, c("X", "Y", "Z"))
 })
 
+test_that("draw_sankey rejects non-tabular links", {
+  expect_error(draw_sankey(list(source = "A", target = "B", value = 1)))
+})
+
 test_that("draw_sankey rejects links missing required columns", {
   bad <- data.frame(from = "A", to = "B", stringsAsFactors = FALSE)
   expect_error(draw_sankey(bad), regexp = "source")
+})
+
+test_that("draw_sankey handles factor source/target columns", {
+  links <- data.frame(
+    source = factor(c("A", "B"), levels = c("A", "B")),
+    target = factor(c("B", "C"), levels = c("B", "C")),
+    value = c(5, 3)
+  )
+  w <- draw_sankey(links)
+  opt <- w[["x"]][["option"]]
+  node_names <- vapply(opt[["series"]][[1L]][["data"]], `[[`, "", "name")
+  expect_setequal(node_names, c("A", "B", "C"))
+  expect_type(node_names, "character")
 })
 
 test_that("draw_sankey respects orient argument", {
