@@ -22,6 +22,8 @@
 #' @param tooltip Optional [Tooltip]: Tooltip configuration.
 #' @param visual_map Optional [VisualMap] or list: Visual map configuration (`visualMap`).
 #'   Required for heatmaps to map data values to colors.
+#' @param toolbox Optional list: Toolbox configuration (`toolbox`), e.g. the
+#'   `dataZoom` and `restore` features used by [draw_gantt()].
 #' @param data_zoom Optional [DataZoom] or list of [DataZoom]: Axis zoom
 #'   component(s) (`dataZoom`). Pass a list to combine, e.g., a `"slider"` with
 #'   an `"inside"` zoom.
