@@ -42,7 +42,14 @@ jobs:
           r-version: release
           use-public-rspm: true
           extra-repositories: https://rtemis-org.r-universe.dev
-
+      # Access latest packages on rtemis-org.r-universe.dev
+      - name: Add rtemis r-universe to repos
+        run: |
+          cat(
+            'options(repos = c(getOption("repos"), rtemisorg = "https://rtemis-org.r-universe.dev"))',
+            file = "~/.Rprofile", sep = "\n", append = TRUE
+          )
+        shell: Rscript {0}
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
           working-directory: r
