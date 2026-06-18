@@ -33,6 +33,7 @@ Axis(
   split_line = NULL,
   minor_split_line = NULL,
   split_area = NULL,
+  axis_pointer = NULL,
   position = NULL,
   grid_index = NULL
 )

@@ -12,6 +12,7 @@ EChartsOption(
   y_axis = NULL,
   tooltip = NULL,
   visual_map = NULL,
+  toolbox = NULL,
   data_zoom = NULL,
   series = NULL,
   color = NULL,

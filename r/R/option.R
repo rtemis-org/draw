@@ -49,6 +49,7 @@ EChartsOption <- S7::new_class(
     y_axis = S7::new_property(class = S7::class_any, default = NULL),
     tooltip = class_or_null_property(Tooltip),
     visual_map = S7::new_property(class = S7::class_any, default = NULL),
+    toolbox = S7::new_property(class = S7::class_any, default = NULL),
     data_zoom = S7::new_property(class = S7::class_any, default = NULL),
     # Series (single or list)
     series = S7::new_property(class = S7::class_any, default = NULL),
@@ -115,7 +116,8 @@ S7::method(to_list, EChartsOption) <- function(x, ...) {
     x_axis = "xAxis",
     y_axis = "yAxis",
     tooltip = "tooltip",
-    visual_map = "visualMap"
+    visual_map = "visualMap",
+    toolbox = "toolbox"
   )
 
   for (prop_name in names(component_map)) {

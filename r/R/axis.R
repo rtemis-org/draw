@@ -478,6 +478,9 @@ Axis <- S7::new_class(
     split_line = class_or_null_property(SplitLine),
     minor_split_line = class_or_null_property(MinorSplitLine),
     split_area = class_or_null_property(SplitArea),
+    # axisPointer: interactive mouse-following guide on this axis (plain list,
+    # echarts-cased keys, e.g. list(show = TRUE, type = "line", label = ...)).
+    axis_pointer = S7::new_property(class = S7::class_any, default = NULL),
     # Axis position: "left"/"right" for yAxis, "top"/"bottom" for xAxis
     position = enum(c("left", "right", "top", "bottom"), nullable = TRUE),
     # Multi-grid support: index of the grid this axis belongs to

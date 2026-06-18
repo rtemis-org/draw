@@ -1,6 +1,6 @@
 Package: rtemis.draw
-Title: Interactive Visualization Using ECharts
-Version: 0.2.1
+Title: Interactive Visualization
+Version: 0.2.2
 Authors@R:
     person(given = "E.D.", family = "Gennatas", role = c("aut", "cre", "cph"),
            email = "gennatas@gmail.com",
@@ -50,6 +50,8 @@ Collate:
     'draw.R'
     'draw_a3.R'
     'draw_spectrogram.R'
+    'draw_gantt.R'
+    'methods.R'
     'export.R'
     'zzz.R'
 Config/roxygen2/version: 8.0.0
