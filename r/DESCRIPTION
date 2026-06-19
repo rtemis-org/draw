@@ -27,7 +27,6 @@ Imports:
 Suggests:
     mgcv,
     rmarkdown,
-    rtemis (>= 1.2.4),
     rtemis.a3,
     testthat (>= 3.0.0)
 Additional_repositories:
@@ -51,7 +50,7 @@ Collate:
     'draw_a3.R'
     'draw_spectrogram.R'
     'draw_gantt.R'
-    'methods.R'
+    'plot.SupervisedSession.R'
     'export.R'
     'zzz.R'
 Config/roxygen2/version: 8.0.0
