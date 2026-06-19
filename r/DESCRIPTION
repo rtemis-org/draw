@@ -19,7 +19,7 @@ Imports:
     cli,
     htmlwidgets,
     jsonlite,
-    rtemis (>= 1.2.4),
+    rtemis (>= 1.2.5),
     rtemis.core (>= 0.2.0),
     S7,
     signal,
