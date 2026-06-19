@@ -15,6 +15,3 @@ specs/
 # Agents
 AGENTS.md
 CLAUDE.md
-
-# R
-*.Rcheck/
