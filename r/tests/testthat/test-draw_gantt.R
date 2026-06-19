@@ -59,6 +59,17 @@ test_that("draw_gantt errors on invalid axis_type", {
 })
 
 
+test_that("draw_gantt errors on NA start or end values", {
+  bad_start <- tasks_df()
+  bad_start[["start"]][2L] <- NA
+  expect_error(draw_gantt(bad_start), "missing values")
+
+  bad_end <- tasks_df()
+  bad_end[["end"]][3L] <- NA
+  expect_error(draw_gantt(bad_end), "missing values")
+})
+
+
 test_that("draw_gantt errors on unknown group column", {
   expect_error(draw_gantt(tasks_df(), group = "nope"), "group")
 })

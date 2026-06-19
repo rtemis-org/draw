@@ -57,15 +57,17 @@ plot_SupervisedSession <- function(
   # End fallback for nodes that never closed (running / aborted, NA t_end):
   # the session finish time, else the latest known start.
   finished <- x@finished
+  starts_ms <- vapply(events, function(e) to_ms(e[["t_start"]]), numeric(1L))
   end_fallback <- if (
     !is.null(finished) && length(finished) > 0L && !is.na(finished)
   ) {
     to_ms(finished)
+  } else if (all(is.na(starts_ms))) {
+    # Degenerate session (no finish time, no recorded starts): fall back to 0 so
+    # we never propagate -Inf (and its warning) into the bar geometry.
+    0
   } else {
-    max(
-      vapply(events, function(e) to_ms(e[["t_start"]]), numeric(1L)),
-      na.rm = TRUE
-    )
+    max(starts_ms, na.rm = TRUE)
   }
 
   # -- Rebuild the execution tree and order nodes depth-first ------------------
@@ -198,7 +200,9 @@ plot_SupervisedSession <- function(
   present <- unique(tasks[["kind"]])
   # Fall back to the default palette for any unmapped kind.
   cols <- kind_colors[present]
-  cols[is.na(cols)] <- rtemis_colors[seq_len(sum(is.na(cols)))]
+  # rep_len recycles the palette so more unmapped kinds than palette colors still
+  # get a (repeated) color rather than NA, which would break ECharts rendering.
+  cols[is.na(cols)] <- rep_len(rtemis_colors, sum(is.na(cols)))
 
   draw_gantt(
     tasks,

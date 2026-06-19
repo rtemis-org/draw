@@ -188,6 +188,13 @@ draw_gantt <- function(
 
   starts <- .gantt_time_values(tasks[["start"]])
   ends <- .gantt_time_values(tasks[["end"]])
+  # NA start/end serialize as JSON null and break the custom-series renderer;
+  # fail early with a corrective message instead.
+  if (anyNA(starts) || anyNA(ends)) {
+    cli::cli_abort(
+      "Columns {.val start} and {.val end} in {.arg tasks} must not contain missing values ({.val NA})."
+    )
+  }
 
   # Optional per-bar border flag (e.g. to outline failures).
   border_flag <- if (!is.null(border)) as.logical(tasks[[border]]) else NULL
