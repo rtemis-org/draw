@@ -19,12 +19,12 @@ Imports:
     cli,
     htmlwidgets,
     jsonlite,
+    rtemis (>= 1.2.4),
     rtemis.core (>= 0.2.0),
     S7,
     signal,
     viridisLite
 Suggests:
-    knitr,
     mgcv,
     rmarkdown,
     rtemis (>= 1.2.4),

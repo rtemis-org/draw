@@ -108,7 +108,7 @@
 
     cli::cli_abort(
       c(
-        "{.arg palette} {.val {palette}} is not recognised.",
+        "{.arg palette} {.val {palette}} is not recognized.",
         "i" = paste0(
           "Named options: {.val ",
           paste(names(viridis_opts), collapse = "}, {.val "),
