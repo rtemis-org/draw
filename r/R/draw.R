@@ -107,14 +107,44 @@ draw <- function(
   # skip when `containLabel` is set explicitly (heatmap uses `containLabel =
   # FALSE` for exact pixel margins).
   if (!is.null(option$xAxis) || !is.null(option$yAxis)) {
+    # ECharts 6.1's `outerBoundsContain` decides whether a grid's outer bounds
+    # reserve room for the axis *name* ("all") or only the tick labels
+    # ("axisLabel"). Using "axisLabel" when no axis name is shown avoids a dead
+    # gap below the labels. Mirrors rtemislive's chartOptionBuilder.ts.
+    has_axis_name <- function(axis) {
+      if (is.null(axis)) {
+        return(FALSE)
+      }
+      axes <- if (is.null(names(axis))) axis else list(axis)
+      any(vapply(
+        axes,
+        function(a) {
+          nm <- a[["name"]]
+          is.character(nm) && length(nm) == 1L && nzchar(nm)
+        },
+        logical(1L)
+      ))
+    }
+    outer_contain <- if (
+      has_axis_name(option$xAxis) || has_axis_name(option$yAxis)
+    ) {
+      "all"
+    } else {
+      "axisLabel"
+    }
     inject_obm <- function(g) {
-      if (is.null(g[["containLabel"]]) && is.null(g[["outerBoundsMode"]])) {
-        g[["outerBoundsMode"]] <- "same"
+      if (is.null(g[["containLabel"]])) {
+        if (is.null(g[["outerBoundsMode"]])) {
+          g[["outerBoundsMode"]] <- "same"
+        }
+        if (is.null(g[["outerBoundsContain"]])) {
+          g[["outerBoundsContain"]] <- outer_contain
+        }
       }
       g
     }
     if (is.null(option$grid)) {
-      option$grid <- list(outerBoundsMode = "same")
+      option$grid <- inject_obm(list())
     } else if (is.list(option$grid) && !is.null(names(option$grid))) {
       # Single grid (named list).
       option$grid <- inject_obm(option$grid)

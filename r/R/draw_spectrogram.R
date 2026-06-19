@@ -18,7 +18,7 @@
     return(window)
   }
   fns <- list(
-    hann = signal::hanning,
+    hanning = signal::hanning,
     hamming = signal::hamming,
     blackman = signal::blackman,
     bartlett = signal::bartlett,
@@ -28,7 +28,7 @@
   if (is.null(fn)) {
     cli::cli_abort(
       c(
-        "{.arg window} {.val {window}} is not a recognised window type.",
+        "{.arg window} {.val {window}} is not a recognized window type.",
         "i" = "Use one of {.val {paste(names(fns), collapse = ', ')}} \\
                or supply a numeric vector of length {.arg n_fft}."
       ),
@@ -108,7 +108,7 @@
 
     cli::cli_abort(
       c(
-        "{.arg palette} {.val {palette}} is not recognised.",
+        "{.arg palette} {.val {palette}} is not recognized.",
         "i" = paste0(
           "Named options: {.val ",
           paste(names(viridis_opts), collapse = "}, {.val "),
@@ -163,7 +163,7 @@
 #'   `nrow(x)`. Only used when `x` is a matrix.
 #' @param n_fft Integer `[2, Inf)`: FFT window size in samples. Passed to
 #'   [signal::specgram()] as `n`. Only used when `x` is a raw signal.
-#' @param window Character \{"hann", "hamming", "blackman", "bartlett",
+#' @param window Character \{"hanning", "hamming", "blackman", "bartlett",
 #'   "rectangular"\} or Numeric: Window function name or a pre-built window
 #'   vector. Passed to [signal::specgram()]. Only used when `x` is a raw signal.
 #' @param overlap Optional Integer `[0, n_fft)`: Overlap between consecutive
@@ -226,7 +226,7 @@ draw_spectrogram <- function(
   time = NULL,
   frequency = NULL,
   n_fft = 256L,
-  window = "hann",
+  window = "hanning",
   overlap = NULL,
   power = TRUE,
   db = TRUE,

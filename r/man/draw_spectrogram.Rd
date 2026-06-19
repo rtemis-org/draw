@@ -10,7 +10,7 @@ draw_spectrogram(
   time = NULL,
   frequency = NULL,
   n_fft = 256L,
-  window = "hann",
+  window = "hanning",
   overlap = NULL,
   power = TRUE,
   db = TRUE,
@@ -56,7 +56,7 @@ Only used when \code{x} is a matrix.}
 \item{n_fft}{Integer \verb{[2, Inf)}: FFT window size in samples. Passed to
 \code{\link[signal:specgram]{signal::specgram()}} as \code{n}. Only used when \code{x} is a raw signal.}
 
-\item{window}{Character \{"hann", "hamming", "blackman", "bartlett",
+\item{window}{Character \{"hanning", "hamming", "blackman", "bartlett",
 "rectangular"\} or Numeric: Window function name or a pre-built window
 vector. Passed to \code{\link[signal:specgram]{signal::specgram()}}. Only used when \code{x} is a raw signal.}
 

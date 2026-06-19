@@ -33,6 +33,7 @@ Axis(
   split_line = NULL,
   minor_split_line = NULL,
   split_area = NULL,
+  axis_pointer = NULL,
   position = NULL,
   grid_index = NULL
 )
@@ -94,6 +95,10 @@ vector of numbers/strings (numeric axes).}
 \item{minor_split_line}{Optional \link{MinorSplitLine}: Minor split line configuration.}
 
 \item{split_area}{Optional \link{SplitArea}: Split area configuration.}
+
+\item{axis_pointer}{Optional list: Interactive mouse-following axis guide
+(\code{axisPointer}), e.g. \code{list(show = TRUE, type = "line")}. Uses
+echarts-cased keys.}
 
 \item{position}{Optional Character \{"left", "right", "top", "bottom"\}: Axis position.
 For \code{yAxis}: \code{"left"} (default) or \code{"right"}. For \code{xAxis}: \code{"bottom"} (default) or \code{"top"}.}

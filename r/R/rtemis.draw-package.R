@@ -8,7 +8,7 @@
 #' built with S7 classes that mirror the ECharts TypeScript API, with convenience functions for
 #' common chart types and full htmlwidgets integration for use in Quarto, Shiny, and IDE viewers.
 #'
-#' @import S7 rtemis.core
+#' @import S7 rtemis.core rtemis
 #' @importFrom stats approx
 "_PACKAGE"
 

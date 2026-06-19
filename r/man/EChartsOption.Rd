@@ -12,6 +12,7 @@ EChartsOption(
   y_axis = NULL,
   tooltip = NULL,
   visual_map = NULL,
+  toolbox = NULL,
   data_zoom = NULL,
   series = NULL,
   color = NULL,
@@ -41,6 +42,9 @@ EChartsOption(
 
 \item{visual_map}{Optional \link{VisualMap} or list: Visual map configuration (\code{visualMap}).
 Required for heatmaps to map data values to colors.}
+
+\item{toolbox}{Optional list: Toolbox configuration (\code{toolbox}), e.g. the
+\code{dataZoom} and \code{restore} features used by \code{\link[=draw_gantt]{draw_gantt()}}.}
 
 \item{data_zoom}{Optional \link{DataZoom} or list of \link{DataZoom}: Axis zoom
 component(s) (\code{dataZoom}). Pass a list to combine, e.g., a \code{"slider"} with

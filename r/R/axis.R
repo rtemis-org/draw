@@ -377,6 +377,9 @@ S7::method(to_list, AxisLabel) <- function(x, ...) {
 #' @param split_line Optional [SplitLine]: Split line configuration.
 #' @param minor_split_line Optional [MinorSplitLine]: Minor split line configuration.
 #' @param split_area Optional [SplitArea]: Split area configuration.
+#' @param axis_pointer Optional list: Interactive mouse-following axis guide
+#'   (`axisPointer`), e.g. `list(show = TRUE, type = "line")`. Uses
+#'   echarts-cased keys.
 #' @param position Optional Character \{"left", "right", "top", "bottom"\}: Axis position.
 #'   For `yAxis`: `"left"` (default) or `"right"`. For `xAxis`: `"bottom"` (default) or `"top"`.
 #' @param grid_index Optional Numeric `[0, Inf)`: Index of the grid this axis belongs to.
@@ -478,6 +481,9 @@ Axis <- S7::new_class(
     split_line = class_or_null_property(SplitLine),
     minor_split_line = class_or_null_property(MinorSplitLine),
     split_area = class_or_null_property(SplitArea),
+    # axisPointer: interactive mouse-following guide on this axis (plain list,
+    # echarts-cased keys, e.g. list(show = TRUE, type = "line", label = ...)).
+    axis_pointer = S7::new_property(class = S7::class_any, default = NULL),
     # Axis position: "left"/"right" for yAxis, "top"/"bottom" for xAxis
     position = enum(c("left", "right", "top", "bottom"), nullable = TRUE),
     # Multi-grid support: index of the grid this axis belongs to

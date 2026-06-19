@@ -1,5 +1,5 @@
 test_that(".specgram_window returns correct vector for named windows", {
-  for (nm in c("hann", "hamming", "blackman", "bartlett", "rectangular")) {
+  for (nm in c("hanning", "hamming", "blackman", "bartlett", "rectangular")) {
     w <- rtemis.draw:::.specgram_window(nm, 64L)
     expect_length(w, 64L)
     expect_true(is.numeric(w))
@@ -65,7 +65,7 @@ test_that(".spectrogram_palette diverging returns dark_variant attribute", {
 
 test_that(".spectrogram_palette diverging symmetrises zlim around 0", {
   # c(-1.5, 2) is asymmetric but both endpoints have |max| = 2, so after
-  # symmetrisation both calls produce the same palette as c(-2, 2).
+  # symmetrization both calls produce the same palette as c(-2, 2).
   sym <- rtemis.draw:::.spectrogram_palette("diverging", 101L, FALSE, c(-2, 2))
   asym <- rtemis.draw:::.spectrogram_palette(
     "diverging",

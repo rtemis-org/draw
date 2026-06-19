@@ -106,6 +106,24 @@ HTMLWidgets.widget({
       });
 
       chart.setOption(x.option, true);
+
+      // Double-click resets any dataZoom (e.g. the gantt's inside zoom) back to
+      // the full view -- a familiar gesture, in addition to the toolbox reset.
+      // No-op when the chart has no dataZoom, so it's safe for every chart type.
+      // Re-apply the option's own dataZoom components with start/end = 0/100:
+      // setOption merges by index onto exactly those components, resetting every
+      // axis (the toolbox's internal dataZoom shift dispatchAction indices, so
+      // index-based dispatch would miss an axis). Legend selection is untouched.
+      const zoomDefs = x.option?.dataZoom;
+      if (zoomDefs?.length) {
+        chart.getZr().on("dblclick", () => {
+          chart.setOption({
+            dataZoom: zoomDefs.map((d) =>
+              Object.assign({}, d, { start: 0, end: 100 })
+            )
+          });
+        });
+      }
     };
 
     // Listen for system color scheme changes

@@ -12,6 +12,8 @@ __dev/
 .zed/
 
 # R
+*.tar.gz
+*.Rcheck/
 .lintr
 air.toml
 
