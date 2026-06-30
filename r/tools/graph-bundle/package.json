@@ -1,0 +1,20 @@
+{
+  "name": "rtemis-graph-bundle",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Build input for the vendored Sigma.js + graphology browser bundle used by the rtemis-graph htmlwidget. Run `npm install && npm run build` to regenerate inst/htmlwidgets/lib/sigma/rtemis-graph-deps.js. Versions are pinned to match rtemislive (~/Code/live).",
+  "type": "module",
+  "scripts": {
+    "build": "esbuild entry.mjs --bundle --format=iife --global-name=RtemisGraph --minify --legal-comments=none --outfile=../../inst/htmlwidgets/lib/sigma/rtemis-graph-deps.js"
+  },
+  "dependencies": {
+    "graphology": "0.26.0",
+    "graphology-communities-louvain": "2.0.2",
+    "graphology-layout": "0.6.1",
+    "graphology-layout-forceatlas2": "0.10.1",
+    "sigma": "4.0.0-alpha.6"
+  },
+  "devDependencies": {
+    "esbuild": "^0.25.0"
+  }
+}
