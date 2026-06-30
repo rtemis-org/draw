@@ -404,15 +404,15 @@ map_from_data_frame <- function(
   val <- as.numeric(data[[value]])
   tooltip <- tooltip %||% character(0)
 
+  # Extract tooltip columns once (coercing factors) rather than subsetting the
+  # data frame per row inside the loop.
+  tooltip_list <- lapply(data[tooltip], function(v) {
+    if (is.factor(v)) as.character(v) else v
+  })
+
   rows <- lapply(seq_len(nrow(data)), function(i) {
     extras <- if (length(tooltip) > 0L) {
-      stats::setNames(
-        lapply(tooltip, function(f) {
-          v <- data[[f]][i]
-          if (is.factor(v)) as.character(v) else v
-        }),
-        tooltip
-      )
+      lapply(tooltip_list, `[[`, i)
     } else {
       NULL
     }

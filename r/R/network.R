@@ -430,12 +430,17 @@ graph_from_edge_list <- function(edges, nodes = NULL, directed = FALSE) {
   # Weighted degree per node id, used as the default `value` for any node not
   # explicitly described in `nodes`.
   edge_ids <- unique(c(src, tgt))
+  # Weighted degree, vectorized: each edge contributes its weight to both
+  # endpoints. Missing/absent weights count as 1.
+  weights <- if (is.null(wgt)) rep(1, length(src)) else abs(wgt)
+  weights[is.na(weights)] <- 1
+  deg_sums <- vapply(
+    split(rep(weights, 2L), c(src, tgt)),
+    sum,
+    numeric(1L)
+  )
   degree <- stats::setNames(numeric(length(edge_ids)), edge_ids)
-  for (k in seq_len(nrow(edges))) {
-    w <- if (is.null(wgt) || is.na(wgt[k])) 1 else abs(wgt[k])
-    degree[src[k]] <- degree[src[k]] + w
-    degree[tgt[k]] <- degree[tgt[k]] + w
-  }
+  degree[names(deg_sums)] <- deg_sums
 
   if (is.null(nodes)) {
     node_objs <- lapply(edge_ids, function(id) {
@@ -453,25 +458,30 @@ graph_from_edge_list <- function(edges, nodes = NULL, directed = FALSE) {
       names(nodes)[1L]
     }
     node_ids <- as.character(nodes[[id_col]])
+    # Extract optional columns once as flat vectors instead of subsetting the
+    # data frame per row inside the loop.
+    labels <- if ("label" %in% names(nodes)) {
+      as.character(nodes[["label"]])
+    } else {
+      NULL
+    }
+    values <- if ("value" %in% names(nodes)) {
+      as.numeric(nodes[["value"]])
+    } else {
+      NULL
+    }
+    groups <- if ("group" %in% names(nodes)) {
+      as.character(nodes[["group"]])
+    } else {
+      NULL
+    }
     node_objs <- lapply(seq_len(nrow(nodes)), function(k) {
       id <- node_ids[k]
       GraphNode(
         id = id,
-        label = if ("label" %in% names(nodes)) {
-          as.character(nodes[["label"]][k])
-        } else {
-          id
-        },
-        value = if ("value" %in% names(nodes)) {
-          as.numeric(nodes[["value"]][k])
-        } else {
-          unname(degree[id] %||% 0)
-        },
-        group = if ("group" %in% names(nodes)) {
-          as.character(nodes[["group"]][k])
-        } else {
-          NULL
-        }
+        label = if (!is.null(labels)) labels[k] else id,
+        value = if (!is.null(values)) values[k] else unname(degree[id] %||% 0),
+        group = if (!is.null(groups)) groups[k] else NULL
       )
     })
     # Add any edge-referenced ids missing from the node table.
