@@ -176,3 +176,120 @@ test_that("draw_graph auto-theme payload carries light and dark themes", {
   expect_false(is.null(w$x$theme))
   expect_false(is.null(w$x$themeDark))
 })
+
+# -- SigmaOption ----------------------------------------------------------------
+
+test_that("SigmaOption applies sensible style defaults", {
+  m <- GraphModel(
+    nodes = list(GraphNode(id = "a"), GraphNode(id = "b")),
+    edges = list(GraphEdge(source = "a", target = "b")),
+    directed = FALSE
+  )
+  opt <- SigmaOption(model = m)
+  expect_true(S7::S7_inherits(opt, SigmaOption))
+  expect_equal(opt@layout, "force")
+  expect_equal(opt@node_size, 10)
+  expect_equal(opt@node_opacity, 0.95)
+  expect_true(opt@scale_by_degree)
+  expect_false(opt@color_by_group)
+  expect_equal(opt@node_color, rtemis_colors[[1L]])
+  expect_equal(opt@negative_color, "#ff9e1f")
+})
+
+test_that("SigmaOption to_list produces the {model, style} payload shape", {
+  m <- GraphModel(
+    nodes = list(GraphNode(id = "a"), GraphNode(id = "b")),
+    edges = list(GraphEdge(source = "a", target = "b", weight = 0.5)),
+    directed = FALSE
+  )
+  out <- to_list(SigmaOption(model = m, layout = "circular", node_size = 20))
+  expect_named(out, c("model", "style"))
+  expect_length(out$model$nodes, 2L)
+  # style keys are camelCase for the JS binding
+  expect_equal(out$style$layout, "circular")
+  expect_equal(out$style$nodeSize, 20)
+  expect_true("scaleByDegree" %in% names(out$style))
+  # title omitted when NULL
+  expect_false("title" %in% names(out))
+})
+
+test_that("SigmaOption serializes a title when present", {
+  m <- GraphModel(
+    nodes = list(GraphNode(id = "a")),
+    edges = list(),
+    directed = FALSE
+  )
+  out <- to_list(SigmaOption(model = m, title = "My Network"))
+  expect_equal(out$title, "My Network")
+})
+
+test_that("SigmaOption accepts a plain list model but rejects a model without nodes", {
+  expect_no_error(SigmaOption(model = list(nodes = list(), edges = list())))
+  expect_error(SigmaOption(model = list(edges = list())), "nodes")
+  expect_error(SigmaOption(model = 42), "GraphModel")
+})
+
+test_that("SigmaOption rejects an invalid layout", {
+  m <- GraphModel(
+    nodes = list(GraphNode(id = "a")),
+    edges = list(),
+    directed = FALSE
+  )
+  expect_error(SigmaOption(model = m, layout = "spiral"))
+})
+
+# -- draw() generic dispatch ----------------------------------------------------
+
+test_that("draw() dispatches a SigmaOption to the rtemis-graph backend", {
+  m <- GraphModel(
+    nodes = list(GraphNode(id = "a"), GraphNode(id = "b")),
+    edges = list(GraphEdge(source = "a", target = "b")),
+    directed = FALSE
+  )
+  w <- draw(SigmaOption(model = m))
+  expect_s3_class(w, "htmlwidget")
+  # Sigma payload shape (model/style), not the ECharts shape (option)
+  expect_false(is.null(w$x$model))
+  expect_false(is.null(w$x$style))
+  expect_null(w$x$option)
+  # theme resolved uniformly by draw(), not carried on the option
+  expect_true(w$x$autoTheme)
+})
+
+test_that("draw(SigmaOption) honours an explicit theme and NA (no theme)", {
+  m <- GraphModel(
+    nodes = list(GraphNode(id = "a")),
+    edges = list(),
+    directed = FALSE
+  )
+  wt <- draw(SigmaOption(model = m), theme = theme_dark())
+  expect_false(is.null(wt$x$theme))
+  expect_null(wt$x$autoTheme)
+
+  wna <- draw(SigmaOption(model = m), theme = NA)
+  expect_null(wna$x$theme)
+  expect_null(wna$x$autoTheme)
+})
+
+test_that("draw(SigmaOption) warns and ignores filename (no static export yet)", {
+  m <- GraphModel(
+    nodes = list(GraphNode(id = "a")),
+    edges = list(),
+    directed = FALSE
+  )
+  expect_warning(
+    draw(SigmaOption(model = m), filename = "net.svg"),
+    "not yet supported"
+  )
+})
+
+test_that("draw() still renders an EChartsOption and a bare list", {
+  we <- draw(EChartsOption(series = LineSeries(data = list(1, 2, 3))))
+  expect_s3_class(we, "htmlwidget")
+  expect_false(is.null(we$x$option))
+  expect_equal(we$x$renderer, "canvas")
+
+  wl <- draw(list(series = list(list(type = "line", data = list(1, 2, 3)))))
+  expect_s3_class(wl, "htmlwidget")
+  expect_false(is.null(wl$x$option))
+})

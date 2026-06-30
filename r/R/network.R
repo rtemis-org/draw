@@ -142,6 +142,170 @@ S7::method(to_list, GraphModel) <- function(x, ...) {
   )
 }
 
+# -- SigmaOption ----------------------------------------------------------------
+
+#' Sigma.js Render Option
+#'
+#' The complete, validated render spec for a Sigma.js network: a [GraphModel]
+#' (the data) plus all visual styling and an optional title. This is the Sigma
+#' analog of [EChartsOption] -- the single object [draw()] dispatches on to emit
+#' a `rtemis-graph` widget. Theme is *not* a property here; like every backend,
+#' theming is supplied to [draw()] and resolved uniformly.
+#'
+#' Most users never touch this directly -- [draw_network()] and [draw_graph()]
+#' build it -- but power users can construct it for full control:
+#' `draw(SigmaOption(model = GraphModel(...), layout = "circular"))`.
+#'
+#' Its [to_list()] produces the `{ model, style, title }` payload consumed by
+#' the `rtemis-graph` htmlwidget binding.
+#'
+#' @param model [GraphModel] or named list: The graph to render (a list must
+#'   contain a `nodes` element).
+#' @param layout Character \{"force", "circular", "circlepack", "random"\}:
+#'   Layout algorithm. `"force"` is ForceAtlas2.
+#' @param node_size Numeric \[0, Inf): Base node radius in screen pixels.
+#' @param edge_scale Numeric \[0, Inf): Multiplier mapping normalized edge weight
+#'   to stroke width.
+#' @param node_opacity Numeric \[0, 1\]: Node fill opacity.
+#' @param edge_opacity Numeric \[0, 1\]: Edge stroke opacity.
+#' @param show_labels Logical: Whether to render node labels.
+#' @param scale_by_degree Logical: Scale each node's radius by its `value`
+#'   (weighted degree); when `FALSE` all nodes use the base size.
+#' @param color_by_group Logical: Color nodes by detected community (Louvain)
+#'   instead of a single hue.
+#' @param resolution Numeric \[0, Inf): Louvain resolution; higher yields more,
+#'   smaller communities.
+#' @param blend_edges Logical: Color each edge as the blend of its two endpoint
+#'   node colors instead of by sign.
+#' @param palette Character: Categorical colors for communities.
+#' @param node_color Character: Single node color used when `color_by_group` is
+#'   `FALSE`.
+#' @param positive_color Character: Edge color for positive-sign edges.
+#' @param negative_color Character: Edge color for negative-sign edges.
+#' @param title Optional Character: Title shown above the network.
+#' @export
+SigmaOption <- S7::new_class(
+  "SigmaOption",
+  properties = list(
+    # model: a GraphModel, or a plain list already in {nodes, edges, directed}
+    # shape (the contract draw_graph() has always accepted).
+    model = S7::new_property(
+      class = S7::class_any,
+      validator = function(value) {
+        if (S7::S7_inherits(value, GraphModel)) {
+          return(NULL)
+        }
+        if (is.list(value) && !is.null(value[["nodes"]])) {
+          return(NULL)
+        }
+        "must be a GraphModel or a list with a `nodes` element"
+      }
+    ),
+    layout = S7::new_property(
+      S7::class_character,
+      default = "force",
+      validator = function(value) {
+        if (
+          length(value) != 1L ||
+            !value %in% c("force", "circular", "circlepack", "random")
+        ) {
+          return(
+            "must be one of \"force\", \"circular\", \"circlepack\", \"random\""
+          )
+        }
+        NULL
+      }
+    ),
+    node_size = nonneg_numeric_default(10),
+    edge_scale = nonneg_numeric_default(3),
+    node_opacity = prob_default(0.95),
+    edge_opacity = prob_default(0.4),
+    show_labels = logical_default(TRUE),
+    scale_by_degree = logical_default(TRUE),
+    color_by_group = logical_default(FALSE),
+    resolution = nonneg_numeric_default(1),
+    blend_edges = logical_default(FALSE),
+    palette = S7::new_property(
+      S7::class_character,
+      default = quote(as.character(rtemis_colors)),
+      validator = function(value) {
+        if (length(value) == 0L) {
+          return("must be a non-empty character vector of colors")
+        }
+        NULL
+      }
+    ),
+    node_color = S7::new_property(
+      S7::class_character,
+      default = quote(rtemis_colors[[1L]])
+    ),
+    positive_color = S7::new_property(
+      S7::class_character,
+      default = quote(rtemis_colors[[1L]])
+    ),
+    negative_color = S7::new_property(
+      S7::class_character,
+      default = "#ff9e1f"
+    ),
+    title = optional_character_scalar
+  )
+)
+
+S7::method(to_list, SigmaOption) <- function(x, ...) {
+  model <- x@model
+  model_list <- if (S7::S7_inherits(model)) to_list(model) else model
+  out <- list(
+    model = model_list,
+    style = list(
+      layout = x@layout,
+      nodeSize = x@node_size,
+      edgeScale = x@edge_scale,
+      nodeOpacity = x@node_opacity,
+      edgeOpacity = x@edge_opacity,
+      showLabels = x@show_labels,
+      scaleByDegree = x@scale_by_degree,
+      colorByGroup = x@color_by_group,
+      resolution = x@resolution,
+      blendEdges = x@blend_edges,
+      palette = as.character(x@palette),
+      nodeColor = x@node_color,
+      positiveColor = x@positive_color,
+      negativeColor = x@negative_color
+    )
+  )
+  if (!is.null(x@title)) {
+    out[["title"]] <- x@title
+  }
+  out
+}
+
+# -- draw() method: Sigma.js backend --------------------------------------------
+
+# Sigma.js backend: render the network spec as a `rtemis-graph` widget.
+S7::method(draw, SigmaOption) <- function(
+  option,
+  theme = NULL,
+  width = NULL,
+  height = NULL,
+  elementId = NULL,
+  filename = NULL,
+  ...
+) {
+  if (!is.null(filename)) {
+    cli::cli_warn(
+      "Static export of network widgets is not yet supported; ignoring {.arg filename}."
+    )
+  }
+  render_widget(
+    "rtemis-graph",
+    to_list(option),
+    theme = theme,
+    width = width,
+    height = height,
+    elementId = elementId
+  )
+}
+
 # -- Model builders -------------------------------------------------------------
 
 #' Build a GraphModel from a square weight / adjacency matrix
@@ -359,6 +523,9 @@ graph_from_edge_list <- function(edges, nodes = NULL, directed = FALSE) {
 #' @param width Optional Character or Numeric: Widget width.
 #' @param height Optional Character or Numeric: Widget height.
 #' @param elementId Optional Character: Explicit element ID.
+#' @param filename Optional Character: Currently ignored with a warning (static
+#'   export of network widgets is not yet supported); accepted for signature
+#'   parity with the other `draw_*` functions.
 #' @return htmlwidget.
 #' @export
 draw_graph <- function(
@@ -374,79 +541,46 @@ draw_graph <- function(
   resolution = 1,
   blend_edges = FALSE,
   palette = rtemis_colors,
-  node_color = "#808080",
-  positive_color = rtemis_colors[["orange"]],
-  negative_color = rtemis_colors[["teal"]],
+  node_color = rtemis_colors[[1L]],
+  positive_color = rtemis_colors[[1L]],
+  negative_color = "#ff9e1f",
   title = NULL,
   theme = NULL,
   width = NULL,
   height = NULL,
-  elementId = NULL
+  elementId = NULL,
+  filename = NULL
 ) {
   layout <- match.arg(layout, c("force", "circular", "circlepack", "random"))
 
-  if (S7::S7_inherits(model)) {
-    model <- to_list(model)
-  }
-  if (!is.list(model) || is.null(model[["nodes"]])) {
-    cli::cli_abort(
-      "{.arg model} must be a {.cls GraphModel} or a list with a {.field nodes} element."
-    )
-  }
-
-  # Resolve themes the same way draw() does: auto-detect unless an explicit
-  # Theme/list/NA is supplied. Sigma reads only colors (text/background), so we
-  # pass the resolved theme lists straight through to the binding.
-  auto_theme <- is.null(theme)
-  theme_list <- NULL
-  theme_dark_list <- NULL
-  if (auto_theme) {
-    theme_list <- to_list(theme_light())
-    theme_dark_list <- to_list(theme_dark())
-  } else if (!isTRUE(is.na(theme))) {
-    theme_list <- if (S7::S7_inherits(theme)) to_list(theme) else theme
-  }
-
-  payload <- list(
+  # Assemble the full Sigma render spec, then dispatch through draw(). Theme is
+  # resolved uniformly inside draw()/render_widget(), not here.
+  option <- SigmaOption(
     model = model,
-    style = list(
-      layout = layout,
-      nodeSize = node_size,
-      edgeScale = edge_scale,
-      nodeOpacity = node_opacity,
-      edgeOpacity = edge_opacity,
-      showLabels = show_labels,
-      scaleByDegree = scale_by_degree,
-      colorByGroup = color_by_group,
-      resolution = resolution,
-      blendEdges = blend_edges,
-      palette = as.character(palette),
-      nodeColor = node_color,
-      positiveColor = positive_color,
-      negativeColor = negative_color
-    ),
-    title = title,
-    autoTheme = if (auto_theme) TRUE else NULL,
-    theme = theme_list,
-    themeDark = theme_dark_list
+    layout = layout,
+    node_size = node_size,
+    edge_scale = edge_scale,
+    node_opacity = node_opacity,
+    edge_opacity = edge_opacity,
+    show_labels = show_labels,
+    scale_by_degree = scale_by_degree,
+    color_by_group = color_by_group,
+    resolution = resolution,
+    blend_edges = blend_edges,
+    palette = as.character(palette),
+    node_color = node_color,
+    positive_color = positive_color,
+    negative_color = negative_color,
+    title = title
   )
 
-  should_fill <- is.null(width) || is.character(width)
-
-  htmlwidgets::createWidget(
-    name = "rtemis-graph",
-    x = payload,
+  draw(
+    option,
+    theme = theme,
     width = width,
     height = height,
-    sizingPolicy = htmlwidgets::sizingPolicy(
-      browser.fill = should_fill,
-      browser.padding = 0,
-      viewer.fill = should_fill,
-      viewer.padding = 0,
-      fill = should_fill
-    ),
-    package = "rtemis.draw",
-    elementId = elementId
+    elementId = elementId,
+    filename = filename
   )
 }
 
@@ -533,7 +667,7 @@ draw_network <- function(
     ))
   }
 
-  widget <- draw_graph(
+  draw_graph(
     model,
     layout = layout,
     node_size = node_size,
@@ -553,14 +687,7 @@ draw_network <- function(
     theme = theme,
     width = width,
     height = height,
-    elementId = elementId
+    elementId = elementId,
+    filename = filename
   )
-
-  if (!is.null(filename)) {
-    cli::cli_warn(
-      "Static export of network widgets is not yet supported; ignoring {.arg filename}."
-    )
-  }
-
-  widget
 }

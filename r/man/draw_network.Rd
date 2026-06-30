@@ -98,6 +98,10 @@ light/dark auto-detection (matching \code{\link[=draw]{draw()}}).}
 \item{height}{Optional Character or Numeric: Widget height.}
 
 \item{elementId}{Optional Character: Explicit element ID.}
+
+\item{filename}{Optional Character: Currently ignored with a warning (static
+export of network widgets is not yet supported); accepted for signature
+parity with the other \verb{draw_*} functions.}
 }
 \value{
 htmlwidget.

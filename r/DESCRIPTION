@@ -1,6 +1,7 @@
 Package: rtemis.draw
 Title: Interactive Visualization
-Version: 0.3.0
+Version: 0.4.0
+Date: 2026-06-29
 Authors@R:
     person(given = "E.D.", family = "Gennatas", role = c("aut", "cre", "cph"),
            email = "gennatas@gmail.com",
@@ -48,6 +49,7 @@ Collate:
     'theme.R'
     'draw.R'
     'network.R'
+    'map.R'
     'draw_a3.R'
     'draw_spectrogram.R'
     'draw_gantt.R'

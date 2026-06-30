@@ -2,29 +2,24 @@
 % Please edit documentation in R/draw.R
 \name{draw}
 \alias{draw}
-\title{Render an ECharts option as an htmlwidget}
+\title{Render a render-spec option object as an htmlwidget}
 \usage{
 draw(
   option,
   theme = NULL,
-  renderer = "canvas",
   width = NULL,
   height = NULL,
   elementId = NULL,
   filename = NULL,
-  meta = list()
+  ...
 )
 }
 \arguments{
-\item{option}{\link{EChartsOption} or named list: Option object to render.}
+\item{option}{\link{EChartsOption}, \link{SigmaOption}, or named list: Render spec to
+draw.}
 
 \item{theme}{Optional \link{Theme}, list, or \code{NA}: Theme override. \code{NULL} enables
-auto-detection of light/dark mode, or \code{NA} for no theme (raw ECharts
-defaults). When \code{NULL}, the widget detects dark mode from VS Code,
-RStudio, or the browser's \code{prefers-color-scheme} and applies
-\code{\link[=theme_light]{theme_light()}} or \code{\link[=theme_dark]{theme_dark()}} accordingly.}
-
-\item{renderer}{Character \{"canvas", "svg"\}: Rendering engine.}
+light/dark auto-detection; \code{NA} disables theming. Applied to every backend.}
 
 \item{width}{Optional Character or Numeric: Widget width.}
 
@@ -33,17 +28,33 @@ RStudio, or the browser's \code{prefers-color-scheme} and applies
 \item{elementId}{Optional Character: Explicit element ID.}
 
 \item{filename}{Optional Character: If provided, the widget is also written to
-this file via \code{\link[=save_drawing]{save_drawing()}}. Extension determines the format (currently
-only \code{.svg} is supported).}
+this file via \code{\link[=save_drawing]{save_drawing()}} (ECharts only; other backends warn and
+ignore it). Extension determines the format (currently only \code{.svg}).}
 
-\item{meta}{Optional named list: Extra fields merged into the widget payload.
-Used internally (e.g. by \code{\link[=draw_heatmap]{draw_heatmap()}} to pass square-cell layout
-parameters to the JS binding).}
+\item{...}{Backend-specific arguments. ECharts accepts \code{renderer}
+(Character \{"canvas", "svg"\}) and \code{meta} (named list of extra payload
+fields, used internally e.g. by \code{\link[=draw_heatmap]{draw_heatmap()}}).}
 }
 \value{
 htmlwidget: Widget object.
 }
 \description{
-Low-level function that takes an \link{EChartsOption} (or a plain list) and
-renders it as an interactive htmlwidget.
+\code{draw()} is the single low-level entry point for every rendering backend in
+rtemis.draw. It is an S7 generic that dispatches on the \emph{option object} -- the
+complete, validated render spec for one backend -- so the right JS binding is
+selected purely by type, with no ambiguity:
+}
+\details{
+\itemize{
+\item \link{EChartsOption} -> ECharts (\code{rtemis-draw} widget)
+\item \link{SigmaOption}   -> Sigma.js (\code{rtemis-graph} widget)
+}
+
+A plain named list is treated as a raw ECharts option (back-compatible with
+the original \code{draw()}).
+
+Theme handling is uniform across backends and lives on \code{draw()}, not on the
+option object: pass \code{NULL} (default) for light/dark auto-detection (from VS
+Code, RStudio, or the browser's \code{prefers-color-scheme}), \code{NA} for no theme
+(raw backend defaults), or a \link{Theme} / list to force one.
 }

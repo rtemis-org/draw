@@ -62,6 +62,12 @@ check-cran: (check "--as-cran")
 # Run R CMD check --as-cran --no-tests
 check-cran-no-tests: (check "--as-cran" "--no-tests")
 
+# Check URLs in package documentation with urlchecker
+urls:
+    @just _msg "─── Checking URLs for {{pkg}}... ───"
+    cd {{r_dir}} && {{rscript}} -e "urlchecker::url_check()"
+    @just _msg "Done"
+
 # Build package manual (PDF)
 manual:
     @just _msg "─── Building manual for {{pkg}}... ───"

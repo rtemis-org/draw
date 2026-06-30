@@ -23,3 +23,5 @@
 ^SKILL\.md$
 ^LICENSE\.md$
 ^justfile$
+^tools$
+node_modules
