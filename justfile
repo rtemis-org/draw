@@ -4,8 +4,8 @@
 
 r_dir := "r"
 pkg := `awk '/^Package:/{print $2; exit}' r/DESCRIPTION`
-r := env_var_or_default("R", "R")
-rscript := env_var_or_default("RSCRIPT", "Rscript")
+r := env("R", "R")
+rscript := env("RSCRIPT", "Rscript")
 tarball_glob := pkg + "_*.tar.gz"
 
 # List available recipes
