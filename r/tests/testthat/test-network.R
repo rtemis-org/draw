@@ -293,3 +293,27 @@ test_that("draw() still renders an EChartsOption and a bare list", {
   expect_s3_class(wl, "htmlwidget")
   expect_false(is.null(wl$x$option))
 })
+
+test_that("graph_from_edge_list assigns 0 (not NA) to isolated nodes", {
+  # "iso" appears in the node table but in no edge: its weighted degree is
+  # absent from the degree vector, which must coalesce to 0 rather than NA.
+  edges <- data.frame(source = "a", target = "b", weight = 2)
+  nodes <- data.frame(id = c("a", "b", "iso"))
+  m <- graph_from_edge_list(edges, nodes = nodes)
+  vals <- vapply(m@nodes, function(n) n@value, numeric(1L))
+  expect_false(anyNA(vals))
+  iso <- Filter(function(n) n@id == "iso", m@nodes)[[1L]]
+  expect_equal(iso@value, 0)
+})
+
+test_that("SigmaOption strips names from color scalars when serializing", {
+  m <- GraphModel(
+    nodes = list(GraphNode(id = "a")),
+    edges = list(),
+    directed = FALSE
+  )
+  opt <- SigmaOption(model = m, node_color = c(primary = "#6CA3A0"))
+  lst <- to_list(opt)
+  expect_null(names(lst$style$nodeColor))
+  expect_identical(lst$style$nodeColor, "#6CA3A0")
+})

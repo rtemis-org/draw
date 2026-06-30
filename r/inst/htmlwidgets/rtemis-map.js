@@ -359,7 +359,6 @@ HTMLWidgets.widget({
       UA: "UKR", UG: "UGA", US: "USA", UY: "URY", UZ: "UZB", VE: "VEN",
       VN: "VNM", VU: "VUT", YE: "YEM", ZA: "ZAF", ZM: "ZMB", ZW: "ZWE",
     };
-    const ISO3_CODES = new Set(Object.values(ISO2_TO_ISO3));
 
     const digits = (raw) => raw.replace(/[^0-9]/g, "");
 

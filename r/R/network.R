@@ -268,9 +268,9 @@ S7::method(to_list, SigmaOption) <- function(x, ...) {
       resolution = x@resolution,
       blendEdges = x@blend_edges,
       palette = as.character(x@palette),
-      nodeColor = x@node_color,
-      positiveColor = x@positive_color,
-      negativeColor = x@negative_color
+      nodeColor = as.character(x@node_color),
+      positiveColor = as.character(x@positive_color),
+      negativeColor = as.character(x@negative_color)
     )
   )
   if (!is.null(x@title)) {
@@ -442,6 +442,13 @@ graph_from_edge_list <- function(edges, nodes = NULL, directed = FALSE) {
   degree <- stats::setNames(numeric(length(edge_ids)), edge_ids)
   degree[names(deg_sums)] <- deg_sums
 
+  # NA-safe degree lookup: isolated nodes (in `nodes` but in no edge) are absent
+  # from `degree`, where `degree[id]` returns NA rather than NULL.
+  degree_of <- function(id) {
+    d <- degree[id]
+    if (length(d) == 0L || is.na(d)) 0 else unname(d)
+  }
+
   if (is.null(nodes)) {
     node_objs <- lapply(edge_ids, function(id) {
       GraphNode(id = id, label = id, value = unname(degree[id]))
@@ -480,7 +487,7 @@ graph_from_edge_list <- function(edges, nodes = NULL, directed = FALSE) {
       GraphNode(
         id = id,
         label = if (!is.null(labels)) labels[k] else id,
-        value = if (!is.null(values)) values[k] else unname(degree[id] %||% 0),
+        value = if (!is.null(values)) values[k] else degree_of(id),
         group = if (!is.null(groups)) groups[k] else NULL
       )
     })
@@ -651,8 +658,8 @@ draw_network <- function(
   resolution = 1,
   blend_edges = FALSE,
   palette = rtemis_colors,
-  node_color = rtemis_colors[1L],
-  positive_color = rtemis_colors[1L],
+  node_color = rtemis_colors[[1L]],
+  positive_color = rtemis_colors[[1L]],
   negative_color = "#ff9e1f",
   title = NULL,
   theme = NULL,
