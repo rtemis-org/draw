@@ -22,4 +22,6 @@
 ^pkgdown$
 ^SKILL\.md$
 ^LICENSE\.md$
-^Makefile$
+^justfile$
+^tools$
+node_modules

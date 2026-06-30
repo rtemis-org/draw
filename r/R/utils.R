@@ -112,6 +112,84 @@ to_list <- S7::new_generic("to_list", "x")
 # -- Type validators for S7 properties -------------------------------------------
 # These return validator functions or S7 class unions.
 
+#' Property that accepts a non-negative numeric scalar, with a default
+#'
+#' For required style values (e.g. node size, edge scale) that always carry a
+#' sensible default in a render-spec option object.
+#' @param default Numeric: Default value.
+#' @keywords internal
+#' @noRd
+nonneg_numeric_default <- function(default) {
+  S7::new_property(
+    class = S7::class_numeric,
+    default = default,
+    validator = function(value) {
+      if (length(value) != 1L || is.na(value) || value < 0) {
+        return("must be a single non-negative number")
+      }
+      NULL
+    }
+  )
+}
+
+#' Property that accepts a probability scalar in \[0, 1\], with a default
+#' @param default Numeric \[0, 1\]: Default value.
+#' @keywords internal
+#' @noRd
+prob_default <- function(default) {
+  S7::new_property(
+    class = S7::class_numeric,
+    default = default,
+    validator = function(value) {
+      if (length(value) != 1L || is.na(value) || value < 0 || value > 1) {
+        return("must be a single number in [0, 1]")
+      }
+      NULL
+    }
+  )
+}
+
+#' Property that accepts a logical scalar, with a default
+#' @param default Logical: Default value.
+#' @keywords internal
+#' @noRd
+logical_default <- function(default) {
+  S7::new_property(
+    class = S7::class_logical,
+    default = default,
+    validator = function(value) {
+      if (length(value) != 1L || is.na(value)) {
+        return("must be a single logical (TRUE or FALSE)")
+      }
+      NULL
+    }
+  )
+}
+
+#' Property that accepts one of a fixed set of strings, with a default
+#'
+#' For render-spec enum fields (e.g. classification, color scheme, corner).
+#' @param choices Character: Allowed values.
+#' @param default Character: Default value (must be in `choices`).
+#' @keywords internal
+#' @noRd
+map_enum_default <- function(choices, default) {
+  force(choices)
+  S7::new_property(
+    class = S7::class_character,
+    default = default,
+    validator = function(value) {
+      if (length(value) != 1L || !value %in% choices) {
+        return(paste0(
+          "must be one of ",
+          paste0("\"", choices, "\"", collapse = ", ")
+        ))
+      }
+      NULL
+    }
+  )
+}
+
 #' Property that accepts a number or NULL
 #' @keywords internal
 #' @noRd

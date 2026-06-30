@@ -4,44 +4,156 @@
 # Constants ----
 DEFAULT_MARGINS <- c(top = 36, right = 36, bottom = 36, left = 36)
 
-#' Render an ECharts option as an htmlwidget
+#' Resolve a theme and create a backend widget
 #'
-#' Low-level function that takes an [EChartsOption] (or a plain list) and
-#' renders it as an interactive htmlwidget.
+#' Shared tail of every [draw()] method. Resolves the uniform `theme` argument
+#' into the `autoTheme` / `theme` / `themeDark` payload fields that every backend
+#' JS binding reads, applies the standard sizing policy, and creates the widget.
+#' Backends differ only in the `name` (which JS binding) and the `payload` they
+#' build; theme handling and sizing are identical, so they live here.
 #'
-#' @param option [EChartsOption] or named list: Option object to render.
+#' @param name Character: htmlwidget name (`"rtemis-draw"`, `"rtemis-graph"`, ...).
+#' @param payload Named list: Backend-specific widget payload. The theme fields
+#'   are merged into this list.
+#' @param theme Optional [Theme], list, or `NA`: Theme override; `NULL` (default)
+#'   enables light/dark auto-detection.
+#' @param width Optional Character or Numeric: Widget width.
+#' @param height Optional Character or Numeric: Widget height.
+#' @param elementId Optional Character: Explicit element ID.
+#' @return htmlwidget: Widget object.
+#' @keywords internal
+#' @noRd
+render_widget <- function(
+  name,
+  payload,
+  theme = NULL,
+  width = NULL,
+  height = NULL,
+  elementId = NULL
+) {
+  # Theme resolution is uniform across backends:
+  #   NA   -> no theme (raw backend defaults)
+  #   NULL -> auto-detect: send both light + dark, let JS pick by dark mode
+  #   Theme / list -> an explicit theme
+  auto_theme <- FALSE
+  theme_list <- NULL
+  theme_dark_list <- NULL
+  if (identical(theme, NA)) {
+    theme_list <- NULL
+  } else if (is.null(theme)) {
+    auto_theme <- TRUE
+    theme_list <- to_list(theme_light())
+    theme_dark_list <- to_list(theme_dark())
+  } else if (S7::S7_inherits(theme, Theme)) {
+    theme_list <- to_list(theme)
+  } else if (is.list(theme)) {
+    theme_list <- theme
+  }
+
+  payload <- c(
+    payload,
+    list(
+      autoTheme = if (auto_theme) TRUE else NULL,
+      theme = theme_list,
+      themeDark = theme_dark_list
+    )
+  )
+
+  # Respect explicit pixel dimensions: when a numeric width/height is given,
+  # disable browser.fill/viewer.fill so the widget keeps the computed size
+  # instead of expanding to fill the container.
+  should_fill <- is.null(width) || is.character(width)
+
+  htmlwidgets::createWidget(
+    name = name,
+    x = payload,
+    width = width,
+    height = height,
+    sizingPolicy = htmlwidgets::sizingPolicy(
+      browser.fill = should_fill,
+      browser.padding = 0,
+      viewer.fill = should_fill,
+      viewer.padding = 0,
+      fill = should_fill
+    ),
+    package = "rtemis.draw",
+    elementId = elementId
+  )
+}
+
+#' Render a render-spec option object as an htmlwidget
+#'
+#' `draw()` is the single low-level entry point for every rendering backend in
+#' rtemis.draw. It is an S7 generic that dispatches on the *option object* -- the
+#' complete, validated render spec for one backend -- so the right JS binding is
+#' selected purely by type, with no ambiguity:
+#'
+#' - [EChartsOption] -> ECharts (`rtemis-draw` widget)
+#' - [SigmaOption]   -> Sigma.js (`rtemis-graph` widget)
+#'
+#' A plain named list is treated as a raw ECharts option (back-compatible with
+#' the original `draw()`).
+#'
+#' Theme handling is uniform across backends and lives on `draw()`, not on the
+#' option object: pass `NULL` (default) for light/dark auto-detection (from VS
+#' Code, RStudio, or the browser's `prefers-color-scheme`), `NA` for no theme
+#' (raw backend defaults), or a [Theme] / list to force one.
+#'
+#' @param option [EChartsOption], [SigmaOption], or named list: Render spec to
+#'   draw.
 #' @param theme Optional [Theme], list, or `NA`: Theme override. `NULL` enables
-#'   auto-detection of light/dark mode, or `NA` for no theme (raw ECharts
-#'   defaults). When `NULL`, the widget detects dark mode from VS Code,
-#'   RStudio, or the browser's `prefers-color-scheme` and applies
-#'   [theme_light()] or [theme_dark()] accordingly.
-#' @param renderer Character \{"canvas", "svg"\}: Rendering engine.
+#'   light/dark auto-detection; `NA` disables theming. Applied to every backend.
 #' @param width Optional Character or Numeric: Widget width.
 #' @param height Optional Character or Numeric: Widget height.
 #' @param elementId Optional Character: Explicit element ID.
 #' @param filename Optional Character: If provided, the widget is also written to
-#'   this file via [save_drawing()]. Extension determines the format (currently
-#'   only `.svg` is supported).
-#' @param meta Optional named list: Extra fields merged into the widget payload.
-#'   Used internally (e.g. by [draw_heatmap()] to pass square-cell layout
-#'   parameters to the JS binding).
+#'   this file via [save_drawing()] (ECharts only; other backends warn and
+#'   ignore it). Extension determines the format (currently only `.svg`).
+#' @param ... Backend-specific arguments. ECharts accepts `renderer`
+#'   (Character \{"canvas", "svg"\}) and `meta` (named list of extra payload
+#'   fields, used internally e.g. by [draw_heatmap()]).
 #' @return htmlwidget: Widget object.
 #' @export
-draw <- function(
+draw <- S7::new_generic(
+  "draw",
+  "option",
+  function(
+    option,
+    theme = NULL,
+    width = NULL,
+    height = NULL,
+    elementId = NULL,
+    filename = NULL,
+    ...
+  ) {
+    S7::S7_dispatch()
+  }
+)
+
+#' Render an ECharts option (already a plain list) as an htmlwidget
+#'
+#' Internal worker shared by the [EChartsOption] and bare-list [draw()] methods.
+#' Holds all ECharts-specific option post-processing (legend auto-add, empty-
+#' object fix, axis tick hiding, grid outer-bounds), then hands off to
+#' `render_widget()`.
+#'
+#' @param option Named list: ECharts option (already converted from S7).
+#' @param renderer Character \{"canvas", "svg"\}: Rendering engine.
+#' @param theme,width,height,elementId,filename See [draw()].
+#' @param meta Named list: Extra fields merged into the widget payload.
+#' @return htmlwidget: Widget object.
+#' @keywords internal
+#' @noRd
+draw_echarts_option <- function(
   option,
-  theme = NULL,
   renderer = "canvas",
+  theme = NULL,
   width = NULL,
   height = NULL,
   elementId = NULL,
   filename = NULL,
   meta = list()
 ) {
-  # Convert S7 objects to plain lists
-  if (S7::S7_inherits(option)) {
-    option <- to_list(option)
-  }
-
   # Auto-add legend when multiple distinctly named series are present
   if (
     is.null(option$legend) &&
@@ -154,53 +266,20 @@ draw <- function(
     }
   }
 
-  auto_theme <- FALSE
-  theme_list <- NULL
-  theme_dark_list <- NULL
-
-  if (identical(theme, NA)) {
-    # NA = no theme (raw ECharts defaults)
-    theme_list <- NULL
-  } else if (is.null(theme)) {
-    # NULL = auto-detect: send both themes, let JS pick based on dark mode
-    auto_theme <- TRUE
-    theme_list <- to_list(theme_light())
-    theme_dark_list <- to_list(theme_dark())
-  } else if (S7::S7_inherits(theme, Theme)) {
-    theme_list <- to_list(theme)
-  } else if (is.list(theme)) {
-    theme_list <- theme
-  }
-
   payload <- c(
     list(
       option = option,
-      theme = theme_list,
-      renderer = renderer,
-      autoTheme = if (auto_theme) TRUE else NULL,
-      themeDark = theme_dark_list
+      renderer = renderer
     ),
     meta
   )
 
-  # Respect explicit pixel dimensions: when a numeric width/height is given,
-  # disable browser.fill/viewer.fill so the widget keeps the computed size
-  # instead of expanding to fill the container.
-  should_fill <- is.null(width) || is.character(width)
-
-  widget <- htmlwidgets::createWidget(
-    name = "rtemis-draw",
-    x = payload,
+  widget <- render_widget(
+    "rtemis-draw",
+    payload,
+    theme = theme,
     width = width,
     height = height,
-    sizingPolicy = htmlwidgets::sizingPolicy(
-      browser.fill = should_fill,
-      browser.padding = 0,
-      viewer.fill = should_fill,
-      viewer.padding = 0,
-      fill = should_fill
-    ),
-    package = "rtemis.draw",
     elementId = elementId
   )
 
@@ -209,6 +288,55 @@ draw <- function(
   }
 
   widget
+}
+
+# ECharts backend: convert the option object to a list, then render.
+S7::method(draw, EChartsOption) <- function(
+  option,
+  theme = NULL,
+  width = NULL,
+  height = NULL,
+  elementId = NULL,
+  filename = NULL,
+  ...,
+  renderer = "canvas",
+  meta = list()
+) {
+  draw_echarts_option(
+    to_list(option),
+    renderer = renderer,
+    theme = theme,
+    width = width,
+    height = height,
+    elementId = elementId,
+    filename = filename,
+    meta = meta
+  )
+}
+
+# A bare named list is treated as a raw ECharts option (back-compat with the
+# original list-accepting `draw()`).
+S7::method(draw, S7::class_list) <- function(
+  option,
+  theme = NULL,
+  width = NULL,
+  height = NULL,
+  elementId = NULL,
+  filename = NULL,
+  ...,
+  renderer = "canvas",
+  meta = list()
+) {
+  draw_echarts_option(
+    option,
+    renderer = renderer,
+    theme = theme,
+    width = width,
+    height = height,
+    elementId = elementId,
+    filename = filename,
+    meta = meta
+  )
 }
 
 #' Shiny output for draw widget

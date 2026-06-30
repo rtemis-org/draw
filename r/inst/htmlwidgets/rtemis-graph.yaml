@@ -1,0 +1,5 @@
+dependencies:
+  - name: rtemis-graph-deps
+    version: 1.0.0
+    src: htmlwidgets/lib/sigma
+    script: rtemis-graph-deps.js

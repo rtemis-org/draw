@@ -1,0 +1,5 @@
+dependencies:
+  - name: rtemis-map-deps
+    version: 1.0.0
+    src: htmlwidgets/lib/maplibre
+    script: rtemis-map-deps.js
