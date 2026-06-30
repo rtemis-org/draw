@@ -22,4 +22,4 @@
 ^pkgdown$
 ^SKILL\.md$
 ^LICENSE\.md$
-^Makefile$
+^justfile$
