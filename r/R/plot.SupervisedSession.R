@@ -40,8 +40,9 @@ S7::method(plot, SupervisedSession) <- function(
 ) {
   events <- x@events
   if (length(events) == 0L) {
-    cli::cli_abort(
-      "This {.cls SupervisedSession} has no recorded events to plot."
+    abort(
+      "This SupervisedSession has no recorded events to plot.",
+      class = c("rtemis_value_error", "rtemis_input_error")
     )
   }
   started <- x@started

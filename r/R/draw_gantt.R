@@ -155,28 +155,45 @@ draw_gantt <- function(
   required_cols <- c("label", "start", "end")
   missing_cols <- setdiff(required_cols, names(tasks))
   if (length(missing_cols) > 0L) {
-    cli::cli_abort(
-      "{.arg tasks} must have columns {.val {required_cols}}; missing: {.val {missing_cols}}."
+    abort(
+      "`tasks` must have columns ",
+      paste(required_cols, collapse = ", "),
+      "; missing: ",
+      paste(missing_cols, collapse = ", "),
+      ".",
+      class = c("rtemis_value_error", "rtemis_input_error")
     )
   }
   if (!axis_type %in% c("value", "time")) {
-    cli::cli_abort(
-      "{.arg axis_type} must be one of {.val {c('value', 'time')}}, not {.val {axis_type}}."
+    abort(
+      "`axis_type` must be one of 'value', 'time', not '",
+      axis_type,
+      "'.",
+      class = c("rtemis_value_error", "rtemis_input_error")
     )
   }
   if (!is.null(group) && !group %in% names(tasks)) {
-    cli::cli_abort(
-      "{.arg group} column {.val {group}} not found in {.arg tasks}."
+    abort(
+      "`group` column '",
+      group,
+      "' not found in `tasks`.",
+      class = c("rtemis_value_error", "rtemis_input_error")
     )
   }
   if (!is.null(tooltip) && !tooltip %in% names(tasks)) {
-    cli::cli_abort(
-      "{.arg tooltip} column {.val {tooltip}} not found in {.arg tasks}."
+    abort(
+      "`tooltip` column '",
+      tooltip,
+      "' not found in `tasks`.",
+      class = c("rtemis_value_error", "rtemis_input_error")
     )
   }
   if (!is.null(border) && !border %in% names(tasks)) {
-    cli::cli_abort(
-      "{.arg border} column {.val {border}} not found in {.arg tasks}."
+    abort(
+      "`border` column '",
+      border,
+      "' not found in `tasks`.",
+      class = c("rtemis_value_error", "rtemis_input_error")
     )
   }
 
@@ -191,8 +208,9 @@ draw_gantt <- function(
   # NA start/end serialize as JSON null and break the custom-series renderer;
   # fail early with a corrective message instead.
   if (anyNA(starts) || anyNA(ends)) {
-    cli::cli_abort(
-      "Columns {.val start} and {.val end} in {.arg tasks} must not contain missing values ({.val NA})."
+    abort(
+      "Columns 'start' and 'end' in `tasks` must not contain missing values (NA).",
+      class = c("rtemis_value_error", "rtemis_input_error")
     )
   }
 

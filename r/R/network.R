@@ -292,8 +292,8 @@ S7::method(draw, SigmaOption) <- function(
   ...
 ) {
   if (!is.null(filename)) {
-    cli::cli_warn(
-      "Static export of network widgets is not yet supported; ignoring {.arg filename}."
+    warn(
+      "Static export of network widgets is not yet supported; ignoring `filename`."
     )
   }
   render_widget(
@@ -334,12 +334,20 @@ graph_from_matrix <- function(
   threshold = NULL
 ) {
   if (!is.matrix(x) || nrow(x) != ncol(x)) {
-    cli::cli_abort(
-      "Matrix input to {.fn draw_network} must be square; got {nrow(x)}x{ncol(x)}."
+    abort(
+      "Matrix input to `draw_network()` must be square; got ",
+      nrow(x),
+      "x",
+      ncol(x),
+      ".",
+      class = c("rtemis_dim_error", "rtemis_input_error")
     )
   }
   if (!is.numeric(x)) {
-    cli::cli_abort("Matrix input to {.fn draw_network} must be numeric.")
+    abort(
+      "Matrix input to `draw_network()` must be numeric.",
+      class = c("rtemis_type_error", "rtemis_input_error")
+    )
   }
 
   n <- nrow(x)
@@ -400,13 +408,15 @@ graph_from_matrix <- function(
 #' @noRd
 graph_from_edge_list <- function(edges, nodes = NULL, directed = FALSE) {
   if (!is.data.frame(edges)) {
-    cli::cli_abort(
-      "Edge-list input to {.fn draw_network} must be a data frame."
+    abort(
+      "Edge-list input to `draw_network()` must be a data frame.",
+      class = c("rtemis_type_error", "rtemis_input_error")
     )
   }
   if (ncol(edges) < 2L) {
-    cli::cli_abort(
-      "Edge-list data frame must have at least 2 columns (source, target)."
+    abort(
+      "Edge-list data frame must have at least 2 columns (source, target).",
+      class = c("rtemis_dim_error", "rtemis_input_error")
     )
   }
 
@@ -455,7 +465,10 @@ graph_from_edge_list <- function(edges, nodes = NULL, directed = FALSE) {
     })
   } else {
     if (!is.data.frame(nodes)) {
-      cli::cli_abort("`nodes` must be a data frame or NULL.")
+      abort(
+        "`nodes` must be a data frame or NULL.",
+        class = c("rtemis_type_error", "rtemis_input_error")
+      )
     }
     id_col <- if ("id" %in% names(nodes)) {
       "id"
@@ -678,10 +691,12 @@ draw_network <- function(
   } else if (is.data.frame(x)) {
     model <- graph_from_edge_list(x, nodes = nodes, directed = directed)
   } else {
-    cli::cli_abort(c(
-      "{.arg x} must be a square numeric matrix or an edge-list data frame.",
-      "i" = "Got {.cls {class(x)}}."
-    ))
+    abort(
+      "`x` must be a square numeric matrix or an edge-list data frame; got ",
+      paste(class(x), collapse = "/"),
+      ".",
+      class = c("rtemis_type_error", "rtemis_input_error")
+    )
   }
 
   draw_graph(

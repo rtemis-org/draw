@@ -9,10 +9,13 @@
 .specgram_window <- function(window, n) {
   if (is.numeric(window)) {
     if (length(window) != n) {
-      cli::cli_abort(
-        "Custom {.arg window} vector has length {length(window)}, \\
-         expected {n} (= {.arg n_fft}).",
-        call = NULL
+      abort(
+        "Custom `window` vector has length ",
+        length(window),
+        ", expected ",
+        n,
+        " (= `n_fft`).",
+        class = c("rtemis_dim_error", "rtemis_input_error")
       )
     }
     return(window)
@@ -26,13 +29,13 @@
   )
   fn <- fns[[window]]
   if (is.null(fn)) {
-    cli::cli_abort(
-      c(
-        "{.arg window} {.val {window}} is not a recognized window type.",
-        "i" = "Use one of {.val {paste(names(fns), collapse = ', ')}} \\
-               or supply a numeric vector of length {.arg n_fft}."
-      ),
-      call = NULL
+    abort(
+      "`window` '",
+      window,
+      "' is not a recognized window type. Use one of ",
+      paste(names(fns), collapse = ", "),
+      " or supply a numeric vector of length `n_fft`.",
+      class = c("rtemis_value_error", "rtemis_input_error")
     )
   }
   fn(n)
@@ -106,17 +109,13 @@
       return(cols_light)
     }
 
-    cli::cli_abort(
-      c(
-        "{.arg palette} {.val {palette}} is not recognized.",
-        "i" = paste0(
-          "Named options: {.val ",
-          paste(names(viridis_opts), collapse = "}, {.val "),
-          "}}, {.val diverging}.",
-          " Or supply a character vector of >= 2 hex colours."
-        )
-      ),
-      call = NULL
+    abort(
+      "`palette` '",
+      palette,
+      "' is not recognized. Named options: ",
+      paste(names(viridis_opts), collapse = ", "),
+      ", diverging. Or supply a character vector of >= 2 hex colours.",
+      class = c("rtemis_value_error", "rtemis_input_error")
     )
   }
 
@@ -129,12 +128,10 @@
     return(cols)
   }
 
-  cli::cli_abort(
-    paste0(
-      "{.arg palette} must be a named palette string or a character vector \\
-       of >= 2 hex colours."
-    ),
-    call = NULL
+  abort(
+    "`palette` must be a named palette string or a character vector ",
+    "of >= 2 hex colours.",
+    class = c("rtemis_type_error", "rtemis_input_error")
   )
 }
 
@@ -253,19 +250,19 @@ draw_spectrogram <- function(
 ) {
   # -- 1. Validate scalar arguments ---------------------------------------------
   if (!is.numeric(x) && !is.complex(x)) {
-    cli::cli_abort(
-      "{.arg x} must be a numeric or complex matrix (freq x time) \\
-       or a numeric vector (raw signal)."
+    abort(
+      "`x` must be a numeric or complex matrix (freq x time) ",
+      "or a numeric vector (raw signal).",
+      class = c("rtemis_type_error", "rtemis_input_error")
     )
   }
 
   if (is.complex(x) && !is.matrix(x)) {
-    cli::cli_abort(
-      c(
-        "{.arg x} is a complex vector, which is not a valid raw signal.",
-        "i" = "Pass the STFT output as a complex matrix (freq x time), \\
-               e.g. {.code signal::specgram(x)$S}."
-      )
+    abort(
+      "`x` is a complex vector, which is not a valid raw signal. ",
+      "Pass the STFT output as a complex matrix (freq x time), ",
+      "e.g. `signal::specgram(x)$S`.",
+      class = c("rtemis_type_error", "rtemis_input_error")
     )
   }
 
@@ -276,21 +273,27 @@ draw_spectrogram <- function(
   time_unit <- match.arg(time_unit, c("s", "ms"))
 
   if (!is.logical(power) || length(power) != 1L) {
-    cli::cli_abort(
-      "{.arg power} must be a single logical value (TRUE or FALSE)."
+    abort(
+      "`power` must be a single logical value (TRUE or FALSE).",
+      class = c("rtemis_type_error", "rtemis_input_error")
     )
   }
   if (!is.logical(db) || length(db) != 1L) {
-    cli::cli_abort("{.arg db} must be a single logical value (TRUE or FALSE).")
+    abort(
+      "`db` must be a single logical value (TRUE or FALSE).",
+      class = c("rtemis_type_error", "rtemis_input_error")
+    )
   }
   if (!is.logical(palette_reverse) || length(palette_reverse) != 1L) {
-    cli::cli_abort(
-      "{.arg palette_reverse} must be a single logical value (TRUE or FALSE)."
+    abort(
+      "`palette_reverse` must be a single logical value (TRUE or FALSE).",
+      class = c("rtemis_type_error", "rtemis_input_error")
     )
   }
   if (!is.logical(show_colorbar) || length(show_colorbar) != 1L) {
-    cli::cli_abort(
-      "{.arg show_colorbar} must be a single logical value (TRUE or FALSE)."
+    abort(
+      "`show_colorbar` must be a single logical value (TRUE or FALSE).",
+      class = c("rtemis_type_error", "rtemis_input_error")
     )
   }
   if (
@@ -299,9 +302,11 @@ draw_spectrogram <- function(
       is.na(db_range) ||
       db_range <= 0
   ) {
-    cli::cli_abort(
-      "{.arg db_range} must be a single positive number. \\
-       Got {.val {db_range}}."
+    abort(
+      "`db_range` must be a single positive number. Got ",
+      paste(db_range, collapse = ", "),
+      ".",
+      class = c("rtemis_value_error", "rtemis_input_error")
     )
   }
   if (
@@ -310,7 +315,10 @@ draw_spectrogram <- function(
       is.na(n_colors) ||
       n_colors < 2L
   ) {
-    cli::cli_abort("{.arg n_colors} must be an integer >= 2.")
+    abort(
+      "`n_colors` must be an integer >= 2.",
+      class = c("rtemis_value_error", "rtemis_input_error")
+    )
   }
   n_colors <- as.integer(n_colors)
 
@@ -320,9 +328,17 @@ draw_spectrogram <- function(
       return(invisible(NULL))
     }
     if (!is.numeric(r) || length(r) != 2L || anyNA(r) || r[[1L]] >= r[[2L]]) {
-      cli::cli_abort(
-        "{.arg {arg}} must be a length-2 numeric vector with {arg}[1] < {arg}[2]. \\
-         Got {.val {r}}."
+      abort(
+        "`",
+        arg,
+        "` must be a length-2 numeric vector with ",
+        arg,
+        "[1] < ",
+        arg,
+        "[2]. Got ",
+        paste(r, collapse = ", "),
+        ".",
+        class = c("rtemis_value_error", "rtemis_input_error")
       )
     }
   }
@@ -342,11 +358,10 @@ draw_spectrogram <- function(
   # -- 2. STFT (raw signal) or matrix input ------------------------------------
   if (is_raw_signal) {
     if (is.null(sample_rate)) {
-      cli::cli_abort(
-        c(
-          "{.arg sample_rate} is required when {.arg x} is a raw signal vector.",
-          "i" = "Provide the sampling rate in Hz, e.g. {.code sample_rate = 44100}."
-        )
+      abort(
+        "`sample_rate` is required when `x` is a raw signal vector. ",
+        "Provide the sampling rate in Hz, e.g. `sample_rate = 44100`.",
+        class = c("rtemis_value_error", "rtemis_input_error")
       )
     }
     if (
@@ -355,24 +370,38 @@ draw_spectrogram <- function(
         is.na(sample_rate) ||
         sample_rate <= 0
     ) {
-      cli::cli_abort(
-        "{.arg sample_rate} must be a single positive number (Hz). \\
-         Got {.val {sample_rate}}."
+      abort(
+        "`sample_rate` must be a single positive number (Hz). Got ",
+        paste(sample_rate, collapse = ", "),
+        ".",
+        class = c("rtemis_value_error", "rtemis_input_error")
       )
     }
     if (!is.numeric(n_fft) || length(n_fft) != 1L || is.na(n_fft)) {
-      cli::cli_abort(
-        "{.arg n_fft} must be a single integer >= 2. Got {.val {n_fft}}."
+      abort(
+        "`n_fft` must be a single integer >= 2. Got ",
+        paste(n_fft, collapse = ", "),
+        ".",
+        class = c("rtemis_value_error", "rtemis_input_error")
       )
     }
     n_fft <- as.integer(n_fft)
     if (n_fft < 2L) {
-      cli::cli_abort("{.arg n_fft} must be >= 2. Got {n_fft}.")
+      abort(
+        "`n_fft` must be >= 2. Got ",
+        n_fft,
+        ".",
+        class = c("rtemis_range_error", "rtemis_input_error")
+      )
     }
     if (n_fft > length(x)) {
-      cli::cli_abort(
-        "{.arg n_fft} ({n_fft}) exceeds the signal length ({length(x)}). \\
-         Reduce {.arg n_fft} or supply a longer signal."
+      abort(
+        "`n_fft` (",
+        n_fft,
+        ") exceeds the signal length (",
+        length(x),
+        "). Reduce `n_fft` or supply a longer signal.",
+        class = c("rtemis_range_error", "rtemis_input_error")
       )
     }
 
@@ -381,16 +410,22 @@ draw_spectrogram <- function(
       !is.null(overlap) &&
         (!is.numeric(overlap) || length(overlap) != 1L || is.na(overlap))
     ) {
-      cli::cli_abort(
-        "{.arg overlap} must be a single non-negative integer or NULL. \\
-         Got {.val {overlap}}."
+      abort(
+        "`overlap` must be a single non-negative integer or NULL. Got ",
+        paste(overlap, collapse = ", "),
+        ".",
+        class = c("rtemis_value_error", "rtemis_input_error")
       )
     }
     ovlp <- as.integer(overlap %||% ceiling(n_fft / 2L))
     if (ovlp < 0L || ovlp >= n_fft) {
-      cli::cli_abort(
-        "{.arg overlap} must be in [0, n_fft - 1] = [0, {n_fft - 1L}]. \\
-         Got {ovlp}."
+      abort(
+        "`overlap` must be in [0, n_fft - 1] = [0, ",
+        n_fft - 1L,
+        "]. Got ",
+        ovlp,
+        ".",
+        class = c("rtemis_range_error", "rtemis_input_error")
       )
     }
 
@@ -407,9 +442,10 @@ draw_spectrogram <- function(
   } else {
     # Pre-computed matrix (real or complex)
     if (!is.matrix(x)) {
-      cli::cli_abort(
-        "{.arg x} must be a numeric or complex matrix (freq x time) \\
-         or a numeric vector (raw signal)."
+      abort(
+        "`x` must be a numeric or complex matrix (freq x time) ",
+        "or a numeric vector (raw signal).",
+        class = c("rtemis_type_error", "rtemis_input_error")
       )
     }
     S <- x
@@ -418,9 +454,11 @@ draw_spectrogram <- function(
 
     if (!is.null(time)) {
       if (!is.numeric(time) || length(time) != n_time || anyNA(time)) {
-        cli::cli_abort(
-          "{.arg time} must be a numeric vector of length {n_time} \\
-           (= ncol(x)) with no NAs."
+        abort(
+          "`time` must be a numeric vector of length ",
+          n_time,
+          " (= ncol(x)) with no NAs.",
+          class = c("rtemis_value_error", "rtemis_input_error")
         )
       }
       time_s <- time
@@ -434,9 +472,11 @@ draw_spectrogram <- function(
           length(frequency) != n_freq ||
           anyNA(frequency)
       ) {
-        cli::cli_abort(
-          "{.arg frequency} must be a numeric vector of length {n_freq} \\
-           (= nrow(x)) with no NAs."
+        abort(
+          "`frequency` must be a numeric vector of length ",
+          n_freq,
+          " (= nrow(x)) with no NAs.",
+          class = c("rtemis_value_error", "rtemis_input_error")
         )
       }
       freq_hz <- frequency
@@ -458,13 +498,11 @@ draw_spectrogram <- function(
   # -- 4. dB conversion --------------------------------------------------------
   if (db) {
     if (!is.complex(S) && any(spec < 0, na.rm = TRUE)) {
-      cli::cli_warn(
-        c(
-          "Pre-computed matrix contains negative values; {.code db = TRUE} \\
-           will produce {.val NaN} for those entries.",
-          "i" = "Pass {.code db = FALSE} if the matrix is already in dB, \\
-                 or ensure values are non-negative before dB conversion."
-        )
+      warn(
+        "Pre-computed matrix contains negative values; `db = TRUE` ",
+        "will produce NaN for those entries. ",
+        "Pass `db = FALSE` if the matrix is already in dB, ",
+        "or ensure values are non-negative before dB conversion."
       )
     }
     eps <- .Machine[["double.eps"]]
@@ -479,9 +517,10 @@ draw_spectrogram <- function(
   if (freq_scale == "log") {
     keep_f <- freq_hz > 0
     if (!any(keep_f)) {
-      cli::cli_abort(
-        "No positive-frequency bins found for {.code freq_scale = 'log'}. \\
-         This should not happen; please check the signal or frequency vector."
+      abort(
+        "No positive-frequency bins found for `freq_scale = 'log'`. ",
+        "This should not happen; please check the signal or frequency vector.",
+        class = c("rtemis_value_error", "rtemis_input_error")
       )
     }
     spec <- spec[keep_f, , drop = FALSE]
@@ -492,11 +531,15 @@ draw_spectrogram <- function(
   if (!is.null(freq_range)) {
     keep_f <- freq_hz >= freq_range[[1L]] & freq_hz <= freq_range[[2L]]
     if (!any(keep_f)) {
-      cli::cli_abort(
-        "No frequency bins fall within {.arg freq_range} \\
-         [{freq_range[1]}, {freq_range[2]}] Hz. \\
-         Check {.arg freq_range} against the signal's Nyquist limit \\
-         ({max(freq_hz)} Hz)."
+      abort(
+        "No frequency bins fall within `freq_range` [",
+        freq_range[[1L]],
+        ", ",
+        freq_range[[2L]],
+        "] Hz. Check `freq_range` against the signal's Nyquist limit (",
+        max(freq_hz),
+        " Hz).",
+        class = c("rtemis_range_error", "rtemis_input_error")
       )
     }
     spec <- spec[keep_f, , drop = FALSE]
@@ -505,11 +548,15 @@ draw_spectrogram <- function(
   if (!is.null(time_range)) {
     keep_t <- time_s >= time_range[[1L]] & time_s <= time_range[[2L]]
     if (!any(keep_t)) {
-      cli::cli_abort(
-        "No time frames fall within {.arg time_range} \\
-         [{time_range[1]}, {time_range[2]}] s. \\
-         Check {.arg time_range} against the signal duration \\
-         ({max(time_s)} s)."
+      abort(
+        "No time frames fall within `time_range` [",
+        time_range[[1L]],
+        ", ",
+        time_range[[2L]],
+        "] s. Check `time_range` against the signal duration (",
+        max(time_s),
+        " s).",
+        class = c("rtemis_range_error", "rtemis_input_error")
       )
     }
     spec <- spec[, keep_t, drop = FALSE]
@@ -551,11 +598,10 @@ draw_spectrogram <- function(
   # -- 9. Colour-scale limits --------------------------------------------------
   if (is.null(zlim)) {
     if (!any(is.finite(spec))) {
-      cli::cli_abort(
-        c(
-          "Cannot determine colour-scale limits: spectrogram contains no finite values.",
-          "i" = "Check the input signal, or supply {.arg zlim} explicitly."
-        )
+      abort(
+        "Cannot determine colour-scale limits: spectrogram contains no finite values. ",
+        "Check the input signal, or supply `zlim` explicitly.",
+        class = c("rtemis_value_error", "rtemis_input_error")
       )
     }
     zlim <- range(spec, na.rm = TRUE)
@@ -570,11 +616,16 @@ draw_spectrogram <- function(
   n_time_disp <- ncol(spec)
   n_cells <- n_freq_disp * n_time_disp
   if (n_cells > 500000L) {
-    cli::cli_warn(
-      c(
-        "Spectrogram has {n_cells} cells; browser rendering may be slow.",
-        "i" = "Consider reducing {.arg n_fft} or the signal length."
-      )
+    warn(
+      "Spectrogram has ",
+      n_cells,
+      " cells; browser rendering may be slow."
+    )
+    info(
+      "Consider reducing 'n_fft' (currently ",
+      n_fft,
+      ")",
+      " or the signal length."
     )
   }
 

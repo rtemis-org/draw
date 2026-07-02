@@ -453,7 +453,10 @@ draw_line <- function(
 
   # `xlim` only makes sense on a numeric (value) x-axis.
   if (!is.null(xlim) && x_type != "value") {
-    cli::cli_abort("{.arg xlim} only applies when {.arg x} is numeric.")
+    abort(
+      "`xlim` only applies when `x` is numeric.",
+      class = c("rtemis_value_error", "rtemis_input_error")
+    )
   }
 
   # Resolve axis limits. Defaults: exact data range (no padding) so bands and
@@ -481,9 +484,10 @@ draw_line <- function(
       !is.character(line_style) ||
         any(!line_style %in% valid_line_styles)
     ) {
-      cli::cli_abort(
-        "{.arg line_style} must be {.val NULL} or a character vector of \\
-        {.val solid}, {.val dashed}, or {.val dotted}."
+      abort(
+        "`line_style` must be NULL or a character vector of ",
+        "'solid', 'dashed', or 'dotted'.",
+        class = c("rtemis_value_error", "rtemis_input_error")
       )
     }
   }
@@ -662,18 +666,25 @@ axis_line_for_orthogonal <- function(ortho_lim) {
 #' @noRd
 build_block_mark_area <- function(x, blocks, block_color, block_opacity) {
   if (length(blocks) != length(x)) {
-    cli::cli_abort(
-      "{.arg blocks} must have the same length as {.arg x} ({length(x)}); got {length(blocks)}."
+    abort(
+      "`blocks` must have the same length as `x` (",
+      length(x),
+      "); got ",
+      length(blocks),
+      ".",
+      class = c("rtemis_dim_error", "rtemis_input_error")
     )
   }
   if (!is.atomic(blocks)) {
-    cli::cli_abort(
-      "{.arg blocks} must be an atomic vector (factor, integer, character, or logical)."
+    abort(
+      "`blocks` must be an atomic vector (factor, integer, character, or logical).",
+      class = c("rtemis_type_error", "rtemis_input_error")
     )
   }
   if (is.null(block_color)) {
-    cli::cli_abort(
-      "{.arg block_color} must be provided when {.arg blocks} is set."
+    abort(
+      "`block_color` must be provided when `blocks` is set.",
+      class = c("rtemis_value_error", "rtemis_input_error")
     )
   }
   check_prob_scalar(block_opacity)
@@ -694,15 +705,21 @@ build_block_mark_area <- function(x, blocks, block_color, block_opacity) {
   if (!is.null(bc_names) && !any(bc_names == "")) {
     missing_levels <- setdiff(level_keys, bc_names)
     if (length(missing_levels) > 0L) {
-      cli::cli_abort(
-        "{.arg block_color} is missing entries for {.val {missing_levels}}."
+      abort(
+        "`block_color` is missing entries for: ",
+        paste(missing_levels, collapse = ", "),
+        ".",
+        class = c("rtemis_value_error", "rtemis_input_error")
       )
     }
     color_for <- function(lvl) block_color[[as_key(lvl)]]
   } else {
     if (length(block_color) != k) {
-      cli::cli_abort(
-        "{.arg block_color} must have length {k} (one per level of {.arg blocks})."
+      abort(
+        "`block_color` must have length ",
+        k,
+        " (one per level of `blocks`).",
+        class = c("rtemis_dim_error", "rtemis_input_error")
       )
     }
     color_for <- function(lvl) {
@@ -818,8 +835,11 @@ resolve_zoom <- function(zoom, axis = "x") {
   if (is.list(zoom)) {
     return(zoom)
   }
-  cli::cli_abort(
-    "{.arg zoom} must be {.code TRUE}, {.code FALSE}, a {.cls DataZoom} object, or a list; got {.cls {class(zoom)[1]}}."
+  abort(
+    "`zoom` must be TRUE, FALSE, a DataZoom object, or a list; got ",
+    class(zoom)[1],
+    ".",
+    class = c("rtemis_type_error", "rtemis_input_error")
   )
 }
 
@@ -2021,7 +2041,10 @@ draw_heatmap <- function(
     x <- as.matrix(x)
   }
   if (!is.numeric(x)) {
-    cli::cli_abort("{.arg x} must be a numeric matrix.")
+    abort(
+      "`x` must be a numeric matrix.",
+      class = c("rtemis_type_error", "rtemis_input_error")
+    )
   }
   if (!is.null(triangle)) {
     triangle <- match.arg(triangle, c("upper", "lower"))
@@ -2710,8 +2733,13 @@ draw_sankey <- function(
   required_cols <- c("source", "target", "value")
   missing_cols <- setdiff(required_cols, names(links))
   if (length(missing_cols) > 0L) {
-    cli::cli_abort(
-      "{.arg links} must have columns {.val {required_cols}}; missing: {.val {missing_cols}}."
+    abort(
+      "`links` must have columns ",
+      paste(required_cols, collapse = ", "),
+      "; missing: ",
+      paste(missing_cols, collapse = ", "),
+      ".",
+      class = c("rtemis_value_error", "rtemis_input_error")
     )
   }
 

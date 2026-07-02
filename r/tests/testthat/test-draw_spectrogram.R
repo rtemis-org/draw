@@ -14,14 +14,14 @@ test_that(".specgram_window accepts a pre-built numeric vector", {
 test_that(".specgram_window errors on unknown name", {
   expect_error(
     rtemis.draw:::.specgram_window("bogus", 64L),
-    class = "rlang_error"
+    class = "rtemis_error"
   )
 })
 
 test_that(".specgram_window errors when custom vector length mismatches n", {
   expect_error(
     rtemis.draw:::.specgram_window(rep(1, 10L), 32L),
-    class = "rlang_error"
+    class = "rtemis_error"
   )
 })
 
@@ -93,7 +93,7 @@ test_that(".spectrogram_palette accepts custom hex vector", {
 test_that(".spectrogram_palette errors on unknown name", {
   expect_error(
     rtemis.draw:::.spectrogram_palette("unknown_pal", 64L, FALSE, c(0, 1)),
-    class = "rlang_error"
+    class = "rtemis_error"
   )
 })
 
@@ -102,32 +102,35 @@ test_that(".spectrogram_palette errors on unknown name", {
 # ---------------------------------------------------------------------------
 
 test_that("draw_spectrogram errors when x is not numeric", {
-  expect_error(draw_spectrogram("hello"), class = "rlang_error")
+  expect_error(draw_spectrogram("hello"), class = "rtemis_error")
 })
 
 test_that("draw_spectrogram errors when x is a complex vector (not matrix)", {
   expect_error(
     draw_spectrogram(complex(real = 1:10, imaginary = 1:10)),
-    class = "rlang_error"
+    class = "rtemis_error"
   )
 })
 
 test_that("draw_spectrogram errors when raw signal missing sample_rate", {
   sig <- rnorm(1000)
-  expect_error(draw_spectrogram(sig), class = "rlang_error")
+  expect_error(draw_spectrogram(sig), class = "rtemis_error")
 })
 
 test_that("draw_spectrogram errors when sample_rate is non-positive", {
   sig <- rnorm(1000)
-  expect_error(draw_spectrogram(sig, sample_rate = 0), class = "rlang_error")
-  expect_error(draw_spectrogram(sig, sample_rate = -100), class = "rlang_error")
+  expect_error(draw_spectrogram(sig, sample_rate = 0), class = "rtemis_error")
+  expect_error(
+    draw_spectrogram(sig, sample_rate = -100),
+    class = "rtemis_error"
+  )
 })
 
 test_that("draw_spectrogram errors when n_fft exceeds signal length", {
   sig <- rnorm(100)
   expect_error(
     draw_spectrogram(sig, sample_rate = 1000, n_fft = 200L),
-    class = "rlang_error"
+    class = "rtemis_error"
   )
 })
 
@@ -135,11 +138,11 @@ test_that("draw_spectrogram errors on invalid overlap", {
   sig <- rnorm(1000)
   expect_error(
     draw_spectrogram(sig, sample_rate = 1000, n_fft = 64L, overlap = 64L),
-    class = "rlang_error"
+    class = "rtemis_error"
   )
   expect_error(
     draw_spectrogram(sig, sample_rate = 1000, n_fft = 64L, overlap = -1L),
-    class = "rlang_error"
+    class = "rtemis_error"
   )
 })
 
@@ -147,11 +150,11 @@ test_that("draw_spectrogram errors on bad db_range", {
   sig <- rnorm(1000)
   expect_error(
     draw_spectrogram(sig, sample_rate = 1000, db_range = -10),
-    class = "rlang_error"
+    class = "rtemis_error"
   )
   expect_error(
     draw_spectrogram(sig, sample_rate = 1000, db_range = 0),
-    class = "rlang_error"
+    class = "rtemis_error"
   )
 })
 
@@ -159,11 +162,11 @@ test_that("draw_spectrogram errors on bad freq_range", {
   sig <- rnorm(1000)
   expect_error(
     draw_spectrogram(sig, sample_rate = 1000, freq_range = c(500, 200)),
-    class = "rlang_error"
+    class = "rtemis_error"
   )
   expect_error(
     draw_spectrogram(sig, sample_rate = 1000, freq_range = c(1, 2, 3)),
-    class = "rlang_error"
+    class = "rtemis_error"
   )
 })
 
@@ -172,7 +175,7 @@ test_that("draw_spectrogram errors when freq_range excludes all bins", {
   # 1000 Hz sample rate → Nyquist at 500 Hz; requesting above that
   expect_error(
     draw_spectrogram(sig, sample_rate = 1000, freq_range = c(600, 800)),
-    class = "rlang_error"
+    class = "rtemis_error"
   )
 })
 
@@ -180,7 +183,7 @@ test_that("draw_spectrogram errors on bad time_range", {
   sig <- rnorm(1000)
   expect_error(
     draw_spectrogram(sig, sample_rate = 1000, time_range = c(2, 1)),
-    class = "rlang_error"
+    class = "rtemis_error"
   )
 })
 
@@ -188,7 +191,7 @@ test_that("draw_spectrogram errors on bad zlim", {
   sig <- rnorm(1000)
   expect_error(
     draw_spectrogram(sig, sample_rate = 1000, zlim = c(10, 5)),
-    class = "rlang_error"
+    class = "rtemis_error"
   )
 })
 
@@ -196,7 +199,7 @@ test_that("draw_spectrogram errors on mismatched time vector for matrix input", 
   mat <- matrix(abs(rnorm(128 * 50)), nrow = 128, ncol = 50)
   expect_error(
     draw_spectrogram(mat, time = seq_len(30)), # wrong length
-    class = "rlang_error"
+    class = "rtemis_error"
   )
 })
 
@@ -204,7 +207,7 @@ test_that("draw_spectrogram errors on mismatched frequency vector for matrix inp
   mat <- matrix(abs(rnorm(128 * 50)), nrow = 128, ncol = 50)
   expect_error(
     draw_spectrogram(mat, frequency = seq_len(10)), # wrong length
-    class = "rlang_error"
+    class = "rtemis_error"
   )
 })
 

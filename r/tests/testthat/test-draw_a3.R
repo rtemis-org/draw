@@ -68,8 +68,8 @@ test_that("a3_circular_offset returns x and y", {
 # ── draw_a3 ───────────────────────────────────────────────────────────────────
 
 test_that("draw_a3 rejects non-A3 input", {
-  expect_error(draw_a3("MAEPR"), class = "rlang_error")
-  expect_error(draw_a3(list(sequence = "MAEPR")), class = "rlang_error")
+  expect_error(draw_a3("MAEPR"), class = "rtemis_error")
+  expect_error(draw_a3(list(sequence = "MAEPR")), class = "rtemis_error")
 })
 
 test_that("draw_a3 creates htmlwidget from minimal A3 object", {
@@ -222,5 +222,5 @@ test_that("draw_a3 dataZoom absent when enable_zoom = FALSE", {
 test_that("draw_a3 n_per_row validation works", {
   skip_if_not_installed("rtemis.a3")
   a <- rtemis.a3::create_A3("MAEPR")
-  expect_error(draw_a3(a, n_per_row = 1L), class = "rlang_error")
+  expect_error(draw_a3(a, n_per_row = 1L), class = "rtemis_error")
 })

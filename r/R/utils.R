@@ -292,29 +292,36 @@ parse_margins <- function(margins) {
   }
   # Accept a named atomic vector (numeric / character) or a named list.
   if (!is.list(margins) && !is.atomic(margins)) {
-    cli::cli_abort(
-      "{.arg margins} must be a named numeric vector or named list."
+    abort(
+      "`margins` must be a named numeric vector or named list.",
+      class = c("rtemis_type_error", "rtemis_input_error")
     )
   }
   nms <- names(margins)
   if (is.null(nms) || any(!nzchar(nms))) {
-    cli::cli_abort(
-      "{.arg margins} must be named with any of {.val top}, {.val right}, {.val bottom}, {.val left}."
+    abort(
+      "`margins` must be named with any of 'top', 'right', 'bottom', 'left'.",
+      class = c("rtemis_value_error", "rtemis_input_error")
     )
   }
   valid_sides <- c("top", "right", "bottom", "left")
   bad <- setdiff(nms, valid_sides)
   if (length(bad) > 0L) {
-    cli::cli_abort(
-      c(
-        "{.arg margins} has unrecognised name{?s}: {.val {bad}}.",
-        "i" = "Valid names are {.val {valid_sides}}."
-      )
+    abort(
+      "`margins` has unrecognised names: ",
+      paste(bad, collapse = ", "),
+      ". Valid names are: ",
+      paste(valid_sides, collapse = ", "),
+      ".",
+      class = c("rtemis_value_error", "rtemis_input_error")
     )
   }
   if (any(duplicated(nms))) {
-    cli::cli_abort(
-      "{.arg margins} has duplicate name{?s}: {.val {nms[duplicated(nms)]}}."
+    abort(
+      "`margins` has duplicate names: ",
+      paste(unique(nms[duplicated(nms)]), collapse = ", "),
+      ".",
+      class = c("rtemis_value_error", "rtemis_input_error")
     )
   }
   for (side in valid_sides) {
@@ -329,8 +336,15 @@ parse_margins <- function(margins) {
       !((is.numeric(val) && length(val) == 1L) ||
         (is.character(val) && length(val) == 1L))
     ) {
-      cli::cli_abort(
-        "{.arg margins} element {.val {side}} must be a single number or string (e.g. {.val 10%}); got {.cls {class(val)[1]}} of length {length(val)}."
+      abort(
+        "`margins` element '",
+        side,
+        "' must be a single number or string (e.g. '10%'); got ",
+        class(val)[1],
+        " of length ",
+        length(val),
+        ".",
+        class = c("rtemis_type_error", "rtemis_input_error")
       )
     }
     empty[[side]] <- val
@@ -368,7 +382,7 @@ resolve_margins <- function(margins) {
 #' Validate an axis-limits argument
 #'
 #' Checks that a user-supplied `xlim`/`ylim`/`zlim` value is either `NULL` or a
-#' length-2 numeric vector. Errors with a corrective [cli::cli_abort()] message
+#' length-2 numeric vector. Errors with a corrective [rtemis.core::abort()] message
 #' otherwise. Returns the value invisibly so callers can chain if desired.
 #'
 #' @param value Any: User-supplied limits value.
@@ -382,8 +396,11 @@ validate_axis_lim <- function(value, arg) {
     return(invisible(value))
   }
   if (!is.numeric(value) || length(value) != 2L || !all(is.finite(value))) {
-    cli::cli_abort(
-      "{.arg {arg}} must be a length-2 finite numeric vector or {.code NULL}."
+    abort(
+      "`",
+      arg,
+      "` must be a length-2 finite numeric vector or `NULL`.",
+      class = c("rtemis_type_error", "rtemis_input_error")
     )
   }
   invisible(value)

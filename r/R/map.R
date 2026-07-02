@@ -300,7 +300,12 @@ load_map_geometry <- function(resolution) {
   )
   src <- sources[[resolution]]
   if (is.null(src)) {
-    cli::cli_abort("Unknown map resolution {.val {resolution}}.")
+    abort(
+      "Unknown map resolution '",
+      resolution,
+      "'.",
+      class = c("rtemis_value_error", "rtemis_input_error")
+    )
   }
   path <- system.file(
     "htmlwidgets",
@@ -310,8 +315,11 @@ load_map_geometry <- function(resolution) {
     package = "rtemis.draw"
   )
   if (!nzchar(path) || !file.exists(path)) {
-    cli::cli_abort(
-      "Vendored geometry {.file {src[['file']]}} not found in the package."
+    abort(
+      "Vendored geometry '",
+      src[["file"]],
+      "' not found in the package.",
+      class = "rtemis_io_error"
     )
   }
   # Read the whole file as one JSON string; file size in bytes is an upper bound
@@ -340,8 +348,10 @@ S7::method(draw, MapLibreOption) <- function(
   ...
 ) {
   if (!is.null(filename)) {
-    cli::cli_warn(
-      "Static export of map widgets is not yet supported; ignoring {.arg filename}."
+    warn(
+      "Static export of map widgets is not yet supported; ignoring ",
+      filename,
+      "."
     )
   }
 
@@ -384,20 +394,33 @@ map_from_data_frame <- function(
   value_label = NULL
 ) {
   if (!is.data.frame(data)) {
-    cli::cli_abort("{.arg data} must be a data frame.")
+    abort(
+      "`data` must be a data frame.",
+      class = c("rtemis_type_error", "rtemis_input_error")
+    )
   }
   if (!is.character(location) || length(location) != 1L) {
-    cli::cli_abort("{.arg location} must be a single column name.")
+    abort(
+      "`location` must be a single column name.",
+      class = c("rtemis_type_error", "rtemis_input_error")
+    )
   }
   if (!is.character(value) || length(value) != 1L) {
-    cli::cli_abort("{.arg value} must be a single column name.")
+    abort(
+      "`value` must be a single column name.",
+      class = c("rtemis_type_error", "rtemis_input_error")
+    )
   }
   missing_cols <- setdiff(c(location, value, tooltip), names(data))
   if (length(missing_cols) > 0L) {
-    cli::cli_abort(c(
-      "Column{?s} {.val {missing_cols}} not found in {.arg data}.",
-      "i" = "Available columns: {.val {names(data)}}."
-    ))
+    abort(
+      "Columns not found in `data`: ",
+      paste(missing_cols, collapse = ", "),
+      ". Available columns: ",
+      paste(names(data), collapse = ", "),
+      ".",
+      class = c("rtemis_value_error", "rtemis_input_error")
+    )
   }
 
   loc <- as.character(data[[location]])

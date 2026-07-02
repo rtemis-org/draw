@@ -327,16 +327,19 @@ draw_a3 <- function(
 ) {
   # ── Input validation ────────────────────────────────────────────────────────
   if (!S7::S7_inherits(x)) {
-    cli::cli_abort(
-      "{.arg x} must be an {.cls A3} object. \\
-      Create one with {.fn rtemis.a3::create_A3}."
+    abort(
+      "`x` must be an A3 object. ",
+      "Create one with `rtemis.a3::create_A3()`.",
+      class = c("rtemis_type_error", "rtemis_input_error")
     )
   }
   cls_name <- S7::S7_class(x)@name
   if (!grepl("::A3$|^A3$", cls_name)) {
-    cli::cli_abort(
-      "{.arg x} must be an {.cls A3} object, not {.cls {cls_name}}. \\
-      Create one with {.fn rtemis.a3::create_A3}."
+    abort(
+      "`x` must be an A3 object, not ",
+      cls_name,
+      ". Create one with `rtemis.a3::create_A3()`.",
+      class = c("rtemis_type_error", "rtemis_input_error")
     )
   }
   ptm_placement <- match.arg(
@@ -345,10 +348,16 @@ draw_a3 <- function(
   )
   n_per_row <- as.integer(n_per_row)
   if (n_per_row <= 1L) {
-    cli::cli_abort("{.arg n_per_row} must be an integer > 1.")
+    abort(
+      "`n_per_row` must be an integer > 1.",
+      class = c("rtemis_range_error", "rtemis_input_error")
+    )
   }
   if (!is.numeric(residue_spacing) || residue_spacing <= 0) {
-    cli::cli_abort("{.arg residue_spacing} must be a positive number.")
+    abort(
+      "`residue_spacing` must be a positive number.",
+      class = c("rtemis_range_error", "rtemis_input_error")
+    )
   }
   if (!is.null(position_every)) {
     position_every <- as.integer(position_every)
@@ -357,15 +366,17 @@ draw_a3 <- function(
         is.na(position_every) ||
         position_every < 1L
     ) {
-      cli::cli_abort(
-        "{.arg position_every} must be a positive integer or {.val NULL}."
+      abort(
+        "`position_every` must be a positive integer or NULL.",
+        class = c("rtemis_range_error", "rtemis_input_error")
       )
     }
   }
   if (!is.null(grid) && !S7::S7_inherits(grid, Grid)) {
-    cli::cli_abort(
-      "{.arg grid} must be a {.cls Grid} object or {.val NULL}. \\
-      Use {.fn Grid} to create one, e.g. {.code Grid(left = 8, top = 8)}."
+    abort(
+      "`grid` must be a Grid object or NULL. ",
+      "Use `Grid()` to create one, e.g. `Grid(left = 8, top = 8)`.",
+      class = c("rtemis_type_error", "rtemis_input_error")
     )
   }
 
