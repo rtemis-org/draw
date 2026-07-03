@@ -621,12 +621,20 @@ draw_spectrogram <- function(
       n_cells,
       " cells; browser rendering may be slow."
     )
-    info(
-      "Consider reducing 'n_fft' (currently ",
-      n_fft,
-      ")",
-      " or the signal length."
-    )
+    # `n_fft`/signal length only apply when we computed the STFT ourselves; a
+    # pre-computed matrix must be shrunk by the caller before plotting.
+    if (is_raw_signal) {
+      info(
+        "Consider reducing `n_fft` (currently ",
+        n_fft,
+        ") or the signal length."
+      )
+    } else {
+      info(
+        "Consider reducing the matrix resolution before plotting, ",
+        "e.g. by aggregating neighboring frequency bins or time frames."
+      )
+    }
   }
 
   # -- 12. Axis label defaults and formatted label vectors ---------------------

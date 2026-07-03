@@ -349,9 +349,7 @@ S7::method(draw, MapLibreOption) <- function(
 ) {
   if (!is.null(filename)) {
     warn(
-      "Static export of map widgets is not yet supported; ignoring ",
-      filename,
-      "."
+      "Static export of map widgets is not yet supported; ignoring `filename`."
     )
   }
 

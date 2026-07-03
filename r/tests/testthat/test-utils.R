@@ -116,6 +116,15 @@ test_that("lighten accepts named colors and is vectorized", {
   )
 })
 
+test_that("lighten preserves names of the input vector", {
+  expect_equal(
+    rtemis.draw:::lighten(c(a = "#000000", b = "#FFFFFF"), 0.5),
+    c(a = "#808080", b = "#FFFFFF")
+  )
+  # unnamed input stays unnamed
+  expect_null(names(rtemis.draw:::lighten("#000000", 0.5)))
+})
+
 test_that("lighten preserves the alpha channel", {
   # opaque input => 6-digit hex, no alpha suffix
   expect_equal(rtemis.draw:::lighten("#000000", 0.5), "#808080")

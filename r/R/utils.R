@@ -457,8 +457,9 @@ class_or_null_property <- function(s7_class) {
 #' @param x Character: R color specification(s) (hex string or named color).
 #' @param amount Numeric \[0, 1]: Fraction of the distance toward white to
 #'   move each channel. `0` returns the input unchanged, `1` returns white.
-#' @return Character: Hex color string(s), same length as `x`. Opaque colors
-#'   are returned as `"#RRGGBB"`; colors with alpha as `"#RRGGBBAA"`.
+#' @return Character: Hex color string(s), same length as `x`, with names
+#'   preserved. Opaque colors are returned as `"#RRGGBB"`; colors with alpha
+#'   as `"#RRGGBBAA"`.
 #' @author EDG
 #' @keywords internal
 #' @noRd
@@ -492,5 +493,7 @@ lighten <- function(x, amount = 0.1) {
     rgba[3L, !opaque],
     alpha = rgba[4L, !opaque]
   )
+  # grDevices::rgb() drops names; restore them so named palettes survive.
+  names(out) <- names(x)
   out
 }
