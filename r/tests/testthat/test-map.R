@@ -227,7 +227,7 @@ test_that("draw_choropleth honours an explicit theme and NA (no theme)", {
 
 test_that("draw_choropleth warns and ignores filename (no static export yet)", {
   df <- data.frame(iso = "USA", gdp = 1)
-  expect_warning(
+  expect_message(
     draw_choropleth(df, "iso", "gdp", filename = "map.png"),
     "not yet supported"
   )

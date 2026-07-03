@@ -153,8 +153,9 @@ S7::method(to_list, EChartsOption) <- function(x, ...) {
         if (S7::S7_inherits(dz)) to_list(dz) else dz
       }))
     } else {
-      cli::cli_abort(
-        "{.arg data_zoom} must be a {.cls DataZoom} object or a list of them."
+      abort(
+        "`data_zoom` must be a DataZoom object or a list of them.",
+        class = c("rtemis_type_error", "rtemis_input_error")
       )
     }
   }

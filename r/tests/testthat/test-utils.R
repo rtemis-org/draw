@@ -98,3 +98,43 @@ test_that("resolve_margins returns a Grid with only specified sides", {
   expect_null(g@right)
   expect_null(g@bottom)
 })
+
+test_that("lighten interpolates toward white in RGB space", {
+  # black lightened 10% => 10% of 255 per channel
+  expect_equal(rtemis.draw:::lighten("#000000", 0.1), "#1A1A1A")
+  # amount = 0 is identity, amount = 1 is white
+  expect_equal(rtemis.draw:::lighten("#3366CC", 0), "#3366CC")
+  expect_equal(rtemis.draw:::lighten("#3366CC", 1), "#FFFFFF")
+  # white is a fixed point
+  expect_equal(rtemis.draw:::lighten("#FFFFFF", 0.5), "#FFFFFF")
+})
+
+test_that("lighten accepts named colors and is vectorized", {
+  expect_equal(
+    rtemis.draw:::lighten(c("red", "#000000"), 0.5),
+    c("#FF8080", "#808080")
+  )
+})
+
+test_that("lighten preserves names of the input vector", {
+  expect_equal(
+    rtemis.draw:::lighten(c(a = "#000000", b = "#FFFFFF"), 0.5),
+    c(a = "#808080", b = "#FFFFFF")
+  )
+  # unnamed input stays unnamed
+  expect_null(names(rtemis.draw:::lighten("#000000", 0.5)))
+})
+
+test_that("lighten preserves the alpha channel", {
+  # opaque input => 6-digit hex, no alpha suffix
+  expect_equal(rtemis.draw:::lighten("#000000", 0.5), "#808080")
+  # input with alpha keeps its alpha unchanged
+  expect_equal(rtemis.draw:::lighten("#00000080", 0.5), "#80808080")
+})
+
+test_that("lighten rejects invalid amount", {
+  expect_error(rtemis.draw:::lighten("#000000", -0.1), "amount")
+  expect_error(rtemis.draw:::lighten("#000000", 1.5), "amount")
+  expect_error(rtemis.draw:::lighten("#000000", "a"), "amount")
+  expect_error(rtemis.draw:::lighten("#000000", c(0.1, 0.2)), "amount")
+})

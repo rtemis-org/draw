@@ -40,8 +40,9 @@ S7::method(plot, SupervisedSession) <- function(
 ) {
   events <- x@events
   if (length(events) == 0L) {
-    cli::cli_abort(
-      "This {.cls SupervisedSession} has no recorded events to plot."
+    abort(
+      "This SupervisedSession has no recorded events to plot.",
+      class = c("rtemis_value_error", "rtemis_input_error")
     )
   }
   started <- x@started
@@ -188,14 +189,16 @@ S7::method(plot, SupervisedSession) <- function(
   # kind's color stable across runs; draw_gantt() zips groups in first-seen (DFS)
   # order, so index the map by that order.
   kind_colors <- c(
-    train = "#607D8B",
-    outer_fold = "#8E63CE",
-    tune = "#BE2E5F",
-    grid_cell = "#466D96",
-    train_alg = "#4F662A",
-    predict = "#6CA3A0",
-    varimp = "#F08904",
-    metrics = "#FDB808"
+    train = "#808080",
+    outer_fold = getFromNamespace("col_outer", "rtemis"),
+    tune = getFromNamespace("col_tuner", "rtemis"),
+    grid_cell = lighten(getFromNamespace("col_tuner", "rtemis"), 0.5),
+    preprocess = getFromNamespace("col_preprocessor", "rtemis"),
+    decompose = getFromNamespace("col_decom", "rtemis"),
+    train_alg = getFromNamespace("highlight_col", "rtemis"),
+    predict = rtemis.core::rtemis_colors[["blue"]],
+    varimp = rtemis.core::rtemis_colors[["light_blue"]],
+    metrics = rtemis.core::rtemis_colors[["orange"]]
   )
   present <- unique(tasks[["kind"]])
   # Fall back to the default palette for any unmapped kind.

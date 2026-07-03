@@ -277,7 +277,7 @@ test_that("draw(SigmaOption) warns and ignores filename (no static export yet)",
     edges = list(),
     directed = FALSE
   )
-  expect_warning(
+  expect_message(
     draw(SigmaOption(model = m), filename = "net.svg"),
     "not yet supported"
   )
