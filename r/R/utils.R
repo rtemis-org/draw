@@ -445,3 +445,52 @@ class_or_null_property <- function(s7_class) {
     }
   )
 }
+
+
+# %% lighten() ----
+#' Lighten colors
+#'
+#' Lightens colors by linear interpolation toward white in RGB space
+#' (a "tint"): each RGB channel moves `amount` of its remaining distance
+#' toward 255. The alpha channel is preserved unchanged.
+#'
+#' @param x Character: R color specification(s) (hex string or named color).
+#' @param amount Numeric \[0, 1]: Fraction of the distance toward white to
+#'   move each channel. `0` returns the input unchanged, `1` returns white.
+#' @return Character: Hex color string(s), same length as `x`. Opaque colors
+#'   are returned as `"#RRGGBB"`; colors with alpha as `"#RRGGBBAA"`.
+#' @author EDG
+#' @keywords internal
+#' @noRd
+lighten <- function(x, amount = 0.1) {
+  if (
+    !is.numeric(amount) ||
+      length(amount) != 1L ||
+      is.na(amount) ||
+      amount < 0 ||
+      amount > 1
+  ) {
+    abort(
+      "`amount` must be a single numeric value in [0, 1].",
+      class = c("rtemis_value_error", "rtemis_input_error")
+    )
+  }
+  # Work in [0, 1]
+  rgba <- grDevices::col2rgb(x, alpha = TRUE) / 255
+  # Move each RGB channel `amount` of the way toward 1; leave alpha as is.
+  rgba[1:3, ] <- rgba[1:3, ] + (1 - rgba[1:3, ]) * amount
+  out <- character(ncol(rgba))
+  opaque <- rgba[4L, ] == 1
+  out[opaque] <- grDevices::rgb(
+    rgba[1L, opaque],
+    rgba[2L, opaque],
+    rgba[3L, opaque]
+  )
+  out[!opaque] <- grDevices::rgb(
+    rgba[1L, !opaque],
+    rgba[2L, !opaque],
+    rgba[3L, !opaque],
+    alpha = rgba[4L, !opaque]
+  )
+  out
+}
