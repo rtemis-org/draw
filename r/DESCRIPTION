@@ -20,7 +20,7 @@ Imports:
     htmlwidgets,
     jsonlite,
     rtemis (>= 1.2.4),
-    rtemis.core (>= 0.2.0),
+    rtemis.core (>= 0.4.1),
     S7,
     signal,
     viridisLite
