@@ -34,7 +34,6 @@ Additional_repositories:
 Config/testthat/edition: 3
 Config/testthat/parallel: true
 Collate:
-    '00_init.R'
     'rtemis.draw-package.R'
     'rtemis_color_system.R'
     'utils.R'
