@@ -33,7 +33,7 @@ draw_network(
 )
 }
 \arguments{
-\item{x}{Numeric matrix or Data frame: A square weight / adjacency matrix, or
+\item{x}{Numeric matrix or data.frame: A square weight / adjacency matrix, or
 an edge-list data frame with \code{source} / \code{target} columns (and optional
 \code{weight}, \code{sign}). For a matrix, dimnames supply node ids and \verb{[i, j]} is
 the edge weight (zero / \code{NA} entries produce no edge); the absolute value
