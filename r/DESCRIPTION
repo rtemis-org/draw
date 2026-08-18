@@ -19,7 +19,7 @@ Roxygen: list(markdown = TRUE)
 Imports:
     htmlwidgets,
     jsonlite,
-    rtemis (>= 1.2.8),
+    rtemis (>= 1.3.0),
     rtemis.core (>= 0.4.1),
     S7,
     signal,
@@ -34,7 +34,6 @@ Additional_repositories:
 Config/testthat/edition: 3
 Config/testthat/parallel: true
 Collate:
-    '00_init.R'
     'rtemis.draw-package.R'
     'rtemis_color_system.R'
     'utils.R'

@@ -28,15 +28,13 @@ snake_to_camel <- function(x) {
 #' Drop NULL values from a list
 #'
 #' Removes all NULL entries from a named list. Used by `to_list()` methods
-#' to produce clean JSON (echarts treats missing keys as defaults).
+#' to produce clean JSON (ECharts treats missing keys as defaults).
 #'
 #' @param x List: Named list.
 #' @return List: Input list with `NULL` values removed.
 #' @keywords internal
 #' @noRd
 drop_nulls <- function(x) {
-  # Also drop zero-length values: S7 0.2.2 stores empty prototypes (e.g. logical(0))
-  # instead of NULL for new_union(type, NULL) properties with default = NULL.
   x[!vapply(x, function(v) is.null(v) || length(v) == 0L, logical(1))]
 }
 

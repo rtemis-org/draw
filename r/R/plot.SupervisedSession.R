@@ -71,3 +71,27 @@ S7::method(plot, SupervisedSession) <- function(
     filename = filename
   )
 }
+
+
+# %% plot_session
+#'  Plot a Supervised object's session timeline
+#'
+#' Plots the session timeline of a Supervised object using [draw_gantt].
+#'
+#' @param x `Supervised` object.
+#' @param ... Additional arguments passed to [draw_gantt].
+#' @return htmlwidget: Widget object.
+#' @author EDG
+#' @export
+plot_session <- new_generic("plot_session", "x")
+
+
+# %% plot_session.Supervised
+Supervised <- utils::getFromNamespace("Supervised", "rtemis")
+method(plot_session, Supervised) <- function(x, ...) {
+  plot(x@session, ...)
+}
+SupervisedRes <- utils::getFromNamespace("SupervisedRes", "rtemis")
+method(plot_session, SupervisedRes) <- function(x, ...) {
+  plot(x@session, ...)
+}

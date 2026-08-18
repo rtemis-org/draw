@@ -623,7 +623,7 @@ draw_graph <- function(
 #' the type of `x`. Communities are detected with Louvain and laid out with
 #' ForceAtlas2 by default.
 #'
-#' @param x Numeric matrix or Data frame: A square weight / adjacency matrix, or
+#' @param x Numeric matrix or data.frame: A square weight / adjacency matrix, or
 #'   an edge-list data frame with `source` / `target` columns (and optional
 #'   `weight`, `sign`). For a matrix, dimnames supply node ids and `[i, j]` is
 #'   the edge weight (zero / `NA` entries produce no edge); the absolute value
