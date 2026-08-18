@@ -104,7 +104,7 @@ HistogramConfig <- new_class(
 # %% HISTOGRAM_ORIGIN_NAMES ----
 HISTOGRAM_ORIGIN_NAMES <- setdiff(
   names(HistogramConfig@properties),
-  c("type", "origin", "writer")
+  c("type", PROVENANCE_PROPS)
 )
 
 
@@ -182,9 +182,7 @@ method(resolve, HistogramConfig) <- function(config, data = NULL, ...) {
 
 # %% compile.HistogramConfig ----
 method(compile, HistogramConfig) <- function(config, data = NULL, ...) {
-  dat <- config_data(config, data)
-  config <- resolve(config, data = dat)
-  x <- config_column(dat, config@x, "x")
+  x <- config_column(data, config@x, "x")
   if (is.null(x)) {
     abort(
       "A HistogramConfig needs `x` set to draw.",
@@ -193,7 +191,7 @@ method(compile, HistogramConfig) <- function(config, data = NULL, ...) {
   }
   histogram_option(
     x = x,
-    group = config_column(dat, config@group, "group"),
+    group = config_column(data, config@group, "group"),
     breaks = config@breaks,
     palette = config@palette,
     xlab = config@xlab,

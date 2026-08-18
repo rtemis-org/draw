@@ -18,6 +18,8 @@ ScatterConfig(
   n_fit = 200L,
   fit_alpha = 0.25,
   palette = NULL,
+  square = FALSE,
+  equal_axes = FALSE,
   pad = 0.04,
   xlim = NULL,
   ylim = NULL,
@@ -61,6 +63,14 @@ no fit.}
 
 \item{palette}{Optional Character: Series colors, overriding the theme
 palette for this chart. \code{NULL} uses the theme's.}
+
+\item{square}{Logical: If TRUE, draw the plotting box square -- equal height
+and width in pixels, excluding axis labels and margins.}
+
+\item{equal_axes}{Logical: If TRUE, give one data unit the same size in
+pixels on both axes. Set with \code{square} for a plot that is both, such as a
+true-versus-predicted plot whose identity line runs at 45 degrees; the two
+axes are then made to span the same interval.}
 
 \item{pad}{Numeric \verb{[0, Inf)}: Fraction of the data range to extend each axis
 by when \code{xlim} / \code{ylim} are not given. The default matches base R's

@@ -119,7 +119,7 @@ GanttConfig <- new_class(
 # %% GANTT_ORIGIN_NAMES ----
 GANTT_ORIGIN_NAMES <- setdiff(
   names(GanttConfig@properties),
-  c("type", "origin", "writer")
+  c("type", PROVENANCE_PROPS)
 )
 
 
@@ -208,18 +208,16 @@ method(resolve, GanttConfig) <- function(config, data = NULL, ...) {
 # renamed into them. The optional roles keep their own names, since the builder
 # takes those as column names rather than as values.
 method(compile, GanttConfig) <- function(config, data = NULL, ...) {
-  dat <- config_data(config, data)
-  config <- resolve(config, data = dat)
   tasks <- data.frame(
-    label = config_column(dat, config@label, "label"),
-    start = config_column(dat, config@start, "start"),
-    end = config_column(dat, config@end, "end"),
+    label = config_column(data, config@label, "label"),
+    start = config_column(data, config@start, "start"),
+    end = config_column(data, config@end, "end"),
     stringsAsFactors = FALSE
   )
   for (role in c("group", "tooltip", "border")) {
     column <- prop(config, role)
     if (!is.null(column)) {
-      tasks[[column]] <- config_column(dat, column, role)
+      tasks[[column]] <- config_column(data, column, role)
     }
   }
   gantt_option(

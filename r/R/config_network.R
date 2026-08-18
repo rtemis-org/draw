@@ -133,7 +133,7 @@ NetworkConfig <- new_class(
 # %% NETWORK_ORIGIN_NAMES ----
 NETWORK_ORIGIN_NAMES <- setdiff(
   names(NetworkConfig@properties),
-  c("type", "origin", "writer")
+  c("type", PROVENANCE_PROPS)
 )
 
 
@@ -223,7 +223,7 @@ method(resolve, NetworkConfig) <- function(config, data = NULL, ...) {
 # `data` is the adjacency matrix, or a list carrying it alongside a node table --
 # one argument has to hold both, and a named list is the least surprising way.
 method(compile, NetworkConfig) <- function(config, data = NULL, ...) {
-  bound <- config_data(config, data)
+  bound <- data
   nodes <- NULL
   if (
     is.list(bound) && !is.data.frame(bound) && "adjacency" %in% names(bound)

@@ -118,7 +118,7 @@ BoxplotConfig <- new_class(
 # %% BOXPLOT_ORIGIN_NAMES ----
 BOXPLOT_ORIGIN_NAMES <- setdiff(
   names(BoxplotConfig@properties),
-  c("type", "origin", "writer")
+  c("type", PROVENANCE_PROPS)
 )
 
 
@@ -198,20 +198,18 @@ method(resolve, BoxplotConfig) <- function(config, data = NULL, ...) {
 # The builder takes a named list, one element per box, and uses the names as
 # labels -- so the bound column names carry through without a `labels` argument.
 method(compile, BoxplotConfig) <- function(config, data = NULL, ...) {
-  dat <- config_data(config, data)
-  config <- resolve(config, data = dat)
   if (is.null(config@x)) {
     abort(
       "A BoxplotConfig needs `x` set to draw.",
       class = c("rtemis_null_input", "rtemis_input_error")
     )
   }
-  values <- lapply(config@x, function(column) config_column(dat, column, "x"))
+  values <- lapply(config@x, function(column) config_column(data, column, "x"))
   names(values) <- config@x
   boxplot_option(
     x = values,
     labels = config@labels,
-    group = config_column(dat, config@group, "group"),
+    group = config_column(data, config@group, "group"),
     horizontal = config@horizontal,
     palette = config@palette,
     fill_alpha = config@fill_alpha,

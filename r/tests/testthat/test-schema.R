@@ -10,7 +10,7 @@
 # The load-bearing one is "no `default` is emitted anywhere". A default is what
 # an interface chooses to fill in, and interfaces are expected to differ; a
 # schema stating one would make a chart pane and a web canvas wrong about each
-# other. See `plan/draw-schemas.md`.
+# other.
 
 SCATTER_ID <- "https://schema.rtemis.org/chart/scatter/v1/schema.json"
 
@@ -239,4 +239,50 @@ test_that("write_chart_schema writes parseable JSON and creates its directory", 
   round_tripped <- jsonlite::fromJSON(path, simplifyVector = FALSE)
   expect_identical(round_tripped[["$id"]], SCATTER_ID)
   expect_identical(round_tripped[["required"]], list("type"))
+})
+
+
+# %% provenance ----
+
+test_that("origin values are constrained to the three the description names", {
+  origin <- scatter_schema()[["properties"]][["origin"]]
+  expect_identical(
+    as.character(origin[["additionalProperties"]][["enum"]]),
+    c("user", "default", "derived")
+  )
+})
+
+test_that("an output config's provenance is required and non-null", {
+  # Everything else may be null in a complete document -- "this chart has no
+  # title" is a fact worth recording -- but a document that cannot say where
+  # its values came from is not complete, whatever it claims.
+  complete <- chart_schema(
+    ScatterConfig,
+    id = SCATTER_ID,
+    title = "t",
+    description = "d",
+    complete = TRUE
+  )
+  for (nm in c("origin", "writer")) {
+    expect_identical(complete[["properties"]][[nm]][["type"]], "object")
+  }
+  # The input config leaves both nullable: an authored config has neither.
+  input <- scatter_schema()
+  for (nm in c("origin", "writer")) {
+    expect_setequal(input[["properties"]][[nm]][["type"]], c("object", "null"))
+  }
+})
+
+test_that("a chart's own properties stay nullable in an output config", {
+  complete <- chart_schema(
+    ScatterConfig,
+    id = SCATTER_ID,
+    title = "t",
+    description = "d",
+    complete = TRUE
+  )
+  expect_setequal(
+    complete[["properties"]][["title"]][["type"]],
+    c("string", "null")
+  )
 })

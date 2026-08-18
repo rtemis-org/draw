@@ -109,7 +109,7 @@ A3Config <- new_class(
 # %% A3_ORIGIN_NAMES ----
 A3_ORIGIN_NAMES <- setdiff(
   names(A3Config@properties),
-  c("type", "origin", "writer")
+  c("type", PROVENANCE_PROPS)
 )
 
 
@@ -192,6 +192,11 @@ method(resolve, A3Config) <- function(config, data = NULL, ...) {
 
 # %% a3_built ----
 #' Build an A3 diagram's option and render hints together
+#'
+#' Reached two ways: through `compile()`, which has already materialized the
+#' data and resolved the config, and directly from the `draw()` method, which
+#' has not. So it does both itself. Neither is wasted work the first way round:
+#' `config_data()` returns data it is handed, and `resolve()` is idempotent.
 #'
 #' @param config [A3Config]: The chart configuration.
 #' @param data Optional `A3` object: The protein to draw.

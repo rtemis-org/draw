@@ -4,6 +4,195 @@
 # Constants ----
 DEFAULT_MARGINS <- c(top = 36, right = 36, bottom = 36, left = 36)
 
+# %% equal_axis_limits ----
+#' Reconcile axis limits for a square, equally-scaled plot
+#'
+#' `equal_axes` and `square` are independent statements -- one about scale, one
+#' about shape -- and each is satisfiable on its own. Asking for **both** is a
+#' statement about the *limits*: a square box in which one data unit is the same
+#' size on both axes is a box whose axes span the same interval. So that is what
+#' this produces.
+#'
+#' @details
+#' Which interval depends on what the caller already pinned down:
+#'
+#' - Neither limit given: one common interval over all the values, padded, so a
+#'   true-versus-predicted plot gets its identity line at 45 degrees without the
+#'   caller working out the range.
+#' - One given: the other matches it. The caller stated the window; both axes
+#'   use it.
+#' - Both given, spanning different intervals: an error. The caller asked for
+#'   two things that cannot both hold, and silently overriding either would
+#'   discard a choice they made explicitly.
+#'
+#' With only one of the two flags set there is nothing to reconcile and the
+#' limits pass through untouched.
+#'
+#' @param x,y Numeric: The values on each axis. `y` may be a list of series.
+#' @param xlim,ylim Optional Numeric: Author-supplied limits, length 2.
+#' @param pad Numeric `[0, Inf)`: Fraction of the range to pad a derived
+#'   interval by.
+#' @param square,equal_axes Logical: The two requests.
+#'
+#' @return Named list: `xlim` and `ylim`.
+#'
+#' @author EDG
+#' @keywords internal
+#' @noRd
+equal_axis_limits <- function(x, y, xlim, ylim, pad, square, equal_axes) {
+  if (!square || !equal_axes) {
+    return(list(xlim = xlim, ylim = ylim))
+  }
+  if (!is.null(xlim) && !is.null(ylim)) {
+    if (!isTRUE(all.equal(as.numeric(xlim), as.numeric(ylim)))) {
+      abort(
+        "`square` and `equal_axes` together require both axes to span the ",
+        "same interval, but `xlim` is [",
+        paste(xlim, collapse = ", "),
+        "] and `ylim` is [",
+        paste(ylim, collapse = ", "),
+        "]. Give them the same limits, or drop one of the two flags.",
+        class = c("rtemis_value_error", "rtemis_input_error")
+      )
+    }
+    return(list(xlim = xlim, ylim = ylim))
+  }
+  # One stated window governs both axes; with neither stated, the data does.
+  common <- xlim %||% ylim
+  if (is.null(common)) {
+    values <- c(
+      if (is.null(x)) NULL else as.numeric(x),
+      if (is.list(y)) unlist(y, use.names = FALSE) else as.numeric(y)
+    )
+    # Nothing stated and nothing to measure: resolve() is called without data
+    # too, and there is no interval to be had. Leave the limits unset.
+    if (length(values) == 0L) {
+      return(list(xlim = xlim, ylim = ylim))
+    }
+    common <- calc_limits(values, pad)
+  }
+  list(xlim = common, ylim = common)
+} # /rtemis.draw::equal_axis_limits
+
+
+# %% aspect_meta ----
+#' Derive the `aspect` render hint from a built option
+#'
+#' The pixel geometry a square or equally-scaled plot needs, read off the option
+#' that was just built rather than recomputed: the resolved axis limits and the
+#' grid margins are both already on it, and reading them is what keeps the hint
+#' and the chart from disagreeing.
+#'
+#' The ratio is the whole point. `equal_axes` wants one data unit to occupy the
+#' same number of pixels on both axes, which makes the grid's height-to-width
+#' ratio the y range over the x range. `square` wants a ratio of 1. Asked for
+#' together, `equal_axis_limits()` has already made the two spans equal, so the
+#' `equal_axes` formula yields 1 and the two agree by construction.
+#'
+#' @param option [EChartsOption]: The built option.
+#' @param square,equal_axes Logical: The two requests. With neither set there is
+#'   no hint to give and the result is an empty list.
+#'
+#' @return Named list: `aspect`, or empty.
+#'
+#' @author EDG
+#' @keywords internal
+#' @noRd
+aspect_meta <- function(option, square = FALSE, equal_axes = FALSE) {
+  if (!square && !equal_axes) {
+    return(list())
+  }
+  x_lim <- axis_span(option@x_axis, "x", square, equal_axes)
+  y_lim <- axis_span(option@y_axis, "y", square, equal_axes)
+  # `widthPx` is deliberately absent: with no preferred width the box fills the
+  # container, and `width` on draw() is the one place to constrain it.
+  list(
+    aspect = c(
+      list(ratio = if (equal_axes) diff(y_lim) / diff(x_lim) else 1),
+      grid_px(option@grid)
+    )
+  )
+} # /rtemis.draw::aspect_meta
+
+
+# %% axis_span ----
+#' Read one axis's resolved numeric span off a built option
+#'
+#' @param axis [Axis]: The axis.
+#' @param which Character: `"x"` or `"y"`, for the error message.
+#' @param square,equal_axes Logical: Which request is being served, so the error
+#'   names the argument the caller actually passed.
+#'
+#' @return Numeric: Length-2 `c(min, max)`.
+#'
+#' @author EDG
+#' @keywords internal
+#' @noRd
+axis_span <- function(axis, which, square, equal_axes) {
+  span <- c(axis@min, axis@max)
+  if (!is.numeric(span) || length(span) != 2L || !all(is.finite(span))) {
+    abort(
+      "`",
+      if (square) "square" else "equal_axes",
+      "` needs a numeric ",
+      which,
+      " axis with known limits, and this chart's is ",
+      if (identical(axis@type, "category")) {
+        "categorical"
+      } else {
+        "unbounded"
+      },
+      ". Plot numeric values, or set `",
+      which,
+      "lim`.",
+      class = c("rtemis_value_error", "rtemis_input_error")
+    )
+  }
+  as.numeric(span)
+} # /rtemis.draw::axis_span
+
+
+# %% grid_px ----
+#' Read a grid's four margins as pixel numbers
+#'
+#' The browser solves the box from the container width, which means it has to
+#' know how much room to leave outside the grid. A margin ECharts is left to
+#' choose, or one given as a percentage, is not a number this side knows -- so
+#' rather than guess one, this says which side is the problem.
+#'
+#' @param grid Optional [Grid]: The option's grid.
+#'
+#' @return Named list: `leftPx`, `rightPx`, `topPx`, `botPx`.
+#'
+#' @author EDG
+#' @keywords internal
+#' @noRd
+grid_px <- function(grid) {
+  sides <- list(
+    leftPx = "left",
+    rightPx = "right",
+    topPx = "top",
+    botPx = "bottom"
+  )
+  out <- lapply(names(sides), function(key) {
+    value <- if (is.null(grid)) NULL else prop(grid, sides[[key]])
+    if (!is.numeric(value) || length(value) != 1L || !is.finite(value)) {
+      abort(
+        "`square` and `equal_axes` need all four margins as pixel numbers, ",
+        "and `",
+        sides[[key]],
+        "` is ",
+        if (is.null(value)) "unset" else paste0("'", value, "'"),
+        ". Pass `margins = c(top = , right = , bottom = , left = )` in pixels.",
+        class = c("rtemis_value_error", "rtemis_input_error")
+      )
+    }
+    as.numeric(value)
+  })
+  stats::setNames(out, names(sides))
+} # /rtemis.draw::grid_px
+
+
 #' Resolve a theme and create a backend widget
 #'
 #' Shared tail of every [draw()] method. Resolves the uniform `theme` argument
@@ -118,9 +307,11 @@ render_widget <- function(
 #' @param filename Optional Character: If provided, the widget is also written to
 #'   this file via [save_drawing()] (ECharts only; other backends warn and
 #'   ignore it). Extension determines the format (currently only `.svg`).
-#' @param ... Backend-specific arguments. ECharts accepts `renderer`
-#'   (Character \{"canvas", "svg"\}) and `meta` (named list of extra payload
-#'   fields, used internally e.g. by [draw_heatmap()]).
+#' @param ... Backend-specific arguments, which must be named. ECharts accepts
+#'   `renderer` (Character \{"canvas", "svg"\}) and `meta` (named list of extra
+#'   payload fields, used internally e.g. by [draw_heatmap()]). Any other name
+#'   is an error rather than a silent no-op, so a typo cannot quietly change
+#'   what is drawn.
 #'
 #'   Two `meta` fields are read by the ECharts JS binding and are part of its
 #'   contract, because they need the container width, which only the browser
@@ -343,6 +534,7 @@ S7::method(draw, EChartsOption) <- function(
   renderer = "canvas",
   meta = list()
 ) {
+  check_dots_empty(...)
   draw_echarts_option(
     to_list(option),
     renderer = renderer,
@@ -370,6 +562,7 @@ S7::method(draw, S7::class_list) <- function(
   renderer = "canvas",
   meta = list()
 ) {
+  check_dots_empty(...)
   draw_echarts_option(
     option,
     renderer = renderer,
@@ -440,6 +633,8 @@ line_option <- function(
   pad = DEFAULT_PAD,
   xlim = NULL,
   ylim = NULL,
+  square = FALSE,
+  equal_axes = FALSE,
   xlab = NULL,
   ylab = NULL,
   title = NULL,
@@ -459,6 +654,18 @@ line_option <- function(
       class = c("rtemis_value_error", "rtemis_input_error")
     )
   }
+  if (equal_axes && x_type != "value") {
+    abort(
+      "`equal_axes` compares the two axes' scales, which needs a numeric x. ",
+      "This chart's x is categorical.",
+      class = c("rtemis_value_error", "rtemis_input_error")
+    )
+  }
+  # Asking for a square box *and* equal scaling is a statement about the limits;
+  # settle them before anything reads them.
+  limits <- equal_axis_limits(x, y, xlim, ylim, pad, square, equal_axes)
+  xlim <- limits[["xlim"]]
+  ylim <- limits[["ylim"]]
 
   # Resolve axis limits, extended by `pad` as on every other value axis. This
   # used to be the exact data range, which put the first and last points hard
@@ -599,6 +806,28 @@ line_option <- function(
 #'
 #' Quick line chart from x/y data.
 #'
+#' @details
+#' # Square and equally-scaled plots
+#'
+#' `square` and `equal_axes` are separate requests. `square` is about the
+#' *shape* of the plotting box: equal height and width in pixels, measured on
+#' the box itself, not including axis labels or margins. `equal_axes` is about
+#' *scale*: one data unit occupies the same number of pixels on both axes, so a
+#' 45-degree line really is a slope of 1.
+#'
+#' Either works alone. `equal_axes` on a chart whose x spans ten units and whose
+#' y spans one gives a wide, short box, which is what equal scaling means there.
+#'
+#' Asking for both is a statement about the limits, since the only square box in
+#' which both axes are equally scaled is one whose axes span the same interval.
+#' So both axes are made to span one interval: over all the values when neither
+#' limit was given, or the one you gave when you gave exactly one. Giving both
+#' `xlim` and `ylim` as different intervals is an error rather than a silent
+#' override.
+#'
+#' The box itself is solved in the browser, which is the only side that knows
+#' how wide the container is, and re-solved whenever it resizes.
+#'
 #' @param x Vector: X-axis values.
 #' @param y Numeric or named list: Y values.
 #' @param names Optional Character: Series names used when `y` is an unnamed list.
@@ -630,6 +859,12 @@ line_option <- function(
 #'   axis by when `xlim` / `ylim` are not given. The default matches base R's
 #'   `xaxs = "r"`, which extends the range by 4% at each end.
 #'   Defaults to the range of all `y` values across series (no padding).
+#' @param square Logical: If TRUE, draw the plotting box square -- equal height
+#'   and width in pixels, excluding axis labels and margins.
+#' @param equal_axes Logical: If TRUE, give one data unit the same size in
+#'   pixels on both axes. Set both for a plot that is square *and* to scale,
+#'   such as an ROC curve; the two axes are then made to span the same
+#'   interval. Requires a numeric `x`. See Details.
 #' @param xlab Optional Character: X-axis title.
 #' @param ylab Optional Character: Y-axis title.
 #' @param title Optional Character: Chart title.
@@ -652,6 +887,18 @@ line_option <- function(
 #' @param filename Optional Character: If provided, save the widget to this file via
 #'   [save_drawing()].
 #' @return htmlwidget: Widget object.
+#'
+#' @examples
+#' # An ROC curve is square by nature, on axes that share their [0, 1] range.
+#' draw_line(
+#'   x = c(0, 0.2, 0.6, 1),
+#'   y = c(0, 0.55, 0.85, 1),
+#'   square = TRUE,
+#'   equal_axes = TRUE,
+#'   xlab = "False positive rate",
+#'   ylab = "True positive rate"
+#' )
+#'
 #' @export
 draw_line <- function(
   x,
@@ -668,6 +915,8 @@ draw_line <- function(
   pad = DEFAULT_PAD,
   xlim = NULL,
   ylim = NULL,
+  square = FALSE,
+  equal_axes = FALSE,
   xlab = NULL,
   ylab = NULL,
   title = NULL,
@@ -694,6 +943,8 @@ draw_line <- function(
     pad = pad,
     xlim = xlim,
     ylim = ylim,
+    square = square,
+    equal_axes = equal_axes,
     xlab = xlab,
     ylab = ylab,
     title = title,
@@ -707,7 +958,8 @@ draw_line <- function(
     width = width,
     height = height,
     element_id = element_id,
-    filename = filename
+    filename = filename,
+    meta = aspect_meta(opt, square = square, equal_axes = equal_axes)
   )
 }
 
@@ -1150,6 +1402,8 @@ scatter_option <- function(
   xlim = NULL,
   ylim = NULL,
   pad = DEFAULT_PAD,
+  square = FALSE,
+  equal_axes = FALSE,
   xlab = NULL,
   ylab = NULL,
   title = NULL,
@@ -1157,6 +1411,11 @@ scatter_option <- function(
 ) {
   validate_axis_lim(xlim, "xlim")
   validate_axis_lim(ylim, "ylim")
+  # Asking for a square box *and* equal scaling is a statement about the limits;
+  # settle them before anything reads them.
+  limits <- equal_axis_limits(x, y, xlim, ylim, pad, square, equal_axes)
+  xlim <- limits[["xlim"]]
+  ylim <- limits[["ylim"]]
 
   # Resolve axis limits. Defaults apply 4% symmetric padding so points aren't
   # drawn on the axis edges — matches base R `xaxs = "r"` and ggplot2 ~5%.
@@ -1336,6 +1595,28 @@ scatter_option <- function(
 #' Quick scatter plot from x/y data with optional fitted line and
 #' confidence band.
 #'
+#' @details
+#' # Square and equally-scaled plots
+#'
+#' `square` and `equal_axes` are separate requests. `square` is about the
+#' *shape* of the plotting box: equal height and width in pixels, measured on
+#' the box itself, not including axis labels or margins. `equal_axes` is about
+#' *scale*: one data unit occupies the same number of pixels on both axes, so a
+#' 45-degree line really is a slope of 1.
+#'
+#' Either works alone. `equal_axes` on a chart whose x spans ten units and whose
+#' y spans one gives a wide, short box, which is what equal scaling means there.
+#'
+#' Asking for both is a statement about the limits, since the only square box in
+#' which both axes are equally scaled is one whose axes span the same interval.
+#' So both axes are made to span one interval: over all the values when neither
+#' limit was given, or the one you gave when you gave exactly one. Giving both
+#' `xlim` and `ylim` as different intervals is an error rather than a silent
+#' override.
+#'
+#' The box itself is solved in the browser, which is the only side that knows
+#' how wide the container is, and re-solved whenever it resizes.
+#'
 #' @param x Numeric: X values.
 #' @param y Numeric: Y values.
 #' @param size Optional Numeric: Symbol sizes.
@@ -1357,6 +1638,13 @@ scatter_option <- function(
 #' @param pad Numeric `[0, Inf)`: Fraction of the data range to extend each
 #'   axis by when `xlim` / `ylim` are not given. The default matches base R's
 #'   `xaxs = "r"`, which extends the range by 4% at each end.
+#' @param square Logical: If TRUE, draw the plotting box square -- equal height
+#'   and width in pixels, excluding axis labels and margins.
+#' @param equal_axes Logical: If TRUE, give one data unit the same size in
+#'   pixels on both axes. Set both for a plot that is square *and* to scale,
+#'   such as a true-versus-predicted plot whose identity line should run at 45
+#'   degrees; the two axes are then made to span the same interval. See
+#'   Details.
 #' @param xlab Optional Character: X-axis title.
 #' @param ylab Optional Character: Y-axis title.
 #' @param title Optional Character: Chart title.
@@ -1375,6 +1663,17 @@ scatter_option <- function(
 #'
 #' @return htmlwidget: Widget object.
 #'
+#' @examples
+#' # True versus predicted: square box, equal scale, identity line at 45 deg.
+#' draw_scatter(
+#'   x = c(1, 2, 3, 4),
+#'   y = c(1.1, 1.9, 3.4, 3.7),
+#'   square = TRUE,
+#'   equal_axes = TRUE,
+#'   xlab = "True",
+#'   ylab = "Predicted"
+#' )
+#'
 #' @export
 draw_scatter <- function(
   x,
@@ -1389,6 +1688,8 @@ draw_scatter <- function(
   xlim = NULL,
   ylim = NULL,
   pad = DEFAULT_PAD,
+  square = FALSE,
+  equal_axes = FALSE,
   xlab = NULL,
   ylab = NULL,
   title = NULL,
@@ -1412,6 +1713,8 @@ draw_scatter <- function(
     xlim = xlim,
     ylim = ylim,
     pad = pad,
+    square = square,
+    equal_axes = equal_axes,
     xlab = xlab,
     ylab = ylab,
     title = title,
@@ -1424,7 +1727,8 @@ draw_scatter <- function(
     width = width,
     height = height,
     element_id = element_id,
-    filename = filename
+    filename = filename,
+    meta = aspect_meta(opt, square = square, equal_axes = equal_axes)
   )
 }
 

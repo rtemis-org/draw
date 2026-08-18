@@ -33,11 +33,14 @@ Two kinds, differing only in what they require:
 \item \code{complete = FALSE} (an \strong{input config}) requires only \code{type}. The author
 sets a subset and the interface fills in the rest.
 \item \code{complete = TRUE} (an \strong{output config}) requires every property, so a
-document that claims to be complete can be checked rather than trusted.
+document that claims to be complete can be checked rather than trusted. The
+chart's own properties may still be null -- "this chart has no title" is a
+fact worth recording -- but the provenance maps may not: a document that
+cannot say where its values came from is not complete, whatever it claims.
 }
 
 Neither emits a \code{default}: what an interface fills in is not a fact about
-the document. See \code{plan/draw-schemas.md}.
+the document.
 }
 \examples{
 schema <- chart_schema(

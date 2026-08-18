@@ -385,3 +385,186 @@ test_that("animation is a render target, not a config property", {
   write_chart_config(setup_ScatterConfig(x = "wt"), path)
   expect_false(grepl("animation", paste(readLines(path), collapse = "")))
 })
+
+
+# %% the compile() contract ----
+
+# `compile()` materializes the data and resolves the config before dispatching,
+# so that a method cannot forget either step. These test the invariant rather
+# than any one method, because it is the invariant that keeps a chart type added
+# later from quietly skipping resolution.
+
+test_that("compile() hands its method a resolved config and materialized data", {
+  # A throwaway chart type that records what the generic passed it, so this
+  # tests the generic's contract rather than any one chart's method.
+  Probe <- S7::new_class(
+    "Probe",
+    parent = ChartConfig,
+    properties = list(
+      type = prop_chart_type("probe"),
+      xlab = prop_string(NULL, nullable = TRUE, description = "X label.")
+    )
+  )
+  S7::method(resolve, Probe) <- function(config, data = NULL, ...) {
+    config_derive(config, list(xlab = if (!is.null(data)) names(data)[[1L]]))
+  }
+  seen <- NULL
+  S7::method(compile, Probe) <- function(config, data = NULL, ...) {
+    seen <<- list(xlab = config@xlab, rows = nrow(data))
+    NULL
+  }
+
+  path <- tempfile(fileext = ".csv")
+  utils::write.csv(mtcars, path, row.names = FALSE)
+  compile(Probe(dat_path = path, origin = c(xlab = "default")))
+
+  # Resolved: the method saw a value only resolve() produces.
+  expect_identical(seen[["xlab"]], names(mtcars)[[1L]])
+  # Materialized: the method saw the table, not the path it came from.
+  expect_identical(seen[["rows"]], nrow(mtcars))
+})
+
+test_that("every chart type resolves before it compiles", {
+  # A config whose derived values are visible in the compiled option: if
+  # resolution were skipped, the axis labels would be absent.
+  config <- setup_ScatterConfig(x = "wt", y = "mpg")
+  option <- compile(config, data = mtcars)
+  expect_identical(option@x_axis@name, "wt")
+  expect_identical(option@y_axis@name, "mpg")
+})
+
+test_that("compile() requires data", {
+  expect_error(
+    compile(setup_ScatterConfig(x = "wt", y = "mpg")),
+    class = "rtemis_null_input"
+  )
+})
+
+
+# %% resolve() without data ----
+
+test_that("resolve() derives what it can with no data at all", {
+  # Labels come from the column names, which the config already states; limits
+  # come from the values, which it does not have. Neither is an error.
+  config <- resolve(setup_ScatterConfig(x = "wt", y = "mpg"))
+  expect_identical(config@xlab, "wt")
+  expect_identical(config@ylab, "mpg")
+  expect_null(config@xlim)
+  expect_null(config@ylim)
+})
+
+test_that("resolve() is idempotent", {
+  # compile() resolves up front and a shared builder may resolve again, so
+  # resolving twice has to be the same as resolving once.
+  once <- resolve(setup_ScatterConfig(x = "wt", y = "mpg"), data = mtcars)
+  twice <- resolve(once, data = mtcars)
+  expect_identical(S7::props(once), S7::props(twice))
+})
+
+test_that("resolve() never overwrites a value the author set", {
+  config <- resolve(
+    setup_ScatterConfig(x = "wt", y = "mpg", xlab = "Weight", xlim = c(0, 10)),
+    data = mtcars
+  )
+  expect_identical(config@xlab, "Weight")
+  expect_identical(config@xlim, c(0, 10))
+  expect_identical(config@origin[["xlab"]], "user")
+  expect_identical(config@origin[["ylab"]], "derived")
+})
+
+test_that("resolve() marks derived values as derived", {
+  config <- resolve(setup_ScatterConfig(x = "wt", y = "mpg"), data = mtcars)
+  expect_identical(config@origin[["xlim"]], "derived")
+  expect_identical(config@origin[["x"]], "user")
+  expect_identical(config@origin[["se"]], "default")
+})
+
+test_that("an origin map admits only the three documented values", {
+  expect_error(
+    ScatterConfig(origin = c(x = "guessed")),
+    "must be one of 'user', 'default', 'derived'"
+  )
+  expect_no_error(ScatterConfig(origin = c(x = "derived")))
+})
+
+
+# %% square and equal_axes on a config ----
+
+test_that("a config resolves the common interval into the document", {
+  # The reconciled limits are part of the document, not something the builder
+  # applies on the way past: reading the document back has to draw the same
+  # chart, which it cannot do if the interval lives only in the renderer.
+  data <- data.frame(true = c(1, 2, 3, 4), predicted = c(1.1, 1.9, 3.4, 3.7))
+  config <- resolve(
+    setup_ScatterConfig(
+      x = "true",
+      y = "predicted",
+      square = TRUE,
+      equal_axes = TRUE
+    ),
+    data = data
+  )
+  expect_identical(config@xlim, config@ylim)
+  expect_identical(config@origin[["xlim"]], "derived")
+})
+
+test_that("a config without the flags derives per-axis limits as before", {
+  data <- data.frame(true = c(1, 2, 3, 4), predicted = c(1.1, 1.9, 3.4, 3.7))
+  config <- resolve(
+    setup_ScatterConfig(x = "true", y = "predicted"),
+    data = data
+  )
+  expect_false(identical(config@xlim, config@ylim))
+})
+
+test_that("drawing a config carries its aspect hint to the widget", {
+  data <- data.frame(true = c(1, 2, 3, 4), predicted = c(1.1, 1.9, 3.4, 3.7))
+  widget <- draw(
+    setup_ScatterConfig(
+      x = "true",
+      y = "predicted",
+      square = TRUE,
+      equal_axes = TRUE
+    ),
+    data = data
+  )
+  expect_equal(widget[["x"]][["aspect"]][["ratio"]], 1)
+})
+
+test_that("a chart type with no render hints sends none", {
+  widget <- draw(
+    setup_BarConfig(x = "k", y = "v"),
+    data = data.frame(k = c("a", "b"), v = c(1, 2))
+  )
+  expect_null(widget[["x"]][["aspect"]])
+})
+
+test_that("square and equal_axes survive a round trip through JSON", {
+  path <- tempfile(fileext = ".json")
+  write_chart_config(
+    setup_ScatterConfig(x = "a", y = "b", square = TRUE, equal_axes = TRUE),
+    path
+  )
+  config <- read_chart_config(path)
+  expect_true(config@square)
+  expect_true(config@equal_axes)
+  unlink(path)
+})
+
+test_that("a config on a non-ECharts backend still draws", {
+  # `meta` is the ECharts binding's channel and the Sigma method has no formal
+  # for it, so an empty one must not be forwarded.
+  m <- matrix(
+    c(0, 1, 1, 1, 0, 1, 1, 1, 0),
+    nrow = 3L,
+    dimnames = list(letters[1:3], letters[1:3])
+  )
+  expect_s3_class(draw(setup_NetworkConfig(), data = m), "htmlwidget")
+  expect_s3_class(
+    draw(
+      setup_ChoroplethConfig(location = "st", value = "v"),
+      data = data.frame(st = c("CA", "TX"), v = c(1, 2))
+    ),
+    "htmlwidget"
+  )
+})

@@ -16,6 +16,8 @@ setup_LineConfig(
   block_color = NULL,
   block_opacity = 0.2,
   pad = DEFAULT_PAD,
+  square = FALSE,
+  equal_axes = FALSE,
   xlim = NULL,
   ylim = NULL,
   xlab = NULL,
@@ -55,6 +57,14 @@ palette for this chart. \code{NULL} uses the theme's.}
 
 \item{pad}{Numeric \verb{[0, Inf)}: Fraction of the data range to extend each axis
 by when the limits are not given.}
+
+\item{square}{Logical: If TRUE, draw the plotting box square -- equal height
+and width in pixels, excluding axis labels and margins.}
+
+\item{equal_axes}{Logical: If TRUE, give one data unit the same size in
+pixels on both axes. Set with \code{square} for a plot that is both, such as an
+ROC curve; the two axes are then made to span the same interval. Requires a
+numeric x.}
 
 \item{xlim, ylim}{Optional Numeric: Axis limits, length 2. \code{NULL} derives them
 from the data, padded by \code{pad}.}

@@ -201,7 +201,7 @@ HeatmapConfig <- new_class(
 # %% HEATMAP_ORIGIN_NAMES ----
 HEATMAP_ORIGIN_NAMES <- setdiff(
   names(HeatmapConfig@properties),
-  c("type", "origin", "writer")
+  c("type", PROVENANCE_PROPS)
 )
 
 
@@ -315,6 +315,11 @@ method(compile, HeatmapConfig) <- function(config, data = NULL, ...) {
 #' `compile()` returns an option; a heatmap also derives hints the browser needs
 #' to size its container for square cells. Both come from one call, so this
 #' shared helper runs it and the two callers take what they need.
+#'
+#' Reached two ways: through `compile()`, which has already materialized the
+#' data and resolved the config, and directly from the `draw()` method, which
+#' has not. So it does both itself. Neither is wasted work the first way round:
+#' `config_data()` returns data it is handed, and `resolve()` is idempotent.
 #'
 #' @param config [HeatmapConfig]: The chart configuration.
 #' @param data Optional Matrix: The matrix to plot.

@@ -35,6 +35,12 @@
 #' @param pad Numeric `[0, Inf)`: Fraction of the data range to extend each axis
 #'   by when `xlim` / `ylim` are not given. The default matches base R's
 #'   `xaxs = "r"`, which extends the range by 4% at each end.
+#' @param square Logical: If TRUE, draw the plotting box square -- equal height
+#'   and width in pixels, excluding axis labels and margins.
+#' @param equal_axes Logical: If TRUE, give one data unit the same size in
+#'   pixels on both axes. Set with `square` for a plot that is both, such as a
+#'   true-versus-predicted plot whose identity line runs at 45 degrees; the two
+#'   axes are then made to span the same interval.
 #' @param xlim,ylim Optional Numeric: Axis limits, length 2. `NULL` derives them
 #'   from the data, padded by `pad`.
 #' @param xlab,ylab Optional Character: Axis labels. `NULL` derives them from
@@ -109,6 +115,20 @@ ScatterConfig <- new_class(
       vector = TRUE,
       description = "Series colors, overriding the theme palette. NULL uses the theme's."
     ),
+    square = prop_boolean(
+      FALSE,
+      description = paste(
+        "Draw the plotting box square: equal height and width in pixels,",
+        "excluding axis labels and margins."
+      )
+    ),
+    equal_axes = prop_boolean(
+      FALSE,
+      description = paste(
+        "Give one data unit the same size in pixels on both axes. Combined",
+        "with `square`, both axes are made to span the same interval."
+      )
+    ),
     pad = prop_float(
       DEFAULT_PAD,
       min = 0,
@@ -174,7 +194,7 @@ ScatterConfig <- new_class(
 # only producible by having actually resolved them all.
 SCATTER_ORIGIN_NAMES <- setdiff(
   names(ScatterConfig@properties),
-  c("type", "origin", "writer")
+  c("type", PROVENANCE_PROPS)
 )
 
 
@@ -216,6 +236,8 @@ setup_ScatterConfig <- function(
   fit_alpha = 0.25,
   palette = NULL,
   pad = DEFAULT_PAD,
+  square = FALSE,
+  equal_axes = FALSE,
   xlim = NULL,
   ylim = NULL,
   xlab = NULL,
@@ -245,6 +267,8 @@ setup_ScatterConfig <- function(
     fit_alpha = fit_alpha,
     palette = palette,
     pad = pad,
+    square = square,
+    equal_axes = equal_axes,
     xlim = xlim,
     ylim = ylim,
     xlab = xlab,
@@ -270,17 +294,28 @@ setup_ScatterConfig <- function(
 # one interface's palette into a document would stop another from applying its
 # own. It is left NULL, meaning "use your palette".
 method(resolve, ScatterConfig) <- function(config, data = NULL, ...) {
-  dat <- config_data(config, data)
-  x <- config_column(dat, config@x, "x")
-  y <- config_column(dat, config@y, "y")
+  x <- config_column(data, config@x, "x")
+  y <- config_column(data, config@y, "y")
+  # `square` + `equal_axes` is a statement about the limits, so it is settled
+  # here rather than in the builder: the document then records the interval the
+  # chart is actually drawn on, and reading it back draws the same chart.
+  common <- equal_axis_limits(
+    x,
+    y,
+    config@xlim,
+    config@ylim,
+    config@pad,
+    config@square,
+    config@equal_axes
+  )
   config_derive(
     config,
     list(
       # Labels come from names; a config naming no column derives no label.
       xlab = config@x,
       ylab = config@y,
-      xlim = if (!is.null(x)) calc_limits(x, config@pad),
-      ylim = if (!is.null(y)) calc_limits(y, config@pad)
+      xlim = common[["xlim"]] %||% if (!is.null(x)) calc_limits(x, config@pad),
+      ylim = common[["ylim"]] %||% if (!is.null(y)) calc_limits(y, config@pad)
     )
   )
 }
@@ -291,10 +326,8 @@ method(resolve, ScatterConfig) <- function(config, data = NULL, ...) {
 # derivable value is already present and this is a straight hand-off to the same
 # builder `draw_scatter()` uses -- one implementation, two entry points.
 method(compile, ScatterConfig) <- function(config, data = NULL, ...) {
-  dat <- config_data(config, data)
-  config <- resolve(config, data = dat)
-  x <- config_column(dat, config@x, "x")
-  y <- config_column(dat, config@y, "y")
+  x <- config_column(data, config@x, "x")
+  y <- config_column(data, config@y, "y")
   if (is.null(x) || is.null(y)) {
     abort(
       "A ScatterConfig needs both `x` and `y` set to draw.",
@@ -304,19 +337,34 @@ method(compile, ScatterConfig) <- function(config, data = NULL, ...) {
   scatter_option(
     x = x,
     y = y,
-    size = config_column(dat, config@size, "size"),
-    group = config_column(dat, config@group, "group"),
+    size = config_column(data, config@size, "size"),
+    group = config_column(data, config@group, "group"),
     fit = config@fit,
     se = config@se,
     fit_alpha = config@fit_alpha,
     n_fit = config@n_fit,
     palette = config@palette,
     pad = config@pad,
+    square = config@square,
+    equal_axes = config@equal_axes,
     xlim = config@xlim,
     ylim = config@ylim,
     xlab = config@xlab,
     ylab = config@ylab,
     title = config@title,
     margins = config_margins(config) %||% DEFAULT_MARGINS
+  )
+}
+
+
+# %% render_meta.ScatterConfig ----
+# A square or equally-scaled plot is solved in the browser, from the ratio and
+# padding derived here. The limits are already reconciled by resolve(), so this
+# only reads what compile() produced.
+method(render_meta, ScatterConfig) <- function(config, option) {
+  aspect_meta(
+    option,
+    square = config@square,
+    equal_axes = config@equal_axes
   )
 }

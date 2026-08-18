@@ -10,16 +10,18 @@
 # `container`, `min_items`, `unique_items`, `allow_empty`, `description`), so
 # the emitter below is largely a field rename plus a wrapper.
 #
-# Two rules it enforces, both from `plan/draw-schemas.md`:
+# Two rules it enforces:
 #
 # 1. **No `default` is ever emitted.** A default is what an interface chooses
 #    to fill in, not a fact about the document, and interfaces are expected to
 #    differ -- a chart pane in an IDE and a large web canvas should not be
 #    forced to agree. Round-trip fidelity comes from writing *resolved*
 #    documents, not from sharing defaults.
-# 2. **Nothing is required** beyond the discriminator, which carries the
-#    document's shape. A config is partial by nature: the author sets a subset
-#    and the interface fills in the rest.
+# 2. **An input config requires nothing** beyond the discriminator, which
+#    carries the document's shape. A config is partial by nature: the author
+#    sets a subset and the interface fills in the rest. The `complete` variant
+#    requires every property, which is a claim about a *written* document
+#    rather than a constraint on what an author has to type.
 #
 # Each leaf is self-contained: it declares its own `type` constant and closes
 # with `additionalProperties: false`, so it validates standalone rather than
@@ -134,10 +136,13 @@ schema_property <- function(spec) {
 #' - `complete = FALSE` (an **input config**) requires only `type`. The author
 #'   sets a subset and the interface fills in the rest.
 #' - `complete = TRUE` (an **output config**) requires every property, so a
-#'   document that claims to be complete can be checked rather than trusted.
+#'   document that claims to be complete can be checked rather than trusted. The
+#'   chart's own properties may still be null -- "this chart has no title" is a
+#'   fact worth recording -- but the provenance maps may not: a document that
+#'   cannot say where its values came from is not complete, whatever it claims.
 #'
 #' Neither emits a `default`: what an interface fills in is not a fact about
-#' the document. See `plan/draw-schemas.md`.
+#' the document.
 #'
 #' @param cls S7 class: A [ChartConfig] subclass.
 #' @param id Character: The schema's `$id` URL.
@@ -200,6 +205,10 @@ chart_schema <- function(
         "with one, or exclude it from the published class.",
         class = c("rtemis_value_error", "rtemis_input_error")
       )
+    }
+    if (complete && nm %in% PROVENANCE_PROPS) {
+      # Required *and* non-null in an output config: see @details above.
+      spec[["nullable"]] <- FALSE
     }
     out[[nm]] <- schema_property(spec)
   }

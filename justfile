@@ -125,10 +125,12 @@ spell-update:
     cd {{r_dir}} && {{rscript}} -e "spelling::update_wordlist(confirm = FALSE)"
     @just _msg "Done"
 
-# Lint package source for unused objects (variables/arguments)
+# Lint package source for unused objects (variables/arguments).
+# Loads the package first: without it lintr resolves each file on its own and
+# reports every cross-file internal object as undefined.
 lint:
     @just _msg "─── Linting {{pkg}} source for unused objects... ───"
-    cd {{r_dir}} && {{rscript}} -e "l <- lintr::lint_dir('R', linters = list(lintr::object_usage_linter())); print(l); if (length(l) > 0L) quit(status = 1L)"
+    cd {{r_dir}} && {{rscript}} -e "suppressMessages(pkgload::load_all('.', quiet = TRUE)); l <- lintr::lint_dir('R', linters = list(lintr::object_usage_linter())); print(l); if (length(l) > 0L) quit(status = 1L)"
     @just _msg "Done"
 
 # Check R code formatting without modifying files (CI-friendly; fails if unformatted)

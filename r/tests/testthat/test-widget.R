@@ -1258,3 +1258,162 @@ test_that("draw_boxplot xlab applies in grouped multi-variable branch", {
   expect_equal(w$x$option$xAxis[["name"]], "Variable")
   expect_equal(w$x$option$yAxis[["name"]], "Value")
 })
+
+
+# %% unrecognized draw() arguments ----
+
+# Every draw() method takes `...` so a backend can declare arguments the generic
+# does not know about, and those are declared after `...` so they must be named.
+# That leaves `...` empty in any correct call -- and makes a name landing in it
+# a name the method does not have. Silently dropping it is the worst way for a
+# typo to behave: the chart still renders, just not as asked.
+
+test_that("draw() rejects an argument it does not recognize", {
+  option <- scatter_option(x = 1:5, y = 1:5)
+  expect_error(
+    draw(option, elementId = "typo"),
+    class = "rtemis_value_error"
+  )
+  expect_error(draw(option, elementId = "typo"), "elementId")
+})
+
+test_that("draw() names every unrecognized argument it was given", {
+  option <- scatter_option(x = 1:5, y = 1:5)
+  expect_error(draw(option, foo = 1, bar = 2), "`foo`, `bar`")
+})
+
+test_that("draw() accepts the arguments its backends declare", {
+  option <- scatter_option(x = 1:5, y = 1:5)
+  widget <- draw(option, element_id = "kept", renderer = "svg")
+  expect_identical(widget[["elementId"]], "kept")
+})
+
+test_that("the guard reaches every backend", {
+  graph <- graph_option(
+    graph_from_matrix(matrix(
+      c(0, 1, 1, 0),
+      nrow = 2L,
+      dimnames = list(c("a", "b"), c("a", "b"))
+    ))
+  )
+  expect_error(draw(graph, elementId = "typo"), class = "rtemis_value_error")
+})
+
+test_that("a config's draw() forwards the guard rather than swallowing it", {
+  expect_error(
+    draw(setup_ScatterConfig(x = "wt", y = "mpg"), data = mtcars, foo = 1),
+    class = "rtemis_value_error"
+  )
+})
+
+
+# %% square and equal_axes ----
+
+# Two separate requests: `square` is about the shape of the plotting box,
+# `equal_axes` about its scale. The box itself is solved in the browser, so
+# what R has to get right is the `aspect` hint it sends -- the ratio, and the
+# padding to reserve outside the grid.
+
+test_that("equal_axes sets the ratio from the two axis spans", {
+  # x spans ten units, y spans one: equal scaling means a wide, short box.
+  w <- draw_scatter(x = c(0, 10), y = c(0, 1), equal_axes = TRUE)
+  expect_equal(w[["x"]][["aspect"]][["ratio"]], 0.1)
+})
+
+test_that("square asks for a ratio of 1 and leaves the limits alone", {
+  w <- draw_scatter(x = c(0, 10), y = c(0, 1), square = TRUE)
+  expect_equal(w[["x"]][["aspect"]][["ratio"]], 1)
+  # The spans still differ; only the box is square.
+  expect_equal(w[["x"]][["option"]][["xAxis"]][["min"]], -0.4)
+  expect_equal(w[["x"]][["option"]][["yAxis"]][["min"]], -0.04)
+})
+
+test_that("both together put the axes on one common interval", {
+  w <- draw_scatter(x = c(0, 10), y = c(0, 1), square = TRUE, equal_axes = TRUE)
+  expect_equal(w[["x"]][["aspect"]][["ratio"]], 1)
+  expect_equal(
+    w[["x"]][["option"]][["xAxis"]][["min"]],
+    w[["x"]][["option"]][["yAxis"]][["min"]]
+  )
+  expect_equal(
+    w[["x"]][["option"]][["xAxis"]][["max"]],
+    w[["x"]][["option"]][["yAxis"]][["max"]]
+  )
+})
+
+test_that("one stated limit governs both axes", {
+  w <- draw_scatter(
+    x = c(1, 4),
+    y = c(1.1, 3.7),
+    xlim = c(0, 5),
+    square = TRUE,
+    equal_axes = TRUE
+  )
+  expect_equal(w[["x"]][["option"]][["yAxis"]][["min"]], 0)
+  expect_equal(w[["x"]][["option"]][["yAxis"]][["max"]], 5)
+})
+
+test_that("two stated limits that disagree are an error, not an override", {
+  expect_error(
+    draw_scatter(
+      x = c(0, 10),
+      y = c(0, 1),
+      xlim = c(0, 10),
+      ylim = c(0, 1),
+      square = TRUE,
+      equal_axes = TRUE
+    ),
+    class = "rtemis_value_error"
+  )
+})
+
+test_that("the aspect carries the padding the browser needs", {
+  w <- draw_scatter(
+    x = c(0, 1),
+    y = c(0, 1),
+    square = TRUE,
+    margins = c(top = 10, right = 20, bottom = 30, left = 40)
+  )
+  aspect <- w[["x"]][["aspect"]]
+  expect_equal(aspect[["topPx"]], 10)
+  expect_equal(aspect[["rightPx"]], 20)
+  expect_equal(aspect[["botPx"]], 30)
+  expect_equal(aspect[["leftPx"]], 40)
+  # No preferred width: the box fills the container, and `width` constrains it.
+  expect_null(aspect[["widthPx"]])
+})
+
+test_that("neither flag means no aspect at all", {
+  expect_null(draw_scatter(x = 1:3, y = 1:3)[["x"]][["aspect"]])
+})
+
+test_that("a margin the browser cannot know is refused", {
+  # ECharts would choose the unset sides itself, and the container height
+  # cannot be solved without knowing them.
+  expect_error(
+    draw_scatter(
+      x = c(0, 1),
+      y = c(0, 1),
+      square = TRUE,
+      margins = c(left = 80)
+    ),
+    class = "rtemis_value_error"
+  )
+})
+
+test_that("draw_line takes the same two arguments", {
+  roc <- draw_line(
+    x = c(0, 0.2, 0.6, 1),
+    y = c(0, 0.55, 0.85, 1),
+    square = TRUE,
+    equal_axes = TRUE
+  )
+  expect_equal(roc[["x"]][["aspect"]][["ratio"]], 1)
+})
+
+test_that("equal_axes needs a numeric x", {
+  expect_error(
+    draw_line(x = c("a", "b"), y = c(1, 2), equal_axes = TRUE),
+    class = "rtemis_value_error"
+  )
+})

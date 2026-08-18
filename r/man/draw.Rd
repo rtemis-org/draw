@@ -38,9 +38,11 @@ animation, which matters for charts with many points, where animating
 every interactive update is expensive. Ignored by the Sigma and MapLibre
 backends, which have no ECharts animation to disable.}
 
-\item{...}{Backend-specific arguments. ECharts accepts \code{renderer}
-(Character \{"canvas", "svg"\}) and \code{meta} (named list of extra payload
-fields, used internally e.g. by \code{\link[=draw_heatmap]{draw_heatmap()}}).
+\item{...}{Backend-specific arguments, which must be named. ECharts accepts
+\code{renderer} (Character \{"canvas", "svg"\}) and \code{meta} (named list of extra
+payload fields, used internally e.g. by \code{\link[=draw_heatmap]{draw_heatmap()}}). Any other name
+is an error rather than a silent no-op, so a typo cannot quietly change
+what is drawn.
 
 Two \code{meta} fields are read by the ECharts JS binding and are part of its
 contract, because they need the container width, which only the browser

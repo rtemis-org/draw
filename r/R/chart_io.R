@@ -5,16 +5,19 @@
 # Reading and writing chart configs as JSON. This is the point of the schema:
 # write a config in one interface, recreate the chart in another.
 #
-# The model (see `plan/draw-schemas.md`):
+# The model:
 #
 # - An **input config** is what an author writes: a subset of the properties,
-#   with no `origin` and no `writer`.
-# - An **output config** is what an interface writes back: every value it used,
-#   plus an `origin` map saying where each came from and a `writer` saying who
-#   produced it.
+#   with no `origin` and no `writer`. This is what `write_chart_config()`
+#   produces by default.
+# - An **output config** is what an interface writes back: every property,
+#   present even where its value is null, plus an `origin` map saying where each
+#   came from and a `writer` saying who produced it. This is
+#   `write_chart_config(complete = TRUE)`.
 #
-# Both are the same kind of document and validate against the same schema; they
-# differ only in how much is filled in. Reading is `do.call(setup_*, x)`, so a
+# Both are the same kind of document and differ only in how much is filled in;
+# they validate against `schema.json` and `complete.json` respectively, which
+# differ only in what they require. Reading is `do.call(setup_*, x)`, so a
 # document from any source arrives fully resolved through the same seam a
 # hand-written call goes through.
 
@@ -90,6 +93,10 @@ chart_origin <- function(call, names) {
 # %% chart_writer ----
 #' Identify this package as the writer of a config
 #'
+#' Stamped onto every complete document by [write_chart_config()], overwriting
+#' any writer already there: the interface that wrote *this* file is the one
+#' that produced it, whoever produced the one it was read from.
+#'
 #' @return Named character vector: `name` and `version`.
 #'
 #' @author EDG
@@ -103,14 +110,82 @@ chart_writer <- function() {
 } # /rtemis.draw::chart_writer
 
 
+# %% settable_props ----
+#' The properties a config's author and interface set
+#'
+#' Everything except the discriminator, which is a class constant, and the two
+#' provenance maps, which describe the document rather than the chart.
+#'
+#' @param config [ChartConfig]: The chart configuration.
+#'
+#' @return Character: Property names.
+#'
+#' @author EDG
+#' @keywords internal
+#' @noRd
+settable_props <- function(config) {
+  setdiff(
+    names(S7::S7_class(config)@properties),
+    c("type", PROVENANCE_PROPS)
+  )
+} # /rtemis.draw::settable_props
+
+
+# %% as_output_config ----
+#' Turn a config into the output config a complete document records
+#'
+#' Stamps this package as the writer and checks that the config can honestly
+#' claim to be complete.
+#'
+#' The check is on `origin`: a complete document has to say where every one of
+#' its values came from, and only `setup_*()` builds a map that covers every
+#' property. A config from a bare constructor has none, and one from an older
+#' writer may cover fewer properties than the class now declares -- in both
+#' cases writing it as complete would assert a provenance nobody established.
+#'
+#' @param config [ChartConfig]: The chart configuration.
+#'
+#' @return [ChartConfig], with `writer` set.
+#'
+#' @author EDG
+#' @keywords internal
+#' @noRd
+as_output_config <- function(config) {
+  absent <- setdiff(settable_props(config), names(config@origin))
+  if (length(absent) > 0L) {
+    abort(
+      "A complete config needs an `origin` entry for every property; ",
+      length(absent),
+      " are missing: ",
+      paste(absent, collapse = ", "),
+      ". Build the config with setup_",
+      S7::S7_class(config)@name,
+      "(), which records one per property.",
+      class = c("rtemis_value_error", "rtemis_input_error")
+    )
+  }
+  config@writer <- chart_writer()
+  config
+} # /rtemis.draw::as_output_config
+
+
 # %% chart_config_to_list ----
 #' Convert a chart config to a plain list
 #'
-#' Drops unset properties, so an authored config stays as small as it was
-#' authored. `type` is always kept: it carries the document's shape and is the
-#' one key the schema requires.
+#' @details
+#' Two forms, matching the two the schema publishes:
+#'
+#' - `complete = FALSE` (default) drops unset properties, so an authored config
+#'   stays as small as it was authored. `type` is always kept: it carries the
+#'   document's shape and is the one key the schema requires.
+#' - `complete = TRUE` keeps every property, unset ones included, so they
+#'   serialize as explicit nulls -- and stamps the `writer`. A consumer of such
+#'   a document can read every key directly instead of reproducing this
+#'   package's defaults. Requires a full `origin` map; see [write_chart_config()].
 #'
 #' @param config [ChartConfig]: The chart configuration.
+#' @param complete Logical: If TRUE, emit the output-config form: every
+#'   property, plus provenance.
 #'
 #' @return Named list, ready for [jsonlite::toJSON()].
 #'
@@ -119,15 +194,21 @@ chart_writer <- function() {
 #'
 #' @examples
 #' chart_config_to_list(setup_ScatterConfig(x = "wt", y = "mpg"))
-chart_config_to_list <- function(config) {
+chart_config_to_list <- function(config, complete = FALSE) {
   if (!S7_inherits(config, ChartConfig)) {
     abort(
       "`config` must be a ChartConfig.",
       class = c("rtemis_type_error", "rtemis_input_error")
     )
   }
+  check_logical_scalar(complete)
+  if (complete) {
+    config <- as_output_config(config)
+  }
   values <- S7::props(config)
-  values <- values[!vapply(values, is.null, logical(1L))]
+  if (!complete) {
+    values <- values[!vapply(values, is.null, logical(1L))]
+  }
   # jsonlite serializes an atomic vector as an array whatever its names, and
   # `auto_unbox` collapses a length-1 one to a scalar. Neither matches what the
   # schema declares, so shape each value by its *declared container* rather than
@@ -136,6 +217,12 @@ chart_config_to_list <- function(config) {
   #   array -> I(), so a one-element array stays an array
   properties <- S7::S7_class(config)@properties
   for (nm in names(values)) {
+    # An unset property is a null on the wire, which has no container to shape
+    # -- and assigning NULL into a list would delete the key rather than empty
+    # it, dropping the very entry `complete` exists to keep.
+    if (is.null(values[[nm]])) {
+      next
+    }
     spec <- prop_spec(properties[[nm]])
     container <- if (is.null(spec)) "none" else spec[["container"]]
     if (identical(container, "map")) {
@@ -151,8 +238,23 @@ chart_config_to_list <- function(config) {
 # %% write_chart_config ----
 #' Write a chart config to a JSON file
 #'
+#' @details
+#' `complete = FALSE` (default) writes an **input config**: only the properties
+#' that are set. It validates against the chart's `schema.json`.
+#'
+#' `complete = TRUE` writes an **output config**: every property, unset ones as
+#' explicit nulls, with this package stamped as the `writer`. It validates
+#' against `complete.json`, and is what an interface hands to another interface
+#' -- nothing is left for the reader to infer. Resolve the config first, so that
+#' the values the data determines are written as the derived facts they are:
+#'
+#' ```r
+#' write_chart_config(resolve(config, data), path, complete = TRUE)
+#' ```
+#'
 #' @param config [ChartConfig]: The chart configuration.
 #' @param path Character: Destination file.
+#' @param complete Logical: If TRUE, write the output-config form.
 #'
 #' @return `path`, invisibly.
 #'
@@ -162,11 +264,15 @@ chart_config_to_list <- function(config) {
 #' @examples
 #' path <- tempfile(fileext = ".json")
 #' write_chart_config(setup_ScatterConfig(x = "wt", y = "mpg"), path)
+#'
+#' # An output config: resolved against the data, then written in full.
+#' cfg <- resolve(setup_ScatterConfig(x = "wt", y = "mpg"), data = mtcars)
+#' write_chart_config(cfg, path, complete = TRUE)
 #' unlink(path)
-write_chart_config <- function(config, path) {
+write_chart_config <- function(config, path, complete = FALSE) {
   check_character_scalar(path)
   json <- jsonlite::toJSON(
-    chart_config_to_list(config),
+    chart_config_to_list(config, complete = complete),
     auto_unbox = TRUE,
     pretty = TRUE,
     null = "null",
@@ -228,7 +334,7 @@ read_chart_config <- function(x) {
   setup <- get(entry[["setup"]], envir = asNamespace("rtemis.draw"))
   # `type` is a constant on the class, and `origin` / `writer` are provenance a
   # reader restores rather than re-resolves, so none is a setup_* argument.
-  args <- parsed[setdiff(names(parsed), c("type", "origin", "writer"))]
+  args <- parsed[setdiff(names(parsed), c("type", PROVENANCE_PROPS))]
   properties <- entry[["cls"]]@properties
   args <- stats::setNames(
     lapply(names(args), function(nm) {
@@ -237,7 +343,7 @@ read_chart_config <- function(x) {
     names(args)
   )
   config <- do.call(setup, args)
-  for (nm in c("origin", "writer")) {
+  for (nm in PROVENANCE_PROPS) {
     if (!is.null(parsed[[nm]])) {
       prop(config, nm) <- unlist(parsed[[nm]])
     }

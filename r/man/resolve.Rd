@@ -10,7 +10,7 @@ resolve(config, data = NULL, ...)
 \item{config}{\link{ChartConfig}: The chart configuration.}
 
 \item{data}{Optional Data frame or named list: The data to plot. When \code{NULL},
-the config's \code{dat_path} is read instead.}
+the config's \code{dat_path} is read if it has one.}
 
 \item{...}{Passed to methods.}
 }
@@ -38,6 +38,20 @@ pane is wrong in a large web canvas.
 \item \strong{Anything with nothing to derive from.} Labels come from column names, so
 a config that names no columns gets no labels.
 }
+
+Resolving is \strong{idempotent} and never overwrites a value that is already
+set, so resolving twice is the same as resolving once. \code{\link[=compile]{compile()}} relies on
+that: it resolves up front, and a builder it shares with \code{\link[=draw]{draw()}} may resolve
+again without changing the result.
+
+Data is optional. With none available, the values that need it are simply not
+derived; the ones that come from the column names still are. That makes
+\code{resolve()} total -- it has no failing input -- so a caller can always ask for
+the most complete config obtainable from what it has.
+}
+\examples{
+# Axis limits come from the data; the labels come from the column names.
+resolve(setup_ScatterConfig(x = "wt", y = "mpg"), data = mtcars)@xlim
 }
 \author{
 EDG

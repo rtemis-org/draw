@@ -71,7 +71,7 @@ PieConfig <- new_class(
 # %% PIE_ORIGIN_NAMES ----
 PIE_ORIGIN_NAMES <- setdiff(
   names(PieConfig@properties),
-  c("type", "origin", "writer")
+  c("type", PROVENANCE_PROPS)
 )
 
 
@@ -133,10 +133,8 @@ method(resolve, PieConfig) <- function(config, data = NULL, ...) {
 
 # %% compile.PieConfig ----
 method(compile, PieConfig) <- function(config, data = NULL, ...) {
-  dat <- config_data(config, data)
-  config <- resolve(config, data = dat)
-  values <- config_column(dat, config@values, "values")
-  labels <- config_column(dat, config@labels, "labels")
+  values <- config_column(data, config@values, "values")
+  labels <- config_column(data, config@labels, "labels")
   if (is.null(values) || is.null(labels)) {
     abort(
       "A PieConfig needs both `values` and `labels` set to draw.",

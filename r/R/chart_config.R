@@ -22,8 +22,20 @@
 #    arguments to `draw()` and are deliberately not properties. That is what
 #    lets one document render correctly in an IDE pane and a web app, adapting
 #    its presentation while keeping its meaning.
-#
-# See `plan/draw-schemas.md`.
+
+# %% ORIGIN_VALUES ----
+# The three things a value's provenance can be. Named here so the S7 validator,
+# the emitted schema's `enum`, and `config_derive()` cannot drift apart.
+ORIGIN_VALUES <- c("user", "default", "derived")
+
+
+# %% PROVENANCE_PROPS ----
+# The properties that describe the *document* rather than the chart. They are
+# not `setup_*()` values, they carry no origin of their own, and they are the
+# two a complete document must state -- so every place that has to treat them
+# apart from the chart's own properties reads them from here.
+PROVENANCE_PROPS <- c("origin", "writer")
+
 
 # %% ChartConfig ----
 #' Chart Configuration Base Class
@@ -76,6 +88,7 @@ ChartConfig <- new_class(
     # per property.
     origin = prop_string(
       NULL,
+      enum = ORIGIN_VALUES,
       nullable = TRUE,
       map = TRUE,
       description = paste(
@@ -127,6 +140,13 @@ prop_chart_type <- function(type) {
 #' an [EChartsOption] for ECharts charts. This is where a config's column names
 #' are resolved against actual data.
 #'
+#' @details
+#' The generic does the two steps every chart needs before its own translation
+#' can start, so that no method can forget one: it materializes the data (from
+#' `data`, or from the config's `dat_path`) and [resolve()]s the config against
+#' it. Methods therefore always receive a **resolved** config and **non-NULL**
+#' data, and are pure translation.
+#'
 #' @param config [ChartConfig]: The chart configuration.
 #' @param data Optional Data frame or named list: The data to plot. When `NULL`,
 #'   the config's `dat_path` is read instead.
@@ -140,6 +160,12 @@ compile <- new_generic(
   "compile",
   "config",
   function(config, data = NULL, ...) {
+    # Rebinding before S7_dispatch() is what makes "resolved config, real data"
+    # an invariant of the generic rather than a convention each method has to
+    # remember. `resolve()` is idempotent, so a builder shared with draw() may
+    # resolve again without consequence.
+    data <- config_data(config, data)
+    config <- resolve(config, data = data)
     S7_dispatch()
   }
 )
@@ -153,23 +179,55 @@ compile <- new_generic(
 #'
 #' @param config [ChartConfig]: The chart configuration.
 #' @param data Optional Data frame or named list: Data supplied by the caller.
+#' @param required Logical: If TRUE, having no data at all is an error. FALSE
+#'   returns `NULL` instead, which is what [resolve()] wants: a config with no
+#'   data can still derive labels from the column names it states.
 #'
-#' @return Data frame or named list.
+#' @return Data frame, matrix, or other object read from `dat_path`; `NULL` when
+#'   there is no data and `required` is FALSE.
 #'
 #' @author EDG
 #' @keywords internal
 #' @noRd
-config_data <- function(config, data = NULL) {
+config_data <- function(config, data = NULL, required = TRUE) {
   if (!is.null(data)) {
     return(data)
   }
   path <- config@dat_path
   if (is.null(path)) {
+    if (!required) {
+      return(NULL)
+    }
     abort(
       "No data: pass `data` to draw(), or set `dat_path` on the config.",
       class = c("rtemis_null_input", "rtemis_input_error")
     )
   }
+  read_dat(path)
+} # /rtemis.draw::config_data
+
+
+# %% read_dat ----
+#' Read a config's data file
+#'
+#' Dispatches on the file extension, because a config's binding is not always a
+#' table: a heatmap binds a matrix, a network an adjacency matrix, an annotated
+#' protein diagram an `A3` object. CSV covers the tabular charts; RDS covers
+#' every one of them, since it round-trips any R object exactly.
+#'
+#' CSV is read with `check.names = FALSE`. R's default would rewrite
+#' `"Bill Length"` to `"Bill.Length"`, and a config names its columns as they
+#' are written -- so the default would make a config unable to find the column
+#' it names.
+#'
+#' @param path Character: Path to the data file.
+#'
+#' @return The object read from `path`.
+#'
+#' @author EDG
+#' @keywords internal
+#' @noRd
+read_dat <- function(path) {
   if (!file.exists(path)) {
     abort(
       "`dat_path` does not exist: ",
@@ -178,8 +236,23 @@ config_data <- function(config, data = NULL) {
       class = c("rtemis_value_error", "rtemis_input_error")
     )
   }
-  utils::read.csv(path, stringsAsFactors = FALSE)
-} # /rtemis.draw::config_data
+  switch(
+    tolower(tools::file_ext(path)),
+    csv = utils::read.csv(
+      path,
+      check.names = FALSE,
+      stringsAsFactors = FALSE
+    ),
+    rds = readRDS(path),
+    abort(
+      "`dat_path` must name a .csv or .rds file; got '",
+      basename(path),
+      "'. Use .rds for data that is not a table, such as a heatmap matrix or ",
+      "a network adjacency matrix.",
+      class = c("rtemis_value_error", "rtemis_input_error")
+    )
+  )
+} # /rtemis.draw::read_dat
 
 
 # %% config_column ----
@@ -189,7 +262,11 @@ config_data <- function(config, data = NULL) {
 #' in the data is a config error and is reported as one, naming both the missing
 #' column and what is available.
 #'
-#' @param data Data frame or named list: The resolved data.
+#' @param data Optional Data frame or named list: The resolved data. `NULL`
+#'   returns `NULL`, which is what [resolve()] wants: with no data there are no
+#'   values to derive from, and that is not an error. `compile()` guarantees its
+#'   methods non-NULL data, so the lookup below is never skipped where a missing
+#'   column would matter.
 #' @param column Optional Character: Column name; `NULL` returns `NULL`.
 #' @param argument Character: The config property being resolved, for the error
 #'   message.
@@ -200,7 +277,7 @@ config_data <- function(config, data = NULL) {
 #' @keywords internal
 #' @noRd
 config_column <- function(data, column, argument) {
-  if (is.null(column)) {
+  if (is.null(column) || is.null(data)) {
     return(NULL)
   }
   if (!column %in% names(data)) {
@@ -274,19 +351,36 @@ config_margins <- function(config) {
 #' - **Anything with nothing to derive from.** Labels come from column names, so
 #'   a config that names no columns gets no labels.
 #'
+#' Resolving is **idempotent** and never overwrites a value that is already
+#' set, so resolving twice is the same as resolving once. [compile()] relies on
+#' that: it resolves up front, and a builder it shares with [draw()] may resolve
+#' again without changing the result.
+#'
+#' Data is optional. With none available, the values that need it are simply not
+#' derived; the ones that come from the column names still are. That makes
+#' `resolve()` total -- it has no failing input -- so a caller can always ask for
+#' the most complete config obtainable from what it has.
+#'
 #' @param config [ChartConfig]: The chart configuration.
 #' @param data Optional Data frame or named list: The data to plot. When `NULL`,
-#'   the config's `dat_path` is read instead.
+#'   the config's `dat_path` is read if it has one.
 #' @param ... Passed to methods.
 #'
 #' @return [ChartConfig] subclass object, with every derivable value filled in.
 #'
 #' @author EDG
 #' @export
+#'
+#' @examples
+#' # Axis limits come from the data; the labels come from the column names.
+#' resolve(setup_ScatterConfig(x = "wt", y = "mpg"), data = mtcars)@xlim
 resolve <- new_generic(
   "resolve",
   "config",
   function(config, data = NULL, ...) {
+    # Materialized once here so that no method has to, and `required = FALSE`
+    # so that having no data is a smaller resolution rather than an error.
+    data <- config_data(config, data, required = FALSE)
     S7_dispatch()
   }
 )
@@ -315,6 +409,8 @@ config_derive <- function(config, values) {
       next
     }
     prop(config, nm) <- values[[nm]]
+    # A config built by its bare constructor carries no origin map -- provenance
+    # is what `setup_*()` adds -- so there is nothing to stamp.
     if (!is.null(origin) && nm %in% names(origin)) {
       origin[[nm]] <- "derived"
     }
@@ -322,6 +418,39 @@ config_derive <- function(config, values) {
   config@origin <- origin
   config
 } # /rtemis.draw::config_derive
+
+
+# %% render_meta ----
+#' Render hints a config's chart needs but its document does not carry
+#'
+#' Some charts need the browser to solve part of their geometry, because it
+#' depends on the container width and nothing on this side knows that. Those
+#' hints are derived from the compiled option at draw time and passed as `meta`;
+#' they are never written into a document, because a box solved for an IDE pane
+#' is the wrong box for a large web canvas.
+#'
+#' Most charts have none, so the base method returns nothing and a chart type
+#' opts in by overriding.
+#'
+#' @param config [ChartConfig]: The chart configuration.
+#' @param option The compiled render option.
+#'
+#' @return Named list, empty when the chart needs no hints.
+#'
+#' @author EDG
+#' @keywords internal
+#' @noRd
+render_meta <- new_generic(
+  "render_meta",
+  "config",
+  function(config, option) {
+    S7_dispatch()
+  }
+)
+
+method(render_meta, ChartConfig) <- function(config, option) {
+  list()
+}
 
 
 # %% draw.ChartConfig ----
@@ -338,8 +467,28 @@ method(draw, ChartConfig) <- function(
   ...,
   data = NULL
 ) {
+  built <- compile(option, data = data)
+  meta <- render_meta(option, built)
+  # `meta` is the ECharts binding's channel; the Sigma and MapLibre methods have
+  # no formal for it. Forwarding an empty one anyway would make draw() an error
+  # on every config those backends serve -- while forwarding a *non-empty* one
+  # to a backend that cannot carry it should be exactly that, rather than hints
+  # silently going nowhere. So it travels only when there is something to send.
+  if (length(meta) > 0L) {
+    return(draw(
+      built,
+      theme = theme,
+      width = width,
+      height = height,
+      element_id = element_id,
+      filename = filename,
+      animation = animation,
+      meta = meta,
+      ...
+    ))
+  }
   draw(
-    compile(option, data = data),
+    built,
     theme = theme,
     width = width,
     height = height,

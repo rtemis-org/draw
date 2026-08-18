@@ -23,6 +23,9 @@ Imports:
     rtemis.core (>= 0.4.1),
     S7,
     signal,
+    stats,
+    tools,
+    utils,
     viridisLite
 Suggests:
     mgcv,

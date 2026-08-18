@@ -4,12 +4,14 @@
 \alias{write_chart_config}
 \title{Write a chart config to a JSON file}
 \usage{
-write_chart_config(config, path)
+write_chart_config(config, path, complete = FALSE)
 }
 \arguments{
 \item{config}{\link{ChartConfig}: The chart configuration.}
 
 \item{path}{Character: Destination file.}
+
+\item{complete}{Logical: If TRUE, write the output-config form.}
 }
 \value{
 \code{path}, invisibly.
@@ -17,9 +19,26 @@ write_chart_config(config, path)
 \description{
 Write a chart config to a JSON file
 }
+\details{
+\code{complete = FALSE} (default) writes an \strong{input config}: only the properties
+that are set. It validates against the chart's \code{schema.json}.
+
+\code{complete = TRUE} writes an \strong{output config}: every property, unset ones as
+explicit nulls, with this package stamped as the \code{writer}. It validates
+against \code{complete.json}, and is what an interface hands to another interface
+-- nothing is left for the reader to infer. Resolve the config first, so that
+the values the data determines are written as the derived facts they are:
+
+\if{html}{\out{<div class="sourceCode r">}}\preformatted{write_chart_config(resolve(config, data), path, complete = TRUE)
+}\if{html}{\out{</div>}}
+}
 \examples{
 path <- tempfile(fileext = ".json")
 write_chart_config(setup_ScatterConfig(x = "wt", y = "mpg"), path)
+
+# An output config: resolved against the data, then written in full.
+cfg <- resolve(setup_ScatterConfig(x = "wt", y = "mpg"), data = mtcars)
+write_chart_config(cfg, path, complete = TRUE)
 unlink(path)
 }
 \author{

@@ -113,7 +113,7 @@ BarConfig <- new_class(
 # The properties an origin map covers: every settable one.
 BAR_ORIGIN_NAMES <- setdiff(
   names(BarConfig@properties),
-  c("type", "origin", "writer")
+  c("type", PROVENANCE_PROPS)
 )
 
 
@@ -213,9 +213,7 @@ bar_value_label <- function(config) {
 # One bound column becomes a single series; several become a named list, one per
 # column, which is the shape `bar_option()` already takes from `draw_bar()`.
 method(compile, BarConfig) <- function(config, data = NULL, ...) {
-  dat <- config_data(config, data)
-  config <- resolve(config, data = dat)
-  x <- config_column(dat, config@x, "x")
+  x <- config_column(data, config@x, "x")
   if (is.null(x) || is.null(config@y)) {
     abort(
       "A BarConfig needs both `x` and `y` set to draw.",
@@ -223,7 +221,7 @@ method(compile, BarConfig) <- function(config, data = NULL, ...) {
     )
   }
   values <- lapply(config@y, function(column) {
-    config_column(dat, column, "y")
+    config_column(data, column, "y")
   })
   names(values) <- config@y
   bar_option(

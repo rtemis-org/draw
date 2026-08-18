@@ -162,7 +162,7 @@ SpectrogramConfig <- new_class(
 # %% SPECTROGRAM_ORIGIN_NAMES ----
 SPECTROGRAM_ORIGIN_NAMES <- setdiff(
   names(SpectrogramConfig@properties),
-  c("type", "origin", "writer")
+  c("type", PROVENANCE_PROPS)
 )
 
 
@@ -261,6 +261,11 @@ method(resolve, SpectrogramConfig) <- function(config, data = NULL, ...) {
 
 # %% spectrogram_built ----
 #' Build a spectrogram's option and render hints together
+#'
+#' Reached two ways: through `compile()`, which has already materialized the
+#' data and resolved the config, and directly from the `draw()` method, which
+#' has not. So it does both itself. Neither is wasted work the first way round:
+#' `config_data()` returns data it is handed, and `resolve()` is idempotent.
 #'
 #' @param config [SpectrogramConfig]: The chart configuration.
 #' @param data Optional Numeric or Matrix: Signal or spectrogram matrix.

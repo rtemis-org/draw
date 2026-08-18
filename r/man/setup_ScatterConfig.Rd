@@ -15,6 +15,8 @@ setup_ScatterConfig(
   fit_alpha = 0.25,
   palette = NULL,
   pad = DEFAULT_PAD,
+  square = FALSE,
+  equal_axes = FALSE,
   xlim = NULL,
   ylim = NULL,
   xlab = NULL,
@@ -51,6 +53,14 @@ palette for this chart. \code{NULL} uses the theme's.}
 \item{pad}{Numeric \verb{[0, Inf)}: Fraction of the data range to extend each axis
 by when \code{xlim} / \code{ylim} are not given. The default matches base R's
 \code{xaxs = "r"}, which extends the range by 4\% at each end.}
+
+\item{square}{Logical: If TRUE, draw the plotting box square -- equal height
+and width in pixels, excluding axis labels and margins.}
+
+\item{equal_axes}{Logical: If TRUE, give one data unit the same size in
+pixels on both axes. Set with \code{square} for a plot that is both, such as a
+true-versus-predicted plot whose identity line runs at 45 degrees; the two
+axes are then made to span the same interval.}
 
 \item{xlim, ylim}{Optional Numeric: Axis limits, length 2. \code{NULL} derives them
 from the data, padded by \code{pad}.}

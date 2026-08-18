@@ -562,3 +562,51 @@ lighten <- function(x, amount = 0.1) {
 palette_colors <- function(x) {
   unname(x)
 } # /rtemis.draw::palette_colors
+
+
+# %% check_dots_empty ----
+#' Reject arguments `draw()` does not recognize
+#'
+#' Every `draw()` method takes `...` so that a backend can declare arguments the
+#' generic does not know about (`renderer`, `meta`). Those are declared *after*
+#' `...` and so must be named, which leaves `...` empty in any correct call --
+#' and makes anything landing in it a name the method does not have.
+#'
+#' Without this an unknown name is silently dropped, which is the worst way for
+#' a typo to behave: the chart still renders, just not as asked.
+#'
+#' @param ... Arguments a `draw()` method did not match.
+#'
+#' @return NULL, invisibly. Called for its side effect.
+#'
+#' @author EDG
+#' @keywords internal
+#' @noRd
+check_dots_empty <- function(...) {
+  n <- ...length()
+  if (n == 0L) {
+    return(invisible(NULL))
+  }
+  named <- names(list(...))
+  named <- named[nzchar(named)]
+  abort(
+    if (length(named) > 0L) {
+      paste0(
+        "Unrecognized argument",
+        if (length(named) > 1L) "s" else "",
+        " to draw(): ",
+        paste0("`", named, "`", collapse = ", "),
+        "."
+      )
+    } else {
+      paste0(
+        "draw() takes ",
+        n,
+        " unnamed argument",
+        if (n > 1L) "s" else "",
+        " it does not recognize; every optional argument must be named."
+      )
+    },
+    class = c("rtemis_value_error", "rtemis_input_error")
+  )
+} # /rtemis.draw::check_dots_empty

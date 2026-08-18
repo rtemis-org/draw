@@ -350,6 +350,7 @@ S7::method(draw, MapLibreOption) <- function(
   animation = NULL,
   ...
 ) {
+  check_dots_empty(...)
   if (!is.null(filename)) {
     warn(
       "Static export of map widgets is not yet supported; ignoring `filename`."

@@ -19,6 +19,8 @@ draw_line(
   pad = DEFAULT_PAD,
   xlim = NULL,
   ylim = NULL,
+  square = FALSE,
+  equal_axes = FALSE,
   xlab = NULL,
   ylab = NULL,
   title = NULL,
@@ -77,6 +79,14 @@ errors. Defaults to \code{range(x)} (no padding) when \code{x} is numeric.}
 
 \item{ylim}{Optional Numeric [length 2]: Y-axis limits \code{c(min, max)}.}
 
+\item{square}{Logical: If TRUE, draw the plotting box square -- equal height
+and width in pixels, excluding axis labels and margins.}
+
+\item{equal_axes}{Logical: If TRUE, give one data unit the same size in
+pixels on both axes. Set both for a plot that is square \emph{and} to scale,
+such as an ROC curve; the two axes are then made to span the same
+interval. Requires a numeric \code{x}. See Details.}
+
 \item{xlab}{Optional Character: X-axis title.}
 
 \item{ylab}{Optional Character: Y-axis title.}
@@ -113,4 +123,37 @@ htmlwidget: Widget object.
 }
 \description{
 Quick line chart from x/y data.
+}
+\section{Square and equally-scaled plots}{
+\code{square} and \code{equal_axes} are separate requests. \code{square} is about the
+\emph{shape} of the plotting box: equal height and width in pixels, measured on
+the box itself, not including axis labels or margins. \code{equal_axes} is about
+\emph{scale}: one data unit occupies the same number of pixels on both axes, so a
+45-degree line really is a slope of 1.
+
+Either works alone. \code{equal_axes} on a chart whose x spans ten units and whose
+y spans one gives a wide, short box, which is what equal scaling means there.
+
+Asking for both is a statement about the limits, since the only square box in
+which both axes are equally scaled is one whose axes span the same interval.
+So both axes are made to span one interval: over all the values when neither
+limit was given, or the one you gave when you gave exactly one. Giving both
+\code{xlim} and \code{ylim} as different intervals is an error rather than a silent
+override.
+
+The box itself is solved in the browser, which is the only side that knows
+how wide the container is, and re-solved whenever it resizes.
+}
+
+\examples{
+# An ROC curve is square by nature, on axes that share their [0, 1] range.
+draw_line(
+  x = c(0, 0.2, 0.6, 1),
+  y = c(0, 0.55, 0.85, 1),
+  square = TRUE,
+  equal_axes = TRUE,
+  xlab = "False positive rate",
+  ylab = "True positive rate"
+)
+
 }

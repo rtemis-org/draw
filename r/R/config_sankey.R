@@ -99,7 +99,7 @@ SankeyConfig <- new_class(
 # %% SANKEY_ORIGIN_NAMES ----
 SANKEY_ORIGIN_NAMES <- setdiff(
   names(SankeyConfig@properties),
-  c("type", "origin", "writer")
+  c("type", PROVENANCE_PROPS)
 )
 
 
@@ -173,12 +173,10 @@ method(resolve, SankeyConfig) <- function(config, data = NULL, ...) {
 # renamed into them here. That is what lets a table calling them anything else
 # be plotted without the caller reshaping it first.
 method(compile, SankeyConfig) <- function(config, data = NULL, ...) {
-  dat <- config_data(config, data)
-  config <- resolve(config, data = dat)
   links <- data.frame(
-    source = config_column(dat, config@source, "source"),
-    target = config_column(dat, config@target, "target"),
-    value = config_column(dat, config@value, "value"),
+    source = config_column(data, config@source, "source"),
+    target = config_column(data, config@target, "target"),
+    value = config_column(data, config@value, "value"),
     stringsAsFactors = FALSE
   )
   sankey_option(

@@ -130,7 +130,7 @@ ChoroplethConfig <- new_class(
 # %% CHOROPLETH_ORIGIN_NAMES ----
 CHOROPLETH_ORIGIN_NAMES <- setdiff(
   names(ChoroplethConfig@properties),
-  c("type", "origin", "writer")
+  c("type", PROVENANCE_PROPS)
 )
 
 
@@ -216,8 +216,6 @@ method(resolve, ChoroplethConfig) <- function(config, data = NULL, ...) {
 # Builds the MapModel from the bound columns, then styles it -- the same two
 # steps `draw_choropleth()` takes, through the same builder.
 method(compile, ChoroplethConfig) <- function(config, data = NULL, ...) {
-  dat <- config_data(config, data)
-  config <- resolve(config, data = dat)
   if (is.null(config@location) || is.null(config@value)) {
     abort(
       "A ChoroplethConfig needs both `location` and `value` set to draw.",
@@ -225,7 +223,7 @@ method(compile, ChoroplethConfig) <- function(config, data = NULL, ...) {
     )
   }
   model <- map_from_data_frame(
-    data = dat,
+    data = data,
     location = config@location,
     value = config@value,
     resolution = config@resolution,

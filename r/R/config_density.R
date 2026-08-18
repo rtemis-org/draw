@@ -113,7 +113,7 @@ DensityConfig <- new_class(
 # %% DENSITY_ORIGIN_NAMES ----
 DENSITY_ORIGIN_NAMES <- setdiff(
   names(DensityConfig@properties),
-  c("type", "origin", "writer")
+  c("type", PROVENANCE_PROPS)
 )
 
 
@@ -198,9 +198,7 @@ method(resolve, DensityConfig) <- function(config, data = NULL, ...) {
 # uses the builder's default, exactly as `draw_density()` does when the caller
 # says nothing.
 method(compile, DensityConfig) <- function(config, data = NULL, ...) {
-  dat <- config_data(config, data)
-  config <- resolve(config, data = dat)
-  x <- config_column(dat, config@x, "x")
+  x <- config_column(data, config@x, "x")
   if (is.null(x)) {
     abort(
       "A DensityConfig needs `x` set to draw.",
@@ -209,7 +207,7 @@ method(compile, DensityConfig) <- function(config, data = NULL, ...) {
   }
   density_option(
     x = x,
-    group = config_column(dat, config@group, "group"),
+    group = config_column(data, config@group, "group"),
     n = config@n,
     bw = config@bw,
     na_rm = config@na_rm,

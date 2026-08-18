@@ -22,6 +22,13 @@ Turns a \link{ChartConfig} into the backend option object \code{draw()} renders 
 an \link{EChartsOption} for ECharts charts. This is where a config's column names
 are resolved against actual data.
 }
+\details{
+The generic does the two steps every chart needs before its own translation
+can start, so that no method can forget one: it materializes the data (from
+\code{data}, or from the config's \code{dat_path}) and \code{\link[=resolve]{resolve()}}s the config against
+it. Methods therefore always receive a \strong{resolved} config and \strong{non-NULL}
+data, and are pure translation.
+}
 \author{
 EDG
 }
