@@ -69,7 +69,7 @@ document by any interface.
 * `draw()` now errors on an argument it does not recognize, instead of
   silently dropping it.
 
-## Fixes
+## Other
 
 * A named color palette reached the browser as a JSON object where ECharts
   expects an array, and the chart rendered with no colors at all. Every
