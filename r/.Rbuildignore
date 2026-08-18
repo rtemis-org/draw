@@ -1,6 +1,8 @@
 ^draw\.Rproj$
 ^\.Rproj\.user$
 ^__dev$
+^plan$
+^data-raw$
 ^_pkgdown\.yml$
 ^.*\.code-workspace$
 ^.*\.Rcheck$

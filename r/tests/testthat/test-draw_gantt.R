@@ -155,7 +155,11 @@ test_that("draw_gantt with group emits one series per level with a legend", {
 
 
 test_that("draw_gantt group series carry distinct itemStyle colors", {
-  w <- draw_gantt(tasks_df(), group = "status", color = c("#111111", "#222222"))
+  w <- draw_gantt(
+    tasks_df(),
+    group = "status",
+    palette = c("#111111", "#222222")
+  )
   series <- w$x$option$series
   cols <- vapply(
     series,

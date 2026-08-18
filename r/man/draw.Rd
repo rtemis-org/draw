@@ -9,8 +9,9 @@ draw(
   theme = NULL,
   width = NULL,
   height = NULL,
-  elementId = NULL,
+  element_id = NULL,
   filename = NULL,
+  animation = NULL,
   ...
 )
 }
@@ -25,15 +26,40 @@ light/dark auto-detection; \code{NA} disables theming. Applied to every backend.
 
 \item{height}{Optional Character or Numeric: Widget height.}
 
-\item{elementId}{Optional Character: Explicit element ID.}
+\item{element_id}{Optional Character: Explicit element ID.}
 
 \item{filename}{Optional Character: If provided, the widget is also written to
 this file via \code{\link[=save_drawing]{save_drawing()}} (ECharts only; other backends warn and
 ignore it). Extension determines the format (currently only \code{.svg}).}
 
-\item{...}{Backend-specific arguments. ECharts accepts \code{renderer}
-(Character \{"canvas", "svg"\}) and \code{meta} (named list of extra payload
-fields, used internally e.g. by \code{\link[=draw_heatmap]{draw_heatmap()}}).}
+\item{animation}{Optional Logical: Whether ECharts animates the chart.
+\code{NULL} (default) leaves ECharts' own default in place. \code{FALSE} disables
+animation, which matters for charts with many points, where animating
+every interactive update is expensive. Ignored by the Sigma and MapLibre
+backends, which have no ECharts animation to disable.}
+
+\item{...}{Backend-specific arguments, which must be named. ECharts accepts
+\code{renderer} (Character \{"canvas", "svg"\}) and \code{meta} (named list of extra
+payload fields, used internally e.g. by \code{\link[=draw_heatmap]{draw_heatmap()}}). Any other name
+is an error rather than a silent no-op, so a typo cannot quietly change
+what is drawn.
+
+Two \code{meta} fields are read by the ECharts JS binding and are part of its
+contract, because they need the container width, which only the browser
+knows:
+\itemize{
+\item \code{squareCells}: see \code{\link[=draw_heatmap]{draw_heatmap()}}.
+\item \code{aspect}: a named list with \code{ratio} (required grid height / grid width),
+\code{widthPx} (preferred grid width; the box shrinks below this only when
+the container is too narrow), and \code{leftPx}, \code{rightPx}, \code{topPx}, \code{botPx}
+(padding to reserve outside the grid). The binding solves for the grid
+box on render and on resize, and sets the container height to match.
+Use it for charts whose \emph{pixel} geometry carries meaning -- most often
+equal axis scaling, where one data unit must be the same number of
+pixels on both axes and \code{ratio} is therefore the y range over the
+x range. ECharts has no equal-aspect option, and R cannot know the
+container width, so neither side can enforce this alone.
+}}
 }
 \value{
 htmlwidget: Widget object.

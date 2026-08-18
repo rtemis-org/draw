@@ -1,6 +1,7 @@
 # Dev
 __dev/
 specs/
+plan/
 
 # macOS
 .DS_Store

@@ -13,9 +13,12 @@ draw_scatter(
   se = TRUE,
   fit_alpha = 0.25,
   n_fit = 200,
-  color = NULL,
+  palette = NULL,
   xlim = NULL,
   ylim = NULL,
+  pad = DEFAULT_PAD,
+  square = FALSE,
+  equal_axes = FALSE,
   xlab = NULL,
   ylab = NULL,
   title = NULL,
@@ -23,6 +26,7 @@ draw_scatter(
   margins = DEFAULT_MARGINS,
   width = NULL,
   height = NULL,
+  element_id = NULL,
   filename = NULL
 )
 }
@@ -45,16 +49,29 @@ are computed per group when \code{group} is provided.}
 
 \item{n_fit}{Numeric \verb{[1, Inf)}: Number of evaluation points for the fit.}
 
-\item{color}{Optional Character: Series color palette — a single color string or
+\item{palette}{Optional Character: Series color palette — a single color string or
 character vector that overrides the theme palette for this chart.
 When \code{group} is set, colors are assigned per group in order. \code{color} takes
 precedence over the theme palette.}
 
 \item{xlim}{Optional Numeric [length 2]: X-axis limits \code{c(min, max)}.
-Defaults to \code{range(x)} padded by 4\\\% of the span on each side.}
+Defaults to \code{range(x)} extended by \code{pad}.}
 
 \item{ylim}{Optional Numeric [length 2]: Y-axis limits \code{c(min, max)}.
-Defaults to \code{range(y)} padded by 4\\\% of the span on each side.}
+Defaults to \code{range(y)} extended by \code{pad}.}
+
+\item{pad}{Numeric \verb{[0, Inf)}: Fraction of the data range to extend each
+axis by when \code{xlim} / \code{ylim} are not given. The default matches base R's
+\code{xaxs = "r"}, which extends the range by 4\% at each end.}
+
+\item{square}{Logical: If TRUE, draw the plotting box square -- equal height
+and width in pixels, excluding axis labels and margins.}
+
+\item{equal_axes}{Logical: If TRUE, give one data unit the same size in
+pixels on both axes. Set both for a plot that is square \emph{and} to scale,
+such as a true-versus-predicted plot whose identity line should run at 45
+degrees; the two axes are then made to span the same interval. See
+Details.}
 
 \item{xlab}{Optional Character: X-axis title.}
 
@@ -74,6 +91,9 @@ See \code{\link[=draw_line]{draw_line()}} for details.}
 
 \item{height}{Optional Character or Numeric: Widget height.}
 
+\item{element_id}{Optional Character: Explicit DOM element ID for the widget
+container. \code{NULL} lets htmlwidgets generate one.}
+
 \item{filename}{Optional Character: If provided, save the widget to this file via
 \code{\link[=save_drawing]{save_drawing()}}.}
 }
@@ -83,4 +103,37 @@ htmlwidget: Widget object.
 \description{
 Quick scatter plot from x/y data with optional fitted line and
 confidence band.
+}
+\section{Square and equally-scaled plots}{
+\code{square} and \code{equal_axes} are separate requests. \code{square} is about the
+\emph{shape} of the plotting box: equal height and width in pixels, measured on
+the box itself, not including axis labels or margins. \code{equal_axes} is about
+\emph{scale}: one data unit occupies the same number of pixels on both axes, so a
+45-degree line really is a slope of 1.
+
+Either works alone. \code{equal_axes} on a chart whose x spans ten units and whose
+y spans one gives a wide, short box, which is what equal scaling means there.
+
+Asking for both is a statement about the limits, since the only square box in
+which both axes are equally scaled is one whose axes span the same interval.
+So both axes are made to span one interval: over all the values when neither
+limit was given, or the one you gave when you gave exactly one. Giving both
+\code{xlim} and \code{ylim} as different intervals is an error rather than a silent
+override.
+
+The box itself is solved in the browser, which is the only side that knows
+how wide the container is, and re-solved whenever it resizes.
+}
+
+\examples{
+# True versus predicted: square box, equal scale, identity line at 45 deg.
+draw_scatter(
+  x = c(1, 2, 3, 4),
+  y = c(1.1, 1.9, 3.4, 3.7),
+  square = TRUE,
+  equal_axes = TRUE,
+  xlab = "True",
+  ylab = "Predicted"
+)
+
 }

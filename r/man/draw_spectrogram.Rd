@@ -20,8 +20,8 @@ draw_spectrogram(
   freq_unit = "Hz",
   time_range = NULL,
   time_unit = "s",
-  palette = "magma",
-  palette_reverse = FALSE,
+  colormap = "magma",
+  colormap_reverse = FALSE,
   n_colors = 256L,
   zlim = NULL,
   show_colorbar = TRUE,
@@ -33,7 +33,9 @@ draw_spectrogram(
   margins = NULL,
   width = NULL,
   height = NULL,
-  filename = NULL
+  element_id = NULL,
+  filename = NULL,
+  verbosity = 1L
 )
 }
 \arguments{
@@ -88,19 +90,19 @@ e.g. \code{c(20, 8000)}. Applied after STFT computation.}
 
 \item{time_unit}{Character \{"s", "ms"\}: Unit for the time axis.}
 
-\item{palette}{Character: Colour palette. Accepts a \pkg{viridisLite} palette
+\item{colormap}{Character: Color palette. Accepts a \pkg{viridisLite} colormap
 name (\code{"magma"} (default), \code{"inferno"}, \code{"plasma"},
 \code{"viridis"}, \code{"cividis"}, \code{"mako"}, \code{"rocket"}, \code{"turbo"}), \code{"diverging"}
 for the rtemis teal-background-orange scale (suitable for signed data
-such as EEG/MEG amplitudes), or a character vector of >= 2 hex colours for a
+such as EEG/MEG amplitudes), or a character vector of >= 2 hex colors for a
 custom ramp.}
 
-\item{palette_reverse}{Logical: Reverse the palette direction.}
+\item{colormap_reverse}{Logical: Reverse the colormap direction.}
 
-\item{n_colors}{Integer \verb{[2, Inf)}: Number of discrete colours in the
+\item{n_colors}{Integer \verb{[2, Inf)}: Number of discrete colors in the
 generated palette.}
 
-\item{zlim}{Optional Numeric[2]: Colour-scale limits after all
+\item{zlim}{Optional Numeric[2]: Color-scale limits after all
 transformations (dB clipping, unit conversion). Defaults to the data range.}
 
 \item{show_colorbar}{Logical: Show the continuous visual-map colorbar.}
@@ -126,8 +128,14 @@ margins in pixels. Valid names: \code{"top"}, \code{"right"}, \code{"bottom"}, \
 
 \item{height}{Optional Numeric or Character: Widget height.}
 
+\item{element_id}{Optional Character: Explicit DOM element ID for the widget
+container. \code{NULL} lets htmlwidgets generate one.}
+
 \item{filename}{Optional Character: If provided, the widget is saved via
 \code{\link[=save_drawing]{save_drawing()}}.}
+
+\item{verbosity}{Integer \verb{[0, Inf)}: Verbosity level. \code{0} silences the
+large-spectrogram performance advisory.}
 }
 \value{
 htmlwidget

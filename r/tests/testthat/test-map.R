@@ -63,7 +63,7 @@ test_that("MapLibreOption applies sensible style defaults", {
   opt <- MapLibreOption(model = m)
   expect_true(S7::S7_inherits(opt, MapLibreOption))
   expect_equal(opt@classification, "quantile")
-  expect_equal(opt@color_scheme, "blues")
+  expect_equal(opt@colormap, "blues")
   expect_equal(opt@num_classes, 5)
   expect_equal(opt@opacity, 1)
   expect_true(opt@show_boundaries)
@@ -75,7 +75,7 @@ test_that("MapLibreOption to_list produces the {model, style} payload shape", {
   out <- to_list(MapLibreOption(
     model = m,
     classification = "jenks",
-    color_scheme = "viridis",
+    colormap = "viridis",
     num_classes = 7
   ))
   expect_named(out, c("model", "style"))
@@ -92,7 +92,7 @@ test_that("MapLibreOption to_list produces the {model, style} payload shape", {
 test_that("MapLibreOption validates enums and ranges", {
   m <- MapModel(rows = list(MapRow(location = "USA", value = 1)))
   expect_error(MapLibreOption(model = m, classification = "kmeans"))
-  expect_error(MapLibreOption(model = m, color_scheme = "rainbow"))
+  expect_error(MapLibreOption(model = m, colormap = "rainbow"))
   expect_error(MapLibreOption(model = m, num_classes = 1))
   expect_error(MapLibreOption(model = m, num_classes = 99))
   expect_error(MapLibreOption(model = m, legend_position = "middle"))
@@ -186,7 +186,7 @@ test_that("draw_choropleth returns a configured htmlwidget", {
     location = "iso",
     value = "gdp",
     tooltip = "region",
-    color_scheme = "viridis",
+    colormap = "viridis",
     classification = "jenks"
   )
   expect_s3_class(w, "htmlwidget")
@@ -236,5 +236,5 @@ test_that("draw_choropleth warns and ignores filename (no static export yet)", {
 test_that("draw_choropleth rejects an invalid resolution / scheme", {
   df <- data.frame(iso = "USA", gdp = 1)
   expect_error(draw_choropleth(df, "iso", "gdp", resolution = "planet"))
-  expect_error(draw_choropleth(df, "iso", "gdp", color_scheme = "rainbow"))
+  expect_error(draw_choropleth(df, "iso", "gdp", colormap = "rainbow"))
 })

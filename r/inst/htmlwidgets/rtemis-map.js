@@ -52,6 +52,8 @@ HTMLWidgets.widget({
       }
       if (body.classList.contains("vscode-light")) return false;
       if (body.classList.contains("rstudio-themes-dark-menus")) return true;
+      if (body.classList.contains("quarto-dark")) return true;
+      if (body.classList.contains("quarto-light")) return false;
       if (window.matchMedia) {
         return window.matchMedia("(prefers-color-scheme: dark)").matches;
       }

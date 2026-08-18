@@ -159,6 +159,12 @@ S7::method(to_list, MarkArea) <- function(x, ...) {
 #' @param symbol Optional Character \{"circle", "rect", "roundRect", "triangle", "diamond", "pin", "arrow", "none"\}: Symbol type.
 #'   `"diamond"`, `"pin"`, `"arrow"`, `"none"`, or custom SVG path.
 #' @param symbol_size Optional Numeric: Symbol size in pixels.
+#' @param symbol_rotate Optional Numeric: Symbol rotation in degrees,
+#'   counter-clockwise-positive. A symbol is unrotated at `0`.
+#' @param symbol_offset Optional Numeric or Character: Shift from the data
+#'   point as `c(x, y)`, in screen pixels (numbers) or as a percentage of the
+#'   symbol's own size (strings, e.g. `c("0%", "-50%")`). Applied *after*
+#'   `symbol_rotate`, in the unrotated frame.
 #' @param color Optional Character: Series color override.
 #' @param line_style Optional [LineStyle]: Line styling.
 #' @param area_style Optional [AreaStyle]: Area fill styling.
@@ -239,6 +245,8 @@ LineSeries <- S7::new_class(
         "must be a number, length-2 numeric vector, or NULL"
       }
     ),
+    symbol_rotate = numeric_or_null_property(),
+    symbol_offset = symbol_offset_property(),
     line_style = class_or_null_property(LineStyle),
     area_style = class_or_null_property(AreaStyle),
     item_style = class_or_null_property(ItemStyle),
@@ -342,6 +350,12 @@ S7::method(to_list, BarSeries) <- function(x, ...) {
 #' @param clip Optional Logical: Whether to clip overflow.
 #' @param symbol Optional Character: Symbol type.
 #' @param symbol_size Optional Numeric or function: Symbol size.
+#' @param symbol_rotate Optional Numeric: Symbol rotation in degrees,
+#'   counter-clockwise-positive. A symbol is unrotated at `0`.
+#' @param symbol_offset Optional Numeric or Character: Shift from the data
+#'   point as `c(x, y)`, in screen pixels (numbers) or as a percentage of the
+#'   symbol's own size (strings, e.g. `c("0%", "-50%")`). Applied *after*
+#'   `symbol_rotate`, in the unrotated frame.
 #' @param color Optional Character: Series color override.
 #' @param item_style Optional [ItemStyle]: Data-point marker styling.
 #' @param label Optional [LabelOption]: Data-label configuration.
@@ -384,6 +398,8 @@ ScatterSeries <- S7::new_class(
         "must be a number, length-2 numeric vector, function, or NULL"
       }
     ),
+    symbol_rotate = numeric_or_null_property(),
+    symbol_offset = symbol_offset_property(),
     large = optional_logical_scalar,
     large_threshold = numeric_or_null_property(),
     item_style = class_or_null_property(ItemStyle),

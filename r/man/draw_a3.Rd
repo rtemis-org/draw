@@ -28,6 +28,7 @@ draw_a3(
   theme = NULL,
   width = NULL,
   height = NULL,
+  element_id = NULL,
   filename = NULL
 )
 }
@@ -59,7 +60,7 @@ label every N residues. \code{NULL} disables position labels.}
 
 \item{ptm_placement}{Character \verb{\{"radial", "innerRadial", "outerRadial"\}}:
 Placement of PTM symbols relative to the residue circle.
-\code{"radial"} centres on the circle edge; \code{"innerRadial"} places inside;
+\code{"radial"} centers on the circle edge; \code{"innerRadial"} places inside;
 \code{"outerRadial"} places outside.}
 
 \item{residue_fill}{Character: Residue circle fill color.}
@@ -92,6 +93,9 @@ light/dark mode; \code{NA} uses raw ECharts defaults.}
 
 \item{height}{Optional Numeric or Character: Widget height. Auto-computed
 from layout bounds and \code{marker_size} when \code{NULL}.}
+
+\item{element_id}{Optional Character: Explicit DOM element ID for the widget
+container. \code{NULL} lets htmlwidgets generate one.}
 
 \item{filename}{Optional Character: If provided, save the widget to this
 file via \code{\link[=save_drawing]{save_drawing()}}.}

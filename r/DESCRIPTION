@@ -1,7 +1,7 @@
 Package: rtemis.draw
 Title: Interactive Visualization
-Version: 0.4.1
-Date: 2026-07-02
+Version: 0.5.0
+Date: 2026-08-17
 Authors@R:
     person(given = "E.D.", family = "Gennatas", role = c("aut", "cre", "cph"),
            email = "gennatas@gmail.com",
@@ -15,18 +15,22 @@ Description: Provides a comprehensive R interface to Apache ECharts
 URL: https://www.rtemis.org, https://docs.rtemis.org/draw/r, https://docs.rtemis.org/draw/r-api
 License: GPL (>= 3)
 Encoding: UTF-8
+Language: en-US
 Roxygen: list(markdown = TRUE)
 Imports:
     htmlwidgets,
     jsonlite,
-    rtemis (>= 1.3.0),
     rtemis.core (>= 0.4.1),
     S7,
     signal,
+    stats,
+    tools,
+    utils,
     viridisLite
 Suggests:
     mgcv,
     rmarkdown,
+    rtemis (>= 1.3.0),
     rtemis.a3,
     testthat (>= 3.0.0)
 Additional_repositories:
@@ -46,12 +50,29 @@ Collate:
     'option.R'
     'theme.R'
     'draw.R'
+    'chart_config.R'
+    'config_scatter.R'
+    'config_bar.R'
+    'config_density.R'
+    'config_histogram.R'
+    'config_line.R'
+    'config_pie.R'
+    'config_boxplot.R'
+    'config_sankey.R'
+    'config_gantt.R'
+    'chart_io.R'
+    'schema.R'
     'network.R'
     'map.R'
+    'config_network.R'
+    'config_choropleth.R'
+    'config_heatmap.R'
     'draw_a3.R'
+    'config_a3.R'
     'draw_spectrogram.R'
+    'config_spectrogram.R'
     'draw_gantt.R'
     'plot.SupervisedSession.R'
     'export.R'
     'zzz.R'
-Config/roxygen2/version: 8.0.0
+Config/roxygen2/version: 8.1.0

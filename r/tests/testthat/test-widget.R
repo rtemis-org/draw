@@ -319,10 +319,12 @@ test_that("draw_line rejects invalid zoom values", {
 
 test_that("draw_line defaults xlim/ylim to exact data range (no padding)", {
   w <- draw_line(x = c(1, 2, 3, 4), y = c(10, 20, 15, 25))
-  expect_equal(w$x$option$xAxis$min, 1)
-  expect_equal(w$x$option$xAxis$max, 4)
-  expect_equal(w$x$option$yAxis$min, 10)
-  expect_equal(w$x$option$yAxis$max, 25)
+  # Limits extend the data range by `pad` (4% by default), as on every other
+  # value axis; `draw_line` used to sit hard against the data range.
+  expect_equal(w$x$option$xAxis$min, 1 - 0.04 * 3)
+  expect_equal(w$x$option$xAxis$max, 4 + 0.04 * 3)
+  expect_equal(w$x$option$yAxis$min, 10 - 0.04 * 15)
+  expect_equal(w$x$option$yAxis$max, 25 + 0.04 * 15)
 })
 
 test_that("draw_line honors explicit xlim and ylim", {
@@ -343,8 +345,9 @@ test_that("draw_line ylim spans all series in a list", {
     x = c("A", "B", "C"),
     y = list(S1 = c(1, 2, 3), S2 = c(10, 20, 30))
   )
-  expect_equal(w$x$option$yAxis$min, 1)
-  expect_equal(w$x$option$yAxis$max, 30)
+  # Padded across the union of both series: range 1-30, so 4% of 29 each side.
+  expect_equal(w$x$option$yAxis$min, 1 - 0.04 * 29)
+  expect_equal(w$x$option$yAxis$max, 30 + 0.04 * 29)
 })
 
 test_that("draw_line omits x-axis min/max when x is non-numeric", {
@@ -436,7 +439,7 @@ test_that("draw_bar applies a single color to a single series", {
   w <- draw_bar(
     x = c("Q1", "Q2", "Q3"),
     y = c(100, 200, 150),
-    color = "#ff0000"
+    palette = "#ff0000"
   )
   expect_equal(w$x$option$series[[1]]$color, "#ff0000")
 })
@@ -445,7 +448,7 @@ test_that("draw_bar recycles colors across individual bars", {
   w <- draw_bar(
     x = c("Q1", "Q2", "Q3"),
     y = c(100, 200, 150),
-    color = c("#ff0000", "#00ff00")
+    palette = c("#ff0000", "#00ff00")
   )
   expect_equal(w$x$option$series[[1]]$data[[1]]$itemStyle$color, "#ff0000")
   expect_equal(w$x$option$series[[1]]$data[[2]]$itemStyle$color, "#00ff00")
@@ -466,7 +469,7 @@ test_that("draw_bar recycles colors across multiple series", {
   w <- draw_bar(
     x = c("A", "B"),
     y = list("X" = c(10, 20), "Y" = c(5, 15), "Z" = c(7, 9)),
-    color = c("#ff0000", "#00ff00")
+    palette = c("#ff0000", "#00ff00")
   )
   expect_equal(w$x$option$series[[1]]$color, "#ff0000")
   expect_equal(w$x$option$series[[2]]$color, "#00ff00")
@@ -654,7 +657,7 @@ test_that("draw_pie donut", {
 
 test_that("draw_boxplot computes stats and creates widget", {
   w <- draw_boxplot(
-    data = list(
+    x = list(
       c(1, 2, 3, 4, 5, 6, 7, 8, 9, 10),
       c(5, 6, 7, 8, 9, 10, 11, 12, 13, 14)
     ),
@@ -674,7 +677,7 @@ test_that("draw_boxplot computes stats and creates widget", {
 
 test_that("draw_boxplot uses names from an ungrouped named list as labels", {
   w <- draw_boxplot(
-    data = list(
+    x = list(
       "Control" = c(1, 2, 3, 4, 5, 6, 7),
       "Treatment" = c(3, 4, 5, 6, 7, 8, 9)
     )
@@ -687,7 +690,7 @@ test_that("draw_boxplot uses names from an ungrouped named list as labels", {
 
 test_that("draw_boxplot respects explicit labels over named-list labels", {
   w <- draw_boxplot(
-    data = list(
+    x = list(
       "Control" = c(1, 2, 3, 4, 5, 6, 7),
       "Treatment" = c(3, 4, 5, 6, 7, 8, 9)
     ),
@@ -698,9 +701,9 @@ test_that("draw_boxplot respects explicit labels over named-list labels", {
 
 test_that("draw_boxplot fill_alpha controls fill opacity", {
   w <- draw_boxplot(
-    data = list(c(1, 2, 3, 4, 5, 6, 7)),
+    x = list(c(1, 2, 3, 4, 5, 6, 7)),
     labels = c("G1"),
-    color = "#ff0000",
+    palette = "#ff0000",
     fill_alpha = 0.5
   )
   is <- w$x$option$series[[1]]$itemStyle
@@ -710,7 +713,7 @@ test_that("draw_boxplot fill_alpha controls fill opacity", {
 
 test_that("draw_boxplot horizontal", {
   w <- draw_boxplot(
-    data = list(c(1, 2, 3, 4, 5, 6, 7, 8)),
+    x = list(c(1, 2, 3, 4, 5, 6, 7, 8)),
     labels = c("G1"),
     horizontal = TRUE
   )
@@ -722,7 +725,7 @@ test_that("draw_boxplot horizontal", {
 test_that("draw_boxplot handles NAs in ungrouped data", {
   expect_message(
     w <- draw_boxplot(
-      data = list(c(1, 2, NA, 4, 5, 6, NA, 8, 9, 10)),
+      x = list(c(1, 2, NA, 4, 5, 6, NA, 8, 9, 10)),
       labels = c("G1"),
       verbosity = 1L
     ),
@@ -736,7 +739,7 @@ test_that("draw_boxplot with group computes stats in a single series", {
   set.seed(1)
   vals <- c(rnorm(50, 10, 2), rnorm(50, 15, 3))
   g <- rep(c("Control", "Treatment"), each = 50)
-  w <- draw_boxplot(data = vals, group = g)
+  w <- draw_boxplot(x = vals, group = g)
   expect_s3_class(w, "htmlwidget")
   # Single BoxplotSeries with one data item per group
   expect_equal(length(w$x$option$series), 1L)
@@ -762,7 +765,9 @@ test_that("draw_boxplot with group computes stats in a single series", {
       function(item) item$itemStyle$borderColor,
       character(1)
     ),
-    rtemis_colors[1:2]
+    # `unname()`: the palette is rtemis.core's named vector, while the colors
+    # read back off the option are bare strings.
+    unname(rtemis_colors[1:2])
   )
 })
 
@@ -770,7 +775,7 @@ test_that("draw_boxplot with group drops missing group values", {
   vals <- c(10, 11, 12, 20, 21, 22, 30)
   g <- c("Control", "Control", NA, "Treatment", "Treatment", NA, "Control")
 
-  w <- draw_boxplot(data = vals, group = g)
+  w <- draw_boxplot(x = vals, group = g)
 
   expect_equal(w$x$option$xAxis$data, c("Control", "Treatment"))
   expect_equal(length(w$x$option$series), 1L)
@@ -794,7 +799,7 @@ test_that("draw_boxplot with grouped variables drops missing group values", {
   )
   g <- c("male", "male", NA, "female", "female", NA)
 
-  w <- draw_boxplot(data = data, group = g)
+  w <- draw_boxplot(x = data, group = g)
 
   expect_equal(length(w$x$option$series), 2L)
   expect_equal(
@@ -816,7 +821,7 @@ test_that("draw_boxplot with group horizontal", {
   set.seed(1)
   vals <- c(rnorm(30, 5), rnorm(30, 8))
   g <- rep(c("A", "B"), each = 30)
-  w <- draw_boxplot(data = vals, group = g, horizontal = TRUE)
+  w <- draw_boxplot(x = vals, group = g, horizontal = TRUE)
   expect_equal(w$x$option$xAxis$type, "value")
   expect_equal(w$x$option$yAxis$type, "category")
   expect_equal(w$x$option$yAxis$data, c("A", "B"))
@@ -1081,7 +1086,7 @@ test_that("draw_histogram applies margins", {
 test_that("draw_boxplot applies margins across grouped/ungrouped branches", {
   # Ungrouped list
   w1 <- draw_boxplot(
-    data = list(c(1, 2, 3, 4, 5)),
+    x = list(c(1, 2, 3, 4, 5)),
     labels = "A",
     margins = c(left = 70)
   )
@@ -1089,7 +1094,7 @@ test_that("draw_boxplot applies margins across grouped/ungrouped branches", {
 
   # Grouped single vector
   w2 <- draw_boxplot(
-    data = c(1, 2, 3, 4, 5, 6),
+    x = c(1, 2, 3, 4, 5, 6),
     group = rep(c("A", "B"), each = 3),
     margins = c(left = 70)
   )
@@ -1097,7 +1102,7 @@ test_that("draw_boxplot applies margins across grouped/ungrouped branches", {
 
   # Grouped named list
   w3 <- draw_boxplot(
-    data = list(v1 = c(1, 2, 3, 4), v2 = c(2, 3, 4, 5)),
+    x = list(v1 = c(1, 2, 3, 4), v2 = c(2, 3, 4, 5)),
     group = rep(c("A", "B"), each = 2),
     margins = c(left = 70)
   )
@@ -1127,6 +1132,30 @@ test_that("draw_heatmap margins cascade to square-cell meta", {
   colnames(m) <- c("c1", "c2", "c3", "c4")
   w <- draw_heatmap(m, margins = c(left = 180), square_cells = TRUE)
   expect_equal(w$x$leftPx, 180)
+})
+
+test_that("meta reaches the widget payload verbatim", {
+  # The `aspect` contract documented on draw(): the JS binding reads these
+  # fields off the payload to solve for the grid box at the measured width.
+  aspect <- list(
+    ratio = 0.5,
+    widthPx = 420,
+    leftPx = 34,
+    rightPx = 34,
+    topPx = 28,
+    botPx = 34
+  )
+  w <- draw(
+    EChartsOption(
+      x_axis = Axis(type = "value"),
+      y_axis = Axis(type = "value"),
+      series = list(ScatterSeries(data = list(c(1, 2))))
+    ),
+    width = "100%",
+    height = 260,
+    meta = list(aspect = aspect)
+  )
+  expect_equal(w$x$aspect, aspect)
 })
 
 # -- xlab / ylab ---------------------------------------------------------------
@@ -1183,7 +1212,7 @@ test_that("draw_histogram applies xlab and ylab", {
 
 test_that("draw_boxplot applies xlab and ylab (ungrouped)", {
   w <- draw_boxplot(
-    data = list(A = c(1, 2, 3), B = c(2, 3, 4)),
+    x = list(A = c(1, 2, 3), B = c(2, 3, 4)),
     xlab = "Group",
     ylab = "Value"
   )
@@ -1193,7 +1222,7 @@ test_that("draw_boxplot applies xlab and ylab (ungrouped)", {
 
 test_that("draw_boxplot inferred value_axis_name goes on y when vertical", {
   w <- draw_boxplot(
-    data = list(`Body Mass` = c(1, 2, 3, 4, 5, 6)),
+    x = list(`Body Mass` = c(1, 2, 3, 4, 5, 6)),
     group = rep(c("A", "B"), each = 3)
   )
   expect_equal(w$x$option$yAxis[["name"]], "Body Mass")
@@ -1202,7 +1231,7 @@ test_that("draw_boxplot inferred value_axis_name goes on y when vertical", {
 
 test_that("draw_boxplot inferred value_axis_name goes on x when horizontal", {
   w <- draw_boxplot(
-    data = list(`Body Mass` = c(1, 2, 3, 4, 5, 6)),
+    x = list(`Body Mass` = c(1, 2, 3, 4, 5, 6)),
     group = rep(c("A", "B"), each = 3),
     horizontal = TRUE
   )
@@ -1212,7 +1241,7 @@ test_that("draw_boxplot inferred value_axis_name goes on x when horizontal", {
 
 test_that("draw_boxplot ylab overrides inferred value_axis_name", {
   w <- draw_boxplot(
-    data = list(`Body Mass` = c(1, 2, 3, 4, 5, 6)),
+    x = list(`Body Mass` = c(1, 2, 3, 4, 5, 6)),
     group = rep(c("A", "B"), each = 3),
     ylab = "Mass (g)"
   )
@@ -1221,11 +1250,170 @@ test_that("draw_boxplot ylab overrides inferred value_axis_name", {
 
 test_that("draw_boxplot xlab applies in grouped multi-variable branch", {
   w <- draw_boxplot(
-    data = list(v1 = c(1, 2, 3, 4), v2 = c(2, 3, 4, 5)),
+    x = list(v1 = c(1, 2, 3, 4), v2 = c(2, 3, 4, 5)),
     group = rep(c("A", "B"), each = 2),
     xlab = "Variable",
     ylab = "Value"
   )
   expect_equal(w$x$option$xAxis[["name"]], "Variable")
   expect_equal(w$x$option$yAxis[["name"]], "Value")
+})
+
+
+# %% unrecognized draw() arguments ----
+
+# Every draw() method takes `...` so a backend can declare arguments the generic
+# does not know about, and those are declared after `...` so they must be named.
+# That leaves `...` empty in any correct call -- and makes a name landing in it
+# a name the method does not have. Silently dropping it is the worst way for a
+# typo to behave: the chart still renders, just not as asked.
+
+test_that("draw() rejects an argument it does not recognize", {
+  option <- scatter_option(x = 1:5, y = 1:5)
+  expect_error(
+    draw(option, elementId = "typo"),
+    class = "rtemis_value_error"
+  )
+  expect_error(draw(option, elementId = "typo"), "elementId")
+})
+
+test_that("draw() names every unrecognized argument it was given", {
+  option <- scatter_option(x = 1:5, y = 1:5)
+  expect_error(draw(option, foo = 1, bar = 2), "`foo`, `bar`")
+})
+
+test_that("draw() accepts the arguments its backends declare", {
+  option <- scatter_option(x = 1:5, y = 1:5)
+  widget <- draw(option, element_id = "kept", renderer = "svg")
+  expect_identical(widget[["elementId"]], "kept")
+})
+
+test_that("the guard reaches every backend", {
+  graph <- graph_option(
+    graph_from_matrix(matrix(
+      c(0, 1, 1, 0),
+      nrow = 2L,
+      dimnames = list(c("a", "b"), c("a", "b"))
+    ))
+  )
+  expect_error(draw(graph, elementId = "typo"), class = "rtemis_value_error")
+})
+
+test_that("a config's draw() forwards the guard rather than swallowing it", {
+  expect_error(
+    draw(setup_ScatterConfig(x = "wt", y = "mpg"), data = mtcars, foo = 1),
+    class = "rtemis_value_error"
+  )
+})
+
+
+# %% square and equal_axes ----
+
+# Two separate requests: `square` is about the shape of the plotting box,
+# `equal_axes` about its scale. The box itself is solved in the browser, so
+# what R has to get right is the `aspect` hint it sends -- the ratio, and the
+# padding to reserve outside the grid.
+
+test_that("equal_axes sets the ratio from the two axis spans", {
+  # x spans ten units, y spans one: equal scaling means a wide, short box.
+  w <- draw_scatter(x = c(0, 10), y = c(0, 1), equal_axes = TRUE)
+  expect_equal(w[["x"]][["aspect"]][["ratio"]], 0.1)
+})
+
+test_that("square asks for a ratio of 1 and leaves the limits alone", {
+  w <- draw_scatter(x = c(0, 10), y = c(0, 1), square = TRUE)
+  expect_equal(w[["x"]][["aspect"]][["ratio"]], 1)
+  # The spans still differ; only the box is square.
+  expect_equal(w[["x"]][["option"]][["xAxis"]][["min"]], -0.4)
+  expect_equal(w[["x"]][["option"]][["yAxis"]][["min"]], -0.04)
+})
+
+test_that("both together put the axes on one common interval", {
+  w <- draw_scatter(x = c(0, 10), y = c(0, 1), square = TRUE, equal_axes = TRUE)
+  expect_equal(w[["x"]][["aspect"]][["ratio"]], 1)
+  expect_equal(
+    w[["x"]][["option"]][["xAxis"]][["min"]],
+    w[["x"]][["option"]][["yAxis"]][["min"]]
+  )
+  expect_equal(
+    w[["x"]][["option"]][["xAxis"]][["max"]],
+    w[["x"]][["option"]][["yAxis"]][["max"]]
+  )
+})
+
+test_that("one stated limit governs both axes", {
+  w <- draw_scatter(
+    x = c(1, 4),
+    y = c(1.1, 3.7),
+    xlim = c(0, 5),
+    square = TRUE,
+    equal_axes = TRUE
+  )
+  expect_equal(w[["x"]][["option"]][["yAxis"]][["min"]], 0)
+  expect_equal(w[["x"]][["option"]][["yAxis"]][["max"]], 5)
+})
+
+test_that("two stated limits that disagree are an error, not an override", {
+  expect_error(
+    draw_scatter(
+      x = c(0, 10),
+      y = c(0, 1),
+      xlim = c(0, 10),
+      ylim = c(0, 1),
+      square = TRUE,
+      equal_axes = TRUE
+    ),
+    class = "rtemis_value_error"
+  )
+})
+
+test_that("the aspect carries the padding the browser needs", {
+  w <- draw_scatter(
+    x = c(0, 1),
+    y = c(0, 1),
+    square = TRUE,
+    margins = c(top = 10, right = 20, bottom = 30, left = 40)
+  )
+  aspect <- w[["x"]][["aspect"]]
+  expect_equal(aspect[["topPx"]], 10)
+  expect_equal(aspect[["rightPx"]], 20)
+  expect_equal(aspect[["botPx"]], 30)
+  expect_equal(aspect[["leftPx"]], 40)
+  # No preferred width: the box fills the container, and `width` constrains it.
+  expect_null(aspect[["widthPx"]])
+})
+
+test_that("neither flag means no aspect at all", {
+  expect_null(draw_scatter(x = 1:3, y = 1:3)[["x"]][["aspect"]])
+})
+
+test_that("a margin the browser cannot know is refused", {
+  # ECharts would choose the unset sides itself, and the container height
+  # cannot be solved without knowing them.
+  expect_error(
+    draw_scatter(
+      x = c(0, 1),
+      y = c(0, 1),
+      square = TRUE,
+      margins = c(left = 80)
+    ),
+    class = "rtemis_value_error"
+  )
+})
+
+test_that("draw_line takes the same two arguments", {
+  roc <- draw_line(
+    x = c(0, 0.2, 0.6, 1),
+    y = c(0, 0.55, 0.85, 1),
+    square = TRUE,
+    equal_axes = TRUE
+  )
+  expect_equal(roc[["x"]][["aspect"]][["ratio"]], 1)
+})
+
+test_that("equal_axes needs a numeric x", {
+  expect_error(
+    draw_line(x = c("a", "b"), y = c(1, 2), equal_axes = TRUE),
+    class = "rtemis_value_error"
+  )
 })

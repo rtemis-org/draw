@@ -7,8 +7,10 @@ HTMLWidgets.widget({
     let currentHeight = height;
     let chart = null;
     let currentPayload = null;
+    let renderedDark = null;
+    let injectedVisualMapColor = false;
 
-    // Detect dark mode from VS Code, RStudio, or browser preference
+    // Detect dark mode from VS Code, RStudio, Quarto, or browser preference
     const isDarkMode = () => {
       const body = document.body;
       // VS Code webview
@@ -22,6 +24,15 @@ HTMLWidgets.widget({
       // RStudio
       if (body.classList.contains("rstudio-themes-dark-menus")) {
         return true;
+      }
+      // Quarto: `toggleBodyColorMode()` in the emitted page sets exactly one of
+      // these on <body>, from the reader's saved choice. It wins over the media
+      // query because the reader picked it explicitly.
+      if (body.classList.contains("quarto-dark")) {
+        return true;
+      }
+      if (body.classList.contains("quarto-light")) {
+        return false;
       }
       // Browser / system preference
       if (window.matchMedia) {
@@ -38,6 +49,39 @@ HTMLWidgets.widget({
       return Math.round(x.nRows * cellPx + x.topPx + x.botPx);
     };
 
+    // For `aspect` charts: size the plotting grid from the measured container
+    // width so that the grid keeps a fixed height:width ratio.
+    //
+    // This is the one thing R cannot do. Equal axis scaling (one data unit =
+    // the same number of pixels on both axes) is a constraint on the *pixel*
+    // geometry of the grid, ECharts has no option for it, and R does not know
+    // how wide the container will be. So R sends the ratio it needs and the
+    // padding the axis labels require, and the browser solves for the box.
+    //
+    // `widthPx` is the preferred grid width: the box stays that size wherever
+    // there is room and shrinks to fit only when there is not, so a wide page
+    // centers a fixed-size figure rather than inflating it to fill the column.
+    const aspectBox = (a, containerWidth) => {
+      const avail = containerWidth - a.leftPx - a.rightPx;
+      const preferred = a.widthPx || avail;
+      const gridWidth = Math.max(1, Math.min(preferred, avail));
+      const gridHeight = gridWidth * a.ratio;
+      return {
+        gridWidth,
+        gridHeight,
+        height: Math.round(gridHeight + a.topPx + a.botPx)
+      };
+    };
+
+    // ECharts accepts `visualMap` as a single component or an array of them.
+    // Both post-processing steps below have to reach every one, so they iterate
+    // this rather than assuming the single-component shape.
+    const visualMaps = (option) => {
+      const vm = option?.visualMap;
+      if (!vm) return [];
+      return Array.isArray(vm) ? vm : [vm];
+    };
+
     const renderChart = (x) => {
       if (chart) {
         chart.dispose();
@@ -46,26 +90,32 @@ HTMLWidgets.widget({
 
       let themeName = null;
       let themeObj = null;
+      const dark = isDarkMode();
 
       if (x.autoTheme) {
         // Auto-detect: pick light or dark theme
-        themeObj = isDarkMode() ? x.themeDark : x.theme;
+        themeObj = dark ? x.themeDark : x.theme;
       } else if (x.theme) {
         themeObj = x.theme;
       }
+      renderedDark = dark;
 
       if (themeObj) {
         // Propagate the global theme text color to visualMap labels.
         // ECharts does not automatically inherit global textStyle into
         // visualMap.textStyle, so we inject it here before registering.
+        // `injectedVisualMapColor` distinguishes a color we wrote on an earlier
+        // render (which must be replaced when the theme flips) from one the
+        // caller set in R (which must not be touched).
         const fgColor = themeObj.textStyle?.color;
-        if (fgColor && x.option.visualMap) {
-          if (!x.option.visualMap.textStyle) {
-            x.option.visualMap.textStyle = {};
-          }
-          if (!x.option.visualMap.textStyle.color) {
-            x.option.visualMap.textStyle.color = fgColor;
-          }
+        if (fgColor) {
+          visualMaps(x.option).forEach((vm) => {
+            if (!vm.textStyle) vm.textStyle = {};
+            if (!vm.textStyle.color || injectedVisualMapColor) {
+              vm.textStyle.color = fgColor;
+              injectedVisualMapColor = true;
+            }
+          });
         }
 
         echarts.registerTheme("custom_theme", themeObj);
@@ -89,13 +139,15 @@ HTMLWidgets.widget({
       // Substitute the theme-matched heatmap colour palette when R has
       // pre-computed both light and dark variants.  The dark palette places
       // the theme background colour exactly at 0 for diverging scales.
-      if (x.option.visualMap && (x.colorLight || x.colorDark)) {
+      if (x.colorLight || x.colorDark) {
         const hmColors = x.colorDark
-          ? (isDarkMode() ? x.colorDark : x.colorLight)
+          ? (dark ? x.colorDark : x.colorLight)
           : x.colorLight;
         if (hmColors) {
-          if (!x.option.visualMap.inRange) x.option.visualMap.inRange = {};
-          x.option.visualMap.inRange.color = hmColors;
+          visualMaps(x.option).forEach((vm) => {
+            if (!vm.inRange) vm.inRange = {};
+            vm.inRange.color = hmColors;
+          });
         }
       }
 
@@ -126,20 +178,74 @@ HTMLWidgets.widget({
       }
     };
 
-    // Listen for system color scheme changes
-    if (window.matchMedia) {
-      const mq = window.matchMedia("(prefers-color-scheme: dark)");
-      const onChange = () => {
-        if (currentPayload?.autoTheme) {
-          renderChart(currentPayload);
-        }
-      };
-      if (mq.addEventListener) {
-        mq.addEventListener("change", onChange);
-      } else if (mq.addListener) {
-        mq.addListener(onChange);
+    // Re-render when the effective color scheme changes. The guard compares
+    // against the scheme actually rendered, so unrelated body-class churn --
+    // which the observer below sees a lot of -- does not cost a re-render.
+    const onThemeChange = () => {
+      // The observer below is attached to <body>, which outlives this widget:
+      // once the container is gone (Shiny re-rendering dynamic UI, a tab being
+      // torn down) the listener would keep firing on a detached element, and
+      // one leaks per widget ever rendered. Detaching here is the teardown
+      // hook htmlwidgets does not give us.
+      if (!el.isConnected) {
+        stopWatchingTheme();
+        return;
       }
+      if (!currentPayload?.autoTheme) return;
+      if (isDarkMode() === renderedDark) return;
+      renderChart(currentPayload);
+    };
+
+    let stopWatchingTheme = () => {};
+
+    // Two independent triggers, one guard. The media query catches an OS or
+    // browser preference change; the observer catches an in-page toggle, since
+    // Quarto's light/dark switch only rewrites `body.class` -- it fires no event
+    // and does not touch the media query, so without it the page re-themes and
+    // the charts do not.
+    {
+      const teardown = [];
+
+      if (window.matchMedia) {
+        const mq = window.matchMedia("(prefers-color-scheme: dark)");
+        if (mq.addEventListener) {
+          mq.addEventListener("change", onThemeChange);
+          teardown.push(() => mq.removeEventListener("change", onThemeChange));
+        } else if (mq.addListener) {
+          mq.addListener(onThemeChange);
+          teardown.push(() => mq.removeListener(onThemeChange));
+        }
+      }
+
+      if (window.MutationObserver && document.body) {
+        const observer = new MutationObserver(onThemeChange);
+        observer.observe(document.body, {
+          attributes: true,
+          attributeFilter: ["class"]
+        });
+        teardown.push(() => observer.disconnect());
+      }
+
+      stopWatchingTheme = () => {
+        teardown.forEach((off) => off());
+        teardown.length = 0;
+      };
     }
+
+    // Resolve the grid box and container height for an `aspect` chart at the
+    // current container width, writing the result into the option so that the
+    // next setOption() uses it. Returns the container height, or null when the
+    // payload declares no aspect.
+    const applyAspect = (x, containerWidth) => {
+      if (!x?.aspect || !x.option?.grid) return null;
+      // A multi-grid option is out of scope: aspect describes one plotting box.
+      if (Array.isArray(x.option.grid)) return null;
+      const box = aspectBox(x.aspect, containerWidth);
+      x.option.grid.width = box.gridWidth;
+      x.option.grid.height = box.gridHeight;
+      el.style.height = `${box.height}px`;
+      return box.height;
+    };
 
     return {
       renderValue: (x) => {
@@ -155,6 +261,9 @@ HTMLWidgets.widget({
           currentHeight = newHeight;
         }
 
+        const aspectHeight = applyAspect(x, currentWidth);
+        if (aspectHeight !== null) currentHeight = aspectHeight;
+
         renderChart(x);
       },
 
@@ -168,8 +277,23 @@ HTMLWidgets.widget({
           el.style.height = `${newHeight}px`;
           currentHeight = newHeight;
           if (chart) chart.resize({ width, height: newHeight });
-        } else {
-          if (chart) chart.resize({ width, height });
+          return;
+        }
+
+        // Re-solve the grid box at the new width, then push it onto the live
+        // chart: resizing alone would stretch the grid and break the scale.
+        // `applyAspect` returns null for a payload it does not solve, which
+        // falls through to the plain resize rather than handing ECharts a null
+        // height.
+        const aspectHeight = applyAspect(currentPayload, width);
+        if (aspectHeight !== null) {
+          currentHeight = aspectHeight;
+          if (chart) {
+            chart.resize({ width, height: aspectHeight });
+            chart.setOption({ grid: currentPayload.option.grid });
+          }
+        } else if (chart) {
+          chart.resize({ width, height });
         }
       },
 

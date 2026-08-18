@@ -22,6 +22,8 @@ LineSeries(
   show_symbol = NULL,
   symbol = NULL,
   symbol_size = NULL,
+  symbol_rotate = NULL,
+  symbol_offset = NULL,
   line_style = NULL,
   area_style = NULL,
   item_style = NULL,
@@ -64,6 +66,14 @@ LineSeries(
 \code{"diamond"}, \code{"pin"}, \code{"arrow"}, \code{"none"}, or custom SVG path.}
 
 \item{symbol_size}{Optional Numeric: Symbol size in pixels.}
+
+\item{symbol_rotate}{Optional Numeric: Symbol rotation in degrees,
+counter-clockwise-positive. A symbol is unrotated at \code{0}.}
+
+\item{symbol_offset}{Optional Numeric or Character: Shift from the data
+point as \code{c(x, y)}, in screen pixels (numbers) or as a percentage of the
+symbol's own size (strings, e.g. \code{c("0\%", "-50\%")}). Applied \emph{after}
+\code{symbol_rotate}, in the unrotated frame.}
 
 \item{line_style}{Optional \link{LineStyle}: Line styling.}
 

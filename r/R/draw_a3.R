@@ -230,76 +230,26 @@ a3_flex_positions <- function(index) {
 
 # ── draw_a3 ──────────────────────────────────────────────────────────────────
 
-#' Draw an A3 Amino Acid Sequence Visualization
+#' Build the render option and hints for an annotated protein diagram
 #'
-#' Renders an `A3` object (from `rtemis.a3`) as an interactive ECharts
-#' amino-acid sequence diagram. The sequence is wrapped into rows in a
-#' meander/serpentine path, with optional site, region, PTM, processing, and
-#' variant annotations overlaid as distinct series and collected in a
-#' vertical legend.
+#' The single implementation shared by [draw_a3()] and `compile()` on the
+#' corresponding [ChartConfig].
 #'
-#' Corresponds to `createA3EChartsOption()` in
-#' `src/lib/a3/visualization/echarts.ts`.
+#' Returns both the option and a `render` list, because this chart derives
+#' hints about the *display surface* from its own content. Those are the
+#' interface's business: they are handed to `draw()` and are never written
+#' into a config document, since a height or a container geometry computed
+#' for one surface is wrong on another.
 #'
-#' @param x `A3` object from [rtemis.a3::create_A3()] or
-#'   [rtemis.a3::read_A3json()].
-#' @param n_per_row Integer `[2, Inf)`: Number of residues per wrapped row.
-#' @param residue_spacing Numeric `(0, Inf)`: Horizontal spacing multiplier.
-#'   Values below `1` compress the layout; `1` gives natural hex spacing.
-#' @param marker_size Numeric `(0, Inf)`: Residue circle diameter in pixels.
-#' @param font_size Numeric `(0, Inf)`: Base font size in pixels for residue
-#'   and position labels.
-#' @param line_width Numeric `(0, Inf)`: Backbone line width in pixels.
-#' @param show_markers Logical: Whether to render the backbone line and
-#'   residue circles.
-#' @param show_labels Logical: Whether to render single-letter residue labels.
-#' @param position_every Optional Integer `[1, Inf)`: Show a numeric position
-#'   label every N residues. `NULL` disables position labels.
-#' @param region_opacity Numeric `[0, 1]`: Opacity of region band overlays.
-#' @param ptm_placement Character `{"radial", "innerRadial", "outerRadial"}`:
-#'   Placement of PTM symbols relative to the residue circle.
-#'   `"radial"` centres on the circle edge; `"innerRadial"` places inside;
-#'   `"outerRadial"` places outside.
-#' @param residue_fill Character: Residue circle fill color.
-#' @param residue_stroke Character: Residue circle stroke and backbone line color.
-#' @param label_color Character: Default residue label text color.
-#' @param pos_label_color Character: Position label text color.
-#' @param variant_color Character: Label color for variant residues.
-#' @param disease_variant_color Character: Label color for disease-associated
-#'   variant residues (takes precedence over `variant_color`).
-#' @param enable_zoom Logical: Whether to enable Shift+scroll zoom.
-#' @param title Optional Character: Chart title.
-#' @param grid Optional [Grid]: Override any plot-area margin. The defaults
-#'   (`left = 24`, `top` auto, `right` driven by legend width, `bottom = 24`)
-#'   are merged with the properties of the supplied `Grid` object, so only
-#'   the fields you set are changed — e.g. `Grid(left = 8, top = 8)`.
-#'   `legend_top` is re-derived from the final grid top automatically.
-#' @param theme Optional [Theme]: Theme override. `NULL` auto-detects
-#'   light/dark mode; `NA` uses raw ECharts defaults.
-#' @param width Optional Numeric or Character: Widget width.
-#' @param height Optional Numeric or Character: Widget height. Auto-computed
-#'   from layout bounds and `marker_size` when `NULL`.
-#' @param filename Optional Character: If provided, save the widget to this
-#'   file via [save_drawing()].
-#' @return htmlwidget: Widget object.
-#' @export
+#' @inheritParams draw_a3
 #'
-#' @examples
-#' if (requireNamespace("rtemis.a3", quietly = TRUE)) {
-#'   a <- rtemis.a3::create_A3(
-#'     "MAEPRQEFEVMEDHAGTYGLGDRK",
-#'     site = list(
-#'       Active_site = rtemis.a3::annotation_position(c(5L, 17L))
-#'     ),
-#'     region = list(
-#'       Domain = rtemis.a3::annotation_range(
-#'         matrix(c(3L, 10L, 15L, 22L), ncol = 2, byrow = TRUE)
-#'       )
-#'     )
-#'   )
-#'   draw_a3(a)
-#' }
-draw_a3 <- function(
+#' @return Named list: `option` (a plain list) and `render` (hints for the caller).
+#'
+#' @author EDG
+#' @keywords internal
+#' @noRd
+a3_option <- function(
+  width = NULL,
   x,
   n_per_row = 21L,
   residue_spacing = 0.3,
@@ -320,10 +270,7 @@ draw_a3 <- function(
   enable_zoom = TRUE,
   title = NULL,
   grid = NULL,
-  theme = NULL,
-  width = NULL,
-  height = NULL,
-  filename = NULL
+  height = NULL
 ) {
   # ── Input validation ────────────────────────────────────────────────────────
   if (!S7::S7_inherits(x)) {
@@ -906,11 +853,140 @@ draw_a3 <- function(
   # ── Render ──────────────────────────────────────────────────────────────────
   # Pass the pre-built plain list directly to draw(). The a3 option is
   # self-contained and bypasses the S7 class hierarchy intentionally.
+
+  list(option = option, render = list(height = height))
+} # /rtemis.draw::a3_option
+
+
+#' Draw an A3 Amino Acid Sequence Visualization
+#'
+#' Renders an `A3` object (from `rtemis.a3`) as an interactive ECharts
+#' amino-acid sequence diagram. The sequence is wrapped into rows in a
+#' meander/serpentine path, with optional site, region, PTM, processing, and
+#' variant annotations overlaid as distinct series and collected in a
+#' vertical legend.
+#'
+#' Corresponds to `createA3EChartsOption()` in
+#' `src/lib/a3/visualization/echarts.ts`.
+#'
+#' @param x `A3` object from [rtemis.a3::create_A3()] or
+#'   [rtemis.a3::read_A3json()].
+#' @param n_per_row Integer `[2, Inf)`: Number of residues per wrapped row.
+#' @param residue_spacing Numeric `(0, Inf)`: Horizontal spacing multiplier.
+#'   Values below `1` compress the layout; `1` gives natural hex spacing.
+#' @param marker_size Numeric `(0, Inf)`: Residue circle diameter in pixels.
+#' @param font_size Numeric `(0, Inf)`: Base font size in pixels for residue
+#'   and position labels.
+#' @param line_width Numeric `(0, Inf)`: Backbone line width in pixels.
+#' @param show_markers Logical: Whether to render the backbone line and
+#'   residue circles.
+#' @param show_labels Logical: Whether to render single-letter residue labels.
+#' @param position_every Optional Integer `[1, Inf)`: Show a numeric position
+#'   label every N residues. `NULL` disables position labels.
+#' @param region_opacity Numeric `[0, 1]`: Opacity of region band overlays.
+#' @param ptm_placement Character `{"radial", "innerRadial", "outerRadial"}`:
+#'   Placement of PTM symbols relative to the residue circle.
+#'   `"radial"` centers on the circle edge; `"innerRadial"` places inside;
+#'   `"outerRadial"` places outside.
+#' @param residue_fill Character: Residue circle fill color.
+#' @param residue_stroke Character: Residue circle stroke and backbone line color.
+#' @param label_color Character: Default residue label text color.
+#' @param pos_label_color Character: Position label text color.
+#' @param variant_color Character: Label color for variant residues.
+#' @param disease_variant_color Character: Label color for disease-associated
+#'   variant residues (takes precedence over `variant_color`).
+#' @param enable_zoom Logical: Whether to enable Shift+scroll zoom.
+#' @param title Optional Character: Chart title.
+#' @param grid Optional [Grid]: Override any plot-area margin. The defaults
+#'   (`left = 24`, `top` auto, `right` driven by legend width, `bottom = 24`)
+#'   are merged with the properties of the supplied `Grid` object, so only
+#'   the fields you set are changed — e.g. `Grid(left = 8, top = 8)`.
+#'   `legend_top` is re-derived from the final grid top automatically.
+#' @param theme Optional [Theme]: Theme override. `NULL` auto-detects
+#'   light/dark mode; `NA` uses raw ECharts defaults.
+#' @param width Optional Numeric or Character: Widget width.
+#' @param height Optional Numeric or Character: Widget height. Auto-computed
+#'   from layout bounds and `marker_size` when `NULL`.
+#' @param element_id Optional Character: Explicit DOM element ID for the widget
+#'   container. `NULL` lets htmlwidgets generate one.
+#' @param filename Optional Character: If provided, save the widget to this
+#'   file via [save_drawing()].
+#' @return htmlwidget: Widget object.
+#' @export
+#'
+#' @examples
+#' if (requireNamespace("rtemis.a3", quietly = TRUE)) {
+#'   a <- rtemis.a3::create_A3(
+#'     "MAEPRQEFEVMEDHAGTYGLGDRK",
+#'     site = list(
+#'       Active_site = rtemis.a3::annotation_position(c(5L, 17L))
+#'     ),
+#'     region = list(
+#'       Domain = rtemis.a3::annotation_range(
+#'         matrix(c(3L, 10L, 15L, 22L), ncol = 2, byrow = TRUE)
+#'       )
+#'     )
+#'   )
+#'   draw_a3(a)
+#' }
+draw_a3 <- function(
+  x,
+  n_per_row = 21L,
+  residue_spacing = 0.3,
+  marker_size = 28,
+  font_size = 18,
+  line_width = 2,
+  show_markers = TRUE,
+  show_labels = TRUE,
+  position_every = 10L,
+  region_opacity = 0.35,
+  ptm_placement = "radial",
+  residue_fill = "#E7E5E4",
+  residue_stroke = "#44403C",
+  label_color = "#1C1917",
+  pos_label_color = "#78716C",
+  variant_color = "#FA6E1E",
+  disease_variant_color = "#E266AE",
+  enable_zoom = TRUE,
+  title = NULL,
+  grid = NULL,
+  theme = NULL,
+  width = NULL,
+  height = NULL,
+  element_id = NULL,
+  filename = NULL
+) {
+  built <- a3_option(
+    width = width,
+    x = x,
+    n_per_row = n_per_row,
+    residue_spacing = residue_spacing,
+    marker_size = marker_size,
+    font_size = font_size,
+    line_width = line_width,
+    show_markers = show_markers,
+    show_labels = show_labels,
+    position_every = position_every,
+    region_opacity = region_opacity,
+    ptm_placement = ptm_placement,
+    residue_fill = residue_fill,
+    residue_stroke = residue_stroke,
+    label_color = label_color,
+    pos_label_color = pos_label_color,
+    variant_color = variant_color,
+    disease_variant_color = disease_variant_color,
+    enable_zoom = enable_zoom,
+    title = title,
+    grid = grid,
+    height = height
+  )
+
   draw(
-    option,
+    built[["option"]],
     theme = theme,
     width = width,
-    height = height,
+    height = built[["render"]][["height"]],
+    element_id = element_id,
     filename = filename
   )
 }

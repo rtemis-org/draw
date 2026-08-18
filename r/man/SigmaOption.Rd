@@ -17,8 +17,8 @@ SigmaOption(
   resolution = 1,
   blend_edges = FALSE,
   palette = as.character(rtemis_colors),
-  node_color = rtemis_colors[[1L]],
-  positive_color = rtemis_colors[[1L]],
+  node_color = rtemis_colors[["teal"]],
+  positive_color = rtemis_colors[["teal"]],
   negative_color = "#ff9e1f",
   title = NULL
 )

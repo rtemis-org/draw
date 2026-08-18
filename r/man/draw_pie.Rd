@@ -9,11 +9,12 @@ draw_pie(
   labels,
   radius = "75\%",
   rose_type = NULL,
-  color = NULL,
+  palette = NULL,
   title = NULL,
   theme = NULL,
   width = NULL,
   height = NULL,
+  element_id = NULL,
   filename = NULL
 )
 }
@@ -26,7 +27,7 @@ draw_pie(
 
 \item{rose_type}{Optional Character \{"radius", "area"\}: Nightingale chart type.}
 
-\item{color}{Optional Character: Series color palette — a single color string or
+\item{palette}{Optional Character: Series color palette — a single color string or
 character vector that overrides the theme palette for this chart.
 \code{color} takes precedence over the theme palette (it sets \code{option.color}).}
 
@@ -38,6 +39,9 @@ overridden per-chart with the \code{color} argument.}
 \item{width}{Optional Character or Numeric: Widget width.}
 
 \item{height}{Optional Character or Numeric: Widget height.}
+
+\item{element_id}{Optional Character: Explicit DOM element ID for the widget
+container. \code{NULL} lets htmlwidgets generate one.}
 
 \item{filename}{Optional Character: If provided, save the widget to this file via
 \code{\link[=save_drawing]{save_drawing()}}.}

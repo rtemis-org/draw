@@ -7,7 +7,7 @@
 MapLibreOption(
   model = NULL,
   classification = "quantile",
-  color_scheme = "blues",
+  colormap = "blues",
   num_classes = 5,
   opacity = 1,
   show_boundaries = TRUE,
@@ -27,7 +27,7 @@ contain a \code{rows} element).}
 method. \code{"quantile"} (equal counts), \code{"equal"} (equal intervals), or
 \code{"jenks"} (natural breaks).}
 
-\item{color_scheme}{Character: Color ramp. One of the sequential schemes
+\item{colormap}{Character: Color ramp. One of the sequential schemes
 \code{"blues"}, \code{"viridis"}, \code{"ylorrd"}, \code{"greens"}, \code{"magma"}, or the diverging
 schemes \code{"rdbu"}, \code{"rdylgn"}, \code{"spectral"}, \code{"brbg"}.}
 
@@ -64,7 +64,7 @@ resolved uniformly.
 \details{
 Most users never touch this directly -- \code{\link[=draw_choropleth]{draw_choropleth()}} and \code{\link[=draw_map]{draw_map()}}
 build it -- but power users can construct it for full control:
-\code{draw(MapLibreOption(model = MapModel(...), color_scheme = "viridis"))}.
+\code{draw(MapLibreOption(model = MapModel(...), colormap = "viridis"))}.
 
 Its \code{\link[=to_list]{to_list()}} produces the \verb{\{ model, style, title \}} payload consumed by
 the \code{rtemis-map} htmlwidget binding (the geometry is added by the \code{\link[=draw]{draw()}}
