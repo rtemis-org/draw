@@ -16,15 +16,15 @@ draw_graph(
   color_by_group = FALSE,
   resolution = 1,
   blend_edges = FALSE,
-  palette = rtemis_colors,
-  node_color = rtemis_colors[[1L]],
-  positive_color = rtemis_colors[[1L]],
+  palette = palette_colors(rtemis_colors),
+  node_color = rtemis_colors[["teal"]],
+  positive_color = rtemis_colors[["teal"]],
   negative_color = "#ff9e1f",
   title = NULL,
   theme = NULL,
   width = NULL,
   height = NULL,
-  elementId = NULL,
+  element_id = NULL,
   filename = NULL
 )
 }
@@ -75,7 +75,7 @@ light/dark auto-detection (matching \code{\link[=draw]{draw()}}).}
 
 \item{height}{Optional Character or Numeric: Widget height.}
 
-\item{elementId}{Optional Character: Explicit element ID.}
+\item{element_id}{Optional Character: Explicit element ID.}
 
 \item{filename}{Optional Character: Currently ignored with a warning (static
 export of network widgets is not yet supported); accepted for signature

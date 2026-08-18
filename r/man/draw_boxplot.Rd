@@ -5,13 +5,13 @@
 \title{Draw a Boxplot}
 \usage{
 draw_boxplot(
-  data,
+  x,
   labels = NULL,
   group = NULL,
   horizontal = FALSE,
-  color = NULL,
+  palette = NULL,
   fill_alpha = 0.25,
-  na.rm = TRUE,
+  na_rm = TRUE,
   xlab = NULL,
   ylab = NULL,
   title = NULL,
@@ -20,11 +20,12 @@ draw_boxplot(
   width = NULL,
   height = NULL,
   verbosity = 1L,
+  element_id = NULL,
   filename = NULL
 )
 }
 \arguments{
-\item{data}{Numeric or list: A list of numeric vectors (one per box), or a single numeric
+\item{x}{Numeric or list: A list of numeric vectors (one per box), or a single numeric
 vector when \code{group} is provided. For ungrouped named lists, \code{names(data)}
 are used as labels when \code{labels} is not supplied.}
 
@@ -38,13 +39,13 @@ gets its own colored series.}
 
 \item{horizontal}{Logical: Whether to draw horizontal boxplots.}
 
-\item{color}{Optional Character: Box color or colors. For ungrouped boxplots, a single color used at
+\item{palette}{Optional Character: Box color or colors. For ungrouped boxplots, a single color used at
 full opacity for borders and at \code{fill_alpha} opacity for the fill.
 For grouped boxplots, defaults to \code{rtemis_colors}; recycled as needed.}
 
 \item{fill_alpha}{Numeric \verb{[0, 1]}: Opacity for the box fill color.}
 
-\item{na.rm}{Logical: Whether to remove \code{NA} values before
+\item{na_rm}{Logical: Whether to remove \code{NA} values before
 computing boxplot statistics.}
 
 \item{xlab}{Optional Character: X-axis title (bottom axis). Overrides the
@@ -67,6 +68,9 @@ See \code{\link[=draw_line]{draw_line()}} for details.}
 \item{height}{Optional Character or Numeric: Widget height.}
 
 \item{verbosity}{Integer \verb{[0, Inf)}: Verbosity level for removed-\code{NA} messages.}
+
+\item{element_id}{Optional Character: Explicit DOM element ID for the widget
+container. \code{NULL} lets htmlwidgets generate one.}
 
 \item{filename}{Optional Character: If provided, save the widget to this file via
 \code{\link[=save_drawing]{save_drawing()}}.}

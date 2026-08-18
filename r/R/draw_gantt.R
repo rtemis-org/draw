@@ -76,62 +76,20 @@
 
 # -- draw_gantt -----------------------------------------------------------------
 
-#' Draw a Timeline / Gantt Chart
+#' Build the ECharts option for a Gantt chart
 #'
-#' Draw a timeline (Gantt) chart: one horizontal bar per task, positioned by
-#' `start` and `end` on a value or time x-axis and grouped into rows by `label`
-#' on the y-axis. Implemented as an ECharts `custom` series (ECharts has no
-#' native Gantt series).
+#' The single implementation shared by [draw_gantt()], which resolves its arguments
+#' from vectors, and `compile()` on the corresponding [ChartConfig], which
+#' resolves them from a data frame. The render targets stay with the caller.
 #'
-#' @param tasks Tabular data (data.frame, data.table, or tibble): One row per
-#'   task bar. Must contain columns `label` (row / category), `start`, and
-#'   `end`. Repeated `label` values place multiple bars on the same row.
-#' @param group Optional Character: Name of a column in `tasks` whose values
-#'   color the bars and produce a legend. When `NULL`, all bars share one color.
-#' @param axis_type Character \{"value", "time"\}: Type of the x-axis. Use
-#'   `"value"` for numeric offsets (e.g. milliseconds from start) and `"time"`
-#'   for absolute timestamps; `POSIXct`/`Date` `start`/`end` columns are
-#'   converted to epoch milliseconds automatically.
-#' @param bar_height Numeric `(0, 1]`: Bar thickness as a fraction of one
-#'   category band.
-#' @param bar_radius Numeric `[0, Inf)`: Bar corner radius in pixels.
-#' @param guides Logical: If `TRUE`, show an interactive axis pointer -- a guide
-#'   line that follows the mouse and labels the time value on the x-axis.
-#' @param zoom Logical: If `TRUE`, enable interactive zoom -- mouse-wheel to zoom
-#'   and drag to pan on both the time and row axes (`inside` dataZoom), plus a
-#'   top-right toolbox with box-zoom, undo, and reset controls.
-#' @param tooltip Optional Character: Name of a column in `tasks` to show as the
-#'   tooltip text for each bar. When `NULL`, a default `label: start - end`
-#'   tooltip is shown.
-#' @param border Optional Character: Name of a logical column in `tasks`; bars
-#'   whose value is `TRUE` get an outline (in `border_color`) without changing
-#'   their fill -- e.g. to flag failures while the fill still encodes the group.
-#' @param border_color Character: Outline color for bars flagged by `border`.
-#' @param border_width Numeric `[0, Inf)`: Outline width in pixels.
-#' @param xlab Optional Character: x-axis label.
-#' @param title Optional Character: Chart title.
-#' @param color Optional Character: Color palette as a single color or character
-#'   vector overriding the theme palette. Groups are colored in order.
-#' @param theme Optional [Theme]: Theme override.
-#' @param width Optional Character or Numeric: Widget width.
-#' @param height Optional Character or Numeric: Widget height.
-#' @param filename Optional Character: If provided, save the widget to this file
-#'   via [save_drawing()].
+#' @inheritParams draw_gantt
 #'
-#' @return htmlwidget: Widget object.
+#' @return [EChartsOption]: The option object.
 #'
 #' @author EDG
-#' @export
-#'
-#' @examples
-#' tasks <- data.frame(
-#'   label = c("load", "clean", "train", "predict"),
-#'   start = c(0, 12, 30, 95),
-#'   end = c(12, 30, 95, 100),
-#'   status = c("ok", "ok", "ok", "error")
-#' )
-#' draw_gantt(tasks, group = "status")
-draw_gantt <- function(
+#' @keywords internal
+#' @noRd
+gantt_option <- function(
   tasks,
   group = NULL,
   axis_type = "value",
@@ -145,11 +103,7 @@ draw_gantt <- function(
   border_width = 1.5,
   xlab = NULL,
   title = NULL,
-  color = NULL,
-  theme = NULL,
-  width = NULL,
-  height = NULL,
-  filename = NULL
+  palette = NULL
 ) {
   rtemis.core::check_tabular(tasks)
   required_cols <- c("label", "start", "end")
@@ -227,7 +181,7 @@ draw_gantt <- function(
   # Resolve groups -> colors. With a grouping column we emit one custom series
   # per level so ECharts renders a toggleable legend (mirroring draw_scatter);
   # without one, a single series in the first palette color.
-  palette <- color %||% rtemis_colors
+  palette <- palette_colors(palette %||% rtemis_colors)
   if (!is.null(group)) {
     group_vals <- as.character(tasks[[group]])
     levels_g <- unique(group_vals)
@@ -306,7 +260,7 @@ draw_gantt <- function(
     },
     # Discoverable zoom controls (top-right): box-zoom (drag a rectangle), undo,
     # and reset. Complements the wheel/drag `inside` zoom below. Theme-neutral
-    # grey icons + a subtle selection brush read on both light and dark.
+    # gray icons + a subtle selection brush read on both light and dark.
     toolbox = if (isTRUE(zoom)) {
       list(
         show = TRUE,
@@ -352,7 +306,7 @@ draw_gantt <- function(
           show = TRUE,
           type = "line",
           snap = FALSE,
-          # Neutral grey label background (echarts defaults to a blue-grey).
+          # Neutral gray label background (echarts defaults to a blue-gray).
           label = list(show = TRUE, backgroundColor = "#666666"),
           lineStyle = list(color = "#808080", width = 1L, type = "dashed")
         )
@@ -395,5 +349,111 @@ draw_gantt <- function(
     series = series
   )
 
-  draw(opt, theme = theme, width = width, height = height, filename = filename)
+  opt
+} # /rtemis.draw::gantt_option
+
+
+#' Draw a Timeline / Gantt Chart
+#'
+#' Draw a timeline (Gantt) chart: one horizontal bar per task, positioned by
+#' `start` and `end` on a value or time x-axis and grouped into rows by `label`
+#' on the y-axis. Implemented as an ECharts `custom` series (ECharts has no
+#' native Gantt series).
+#'
+#' @param tasks Tabular data (data.frame, data.table, or tibble): One row per
+#'   task bar. Must contain columns `label` (row / category), `start`, and
+#'   `end`. Repeated `label` values place multiple bars on the same row.
+#' @param group Optional Character: Name of a column in `tasks` whose values
+#'   color the bars and produce a legend. When `NULL`, all bars share one color.
+#' @param axis_type Character \{"value", "time"\}: Type of the x-axis. Use
+#'   `"value"` for numeric offsets (e.g. milliseconds from start) and `"time"`
+#'   for absolute timestamps; `POSIXct`/`Date` `start`/`end` columns are
+#'   converted to epoch milliseconds automatically.
+#' @param bar_height Numeric `(0, 1]`: Bar thickness as a fraction of one
+#'   category band.
+#' @param bar_radius Numeric `[0, Inf)`: Bar corner radius in pixels.
+#' @param guides Logical: If `TRUE`, show an interactive axis pointer -- a guide
+#'   line that follows the mouse and labels the time value on the x-axis.
+#' @param zoom Logical: If `TRUE`, enable interactive zoom -- mouse-wheel to zoom
+#'   and drag to pan on both the time and row axes (`inside` dataZoom), plus a
+#'   top-right toolbox with box-zoom, undo, and reset controls.
+#' @param tooltip Optional Character: Name of a column in `tasks` to show as the
+#'   tooltip text for each bar. When `NULL`, a default `label: start - end`
+#'   tooltip is shown.
+#' @param border Optional Character: Name of a logical column in `tasks`; bars
+#'   whose value is `TRUE` get an outline (in `border_color`) without changing
+#'   their fill -- e.g. to flag failures while the fill still encodes the group.
+#' @param border_color Character: Outline color for bars flagged by `border`.
+#' @param border_width Numeric `[0, Inf)`: Outline width in pixels.
+#' @param xlab Optional Character: x-axis label.
+#' @param title Optional Character: Chart title.
+#' @param palette Optional Character: Color palette as a single color or character
+#'   vector overriding the theme palette. Groups are colored in order.
+#' @param theme Optional [Theme]: Theme override.
+#' @param width Optional Character or Numeric: Widget width.
+#' @param height Optional Character or Numeric: Widget height.
+#' @param element_id Optional Character: Explicit DOM element ID for the widget
+#'   container. `NULL` lets htmlwidgets generate one.
+#' @param filename Optional Character: If provided, save the widget to this file
+#'   via [save_drawing()].
+#'
+#' @return htmlwidget: Widget object.
+#'
+#' @author EDG
+#' @export
+#'
+#' @examples
+#' tasks <- data.frame(
+#'   label = c("load", "clean", "train", "predict"),
+#'   start = c(0, 12, 30, 95),
+#'   end = c(12, 30, 95, 100),
+#'   status = c("ok", "ok", "ok", "error")
+#' )
+#' draw_gantt(tasks, group = "status")
+draw_gantt <- function(
+  tasks,
+  group = NULL,
+  axis_type = "value",
+  bar_height = 0.6,
+  bar_radius = 0,
+  guides = TRUE,
+  zoom = TRUE,
+  tooltip = NULL,
+  border = NULL,
+  border_color = "#E53935",
+  border_width = 1.5,
+  xlab = NULL,
+  title = NULL,
+  palette = NULL,
+  theme = NULL,
+  width = NULL,
+  height = NULL,
+  element_id = NULL,
+  filename = NULL
+) {
+  opt <- gantt_option(
+    tasks = tasks,
+    group = group,
+    axis_type = axis_type,
+    bar_height = bar_height,
+    bar_radius = bar_radius,
+    guides = guides,
+    zoom = zoom,
+    tooltip = tooltip,
+    border = border,
+    border_color = border_color,
+    border_width = border_width,
+    xlab = xlab,
+    title = title,
+    palette = palette
+  )
+
+  draw(
+    opt,
+    theme = theme,
+    width = width,
+    height = height,
+    element_id = element_id,
+    filename = filename
+  )
 }

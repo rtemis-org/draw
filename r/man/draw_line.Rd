@@ -14,8 +14,9 @@ draw_line(
   blocks = NULL,
   block_color = NULL,
   block_opacity = 0.2,
-  color = NULL,
+  palette = NULL,
   line_style = NULL,
+  pad = DEFAULT_PAD,
   xlim = NULL,
   ylim = NULL,
   xlab = NULL,
@@ -26,6 +27,7 @@ draw_line(
   margins = DEFAULT_MARGINS,
   width = NULL,
   height = NULL,
+  element_id = NULL,
   filename = NULL
 )
 }
@@ -57,19 +59,23 @@ or \code{"transparent"} entries skip that level.}
 \item{block_opacity}{Numeric [0, 1]: Fill opacity applied to all bands.
 Defaults to \code{0.2}.}
 
-\item{color}{Optional Character: Series color palette — a single color string or
+\item{palette}{Optional Character: Series color palette — a single color string or
 character vector that overrides the theme palette for this chart.
 \code{color} takes precedence over the theme palette (it sets \code{option.color}).}
 
 \item{line_style}{Optional Character \{"solid", "dashed", "dotted"\}: Line dash
 style — one value per series, recycled to match the number of series.}
 
+\item{pad}{Numeric \verb{[0, Inf)}: Fraction of the data range to extend each
+axis by when \code{xlim} / \code{ylim} are not given. The default matches base R's
+\code{xaxs = "r"}, which extends the range by 4\% at each end.
+Defaults to the range of all \code{y} values across series (no padding).}
+
 \item{xlim}{Optional Numeric [length 2]: X-axis limits \code{c(min, max)}.
 Only supported when \code{x} is numeric; passing \code{xlim} with a non-numeric \code{x}
 errors. Defaults to \code{range(x)} (no padding) when \code{x} is numeric.}
 
-\item{ylim}{Optional Numeric [length 2]: Y-axis limits \code{c(min, max)}.
-Defaults to the range of all \code{y} values across series (no padding).}
+\item{ylim}{Optional Numeric [length 2]: Y-axis limits \code{c(min, max)}.}
 
 \item{xlab}{Optional Character: X-axis title.}
 
@@ -95,6 +101,9 @@ axis labels and names with no dead space.}
 \item{width}{Optional Character or Numeric: Widget width.}
 
 \item{height}{Optional Character or Numeric: Widget height.}
+
+\item{element_id}{Optional Character: Explicit DOM element ID for the widget
+container. \code{NULL} lets htmlwidgets generate one.}
 
 \item{filename}{Optional Character: If provided, save the widget to this file via
 \code{\link[=save_drawing]{save_drawing()}}.}

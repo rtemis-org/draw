@@ -7,7 +7,7 @@
 draw_bar(
   x,
   y,
-  color = NULL,
+  palette = NULL,
   stack = FALSE,
   horizontal = FALSE,
   xlab = NULL,
@@ -17,6 +17,7 @@ draw_bar(
   margins = DEFAULT_MARGINS,
   width = NULL,
   height = NULL,
+  element_id = NULL,
   filename = NULL
 )
 }
@@ -25,7 +26,7 @@ draw_bar(
 
 \item{y}{Numeric or named list: Bar heights.}
 
-\item{color}{Optional Character: Bar color or colors. For multiple series,
+\item{palette}{Optional Character: Bar color or colors. For multiple series,
 colors are applied per series and recycled as needed. For a single series,
 a single color styles the whole series; multiple colors are recycled
 across individual bars. \code{color} takes precedence over the theme palette.}
@@ -51,6 +52,9 @@ See \code{\link[=draw_line]{draw_line()}} for details.}
 \item{width}{Optional Character or Numeric: Widget width.}
 
 \item{height}{Optional Character or Numeric: Widget height.}
+
+\item{element_id}{Optional Character: Explicit DOM element ID for the widget
+container. \code{NULL} lets htmlwidgets generate one.}
 
 \item{filename}{Optional Character: If provided, save the widget to this file via
 \code{\link[=save_drawing]{save_drawing()}}.}

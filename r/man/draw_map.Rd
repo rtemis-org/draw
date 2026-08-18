@@ -7,7 +7,7 @@
 draw_map(
   model,
   classification = "quantile",
-  color_scheme = "blues",
+  colormap = "blues",
   num_classes = 5,
   opacity = 1,
   show_boundaries = TRUE,
@@ -20,7 +20,7 @@ draw_map(
   theme = NULL,
   width = NULL,
   height = NULL,
-  elementId = NULL,
+  element_id = NULL,
   filename = NULL
 )
 }
@@ -31,7 +31,7 @@ draw_map(
 method. \code{"quantile"} (equal counts), \code{"equal"} (equal intervals), or
 \code{"jenks"} (natural breaks).}
 
-\item{color_scheme}{Character: Color ramp. One of the sequential schemes
+\item{colormap}{Character: Color ramp. One of the sequential schemes
 \code{"blues"}, \code{"viridis"}, \code{"ylorrd"}, \code{"greens"}, \code{"magma"}, or the diverging
 schemes \code{"rdbu"}, \code{"rdylgn"}, \code{"spectral"}, \code{"brbg"}.}
 
@@ -64,7 +64,7 @@ light/dark auto-detection (matching \code{\link[=draw]{draw()}}).}
 
 \item{height}{Optional Character or Numeric: Widget height.}
 
-\item{elementId}{Optional Character: Explicit element ID.}
+\item{element_id}{Optional Character: Explicit element ID.}
 
 \item{filename}{Optional Character: Currently ignored with a warning (static
 export of map widgets is not yet supported); accepted for signature parity

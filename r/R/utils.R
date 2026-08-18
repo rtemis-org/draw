@@ -256,7 +256,17 @@ color_with_alpha <- function(color, alpha) {
 #' @return Numeric: Length-2 vector `c(min, max)`.
 #' @keywords internal
 #' @noRd
-calc_limits <- function(values, pad = 0.04) {
+# %% DEFAULT_PAD ----
+# How much room an axis leaves around the data, as a fraction of its range, when
+# limits are not given. 0.04 matches base R's `xaxs = "r"`, which extends the
+# range by 4% at each end.
+#
+# Every `pad` default in the package refers to this, so changing the convention
+# is a one-line change here rather than a sweep through every chart.
+DEFAULT_PAD <- 0.04
+
+
+calc_limits <- function(values, pad = DEFAULT_PAD) {
   rng <- range(values, na.rm = TRUE)
   span <- rng[2] - rng[1]
   if (span == 0) {
@@ -426,6 +436,37 @@ color_palette_property <- function(default = NULL) {
   )
 }
 
+#' Property that accepts a symbol offset or NULL
+#'
+#' echarts' `symbolOffset` shifts a symbol from its data point, in *screen*
+#' pixels or as a percentage of the symbol's own size. It is applied after
+#' `symbolRotate`, in the unrotated frame, so it is independent of the axis
+#' scales -- which is what makes it usable for pixel-exact glyph anchoring.
+#'
+#' Accepts a single value (applied to both axes, matching
+#' `normalizeSymbolOffset()` in `src/util/symbol.ts`) or a length-2 vector of
+#' `c(x, y)`. Numbers are pixels; strings are percentages, e.g. `"-50%"`.
+#' @keywords internal
+#' @noRd
+symbol_offset_property <- function(default = NULL) {
+  S7::new_property(
+    class = S7::class_any,
+    default = default,
+    validator = function(value) {
+      if (is.null(value)) {
+        return(NULL)
+      }
+      if (!is.numeric(value) && !is.character(value)) {
+        return("must be a number, percentage string, or NULL")
+      }
+      if (length(value) < 1L || length(value) > 2L) {
+        return("must be a single value or a length-2 vector c(x, y)")
+      }
+      NULL
+    }
+  )
+}
+
 #' Property that accepts an S7 class instance or NULL
 #' @keywords internal
 #' @noRd
@@ -495,3 +536,29 @@ lighten <- function(x, amount = 0.1) {
   names(out) <- names(x)
   out
 }
+
+
+# %% palette_colors ----
+#' Strip names from a color palette
+#'
+#' ECharts takes a palette as a JSON **array**. `rtemis.core::rtemis_colors` is
+#' a *named* vector -- deliberately, so callers can write
+#' `rtemis_colors[["teal"]]` -- and htmlwidgets serializes named vectors as JSON
+#' objects (`keep_vec_names = TRUE`). A named palette therefore reaches the
+#' browser as `{"teal": "#6CA3A0", ...}` where an array is expected, and the
+#' chart renders with no colors at all, with only a jsonlite deprecation warning
+#' to show for it.
+#'
+#' Every palette entering an option goes through here, including one the caller
+#' supplied: a user passing a named vector hits the same failure.
+#'
+#' @param x Character: Colors.
+#'
+#' @return Character: `x` without names.
+#'
+#' @author EDG
+#' @keywords internal
+#' @noRd
+palette_colors <- function(x) {
+  unname(x)
+} # /rtemis.draw::palette_colors

@@ -274,7 +274,7 @@ test_that("draw_spectrogram works with log freq_scale (drops DC)", {
 test_that("draw_spectrogram works with diverging palette", {
   # Simulate EEG-like signed amplitude matrix
   mat <- matrix(rnorm(64 * 40, sd = 50), nrow = 64, ncol = 40)
-  w <- draw_spectrogram(mat, db = FALSE, power = FALSE, palette = "diverging")
+  w <- draw_spectrogram(mat, db = FALSE, power = FALSE, colormap = "diverging")
   expect_s3_class(w, "htmlwidget")
 })
 
@@ -295,7 +295,7 @@ test_that("draw_spectrogram works with custom hex palette", {
   w <- draw_spectrogram(
     mat,
     db = FALSE,
-    palette = c("#000004", "#51127c", "#b5367a", "#fb8861", "#fcfdbf")
+    colormap = c("#000004", "#51127c", "#b5367a", "#fb8861", "#fcfdbf")
   )
   expect_s3_class(w, "htmlwidget")
 })

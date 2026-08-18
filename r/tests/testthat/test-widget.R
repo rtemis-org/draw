@@ -319,10 +319,12 @@ test_that("draw_line rejects invalid zoom values", {
 
 test_that("draw_line defaults xlim/ylim to exact data range (no padding)", {
   w <- draw_line(x = c(1, 2, 3, 4), y = c(10, 20, 15, 25))
-  expect_equal(w$x$option$xAxis$min, 1)
-  expect_equal(w$x$option$xAxis$max, 4)
-  expect_equal(w$x$option$yAxis$min, 10)
-  expect_equal(w$x$option$yAxis$max, 25)
+  # Limits extend the data range by `pad` (4% by default), as on every other
+  # value axis; `draw_line` used to sit hard against the data range.
+  expect_equal(w$x$option$xAxis$min, 1 - 0.04 * 3)
+  expect_equal(w$x$option$xAxis$max, 4 + 0.04 * 3)
+  expect_equal(w$x$option$yAxis$min, 10 - 0.04 * 15)
+  expect_equal(w$x$option$yAxis$max, 25 + 0.04 * 15)
 })
 
 test_that("draw_line honors explicit xlim and ylim", {
@@ -343,8 +345,9 @@ test_that("draw_line ylim spans all series in a list", {
     x = c("A", "B", "C"),
     y = list(S1 = c(1, 2, 3), S2 = c(10, 20, 30))
   )
-  expect_equal(w$x$option$yAxis$min, 1)
-  expect_equal(w$x$option$yAxis$max, 30)
+  # Padded across the union of both series: range 1-30, so 4% of 29 each side.
+  expect_equal(w$x$option$yAxis$min, 1 - 0.04 * 29)
+  expect_equal(w$x$option$yAxis$max, 30 + 0.04 * 29)
 })
 
 test_that("draw_line omits x-axis min/max when x is non-numeric", {
@@ -436,7 +439,7 @@ test_that("draw_bar applies a single color to a single series", {
   w <- draw_bar(
     x = c("Q1", "Q2", "Q3"),
     y = c(100, 200, 150),
-    color = "#ff0000"
+    palette = "#ff0000"
   )
   expect_equal(w$x$option$series[[1]]$color, "#ff0000")
 })
@@ -445,7 +448,7 @@ test_that("draw_bar recycles colors across individual bars", {
   w <- draw_bar(
     x = c("Q1", "Q2", "Q3"),
     y = c(100, 200, 150),
-    color = c("#ff0000", "#00ff00")
+    palette = c("#ff0000", "#00ff00")
   )
   expect_equal(w$x$option$series[[1]]$data[[1]]$itemStyle$color, "#ff0000")
   expect_equal(w$x$option$series[[1]]$data[[2]]$itemStyle$color, "#00ff00")
@@ -466,7 +469,7 @@ test_that("draw_bar recycles colors across multiple series", {
   w <- draw_bar(
     x = c("A", "B"),
     y = list("X" = c(10, 20), "Y" = c(5, 15), "Z" = c(7, 9)),
-    color = c("#ff0000", "#00ff00")
+    palette = c("#ff0000", "#00ff00")
   )
   expect_equal(w$x$option$series[[1]]$color, "#ff0000")
   expect_equal(w$x$option$series[[2]]$color, "#00ff00")
@@ -654,7 +657,7 @@ test_that("draw_pie donut", {
 
 test_that("draw_boxplot computes stats and creates widget", {
   w <- draw_boxplot(
-    data = list(
+    x = list(
       c(1, 2, 3, 4, 5, 6, 7, 8, 9, 10),
       c(5, 6, 7, 8, 9, 10, 11, 12, 13, 14)
     ),
@@ -674,7 +677,7 @@ test_that("draw_boxplot computes stats and creates widget", {
 
 test_that("draw_boxplot uses names from an ungrouped named list as labels", {
   w <- draw_boxplot(
-    data = list(
+    x = list(
       "Control" = c(1, 2, 3, 4, 5, 6, 7),
       "Treatment" = c(3, 4, 5, 6, 7, 8, 9)
     )
@@ -687,7 +690,7 @@ test_that("draw_boxplot uses names from an ungrouped named list as labels", {
 
 test_that("draw_boxplot respects explicit labels over named-list labels", {
   w <- draw_boxplot(
-    data = list(
+    x = list(
       "Control" = c(1, 2, 3, 4, 5, 6, 7),
       "Treatment" = c(3, 4, 5, 6, 7, 8, 9)
     ),
@@ -698,9 +701,9 @@ test_that("draw_boxplot respects explicit labels over named-list labels", {
 
 test_that("draw_boxplot fill_alpha controls fill opacity", {
   w <- draw_boxplot(
-    data = list(c(1, 2, 3, 4, 5, 6, 7)),
+    x = list(c(1, 2, 3, 4, 5, 6, 7)),
     labels = c("G1"),
-    color = "#ff0000",
+    palette = "#ff0000",
     fill_alpha = 0.5
   )
   is <- w$x$option$series[[1]]$itemStyle
@@ -710,7 +713,7 @@ test_that("draw_boxplot fill_alpha controls fill opacity", {
 
 test_that("draw_boxplot horizontal", {
   w <- draw_boxplot(
-    data = list(c(1, 2, 3, 4, 5, 6, 7, 8)),
+    x = list(c(1, 2, 3, 4, 5, 6, 7, 8)),
     labels = c("G1"),
     horizontal = TRUE
   )
@@ -722,7 +725,7 @@ test_that("draw_boxplot horizontal", {
 test_that("draw_boxplot handles NAs in ungrouped data", {
   expect_message(
     w <- draw_boxplot(
-      data = list(c(1, 2, NA, 4, 5, 6, NA, 8, 9, 10)),
+      x = list(c(1, 2, NA, 4, 5, 6, NA, 8, 9, 10)),
       labels = c("G1"),
       verbosity = 1L
     ),
@@ -736,7 +739,7 @@ test_that("draw_boxplot with group computes stats in a single series", {
   set.seed(1)
   vals <- c(rnorm(50, 10, 2), rnorm(50, 15, 3))
   g <- rep(c("Control", "Treatment"), each = 50)
-  w <- draw_boxplot(data = vals, group = g)
+  w <- draw_boxplot(x = vals, group = g)
   expect_s3_class(w, "htmlwidget")
   # Single BoxplotSeries with one data item per group
   expect_equal(length(w$x$option$series), 1L)
@@ -762,7 +765,9 @@ test_that("draw_boxplot with group computes stats in a single series", {
       function(item) item$itemStyle$borderColor,
       character(1)
     ),
-    rtemis_colors[1:2]
+    # `unname()`: the palette is rtemis.core's named vector, while the colors
+    # read back off the option are bare strings.
+    unname(rtemis_colors[1:2])
   )
 })
 
@@ -770,7 +775,7 @@ test_that("draw_boxplot with group drops missing group values", {
   vals <- c(10, 11, 12, 20, 21, 22, 30)
   g <- c("Control", "Control", NA, "Treatment", "Treatment", NA, "Control")
 
-  w <- draw_boxplot(data = vals, group = g)
+  w <- draw_boxplot(x = vals, group = g)
 
   expect_equal(w$x$option$xAxis$data, c("Control", "Treatment"))
   expect_equal(length(w$x$option$series), 1L)
@@ -794,7 +799,7 @@ test_that("draw_boxplot with grouped variables drops missing group values", {
   )
   g <- c("male", "male", NA, "female", "female", NA)
 
-  w <- draw_boxplot(data = data, group = g)
+  w <- draw_boxplot(x = data, group = g)
 
   expect_equal(length(w$x$option$series), 2L)
   expect_equal(
@@ -816,7 +821,7 @@ test_that("draw_boxplot with group horizontal", {
   set.seed(1)
   vals <- c(rnorm(30, 5), rnorm(30, 8))
   g <- rep(c("A", "B"), each = 30)
-  w <- draw_boxplot(data = vals, group = g, horizontal = TRUE)
+  w <- draw_boxplot(x = vals, group = g, horizontal = TRUE)
   expect_equal(w$x$option$xAxis$type, "value")
   expect_equal(w$x$option$yAxis$type, "category")
   expect_equal(w$x$option$yAxis$data, c("A", "B"))
@@ -1081,7 +1086,7 @@ test_that("draw_histogram applies margins", {
 test_that("draw_boxplot applies margins across grouped/ungrouped branches", {
   # Ungrouped list
   w1 <- draw_boxplot(
-    data = list(c(1, 2, 3, 4, 5)),
+    x = list(c(1, 2, 3, 4, 5)),
     labels = "A",
     margins = c(left = 70)
   )
@@ -1089,7 +1094,7 @@ test_that("draw_boxplot applies margins across grouped/ungrouped branches", {
 
   # Grouped single vector
   w2 <- draw_boxplot(
-    data = c(1, 2, 3, 4, 5, 6),
+    x = c(1, 2, 3, 4, 5, 6),
     group = rep(c("A", "B"), each = 3),
     margins = c(left = 70)
   )
@@ -1097,7 +1102,7 @@ test_that("draw_boxplot applies margins across grouped/ungrouped branches", {
 
   # Grouped named list
   w3 <- draw_boxplot(
-    data = list(v1 = c(1, 2, 3, 4), v2 = c(2, 3, 4, 5)),
+    x = list(v1 = c(1, 2, 3, 4), v2 = c(2, 3, 4, 5)),
     group = rep(c("A", "B"), each = 2),
     margins = c(left = 70)
   )
@@ -1127,6 +1132,30 @@ test_that("draw_heatmap margins cascade to square-cell meta", {
   colnames(m) <- c("c1", "c2", "c3", "c4")
   w <- draw_heatmap(m, margins = c(left = 180), square_cells = TRUE)
   expect_equal(w$x$leftPx, 180)
+})
+
+test_that("meta reaches the widget payload verbatim", {
+  # The `aspect` contract documented on draw(): the JS binding reads these
+  # fields off the payload to solve for the grid box at the measured width.
+  aspect <- list(
+    ratio = 0.5,
+    widthPx = 420,
+    leftPx = 34,
+    rightPx = 34,
+    topPx = 28,
+    botPx = 34
+  )
+  w <- draw(
+    EChartsOption(
+      x_axis = Axis(type = "value"),
+      y_axis = Axis(type = "value"),
+      series = list(ScatterSeries(data = list(c(1, 2))))
+    ),
+    width = "100%",
+    height = 260,
+    meta = list(aspect = aspect)
+  )
+  expect_equal(w$x$aspect, aspect)
 })
 
 # -- xlab / ylab ---------------------------------------------------------------
@@ -1183,7 +1212,7 @@ test_that("draw_histogram applies xlab and ylab", {
 
 test_that("draw_boxplot applies xlab and ylab (ungrouped)", {
   w <- draw_boxplot(
-    data = list(A = c(1, 2, 3), B = c(2, 3, 4)),
+    x = list(A = c(1, 2, 3), B = c(2, 3, 4)),
     xlab = "Group",
     ylab = "Value"
   )
@@ -1193,7 +1222,7 @@ test_that("draw_boxplot applies xlab and ylab (ungrouped)", {
 
 test_that("draw_boxplot inferred value_axis_name goes on y when vertical", {
   w <- draw_boxplot(
-    data = list(`Body Mass` = c(1, 2, 3, 4, 5, 6)),
+    x = list(`Body Mass` = c(1, 2, 3, 4, 5, 6)),
     group = rep(c("A", "B"), each = 3)
   )
   expect_equal(w$x$option$yAxis[["name"]], "Body Mass")
@@ -1202,7 +1231,7 @@ test_that("draw_boxplot inferred value_axis_name goes on y when vertical", {
 
 test_that("draw_boxplot inferred value_axis_name goes on x when horizontal", {
   w <- draw_boxplot(
-    data = list(`Body Mass` = c(1, 2, 3, 4, 5, 6)),
+    x = list(`Body Mass` = c(1, 2, 3, 4, 5, 6)),
     group = rep(c("A", "B"), each = 3),
     horizontal = TRUE
   )
@@ -1212,7 +1241,7 @@ test_that("draw_boxplot inferred value_axis_name goes on x when horizontal", {
 
 test_that("draw_boxplot ylab overrides inferred value_axis_name", {
   w <- draw_boxplot(
-    data = list(`Body Mass` = c(1, 2, 3, 4, 5, 6)),
+    x = list(`Body Mass` = c(1, 2, 3, 4, 5, 6)),
     group = rep(c("A", "B"), each = 3),
     ylab = "Mass (g)"
   )
@@ -1221,7 +1250,7 @@ test_that("draw_boxplot ylab overrides inferred value_axis_name", {
 
 test_that("draw_boxplot xlab applies in grouped multi-variable branch", {
   w <- draw_boxplot(
-    data = list(v1 = c(1, 2, 3, 4), v2 = c(2, 3, 4, 5)),
+    x = list(v1 = c(1, 2, 3, 4), v2 = c(2, 3, 4, 5)),
     group = rep(c("A", "B"), each = 2),
     xlab = "Variable",
     ylab = "Value"

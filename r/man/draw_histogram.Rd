@@ -8,6 +8,7 @@ draw_histogram(
   x,
   group = NULL,
   breaks = "Sturges",
+  palette = NULL,
   xlab = NULL,
   ylab = NULL,
   title = NULL,
@@ -15,6 +16,7 @@ draw_histogram(
   margins = DEFAULT_MARGINS,
   width = NULL,
   height = NULL,
+  element_id = NULL,
   filename = NULL
 )
 }
@@ -26,6 +28,9 @@ draw_histogram(
 \item{breaks}{Numeric, Character, or Numeric vector: Binning method. A single number (number of bins), a character
 string naming an algorithm (e.g. \code{"Sturges"}, \code{"Scott"}, \code{"FD"}), or a
 numeric vector of break points. Passed to \code{\link[graphics:hist]{graphics::hist()}}.}
+
+\item{palette}{Optional Character: Series colors, overriding the theme
+palette for this chart. \code{NULL} uses the theme's.}
 
 \item{xlab}{Optional Character: X-axis title.}
 
@@ -43,6 +48,9 @@ See \code{\link[=draw_line]{draw_line()}} for details.}
 \item{width}{Optional Character or Numeric: Widget width.}
 
 \item{height}{Optional Character or Numeric: Widget height.}
+
+\item{element_id}{Optional Character: Explicit DOM element ID for the widget
+container. \code{NULL} lets htmlwidgets generate one.}
 
 \item{filename}{Optional Character: If provided, save the widget to this file via
 \code{\link[=save_drawing]{save_drawing()}}.}

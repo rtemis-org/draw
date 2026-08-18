@@ -11,10 +11,11 @@ draw_sankey(
   node_gap = NULL,
   node_align = NULL,
   title = NULL,
-  color = NULL,
+  palette = NULL,
   theme = NULL,
   width = NULL,
   height = NULL,
+  element_id = NULL,
   filename = NULL
 )
 }
@@ -33,7 +34,7 @@ alignment within each column.}
 
 \item{title}{Optional Character: Chart title.}
 
-\item{color}{Optional Character: Node color palette — a single color string or
+\item{palette}{Optional Character: Node color palette — a single color string or
 a character vector that overrides the theme palette for this chart.}
 
 \item{theme}{Optional \link{Theme}: Theme override.}
@@ -41,6 +42,9 @@ a character vector that overrides the theme palette for this chart.}
 \item{width}{Optional Character or Numeric: Widget width.}
 
 \item{height}{Optional Character or Numeric: Widget height.}
+
+\item{element_id}{Optional Character: Explicit DOM element ID for the widget
+container. \code{NULL} lets htmlwidgets generate one.}
 
 \item{filename}{Optional Character: If provided, save the widget to this file
 via \code{\link[=save_drawing]{save_drawing()}}.}

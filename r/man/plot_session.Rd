@@ -7,7 +7,7 @@
 plot_session(x, ...)
 }
 \arguments{
-\item{x}{\code{Supervised} object.}
+\item{x}{\code{rtemis::Supervised} or \code{rtemis::SupervisedRes} object.}
 
 \item{...}{Additional arguments passed to \link{draw_gantt}.}
 }
@@ -15,7 +15,12 @@ plot_session(x, ...)
 htmlwidget: Widget object.
 }
 \description{
-Plots the session timeline of a Supervised object using \link{draw_gantt}.
+Plots the session timeline of a \code{Supervised} or \code{SupervisedRes} object using
+\link{draw_gantt}.
+}
+\details{
+Requires the rtemis package: the classes this dispatches on are defined there,
+so the methods are registered only when rtemis is installed.
 }
 \author{
 EDG

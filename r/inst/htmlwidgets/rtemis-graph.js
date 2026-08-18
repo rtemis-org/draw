@@ -23,7 +23,7 @@ HTMLWidgets.widget({
     const { Graph, Sigma, louvain, forceAtlas2, circlepack, random } =
       window.RtemisGraph || {};
 
-    // Detect dark mode from VS Code, RStudio, or browser preference.
+    // Detect dark mode from VS Code, RStudio, Quarto, or browser preference.
     // (Mirrors rtemis-draw.js so both renderers theme consistently.)
     const isDarkMode = () => {
       const body = document.body;
@@ -35,6 +35,8 @@ HTMLWidgets.widget({
       }
       if (body.classList.contains("vscode-light")) return false;
       if (body.classList.contains("rstudio-themes-dark-menus")) return true;
+      if (body.classList.contains("quarto-dark")) return true;
+      if (body.classList.contains("quarto-light")) return false;
       if (window.matchMedia) {
         return window.matchMedia("(prefers-color-scheme: dark)").matches;
       }

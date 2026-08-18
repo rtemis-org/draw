@@ -22,7 +22,7 @@ draw_heatmap(
   dendro_row_side = "right",
   dendro_col_side = "top",
   square_cells = NULL,
-  color = NULL,
+  colormap = NULL,
   zlim = NULL,
   show_values = FALSE,
   value_digits = 2L,
@@ -33,6 +33,7 @@ draw_heatmap(
   margins = NULL,
   width = NULL,
   height = NULL,
+  element_id = NULL,
   filename = NULL
 )
 }
@@ -74,7 +75,7 @@ dendrogram panel (between row labels and the heatmap grid).}
 col dendrogram panel (between the chart title and the heatmap grid).}
 
 \item{dendro_color}{Optional Character: Stroke color for dendrogram branch
-lines. \code{NULL} (default) uses a semi-transparent grey (\code{"#99999988"}),
+lines. \code{NULL} (default) uses a semi-transparent gray (\code{"#99999988"}),
 which works in both light and dark themes.}
 
 \item{dendro_uniform}{Logical: Whether to render dendrograms with uniform level
@@ -96,10 +97,10 @@ matrices (e.g. correlation matrices). When \code{TRUE}, both \code{width} and \c
 are calculated from the number of cells; supply explicit \code{width}/\code{height} to
 override.}
 
-\item{color}{Optional Character: Color palette — a vector of 2 or more colors
+\item{colormap}{Optional Character: Color palette — a vector of 2 or more colors
 defining the continuous color scale from \code{zlim[1]} to \code{zlim[2]}. When \code{NULL}
 (default) a diverging teal–background–orange palette is used when data spans
-zero (with the background colour pinned exactly at 0, even for asymmetric
+zero (with the background color pinned exactly at 0, even for asymmetric
 ranges), otherwise a sequential single-hue palette is used. Two variants
 (light / dark) are computed automatically and the JS binding selects the
 correct one based on the active theme.}
@@ -132,6 +133,9 @@ dendrogram panels. See \code{\link[=draw_line]{draw_line()}} for the general con
 \item{width}{Optional Character or Numeric: Widget width.}
 
 \item{height}{Optional Character or Numeric: Widget height.}
+
+\item{element_id}{Optional Character: Explicit DOM element ID for the widget
+container. \code{NULL} lets htmlwidgets generate one.}
 
 \item{filename}{Optional Character: If provided, save the widget to this file via
 \code{\link[=save_drawing]{save_drawing()}}.}

@@ -17,6 +17,8 @@ ScatterSeries(
   clip = NULL,
   symbol = NULL,
   symbol_size = NULL,
+  symbol_rotate = NULL,
+  symbol_offset = NULL,
   large = NULL,
   large_threshold = NULL,
   item_style = NULL,
@@ -47,6 +49,14 @@ ScatterSeries(
 \item{symbol}{Optional Character: Symbol type.}
 
 \item{symbol_size}{Optional Numeric or function: Symbol size.}
+
+\item{symbol_rotate}{Optional Numeric: Symbol rotation in degrees,
+counter-clockwise-positive. A symbol is unrotated at \code{0}.}
+
+\item{symbol_offset}{Optional Numeric or Character: Shift from the data
+point as \code{c(x, y)}, in screen pixels (numbers) or as a percentage of the
+symbol's own size (strings, e.g. \code{c("0\%", "-50\%")}). Applied \emph{after}
+\code{symbol_rotate}, in the unrotated frame.}
 
 \item{large}{Optional Logical: Whether to enable large-data optimization.}
 

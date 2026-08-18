@@ -59,6 +59,13 @@ test_that("LineSeries symbol_size accepts number and vector", {
   expect_equal(ls2@symbol_size, c(10, 20))
 })
 
+test_that("LineSeries symbol_rotate and symbol_offset serialize", {
+  ls <- LineSeries(symbol_rotate = -30, symbol_offset = c(4, -6))
+  out <- to_list(ls)
+  expect_equal(out$symbolRotate, -30)
+  expect_equal(out$symbolOffset, c(4, -6))
+})
+
 test_that("LineSeries line_style nests correctly", {
   ls <- LineSeries(
     name = "A",
@@ -174,6 +181,32 @@ test_that("ScatterSeries symbol_size accepts function", {
   fn <- function(value) sqrt(value[3]) * 10
   ss <- ScatterSeries(symbol_size = fn)
   expect_true(is.function(ss@symbol_size))
+})
+
+test_that("ScatterSeries symbol_rotate accepts a number, rejects a vector", {
+  ss <- ScatterSeries(symbol_rotate = 45)
+  expect_equal(ss@symbol_rotate, 45)
+  expect_equal(to_list(ss)$symbolRotate, 45)
+  expect_error(ScatterSeries(symbol_rotate = c(0, 45)))
+  expect_error(ScatterSeries(symbol_rotate = "45"))
+})
+
+test_that("ScatterSeries symbol_offset accepts px, percent, and a scalar", {
+  expect_equal(ScatterSeries(symbol_offset = c(-4, 6))@symbol_offset, c(-4, 6))
+  expect_equal(
+    to_list(ScatterSeries(symbol_offset = c("0%", "-50%")))$symbolOffset,
+    c("0%", "-50%")
+  )
+  # echarts' normalizeSymbolOffset() recycles a scalar to both axes.
+  expect_equal(ScatterSeries(symbol_offset = 3)@symbol_offset, 3)
+  expect_error(ScatterSeries(symbol_offset = c(1, 2, 3)))
+  expect_error(ScatterSeries(symbol_offset = TRUE))
+})
+
+test_that("ScatterSeries drops symbol_rotate and symbol_offset when unset", {
+  out <- to_list(ScatterSeries(data = list(c(1, 2))))
+  expect_null(out$symbolRotate)
+  expect_null(out$symbolOffset)
 })
 
 test_that("ScatterSeries item_style nests", {

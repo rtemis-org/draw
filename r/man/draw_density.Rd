@@ -9,7 +9,8 @@ draw_density(
   group = NULL,
   n = 512,
   bw = "nrd0",
-  na.rm = TRUE,
+  na_rm = TRUE,
+  palette = NULL,
   xlab = NULL,
   ylab = NULL,
   title = NULL,
@@ -18,6 +19,7 @@ draw_density(
   width = NULL,
   height = NULL,
   verbosity = 1L,
+  element_id = NULL,
   filename = NULL
 )
 }
@@ -32,8 +34,11 @@ element is split by group into separate traces.}
 
 \item{bw}{Character or Numeric: Bandwidth passed to \code{\link[stats:density]{stats::density()}}.}
 
-\item{na.rm}{Logical: Whether to remove \code{NA} values before
+\item{na_rm}{Logical: Whether to remove \code{NA} values before
 computing densities.}
+
+\item{palette}{Optional Character: Series colors, overriding the theme
+palette for this chart. \code{NULL} uses the theme's.}
 
 \item{xlab}{Optional Character: X-axis title.}
 
@@ -53,6 +58,9 @@ See \code{\link[=draw_line]{draw_line()}} for details.}
 \item{height}{Optional Character or Numeric: Widget height.}
 
 \item{verbosity}{Integer \verb{[0, Inf)}: Verbosity level for removed-\code{NA} messages.}
+
+\item{element_id}{Optional Character: Explicit DOM element ID for the widget
+container. \code{NULL} lets htmlwidgets generate one.}
 
 \item{filename}{Optional Character: If provided, save the widget to this file via
 \code{\link[=save_drawing]{save_drawing()}}.}

@@ -1,13 +1,24 @@
-# plot_SupervisedSession.R
-# Plot method for rtemis SupervisedSession: render the captured execution graph
-# as a timeline / Gantt chart via draw_gantt().
+# plot.SupervisedSession.R
+# ::rtemis.draw::
+# 2026- EDG rtemis.org
 
-# %% Temp get SupervisedSession ----
-SupervisedSession <- utils::getFromNamespace("SupervisedSession", "rtemis")
+# Plot methods for rtemis session objects: render the captured execution graph as
+# a timeline / Gantt chart via draw_gantt().
+#
+# These methods belong in rtemis, not here -- they are glue between rtemis's
+# result classes and this package's generic `draw_gantt()`. They live here
+# temporarily because rtemis cannot depend on rtemis.draw until rtemis.draw is on
+# CRAN, which is what the current release is for. Once it is, rtemis takes them
+# (along with the conformal plots and the rest that will follow) and this file is
+# deleted.
+#
+# Until then `rtemis` is a *Suggests*, so the dependency is soft: the classes
+# these methods dispatch on (`SupervisedSession`, `Supervised`, `SupervisedRes`)
+# exist only when rtemis is installed, and the methods are therefore registered
+# at load time by `.register_rtemis_methods()` rather than at build time. See
+# `R/zzz.R`.
 
-
-# %% plot.SupervisedSession ----
-
+# %% draw_supervised_session ----
 #' Plot a SupervisedSession Execution Timeline
 #'
 #' Render the execution graph captured in a `SupervisedSession` (from rtemis
@@ -19,6 +30,9 @@ SupervisedSession <- utils::getFromNamespace("SupervisedSession", "rtemis")
 #' `rtemis::session_timeline()` and `rtemis::session_kind_colors()`, the shared
 #' helpers also used by rtemis.server for the rtemislive web UI, so both
 #' renderers stay in sync.
+#'
+#' Registered as the `plot()` method for `rtemis::SupervisedSession` when rtemis
+#' is installed.
 #'
 #' @param x `rtemis::SupervisedSession`: Session object, e.g. `model@session`.
 #' @param title Optional Character: Chart title.
@@ -34,7 +48,7 @@ SupervisedSession <- utils::getFromNamespace("SupervisedSession", "rtemis")
 #' @author EDG
 #' @keywords internal
 #' @noRd
-S7::method(plot, SupervisedSession) <- function(
+draw_supervised_session <- function(
   x,
   title = NULL,
   theme = NULL,
@@ -59,39 +73,83 @@ S7::method(plot, SupervisedSession) <- function(
     axis_type = "value",
     tooltip = "tip",
     # Outline failed/aborted nodes (fill still encodes the kind, so a parallel
-    # failed cell keeps its siblings' color -> the same-color = parallel
+    # failed cell keeps its siblings' color -> the same-palette = parallel
     # reading holds, while failures still pop via the red border).
     border = "failed",
     xlab = "Elapsed (ms)",
     title = title,
-    color = unname(cols),
+    palette = unname(cols),
     theme = theme,
     width = width,
     height = height,
     filename = filename
   )
-}
+} # /rtemis.draw::draw_supervised_session
 
 
-# %% plot_session
-#'  Plot a Supervised object's session timeline
+# %% plot_session ----
+#' Plot a Supervised object's session timeline
 #'
-#' Plots the session timeline of a Supervised object using [draw_gantt].
+#' Plots the session timeline of a `Supervised` or `SupervisedRes` object using
+#' [draw_gantt].
 #'
-#' @param x `Supervised` object.
+#' Requires the rtemis package: the classes this dispatches on are defined there,
+#' so the methods are registered only when rtemis is installed.
+#'
+#' @param x `rtemis::Supervised` or `rtemis::SupervisedRes` object.
 #' @param ... Additional arguments passed to [draw_gantt].
+#'
 #' @return htmlwidget: Widget object.
+#'
 #' @author EDG
 #' @export
 plot_session <- new_generic("plot_session", "x")
 
 
-# %% plot_session.Supervised
-Supervised <- utils::getFromNamespace("Supervised", "rtemis")
-method(plot_session, Supervised) <- function(x, ...) {
+# %% draw_object_session ----
+#' Plot the session timeline held on a fitted rtemis object
+#'
+#' Shared implementation for the `plot_session()` methods on
+#' `rtemis::Supervised` and `rtemis::SupervisedRes`: both hold their run's
+#' session on `@session`.
+#'
+#' @param x `rtemis::Supervised` or `rtemis::SupervisedRes` object.
+#' @param ... Additional arguments passed to [draw_gantt].
+#'
+#' @return htmlwidget: Widget object.
+#'
+#' @author EDG
+#' @keywords internal
+#' @noRd
+draw_object_session <- function(x, ...) {
   plot(x@session, ...)
-}
-SupervisedRes <- utils::getFromNamespace("SupervisedRes", "rtemis")
-method(plot_session, SupervisedRes) <- function(x, ...) {
-  plot(x@session, ...)
-}
+} # /rtemis.draw::draw_object_session
+
+
+# %% .register_rtemis_methods ----
+#' Register the rtemis-dependent S7 methods
+#'
+#' Called from `.onLoad()`. `rtemis` is a Suggests, so the classes these methods
+#' dispatch on may not exist; registering at load time rather than at build time
+#' is what lets rtemis.draw install, load and check without it.
+#'
+#' A no-op when rtemis is absent, so `plot_session()` is still exported and still
+#' errors informatively (no method) rather than failing to exist.
+#'
+#' @return NULL, invisibly. Called for its side effect.
+#'
+#' @author EDG
+#' @keywords internal
+#' @noRd
+.register_rtemis_methods <- function() {
+  if (!requireNamespace("rtemis", quietly = TRUE)) {
+    return(invisible(NULL))
+  }
+  rtemis_class <- function(name) {
+    utils::getFromNamespace(name, "rtemis")
+  }
+  S7::method(plot, rtemis_class("SupervisedSession")) <- draw_supervised_session
+  S7::method(plot_session, rtemis_class("Supervised")) <- draw_object_session
+  S7::method(plot_session, rtemis_class("SupervisedRes")) <- draw_object_session
+  invisible(NULL)
+} # /rtemis.draw::.register_rtemis_methods

@@ -18,10 +18,11 @@ draw_gantt(
   border_width = 1.5,
   xlab = NULL,
   title = NULL,
-  color = NULL,
+  palette = NULL,
   theme = NULL,
   width = NULL,
   height = NULL,
+  element_id = NULL,
   filename = NULL
 )
 }
@@ -66,7 +67,7 @@ their fill -- e.g. to flag failures while the fill still encodes the group.}
 
 \item{title}{Optional Character: Chart title.}
 
-\item{color}{Optional Character: Color palette as a single color or character
+\item{palette}{Optional Character: Color palette as a single color or character
 vector overriding the theme palette. Groups are colored in order.}
 
 \item{theme}{Optional \link{Theme}: Theme override.}
@@ -74,6 +75,9 @@ vector overriding the theme palette. Groups are colored in order.}
 \item{width}{Optional Character or Numeric: Widget width.}
 
 \item{height}{Optional Character or Numeric: Widget height.}
+
+\item{element_id}{Optional Character: Explicit DOM element ID for the widget
+container. \code{NULL} lets htmlwidgets generate one.}
 
 \item{filename}{Optional Character: If provided, save the widget to this file
 via \code{\link[=save_drawing]{save_drawing()}}.}

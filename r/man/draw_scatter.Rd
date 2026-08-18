@@ -13,9 +13,10 @@ draw_scatter(
   se = TRUE,
   fit_alpha = 0.25,
   n_fit = 200,
-  color = NULL,
+  palette = NULL,
   xlim = NULL,
   ylim = NULL,
+  pad = DEFAULT_PAD,
   xlab = NULL,
   ylab = NULL,
   title = NULL,
@@ -23,6 +24,7 @@ draw_scatter(
   margins = DEFAULT_MARGINS,
   width = NULL,
   height = NULL,
+  element_id = NULL,
   filename = NULL
 )
 }
@@ -45,16 +47,20 @@ are computed per group when \code{group} is provided.}
 
 \item{n_fit}{Numeric \verb{[1, Inf)}: Number of evaluation points for the fit.}
 
-\item{color}{Optional Character: Series color palette — a single color string or
+\item{palette}{Optional Character: Series color palette — a single color string or
 character vector that overrides the theme palette for this chart.
 When \code{group} is set, colors are assigned per group in order. \code{color} takes
 precedence over the theme palette.}
 
 \item{xlim}{Optional Numeric [length 2]: X-axis limits \code{c(min, max)}.
-Defaults to \code{range(x)} padded by 4\\\% of the span on each side.}
+Defaults to \code{range(x)} extended by \code{pad}.}
 
 \item{ylim}{Optional Numeric [length 2]: Y-axis limits \code{c(min, max)}.
-Defaults to \code{range(y)} padded by 4\\\% of the span on each side.}
+Defaults to \code{range(y)} extended by \code{pad}.}
+
+\item{pad}{Numeric \verb{[0, Inf)}: Fraction of the data range to extend each
+axis by when \code{xlim} / \code{ylim} are not given. The default matches base R's
+\code{xaxs = "r"}, which extends the range by 4\% at each end.}
 
 \item{xlab}{Optional Character: X-axis title.}
 
@@ -73,6 +79,9 @@ See \code{\link[=draw_line]{draw_line()}} for details.}
 \item{width}{Optional Character or Numeric: Widget width.}
 
 \item{height}{Optional Character or Numeric: Widget height.}
+
+\item{element_id}{Optional Character: Explicit DOM element ID for the widget
+container. \code{NULL} lets htmlwidgets generate one.}
 
 \item{filename}{Optional Character: If provided, save the widget to this file via
 \code{\link[=save_drawing]{save_drawing()}}.}

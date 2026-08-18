@@ -5,6 +5,7 @@
 r_dir := "r"
 pkg := `awk '/^Package:/{print $2; exit}' r/DESCRIPTION`
 r := env("R", "R")
+schema_repo := env("SCHEMA_REPO", "")
 rscript := env("RSCRIPT", "Rscript")
 tarball_glob := pkg + "_*.tar.gz"
 
@@ -79,6 +80,74 @@ site:
     @just _msg "─── Building pkgdown site for {{pkg}}... ───"
     cd {{r_dir}} && {{rscript}} -e "pkgdown::build_site()"
     @just _msg "Done"
+
+_need var path:
+    @if [ -z "{{ path }}" ]; then \
+        echo "   Error: {{ var }} is not set. Point it at your local schema checkout."; \
+        exit 1; \
+    elif [ ! -d "{{ path }}" ]; then \
+        echo "   Error: {{ var }} is set to '{{ path }}', which is not a directory."; \
+        exit 1; \
+    fi
+
+# Generate the chart schemas into a throwaway directory, to check they build
+schemas-check:
+    @just _msg "─── Checking schema generation for {{pkg}}... ───"
+    @dir=$(mktemp -d); trap 'rm -rf "$dir"' EXIT; \
+        cd {{r_dir}} && {{rscript}} data-raw/generate_schemas.R "$dir"
+    @just _msg "Done"
+
+# Write the chart schemas to the schema repo (publishing step; commit there separately)
+schemas repo=schema_repo:
+    @just _need SCHEMA_REPO "{{repo}}"
+    @just _msg "─── Generating schemas for {{pkg}} into {{repo}}... ───"
+    cd {{r_dir}} && {{rscript}} data-raw/generate_schemas.R {{repo}}
+    @just _msg "Done"
+
+# Generate schemas and refresh the registry index; stops before the commit
+publish-schemas: schemas
+    @just _msg "─── Indexing {{schema_repo}}... ───"
+    cd "{{schema_repo}}" && just index && just check
+    @git -C "{{schema_repo}}" status --short
+    @just _msg "Review the diff above, then commit and push - the push is the deploy:"
+    @echo "   git -C '{{schema_repo}}' add -A && git -C '{{schema_repo}}' commit -m 'add chart schemas' && git -C '{{schema_repo}}' push"
+
+
+# Spell-check package; accepted technical terms live in inst/WORDLIST
+spell:
+    @just _msg "─── Spell-checking {{pkg}}... ───"
+    cd {{r_dir}} && {{rscript}} -e "r <- spelling::spell_check_package(); print(r); if (nrow(r) > 0L) quit(status = 1L)"
+    @just _msg "Done"
+
+# Add all current spell-check terms to inst/WORDLIST (review the diff)
+spell-update:
+    @just _msg "─── Updating inst/WORDLIST for {{pkg}}... ───"
+    cd {{r_dir}} && {{rscript}} -e "spelling::update_wordlist(confirm = FALSE)"
+    @just _msg "Done"
+
+# Lint package source for unused objects (variables/arguments)
+lint:
+    @just _msg "─── Linting {{pkg}} source for unused objects... ───"
+    cd {{r_dir}} && {{rscript}} -e "l <- lintr::lint_dir('R', linters = list(lintr::object_usage_linter())); print(l); if (length(l) > 0L) quit(status = 1L)"
+    @just _msg "Done"
+
+# Check R code formatting without modifying files (CI-friendly; fails if unformatted)
+format-check:
+    @just _msg "─── Checking formatting for {{pkg}}... ───"
+    @if command -v air >/dev/null 2>&1; then \
+        cd {{r_dir}} && air format --check .; \
+    else \
+        echo "   Error: 'air' CLI not found."; \
+        exit 1; \
+    fi
+    @just _msg "Done"
+
+# Run rhub checks across CRAN platforms
+rhub-check:
+    @just _msg "─── Running rhub checks for {{pkg}}... ───"
+    cd {{r_dir}} && {{rscript}} -e "rhub::rhub_check(platforms = c('linux', 'macos-arm64', 'windows'))"
+    @just _msg "Done"
+
 
 # Remove tarballs and .Rcheck output
 clean:

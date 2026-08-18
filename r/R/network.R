@@ -237,11 +237,11 @@ SigmaOption <- S7::new_class(
     ),
     node_color = S7::new_property(
       S7::class_character,
-      default = quote(rtemis_colors[[1L]])
+      default = quote(rtemis_colors[["teal"]])
     ),
     positive_color = S7::new_property(
       S7::class_character,
-      default = quote(rtemis_colors[[1L]])
+      default = quote(rtemis_colors[["teal"]])
     ),
     negative_color = S7::new_property(
       S7::class_character,
@@ -287,8 +287,11 @@ S7::method(draw, SigmaOption) <- function(
   theme = NULL,
   width = NULL,
   height = NULL,
-  elementId = NULL,
+  element_id = NULL,
   filename = NULL,
+  # Accepted to match the draw() generic; this backend has no ECharts
+  # animation to disable.
+  animation = NULL,
   ...
 ) {
   if (!is.null(filename)) {
@@ -302,7 +305,7 @@ S7::method(draw, SigmaOption) <- function(
     theme = theme,
     width = width,
     height = height,
-    elementId = elementId
+    element_id = element_id
   )
 }
 
@@ -519,6 +522,64 @@ graph_from_edge_list <- function(edges, nodes = NULL, directed = FALSE) {
 
 # -- Widget factory -------------------------------------------------------------
 
+#' Build the render option for network graph
+#'
+#' The single implementation shared by [draw_graph()], which resolves its arguments
+#' directly, and `compile()` on the corresponding [ChartConfig], which resolves
+#' them from a config. The render targets stay with the caller.
+#'
+#' @inheritParams draw_graph
+#'
+#' @return [SigmaOption]: The option object.
+#'
+#' @author EDG
+#' @keywords internal
+#' @noRd
+graph_option <- function(
+  model,
+  layout = "force",
+  node_size = 10,
+  edge_scale = 3,
+  node_opacity = 0.95,
+  edge_opacity = 0.4,
+  show_labels = TRUE,
+  scale_by_degree = TRUE,
+  color_by_group = FALSE,
+  resolution = 1,
+  blend_edges = FALSE,
+  palette = palette_colors(rtemis_colors),
+  node_color = rtemis_colors[["teal"]],
+  positive_color = rtemis_colors[["teal"]],
+  negative_color = "#ff9e1f",
+  title = NULL
+) {
+  layout <- match.arg(layout, c("force", "circular", "circlepack", "random"))
+
+  # Assemble the full Sigma render spec, then dispatch through draw(). Theme is
+  # resolved uniformly inside draw()/render_widget(), not here.
+  option <- SigmaOption(
+    model = model,
+    layout = layout,
+    node_size = node_size,
+    edge_scale = edge_scale,
+    node_opacity = node_opacity,
+    edge_opacity = edge_opacity,
+    show_labels = show_labels,
+    scale_by_degree = scale_by_degree,
+    color_by_group = color_by_group,
+    resolution = resolution,
+    blend_edges = blend_edges,
+    palette = as.character(palette),
+    node_color = node_color,
+    positive_color = positive_color,
+    negative_color = negative_color,
+    title = title
+  )
+
+  option
+} # /rtemis.draw::graph_option
+
+
 #' Render a GraphModel as a Sigma.js htmlwidget
 #'
 #' Low-level renderer: takes a [GraphModel] (or a plain list with `nodes`,
@@ -552,7 +613,7 @@ graph_from_edge_list <- function(edges, nodes = NULL, directed = FALSE) {
 #'   light/dark auto-detection (matching [draw()]).
 #' @param width Optional Character or Numeric: Widget width.
 #' @param height Optional Character or Numeric: Widget height.
-#' @param elementId Optional Character: Explicit element ID.
+#' @param element_id Optional Character: Explicit element ID.
 #' @param filename Optional Character: Currently ignored with a warning (static
 #'   export of network widgets is not yet supported); accepted for signature
 #'   parity with the other `draw_*` functions.
@@ -570,22 +631,18 @@ draw_graph <- function(
   color_by_group = FALSE,
   resolution = 1,
   blend_edges = FALSE,
-  palette = rtemis_colors,
-  node_color = rtemis_colors[[1L]],
-  positive_color = rtemis_colors[[1L]],
+  palette = palette_colors(rtemis_colors),
+  node_color = rtemis_colors[["teal"]],
+  positive_color = rtemis_colors[["teal"]],
   negative_color = "#ff9e1f",
   title = NULL,
   theme = NULL,
   width = NULL,
   height = NULL,
-  elementId = NULL,
+  element_id = NULL,
   filename = NULL
 ) {
-  layout <- match.arg(layout, c("force", "circular", "circlepack", "random"))
-
-  # Assemble the full Sigma render spec, then dispatch through draw(). Theme is
-  # resolved uniformly inside draw()/render_widget(), not here.
-  option <- SigmaOption(
+  option <- graph_option(
     model = model,
     layout = layout,
     node_size = node_size,
@@ -597,7 +654,7 @@ draw_graph <- function(
     color_by_group = color_by_group,
     resolution = resolution,
     blend_edges = blend_edges,
-    palette = as.character(palette),
+    palette = palette,
     node_color = node_color,
     positive_color = positive_color,
     negative_color = negative_color,
@@ -609,7 +666,7 @@ draw_graph <- function(
     theme = theme,
     width = width,
     height = height,
-    elementId = elementId,
+    element_id = element_id,
     filename = filename
   )
 }
@@ -670,15 +727,15 @@ draw_network <- function(
   color_by_group = FALSE,
   resolution = 1,
   blend_edges = FALSE,
-  palette = rtemis_colors,
-  node_color = rtemis_colors[[1L]],
-  positive_color = rtemis_colors[[1L]],
+  palette = palette_colors(rtemis_colors),
+  node_color = rtemis_colors[["teal"]],
+  positive_color = rtemis_colors[["teal"]],
   negative_color = "#ff9e1f",
   title = NULL,
   theme = NULL,
   width = NULL,
   height = NULL,
-  elementId = NULL,
+  element_id = NULL,
   filename = NULL
 ) {
   if (is.matrix(x)) {
@@ -719,7 +776,7 @@ draw_network <- function(
     theme = theme,
     width = width,
     height = height,
-    elementId = elementId,
+    element_id = element_id,
     filename = filename
   )
 }

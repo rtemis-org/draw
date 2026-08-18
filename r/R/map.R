@@ -8,7 +8,7 @@
 # TypeScript interfaces MapRow / MapModel in ~/Code/live/src/lib/types.ts.
 #
 # Pipeline:
-#   draw_choropleth(data, location, value)   # data frame -> MapModel (S7)
+#   draw_choropleth(x, location, value)      # data frame -> MapModel (S7)
 #     -> map_from_data_frame()
 #     -> draw_map(model, ...)                # MapModel -> MapLibreOption (S7)
 #     -> draw(MapLibreOption)                # dispatch -> htmlwidget ("rtemis-map")
@@ -173,7 +173,7 @@ S7::method(to_list, MapModel) <- function(x, ...) {
 #'
 #' Most users never touch this directly -- [draw_choropleth()] and [draw_map()]
 #' build it -- but power users can construct it for full control:
-#' `draw(MapLibreOption(model = MapModel(...), color_scheme = "viridis"))`.
+#' `draw(MapLibreOption(model = MapModel(...), colormap = "viridis"))`.
 #'
 #' Its [to_list()] produces the `{ model, style, title }` payload consumed by
 #' the `rtemis-map` htmlwidget binding (the geometry is added by the [draw()]
@@ -184,7 +184,7 @@ S7::method(to_list, MapModel) <- function(x, ...) {
 #' @param classification Character \{"quantile", "equal", "jenks"\}: Class-break
 #'   method. `"quantile"` (equal counts), `"equal"` (equal intervals), or
 #'   `"jenks"` (natural breaks).
-#' @param color_scheme Character: Color ramp. One of the sequential schemes
+#' @param colormap Character: Color ramp. One of the sequential schemes
 #'   `"blues"`, `"viridis"`, `"ylorrd"`, `"greens"`, `"magma"`, or the diverging
 #'   schemes `"rdbu"`, `"rdylgn"`, `"spectral"`, `"brbg"`.
 #' @param num_classes Numeric \[2, 12\]: Number of color classes.
@@ -217,7 +217,7 @@ MapLibreOption <- S7::new_class(
       }
     ),
     classification = map_enum_default(map_classifications, "quantile"),
-    color_scheme = map_enum_default(map_color_schemes, "blues"),
+    colormap = map_enum_default(map_color_schemes, "blues"),
     num_classes = S7::new_property(
       S7::class_numeric,
       default = 5,
@@ -246,7 +246,7 @@ S7::method(to_list, MapLibreOption) <- function(x, ...) {
     model = model_list,
     style = list(
       classification = x@classification,
-      colorScheme = x@color_scheme,
+      colorScheme = x@colormap,
       numClasses = x@num_classes,
       opacity = x@opacity,
       showBoundaries = x@show_boundaries,
@@ -343,8 +343,11 @@ S7::method(draw, MapLibreOption) <- function(
   theme = NULL,
   width = NULL,
   height = NULL,
-  elementId = NULL,
+  element_id = NULL,
   filename = NULL,
+  # Accepted to match the draw() generic; this backend has no ECharts
+  # animation to disable.
+  animation = NULL,
   ...
 ) {
   if (!is.null(filename)) {
@@ -363,7 +366,7 @@ S7::method(draw, MapLibreOption) <- function(
     theme = theme,
     width = width,
     height = height,
-    elementId = elementId
+    element_id = element_id
   )
 }
 
@@ -450,6 +453,58 @@ map_from_data_frame <- function(
 
 # -- Widget builder: draw_map ---------------------------------------------------
 
+#' Build the render option for choropleth map
+#'
+#' The single implementation shared by [draw_map()], which resolves its arguments
+#' directly, and `compile()` on the corresponding [ChartConfig], which resolves
+#' them from a config. The render targets stay with the caller.
+#'
+#' @inheritParams draw_map
+#'
+#' @return [MapLibreOption]: The option object.
+#'
+#' @author EDG
+#' @keywords internal
+#' @noRd
+map_option <- function(
+  model,
+  classification = "quantile",
+  colormap = "blues",
+  num_classes = 5,
+  opacity = 1,
+  show_boundaries = TRUE,
+  outline_width = 0.2,
+  show_legend = TRUE,
+  legend_position = "bottom-right",
+  tooltip_position = "top-right",
+  report_position = "bottom-left",
+  title = NULL
+) {
+  classification <- match.arg(classification, map_classifications)
+  colormap <- match.arg(colormap, map_color_schemes)
+  legend_position <- match.arg(legend_position, map_corners)
+  tooltip_position <- match.arg(tooltip_position, map_corners)
+  report_position <- match.arg(report_position, map_corners)
+
+  option <- MapLibreOption(
+    model = model,
+    classification = classification,
+    colormap = colormap,
+    num_classes = num_classes,
+    opacity = opacity,
+    show_boundaries = show_boundaries,
+    outline_width = outline_width,
+    show_legend = show_legend,
+    legend_position = legend_position,
+    tooltip_position = tooltip_position,
+    report_position = report_position,
+    title = title
+  )
+
+  option
+} # /rtemis.draw::map_option
+
+
 #' Render a MapModel as a MapLibre choropleth htmlwidget
 #'
 #' Mid-level builder: takes a [MapModel] (or a plain list with `rows`,
@@ -462,7 +517,7 @@ map_from_data_frame <- function(
 #'   light/dark auto-detection (matching [draw()]).
 #' @param width Optional Character or Numeric: Widget width.
 #' @param height Optional Character or Numeric: Widget height.
-#' @param elementId Optional Character: Explicit element ID.
+#' @param element_id Optional Character: Explicit element ID.
 #' @param filename Optional Character: Currently ignored with a warning (static
 #'   export of map widgets is not yet supported); accepted for signature parity
 #'   with the other `draw_*` functions.
@@ -471,7 +526,7 @@ map_from_data_frame <- function(
 draw_map <- function(
   model,
   classification = "quantile",
-  color_scheme = "blues",
+  colormap = "blues",
   num_classes = 5,
   opacity = 1,
   show_boundaries = TRUE,
@@ -484,19 +539,13 @@ draw_map <- function(
   theme = NULL,
   width = NULL,
   height = NULL,
-  elementId = NULL,
+  element_id = NULL,
   filename = NULL
 ) {
-  classification <- match.arg(classification, map_classifications)
-  color_scheme <- match.arg(color_scheme, map_color_schemes)
-  legend_position <- match.arg(legend_position, map_corners)
-  tooltip_position <- match.arg(tooltip_position, map_corners)
-  report_position <- match.arg(report_position, map_corners)
-
-  option <- MapLibreOption(
+  option <- map_option(
     model = model,
     classification = classification,
-    color_scheme = color_scheme,
+    colormap = colormap,
     num_classes = num_classes,
     opacity = opacity,
     show_boundaries = show_boundaries,
@@ -513,7 +562,7 @@ draw_map <- function(
     theme = theme,
     width = width,
     height = height,
-    elementId = elementId,
+    element_id = element_id,
     filename = filename
   )
 }
@@ -532,7 +581,7 @@ draw_map <- function(
 #' abbreviation / full name for US states (5-digit FIPS for counties). A
 #' join report in the corner surfaces any unmatched keys.
 #'
-#' @param data Data frame: One row per region.
+#' @param x Data frame: One row per region.
 #' @param location Character: Name of the column holding the location key
 #'   (FIPS / ISO / name).
 #' @param value Character: Name of the numeric column to color by.
@@ -564,19 +613,19 @@ draw_map <- function(
 #'   value = "pop",
 #'   resolution = "state",
 #'   classification = "jenks",
-#'   color_scheme = "viridis"
+#'   colormap = "viridis"
 #' )
 #' }
 #' @export
 draw_choropleth <- function(
-  data,
+  x,
   location,
   value,
   resolution = c("country", "state", "county"),
   tooltip = NULL,
   value_label = NULL,
   classification = "quantile",
-  color_scheme = "blues",
+  colormap = "blues",
   num_classes = 5,
   opacity = 1,
   show_boundaries = TRUE,
@@ -589,13 +638,13 @@ draw_choropleth <- function(
   theme = NULL,
   width = NULL,
   height = NULL,
-  elementId = NULL,
+  element_id = NULL,
   filename = NULL
 ) {
   resolution <- match.arg(resolution)
 
   model <- map_from_data_frame(
-    data,
+    x,
     location = location,
     value = value,
     resolution = resolution,
@@ -606,7 +655,7 @@ draw_choropleth <- function(
   draw_map(
     model,
     classification = classification,
-    color_scheme = color_scheme,
+    colormap = colormap,
     num_classes = num_classes,
     opacity = opacity,
     show_boundaries = show_boundaries,
@@ -619,7 +668,7 @@ draw_choropleth <- function(
     theme = theme,
     width = width,
     height = height,
-    elementId = elementId,
+    element_id = element_id,
     filename = filename
   )
 }
