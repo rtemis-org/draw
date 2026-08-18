@@ -244,14 +244,6 @@ test_that("write_chart_schema writes parseable JSON and creates its directory", 
 
 # %% provenance ----
 
-test_that("origin values are constrained to the three the description names", {
-  origin <- scatter_schema()[["properties"]][["origin"]]
-  expect_identical(
-    as.character(origin[["additionalProperties"]][["enum"]]),
-    c("user", "default", "derived")
-  )
-})
-
 test_that("an output config's provenance is required and non-null", {
   # Everything else may be null in a complete document -- "this chart has no
   # title" is a fact worth recording -- but a document that cannot say where
@@ -271,6 +263,39 @@ test_that("an output config's provenance is required and non-null", {
   for (nm in c("origin", "writer")) {
     expect_setequal(input[["properties"]][[nm]][["type"]], c("object", "null"))
   }
+})
+
+test_that("origin is a closed object with an entry per settable property", {
+  # An open map would let a document omit an entry, or name a property the
+  # chart does not have, and still validate -- which would make "this document
+  # says where all its values came from" a claim rather than a check. This is
+  # the shape every record.json in the rtemis registry uses.
+  origin <- scatter_schema()[["properties"]][["origin"]]
+  settable <- setdiff(
+    names(ScatterConfig@properties),
+    c("type", "origin", "writer")
+  )
+  expect_setequal(names(origin[["properties"]]), settable)
+  expect_setequal(as.character(origin[["required"]]), settable)
+  expect_false(origin[["additionalProperties"]])
+})
+
+test_that("every origin entry admits the three chart origins", {
+  origin <- scatter_schema()[["properties"]][["origin"]]
+  for (nm in names(origin[["properties"]])) {
+    expect_identical(
+      as.character(origin[["properties"]][[nm]][["enum"]]),
+      c("user", "default", "derived"),
+      info = nm
+    )
+  }
+})
+
+test_that("writer is a closed object of name and version", {
+  writer <- scatter_schema()[["properties"]][["writer"]]
+  expect_setequal(names(writer[["properties"]]), c("name", "version"))
+  expect_setequal(as.character(writer[["required"]]), c("name", "version"))
+  expect_false(writer[["additionalProperties"]])
 })
 
 test_that("a chart's own properties stay nullable in an output config", {

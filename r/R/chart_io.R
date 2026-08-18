@@ -16,8 +16,9 @@
 #   `write_chart_config(complete = TRUE)`.
 #
 # Both are the same kind of document and differ only in how much is filled in;
-# they validate against `schema.json` and `complete.json` respectively, which
-# differ only in what they require. Reading is `do.call(setup_*, x)`, so a
+# they validate against the registry's `schema.json` and `record.json`, which is
+# the name every rtemis family uses for a document whose values are all resolved
+# and annotated with where each came from. Reading is `do.call(setup_*, x)`, so a
 # document from any source arrives fully resolved through the same seam a
 # hand-written call goes through.
 
@@ -244,7 +245,7 @@ chart_config_to_list <- function(config, complete = FALSE) {
 #'
 #' `complete = TRUE` writes an **output config**: every property, unset ones as
 #' explicit nulls, with this package stamped as the `writer`. It validates
-#' against `complete.json`, and is what an interface hands to another interface
+#' against `record.json`, and is what an interface hands to another interface
 #' -- nothing is left for the reader to infer. Resolve the config first, so that
 #' the values the data determines are written as the derived facts they are:
 #'

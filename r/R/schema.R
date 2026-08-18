@@ -122,6 +122,88 @@ schema_property <- function(spec) {
 } # /rtemis.draw::schema_property
 
 
+# %% origin_property ----
+#' JSON Schema fragment for a document's `origin` map
+#'
+#' A closed object with one entry per settable property, all required, rather
+#' than an open string-keyed map. That is what makes "this document says where
+#' every one of its values came from" checkable by a validator instead of only
+#' by the writer: a map missing an entry, or naming a property the chart does
+#' not have, fails here.
+#'
+#' Matches the `origin` block every `record.json` in the rtemis registry
+#' carries. The chart vocabulary is the three of `ORIGIN_VALUES` a chart can
+#' actually produce -- `"tuned"` needs a tuner and `"unset"` means a run never
+#' reached the value, neither of which a chart has.
+#'
+#' @param names Character: The settable property names.
+#' @param nullable Logical: Whether the map itself may be null, which it may be
+#'   on an input config and may not be on a record.
+#'
+#' @return Named list: JSON Schema fragment.
+#'
+#' @author EDG
+#' @keywords internal
+#' @noRd
+origin_property <- function(names, nullable) {
+  entries <- lapply(names, function(nm) {
+    list(type = "string", enum = I(ORIGIN_VALUES))
+  })
+  names(entries) <- names
+  list(
+    type = if (nullable) c("object", "null") else "object",
+    description = paste(
+      "Where each value came from: 'user' if the author set it, 'default' if",
+      "the interface filled it in, 'derived' if it was computed from the data.",
+      "Carried through a re-write, never recomputed: a value the author chose",
+      "must stay honored, while a defaulted one may be re-resolved for a",
+      "different display."
+    ),
+    properties = entries,
+    required = I(names),
+    additionalProperties = FALSE
+  )
+} # /rtemis.draw::origin_property
+
+
+# %% writer_property ----
+#' JSON Schema fragment for a document's `writer`
+#'
+#' Closed for the same reason as `origin`: the two keys are the whole contract,
+#' so a third one is a mistake worth catching rather than a field to ignore.
+#'
+#' @param nullable Logical: Whether the block itself may be null.
+#'
+#' @return Named list: JSON Schema fragment.
+#'
+#' @author EDG
+#' @keywords internal
+#' @noRd
+writer_property <- function(nullable) {
+  list(
+    type = if (nullable) c("object", "null") else "object",
+    description = paste(
+      "Which interface wrote this document, as `name` and `version`.",
+      "Absent on an authored config."
+    ),
+    properties = list(
+      name = list(
+        type = "string",
+        minLength = 1L,
+        description = "The interface that wrote the document."
+      ),
+      version = list(
+        type = "string",
+        minLength = 1L,
+        description = "Its version."
+      )
+    ),
+    required = I(c("name", "version")),
+    additionalProperties = FALSE
+  )
+} # /rtemis.draw::writer_property
+
+
 # %% chart_schema ----
 #' Generate a JSON Schema for a chart config class
 #'
@@ -181,6 +263,9 @@ chart_schema <- function(
   }
   properties <- cls@properties
   type_value <- chart_type_of(cls)
+  # The chart's own properties, which are also exactly the keys an `origin` map
+  # covers -- so the map's schema is built from the same list the document is.
+  settable <- setdiff(names(properties), c("type", PROVENANCE_PROPS))
 
   out <- list()
   for (nm in names(properties)) {
@@ -190,6 +275,16 @@ chart_schema <- function(
         const = type_value,
         description = "Chart type; the schema discriminator."
       )
+      next
+    }
+    if (nm %in% PROVENANCE_PROPS) {
+      # Provenance is structured, not a free map, and a record must state it:
+      # see @details above.
+      out[[nm]] <- if (identical(nm, "origin")) {
+        origin_property(settable, nullable = !complete)
+      } else {
+        writer_property(nullable = !complete)
+      }
       next
     }
     spec <- prop_spec(properties[[nm]])
@@ -205,10 +300,6 @@ chart_schema <- function(
         "with one, or exclude it from the published class.",
         class = c("rtemis_value_error", "rtemis_input_error")
       )
-    }
-    if (complete && nm %in% PROVENANCE_PROPS) {
-      # Required *and* non-null in an output config: see @details above.
-      spec[["nullable"]] <- FALSE
     }
     out[[nm]] <- schema_property(spec)
   }

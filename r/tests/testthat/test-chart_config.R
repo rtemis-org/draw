@@ -568,3 +568,24 @@ test_that("a config on a non-ECharts backend still draws", {
     "htmlwidget"
   )
 })
+
+
+# %% provenance shape ----
+
+test_that("an origin naming a property the chart lacks is rejected", {
+  # The published schema states `origin` as a closed object, so the class holds
+  # to the same shape rather than letting a stray key survive to the far end of
+  # a round trip.
+  expect_error(
+    ScatterConfig(origin = c(nope = "user")),
+    "does not have|not have"
+  )
+})
+
+test_that("a writer with a key beyond name and version is rejected", {
+  expect_error(
+    ScatterConfig(writer = c(name = "a", version = "1", extra = "x")),
+    "name` and `version"
+  )
+  expect_no_error(ScatterConfig(writer = c(name = "a", version = "1")))
+})

@@ -108,7 +108,31 @@ ChartConfig <- new_class(
         "Absent on an authored config."
       )
     )
-  )
+  ),
+  # The published schema states both maps as closed objects, so the class holds
+  # to the same shape: an origin naming a property the chart does not have, or a
+  # writer with a key that is not `name` or `version`, is a mistake worth
+  # catching where it is made rather than at the far end of a round trip.
+  validator = function(self) {
+    origin_extra <- setdiff(names(self@origin), settable_props(self))
+    writer_extra <- setdiff(names(self@writer), c("name", "version"))
+    c(
+      if (length(origin_extra) > 0L) {
+        paste0(
+          "@origin names properties this chart does not have: ",
+          paste(origin_extra, collapse = ", "),
+          "."
+        )
+      },
+      if (!is.null(self@writer) && length(writer_extra) > 0L) {
+        paste0(
+          "@writer takes `name` and `version`; got: ",
+          paste(writer_extra, collapse = ", "),
+          "."
+        )
+      }
+    )
+  }
 ) # /rtemis.draw::ChartConfig
 
 

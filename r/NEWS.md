@@ -39,9 +39,14 @@ document by any interface.
 ## Schemas
 
 * `chart_schema()` and `chart_dispatcher_schema()` generate the JSON Schemas
-  published at `schema.rtemis.org`, from the classes themselves. No `default`
-  is ever emitted: a default is what an interface chooses to fill in, not a
-  fact about the document.
+  published at `schema.rtemis.org`, from the classes themselves. Each chart type
+  publishes a `schema.json` (input config) and a `record.json` (output config),
+  the two names the registry already uses, plus a dispatcher of each kind. No
+  `default` is ever emitted: a default is what an interface chooses to fill in,
+  not a fact about the document.
+* `origin` and `writer` are emitted as closed objects -- one entry per settable
+  property, all required, no others allowed -- matching the `origin` block every
+  other rtemis `record.json` carries. The class validates the same shape.
 * `just schemas` writes them to a schema-repo checkout; `just schemas-check`
   verifies they build.
 

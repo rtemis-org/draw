@@ -209,7 +209,7 @@ test_that("an invalid value is rejected on read, through the same validator", {
 # An output config is the form one interface hands to another: every property
 # present, nothing left for the reader to infer, and provenance attached. The
 # test that matters is that the package can actually produce one -- the schema
-# says `complete.json` requires every key, and it is only worth requiring if
+# says `record.json` requires every key, and it is only worth requiring if
 # something writes them.
 
 test_that("a complete document carries every property the schema requires", {
@@ -219,7 +219,7 @@ test_that("a complete document carries every property the schema requires", {
 
   schema <- chart_schema(
     ScatterConfig,
-    id = "https://schema.rtemis.org/chart/scatter/v1/complete.json",
+    id = "https://schema.rtemis.org/chart/scatter/v1/record.json",
     title = "rtemis ScatterConfig",
     description = "Scatter chart.",
     complete = TRUE
@@ -353,7 +353,7 @@ test_that("a missing dat_path is reported as such", {
 
 test_that("every chart type writes a complete document that conforms", {
   # The general form of the tests above: a chart type added later gets this for
-  # free, and cannot ship a `complete.json` nothing can satisfy.
+  # free, and cannot ship a `record.json` nothing can satisfy.
   for (type in names(chart_registry())) {
     entry <- chart_registry()[[type]]
     setup <- get(entry[["setup"]], envir = asNamespace("rtemis.draw"))
@@ -365,7 +365,7 @@ test_that("every chart type writes a complete document that conforms", {
       id = paste0(
         "https://schema.rtemis.org/chart/",
         type,
-        "/v1/complete.json"
+        "/v1/record.json"
       ),
       title = type,
       description = type,

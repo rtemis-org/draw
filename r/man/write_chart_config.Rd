@@ -25,7 +25,7 @@ that are set. It validates against the chart's \code{schema.json}.
 
 \code{complete = TRUE} writes an \strong{output config}: every property, unset ones as
 explicit nulls, with this package stamped as the \code{writer}. It validates
-against \code{complete.json}, and is what an interface hands to another interface
+against \code{record.json}, and is what an interface hands to another interface
 -- nothing is left for the reader to infer. Resolve the config first, so that
 the values the data determines are written as the derived facts they are:
 
