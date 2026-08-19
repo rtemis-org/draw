@@ -25,6 +25,19 @@ Named list: The JSON Schema, ready for \code{\link[jsonlite:toJSON]{jsonlite::to
 The family's entry point: a document is a chart if it matches exactly one of
 the leaf schemas, selected by its \code{type}.
 }
+\examples{
+schema <- chart_dispatcher_schema(
+  classes = list(ScatterConfig, BarConfig),
+  id = "https://schemas.rtemis.org/draw/chart.schema.json",
+  leaf_ids = c(
+    "https://schemas.rtemis.org/draw/scatter.schema.json",
+    "https://schemas.rtemis.org/draw/bar.schema.json"
+  ),
+  title = "Chart",
+  description = "Any rtemis.draw chart."
+)
+schema[["properties"]][["type"]][["enum"]]
+}
 \author{
 EDG
 }

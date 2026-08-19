@@ -21,3 +21,6 @@ Character: JSON string.
 \description{
 Convert EChartsOption to JSON
 }
+\examples{
+to_json(EChartsOption(title = Title(text = "Weekly sessions")))
+}

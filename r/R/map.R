@@ -51,7 +51,13 @@ map_corners <- c("top-left", "top-right", "bottom-left", "bottom-right")
 #' @param value Numeric: The value that colors the region.
 #' @param extras Optional named list: Extra column values to show in the
 #'   tooltip, keyed by column name.
+#'
+#' @return `MapRow` object.
+#'
 #' @export
+#'
+#' @examples
+#' MapRow(location = "USA", value = 25.5)
 MapRow <- S7::new_class(
   "MapRow",
   properties = list(
@@ -110,7 +116,18 @@ S7::method(to_list, MapRow) <- function(x, ...) {
 #'   legend and tooltip value).
 #' @param tooltip_fields Character: Ordered names of the extra fields to show in
 #'   the tooltip (keys into each [MapRow]'s `extras`).
+#'
+#' @return `MapModel` object.
+#'
 #' @export
+#'
+#' @examples
+#' MapModel(
+#'   rows = list(
+#'     MapRow(location = "USA", value = 25.5),
+#'     MapRow(location = "CAN", value = 12.1)
+#'   )
+#' )
 MapModel <- S7::new_class(
   "MapModel",
   properties = list(
@@ -200,7 +217,19 @@ S7::method(to_list, MapModel) <- function(x, ...) {
 #'   "bottom-right"\}: Join-report corner (shows matched / unmatched counts).
 #' @param title Optional Character: Title (currently surfaced via the value
 #'   label; reserved for future use).
+#'
+#' @return `MapLibreOption` object.
+#'
 #' @export
+#'
+#' @examples
+#' model <- MapModel(
+#'   rows = list(
+#'     MapRow(location = "USA", value = 25.5),
+#'     MapRow(location = "CAN", value = 12.1)
+#'   )
+#' )
+#' MapLibreOption(model = model, classification = "quantile")
 MapLibreOption <- S7::new_class(
   "MapLibreOption",
   properties = list(
@@ -524,6 +553,15 @@ map_option <- function(
 #'   with the other `draw_*` functions.
 #' @return htmlwidget.
 #' @export
+#'
+#' @examples
+#' model <- MapModel(
+#'   rows = list(
+#'     MapRow(location = "USA", value = 25.5),
+#'     MapRow(location = "CAN", value = 12.1)
+#'   )
+#' )
+#' draw_map(model)
 draw_map <- function(
   model,
   classification = "quantile",

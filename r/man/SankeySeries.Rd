@@ -87,6 +87,9 @@ Sankey-specific \code{curveness} field (e.g. \code{list(curveness = 0.5)}).}
 
 \item{z}{Optional Numeric: Front-back order within the same canvas layer.}
 }
+\value{
+\code{SankeySeries} object.
+}
 \description{
 Configuration for a Sankey diagram series. Nodes and directed links are
 represented as two separate lists. Node names in \code{data} must match the
@@ -96,4 +99,10 @@ represented as two separate lists. Node names in \code{data} must match the
 Corresponds to \code{SankeySeriesOption} in
 \code{src/chart/sankey/SankeySeries.ts} (line 100).
 ECharts docs: \url{https://echarts.apache.org/en/option.html#series-sankey}
+}
+\examples{
+SankeySeries(
+  data = list(SankeyNodeItem(name = "A"), SankeyNodeItem(name = "B")),
+  links = list(SankeyEdgeItem(source = "A", target = "B", value = 5))
+)
 }

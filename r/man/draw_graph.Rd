@@ -89,3 +89,11 @@ Low-level renderer: takes a \link{GraphModel} (or a plain list with \code{nodes}
 \code{edges}, \code{directed}) and produces an interactive network htmlwidget backed by
 Sigma.js + graphology. Most users call \code{\link[=draw_network]{draw_network()}} instead.
 }
+\examples{
+model <- GraphModel(
+  nodes = list(GraphNode(id = "a"), GraphNode(id = "b")),
+  edges = list(GraphEdge(source = "a", target = "b")),
+  directed = FALSE
+)
+draw_graph(model)
+}

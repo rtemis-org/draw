@@ -31,7 +31,13 @@
 #' @param value_animation Optional Logical: Whether to animate value changes.
 #' @param min_margin Optional Numeric `[0, Inf)`: Minimum margin between labels.
 #' @param text_style Optional [TextStyle]: Text appearance.
+#'
+#' @return `LabelOption` object.
+#'
 #' @export
+#'
+#' @examples
+#' LabelOption(show = TRUE, position = "top", formatter = "{c}")
 LabelOption <- S7::new_class(
   "LabelOption",
   properties = list(
@@ -141,7 +147,13 @@ S7::method(to_list, LabelOption) <- function(x, ...) {
 #' @param smooth Optional Numeric `[0, 1]` or Logical: Line smoothness.
 #' @param min_turn_angle Optional Numeric: Minimum angle for turning the line.
 #' @param line_style Optional [LineStyle]: Line styling.
+#'
+#' @return `LabelLine` object.
+#'
 #' @export
+#'
+#' @examples
+#' LabelLine(show = TRUE, length = 10, length2 = 15)
 LabelLine <- S7::new_class(
   "LabelLine",
   properties = list(

@@ -364,6 +364,19 @@ chart_type_of <- function(cls) {
 #'
 #' @author EDG
 #' @export
+#'
+#' @examples
+#' schema <- chart_dispatcher_schema(
+#'   classes = list(ScatterConfig, BarConfig),
+#'   id = "https://schemas.rtemis.org/draw/chart.schema.json",
+#'   leaf_ids = c(
+#'     "https://schemas.rtemis.org/draw/scatter.schema.json",
+#'     "https://schemas.rtemis.org/draw/bar.schema.json"
+#'   ),
+#'   title = "Chart",
+#'   description = "Any rtemis.draw chart."
+#' )
+#' schema[["properties"]][["type"]][["enum"]]
 chart_dispatcher_schema <- function(
   classes,
   id,
@@ -409,6 +422,18 @@ chart_dispatcher_schema <- function(
 #'
 #' @author EDG
 #' @export
+#'
+#' @examples
+#' schema <- chart_schema(
+#'   ScatterConfig,
+#'   id = "https://schemas.rtemis.org/draw/scatter.schema.json",
+#'   title = "Scatter chart",
+#'   description = "A scatter chart configuration."
+#' )
+#' # Write to the session temp directory; use a real path in your own code.
+#' path <- file.path(tempdir(), "scatter.schema.json")
+#' write_chart_schema(schema, path)
+#' unlink(path)
 write_chart_schema <- function(schema, path) {
   check_character_scalar(path)
   dir.create(dirname(path), recursive = TRUE, showWarnings = FALSE)

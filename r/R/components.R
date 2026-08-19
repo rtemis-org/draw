@@ -33,7 +33,13 @@
 #' @param shadow_color Optional Character: Shadow color.
 #' @param shadow_offset_x Optional Numeric: Shadow horizontal offset.
 #' @param shadow_offset_y Optional Numeric: Shadow vertical offset.
+#'
+#' @return `Grid` object.
+#'
 #' @export
+#'
+#' @examples
+#' Grid(left = "10%", right = "10%", top = 60, bottom = 60, contain_label = TRUE)
 Grid <- S7::new_class(
   "Grid",
   properties = list(
@@ -92,7 +98,13 @@ S7::method(to_list, Grid) <- function(x, ...) {
 #' @param right Optional Numeric or Character: Right position.
 #' @param top Optional Numeric or Character: Top position.
 #' @param bottom Optional Numeric or Character: Bottom position.
+#'
+#' @return `Title` object.
+#'
 #' @export
+#'
+#' @examples
+#' Title(text = "Monthly revenue", subtext = "2026", left = "center")
 Title <- S7::new_class(
   "Title",
   properties = list(
@@ -189,7 +201,13 @@ S7::method(to_list, Title) <- function(x, ...) {
 #' @param border_radius Optional Numeric: Border radius.
 #' @param trigger_event Optional Logical: Whether the legend emits events.
 #' @param data Optional Character vector or list: Legend data items.
+#'
+#' @return `Legend` object.
+#'
 #' @export
+#'
+#' @examples
+#' Legend(show = TRUE, orient = "vertical", left = "left")
 Legend <- S7::new_class(
   "Legend",
   properties = list(
@@ -316,7 +334,13 @@ S7::method(to_list, Legend) <- function(x, ...) {
 #' @param extra_css_text Optional Character: Extra CSS for HTML render mode.
 #' @param order Optional Character \{"seriesAsc", "seriesDesc", "valueAsc", "valueDesc"\}: Tooltip content order.
 #' @param class_name Optional Character: CSS class name for the tooltip element.
+#'
+#' @return `Tooltip` object.
+#'
 #' @export
+#'
+#' @examples
+#' Tooltip(trigger = "axis", border_width = 1)
 Tooltip <- S7::new_class(
   "Tooltip",
   properties = list(
@@ -409,7 +433,13 @@ S7::method(to_list, Tooltip) <- function(x, ...) {
 #' @param right Optional Numeric or Character: Distance from the right of the container.
 #' @param top Optional Numeric or Character: Distance from the top of the container.
 #' @param bottom Optional Numeric or Character: Distance from the bottom of the container.
+#'
+#' @return `VisualMap` object.
+#'
 #' @export
+#'
+#' @examples
+#' VisualMap(type = "continuous", min = 0, max = 100, calculable = TRUE)
 VisualMap <- S7::new_class(
   "VisualMap",
   properties = list(
@@ -570,7 +600,13 @@ mouse_modifier_property <- function() {
 #'   "alt"\}: Whether/how the mouse wheel pans (inside type only).
 #' @param prevent_default_mouse_move Optional Logical: Whether to call
 #'   `event.preventDefault()` on drag (inside type only).
+#'
+#' @return `DataZoom` object.
+#'
 #' @export
+#'
+#' @examples
+#' DataZoom(type = "slider", start = 0, end = 50)
 DataZoom <- S7::new_class(
   "DataZoom",
   properties = list(

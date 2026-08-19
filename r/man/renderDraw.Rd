@@ -13,6 +13,14 @@ renderDraw(expr, env = parent.frame(), quoted = FALSE)
 
 \item{quoted}{Logical: Whether \code{expr} is quoted.}
 }
+\value{
+Shiny render function for a draw widget.
+}
 \description{
 Shiny render function for draw widget
+}
+\examples{
+if (requireNamespace("shiny", quietly = TRUE)) {
+  renderDraw(draw_bar(x = c("A", "B", "C"), y = c(3, 7, 2)))
+}
 }

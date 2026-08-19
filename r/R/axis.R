@@ -21,7 +21,13 @@
 #' @param symbol_size Optional Numeric: Arrow symbol size.
 #' @param symbol_offset Optional Numeric or Character: Arrow symbol offset.
 #' @param line_style Optional [LineStyle]: Line styling.
+#'
+#' @return `AxisLine` object.
+#'
 #' @export
+#'
+#' @examples
+#' AxisLine(show = TRUE, line_style = LineStyle(color = "#888888"))
 AxisLine <- S7::new_class(
   "AxisLine",
   properties = list(
@@ -104,7 +110,13 @@ S7::method(to_list, AxisLine) <- function(x, ...) {
 #' @param length Optional Numeric `[0, Inf)`: Tick mark length in pixels.
 #' @param align_with_label Optional Logical: Whether to align ticks with labels.
 #' @param line_style Optional [LineStyle]: Line styling.
+#'
+#' @return `AxisTick` object.
+#'
 #' @export
+#'
+#' @examples
+#' AxisTick(show = TRUE, length = 5, align_with_label = TRUE)
 AxisTick <- S7::new_class(
   "AxisTick",
   properties = list(
@@ -148,7 +160,13 @@ S7::method(to_list, AxisTick) <- function(x, ...) {
 #' @param split_number Optional Numeric `[0, Inf)`: Number of minor ticks between two main ticks.
 #' @param length Optional Numeric `[0, Inf)`: Minor tick length in pixels.
 #' @param line_style Optional [LineStyle]: Line styling.
+#'
+#' @return `MinorTick` object.
+#'
 #' @export
+#'
+#' @examples
+#' MinorTick(show = TRUE, split_number = 5)
 MinorTick <- S7::new_class(
   "MinorTick",
   properties = list(
@@ -177,7 +195,13 @@ S7::method(to_list, MinorTick) <- function(x, ...) {
 #' @param show_min_line Optional Logical: Whether to show the split line at the minimum end.
 #' @param show_max_line Optional Logical: Whether to show the split line at the maximum end.
 #' @param line_style Optional [LineStyle]: Line styling.
+#'
+#' @return `SplitLine` object.
+#'
 #' @export
+#'
+#' @examples
+#' SplitLine(show = TRUE, line_style = LineStyle(type = "dashed"))
 SplitLine <- S7::new_class(
   "SplitLine",
   properties = list(
@@ -219,7 +243,13 @@ S7::method(to_list, SplitLine) <- function(x, ...) {
 #'
 #' @param show Optional Logical: Whether to show minor split lines.
 #' @param line_style Optional [LineStyle]: Line styling.
+#'
+#' @return `MinorSplitLine` object.
+#'
 #' @export
+#'
+#' @examples
+#' MinorSplitLine(show = TRUE, line_style = LineStyle(opacity = 0.2))
 MinorSplitLine <- S7::new_class(
   "MinorSplitLine",
   properties = list(
@@ -244,7 +274,13 @@ S7::method(to_list, MinorSplitLine) <- function(x, ...) {
 #' @param show Optional Logical: Whether to show the split area.
 #' @param interval Optional Numeric or Character \{"auto"\}: Split-area interval.
 #' @param area_style Optional [AreaStyle]: Area styling.
+#'
+#' @return `SplitArea` object.
+#'
 #' @export
+#'
+#' @examples
+#' SplitArea(show = TRUE, area_style = AreaStyle(opacity = 0.1))
 SplitArea <- S7::new_class(
   "SplitArea",
   properties = list(
@@ -293,7 +329,13 @@ S7::method(to_list, SplitArea) <- function(x, ...) {
 #' @param hide_overlap Optional Logical: Whether to hide overlapping labels.
 #' @param interval Optional Numeric or Character \{"auto"\}: Label interval.
 #' @param text_style Optional [TextStyle]: Text appearance.
+#'
+#' @return `AxisLabel` object.
+#'
 #' @export
+#'
+#' @examples
+#' AxisLabel(show = TRUE, rotate = 45, margin = 8)
 AxisLabel <- S7::new_class(
   "AxisLabel",
   properties = list(
@@ -384,7 +426,13 @@ S7::method(to_list, AxisLabel) <- function(x, ...) {
 #'   For `yAxis`: `"left"` (default) or `"right"`. For `xAxis`: `"bottom"` (default) or `"top"`.
 #' @param grid_index Optional Numeric `[0, Inf)`: Index of the grid this axis belongs to.
 #'   Used when the chart has multiple grids (e.g. heatmap + dendrogram panels).
+#'
+#' @return `Axis` object.
+#'
 #' @export
+#'
+#' @examples
+#' Axis(type = "category", data = c("Mon", "Tue", "Wed"))
 Axis <- S7::new_class(
   "Axis",
   properties = list(

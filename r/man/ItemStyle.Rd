@@ -53,6 +53,9 @@ ItemStyle(
 
 \item{shadow_offset_y}{Optional Numeric: Shadow vertical offset.}
 }
+\value{
+\code{ItemStyle} object.
+}
 \description{
 Styling for graphical items (bar segments, scatter points, pie slices, etc.).
 Includes both fill and stroke options.
@@ -60,4 +63,7 @@ Includes both fill and stroke options.
 \details{
 Corresponds to \code{ItemStyleOption} in \code{src/util/types.ts} (line 1142).
 ECharts docs: \url{https://echarts.apache.org/en/option.html#series-bar.itemStyle}
+}
+\examples{
+ItemStyle(color = "#16a085", border_color = "#ffffff", border_width = 1)
 }

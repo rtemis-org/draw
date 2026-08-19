@@ -83,3 +83,9 @@ Quick boxplot from raw data with optional grouping for multiple traces.
 Boxplot statistics (min, Q1, median, Q3, max) are computed automatically
 using \code{\link[grDevices:boxplot.stats]{grDevices::boxplot.stats()}}.
 }
+\examples{
+draw_boxplot(
+  split(iris[["Sepal.Length"]], iris[["Species"]]),
+  ylab = "Sepal length"
+)
+}

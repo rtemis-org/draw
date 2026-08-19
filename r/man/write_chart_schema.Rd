@@ -18,6 +18,18 @@ write_chart_schema(schema, path)
 \description{
 Write a generated schema to disk
 }
+\examples{
+schema <- chart_schema(
+  ScatterConfig,
+  id = "https://schemas.rtemis.org/draw/scatter.schema.json",
+  title = "Scatter chart",
+  description = "A scatter chart configuration."
+)
+# Write to the session temp directory; use a real path in your own code.
+path <- file.path(tempdir(), "scatter.schema.json")
+write_chart_schema(schema, path)
+unlink(path)
+}
 \author{
 EDG
 }

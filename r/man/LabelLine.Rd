@@ -29,10 +29,16 @@ LabelLine(
 
 \item{line_style}{Optional \link{LineStyle}: Line styling.}
 }
+\value{
+\code{LabelLine} object.
+}
 \description{
 Connecting line between a label and its chart element (e.g. pie label lines).
 }
 \details{
 Corresponds to \code{LabelLineOption} in \code{src/util/types.ts} (line 1379).
 ECharts docs: \url{https://echarts.apache.org/en/option.html#series-pie.labelLine}
+}
+\examples{
+LabelLine(show = TRUE, length = 10, length2 = 15)
 }

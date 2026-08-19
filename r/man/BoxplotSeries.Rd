@@ -47,10 +47,20 @@ BoxplotSeries(
 
 \item{label}{Optional \link{LabelOption}: Data-label configuration.}
 }
+\value{
+\code{BoxplotSeries} object.
+}
 \description{
 Configuration for a boxplot chart series.
 }
 \details{
 Corresponds to \code{BoxplotSeriesOption} in \code{src/chart/boxplot/BoxplotSeries.ts} (line 59).
 ECharts docs: \url{https://echarts.apache.org/en/option.html#series-boxplot}
+}
+\examples{
+# Each element is one box, given as its five-number summary.
+BoxplotSeries(
+  name = "Distribution",
+  data = list(c(850, 940, 960, 980, 1070), c(750, 800, 840, 890, 1020))
+)
 }

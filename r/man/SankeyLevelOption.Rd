@@ -21,6 +21,9 @@ SankeyLevelOption(
 \item{line_style}{Optional \link{LineStyle} or list: Link styling for edges leaving
 this depth. Accepts a \link{LineStyle} object or a plain list (allows \code{curveness}).}
 }
+\value{
+\code{SankeyLevelOption} object.
+}
 \description{
 Style overrides applied to all nodes at a given column depth. \code{depth = 0}
 targets the leftmost column.
@@ -30,4 +33,7 @@ Corresponds to \code{SankeyLevelOption} in
 \code{src/chart/sankey/SankeySeries.ts} (line 96).
 ECharts docs:
 \url{https://echarts.apache.org/en/option.html#series-sankey.levels}
+}
+\examples{
+SankeyLevelOption(depth = 0L, item_style = ItemStyle(color = "#16a085"))
 }

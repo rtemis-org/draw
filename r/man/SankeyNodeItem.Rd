@@ -37,6 +37,9 @@ SankeyNodeItem(
 \{"inEdges", "outEdges", "allEdges"\}: Which adjacent elements to highlight
 on hover.}
 }
+\value{
+\code{SankeyNodeItem} object.
+}
 \description{
 One node in a Sankey diagram. Node names must match the \code{source} / \code{target}
 strings used in the corresponding \link{SankeyEdgeItem} objects.
@@ -46,4 +49,7 @@ Corresponds to \code{SankeyNodeItemOption} in
 \code{src/chart/sankey/SankeySeries.ts} (line 73).
 ECharts docs:
 \url{https://echarts.apache.org/en/option.html#series-sankey.data}
+}
+\examples{
+SankeyNodeItem(name = "Source A", value = 10)
 }

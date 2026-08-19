@@ -21,6 +21,15 @@
 #' @param height Numeric: Image height in pixels.
 #' @return The `filename`, invisibly.
 #' @export
+#'
+#' @examples
+#' # SVG export shells out to Node.js, so run it only where node exists.
+#' if (nzchar(Sys.which("node"))) {
+#'   chart <- draw_bar(x = c("A", "B", "C"), y = c(3, 7, 2))
+#'   path <- file.path(tempdir(), "chart.svg")
+#'   save_drawing(chart, path)
+#'   unlink(path)
+#' }
 save_drawing <- function(widget, filename, width = 800, height = 600) {
   if (!inherits(widget, "htmlwidget")) {
     stop("`widget` must be an htmlwidget returned by draw().", call. = FALSE)
@@ -114,11 +123,17 @@ save_svg_ssr <- function(option, theme, filename, width, height) {
   err_file <- tempfile(fileext = ".err")
   on.exit(unlink(err_file), add = TRUE)
 
+  # Render into a temp file and move it into place only once node has exited
+  # cleanly: a failed export must not leave an empty or truncated file behind
+  # at the caller's path.
+  tmp_out <- tempfile(fileext = ".svg")
+  on.exit(unlink(tmp_out), add = TRUE)
+
   status <- system2(
     node,
     args = shQuote(script),
     stdin = tmp_in,
-    stdout = filename,
+    stdout = tmp_out,
     stderr = err_file
   )
 
@@ -133,5 +148,11 @@ save_svg_ssr <- function(option, theme, filename, width, height) {
       if (length(err)) paste0("\n", paste(err, collapse = "\n")) else "",
       call. = FALSE
     )
+  }
+
+  # file.copy rather than file.rename: the temp directory and the destination
+  # may sit on different filesystems, where a rename fails.
+  if (!file.copy(tmp_out, filename, overwrite = TRUE)) {
+    stop("Could not write the SVG to '", filename, "'.", call. = FALSE)
   }
 }

@@ -66,10 +66,16 @@ symbol's own size (strings, e.g. \code{c("0\%", "-50\%")}). Applied \emph{after}
 
 \item{label}{Optional \link{LabelOption}: Data-label configuration.}
 }
+\value{
+\code{ScatterSeries} object.
+}
 \description{
 Configuration for a scatter (point) chart series.
 }
 \details{
 Corresponds to \code{ScatterSeriesOption} in \code{src/chart/scatter/ScatterSeries.ts} (line 64).
 ECharts docs: \url{https://echarts.apache.org/en/option.html#series-scatter}
+}
+\examples{
+ScatterSeries(name = "Points", data = list(c(1, 2), c(3, 4)), symbol_size = 8)
 }

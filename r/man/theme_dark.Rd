@@ -70,3 +70,6 @@ Returns a dark theme. All parameters have sensible defaults; most
 users only need \code{base_font_size}. Title font size defaults to 1.2x
 the base; all other text defaults to 1x.
 }
+\examples{
+theme_dark(base_font_size = 14)
+}

@@ -44,10 +44,16 @@ LineStyle(
 
 \item{shadow_offset_y}{Optional Numeric: Shadow vertical offset.}
 }
+\value{
+\code{LineStyle} object.
+}
 \description{
 Stroke styling for lines in series, axes, and components.
 }
 \details{
 Corresponds to \code{LineStyleOption} in \code{src/util/types.ts} (line 1154).
 ECharts docs: \url{https://echarts.apache.org/en/option.html#series-line.lineStyle}
+}
+\examples{
+LineStyle(color = "#16a085", width = 2, type = "dashed")
 }

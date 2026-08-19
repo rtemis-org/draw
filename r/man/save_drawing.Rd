@@ -27,3 +27,12 @@ server-side rendering. Requires a \code{node} binary on \code{PATH}.
 Interactive features (tooltip formatters, event handlers) are stripped
 before rendering — static images cannot express them.
 }
+\examples{
+# SVG export shells out to Node.js, so run it only where node exists.
+if (nzchar(Sys.which("node"))) {
+  chart <- draw_bar(x = c("A", "B", "C"), y = c(3, 7, 2))
+  path <- file.path(tempdir(), "chart.svg")
+  save_drawing(chart, path)
+  unlink(path)
+}
+}

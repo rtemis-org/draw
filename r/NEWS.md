@@ -88,9 +88,17 @@ document by any interface.
 * Charts re-theme with Quarto's light/dark toggle, which only rewrites body
   classes and fires no event.
 * `LineSeries` and `ScatterSeries` gained `symbol_rotate` and `symbol_offset`.
+* Every exported class and function now documents its return value and carries
+  a runnable example, as CRAN requires. `just check-rd` enforces this.
+* `save_drawing()` renders to a temp file and moves it into place only after
+  node exits cleanly, so a failed export no longer leaves an empty or
+  truncated file at the path the caller asked for.
 
 ## Dependencies
 
 * `rtemis` moved from Imports to Suggests. The `plot()` and `plot_session()`
   methods for its session classes are registered at load time when it is
   installed.
+* `shiny` added to Suggests: the `drawOutput()` and `renderDraw()` examples
+  build a Shiny output element, and a package used in an example has to be
+  declared.

@@ -51,6 +51,9 @@ Typically \code{list(color = c("blue", "white", "red"))}.}
 
 \item{bottom}{Optional Numeric or Character: Distance from the bottom of the container.}
 }
+\value{
+\code{VisualMap} object.
+}
 \description{
 Continuous visual map component that maps data values to visual properties
 (typically color). Required for heatmaps.
@@ -59,4 +62,7 @@ Continuous visual map component that maps data values to visual properties
 Corresponds to \code{ContinuousVisualMapOption} in
 \code{src/component/visualMap/ContinuousModel.ts}.
 ECharts docs: \url{https://echarts.apache.org/en/option.html#visualMap-continuous}
+}
+\examples{
+VisualMap(type = "continuous", min = 0, max = 100, calculable = TRUE)
 }

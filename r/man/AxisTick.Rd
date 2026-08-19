@@ -23,10 +23,16 @@ AxisTick(
 
 \item{line_style}{Optional \link{LineStyle}: Line styling.}
 }
+\value{
+\code{AxisTick} object.
+}
 \description{
 Configuration for axis tick marks.
 }
 \details{
 Corresponds to \code{AxisTickOption} in \code{src/coord/axisCommonTypes.ts} (line 244).
 ECharts docs: \url{https://echarts.apache.org/en/option.html#xAxis.axisTick}
+}
+\examples{
+AxisTick(show = TRUE, length = 5, align_with_label = TRUE)
 }

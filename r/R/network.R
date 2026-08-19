@@ -27,7 +27,13 @@
 #' @param value Optional Numeric: Drives node size when `scale_by_degree` is
 #'   enabled (e.g. weighted degree).
 #' @param group Optional Character: Categorical key for node color.
+#'
+#' @return `GraphNode` object.
+#'
 #' @export
+#'
+#' @examples
+#' GraphNode(id = "a", label = "Node A", group = "g1")
 GraphNode <- S7::new_class(
   "GraphNode",
   properties = list(
@@ -55,7 +61,13 @@ S7::method(to_list, GraphNode) <- function(x, ...) {
 #'   correlation graph, the absolute value of `r`.
 #' @param sign Optional Numeric \{-1, 1\}: Sign of the underlying value (e.g.
 #'   correlation): `1` positive, `-1` negative. Drives edge color when present.
+#'
+#' @return `GraphEdge` object.
+#'
 #' @export
+#'
+#' @examples
+#' GraphEdge(source = "a", target = "b", weight = 0.8)
 GraphEdge <- S7::new_class(
   "GraphEdge",
   properties = list(
@@ -97,7 +109,17 @@ S7::method(to_list, GraphEdge) <- function(x, ...) {
 #' @param nodes List: List of [GraphNode] objects.
 #' @param edges List: List of [GraphEdge] objects.
 #' @param directed Logical: Whether edges are directed.
+#'
+#' @return `GraphModel` object.
+#'
 #' @export
+#'
+#' @examples
+#' GraphModel(
+#'   nodes = list(GraphNode(id = "a"), GraphNode(id = "b")),
+#'   edges = list(GraphEdge(source = "a", target = "b")),
+#'   directed = FALSE
+#' )
 GraphModel <- S7::new_class(
   "GraphModel",
   properties = list(
@@ -183,7 +205,18 @@ S7::method(to_list, GraphModel) <- function(x, ...) {
 #' @param positive_color Character: Edge color for positive-sign edges.
 #' @param negative_color Character: Edge color for negative-sign edges.
 #' @param title Optional Character: Title shown above the network.
+#'
+#' @return `SigmaOption` object.
+#'
 #' @export
+#'
+#' @examples
+#' model <- GraphModel(
+#'   nodes = list(GraphNode(id = "a"), GraphNode(id = "b")),
+#'   edges = list(GraphEdge(source = "a", target = "b")),
+#'   directed = FALSE
+#' )
+#' SigmaOption(model = model, layout = "force")
 SigmaOption <- S7::new_class(
   "SigmaOption",
   properties = list(
@@ -620,6 +653,14 @@ graph_option <- function(
 #'   parity with the other `draw_*` functions.
 #' @return htmlwidget.
 #' @export
+#'
+#' @examples
+#' model <- GraphModel(
+#'   nodes = list(GraphNode(id = "a"), GraphNode(id = "b")),
+#'   edges = list(GraphEdge(source = "a", target = "b")),
+#'   directed = FALSE
+#' )
+#' draw_graph(model)
 draw_graph <- function(
   model,
   layout = "force",

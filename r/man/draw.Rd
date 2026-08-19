@@ -84,3 +84,11 @@ option object: pass \code{NULL} (default) for light/dark auto-detection (from VS
 Code, RStudio, or the browser's \code{prefers-color-scheme}), \code{NA} for no theme
 (raw backend defaults), or a \link{Theme} / list to force one.
 }
+\examples{
+option <- EChartsOption(
+  x_axis = Axis(type = "category", data = c("Mon", "Tue", "Wed")),
+  y_axis = Axis(type = "value"),
+  series = BarSeries(data = c(120, 200, 150))
+)
+draw(option)
+}

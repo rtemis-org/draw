@@ -132,6 +132,9 @@ for zoom events.}
 \item{prevent_default_mouse_move}{Optional Logical: Whether to call
 \code{event.preventDefault()} on drag (inside type only).}
 }
+\value{
+\code{DataZoom} object.
+}
 \description{
 Axis-range zoom component. ECharts renders \code{dataZoom} as an array; common
 usage pairs a \code{"slider"} (visible scrollbar) with an \code{"inside"} (mouse-wheel
@@ -145,4 +148,7 @@ Corresponds to \code{DataZoomOption} in
 (line 38), and \code{InsideDataZoomOption} in
 \code{src/component/dataZoom/InsideZoomModel.ts} (line 23).
 ECharts docs: \url{https://echarts.apache.org/en/option.html#dataZoom}
+}
+\examples{
+DataZoom(type = "slider", start = 0, end = 50)
 }

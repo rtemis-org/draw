@@ -38,6 +38,9 @@ AxisLabel(
 
 \item{text_style}{Optional \link{TextStyle}: Text appearance.}
 }
+\value{
+\code{AxisLabel} object.
+}
 \description{
 Configuration for axis labels. Combines label-specific positioning with
 text styling (flattened in to_list like LabelOption).
@@ -45,4 +48,7 @@ text styling (flattened in to_list like LabelOption).
 \details{
 Corresponds to \code{AxisLabelBaseOption} in \code{src/coord/axisCommonTypes.ts} (line 312).
 ECharts docs: \url{https://echarts.apache.org/en/option.html#xAxis.axisLabel}
+}
+\examples{
+AxisLabel(show = TRUE, rotate = 45, margin = 8)
 }

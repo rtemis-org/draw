@@ -86,10 +86,16 @@ symbol's own size (strings, e.g. \code{c("0\%", "-50\%")}). Applied \emph{after}
 \item{mark_area}{Optional \link{MarkArea}: Shaded bands (e.g. vertical
 highlight regions across x-ranges).}
 }
+\value{
+\code{LineSeries} object.
+}
 \description{
 Configuration for a line chart series.
 }
 \details{
 Corresponds to \code{LineSeriesOption} in \code{src/chart/line/LineSeries.ts} (line 74).
 ECharts docs: \url{https://echarts.apache.org/en/option.html#series-line}
+}
+\examples{
+LineSeries(name = "Sessions", data = c(150, 230, 224), smooth = TRUE)
 }

@@ -133,6 +133,18 @@ lint:
     cd {{r_dir}} && {{rscript}} -e "suppressMessages(pkgload::load_all('.', quiet = TRUE)); l <- lintr::lint_dir('R', linters = list(lintr::object_usage_linter())); print(l); if (length(l) > 0L) quit(status = 1L)"
     @just _msg "Done"
 
+# Check that each man/*.Rd file has \value and \examples sections (CRAN requires both)
+check-rd:
+    @just _msg "─── Checking Rd sections for {{pkg}}... ───"
+    cd {{r_dir}} && tools/check-rd-sections.sh man
+    @just _msg "Done"
+
+# Like check-rd but also enforces \keyword{internal} docs (data/package stay exempt)
+check-rd-all:
+    @just _msg "─── Checking Rd sections (incl. internal) for {{pkg}}... ───"
+    cd {{r_dir}} && tools/check-rd-sections.sh -internal man
+    @just _msg "Done"
+
 # Check R code formatting without modifying files (CI-friendly; fails if unformatted)
 format-check:
     @just _msg "─── Checking formatting for {{pkg}}... ───"

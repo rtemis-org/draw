@@ -63,3 +63,6 @@ Histogram from numeric data, with optional grouping for multiple traces.
 Bins are computed using \code{\link[graphics:hist]{graphics::hist()}} with consistent break points
 across groups.
 }
+\examples{
+draw_histogram(iris[["Sepal.Length"]], xlab = "Sepal length")
+}

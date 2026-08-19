@@ -11,10 +11,16 @@ MinorSplitLine(show = NULL, line_style = NULL)
 
 \item{line_style}{Optional \link{LineStyle}: Line styling.}
 }
+\value{
+\code{MinorSplitLine} object.
+}
 \description{
 Configuration for minor split lines (between main split lines).
 }
 \details{
 Corresponds to \code{MinorSplitLineOption} in \code{src/coord/axisCommonTypes.ts} (line 364).
 ECharts docs: \url{https://echarts.apache.org/en/option.html#xAxis.minorSplitLine}
+}
+\examples{
+MinorSplitLine(show = TRUE, line_style = LineStyle(opacity = 0.2))
 }

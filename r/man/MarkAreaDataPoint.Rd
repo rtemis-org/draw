@@ -28,6 +28,9 @@ set on the first endpoint of a pair applies to the whole band.}
 
 \item{label}{Optional \link{LabelOption}: Label configuration.}
 }
+\value{
+\code{MarkAreaDataPoint} object.
+}
 \description{
 One endpoint of a \code{markArea} band. Two of these — wrapped in a length-2 list
 — define the opposite corners of a shaded rectangle. Supplying only
@@ -40,4 +43,7 @@ Corresponds to \code{MarkArea2DDataItemDimOption} in
 \code{src/component/marker/MarkAreaModel.ts} (line 49).
 ECharts docs:
 \url{https://echarts.apache.org/en/option.html#series-line.markArea.data}
+}
+\examples{
+MarkAreaDataPoint(x_axis = 1, name = "Event window")
 }

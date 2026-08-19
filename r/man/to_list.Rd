@@ -18,3 +18,6 @@ List: Named list.
 Generic function that converts an S7 object to a plain named list
 matching the ECharts JSON option structure.
 }
+\examples{
+to_list(LineStyle(color = "#16a085", width = 2))
+}

@@ -93,10 +93,23 @@ or a numeric vector.}
 
 \item{bottom}{Optional Numeric or Character: Bottom position.}
 }
+\value{
+\code{PieSeries} object.
+}
 \description{
 Configuration for a pie chart series.
 }
 \details{
 Corresponds to \code{PieSeriesOption} in \code{src/chart/pie/PieSeries.ts} (line 105).
 ECharts docs: \url{https://echarts.apache.org/en/option.html#series-pie}
+}
+\examples{
+PieSeries(
+  name = "Browser",
+  data = list(
+    list(value = 1048, name = "Chrome"),
+    list(value = 735, name = "Firefox")
+  ),
+  radius = "50\%"
+)
 }

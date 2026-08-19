@@ -53,10 +53,16 @@ Grid(
 
 \item{shadow_offset_y}{Optional Numeric: Shadow vertical offset.}
 }
+\value{
+\code{Grid} object.
+}
 \description{
 Configuration for the cartesian coordinate grid container.
 }
 \details{
 Corresponds to \code{GridOption} in \code{src/coord/cartesian/GridModel.ts} (line 37).
 ECharts docs: \url{https://echarts.apache.org/en/option.html#grid}
+}
+\examples{
+Grid(left = "10\%", right = "10\%", top = 60, bottom = 60, contain_label = TRUE)
 }

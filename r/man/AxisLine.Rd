@@ -30,10 +30,16 @@ this axis line is drawn.}
 
 \item{line_style}{Optional \link{LineStyle}: Line styling.}
 }
+\value{
+\code{AxisLine} object.
+}
 \description{
 Configuration for the axis line itself.
 }
 \details{
 Corresponds to \code{AxisLineOption} in \code{src/coord/axisCommonTypes.ts} (line 231).
 ECharts docs: \url{https://echarts.apache.org/en/option.html#xAxis.axisLine}
+}
+\examples{
+AxisLine(show = TRUE, line_style = LineStyle(color = "#888888"))
 }

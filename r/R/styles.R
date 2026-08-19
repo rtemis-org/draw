@@ -25,7 +25,13 @@
 #' @param shadow_color Optional Character: Shadow color.
 #' @param shadow_offset_x Optional Numeric: Shadow horizontal offset.
 #' @param shadow_offset_y Optional Numeric: Shadow vertical offset.
+#'
+#' @return `LineStyle` object.
+#'
 #' @export
+#'
+#' @examples
+#' LineStyle(color = "#16a085", width = 2, type = "dashed")
 LineStyle <- S7::new_class(
   "LineStyle",
   properties = list(
@@ -65,7 +71,13 @@ S7::method(to_list, LineStyle) <- function(x, ...) {
 #' @param shadow_color Optional Character: Shadow color.
 #' @param shadow_offset_x Optional Numeric: Shadow horizontal offset.
 #' @param shadow_offset_y Optional Numeric: Shadow vertical offset.
+#'
+#' @return `AreaStyle` object.
+#'
 #' @export
+#'
+#' @examples
+#' AreaStyle(color = "#16a085", opacity = 0.3)
 AreaStyle <- S7::new_class(
   "AreaStyle",
   properties = list(
@@ -124,7 +136,13 @@ S7::method(to_list, AreaStyle) <- function(x, ...) {
 #' @param shadow_color Optional Character: Shadow color.
 #' @param shadow_offset_x Optional Numeric: Shadow horizontal offset.
 #' @param shadow_offset_y Optional Numeric: Shadow vertical offset.
+#'
+#' @return `ItemStyle` object.
+#'
 #' @export
+#'
+#' @examples
+#' ItemStyle(color = "#16a085", border_color = "#ffffff", border_width = 1)
 ItemStyle <- S7::new_class(
   "ItemStyle",
   properties = list(
@@ -209,7 +227,13 @@ S7::method(to_list, ItemStyle) <- function(x, ...) {
 #' @param shadow_color Optional Character: Box shadow color.
 #' @param shadow_offset_x Optional Numeric: Box shadow horizontal offset.
 #' @param shadow_offset_y Optional Numeric: Box shadow vertical offset.
+#'
+#' @return `TextStyle` object.
+#'
 #' @export
+#'
+#' @examples
+#' TextStyle(color = "#333333", font_size = 14, font_weight = "bold")
 TextStyle <- S7::new_class(
   "TextStyle",
   properties = list(

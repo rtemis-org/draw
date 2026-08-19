@@ -17,7 +17,13 @@ enabled (e.g. weighted degree).}
 
 \item{group}{Optional Character: Categorical key for node color.}
 }
+\value{
+\code{GraphNode} object.
+}
 \description{
 One node (vertex) in a network. The R analog of the \code{GraphNode} TypeScript
 interface in rtemislive (\verb{~/Code/live/src/lib/types.ts}).
+}
+\examples{
+GraphNode(id = "a", label = "Node A", group = "g1")
 }

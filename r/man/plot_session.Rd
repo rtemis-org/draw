@@ -22,6 +22,17 @@ Plots the session timeline of a \code{Supervised} or \code{SupervisedRes} object
 Requires the rtemis package: the classes this dispatches on are defined there,
 so the methods are registered only when rtemis is installed.
 }
+\examples{
+# GLM keeps the example dependency-free: rtemis fits it with stats::glm().
+if (requireNamespace("rtemis", quietly = TRUE)) {
+  mod <- rtemis::train(
+    mtcars[, c("wt", "hp", "mpg")],
+    hyperparameters = rtemis::setup_GLM(),
+    verbosity = 0L
+  )
+  plot_session(mod)
+}
+}
 \author{
 EDG
 }

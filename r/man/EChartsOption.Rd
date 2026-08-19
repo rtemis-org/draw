@@ -73,6 +73,9 @@ an \code{"inside"} zoom.}
 
 \item{use_utc}{Optional Logical: Whether to use UTC for time axes.}
 }
+\value{
+\code{EChartsOption} object.
+}
 \description{
 The top-level configuration object passed to \code{echarts.setOption()}.
 Holds all chart components, series, and global settings.
@@ -80,4 +83,12 @@ Holds all chart components, series, and global settings.
 \details{
 Corresponds to \code{EChartsOption} in \code{src/export/option.ts} (line 258)
 and \code{ECUnitOption} in \code{src/util/types.ts} (line 697).
+}
+\examples{
+EChartsOption(
+  title = Title(text = "Weekly sessions"),
+  x_axis = Axis(type = "category", data = c("Mon", "Tue", "Wed")),
+  y_axis = Axis(type = "value"),
+  series = LineSeries(data = c(150, 230, 224), smooth = TRUE)
+)
 }

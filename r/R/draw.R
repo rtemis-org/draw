@@ -335,6 +335,14 @@ render_widget <- function(
 #'   backends, which have no ECharts animation to disable.
 #' @return htmlwidget: Widget object.
 #' @export
+#'
+#' @examples
+#' option <- EChartsOption(
+#'   x_axis = Axis(type = "category", data = c("Mon", "Tue", "Wed")),
+#'   y_axis = Axis(type = "value"),
+#'   series = BarSeries(data = c(120, 200, 150))
+#' )
+#' draw(option)
 draw <- S7::new_generic(
   "draw",
   "option",
@@ -580,7 +588,15 @@ S7::method(draw, S7::class_list) <- function(
 #' @param outputId Character: Shiny output ID.
 #' @param width Character or Numeric: CSS width.
 #' @param height Character or Numeric: CSS height.
+#'
+#' @return Shiny output element for a draw widget.
+#'
 #' @export
+#'
+#' @examples
+#' if (requireNamespace("shiny", quietly = TRUE)) {
+#'   drawOutput("chart", height = "600px")
+#' }
 drawOutput <- function(outputId, width = "100%", height = "400px") {
   htmlwidgets::shinyWidgetOutput(
     outputId,
@@ -595,7 +611,15 @@ drawOutput <- function(outputId, width = "100%", height = "400px") {
 #' @param expr Expression: Expression that returns a draw widget.
 #' @param env Environment: Evaluation environment.
 #' @param quoted Logical: Whether `expr` is quoted.
+#'
+#' @return Shiny render function for a draw widget.
+#'
 #' @export
+#'
+#' @examples
+#' if (requireNamespace("shiny", quietly = TRUE)) {
+#'   renderDraw(draw_bar(x = c("A", "B", "C"), y = c(3, 7, 2)))
+#' }
 renderDraw <- function(expr, env = parent.frame(), quoted = FALSE) {
   if (!quoted) {
     expr <- substitute(expr)
@@ -1319,6 +1343,9 @@ bar_option <- function(
 #'   [save_drawing()].
 #' @return htmlwidget: Widget object.
 #' @export
+#'
+#' @examples
+#' draw_bar(x = c("A", "B", "C"), y = c(3, 7, 2), title = "Counts")
 draw_bar <- function(
   x,
   y,
@@ -1800,6 +1827,12 @@ pie_option <- function(
 #'   [save_drawing()].
 #' @return htmlwidget: Widget object.
 #' @export
+#'
+#' @examples
+#' draw_pie(
+#'   values = c(1048, 735, 580),
+#'   labels = c("Chrome", "Firefox", "Safari")
+#' )
 draw_pie <- function(
   values,
   labels,
@@ -2070,6 +2103,9 @@ density_option <- function(
 #'   [save_drawing()].
 #' @return htmlwidget: Widget object.
 #' @export
+#'
+#' @examples
+#' draw_density(iris[["Sepal.Length"]], xlab = "Sepal length")
 draw_density <- function(
   x,
   group = NULL,
@@ -2206,6 +2242,9 @@ histogram_option <- function(
 #'   [save_drawing()].
 #' @return htmlwidget: Widget object.
 #' @export
+#'
+#' @examples
+#' draw_histogram(iris[["Sepal.Length"]], xlab = "Sepal length")
 draw_histogram <- function(
   x,
   group = NULL,
@@ -2543,6 +2582,12 @@ boxplot_option <- function(
 #'   [save_drawing()].
 #' @return htmlwidget: Widget object.
 #' @export
+#'
+#' @examples
+#' draw_boxplot(
+#'   split(iris[["Sepal.Length"]], iris[["Species"]]),
+#'   ylab = "Sepal length"
+#' )
 draw_boxplot <- function(
   x,
   labels = NULL,
@@ -3469,6 +3514,9 @@ heatmap_option <- function(
 #'   [save_drawing()].
 #' @return htmlwidget: Widget object.
 #' @export
+#'
+#' @examples
+#' draw_heatmap(cor(mtcars[, 1:5]), title = "Correlation")
 draw_heatmap <- function(
   x,
   row_names = NULL,

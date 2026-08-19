@@ -16,9 +16,15 @@ renderer.}
 \item{extras}{Optional named list: Extra column values to show in the
 tooltip, keyed by column name.}
 }
+\value{
+\code{MapRow} object.
+}
 \description{
 One region's datum in a choropleth: a raw location key, the numeric value
 that colors the region, and optional extra fields to surface in the tooltip.
 The R analog of the \code{MapRow} TypeScript interface in rtemislive
 (\verb{~/Code/live/src/lib/types.ts}).
+}
+\examples{
+MapRow(location = "USA", value = 25.5)
 }

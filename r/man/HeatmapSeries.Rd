@@ -43,6 +43,9 @@ HeatmapSeries(
 \item{emphasis}{Optional list: Emphasis (hover) styling. A plain list passed
 through to ECharts, e.g. \code{list(itemStyle = list(shadowBlur = 10))}.}
 }
+\value{
+\code{HeatmapSeries} object.
+}
 \description{
 Configuration for a heatmap chart series on Cartesian coordinates.
 Each data point is a triple \verb{[col_index, row_index, value]} and color
@@ -51,4 +54,8 @@ encoding is driven by a \link{VisualMap} component.
 \details{
 Corresponds to \code{HeatmapSeriesOption} in \code{src/chart/heatmap/HeatmapSeries.ts}.
 ECharts docs: \url{https://echarts.apache.org/en/option.html#series-heatmap}
+}
+\examples{
+# Each element is one cell, as c(column index, row index, value).
+HeatmapSeries(name = "Density", data = list(c(0, 0, 5), c(1, 0, 3)))
 }

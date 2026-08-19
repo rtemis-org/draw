@@ -23,10 +23,16 @@ SplitLine(
 
 \item{line_style}{Optional \link{LineStyle}: Line styling.}
 }
+\value{
+\code{SplitLine} object.
+}
 \description{
 Configuration for grid split lines perpendicular to the axis.
 }
 \details{
 Corresponds to \code{SplitLineOption} in \code{src/coord/axisCommonTypes.ts} (line 353).
 ECharts docs: \url{https://echarts.apache.org/en/option.html#xAxis.splitLine}
+}
+\examples{
+SplitLine(show = TRUE, line_style = LineStyle(type = "dashed"))
 }

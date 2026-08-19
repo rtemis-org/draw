@@ -36,6 +36,11 @@ authored config; written by the interface that resolved it.}
 Abstract base for every chart config. Subclasses override \code{type} with a
 constant, which is the discriminator the published schema dispatches on.
 }
+\examples{
+# ChartConfig is abstract: build one of its subclasses.
+config <- setup_ScatterConfig(x = "wt", y = "mpg")
+S7::S7_inherits(config, ChartConfig)
+}
 \author{
 EDG
 }
