@@ -52,3 +52,9 @@ htmlwidget: Widget object.
 \description{
 Quick pie chart from values and labels.
 }
+\examples{
+draw_pie(
+  values = c(1048, 735, 580),
+  labels = c("Chrome", "Firefox", "Safari")
+)
+}

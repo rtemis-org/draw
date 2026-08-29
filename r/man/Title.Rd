@@ -74,10 +74,16 @@ Title(
 
 \item{bottom}{Optional Numeric or Character: Bottom position.}
 }
+\value{
+\code{Title} object.
+}
 \description{
 Chart title configuration with main text and optional subtext.
 }
 \details{
 Corresponds to \code{TitleOption} in \code{src/component/title/install.ts} (line 48).
 ECharts docs: \url{https://echarts.apache.org/en/option.html#title}
+}
+\examples{
+Title(text = "Monthly revenue", subtext = "2026", left = "center")
 }

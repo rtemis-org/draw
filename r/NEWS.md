@@ -1,3 +1,14 @@
+# rtemis.draw 0.5.1
+
+- **Schemas are written by `rtemis.core::write_JSONSchema()`.**
+  `write_chart_schema()` is retired: the registry has more than one producer, and
+  a document's shape belongs to the registry rather than to whichever package
+  emitted it. Keyword order is now the registry's, applied on write, so it cannot
+  be skipped. `digits = I(17)` -- what round-trips an IEEE 754 axis limit exactly
+  -- is passed by the generator rather than baked into a writer.
+- `just schemas` reindexes the registry, so a run that writes documents cannot
+  leave `index.json` describing a tree it no longer matches.
+
 # rtemis.draw 0.5.0
 
 First release with the **config layer**: a chart can now be described as a
@@ -88,9 +99,17 @@ document by any interface.
 * Charts re-theme with Quarto's light/dark toggle, which only rewrites body
   classes and fires no event.
 * `LineSeries` and `ScatterSeries` gained `symbol_rotate` and `symbol_offset`.
+* Every exported class and function now documents its return value and carries
+  a runnable example, as CRAN requires. `just check-rd` enforces this.
+* `save_drawing()` renders to a temp file and moves it into place only after
+  node exits cleanly, so a failed export no longer leaves an empty or
+  truncated file at the path the caller asked for.
 
 ## Dependencies
 
 * `rtemis` moved from Imports to Suggests. The `plot()` and `plot_session()`
   methods for its session classes are registered at load time when it is
   installed.
+* `shiny` added to Suggests: the `drawOutput()` and `renderDraw()` examples
+  build a Shiny output element, and a package used in an example has to be
+  declared.

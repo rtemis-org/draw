@@ -31,7 +31,13 @@
 #' @param focus_node_adjacency Optional Logical or Character
 #'   \{"inEdges", "outEdges", "allEdges"\}: Which adjacent elements to highlight
 #'   on hover.
+#'
+#' @return `SankeyNodeItem` object.
+#'
 #' @export
+#'
+#' @examples
+#' SankeyNodeItem(name = "Source A", value = 10)
 SankeyNodeItem <- S7::new_class(
   "SankeyNodeItem",
   properties = list(
@@ -92,7 +98,13 @@ S7::method(to_list, SankeyNodeItem) <- function(x, ...) {
 #' @param focus_node_adjacency Optional Logical or Character
 #'   \{"inEdges", "outEdges", "allEdges"\}: Which adjacent elements to highlight
 #'   on hover.
+#'
+#' @return `SankeyEdgeItem` object.
+#'
 #' @export
+#'
+#' @examples
+#' SankeyEdgeItem(source = "A", target = "B", value = 5)
 SankeyEdgeItem <- S7::new_class(
   "SankeyEdgeItem",
   properties = list(
@@ -150,7 +162,13 @@ S7::method(to_list, SankeyEdgeItem) <- function(x, ...) {
 #' @param item_style Optional [ItemStyle]: Node fill/border styling at this depth.
 #' @param line_style Optional [LineStyle] or list: Link styling for edges leaving
 #'   this depth. Accepts a [LineStyle] object or a plain list (allows `curveness`).
+#'
+#' @return `SankeyLevelOption` object.
+#'
 #' @export
+#'
+#' @examples
+#' SankeyLevelOption(depth = 0L, item_style = ItemStyle(color = "#16a085"))
 SankeyLevelOption <- S7::new_class(
   "SankeyLevelOption",
   properties = list(
@@ -208,7 +226,16 @@ S7::method(to_list, SankeyLevelOption) <- function(x, ...) {
 #' @param silent Optional Logical: Whether to disable mouse/touch events.
 #' @param z_level Optional Numeric: Canvas layer index.
 #' @param z Optional Numeric: Front-back order within the same canvas layer.
+#'
+#' @return `SankeySeries` object.
+#'
 #' @export
+#'
+#' @examples
+#' SankeySeries(
+#'   data = list(SankeyNodeItem(name = "A"), SankeyNodeItem(name = "B")),
+#'   links = list(SankeyEdgeItem(source = "A", target = "B", value = 5))
+#' )
 SankeySeries <- S7::new_class(
   "SankeySeries",
   properties = list(

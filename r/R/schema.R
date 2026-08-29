@@ -159,6 +159,14 @@ origin_property <- function(names, nullable) {
       "must stay honored, while a defaulted one may be re-resolved for a",
       "different display."
     ),
+    # Written by the interface, never authored: the map records what happened
+    # to the *other* properties, so there is nothing here for a user to fill
+    # in. It stays in the input schema because a re-write must be allowed to
+    # carry it back in, which is exactly rtemis's `role = "state"` -- accepted
+    # on input, not settable -- and is read as such by consumers building a
+    # form from the published contract.
+    readOnly = TRUE,
+    `x-rtemis` = list(type = "object", role = "state"),
     properties = entries,
     required = I(names),
     additionalProperties = FALSE
@@ -186,6 +194,10 @@ writer_property <- function(nullable) {
       "Which interface wrote this document, as `name` and `version`.",
       "Absent on an authored config."
     ),
+    # Not settable, for the same reason as `origin`: the writer stamps this,
+    # and "absent on an authored config" is the whole point.
+    readOnly = TRUE,
+    `x-rtemis` = list(type = "object", role = "state"),
     properties = list(
       name = list(
         type = "string",
@@ -270,10 +282,18 @@ chart_schema <- function(
   out <- list()
   for (nm in names(properties)) {
     if (identical(nm, "type")) {
-      # The discriminator is a computed constant, so it carries no spec.
+      # The discriminator is a computed constant, so it carries no spec -- but
+      # it is still annotated like every other constant in the registry
+      # (rtemis's `spec_to_schema` emits `role = "constant"` for these). The
+      # `const` alone says what the value must be; the annotation says the user
+      # does not supply it, which is what a consumer building a form reads to
+      # skip the field instead of asking for a value it cannot vary. Without
+      # `type` here a bare `const` also leaves such a consumer with no declared
+      # type to classify the property by.
       out[[nm]] <- list(
         const = type_value,
-        description = "Chart type; the schema discriminator."
+        description = "Chart type; the schema discriminator.",
+        `x-rtemis` = list(type = "string", role = "constant")
       )
       next
     }
@@ -364,6 +384,19 @@ chart_type_of <- function(cls) {
 #'
 #' @author EDG
 #' @export
+#'
+#' @examples
+#' schema <- chart_dispatcher_schema(
+#'   classes = list(ScatterConfig, BarConfig),
+#'   id = "https://schemas.rtemis.org/draw/chart.schema.json",
+#'   leaf_ids = c(
+#'     "https://schemas.rtemis.org/draw/scatter.schema.json",
+#'     "https://schemas.rtemis.org/draw/bar.schema.json"
+#'   ),
+#'   title = "Chart",
+#'   description = "Any rtemis.draw chart."
+#' )
+#' schema[["properties"]][["type"]][["enum"]]
 chart_dispatcher_schema <- function(
   classes,
   id,
@@ -396,34 +429,3 @@ chart_dispatcher_schema <- function(
     oneOf = lapply(leaf_ids, function(ref) list(`$ref` = ref))
   )
 } # /rtemis.draw::chart_dispatcher_schema
-
-
-# %% write_chart_schema ----
-#' Write a generated schema to disk
-#'
-#' @param schema Named list: A schema from [chart_schema()] or
-#'   [chart_dispatcher_schema()].
-#' @param path Character: Destination file.
-#'
-#' @return `path`, invisibly.
-#'
-#' @author EDG
-#' @export
-write_chart_schema <- function(schema, path) {
-  check_character_scalar(path)
-  dir.create(dirname(path), recursive = TRUE, showWarnings = FALSE)
-  json <- jsonlite::toJSON(
-    schema,
-    auto_unbox = TRUE,
-    pretty = TRUE,
-    null = "null",
-    # 17 significant digits is what round-trips an IEEE 754 double exactly.
-    # jsonlite defaults to 4 *decimal places*, which silently rounds a resolved
-    # axis limit, and even `digits = NA` loses the last bits -- so a document
-    # would draw a *nearly* identical chart, which is worse than an obviously
-    # broken one. Verified: I(15) and I(16) still lose them.
-    digits = I(17)
-  )
-  writeLines(as.character(json), path)
-  invisible(path)
-} # /rtemis.draw::write_chart_schema

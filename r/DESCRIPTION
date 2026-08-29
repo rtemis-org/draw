@@ -1,6 +1,6 @@
 Package: rtemis.draw
 Title: Interactive Visualization
-Version: 0.5.0
+Version: 0.5.1
 Date: 2026-08-17
 Authors@R:
     person(given = "E.D.", family = "Gennatas", role = c("aut", "cre", "cph"),
@@ -20,7 +20,7 @@ Roxygen: list(markdown = TRUE)
 Imports:
     htmlwidgets,
     jsonlite,
-    rtemis.core (>= 0.4.1),
+    rtemis.core (>= 0.4.4),
     S7,
     signal,
     stats,
@@ -32,6 +32,7 @@ Suggests:
     rmarkdown,
     rtemis (>= 1.3.0),
     rtemis.a3,
+    shiny,
     testthat (>= 3.0.0)
 Additional_repositories:
     https://rtemis-org.r-universe.dev

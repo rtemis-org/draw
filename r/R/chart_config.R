@@ -59,6 +59,11 @@ PROVENANCE_PROPS <- c("origin", "writer")
 #'
 #' @author EDG
 #' @export
+#'
+#' @examples
+#' # ChartConfig is abstract: build one of its subclasses.
+#' config <- setup_ScatterConfig(x = "wt", y = "mpg")
+#' S7::S7_inherits(config, ChartConfig)
 ChartConfig <- new_class(
   name = "ChartConfig",
   package = "rtemis.draw",
@@ -180,6 +185,11 @@ prop_chart_type <- function(type) {
 #'
 #' @author EDG
 #' @export
+#'
+#' @examples
+#' config <- setup_ScatterConfig(x = "wt", y = "mpg")
+#' option <- compile(config, data = mtcars)
+#' option@x_axis@name
 compile <- new_generic(
   "compile",
   "config",

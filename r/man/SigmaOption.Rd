@@ -64,6 +64,9 @@ node colors instead of by sign.}
 
 \item{title}{Optional Character: Title shown above the network.}
 }
+\value{
+\code{SigmaOption} object.
+}
 \description{
 The complete, validated render spec for a Sigma.js network: a \link{GraphModel}
 (the data) plus all visual styling and an optional title. This is the Sigma
@@ -78,4 +81,12 @@ build it -- but power users can construct it for full control:
 
 Its \code{\link[=to_list]{to_list()}} produces the \verb{\{ model, style, title \}} payload consumed by
 the \code{rtemis-graph} htmlwidget binding.
+}
+\examples{
+model <- GraphModel(
+  nodes = list(GraphNode(id = "a"), GraphNode(id = "b")),
+  edges = list(GraphEdge(source = "a", target = "b")),
+  directed = FALSE
+)
+SigmaOption(model = model, layout = "force")
 }

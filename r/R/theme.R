@@ -33,7 +33,13 @@
 #' @param value_axis Optional Named list: Value-axis defaults.
 #' @param log_axis Optional Named list: Log-axis defaults.
 #' @param time_axis Optional Named list: Time-axis defaults.
+#'
+#' @return `Theme` object.
+#'
 #' @export
+#'
+#' @examples
+#' Theme(color = c("#16a085", "#e67e22"), background_color = "#ffffff")
 Theme <- S7::new_class(
   "Theme",
   properties = list(
@@ -263,6 +269,9 @@ build_theme <- function(
 #' @param tooltip_color Optional Character: Tooltip text color.
 #' @return [Theme]: Theme object.
 #' @export
+#'
+#' @examples
+#' theme_light(base_font_size = 14)
 theme_light <- function(
   base_font_size = 12,
   title_font_size = NULL,
@@ -314,6 +323,9 @@ theme_light <- function(
 #' @inheritParams theme_light
 #' @return [Theme]: Theme object.
 #' @export
+#'
+#' @examples
+#' theme_dark(base_font_size = 14)
 theme_dark <- function(
   base_font_size = 12,
   title_font_size = NULL,

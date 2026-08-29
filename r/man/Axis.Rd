@@ -106,6 +106,9 @@ For \code{yAxis}: \code{"left"} (default) or \code{"right"}. For \code{xAxis}: \
 \item{grid_index}{Optional Numeric \verb{[0, Inf)}: Index of the grid this axis belongs to.
 Used when the chart has multiple grids (e.g. heatmap + dendrogram panels).}
 }
+\value{
+\code{Axis} object.
+}
 \description{
 Configuration for a cartesian axis (xAxis or yAxis). Combines fields from
 \code{AxisBaseOptionCommon}, \code{NumericAxisBaseOptionCommon}, \code{CategoryAxisBaseOption},
@@ -114,4 +117,7 @@ Configuration for a cartesian axis (xAxis or yAxis). Combines fields from
 \details{
 Corresponds to \code{AxisBaseOption} in \code{src/coord/axisCommonTypes.ts} (line 376).
 ECharts docs: \url{https://echarts.apache.org/en/option.html#xAxis}
+}
+\examples{
+Axis(type = "category", data = c("Mon", "Tue", "Wed"))
 }

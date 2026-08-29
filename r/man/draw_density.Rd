@@ -74,3 +74,6 @@ for multiple traces. A list input creates one density trace per vector when
 ungrouped, or one trace per variable/group combination when \code{group} is
 supplied.
 }
+\examples{
+draw_density(iris[["Sepal.Length"]], xlab = "Sepal length")
+}

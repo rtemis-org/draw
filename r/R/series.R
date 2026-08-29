@@ -36,7 +36,13 @@
 #' @param item_style Optional [ItemStyle]: Fill and border styling. Styling
 #'   set on the first endpoint of a pair applies to the whole band.
 #' @param label Optional [LabelOption]: Label configuration.
+#'
+#' @return `MarkAreaDataPoint` object.
+#'
 #' @export
+#'
+#' @examples
+#' MarkAreaDataPoint(x_axis = 1, name = "Event window")
 MarkAreaDataPoint <- S7::new_class(
   "MarkAreaDataPoint",
   properties = list(
@@ -109,7 +115,19 @@ S7::method(to_list, MarkAreaDataPoint) <- function(x, ...) {
 #'   bands. Per-band overrides go on the first [MarkAreaDataPoint] of a pair.
 #' @param label Optional [LabelOption]: Default label configuration.
 #' @param z2 Optional Numeric: Front-back order among markers.
+#'
+#' @return `MarkArea` object.
+#'
 #' @export
+#'
+#' @examples
+#' # One shaded band, defined by its two corner points.
+#' MarkArea(
+#'   data = list(list(
+#'     MarkAreaDataPoint(x_axis = 1),
+#'     MarkAreaDataPoint(x_axis = 3)
+#'   ))
+#' )
 MarkArea <- S7::new_class(
   "MarkArea",
   properties = list(
@@ -176,7 +194,13 @@ S7::method(to_list, MarkArea) <- function(x, ...) {
 #' @param silent Optional Logical: Whether the series is silent.
 #' @param z_level Optional Numeric: Canvas layer index.
 #' @param z Optional Numeric: Front-back order within the same layer.
+#'
+#' @return `LineSeries` object.
+#'
 #' @export
+#'
+#' @examples
+#' LineSeries(name = "Sessions", data = c(150, 230, 224), smooth = TRUE)
 LineSeries <- S7::new_class(
   "LineSeries",
   properties = list(
@@ -295,7 +319,13 @@ S7::method(to_list, LineSeries) <- function(x, ...) {
 #' @param silent Optional Logical: Whether the series is silent.
 #' @param z_level Optional Numeric: Canvas layer index.
 #' @param z Optional Numeric: Front-back order within the same layer.
+#'
+#' @return `BarSeries` object.
+#'
 #' @export
+#'
+#' @examples
+#' BarSeries(name = "Counts", data = c(3, 7, 2))
 BarSeries <- S7::new_class(
   "BarSeries",
   properties = list(
@@ -365,7 +395,13 @@ S7::method(to_list, BarSeries) <- function(x, ...) {
 #' @param silent Optional Logical: Whether the series is silent.
 #' @param z_level Optional Numeric: Canvas layer index.
 #' @param z Optional Numeric: Front-back order within the same layer.
+#'
+#' @return `ScatterSeries` object.
+#'
 #' @export
+#'
+#' @examples
+#' ScatterSeries(name = "Points", data = list(c(1, 2), c(3, 4)), symbol_size = 8)
 ScatterSeries <- S7::new_class(
   "ScatterSeries",
   properties = list(
@@ -454,7 +490,20 @@ S7::method(to_list, ScatterSeries) <- function(x, ...) {
 #' @param right Optional Numeric or Character: Right position.
 #' @param top Optional Numeric or Character: Top position.
 #' @param bottom Optional Numeric or Character: Bottom position.
+#'
+#' @return `PieSeries` object.
+#'
 #' @export
+#'
+#' @examples
+#' PieSeries(
+#'   name = "Browser",
+#'   data = list(
+#'     list(value = 1048, name = "Chrome"),
+#'     list(value = 735, name = "Firefox")
+#'   ),
+#'   radius = "50%"
+#' )
 PieSeries <- S7::new_class(
   "PieSeries",
   properties = list(
@@ -562,7 +611,17 @@ S7::method(to_list, PieSeries) <- function(x, ...) {
 #' @param silent Optional Logical: Whether the series is silent.
 #' @param z_level Optional Numeric: Canvas layer index.
 #' @param z Optional Numeric: Front-back order within the same layer.
+#'
+#' @return `BoxplotSeries` object.
+#'
 #' @export
+#'
+#' @examples
+#' # Each element is one box, given as its five-number summary.
+#' BoxplotSeries(
+#'   name = "Distribution",
+#'   data = list(c(850, 940, 960, 980, 1070), c(750, 800, 840, 890, 1020))
+#' )
 BoxplotSeries <- S7::new_class(
   "BoxplotSeries",
   properties = list(
@@ -629,7 +688,14 @@ S7::method(to_list, BoxplotSeries) <- function(x, ...) {
 #' @param silent Optional Logical: Whether the series is silent (no events).
 #' @param z_level Optional Numeric: Canvas layer index.
 #' @param z Optional Numeric: Front-back order within the same layer.
+#'
+#' @return `HeatmapSeries` object.
+#'
 #' @export
+#'
+#' @examples
+#' # Each element is one cell, as c(column index, row index, value).
+#' HeatmapSeries(name = "Density", data = list(c(0, 0, 5), c(1, 0, 3)))
 HeatmapSeries <- S7::new_class(
   "HeatmapSeries",
   properties = list(

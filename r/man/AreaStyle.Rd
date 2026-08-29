@@ -29,10 +29,16 @@ AreaStyle(
 
 \item{shadow_offset_y}{Optional Numeric: Shadow vertical offset.}
 }
+\value{
+\code{AreaStyle} object.
+}
 \description{
 Fill styling for areas (polygons, area under curves, etc.).
 }
 \details{
 Corresponds to \code{AreaStyleOption} in \code{src/util/types.ts} (line 1169).
 ECharts docs: \url{https://echarts.apache.org/en/option.html#series-line.areaStyle}
+}
+\examples{
+AreaStyle(color = "#16a085", opacity = 0.3)
 }

@@ -53,6 +53,9 @@ schemes \code{"rdbu"}, \code{"rdylgn"}, \code{"spectral"}, \code{"brbg"}.}
 \item{title}{Optional Character: Title (currently surfaced via the value
 label; reserved for future use).}
 }
+\value{
+\code{MapLibreOption} object.
+}
 \description{
 The complete, validated render spec for a MapLibre choropleth: a \link{MapModel}
 (the data) plus all visual styling and an optional title. This is the
@@ -69,4 +72,13 @@ build it -- but power users can construct it for full control:
 Its \code{\link[=to_list]{to_list()}} produces the \verb{\{ model, style, title \}} payload consumed by
 the \code{rtemis-map} htmlwidget binding (the geometry is added by the \code{\link[=draw]{draw()}}
 method, since it depends only on the model's resolution).
+}
+\examples{
+model <- MapModel(
+  rows = list(
+    MapRow(location = "USA", value = 25.5),
+    MapRow(location = "CAN", value = 12.1)
+  )
+)
+MapLibreOption(model = model, classification = "quantile")
 }

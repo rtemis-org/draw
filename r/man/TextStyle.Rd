@@ -107,10 +107,16 @@ TextStyle(
 
 \item{shadow_offset_y}{Optional Numeric: Box shadow vertical offset.}
 }
+\value{
+\code{TextStyle} object.
+}
 \description{
 Text styling used in labels, titles, tooltips, and other text elements.
 }
 \details{
 Corresponds to \code{TextCommonOption} in \code{src/util/types.ts} (line 1220).
 ECharts docs: \url{https://echarts.apache.org/en/option.html#title.textStyle}
+}
+\examples{
+TextStyle(color = "#333333", font_size = 14, font_weight = "bold")
 }

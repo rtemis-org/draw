@@ -75,6 +75,9 @@ Tooltip(
 
 \item{class_name}{Optional Character: CSS class name for the tooltip element.}
 }
+\value{
+\code{Tooltip} object.
+}
 \description{
 Tooltip configuration for showing data on hover/click.
 }
@@ -82,4 +85,7 @@ Tooltip configuration for showing data on hover/click.
 Corresponds to \code{TooltipOption} in \code{src/component/tooltip/TooltipModel.ts} (line 36)
 and \code{CommonTooltipOption} in \code{src/util/types.ts} (line 1527).
 ECharts docs: \url{https://echarts.apache.org/en/option.html#tooltip}
+}
+\examples{
+Tooltip(trigger = "axis", border_width = 1)
 }

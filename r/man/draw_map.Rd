@@ -78,3 +78,12 @@ Mid-level builder: takes a \link{MapModel} (or a plain list with \code{rows},
 \code{resolution}, ...) plus styling, assembles a \link{MapLibreOption}, and dispatches
 through \code{\link[=draw]{draw()}}. Most users call \code{\link[=draw_choropleth]{draw_choropleth()}} instead.
 }
+\examples{
+model <- MapModel(
+  rows = list(
+    MapRow(location = "USA", value = 25.5),
+    MapRow(location = "CAN", value = 12.1)
+  )
+)
+draw_map(model)
+}

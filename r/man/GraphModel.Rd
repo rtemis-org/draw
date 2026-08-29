@@ -13,6 +13,9 @@ GraphModel(nodes = list(), edges = list(), directed = logical(0))
 
 \item{directed}{Logical: Whether edges are directed.}
 }
+\value{
+\code{GraphModel} object.
+}
 \description{
 A complete, renderer-agnostic network: a list of \link{GraphNode} objects, a list
 of \link{GraphEdge} objects, and a directedness flag. The R analog of the
@@ -22,4 +25,11 @@ of \link{GraphEdge} objects, and a directedness flag. The R analog of the
 \details{
 Most users build this implicitly through \code{\link[=draw_network]{draw_network()}}; the constructor is
 exported for power users who assemble nodes and edges directly.
+}
+\examples{
+GraphModel(
+  nodes = list(GraphNode(id = "a"), GraphNode(id = "b")),
+  edges = list(GraphEdge(source = "a", target = "b")),
+  directed = FALSE
+)
 }

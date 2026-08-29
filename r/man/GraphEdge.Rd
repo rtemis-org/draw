@@ -22,7 +22,13 @@ correlation graph, the absolute value of \code{r}.}
 \item{sign}{Optional Numeric \{-1, 1\}: Sign of the underlying value (e.g.
 correlation): \code{1} positive, \code{-1} negative. Drives edge color when present.}
 }
+\value{
+\code{GraphEdge} object.
+}
 \description{
 One edge (link) in a network. The R analog of the \code{GraphEdge} TypeScript
 interface in rtemislive (\verb{~/Code/live/src/lib/types.ts}).
+}
+\examples{
+GraphEdge(source = "a", target = "b", weight = 0.8)
 }

@@ -44,6 +44,9 @@ LabelOption(
 
 \item{text_style}{Optional \link{TextStyle}: Text appearance.}
 }
+\value{
+\code{LabelOption} object.
+}
 \description{
 Text label configuration for chart elements. Combines label-specific
 positioning (show, position, distance, rotate) with text styling.
@@ -52,4 +55,7 @@ positioning (show, position, distance, rotate) with text styling.
 Corresponds to \code{SeriesLabelOption} / \code{LabelOption} in \code{src/util/types.ts}
 (line 1283, 1348).
 ECharts docs: \url{https://echarts.apache.org/en/option.html#series-bar.label}
+}
+\examples{
+LabelOption(show = TRUE, position = "top", formatter = "{c}")
 }

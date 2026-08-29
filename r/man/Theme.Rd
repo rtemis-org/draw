@@ -50,6 +50,9 @@ Theme(
 
 \item{time_axis}{Optional Named list: Time-axis defaults.}
 }
+\value{
+\code{Theme} object.
+}
 \description{
 A chart theme that controls default colors, text styles, and
 component appearance. Corresponds to the object passed as the second
@@ -58,4 +61,7 @@ argument to \code{echarts.init(dom, theme)} or registered via
 }
 \details{
 TS source: \code{src/model/globalDefault.ts}, \code{src/theme/dark.ts}.
+}
+\examples{
+Theme(color = c("#16a085", "#e67e22"), background_color = "#ffffff")
 }

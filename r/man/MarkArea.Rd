@@ -29,6 +29,9 @@ bands. Per-band overrides go on the first \link{MarkAreaDataPoint} of a pair.}
 
 \item{z2}{Optional Numeric: Front-back order among markers.}
 }
+\value{
+\code{MarkArea} object.
+}
 \description{
 Container for \code{markArea} bands attached to a series. \code{data} is a list where
 each element is a length-2 list of \link{MarkAreaDataPoint} (or plain named list)
@@ -39,4 +42,13 @@ Corresponds to \code{MarkAreaOption} in
 \code{src/component/marker/MarkAreaModel.ts} (line 60).
 ECharts docs:
 \url{https://echarts.apache.org/en/option.html#series-line.markArea}
+}
+\examples{
+# One shaded band, defined by its two corner points.
+MarkArea(
+  data = list(list(
+    MarkAreaDataPoint(x_axis = 1),
+    MarkAreaDataPoint(x_axis = 3)
+  ))
+)
 }

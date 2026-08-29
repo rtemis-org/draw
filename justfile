@@ -97,17 +97,24 @@ schemas-check:
         cd {{r_dir}} && {{rscript}} data-raw/generate_schemas.R "$dir"
     @just _msg "Done"
 
-# Write the chart schemas to the schema repo (publishing step; commit there separately)
+# Write the chart schemas to the schema repo (publishing step; commit there
+# separately), then reindex it.
+#
+# The reindex is folded in rather than left as a step to remember, because
+# skipping it fails nothing where it happens: the repo commits clean, the files
+# serve 200, and `deployed` compares a stale manifest against an identically
+# stale one. It surfaces two repos away, as a sha256 mismatch in a consumer's
+# schema sync.
 schemas repo=schema_repo:
     @just _need SCHEMA_REPO "{{repo}}"
     @just _msg "─── Generating schemas for {{pkg}} into {{repo}}... ───"
     cd {{r_dir}} && {{rscript}} data-raw/generate_schemas.R {{repo}}
+    @just _msg "─── Indexing {{repo}}... ───"
+    cd "{{repo}}" && just index && just check
     @just _msg "Done"
 
-# Generate schemas and refresh the registry index; stops before the commit
+# Generate schemas, reindex, and stop before the commit for review
 publish-schemas: schemas
-    @just _msg "─── Indexing {{schema_repo}}... ───"
-    cd "{{schema_repo}}" && just index && just check
     @git -C "{{schema_repo}}" status --short
     @just _msg "Review the diff above, then commit and push - the push is the deploy:"
     @echo "   git -C '{{schema_repo}}' add -A && git -C '{{schema_repo}}' commit -m 'add chart schemas' && git -C '{{schema_repo}}' push"
@@ -131,6 +138,18 @@ spell-update:
 lint:
     @just _msg "─── Linting {{pkg}} source for unused objects... ───"
     cd {{r_dir}} && {{rscript}} -e "suppressMessages(pkgload::load_all('.', quiet = TRUE)); l <- lintr::lint_dir('R', linters = list(lintr::object_usage_linter())); print(l); if (length(l) > 0L) quit(status = 1L)"
+    @just _msg "Done"
+
+# Check that each man/*.Rd file has \value and \examples sections (CRAN requires both)
+check-rd:
+    @just _msg "─── Checking Rd sections for {{pkg}}... ───"
+    cd {{r_dir}} && tools/check-rd-sections.sh man
+    @just _msg "Done"
+
+# Like check-rd but also enforces \keyword{internal} docs (data/package stay exempt)
+check-rd-all:
+    @just _msg "─── Checking Rd sections (incl. internal) for {{pkg}}... ───"
+    cd {{r_dir}} && tools/check-rd-sections.sh -internal man
     @just _msg "Done"
 
 # Check R code formatting without modifying files (CI-friendly; fails if unformatted)

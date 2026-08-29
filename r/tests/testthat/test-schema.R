@@ -231,14 +231,20 @@ test_that("a property with no spec fails generation loudly", {
 
 # %% writing ----
 
-test_that("write_chart_schema writes parseable JSON and creates its directory", {
+test_that("a written schema is parseable JSON in the registry's key order", {
   path <- file.path(tempfile(), "chart", "scatter", "v1", "schema.json")
   on.exit(unlink(dirname(dirname(dirname(dirname(path)))), recursive = TRUE))
-  write_chart_schema(scatter_schema(), path)
+  rtemis.core::write_JSONSchema(scatter_schema(), path, verbosity = 0L)
   expect_true(file.exists(path))
   round_tripped <- jsonlite::fromJSON(path, simplifyVector = FALSE)
   expect_identical(round_tripped[["$id"]], SCATTER_ID)
   expect_identical(round_tripped[["required"]], list("type"))
+  # The registry's order, which every producer writes through
+  # `rtemis.core::write_JSONSchema()` rather than arranging for itself.
+  expect_identical(
+    names(round_tripped)[1:5],
+    c("$id", "$schema", "title", "description", "type")
+  )
 })
 
 

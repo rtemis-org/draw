@@ -11,15 +11,17 @@ rtemis.draw_version <- utils::packageVersion("rtemis.draw")
 }
 
 .onAttach <- function(libname, pkgname) {
-  packageStartupMessage(
-    paste0(
-      ".:",
-      pkgname,
-      " ",
-      rtemis.draw_version,
-      " \U1F58C",
-      " ",
-      utils::sessionInfo()[[2]]
+  if (interactive()) {
+    packageStartupMessage(
+      paste0(
+        ".:",
+        pkgname,
+        " ",
+        rtemis.draw_version,
+        " \U1F58C",
+        " ",
+        utils::sessionInfo()[[2]]
+      )
     )
-  )
+  }
 }

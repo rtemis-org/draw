@@ -103,6 +103,17 @@ draw_supervised_session <- function(
 #'
 #' @author EDG
 #' @export
+#'
+#' @examples
+#' # GLM keeps the example dependency-free: rtemis fits it with stats::glm().
+#' if (requireNamespace("rtemis", quietly = TRUE)) {
+#'   mod <- rtemis::train(
+#'     mtcars[, c("wt", "hp", "mpg")],
+#'     hyperparameters = rtemis::setup_GLM(),
+#'     verbosity = 0L
+#'   )
+#'   plot_session(mod)
+#' }
 plot_session <- new_generic("plot_session", "x")
 
 

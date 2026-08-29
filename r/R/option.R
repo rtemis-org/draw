@@ -39,7 +39,18 @@
 #' @param animation_delay Optional Numeric `[0, Inf)`: Initial animation delay in milliseconds.
 #' @param dark_mode Optional Logical or Character \{"auto"\}: Dark-mode setting.
 #' @param use_utc Optional Logical: Whether to use UTC for time axes.
+#'
+#' @return `EChartsOption` object.
+#'
 #' @export
+#'
+#' @examples
+#' EChartsOption(
+#'   title = Title(text = "Weekly sessions"),
+#'   x_axis = Axis(type = "category", data = c("Mon", "Tue", "Wed")),
+#'   y_axis = Axis(type = "value"),
+#'   series = LineSeries(data = c(150, 230, 224), smooth = TRUE)
+#' )
 EChartsOption <- S7::new_class(
   "EChartsOption",
   properties = list(
@@ -196,6 +207,9 @@ S7::method(to_list, EChartsOption) <- function(x, ...) {
 #' @param ... Dots: Additional arguments passed to [jsonlite::toJSON()].
 #' @return Character: JSON string.
 #' @export
+#'
+#' @examples
+#' to_json(EChartsOption(title = Title(text = "Weekly sessions")))
 to_json <- function(x, pretty = FALSE, auto_unbox = TRUE, ...) {
   jsonlite::toJSON(
     to_list(x),

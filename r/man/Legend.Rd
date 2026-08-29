@@ -89,10 +89,16 @@ Legend(
 
 \item{data}{Optional Character vector or list: Legend data items.}
 }
+\value{
+\code{Legend} object.
+}
 \description{
 Legend configuration for selecting/filtering series.
 }
 \details{
 Corresponds to \code{LegendOption} in \code{src/component/legend/LegendModel.ts} (line 162).
 ECharts docs: \url{https://echarts.apache.org/en/option.html#legend}
+}
+\examples{
+Legend(show = TRUE, orient = "vertical", left = "left")
 }

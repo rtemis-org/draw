@@ -105,6 +105,9 @@ props_to_list <- function(obj, rename = NULL) {
 #' @param ... Dots: Unused.
 #' @return List: Named list.
 #' @export
+#'
+#' @examples
+#' to_list(LineStyle(color = "#16a085", width = 2))
 to_list <- S7::new_generic("to_list", "x")
 
 # -- Type validators for S7 properties -------------------------------------------

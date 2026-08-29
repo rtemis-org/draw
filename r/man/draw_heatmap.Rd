@@ -155,3 +155,6 @@ are reordered accordingly.  When \code{cluster_rows} or \code{cluster_cols} is \
 (and the corresponding \verb{show_*_dendro} flag is not \code{FALSE}), a dendrogram
 panel is rendered alongside the heatmap as an ECharts custom series.
 }
+\examples{
+draw_heatmap(cor(mtcars[, 1:5]), title = "Correlation")
+}

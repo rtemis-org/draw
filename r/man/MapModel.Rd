@@ -24,6 +24,9 @@ legend and tooltip value).}
 \item{tooltip_fields}{Character: Ordered names of the extra fields to show in
 the tooltip (keys into each \link{MapRow}'s \code{extras}).}
 }
+\value{
+\code{MapModel} object.
+}
 \description{
 A complete, renderer-agnostic choropleth dataset: a list of \link{MapRow} objects,
 the administrative \code{resolution} that selects the geometry, the label for the
@@ -34,4 +37,12 @@ consumed by the \code{rtemis-map} htmlwidget.
 \details{
 Most users build this implicitly through \code{\link[=draw_choropleth]{draw_choropleth()}}; the constructor
 is exported for power users who assemble rows directly.
+}
+\examples{
+MapModel(
+  rows = list(
+    MapRow(location = "USA", value = 25.5),
+    MapRow(location = "CAN", value = 12.1)
+  )
+)
 }

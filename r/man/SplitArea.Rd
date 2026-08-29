@@ -13,10 +13,16 @@ SplitArea(show = NULL, interval = NULL, area_style = NULL)
 
 \item{area_style}{Optional \link{AreaStyle}: Area styling.}
 }
+\value{
+\code{SplitArea} object.
+}
 \description{
 Configuration for alternating colored bands between split lines.
 }
 \details{
 Corresponds to \code{SplitAreaOption} in \code{src/coord/axisCommonTypes.ts} (line 369).
 ECharts docs: \url{https://echarts.apache.org/en/option.html#xAxis.splitArea}
+}
+\examples{
+SplitArea(show = TRUE, area_style = AreaStyle(opacity = 0.1))
 }

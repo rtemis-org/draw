@@ -30,6 +30,9 @@ Sankey-specific \code{curveness} field (e.g. \code{list(curveness = 0.5, opacity
 \{"inEdges", "outEdges", "allEdges"\}: Which adjacent elements to highlight
 on hover.}
 }
+\value{
+\code{SankeyEdgeItem} object.
+}
 \description{
 One directed link (edge) in a Sankey diagram.
 }
@@ -38,4 +41,7 @@ Corresponds to \code{SankeyEdgeItemOption} in
 \code{src/chart/sankey/SankeySeries.ts} (line 88).
 ECharts docs:
 \url{https://echarts.apache.org/en/option.html#series-sankey.links}
+}
+\examples{
+SankeyEdgeItem(source = "A", target = "B", value = 5)
 }

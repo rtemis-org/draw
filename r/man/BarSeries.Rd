@@ -71,6 +71,9 @@ BarSeries(
 
 \item{label}{Optional \link{LabelOption}: Data-label configuration.}
 }
+\value{
+\code{BarSeries} object.
+}
 \description{
 Configuration for a bar chart series.
 }
@@ -78,4 +81,7 @@ Configuration for a bar chart series.
 Corresponds to \code{BarSeriesOption} in \code{src/chart/bar/BarSeries.ts} (line 68)
 and \code{BaseBarSeriesOption} in \code{src/chart/bar/BaseBarSeries.ts} (line 38).
 ECharts docs: \url{https://echarts.apache.org/en/option.html#series-bar}
+}
+\examples{
+BarSeries(name = "Counts", data = c(3, 7, 2))
 }

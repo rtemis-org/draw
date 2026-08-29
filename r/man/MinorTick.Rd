@@ -15,10 +15,16 @@ MinorTick(show = NULL, split_number = NULL, length = NULL, line_style = NULL)
 
 \item{line_style}{Optional \link{LineStyle}: Line styling.}
 }
+\value{
+\code{MinorTick} object.
+}
 \description{
 Configuration for minor axis tick marks (between main ticks).
 }
 \details{
 Corresponds to \code{MinorTickOption} in \code{src/coord/axisCommonTypes.ts} (line 346).
 ECharts docs: \url{https://echarts.apache.org/en/option.html#xAxis.minorTick}
+}
+\examples{
+MinorTick(show = TRUE, split_number = 5)
 }

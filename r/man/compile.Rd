@@ -29,6 +29,11 @@ can start, so that no method can forget one: it materializes the data (from
 it. Methods therefore always receive a \strong{resolved} config and \strong{non-NULL}
 data, and are pure translation.
 }
+\examples{
+config <- setup_ScatterConfig(x = "wt", y = "mpg")
+option <- compile(config, data = mtcars)
+option@x_axis@name
+}
 \author{
 EDG
 }

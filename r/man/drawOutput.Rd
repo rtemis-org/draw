@@ -13,6 +13,14 @@ drawOutput(outputId, width = "100\%", height = "400px")
 
 \item{height}{Character or Numeric: CSS height.}
 }
+\value{
+Shiny output element for a draw widget.
+}
 \description{
 Shiny output for draw widget
+}
+\examples{
+if (requireNamespace("shiny", quietly = TRUE)) {
+  drawOutput("chart", height = "600px")
+}
 }
