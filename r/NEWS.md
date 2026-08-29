@@ -1,3 +1,14 @@
+# rtemis.draw 0.5.1
+
+- **Schemas are written by `rtemis.core::write_JSONSchema()`.**
+  `write_chart_schema()` is retired: the registry has more than one producer, and
+  a document's shape belongs to the registry rather than to whichever package
+  emitted it. Keyword order is now the registry's, applied on write, so it cannot
+  be skipped. `digits = I(17)` -- what round-trips an IEEE 754 axis limit exactly
+  -- is passed by the generator rather than baked into a writer.
+- `just schemas` reindexes the registry, so a run that writes documents cannot
+  leave `index.json` describing a tree it no longer matches.
+
 # rtemis.draw 0.5.0
 
 First release with the **config layer**: a chart can now be described as a

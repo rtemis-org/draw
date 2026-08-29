@@ -97,17 +97,24 @@ schemas-check:
         cd {{r_dir}} && {{rscript}} data-raw/generate_schemas.R "$dir"
     @just _msg "Done"
 
-# Write the chart schemas to the schema repo (publishing step; commit there separately)
+# Write the chart schemas to the schema repo (publishing step; commit there
+# separately), then reindex it.
+#
+# The reindex is folded in rather than left as a step to remember, because
+# skipping it fails nothing where it happens: the repo commits clean, the files
+# serve 200, and `deployed` compares a stale manifest against an identically
+# stale one. It surfaces two repos away, as a sha256 mismatch in a consumer's
+# schema sync.
 schemas repo=schema_repo:
     @just _need SCHEMA_REPO "{{repo}}"
     @just _msg "─── Generating schemas for {{pkg}} into {{repo}}... ───"
     cd {{r_dir}} && {{rscript}} data-raw/generate_schemas.R {{repo}}
+    @just _msg "─── Indexing {{repo}}... ───"
+    cd "{{repo}}" && just index && just check
     @just _msg "Done"
 
-# Generate schemas and refresh the registry index; stops before the commit
+# Generate schemas, reindex, and stop before the commit for review
 publish-schemas: schemas
-    @just _msg "─── Indexing {{schema_repo}}... ───"
-    cd "{{schema_repo}}" && just index && just check
     @git -C "{{schema_repo}}" status --short
     @just _msg "Review the diff above, then commit and push - the push is the deploy:"
     @echo "   git -C '{{schema_repo}}' add -A && git -C '{{schema_repo}}' commit -m 'add chart schemas' && git -C '{{schema_repo}}' push"

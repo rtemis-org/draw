@@ -38,6 +38,23 @@ leaf_url <- function(type, kind) {
   paste0(base_url, "/", family, "/", type, "/v1/", kind, ".json")
 }
 
+# Every document in the registry is written by one function, so the keyword
+# order and the serialization are the registry's rather than this package's.
+# `digits = I(17)` is the one thing a chart schema needs that the default does
+# not give: 17 significant digits is what round-trips an IEEE 754 double
+# exactly, and jsonlite's own default of 4 *decimal places* would silently round
+# a resolved axis limit -- a document that draws a nearly identical chart, which
+# is worse than one that obviously fails.
+write_schema <- function(schema, path) {
+  rtemis.core::write_JSONSchema(
+    schema,
+    path,
+    overwrite = TRUE,
+    digits = I(17),
+    verbosity = 0L
+  )
+}
+
 # Leaves. Each is written twice, under the two names the registry publishes:
 #
 #   schema.json  the **input config** -- requires only the discriminator.
@@ -64,7 +81,7 @@ for (i in seq_along(charts)) {
       description = chart_descriptions[[type]],
       complete = kind == "record"
     )
-    write_chart_schema(schema, file.path(dir, paste0(kind, ".json")))
+    write_schema(schema, file.path(dir, paste0(kind, ".json")))
   }
   cat(sprintf("%-14s schema + record\n", type))
 }
@@ -81,7 +98,7 @@ for (kind in c("schema", "record")) {
     title = chart_family[["title"]],
     description = chart_family[["description"]]
   )
-  write_chart_schema(
+  write_schema(
     dispatcher,
     file.path(schema_repo, family, "v1", paste0(kind, ".json"))
   )
