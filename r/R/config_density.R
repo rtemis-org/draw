@@ -59,7 +59,7 @@ DensityConfig <- new_class(
     ),
     bw = prop_string(
       "nrd0",
-      description = "Bandwidth selector, passed to stats::density()."
+      description = "Bandwidth selector."
     ),
     na_rm = prop_boolean(
       TRUE,

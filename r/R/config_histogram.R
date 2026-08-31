@@ -54,7 +54,7 @@ HistogramConfig <- new_class(
     breaks = prop_string(
       "Sturges",
       enum = c("Sturges", "Scott", "FD", "Freedman-Diaconis"),
-      description = "Binning rule, passed to graphics::hist()."
+      description = "Binning rule."
     ),
     # -- appearance --------------------------------------------------------
     palette = prop_string(
