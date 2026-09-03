@@ -45,7 +45,18 @@ leaf_url <- function(type, kind) {
 # exactly, and jsonlite's own default of 4 *decimal places* would silently round
 # a resolved axis limit -- a document that draws a nearly identical chart, which
 # is worse than one that obviously fails.
-write_schema <- function(schema, path) {
+# The input-schema contract, held in `rtemis.core` because rtemis publishes into
+# the same registry and one registry cannot hold documents kept to two
+# standards. Config schemas only: a record states what a run used, so everything
+# in it is required and the config's rules do not apply.
+write_schema <- function(schema, path, id = NULL) {
+  if (!is.null(id) && basename(path) == "schema.json") {
+    # `type` is the discriminator: it says which chart the document is, which
+    # nothing can supply on the caller's behalf, so requiring it is structural
+    # rather than a demand for a value. Top-level mode carries no payload key,
+    # so the discriminator is the whole allowance.
+    rtemis.core::assert_config_contract(schema, id, structural = "type")
+  }
   rtemis.core::write_JSONSchema(
     schema,
     path,
@@ -81,7 +92,7 @@ for (i in seq_along(charts)) {
       description = chart_descriptions[[type]],
       complete = kind == "record"
     )
-    write_schema(schema, file.path(dir, paste0(kind, ".json")))
+    write_schema(schema, file.path(dir, paste0(kind, ".json")), leaf_url(type, kind))
   }
   cat(sprintf("%-14s schema + record\n", type))
 }
@@ -100,7 +111,8 @@ for (kind in c("schema", "record")) {
   )
   write_schema(
     dispatcher,
-    file.path(schema_repo, family, "v1", paste0(kind, ".json"))
+    file.path(schema_repo, family, "v1", paste0(kind, ".json")),
+    paste0(base_url, "/", family, "/v1/", kind, ".json")
   )
 }
 cat(sprintf(

@@ -20,7 +20,7 @@ Roxygen: list(markdown = TRUE)
 Imports:
     htmlwidgets,
     jsonlite,
-    rtemis.core (>= 0.4.4),
+    rtemis.core (>= 0.4.5),
     S7,
     signal,
     stats,

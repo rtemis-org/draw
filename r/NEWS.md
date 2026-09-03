@@ -1,5 +1,18 @@
 # rtemis.draw 0.5.1
 
+- **Chart schemas are held to the registry's input-schema contract.**
+  `rtemis.core::assert_config_contract()` now runs on every `schema.json` this
+  package writes. The registry has more than one producer and only `rtemis` was
+  checking itself, so `chart/*` had been publishing documents no gate had ever
+  read -- 32 descriptions naming an R constructor among them. `type` is declared
+  structural at the call site: it says which chart the document is, which nothing
+  can supply on a caller's behalf, so requiring it is not a demand for a value.
+- **No chart description names an R constructor or function.** Fourteen ended
+  "See `setup_XConfig`."; two more pointed at `graphics::hist` and
+  `stats::density`. The corpus is language-independent, and a description is read
+  by the CLI, by the browser and by a model as often as by an R user, who has the
+  roxygen docs. Passed to `setup_*` is what the roxygen `@param` says; the schema
+  now says what the setting *is*.
 - **Schemas are written by `rtemis.core::write_JSONSchema()`.**
   `write_chart_schema()` is retired: the registry has more than one producer, and
   a document's shape belongs to the registry rather than to whichever package
