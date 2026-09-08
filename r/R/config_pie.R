@@ -51,7 +51,7 @@ PieConfig <- new_class(
       NULL,
       enum = c("radius", "area"),
       nullable = TRUE,
-      description = "Draw as a Nightingale rose chart. NULL draws a plain pie."
+      description = "Draw as a Nightingale rose chart. Unset draws a plain pie."
     ),
     # -- appearance --------------------------------------------------------
     radius = prop_string(
@@ -62,7 +62,7 @@ PieConfig <- new_class(
       NULL,
       nullable = TRUE,
       vector = TRUE,
-      description = "Slice colors, overriding the theme palette. NULL uses the theme's."
+      description = "Slice colors, overriding the theme palette. Unset uses the theme's."
     )
   )
 ) # /rtemis.draw::PieConfig

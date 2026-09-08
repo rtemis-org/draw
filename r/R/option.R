@@ -68,13 +68,13 @@ EChartsOption <- S7::new_class(
     series = S7::new_property(class = S7::class_any, default = NULL),
     # Global settings
     color = color_palette_property(),
-    background_color = optional_character_scalar,
+    background_color = prop_string(nullable = TRUE),
     text_style = class_or_null_property(TextStyle),
     # Animation
-    animation = optional_logical_scalar,
+    animation = prop_boolean(default = NULL, nullable = TRUE),
     animation_threshold = numeric_or_null_property(),
     animation_duration = numeric_or_null_property(),
-    animation_easing = optional_character_scalar,
+    animation_easing = prop_string(nullable = TRUE),
     animation_delay = numeric_or_null_property(),
     # Other
     dark_mode = S7::new_property(
@@ -93,7 +93,7 @@ EChartsOption <- S7::new_class(
         "must be TRUE, FALSE, 'auto', or NULL"
       }
     ),
-    use_utc = optional_logical_scalar
+    use_utc = prop_boolean(default = NULL, nullable = TRUE)
   )
 )
 

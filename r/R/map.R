@@ -61,7 +61,7 @@ map_corners <- c("top-left", "top-right", "bottom-left", "bottom-right")
 MapRow <- S7::new_class(
   "MapRow",
   properties = list(
-    location = character_scalar,
+    location = prop_string(),
     value = S7::new_property(
       S7::class_numeric,
       validator = function(value) {
@@ -264,7 +264,7 @@ MapLibreOption <- S7::new_class(
     legend_position = map_enum_default(map_corners, "bottom-right"),
     tooltip_position = map_enum_default(map_corners, "top-right"),
     report_position = map_enum_default(map_corners, "bottom-left"),
-    title = optional_character_scalar
+    title = prop_string(nullable = TRUE)
   )
 )
 

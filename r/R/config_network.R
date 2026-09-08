@@ -112,7 +112,7 @@ NetworkConfig <- new_class(
       NULL,
       nullable = TRUE,
       vector = TRUE,
-      description = "Community colors, overriding the theme palette. NULL uses the theme's."
+      description = "Community colors, overriding the theme palette. Unset uses the theme's."
     ),
     node_color = prop_string(
       "#6CA3A0",

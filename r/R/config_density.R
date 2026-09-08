@@ -63,24 +63,24 @@ DensityConfig <- new_class(
     ),
     na_rm = prop_boolean(
       TRUE,
-      description = "Drop NA values before estimating."
+      description = "Drop missing values before estimating."
     ),
     # -- appearance --------------------------------------------------------
     palette = prop_string(
       NULL,
       nullable = TRUE,
       vector = TRUE,
-      description = "Series colors, overriding the theme palette. NULL uses the theme's."
+      description = "Series colors, overriding the theme palette. Unset uses the theme's."
     ),
     xlab = prop_string(
       NULL,
       nullable = TRUE,
-      description = "X axis label. NULL derives it from the data."
+      description = "X axis label. Unset derives it from the data."
     ),
     ylab = prop_string(
       NULL,
       nullable = TRUE,
-      description = "Y axis label. NULL derives it from the data."
+      description = "Y axis label. Unset derives it from the data."
     ),
     margin_top = prop_integer(
       NULL,

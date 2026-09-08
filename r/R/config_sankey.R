@@ -90,7 +90,7 @@ SankeyConfig <- new_class(
       NULL,
       nullable = TRUE,
       vector = TRUE,
-      description = "Node colors, overriding the theme palette. NULL uses the theme's."
+      description = "Node colors, overriding the theme palette. Unset uses the theme's."
     )
   )
 ) # /rtemis.draw::SankeyConfig

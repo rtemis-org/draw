@@ -76,7 +76,7 @@ LineConfig <- new_class(
       nullable = TRUE,
       description = paste(
         "Column whose contiguous runs shade vertical background bands.",
-        "NA entries produce no band."
+        "Missing entries produce no band."
       )
     ),
     # -- semantics ---------------------------------------------------------
@@ -92,7 +92,7 @@ LineConfig <- new_class(
       NULL,
       nullable = TRUE,
       vector = TRUE,
-      description = "Series colors, overriding the theme palette. NULL uses the theme's."
+      description = "Series colors, overriding the theme palette. Unset uses the theme's."
     ),
     block_color = prop_string(
       NULL,
@@ -133,24 +133,24 @@ LineConfig <- new_class(
       nullable = TRUE,
       vector = TRUE,
       min_items = 2L,
-      description = "X axis limits. NULL derives them from the data."
+      description = "X axis limits. Unset derives them from the data."
     ),
     ylim = prop_float(
       NULL,
       nullable = TRUE,
       vector = TRUE,
       min_items = 2L,
-      description = "Y axis limits. NULL derives them from the data."
+      description = "Y axis limits. Unset derives them from the data."
     ),
     xlab = prop_string(
       NULL,
       nullable = TRUE,
-      description = "X axis label. NULL derives it from the data."
+      description = "X axis label. Unset derives it from the data."
     ),
     ylab = prop_string(
       NULL,
       nullable = TRUE,
-      description = "Y axis label. NULL derives it from the data."
+      description = "Y axis label. Unset derives it from the data."
     ),
     margin_top = prop_integer(
       NULL,

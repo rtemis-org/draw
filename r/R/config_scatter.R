@@ -91,7 +91,7 @@ ScatterConfig <- new_class(
       NULL,
       enum = c("glm", "gam"),
       nullable = TRUE,
-      description = "Fit to overlay. NULL draws no fit."
+      description = "Fit to overlay. Unset draws no fit."
     ),
     se = prop_boolean(
       TRUE,
@@ -113,7 +113,7 @@ ScatterConfig <- new_class(
       NULL,
       nullable = TRUE,
       vector = TRUE,
-      description = "Series colors, overriding the theme palette. NULL uses the theme's."
+      description = "Series colors, overriding the theme palette. Unset uses the theme's."
     ),
     square = prop_boolean(
       FALSE,
@@ -142,24 +142,24 @@ ScatterConfig <- new_class(
       nullable = TRUE,
       vector = TRUE,
       min_items = 2L,
-      description = "X axis limits. NULL derives them from the data."
+      description = "X axis limits. Unset derives them from the data."
     ),
     ylim = prop_float(
       NULL,
       nullable = TRUE,
       vector = TRUE,
       min_items = 2L,
-      description = "Y axis limits. NULL derives them from the data."
+      description = "Y axis limits. Unset derives them from the data."
     ),
     xlab = prop_string(
       NULL,
       nullable = TRUE,
-      description = "X axis label. NULL derives it from the data."
+      description = "X axis label. Unset derives it from the data."
     ),
     ylab = prop_string(
       NULL,
       nullable = TRUE,
-      description = "Y axis label. NULL derives it from the data."
+      description = "Y axis label. Unset derives it from the data."
     ),
     margin_top = prop_integer(
       NULL,

@@ -44,7 +44,7 @@ Theme <- S7::new_class(
   "Theme",
   properties = list(
     color = color_palette_property(),
-    background_color = optional_character_scalar,
+    background_color = prop_string(nullable = TRUE),
     text_style = class_or_null_property(TextStyle),
     # Component overrides (plain lists)
     title = S7::new_property(class = S7::class_any, default = NULL),

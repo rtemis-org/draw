@@ -1,5 +1,7 @@
 # rtemis.draw 0.5.1
 
+- **Every property this package declares through `rtemis.core` now comes from a `prop_*` factory.** The 175 remaining uses of that package's hand-written properties -- `optional_logical_scalar`, `optional_character_scalar`, `enum()` and four others, across the ten ECharts option files -- are replaced by `prop_boolean()`, `prop_string()` and `prop_integer()`. The hand-written properties carry no `PropertySpec`, so `prop_spec()` returns `NULL` for them and a class built on one and its published schema are free to disagree; they are the same defect that retired `bounded_double_property()` in `rtemis.core` 0.4.6, and they are the last of their kind in that package. None was reachable from a published schema -- `chart_schema()` refuses a property with no spec rather than emitting one that omits it -- so the generated corpus is unchanged; what this buys is that `rtemis.core` can now remove them without a coordinated release. Each replacement was checked against the property it replaces over absent, `NULL`, valid, out-of-range, `NA`, vector and wrong-type inputs before the swap, so validation behavior is identical, defaults included.
+
 - **Chart schemas are held to the registry's input-schema contract.**
   `rtemis.core::assert_config_contract()` now runs on every `schema.json` this
   package writes. The registry has more than one producer and only `rtemis` was
@@ -7,6 +9,14 @@
   read -- 32 descriptions naming an R constructor among them. `type` is declared
   structural at the call site: it says which chart the document is, which nothing
   can supply on a caller's behalf, so requiring it is not a demand for a value.
+- **No chart description spells a value the way R does.** The sibling of the
+  rule below, and the half it missed: 34 descriptions said "NULL uses the
+  theme's" or "Drop NA values", telling every reader but one to write something
+  no JSON document can hold. They now say what the absent value means -- "Unset
+  uses the theme's". `rtemis.core` 0.4.6 makes this the contract's fifth rule
+  and adds `assert_description_language()`, so a record and a `$defs` entry are
+  checked too, not only the `schema.json` a caller authors. The roxygen
+  `@param` still says `NULL`, which is what an R caller types.
 - **No chart description names an R constructor or function.** Fourteen ended
   "See `setup_XConfig`."; two more pointed at `graphics::hist` and
   `stats::density`. The corpus is language-independent, and a description is read

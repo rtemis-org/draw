@@ -121,7 +121,7 @@ ChoroplethConfig <- new_class(
     value_label = prop_string(
       NULL,
       nullable = TRUE,
-      description = "Label for the value. NULL derives it from the bound column."
+      description = "Label for the value. Unset derives it from the bound column."
     )
   )
 ) # /rtemis.draw::ChoroplethConfig

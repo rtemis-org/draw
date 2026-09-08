@@ -37,10 +37,10 @@
 GraphNode <- S7::new_class(
   "GraphNode",
   properties = list(
-    id = character_scalar,
-    label = optional_character_scalar,
+    id = prop_string(),
+    label = prop_string(nullable = TRUE),
     value = numeric_or_null_property(),
-    group = optional_character_scalar
+    group = prop_string(nullable = TRUE)
   )
 )
 
@@ -71,8 +71,8 @@ S7::method(to_list, GraphNode) <- function(x, ...) {
 GraphEdge <- S7::new_class(
   "GraphEdge",
   properties = list(
-    source = character_scalar,
-    target = character_scalar,
+    source = prop_string(),
+    target = prop_string(),
     weight = numeric_or_null_property(),
     sign = S7::new_property(
       class = S7::class_any,
@@ -125,7 +125,7 @@ GraphModel <- S7::new_class(
   properties = list(
     nodes = S7::new_property(class = S7::class_list, default = list()),
     edges = S7::new_property(class = S7::class_list, default = list()),
-    directed = logical_scalar
+    directed = prop_boolean(default = NULL)
   ),
   validator = function(self) {
     if (
@@ -280,7 +280,7 @@ SigmaOption <- S7::new_class(
       S7::class_character,
       default = "#ff9e1f"
     ),
-    title = optional_character_scalar
+    title = prop_string(nullable = TRUE)
   )
 )
 

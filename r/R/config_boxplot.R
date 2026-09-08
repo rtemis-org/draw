@@ -64,20 +64,20 @@ BoxplotConfig <- new_class(
     ),
     na_rm = prop_boolean(
       TRUE,
-      description = "Drop NA values before summarizing."
+      description = "Drop missing values before summarizing."
     ),
     # -- appearance --------------------------------------------------------
     labels = prop_string(
       NULL,
       nullable = TRUE,
       vector = TRUE,
-      description = "Box labels. NULL uses the bound column names."
+      description = "Box labels. Unset uses the bound column names."
     ),
     palette = prop_string(
       NULL,
       nullable = TRUE,
       vector = TRUE,
-      description = "Box colors, overriding the theme palette. NULL uses the theme's."
+      description = "Box colors, overriding the theme palette. Unset uses the theme's."
     ),
     fill_alpha = prop_float(
       0.25,

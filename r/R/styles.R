@@ -35,17 +35,17 @@
 LineStyle <- S7::new_class(
   "LineStyle",
   properties = list(
-    color = optional_character_scalar,
+    color = prop_string(nullable = TRUE),
     width = numeric_or_null_property(),
     opacity = numeric_or_null_property(),
-    type = enum(c("solid", "dashed", "dotted"), nullable = TRUE),
-    cap = enum(c("butt", "round", "square"), nullable = TRUE),
-    join = enum(c("bevel", "round", "miter"), nullable = TRUE),
+    type = prop_string(enum = c("solid", "dashed", "dotted"), nullable = TRUE),
+    cap = prop_string(enum = c("butt", "round", "square"), nullable = TRUE),
+    join = prop_string(enum = c("bevel", "round", "miter"), nullable = TRUE),
     dash_offset = numeric_or_null_property(),
     miter_limit = numeric_or_null_property(),
     # ShadowOptionMixin
     shadow_blur = numeric_or_null_property(),
-    shadow_color = optional_character_scalar,
+    shadow_color = prop_string(nullable = TRUE),
     shadow_offset_x = numeric_or_null_property(),
     shadow_offset_y = numeric_or_null_property()
   )
@@ -81,7 +81,7 @@ S7::method(to_list, LineStyle) <- function(x, ...) {
 AreaStyle <- S7::new_class(
   "AreaStyle",
   properties = list(
-    color = optional_character_scalar,
+    color = prop_string(nullable = TRUE),
     opacity = numeric_or_null_property(),
     origin = S7::new_property(
       class = S7::class_any,
@@ -101,7 +101,7 @@ AreaStyle <- S7::new_class(
     ),
     # ShadowOptionMixin
     shadow_blur = numeric_or_null_property(),
-    shadow_color = optional_character_scalar,
+    shadow_color = prop_string(nullable = TRUE),
     shadow_offset_x = numeric_or_null_property(),
     shadow_offset_y = numeric_or_null_property()
   )
@@ -146,14 +146,23 @@ S7::method(to_list, AreaStyle) <- function(x, ...) {
 ItemStyle <- S7::new_class(
   "ItemStyle",
   properties = list(
-    color = optional_character_scalar,
+    color = prop_string(nullable = TRUE),
     opacity = numeric_or_null_property(),
     # BorderOptionMixin
-    border_color = optional_character_scalar,
+    border_color = prop_string(nullable = TRUE),
     border_width = numeric_or_null_property(),
-    border_type = enum(c("solid", "dashed", "dotted"), nullable = TRUE),
-    border_cap = enum(c("butt", "round", "square"), nullable = TRUE),
-    border_join = enum(c("bevel", "round", "miter"), nullable = TRUE),
+    border_type = prop_string(
+      enum = c("solid", "dashed", "dotted"),
+      nullable = TRUE
+    ),
+    border_cap = prop_string(
+      enum = c("butt", "round", "square"),
+      nullable = TRUE
+    ),
+    border_join = prop_string(
+      enum = c("bevel", "round", "miter"),
+      nullable = TRUE
+    ),
     border_dash_offset = numeric_or_null_property(),
     border_miter_limit = numeric_or_null_property(),
     border_radius = S7::new_property(
@@ -175,7 +184,7 @@ ItemStyle <- S7::new_class(
     decal = S7::new_property(class = S7::class_any, default = NULL),
     # ShadowOptionMixin
     shadow_blur = numeric_or_null_property(),
-    shadow_color = optional_character_scalar,
+    shadow_color = prop_string(nullable = TRUE),
     shadow_offset_x = numeric_or_null_property(),
     shadow_offset_y = numeric_or_null_property()
   )
@@ -237,8 +246,11 @@ S7::method(to_list, ItemStyle) <- function(x, ...) {
 TextStyle <- S7::new_class(
   "TextStyle",
   properties = list(
-    color = optional_character_scalar,
-    font_style = enum(c("normal", "italic", "oblique"), nullable = TRUE),
+    color = prop_string(nullable = TRUE),
+    font_style = prop_string(
+      enum = c("normal", "italic", "oblique"),
+      nullable = TRUE
+    ),
     font_weight = S7::new_property(
       class = S7::class_any,
       default = NULL,
@@ -258,16 +270,22 @@ TextStyle <- S7::new_class(
         "must be 'normal', 'bold', 'bolder', 'lighter', a number, or NULL"
       }
     ),
-    font_family = optional_character_scalar,
+    font_family = prop_string(nullable = TRUE),
     font_size = numeric_or_string_property(),
-    align = enum(c("left", "center", "right"), nullable = TRUE),
-    vertical_align = enum(c("top", "middle", "bottom"), nullable = TRUE),
+    align = prop_string(enum = c("left", "center", "right"), nullable = TRUE),
+    vertical_align = prop_string(
+      enum = c("top", "middle", "bottom"),
+      nullable = TRUE
+    ),
     opacity = numeric_or_null_property(),
     line_height = numeric_or_null_property(),
-    background_color = optional_character_scalar,
-    border_color = optional_character_scalar,
+    background_color = prop_string(nullable = TRUE),
+    border_color = prop_string(nullable = TRUE),
     border_width = numeric_or_null_property(),
-    border_type = enum(c("solid", "dashed", "dotted"), nullable = TRUE),
+    border_type = prop_string(
+      enum = c("solid", "dashed", "dotted"),
+      nullable = TRUE
+    ),
     border_dash_offset = numeric_or_null_property(),
     border_radius = S7::new_property(
       class = S7::class_any,
@@ -297,23 +315,26 @@ TextStyle <- S7::new_class(
     ),
     width = numeric_or_string_property(),
     height = numeric_or_null_property(),
-    text_border_color = optional_character_scalar,
+    text_border_color = prop_string(nullable = TRUE),
     text_border_width = numeric_or_null_property(),
-    text_border_type = enum(c("solid", "dashed", "dotted"), nullable = TRUE),
-    text_border_dash_offset = numeric_or_null_property(),
-    text_shadow_blur = numeric_or_null_property(),
-    text_shadow_color = optional_character_scalar,
-    text_shadow_offset_x = numeric_or_null_property(),
-    text_shadow_offset_y = numeric_or_null_property(),
-    overflow = enum(
-      c("truncate", "break", "breakAll", "none"),
+    text_border_type = prop_string(
+      enum = c("solid", "dashed", "dotted"),
       nullable = TRUE
     ),
-    ellipsis = optional_character_scalar,
+    text_border_dash_offset = numeric_or_null_property(),
+    text_shadow_blur = numeric_or_null_property(),
+    text_shadow_color = prop_string(nullable = TRUE),
+    text_shadow_offset_x = numeric_or_null_property(),
+    text_shadow_offset_y = numeric_or_null_property(),
+    overflow = prop_string(
+      enum = c("truncate", "break", "breakAll", "none"),
+      nullable = TRUE
+    ),
+    ellipsis = prop_string(nullable = TRUE),
     rich = S7::new_property(class = S7::class_any, default = NULL),
     # ShadowOptionMixin (box-level shadow)
     shadow_blur = numeric_or_null_property(),
-    shadow_color = optional_character_scalar,
+    shadow_color = prop_string(nullable = TRUE),
     shadow_offset_x = numeric_or_null_property(),
     shadow_offset_y = numeric_or_null_property()
   )

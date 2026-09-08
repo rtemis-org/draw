@@ -92,7 +92,11 @@ for (i in seq_along(charts)) {
       description = chart_descriptions[[type]],
       complete = kind == "record"
     )
-    write_schema(schema, file.path(dir, paste0(kind, ".json")), leaf_url(type, kind))
+    write_schema(
+      schema,
+      file.path(dir, paste0(kind, ".json")),
+      leaf_url(type, kind)
+    )
   }
   cat(sprintf("%-14s schema + record\n", type))
 }
