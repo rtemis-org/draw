@@ -1,3 +1,15 @@
+# rtemis.draw 0.5.2
+
+- **`draw_sankey()` colors its ribbons and its nodes.** A ribbon now takes the
+  color of the node it leaves (`link_color = "source"`, `link_opacity = 0.45`),
+  which is what lets a reader follow one source across a diagram; before, the
+  theme's link color applied and every ribbon was the same grey. Each node also
+  carries its color on the datum rather than leaving it to the chart-level
+  `color` array, which a theme's series `itemStyle` takes precedence over -- so
+  a `palette` passed to `draw_sankey()` painted the links only and left every
+  node one color. `link_color` accepts `"source"`, `"target"`, `"gradient"` or a
+  color.
+
 # rtemis.draw 0.5.1
 
 - **Every property this package declares through `rtemis.core` now comes from a `prop_*` factory.** The 175 remaining uses of that package's hand-written properties -- `optional_logical_scalar`, `optional_character_scalar`, `enum()` and four others, across the ten ECharts option files -- are replaced by `prop_boolean()`, `prop_string()` and `prop_integer()`. The hand-written properties carry no `PropertySpec`, so `prop_spec()` returns `NULL` for them and a class built on one and its published schema are free to disagree; they are the same defect that retired `bounded_double_property()` in `rtemis.core` 0.4.6, and they are the last of their kind in that package. None was reachable from a published schema -- `chart_schema()` refuses a property with no spec rather than emitting one that omits it -- so the generated corpus is unchanged; what this buys is that `rtemis.core` can now remove them without a coordinated release. Each replacement was checked against the property it replaces over absent, `NULL`, valid, out-of-range, `NA`, vector and wrong-type inputs before the swap, so validation behavior is identical, defaults included.

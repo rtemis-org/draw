@@ -12,6 +12,10 @@ draw_sankey(
   node_align = NULL,
   title = NULL,
   palette = NULL,
+  link_color = "source",
+  link_opacity = 0.45,
+  margins = NULL,
+  label_font_size = 12,
   theme = NULL,
   width = NULL,
   height = NULL,
@@ -36,6 +40,24 @@ alignment within each column.}
 
 \item{palette}{Optional Character: Node color palette — a single color string or
 a character vector that overrides the theme palette for this chart.}
+
+\item{link_color}{Character \{"source", "target", "gradient"\} or a color:
+How ribbons are colored. \code{"source"}, the default, gives each ribbon the
+color of the node it leaves, which is what lets a reader follow one source
+across the diagram.}
+
+\item{link_opacity}{Numeric \verb{[0, 1]}: Ribbon opacity. Below 1 so that
+crossing ribbons blend rather than hide one another.}
+
+\item{margins}{Optional named list or numeric: Space around the plotting box,
+as any of \code{left}, \code{right}, \code{top}, \code{bottom} in pixels or as a CSS width.
+Sides left unnamed are derived from the labels: a node's label is drawn to
+its right, so the last column needs room or its labels are clipped. Set
+them explicitly when preparing a static export, where the exact canvas is
+known.}
+
+\item{label_font_size}{Numeric: Node label font size in pixels. Also what the
+derived margins are estimated from.}
 
 \item{theme}{Optional \link{Theme}: Theme override.}
 
