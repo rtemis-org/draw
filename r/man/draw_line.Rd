@@ -8,6 +8,7 @@ draw_line(
   x,
   y,
   names = NULL,
+  group = NULL,
   smooth = FALSE,
   area = FALSE,
   points = TRUE,
@@ -34,11 +35,21 @@ draw_line(
 )
 }
 \arguments{
-\item{x}{Vector: X-axis values.}
+\item{x}{Vector: X-axis values. Numeric values get a value axis. \code{Date}
+and \code{POSIXct} values get a time axis: points are spaced by elapsed time
+and the labels are chosen adaptively for the span shown (years, then
+months, then days, down to seconds), and they read as the timestamps do
+in R whatever timezone the chart is viewed in. Anything else gets a
+category axis with one slot per distinct value, in order of appearance.}
 
 \item{y}{Numeric or named list: Y values.}
 
 \item{names}{Optional Character: Series names used when \code{y} is an unnamed list.}
+
+\item{group}{Optional Vector: Grouping variable, one value per point. Splits
+a single \code{y} vector into one line per level, named by the level, as
+\code{\link[=draw_scatter]{draw_scatter()}} does for points. Cannot be combined with a list \code{y} or
+with \code{blocks}. Points whose group is \code{NA} are dropped.}
 
 \item{smooth}{Logical: Whether to smooth lines.}
 
@@ -73,9 +84,11 @@ axis by when \code{xlim} / \code{ylim} are not given. The default matches base R
 \code{xaxs = "r"}, which extends the range by 4\% at each end.
 Defaults to the range of all \code{y} values across series (no padding).}
 
-\item{xlim}{Optional Numeric [length 2]: X-axis limits \code{c(min, max)}.
-Only supported when \code{x} is numeric; passing \code{xlim} with a non-numeric \code{x}
-errors. Defaults to \code{range(x)} (no padding) when \code{x} is numeric.}
+\item{xlim}{Optional Numeric, Date, or POSIXct [length 2]: X-axis limits
+\code{c(min, max)}. Only supported when \code{x} is numeric or a time; passing
+\code{xlim} with a categorical \code{x} errors. On a time axis, give it in the same
+class as \code{x} (or as epoch milliseconds). Defaults to the range of \code{x}
+extended by \code{pad}.}
 
 \item{ylim}{Optional Numeric [length 2]: Y-axis limits \code{c(min, max)}.}
 

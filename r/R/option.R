@@ -186,7 +186,12 @@ S7::method(to_list, EChartsOption) <- function(x, ...) {
   for (prop_name in simple_props) {
     val <- S7::prop(x, prop_name)
     if (!is.null(val)) {
-      json_name <- snake_to_camel(prop_name)
+      # ECharts spells this one `useUTC`, not the `useUtc` mechanical casing.
+      json_name <- if (prop_name == "use_utc") {
+        "useUTC"
+      } else {
+        snake_to_camel(prop_name)
+      }
       out[[json_name]] <- val
     }
   }

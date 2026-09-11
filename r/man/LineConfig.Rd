@@ -11,6 +11,7 @@ LineConfig(
   writer = NULL,
   x = NULL,
   y = NULL,
+  group = NULL,
   blocks = NULL,
   smooth = FALSE,
   area = FALSE,
@@ -47,9 +48,15 @@ authored config; written by the interface that resolved it.}
 \item{writer}{Optional Named character: Which interface wrote the config, as
 \code{name} and \code{version}. Absent on an authored config.}
 
-\item{x}{Optional Character: Column along the horizontal axis.}
+\item{x}{Optional Character: Column along the horizontal axis. A numeric
+column gets a value axis, a \code{Date} or \code{POSIXct} column a time axis with
+adaptively chosen labels, and any other column a category axis.}
 
 \item{y}{Optional Character: Columns to plot, one line each.}
+
+\item{group}{Optional Character: Column to group and color lines by. Splits
+a single \code{y} column into one line per level; cannot be combined with
+several \code{y} columns or with \code{blocks}.}
 
 \item{blocks}{Optional Character: Column whose contiguous runs shade vertical
 background bands.}
@@ -81,7 +88,8 @@ numeric x.}
 by when the limits are not given.}
 
 \item{xlim, ylim}{Optional Numeric: Axis limits, length 2. \code{NULL} derives them
-from the data, padded by \code{pad}.}
+from the data, padded by \code{pad}. On a time axis \code{xlim} is in epoch
+milliseconds, the unit the chart positions by.}
 
 \item{xlab, ylab}{Optional Character: Axis labels. \code{NULL} derives them from
 the data.}

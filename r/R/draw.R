@@ -629,6 +629,53 @@ renderDraw <- function(expr, env = parent.frame(), quoted = FALSE) {
 
 # -- Tier 1: draw_* convenience functions ---------------------------------------
 
+#' Epoch milliseconds for a time axis, keeping the wall-clock reading
+#'
+#' ECharts places and labels a time axis by epoch milliseconds, formatted in
+#' the browser's timezone unless the option sets `useUTC`. A chart built in
+#' one timezone and viewed in another would then move every point: a date at
+#' midnight, sent as the instant it names, reads as the previous evening on a
+#' browser west of it. So the value sent is the instant whose *UTC* reading is
+#' the timestamp's own wall-clock reading, and the option sets `useUTC`, which
+#' together render the timestamp exactly as R prints it wherever it is viewed.
+#'
+#' A `Date` is a count of days from the epoch and needs no timezone at all.
+#' A `POSIXct` is formatted in its own timezone and re-read as UTC.
+#'
+#' @param x Date, POSIXct, or Numeric: Time values, or milliseconds already.
+#'
+#' @return Numeric: Epoch milliseconds, `NA` where `x` is.
+#'
+#' @author EDG
+#' @keywords internal
+#' @noRd
+time_axis_ms <- function(x) {
+  if (inherits(x, "Date")) {
+    return(as.numeric(x) * 86400000)
+  }
+  if (inherits(x, "POSIXt")) {
+    wall <- format(x, "%Y-%m-%d %H:%M:%OS6")
+    utc <- as.POSIXct(wall, tz = "UTC", format = "%Y-%m-%d %H:%M:%OS")
+    return(round(as.numeric(utc) * 1000))
+  }
+  as.numeric(x)
+} # /rtemis.draw::time_axis_ms
+
+
+#' Is a vector a time for a line chart's x axis?
+#'
+#' @param x Vector: The candidate.
+#'
+#' @return Logical: TRUE for `Date` and `POSIXt`.
+#'
+#' @author EDG
+#' @keywords internal
+#' @noRd
+is_time_axis <- function(x) {
+  inherits(x, c("Date", "POSIXt"))
+} # /rtemis.draw::is_time_axis
+
+
 #' Build the ECharts option for a line chart
 #'
 #' The single implementation shared by [draw_line()], which resolves its arguments
@@ -646,6 +693,7 @@ line_option <- function(
   x,
   y,
   names = NULL,
+  group = NULL,
   smooth = FALSE,
   area = FALSE,
   points = TRUE,
@@ -665,29 +713,45 @@ line_option <- function(
   zoom = FALSE,
   margins = DEFAULT_MARGINS
 ) {
+  # Determine axis type: numbers get a value axis, dates and date-times a
+  # time axis, which ECharts spaces by elapsed time and labels adaptively
+  # (years, then months, then days as the span narrows). Anything else is a
+  # category axis with one slot per distinct value.
+  x_type <- if (is.numeric(x)) {
+    "value"
+  } else if (is_time_axis(x)) {
+    "time"
+  } else {
+    "category"
+  }
+
+  # On a time axis, positions are epoch milliseconds (see time_axis_ms()),
+  # and `xlim` may be given as dates, date-times, or milliseconds.
+  x_num <- switch(x_type, value = x, time = time_axis_ms(x), category = NULL)
+  if (x_type == "time" && !is.null(xlim)) {
+    xlim <- time_axis_ms(xlim)
+  }
   validate_axis_lim(xlim, "xlim")
   validate_axis_lim(ylim, "ylim")
 
-  # Determine axis type
-  x_type <- if (is.numeric(x)) "value" else "category"
-
-  # `xlim` only makes sense on a numeric (value) x-axis.
-  if (!is.null(xlim) && x_type != "value") {
+  # `xlim` only makes sense on an axis with a numeric position.
+  if (!is.null(xlim) && x_type == "category") {
     abort(
-      "`xlim` only applies when `x` is numeric.",
+      "`xlim` only applies when `x` is numeric or a date.",
       class = c("rtemis_value_error", "rtemis_input_error")
     )
   }
   if (equal_axes && x_type != "value") {
     abort(
       "`equal_axes` compares the two axes' scales, which needs a numeric x. ",
-      "This chart's x is categorical.",
+      "This chart's x is ",
+      if (x_type == "time") "a date or time." else "categorical.",
       class = c("rtemis_value_error", "rtemis_input_error")
     )
   }
   # Asking for a square box *and* equal scaling is a statement about the limits;
   # settle them before anything reads them.
-  limits <- equal_axis_limits(x, y, xlim, ylim, pad, square, equal_axes)
+  limits <- equal_axis_limits(x_num, y, xlim, ylim, pad, square, equal_axes)
   xlim <- limits[["xlim"]]
   ylim <- limits[["ylim"]]
 
@@ -696,13 +760,31 @@ line_option <- function(
   # against the plot edges while a scatter of the same data got 4% of room --
   # two charts disagreeing about the same question.
   y_all <- if (is.list(y)) unlist(y, use.names = FALSE) else y
-  x_lim <- if (x_type == "value") (xlim %||% calc_limits(x, pad)) else NULL
+  x_lim <- if (!is.null(x_num)) (xlim %||% calc_limits(x_num, pad)) else NULL
   y_lim <- ylim %||% calc_limits(y_all, pad)
 
-  # Format series data: value axes need [x, y] pairs; category axes need y only
-  pair_xy <- function(y_vals) {
-    if (x_type == "value") {
-      mapply(c, x, y_vals, SIMPLIFY = FALSE)
+  # The categories of a category axis, each listed once. Ungrouped data lists
+  # them once already; grouped data repeats them once per level.
+  x_categories <- if (x_type == "category") unique(x) else NULL
+
+  # Format series data: value and time axes need [x, y] pairs; category axes
+  # need y only when every series covers every category in order (the
+  # ungrouped case), and [index, y] pairs when a series covers a subset (the
+  # grouped case). The index is the category's 0-based position on the axis,
+  # which ECharts accepts in place of its name. Matching by name would need
+  # the name spelled the same way here and by the JSON serializer, and for a
+  # factor or other formatted value that is not guaranteed.
+  pair_xy <- function(y_vals, x_vals = x_num, pair_category = FALSE) {
+    if (x_type != "category") {
+      mapply(c, x_vals, y_vals, SIMPLIFY = FALSE, USE.NAMES = FALSE)
+    } else if (pair_category) {
+      mapply(
+        c,
+        match(x_vals, x_categories) - 1L,
+        y_vals,
+        SIMPLIFY = FALSE,
+        USE.NAMES = FALSE
+      )
     } else {
       y_vals
     }
@@ -734,8 +816,53 @@ line_option <- function(
     LineStyle(type = line_style[((i - 1L) %% n) + 1L])
   }
 
-  # Build series
-  if (is.list(y) && !is.null(names(y))) {
+  # Build series. `group` splits a single `y` into one line per level, the way
+  # draw_scatter() splits points; a list `y` is already multi-series, so the
+  # two do not combine.
+  if (!is.null(group)) {
+    if (is.list(y)) {
+      abort(
+        "`group` splits a single `y` vector into one series per level; ",
+        "pass `y` as a list *or* set `group`, not both.",
+        class = c("rtemis_value_error", "rtemis_input_error")
+      )
+    }
+    if (length(group) != length(y)) {
+      abort(
+        "`group` must have the same length as `y` (",
+        length(y),
+        "); got ",
+        length(group),
+        ".",
+        class = c("rtemis_dim_error", "rtemis_input_error")
+      )
+    }
+    # `blocks` is read along `x`, and with `group` each x repeats once per
+    # level, so the same run would be shaded once per group.
+    if (!is.null(blocks)) {
+      abort(
+        "`blocks` is not supported together with `group`.",
+        class = c("rtemis_value_error", "rtemis_input_error")
+      )
+    }
+    # Points with a missing group belong to no line.
+    groups <- unique(group[!is.na(group)])
+    series <- lapply(seq_along(groups), function(i) {
+      idx <- which(!is.na(group) & group == groups[[i]])
+      LineSeries(
+        name = as.character(groups[[i]]),
+        data = pair_xy(
+          y[idx],
+          x_vals = if (x_type == "category") x[idx] else x_num[idx],
+          pair_category = TRUE
+        ),
+        smooth = smooth,
+        show_symbol = show_symbol,
+        line_style = resolve_line_style(i),
+        area_style = if (area) AreaStyle() else NULL
+      )
+    })
+  } else if (is.list(y) && !is.null(names(y))) {
     series_names <- names(y)
     series <- lapply(seq_along(y), function(i) {
       LineSeries(
@@ -772,7 +899,7 @@ line_option <- function(
   # Optional vertical background bands from `blocks` + `block_color`.
   if (!is.null(blocks)) {
     mark_area <- build_block_mark_area(
-      x = x,
+      x = x_num %||% x,
       blocks = blocks,
       block_color = block_color,
       block_opacity = block_opacity
@@ -788,18 +915,18 @@ line_option <- function(
   opt <- EChartsOption(
     title = if (!is.null(title)) Title(text = title) else NULL,
     tooltip = Tooltip(trigger = "axis"),
-    legend = if (length(series) > 1L) Legend() else NULL,
+    legend = if (length(series) > 1L || !is.null(group)) Legend() else NULL,
     x_axis = Axis(
       type = x_type,
       name = xlab,
       name_location = if (!is.null(xlab)) "middle" else NULL,
-      data = if (x_type == "category") x else NULL,
+      data = x_categories,
       scale = if (x_type == "value") TRUE else NULL,
       min = if (!is.null(x_lim)) x_lim[[1L]] else NULL,
       max = if (!is.null(x_lim)) x_lim[[2L]] else NULL,
-      split_line = if (x_type == "value") no_corner_split_line() else NULL,
-      axis_label = if (x_type == "value") no_corner_axis_label() else NULL,
-      axis_line = if (x_type == "value") {
+      split_line = if (x_type != "category") no_corner_split_line() else NULL,
+      axis_label = if (x_type != "category") no_corner_axis_label() else NULL,
+      axis_line = if (x_type != "category") {
         axis_line_for_orthogonal(y_lim)
       } else {
         NULL
@@ -819,6 +946,8 @@ line_option <- function(
     color = palette,
     data_zoom = data_zoom,
     grid = resolve_margins(margins),
+    # Time positions carry the wall-clock reading as UTC; see time_axis_ms().
+    use_utc = if (x_type == "time") TRUE else NULL,
     series = series
   )
 
@@ -852,9 +981,18 @@ line_option <- function(
 #' The box itself is solved in the browser, which is the only side that knows
 #' how wide the container is, and re-solved whenever it resizes.
 #'
-#' @param x Vector: X-axis values.
+#' @param x Vector: X-axis values. Numeric values get a value axis. `Date`
+#'   and `POSIXct` values get a time axis: points are spaced by elapsed time
+#'   and the labels are chosen adaptively for the span shown (years, then
+#'   months, then days, down to seconds), and they read as the timestamps do
+#'   in R whatever timezone the chart is viewed in. Anything else gets a
+#'   category axis with one slot per distinct value, in order of appearance.
 #' @param y Numeric or named list: Y values.
 #' @param names Optional Character: Series names used when `y` is an unnamed list.
+#' @param group Optional Vector: Grouping variable, one value per point. Splits
+#'   a single `y` vector into one line per level, named by the level, as
+#'   [draw_scatter()] does for points. Cannot be combined with a list `y` or
+#'   with `blocks`. Points whose group is `NA` are dropped.
 #' @param smooth Logical: Whether to smooth lines.
 #' @param area Logical: Whether to show area fill.
 #' @param points Logical: Whether to show point markers on each data value.
@@ -875,9 +1013,11 @@ line_option <- function(
 #'   `color` takes precedence over the theme palette (it sets `option.color`).
 #' @param line_style Optional Character \{"solid", "dashed", "dotted"\}: Line dash
 #'   style — one value per series, recycled to match the number of series.
-#' @param xlim Optional Numeric \[length 2\]: X-axis limits `c(min, max)`.
-#'   Only supported when `x` is numeric; passing `xlim` with a non-numeric `x`
-#'   errors. Defaults to `range(x)` (no padding) when `x` is numeric.
+#' @param xlim Optional Numeric, Date, or POSIXct \[length 2\]: X-axis limits
+#'   `c(min, max)`. Only supported when `x` is numeric or a time; passing
+#'   `xlim` with a categorical `x` errors. On a time axis, give it in the same
+#'   class as `x` (or as epoch milliseconds). Defaults to the range of `x`
+#'   extended by `pad`.
 #' @param ylim Optional Numeric \[length 2\]: Y-axis limits `c(min, max)`.
 #' @param pad Numeric `[0, Inf)`: Fraction of the data range to extend each
 #'   axis by when `xlim` / `ylim` are not given. The default matches base R's
@@ -928,6 +1068,7 @@ draw_line <- function(
   x,
   y,
   names = NULL,
+  group = NULL,
   smooth = FALSE,
   area = FALSE,
   points = TRUE,
@@ -956,6 +1097,7 @@ draw_line <- function(
     x = x,
     y = y,
     names = names,
+    group = group,
     smooth = smooth,
     area = area,
     points = points,
@@ -3629,7 +3771,12 @@ draw_heatmap <- function(
 #' @author EDG
 #' @keywords internal
 #' @noRd
-.sankey_margins <- function(links, margins = NULL, font_size = 12, width = NULL) {
+.sankey_margins <- function(
+  links,
+  margins = NULL,
+  font_size = 12,
+  width = NULL
+) {
   src <- as.character(links[["source"]])
   tgt <- as.character(links[["target"]])
   terminal <- setdiff(tgt, src)

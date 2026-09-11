@@ -121,7 +121,7 @@ test_that("EChartsOption global settings", {
   expect_equal(out$animationDuration, 1000)
   expect_equal(out$animationEasing, "cubicOut")
   expect_equal(out$darkMode, FALSE)
-  expect_equal(out$useUtc, TRUE)
+  expect_equal(out$useUTC, TRUE)
 })
 
 test_that("EChartsOption global text_style", {
