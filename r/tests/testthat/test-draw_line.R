@@ -199,3 +199,42 @@ test_that("time_axis_ms: Date, POSIXct, numeric, and NA", {
   expect_equal(time_axis_ms(c(1, 2)), c(1, 2))
   expect_true(is.na(time_axis_ms(as.Date(NA))))
 })
+
+# %% zoom slider placement ----
+
+test_that("draw_line zoom = TRUE gives the slider its own band under the plot", {
+  opt <- draw_line(1:5, 1:5, zoom = TRUE)$x$option
+  slider <- Filter(function(z) identical(z$type, "slider"), opt$dataZoom)[[1]]
+  # Default margins: the slider sits above the 36 px margin plus its 7 px
+  # brush handle, and the grid clears slider, handle, and an 8 px gap.
+  expect_equal(slider$bottom, 36 + 7)
+  expect_equal(slider$height, 30)
+  expect_equal(opt$grid$bottom, 36 + 7 + 30 + 8)
+})
+
+test_that("draw_line zoom = TRUE builds on an explicit or absent bottom margin", {
+  opt <- draw_line(1:5, 1:5, zoom = TRUE, margins = c(bottom = 50))$x$option
+  expect_equal(opt$grid$bottom, 50 + 45)
+  # No margins at all: ECharts' own default grid bottom of 80 is the base.
+  opt <- draw_line(1:5, 1:5, zoom = TRUE, margins = NULL)$x$option
+  expect_equal(opt$grid$bottom, 80 + 45)
+})
+
+test_that("draw_line zoom leaves a percentage margin and explicit DataZoom alone", {
+  opt <- draw_line(1:5, 1:5, zoom = TRUE, margins = list(bottom = "20%"))$x$option
+  expect_equal(opt$grid$bottom, "20%")
+  slider <- Filter(function(z) identical(z$type, "slider"), opt$dataZoom)[[1]]
+  expect_null(slider$bottom)
+  opt <- draw_line(1:5, 1:5, zoom = DataZoom(type = "slider"))$x$option
+  expect_null(opt$dataZoom[[1]]$bottom)
+  expect_equal(opt$grid$bottom, 36)
+})
+
+# %% tooltip ----
+
+test_that("draw_line tooltip formats values but keeps the axis trigger", {
+  opt <- draw_line(1:3, c(1.23456, 2, 3))$x$option
+  expect_equal(opt$tooltip$trigger, "axis")
+  expect_s3_class(opt$tooltip$valueFormatter, "JS_EVAL")
+  expect_match(opt$tooltip$valueFormatter, "toFixed\\(2\\)")
+})

@@ -676,6 +676,75 @@ is_time_axis <- function(x) {
 } # /rtemis.draw::is_time_axis
 
 
+#' Make room under the plot for the zoom slider
+#'
+#' ECharts lays its slider a fixed distance above the container's bottom edge,
+#' where the x-axis title and the legend already sit, and reserves no grid
+#' space for it. This moves the slider up to the top of the bottom margin --
+#' above the legend, which lives in that margin -- and grows the margin so the
+#' axis labels and title clear the slider.
+#'
+#' Only the preset built by `zoom = TRUE` is placed: a caller who passes
+#' [DataZoom] objects has taken over the layout. A percentage bottom margin is
+#' left alone too, since the slider's height is in pixels.
+#'
+#' @param data_zoom List of [DataZoom]: The resolved zoom specs.
+#' @param grid Optional [Grid]: The resolved margins.
+#'
+#' @return Named list: `data_zoom` and `grid`, placed.
+#'
+#' @author EDG
+#' @keywords internal
+#' @noRd
+reserve_slider_room <- function(data_zoom, grid) {
+  # ECharts' own numbers: the slider's filler height, the brush handle it
+  # draws below the filler, and its default grid margin when none is given.
+  slider_height <- 30
+  handle_height <- 7
+  gap <- 8
+  bottom <- if (is.null(grid) || is.null(grid@bottom)) 80 else grid@bottom
+  if (!is.numeric(bottom)) {
+    return(list(data_zoom = data_zoom, grid = grid))
+  }
+  data_zoom <- lapply(data_zoom, function(dz) {
+    if (S7::S7_inherits(dz, DataZoom) && identical(dz@type, "slider")) {
+      dz@bottom <- bottom + handle_height
+      dz@height <- slider_height
+    }
+    dz
+  })
+  grid <- grid %||% Grid()
+  grid@bottom <- bottom + handle_height + slider_height + gap
+  list(data_zoom = data_zoom, grid = grid)
+} # /rtemis.draw::reserve_slider_room
+
+
+#' Tooltip value formatter for plain numbers
+#'
+#' Formats the value part of a tooltip row while leaving ECharts' own layout
+#' -- axis label header, series marker and name, right-aligned value -- in
+#' place. Integers print as they are; other numbers to two decimals, or in
+#' exponent form when they are very large or very small; anything that is not
+#' a finite number passes through.
+#'
+#' @return `JS` function: For `Tooltip(value_formatter = )`.
+#'
+#' @author EDG
+#' @keywords internal
+#' @noRd
+number_value_formatter <- function() {
+  htmlwidgets::JS(
+    "function (v) {
+      if (typeof v !== 'number' || !isFinite(v)) return v;
+      if (Number.isInteger(v)) return String(v);
+      var a = Math.abs(v);
+      if (a >= 1e6 || a < 0.01) return v.toExponential(2);
+      return v.toFixed(2);
+    }"
+  )
+} # /rtemis.draw::number_value_formatter
+
+
 #' Build the ECharts option for a line chart
 #'
 #' The single implementation shared by [draw_line()], which resolves its arguments
@@ -909,12 +978,22 @@ line_option <- function(
     }
   }
 
-  # Resolve `zoom` argument into an (optional) list of DataZoom specs.
+  # Resolve `zoom` argument into an (optional) list of DataZoom specs. The
+  # `TRUE` preset's slider is given its own band under the plot.
   data_zoom <- resolve_zoom(zoom, axis = "x")
+  grid <- resolve_margins(margins)
+  if (isTRUE(zoom)) {
+    placed <- reserve_slider_room(data_zoom, grid)
+    data_zoom <- placed[["data_zoom"]]
+    grid <- placed[["grid"]]
+  }
 
   opt <- EChartsOption(
     title = if (!is.null(title)) Title(text = title) else NULL,
-    tooltip = Tooltip(trigger = "axis"),
+    tooltip = Tooltip(
+      trigger = "axis",
+      value_formatter = number_value_formatter()
+    ),
     legend = if (length(series) > 1L || !is.null(group)) Legend() else NULL,
     x_axis = Axis(
       type = x_type,
@@ -945,7 +1024,7 @@ line_option <- function(
     ),
     color = palette,
     data_zoom = data_zoom,
-    grid = resolve_margins(margins),
+    grid = grid,
     # Time positions carry the wall-clock reading as UTC; see time_axis_ms().
     use_utc = if (x_type == "time") TRUE else NULL,
     series = series
@@ -1035,9 +1114,10 @@ line_option <- function(
 #' @param theme Optional [Theme]: Theme override. The palette inside the theme can be
 #'   overridden per-chart with the `color` argument.
 #' @param zoom Logical, [DataZoom], or list of [DataZoom]: Enable x-axis zoom.
-#'   `TRUE` adds a slider plus mouse-wheel/drag zoom on the x-axis; `FALSE`
-#'   (default) disables zoom. Pass [DataZoom] objects (or a list of them) for
-#'   full control over zoom behavior and styling.
+#'   `TRUE` adds a slider plus mouse-wheel/drag zoom on the x-axis, with the
+#'   slider given its own band below the axis title; `FALSE` (default)
+#'   disables zoom. Pass [DataZoom] objects (or a list of them) for full
+#'   control over zoom behavior, styling, and placement.
 #' @param margins Optional Named numeric vector or named list: Plot margins in
 #'   pixels (or percentage strings) for any of `"top"`, `"right"`,
 #'   `"bottom"`, `"left"` — e.g. `c(left = 80, right = 20)` or
@@ -3734,19 +3814,6 @@ draw_heatmap <- function(
 
 # -- draw_sankey ----------------------------------------------------------------
 
-#' Build the ECharts option for a Sankey diagram
-#'
-#' The single implementation shared by [draw_sankey()], which resolves its arguments
-#' from vectors, and `compile()` on the corresponding [ChartConfig], which
-#' resolves them from a data frame. The render targets stay with the caller.
-#'
-#' @inheritParams draw_sankey
-#'
-#' @return [EChartsOption]: The option object.
-#'
-#' @author EDG
-#' @keywords internal
-#' @noRd
 # %% .sankey_margins() ----
 #' Space a Sankey needs around its plotting box so no label is cut off
 #'
@@ -3809,7 +3876,19 @@ draw_heatmap <- function(
   utils::modifyList(auto, margins)
 }
 
-
+#' Build the ECharts option for a Sankey diagram
+#'
+#' The single implementation shared by [draw_sankey()], which resolves its arguments
+#' from vectors, and `compile()` on the corresponding [ChartConfig], which
+#' resolves them from a data frame. The render targets stay with the caller.
+#'
+#' @inheritParams draw_sankey
+#'
+#' @return [EChartsOption]: The option object.
+#'
+#' @author EDG
+#' @keywords internal
+#' @noRd
 sankey_option <- function(
   links,
   orient = "horizontal",

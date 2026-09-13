@@ -110,9 +110,10 @@ interval. Requires a numeric \code{x}. See Details.}
 overridden per-chart with the \code{color} argument.}
 
 \item{zoom}{Logical, \link{DataZoom}, or list of \link{DataZoom}: Enable x-axis zoom.
-\code{TRUE} adds a slider plus mouse-wheel/drag zoom on the x-axis; \code{FALSE}
-(default) disables zoom. Pass \link{DataZoom} objects (or a list of them) for
-full control over zoom behavior and styling.}
+\code{TRUE} adds a slider plus mouse-wheel/drag zoom on the x-axis, with the
+slider given its own band below the axis title; \code{FALSE} (default)
+disables zoom. Pass \link{DataZoom} objects (or a list of them) for full
+control over zoom behavior, styling, and placement.}
 
 \item{margins}{Optional Named numeric vector or named list: Plot margins in
 pixels (or percentage strings) for any of \code{"top"}, \code{"right"},
