@@ -48,6 +48,8 @@ Fixed-aspect and square-cell heatmap grids fit within both cell dimensions.
 Dendrograms remain aligned with their heatmap. Give panels
 enough space for their labels and legends. Explicit child themes are kept;
 automatic themes follow the browser, and resolve to light for SVG export.
+Padding and gaps use the common child background when all panels agree;
+mixed-background figures remain transparent. This also applies to SVG export.
 Nested layouts, Sigma/MapLibre, and child JavaScript hooks are not supported
 by this initial composition API.
 }

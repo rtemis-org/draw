@@ -26,7 +26,8 @@ for documentation that needs to exercise the current package on each full build.
 
 After installing the current R package, run `just qa-export <output-directory>`
 from this checkout. The developer tool checks square heatmaps, dendrograms,
-independent panels, and A3 diagrams in light/dark themes and two viewport sizes.
+independent panels, and A3 diagrams in light/dark themes at wide and narrow
+viewport sizes, including a 390-pixel A3 check.
 It writes HTML, SVG, browser screenshots, and a manifest recording the installed
 package/dependency versions, asset fingerprints, source revision, and results.
 Review the images: geometry assertions alone do not establish visual quality.

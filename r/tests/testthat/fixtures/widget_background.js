@@ -4,6 +4,9 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const vm = require('node:vm');
 const source = fs.readFileSync(process.argv[2], 'utf8');
+const path = require('node:path');
+const directory = path.join(path.dirname(process.argv[2]), 'lib/draw');
+for (const kind of ['single', 'panels']) {
 for (const location of ['standalone', 'embedded', 'embedded-direct', 'embedded-header', 'multiple', 'bounded', 'vscode', 'vscode-header', 'vscode-outer-header', 'vscode-multiple', 'vscode-nested']) {
   const isVSCode = location.startsWith('vscode');
   const ownsPage = location === 'standalone' || location === 'vscode';
@@ -12,7 +15,8 @@ for (const location of ['standalone', 'embedded', 'embedded-direct', 'embedded-h
   const html = {style: {backgroundColor: ''}};
   const host = location === 'embedded-direct' ? body :
     {style: {}, id: location === 'embedded' ? 'article' : 'htmlwidget_container', parentElement: body};
-  const el = {style: {}, parentElement: host, isConnected: true};
+  const el = {style: {}, parentElement: host, isConnected: true, children: [],
+    replaceChildren() {this.children = [];}, appendChild(child) {child.parentElement=this;this.children.push(child);}};
   host.children = ['multiple', 'vscode-multiple'].includes(location) ? [el, {}] : [el];
   if (host !== body) body.children = [host, {tagName: 'SCRIPT'}];
   if (location === 'embedded-header') body.children.push({tagName: 'H1'});
@@ -38,17 +42,21 @@ for (const location of ['standalone', 'embedded', 'embedded-direct', 'embedded-h
     disconnect() {}
   }
   const context = {
-    document: {body, documentElement: html},
+    document: {body, documentElement: html, createElement() {return {style: {}, isConnected: true};}},
     window: {MutationObserver: Observer}, MutationObserver: Observer,
     HTMLWidgets: {widget() {}},
+    rtemisA3: {fit() {}},
     rtemisConfusion: {prepare() {}},
-    rtemisPanels: {fitHeatmap() {}, prepareColors() {}, fitAxes() {}, positionLegend() {}, centerVisualMaps() {}},
+    rtemisPanels: {background: require(path.join(directory, 'panels.js')).background, cells: require(path.join(directory, 'panels.js')).cells, fitHeatmap() {}, prepareColors() {}, fitAxes() {}, positionLegend() {}, centerVisualMaps() {}},
     echarts: {registerTheme() {}, init() {return {setOption() {}, dispose() {}};}}
   };
   vm.createContext(context);
   vm.runInContext(source, context);
-  const renderer = context.rtemisDrawFactory(el, 560, 500, location === 'bounded');
-  renderer.renderValue({option: {}, autoTheme: true,
+  vm.runInContext(fs.readFileSync(path.join(directory, 'panel_widget.js'), 'utf8'), context);
+  if (kind === 'panels' && location === 'bounded') continue;
+  const renderer = kind === 'panels' ? context.rtemisPanelFactory(el, 560, 500) : context.rtemisDrawFactory(el, 560, 500, location === 'bounded');
+  const render = payload => renderer.renderValue(kind === 'panels' ? {panels:[payload, payload], layout:{ncol:2,gap:20,padding:10}} : payload);
+  render({option: {}, autoTheme: true,
     theme: {backgroundColor: '#ffffff'}, themeDark: {backgroundColor: '#181818'}});
   assert.equal(el.style.backgroundColor, '#181818');
   assert.equal(body.style.backgroundColor, ownsPage ? '#181818' : 'white');
@@ -57,11 +65,15 @@ for (const location of ['standalone', 'embedded', 'embedded-direct', 'embedded-h
   classes.add(isVSCode ? 'vscode-light' : 'quarto-light'); notify();
   assert.equal(el.style.backgroundColor, '#ffffff');
   assert.equal(body.style.backgroundColor, ownsPage ? '#ffffff' : 'white');
-  renderer.renderValue({option: {backgroundColor: '#253344'}, theme: {backgroundColor: '#ffffff'}});
+  render({option: {backgroundColor: '#253344'}, theme: {backgroundColor: '#ffffff'}});
   assert.equal(el.style.backgroundColor, '#253344', 'Explicit option background must win');
   assert.equal(body.style.backgroundColor, ownsPage ? '#253344' : 'white');
   renderer.dispose();
   assert.equal(body.style.backgroundColor, 'white', 'Disposal must restore the host page');
   assert.equal(html.style.backgroundColor, '');
+  if (host !== body) assert.equal(host.style.backgroundColor, undefined);
+  assert.equal(el.style.backgroundColor, undefined);
 }
 console.log('Standalone, VS Code, embedded, bounded, multiple-widget, theme, override, and disposal backgrounds passed');
+
+}

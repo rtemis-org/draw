@@ -163,3 +163,29 @@ test_that("browser panel sizing uses the measured host instead of the viewport",
   expect_null(attr(out, "status"), info = paste(out, collapse = "\n"))
   expect_match(paste(out, collapse = "\n"), "Host geometry passed")
 })
+
+test_that("panel SVG surfaces match common backgrounds and preserve mixed themes", {
+  skip_if_not(nzchar(Sys.which("node")), "node not found")
+  path <- tempfile(fileext = ".svg")
+  on.exit(unlink(path), add = TRUE)
+  dark <- draw_bar(c("A", "B"), 1:2, theme = theme_dark())
+  light <- draw_bar(c("A", "B"), 1:2, theme = theme_light())
+  for (case in list(
+    list(plots = list(dark, dark), fill = "#181818"),
+    list(plots = list(light, light), fill = "#ffffff"),
+    list(plots = list(dark, light), fill = "transparent")
+  )) {
+    save_drawing(
+      draw_panels(case[["plots"]], ncol = 2, padding = 12),
+      path,
+      width = 900,
+      height = 400
+    )
+    svg <- paste(readLines(path, warn = FALSE), collapse = "\n")
+    expect_match(
+      svg,
+      paste0('<rect width="900" height="400" fill="', case[["fill"]], '"/>'),
+      fixed = TRUE
+    )
+  }
+})

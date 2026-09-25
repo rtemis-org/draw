@@ -104,9 +104,6 @@ builders <- list(
   a3 = function(theme) {
     draw_a3(
       a3,
-      n_per_row = 12L,
-      marker_size = 18,
-      font_size = 12,
       theme = theme,
       title = "Annotated sequence",
       height = 500
@@ -116,8 +113,10 @@ builders <- list(
 manifest <- list(
   r_version = R.version.string,
   node_version = system2(Sys.which("node"), "--version", stdout = TRUE),
-  widget_dependencies = lapply(htmlwidgets::getDependency("rtemis-draw", "rtemis.draw"),
-    function(d) d[c("name", "version", "script")]),
+  widget_dependencies = lapply(
+    htmlwidgets::getDependency("rtemis-draw", "rtemis.draw"),
+    function(d) d[c("name", "version", "script")]
+  ),
   package_version = as.character(packageVersion("rtemis.draw")),
   dependencies = vapply(
     required,
@@ -128,6 +127,8 @@ manifest <- list(
     c(
       "htmlwidgets/rtemis-draw.js",
       "htmlwidgets/lib/draw/panels.js",
+      "htmlwidgets/lib/draw/a3.js",
+      "htmlwidgets/lib/draw/panel_widget.js",
       "node/render_svg.js"
     ),
     package = "rtemis.draw"
@@ -191,7 +192,13 @@ tryCatch(
           )
           stopifnot(status == 0)
         }
-        widths <- if (name == "panels") c(1100L, 900L) else c(1100L, 560L)
+        widths <- if (name == "panels") {
+          c(1100L, 900L)
+        } else if (name == "a3") {
+          c(1100L, 560L, 390L)
+        } else {
+          c(1100L, 560L)
+        }
         for (width in widths) {
           b$Emulation$setDeviceMetricsOverride(
             width = width,
@@ -242,6 +249,61 @@ tryCatch(
             }
             if (name == "panels") stopifnot(chart[["height"]] <= 550)
           }
+          if (name == "panels") {
+            expected <- if (mode == "light") {
+              "rgb(255, 255, 255)"
+            } else {
+              "rgb(24, 24, 24)"
+            }
+            surface <- evaluate(
+              "({widget:getComputedStyle(document.querySelector('.rtemis-draw')).backgroundColor,body:getComputedStyle(document.body).backgroundColor})"
+            )
+            stopifnot(
+              surface[["widget"]] == expected,
+              surface[["body"]] == expected
+            )
+          }
+          if (name == "a3") {
+            geometry <- evaluate(
+              "(()=>{let c=qaCharts[0],s=c.getModel().getSeries().find(s=>s.name==='Primary structure'),d=s.getData(),points=Array.from({length:d.count()},(_,i)=>s.coordinateSystem.dataToPoint([d.get('x',i),d.get('y',i)])),minimum=Math.min(...points.slice(1).map((p,i)=>Math.hypot(p[0]-points[i][0],p[1]-points[i][1]))),boxes=c.getModel().findComponents({mainType:'legend'}).map(l=>{let g=c.getViewOfComponentModel(l).group,b=g.getBoundingRect().clone();b.applyTransform(g.getComputedTransform());return b}),b={x:Math.min(...boxes.map(b=>b.x)),y:Math.min(...boxes.map(b=>b.y))};b.width=Math.max(...boxes.map(b=>b.x+b.width))-b.x;b.height=Math.max(...boxes.map(b=>b.y+b.height))-b.y;return {minimum,diameter:s.get('symbolSize'),legend:{x:b.x,y:b.y,width:b.width,height:b.height},width:c.getWidth(),height:c.getHeight()}})()"
+            )
+            stopifnot(geometry[["minimum"]] > geometry[["diameter"]])
+            box <- geometry[["legend"]]
+            stopifnot(
+              box[["x"]] >= -1,
+              box[["y"]] >= -1,
+              box[["x"]] + box[["width"]] <= geometry[["width"]] + 1,
+              box[["y"]] + box[["height"]] <= geometry[["height"]] + 1
+            )
+            result[["a3"]] <- geometry
+            if (width < 1100) {
+              narrow_svg <- file.path(out, paste0(stem, "-", width, ".svg"))
+              save_drawing(widget, narrow_svg, width = width, height = 550)
+              stopifnot(
+                length(xml2::xml_find_all(
+                  xml2::read_xml(narrow_svg),
+                  './/*[local-name()="image"]'
+                )) ==
+                  0L
+              )
+              if (nzchar(converter)) {
+                stopifnot(
+                  system2(
+                    converter,
+                    c(
+                      shQuote(narrow_svg),
+                      "-o",
+                      shQuote(file.path(
+                        out,
+                        paste0(stem, "-", width, "-svg.png")
+                      ))
+                    )
+                  ) ==
+                    0
+                )
+              }
+            }
+          }
           key <- paste(stem, width, sep = "-")
           manifest[["cases"]][[key]] <- result
           screenshot <- b$Page$captureScreenshot(
@@ -255,7 +317,7 @@ tryCatch(
           # A real pointer click toggles the region legend and restores it.
           if (name == "a3") {
             point <- evaluate(
-              "(()=>{let c=qaCharts[0],m=c.getModel().getComponent('legend'),i=m.getData().findIndex(d=>d.get('name')==='Domain'),g=c.getViewOfComponentModel(m).getContentGroup().children().find(g=>g.__legendDataIndex===i),r=g.getBoundingRect().clone();r.applyTransform(g.getComputedTransform());let d=c.getDom().getBoundingClientRect();return {x:d.x+r.x+r.width/2,y:d.y+r.y+r.height/2}})()"
+              "(()=>{let c=qaCharts[0],m=c.getModel().findComponents({mainType:'legend'}).find(m=>m.getData().some(d=>d.get('name')==='Domain')),i=m.getData().findIndex(d=>d.get('name')==='Domain'),g=c.getViewOfComponentModel(m).getContentGroup().children().find(g=>g.__legendDataIndex===i),r=g.getBoundingRect().clone();r.applyTransform(g.getComputedTransform());let d=c.getDom().getBoundingClientRect();return {x:d.x+r.x+r.width/2,y:d.y+r.y+r.height/2}})()"
             )
             for (selected in c(FALSE, TRUE)) {
               b$Input$dispatchMouseEvent(
@@ -292,7 +354,7 @@ tryCatch(
   },
   finally = b$close()
 )
-stopifnot(length(manifest[["cases"]]) == 24L)
+stopifnot(length(manifest[["cases"]]) == 26L)
 jsonlite::write_json(
   manifest,
   file.path(out, "manifest.json"),

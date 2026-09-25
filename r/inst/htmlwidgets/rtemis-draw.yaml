@@ -11,9 +11,10 @@ dependencies:
     src: htmlwidgets/lib/draw
     script: renderers.js
   - name: rtemis-panel-layout
-    version: 1.0.3
+    version: 1.0.4
     src: htmlwidgets/lib/draw
     script:
       - panels.js
       - confusion.js
+      - a3.js
       - panel_widget.js

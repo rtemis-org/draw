@@ -10,6 +10,8 @@ const host = {clientWidth: 900, clientHeight: 420, style: {},
   appendChild(child) {this.children.push(child);}};
 const context = {
   document: {createElement() {return {style: {}};}},
+  rtemisDrawSurface: () => ({paint() {}, restore() {}}),
+  rtemisDrawIsDarkMode: () => false,
   rtemisPanels: require(path.join(directory, 'panels.js')),
   rtemisDrawFactory(element, width, height, bounded) {
     assert.equal(bounded, true);
@@ -28,4 +30,9 @@ host.clientWidth = 700; host.clientHeight = 360;
 figure.resize(1450,1000);
 assert.deepEqual(chartSizes, [{width:330,height:340},{width:330,height:340}]);
 assert.equal(host.children[1].style.left, '360px');
+const background = context.rtemisPanels.background;
+assert.equal(background({panels:[{option:{},autoTheme:true,theme:{backgroundColor:'#fff'},themeDark:{backgroundColor:'#181818'}}]},true),'#181818');
+assert.equal(background({panels:[{option:{backgroundColor:'#123456'},theme:{backgroundColor:'#fff'}}]}),'#123456');
+assert.equal(background({panels:[{option:{backgroundColor:{type:'linear',colorStops:[]}}}]}),'transparent');
+assert.equal(background({panels:[{option:{},theme:{backgroundColor:'#fff'}},{option:{},theme:{backgroundColor:'#181818'}}]}),'transparent');
 console.log('Host geometry passed');

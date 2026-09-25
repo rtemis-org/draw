@@ -1,4 +1,70 @@
-function rtemisDrawFactory(el, width, height, bounded = false) {
+// Detect dark mode from VS Code, RStudio, Quarto, or browser preference
+function rtemisDrawIsDarkMode() {
+  const body = document.body;
+  // VS Code webview
+  if (body.classList.contains("vscode-dark") ||
+      body.classList.contains("vscode-high-contrast")) {
+    return true;
+  }
+  if (body.classList.contains("vscode-light")) {
+    return false;
+  }
+  // RStudio
+  if (body.classList.contains("rstudio-themes-dark-menus")) {
+    return true;
+  }
+  // Quarto: `toggleBodyColorMode()` in the emitted page sets exactly one of
+  // these on <body>, from the reader's saved choice. It wins over the media
+  // query because the reader picked it explicitly.
+  if (body.classList.contains("quarto-dark")) {
+    return true;
+  }
+  if (body.classList.contains("quarto-light")) {
+    return false;
+  }
+  // Browser / system preference
+  if (window.matchMedia) {
+    return window.matchMedia("(prefers-color-scheme: dark)").matches;
+  }
+  return false;
+}
+
+// Own only a standalone widget document; embedded reports retain page CSS.
+// Record every style we change so replacing/detaching a widget restores its host.
+function rtemisDrawSurface(el, bounded = false) {
+  const saved = new Map();
+  const paintElement = (element, color) => {
+    if (!saved.has(element)) saved.set(element, element.style.backgroundColor);
+    element.style.backgroundColor = color;
+  };
+  // vscode-R embeds saved head metadata beside the widget in #webview-content.
+  const isSoleContent = (container, child) =>
+    Array.from(container.children).every(node => node === child ||
+      ["SCRIPT", "STYLE", "LINK", "META", "TITLE"].includes(node.tagName));
+  return {
+    paint(color) {
+      paintElement(el, color);
+      const host = el.parentElement;
+      if (!host || bounded || host === document.body || host === document.documentElement) return;
+      paintElement(host, color);
+      let pageHost = host;
+      if (host.parentElement?.id === "webview-content" && isSoleContent(host.parentElement, host)) {
+        pageHost = host.parentElement;
+      }
+      if (host.id === "htmlwidget_container" && pageHost.parentElement === document.body &&
+          host.children.length === 1 && isSoleContent(document.body, pageHost)) {
+        paintElement(document.documentElement, color);
+        paintElement(document.body, color);
+      }
+    },
+    restore() {
+      saved.forEach((color, element) => {element.style.backgroundColor = color;});
+      saved.clear();
+    }
+  };
+}
+
+function rtemisDrawFactory(el, width, height, bounded = false, onBackground = () => {}) {
     let currentWidth = width;
     let currentHeight = height;
     let chart = null;
@@ -6,55 +72,7 @@ function rtemisDrawFactory(el, width, height, bounded = false) {
     let renderedDark = null;
     let currentTheme = null;
     let injectedVisualMapColor = false;
-    let pageBackground = null;
-
-    // A standalone htmlwidgets document belongs to its single chart. Restore
-    // its original styles when that renderer is replaced or detached.
-    const restorePageBackground = () => {
-      pageBackground?.forEach(({element, color}) => {
-        element.style.backgroundColor = color;
-      });
-      pageBackground = null;
-    };
-
-    // Whether `child` is a container's only visible element. vscode-R embeds
-    // the complete saved HTML in #webview-content, so the browser also places
-    // that document's head metadata and dependencies inside the wrapper.
-    const isSoleContent = (container, child) =>
-      Array.from(container.children).every(node => node === child ||
-        ["SCRIPT", "STYLE", "LINK", "META", "TITLE"].includes(node.tagName));
-
-    // Detect dark mode from VS Code, RStudio, Quarto, or browser preference
-    const isDarkMode = () => {
-      const body = document.body;
-      // VS Code webview
-      if (body.classList.contains("vscode-dark") ||
-          body.classList.contains("vscode-high-contrast")) {
-        return true;
-      }
-      if (body.classList.contains("vscode-light")) {
-        return false;
-      }
-      // RStudio
-      if (body.classList.contains("rstudio-themes-dark-menus")) {
-        return true;
-      }
-      // Quarto: `toggleBodyColorMode()` in the emitted page sets exactly one of
-      // these on <body>, from the reader's saved choice. It wins over the media
-      // query because the reader picked it explicitly.
-      if (body.classList.contains("quarto-dark")) {
-        return true;
-      }
-      if (body.classList.contains("quarto-light")) {
-        return false;
-      }
-      // Browser / system preference
-      if (window.matchMedia) {
-        return window.matchMedia("(prefers-color-scheme: dark)").matches;
-      }
-      return false;
-    };
-
+    const surface = rtemisDrawSurface(el, bounded);
     // For square-cell heatmaps: compute the required height given a container
     // width, so that grid cells are perfectly square.
     const squareCellHeight = (x, containerWidth) => {
@@ -104,7 +122,7 @@ function rtemisDrawFactory(el, width, height, bounded = false) {
 
       let themeName = null;
       let themeObj = null;
-      const dark = isDarkMode();
+      const dark = rtemisDrawIsDarkMode();
 
       if (x.autoTheme) {
         // Auto-detect: pick light or dark theme
@@ -142,38 +160,8 @@ function rtemisDrawFactory(el, width, height, bounded = false) {
         themeName = "custom_theme";
       }
 
-      // Match the local wrapper to the chart. htmlwidgets standalone pages
-      // also hard-code a white body; theme that viewport only when this chart
-      // owns its sole widget container. Embedded documents keep their page CSS.
-      const bgColor =
-        x.option?.backgroundColor ||
-        themeObj?.backgroundColor ||
-        null;
-      if (bgColor) {
-        el.style.backgroundColor = bgColor;
-        if (el.parentElement && !bounded &&
-            el.parentElement !== document.body && el.parentElement !== document.documentElement) {
-          el.parentElement.style.backgroundColor = bgColor;
-          const host = el.parentElement;
-          // Recognize only the known vscode-R wrapper around an otherwise
-          // standalone widget. A report in that viewer still owns its colors.
-          let pageHost = host;
-          if (host.parentElement?.id === "webview-content" &&
-              isSoleContent(host.parentElement, host)) {
-            pageHost = host.parentElement;
-          }
-          if (host.id === "htmlwidget_container" &&
-              pageHost.parentElement === document.body && host.children.length === 1 &&
-              isSoleContent(document.body, pageHost)) {
-            if (!pageBackground) {
-              pageBackground = [document.documentElement, document.body].map(element =>
-                ({element, color: element.style.backgroundColor}));
-            }
-            pageBackground.forEach(({element}) => { element.style.backgroundColor = bgColor; });
-          }
-        }
-      }
-
+      const bgColor = x.option?.backgroundColor || themeObj?.backgroundColor || 'transparent';
+      surface.paint(bgColor);
       rtemisPanels.prepareColors(echarts, x, themeObj);
 
       chart = echarts.init(el, themeName, {
@@ -183,6 +171,12 @@ function rtemisDrawFactory(el, width, height, bounded = false) {
       });
 
       chart.setOption(x.option, true);
+      rtemisA3.fit(chart, x, bounded);
+      if (x.a3 && !bounded && x.a3.autoHeight) {
+        currentHeight = chart.getHeight();
+        el.style.height = `${currentHeight}px`;
+      }
+      onBackground();
       rtemisPanels.fitAxes(chart, x);
       rtemisPanels.fitHeatmap(chart, x);
       rtemisPanels.positionLegend(echarts, chart, x);
@@ -218,11 +212,12 @@ function rtemisDrawFactory(el, width, height, bounded = false) {
       // hook htmlwidgets does not give us.
       if (!el.isConnected) {
         stopWatchingTheme();
-        restorePageBackground();
+        surface.restore();
+        onBackground();
         return;
       }
       if (!currentPayload?.autoTheme) return;
-      if (isDarkMode() === renderedDark) return;
+      if (rtemisDrawIsDarkMode() === renderedDark) return;
       renderChart(currentPayload);
     };
 
@@ -305,6 +300,14 @@ function rtemisDrawFactory(el, width, height, bounded = false) {
         currentWidth = width;
         currentHeight = height;
 
+        if (currentPayload?.a3 && chart) {
+          chart.resize({width, height});
+          rtemisA3.fit(chart, currentPayload, bounded);
+          currentHeight = chart.getHeight();
+          if (!bounded && currentPayload.a3.autoHeight) el.style.height = `${currentHeight}px`;
+          return;
+        }
+
         if (currentPayload?.confusion) {
           if (!bounded) {
             currentHeight = rtemisConfusion.heightForWidth(echarts, currentPayload, currentTheme, width);
@@ -355,7 +358,7 @@ function rtemisDrawFactory(el, width, height, bounded = false) {
 
       dispose: () => {
         stopWatchingTheme();
-        restorePageBackground();
+        surface.restore();
         if (chart) chart.dispose();
         chart = null;
         currentPayload = null;

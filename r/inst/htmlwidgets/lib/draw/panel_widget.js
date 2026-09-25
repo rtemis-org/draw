@@ -1,8 +1,14 @@
 function rtemisPanelFactory(el, width, height) {
     let payload = null, children = [];
+    const surface = rtemisDrawSurface(el);
+    const paint = () => {
+      if (el.isConnected === false) surface.restore();
+      else surface.paint(rtemisPanels.background(payload, rtemisDrawIsDarkMode()));
+    };
     function dispose() {
       children.forEach(child => child.renderer.dispose());
       children = [];
+      surface.restore();
       el.replaceChildren();
     }
     function resize(w, h) {
@@ -31,10 +37,11 @@ function rtemisPanelFactory(el, width, height) {
           Object.assign(element.style, {position: 'absolute', left: cell.x + 'px',
             top: cell.y + 'px', width: cell.width + 'px', height: cell.height + 'px'});
           el.appendChild(element);
-          const renderer = rtemisDrawFactory(element, cell.width, cell.height, true);
+          const renderer = rtemisDrawFactory(element, cell.width, cell.height, true, paint);
           children.push({element, renderer});
           renderer.renderValue(panel);
         });
+        paint();
       },
       resize,
       dispose,

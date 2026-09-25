@@ -138,6 +138,7 @@ save_drawing <- function(widget, filename, width = NULL, height = NULL) {
     meta = payload[intersect(
       names(payload),
       c(
+        "a3",
         "squareCells",
         "nRows",
         "nCols",

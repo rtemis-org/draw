@@ -27,6 +27,14 @@ const registerRenderers = require("../htmlwidgets/lib/draw/renderers.js");
 const rendererNames = registerRenderers(echarts);
 const layout = require("../htmlwidgets/lib/draw/panels.js");
 const confusion = require("../htmlwidgets/lib/draw/confusion.js");
+const a3 = require("../htmlwidgets/lib/draw/a3.js");
+
+// Escape the CSS color as XML attribute text, including caller-supplied values.
+function backgroundRect(payload, width, height) {
+  const color = layout.background(payload).replace(/[&<>"']/g, c =>
+    ({'&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&apos;'}[c]));
+  return `<rect width="${width}" height="${height}" fill="${color}"/>`;
+}
 
 // Read the entire stdin as UTF-8.
 let raw = "";
@@ -66,6 +74,7 @@ process.stdin.on("end", () => {
 			chart = echarts.init(null, panel.theme || null,
 				{renderer: "svg", ssr: true, width: w, height: h});
 			chart.setOption(option);
+			a3.fit(chart, panel, true);
 			layout.fitAxes(chart, panel);
 			layout.fitHeatmap(chart, panel);
 			layout.positionLegend(echarts, chart, panel);
@@ -87,7 +96,7 @@ process.stdin.on("end", () => {
 				return renderPanel(panel, cell.width, cell.height).replace("<svg ",
 					`<svg x="${cell.x}" y="${cell.y}" overflow="hidden" `);
 			});
-			svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">${parts.join("")}</svg>`;
+			svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">${backgroundRect(payload, width, height)}${parts.join("")}</svg>`;
 		} else {
 			svg = renderPanel(payload, width, height);
 		}

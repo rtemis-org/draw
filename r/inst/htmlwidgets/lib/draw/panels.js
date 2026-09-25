@@ -6,6 +6,17 @@
   else root.rtemisPanels = factory();
 })(typeof globalThis !== 'undefined' ? globalThis : this, function() {
   'use strict';
+  // A shared surface has a meaningful fill only when all child backgrounds
+  // agree. Mixed figures remain transparent instead of privileging one panel.
+  function background(payload, dark = false) {
+    const colors = payload.panels.map(panel => {
+      const theme = panel.autoTheme && dark ? panel.themeDark : panel.theme;
+      const color = panel.option?.backgroundColor || theme?.backgroundColor;
+      // ECharts also accepts gradients; those remain local to their child.
+      return typeof color === 'string' ? color : 'transparent';
+    });
+    return colors.every(color => color === colors[0]) ? colors[0] : 'transparent';
+  }
   function cells(count, layout, width, height) {
     const cols = layout.ncol, gap = layout.gap, pad = layout.padding;
     const rows = Math.ceil(count / cols);
@@ -169,5 +180,5 @@
     });
     if (changed) chart.setOption({visualMap: updates});
   }
-  return {cells, fit, fitAxes, fitHeatmap, prepareColors, positionLegend, centerVisualMaps};
+  return {background, cells, fit, fitAxes, fitHeatmap, prepareColors, positionLegend, centerVisualMaps};
 });

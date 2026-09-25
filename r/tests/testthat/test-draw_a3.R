@@ -258,3 +258,76 @@ test_that("A3 legend headings and annotations survive callback-free SVG export",
     expect_false(grepl('<image|__legend_heading|\\{heading\\|', svg))
   }
 })
+
+test_that("A3 shares responsive surface hints and native geometry across renderers", {
+  skip_if_not_installed("rtemis.a3")
+  skip_if_not(nzchar(Sys.which("node")), "node not found")
+  a <- rtemis.a3::create_A3(
+    "MAEPRQEFEVMEDHAGTYGLGDRK",
+    region = list(
+      Domain = rtemis.a3::annotation_range(matrix(c(3L, 10L), ncol = 2))
+    ),
+    site = list(Site = rtemis.a3::annotation_position(8L)),
+    ptm = list(Phosphorylation = rtemis.a3::annotation_position(5L)),
+    processing = list(Cleavage = rtemis.a3::annotation_position(17L))
+  )
+  w <- draw_a3(a, theme = theme_dark())
+  expect_true(w[["x"]][["a3"]][["autoHeight"]])
+  expect_false(draw_a3(a, height = 400)[["x"]][["a3"]][["autoHeight"]])
+  expect_false(draw_a3(a, grid = Grid(left = 40))[["x"]][["a3"]][["autoGrid"]])
+  expect_identical(
+    draw(setup_A3Config(), data = a)[["x"]][["a3"]],
+    w[["x"]][["a3"]]
+  )
+  expect_false(draw(setup_A3Config(), data = a, height = 400)[["x"]][["a3"]][[
+    "autoHeight"
+  ]])
+  input <- tempfile(fileext = ".json")
+  on.exit(unlink(input), add = TRUE)
+  jsonlite::write_json(
+    list(
+      payload = strip_js(w[["x"]]),
+      echarts = system.file(
+        "htmlwidgets/lib/echarts/echarts.min.js",
+        package = "rtemis.draw"
+      ),
+      layout = system.file(
+        "htmlwidgets/lib/draw/panels.js",
+        package = "rtemis.draw"
+      ),
+      binding = system.file(
+        "htmlwidgets/rtemis-draw.js",
+        package = "rtemis.draw"
+      )
+    ),
+    input,
+    auto_unbox = TRUE,
+    null = "null",
+    digits = NA
+  )
+  out <- system2(
+    Sys.which("node"),
+    c(shQuote(test_path("fixtures", "a3_geometry.js")), shQuote(input)),
+    stdout = TRUE,
+    stderr = TRUE
+  )
+  expect_null(attr(out, "status"), info = paste(out, collapse = "\n"))
+  expect_match(paste(out, collapse = "\n"), "A3 spacing")
+})
+
+
+test_that("A3 empty display choices and zero marker configs still export", {
+  skip_if_not_installed("rtemis.a3")
+  skip_if_not(nzchar(Sys.which("node")), "node not found")
+  a <- rtemis.a3::create_A3("MAEPR")
+  path <- tempfile(fileext = ".svg")
+  on.exit(unlink(path), add = TRUE)
+  blank <- draw_a3(a, show_markers = FALSE, show_labels = FALSE)
+  expect_identical(blank[["x"]][["option"]][["legend"]][["data"]], character(0))
+  expect_identical(blank[["x"]][["option"]][["series"]], character(0))
+  expect_no_error(save_drawing(blank, path))
+  expect_no_error(save_drawing(
+    draw(setup_A3Config(marker_size = 0), data = a),
+    path
+  ))
+})
