@@ -105,12 +105,79 @@ save_drawing <- function(widget, filename, width = NULL, height = NULL) {
   }
   payload <- widget[["x"]]
   option <- strip_js(payload[["option"]], path = "option")
+  option <- static_aspect(option, payload[["aspect"]], width, height)
   # Automatic themes resolve to light for offline export. An explicit theme
   # remains the export theme; static output does not query OS preferences.
   theme <- strip_js(payload[["theme"]], path = "theme")
   save_svg_ssr(option, theme, filename, width, height)
 
   invisible(filename)
+}
+
+#' Fit a fixed-aspect plotting grid into a static image
+#'
+#' Uses the same ratio and pixel margins as the browser binding. Static export
+#' respects both requested canvas dimensions instead of growing the host height.
+#' @param x List: Compiled ECharts option.
+#' @param aspect Optional List: Ratio and pixel margins from render_meta().
+#' @param width,height Numeric: Validated canvas dimensions.
+#' @return List containing the resolved plotting-grid dimensions.
+#' @keywords internal
+#' @noRd
+static_aspect <- new_generic("static_aspect", "x")
+method(static_aspect, class_list) <- function(x, aspect, width, height) {
+  if (is.null(aspect)) {
+    return(x)
+  }
+  grid <- x[["grid"]]
+  if (is.null(grid) || is.null(names(grid))) {
+    abort(
+      "Fixed-aspect SVG export requires one named plotting grid.",
+      class = c("rtemis_export_error", "rtemis_input_error")
+    )
+  }
+  fields <- c("ratio", "leftPx", "rightPx", "topPx", "botPx")
+  if (
+    !all(vapply(
+      aspect[fields],
+      function(v) {
+        is.numeric(v) &&
+          length(v) == 1L &&
+          is.finite(v)
+      },
+      logical(1)
+    )) ||
+      aspect[["ratio"]] <= 0 ||
+      any(unlist(aspect[fields[-1L]]) < 0)
+  ) {
+    abort(
+      "Supply a positive aspect ratio and finite nonnegative pixel margins.",
+      class = c("rtemis_export_error", "rtemis_input_error")
+    )
+  }
+  available <- min(
+    width - aspect[["leftPx"]] - aspect[["rightPx"]],
+    (height - aspect[["topPx"]] - aspect[["botPx"]]) / aspect[["ratio"]]
+  )
+  preferred <- aspect[["widthPx"]] %||% available
+  if (
+    !is.numeric(preferred) ||
+      length(preferred) != 1L ||
+      !is.finite(preferred) ||
+      preferred <= 0 ||
+      available <= 0
+  ) {
+    abort(
+      "Increase the SVG dimensions to leave room for the plotting grid and margins.",
+      class = c("rtemis_export_error", "rtemis_input_error")
+    )
+  }
+  grid[["width"]] <- min(preferred, available)
+  grid[["height"]] <- grid[["width"]] * aspect[["ratio"]]
+  grid[["containLabel"]] <- FALSE
+  grid[["outerBoundsMode"]] <- "none"
+  x[["grid"]] <- grid
+  x
 }
 
 #' Prepare an option subtree for static rendering

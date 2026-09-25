@@ -146,7 +146,7 @@ test_that("the A3 config round-trips without needing an A3 object", {
 
 test_that("every chart type is registered and agrees with its class", {
   registry <- chart_registry()
-  expect_length(registry, 16L)
+  expect_length(registry, 17L)
   for (type in names(registry)) {
     entry <- registry[[type]]
     expect_identical(chart_type_of(entry[["cls"]]), type)

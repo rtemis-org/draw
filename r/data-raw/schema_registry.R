@@ -32,6 +32,7 @@ chart_family <- list(
 # here: it comes from `chart_registry()`, the same one `read_chart_config()`
 # uses, so a chart type cannot exist for reading and not for publishing.
 chart_descriptions <- c(
+  roc = "Receiver operating characteristic curves with pooled or per-resample AUC summaries.",
   confusion = "Confusion counts and per-class summaries in one or more panels.",
   significance = "Volcano or categorical significance plots of estimates and adjusted p-values.",
   scatter = paste0(

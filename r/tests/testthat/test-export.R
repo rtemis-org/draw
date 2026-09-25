@@ -353,3 +353,22 @@ test_that("SVG dimensions follow numeric widget dimensions unless overridden", {
     fixed = TRUE
   )
 })
+
+test_that("static aspect layout fits both canvas dimensions and rejects unusable margins", {
+  option <- list(grid = list(left = 50, right = 50, top = 20, bottom = 30))
+  hint <- list(ratio = 2, leftPx = 50, rightPx = 50, topPx = 20, botPx = 30)
+  expect_identical(static_aspect(option, NULL, 300, 200), option)
+  out <- static_aspect(option, hint, 300, 200)
+  expect_equal(out[["grid"]][["width"]], 75)
+  expect_equal(out[["grid"]][["height"]], 150)
+  expect_identical(out[["grid"]][["outerBoundsMode"]], "none")
+  hint[["widthPx"]] <- 40
+  expect_equal(static_aspect(option, hint, 300, 200)[["grid"]][["width"]], 40)
+  expect_error(static_aspect(option, hint, 50, 200), "Increase")
+  hint[["ratio"]] <- 0
+  expect_error(static_aspect(option, hint, 300, 200), "positive aspect")
+  expect_error(
+    static_aspect(list(grid = list(list())), hint, 300, 200),
+    "one named"
+  )
+})

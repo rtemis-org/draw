@@ -190,6 +190,8 @@ draw_object_session <- function(x, ...) {
       cls
     ) <- extract_classification_plot_data
     S7::method(plot_true_pred, cls) <- draw_classification_predictions
+    S7::method(roc_plot_data, cls) <- extract_roc_plot_data
+    S7::method(plot_roc, cls) <- draw_model_roc
   }
   invisible(NULL)
 } # /rtemis.draw::.register_rtemis_methods
