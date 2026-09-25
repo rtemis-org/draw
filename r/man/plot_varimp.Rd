@@ -10,7 +10,8 @@ plot_varimp(x, ...)
 \item{x}{\code{rtemis::Supervised} or \code{rtemis::SupervisedRes}: Fitted model result.}
 
 \item{...}{Additional arguments to \code{\link[=draw_varimp]{draw_varimp()}}, including \code{measure},
-\code{type}, \code{top_n}, \code{rank_by}, \code{summary}, \code{absent}, and \code{title}. Fold IDs come from
+\code{type}, \code{top_n}, \code{rank_by}, \code{decreasing}, \code{bar_width}, \code{summary}, \code{absent},
+and \code{title}. Fold IDs come from
 the model and cannot be overridden.}
 }
 \value{

@@ -22,6 +22,7 @@ draw_varimp(
   element_id = NULL,
   filename = NULL,
   type = "bar",
+  decreasing = TRUE,
   ...
 )
 }
@@ -70,6 +71,9 @@ container. \code{NULL} lets htmlwidgets generate one.}
 
 \item{type}{Character {"bar", "boxplot"}: Summary or fold-distribution view.}
 
+\item{decreasing}{Logical: Select and display ranks from largest to smallest.
+FALSE selects and displays the smallest ranks first.}
+
 \item{...}{Additional settings for \code{\link[=setup_BarConfig]{setup_BarConfig()}} or
 \code{\link[=setup_BoxplotConfig]{setup_BoxplotConfig()}}, according to \code{type}. Boxplots accept \code{boxpoints},
 \code{quartiles}, \code{whisker}, and point styling; unset \code{boxpoints} shows all scores.
@@ -87,10 +91,19 @@ preserve named measures and optionally identify resamples with \code{fold}.
 \details{
 Resampled scores are summarized before selection. Magnitude ranking uses
 the absolute summary, not the mean absolute fold score. Signed ranking uses
-the summary itself. Ties retain first appearance in the input. The strongest
-selected variable appears at the top of horizontal bars or the left of
+the summary itself. \code{decreasing = FALSE} selects the smallest ranks first.
+Ties retain first appearance in the input. The first selected variable
+appears at the top of horizontal bars or the left of
 vertical bars or boxes. Zero scores are retained. For distributions, the
 summary controls selection and ordering only; boxes use the fold values.
+Ranking direction is never inferred from a measure name. For smaller-is-better
+scores, use \verb{rank_by = "signed", decreasing = FALSE}. Averaging fold p-values
+does not produce a combined p-value; choose a suitable summary outside this
+function when the score's interpretation requires it.
+
+Set \code{bar_width} to a pixel thickness for separate zero-to-score segments.
+This uses native bars and covers the legacy importance \code{type = "line"}
+geometry without connecting different variables or adding a new chart type.
 
 Explicit NA scores and wholly unavailable folds are excluded from each
 variable's summary. Variables with no available score are omitted.

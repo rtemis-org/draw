@@ -217,7 +217,7 @@ method(varimp_distribution, class_data.frame) <- function(
 #' @param data Data frame: Normalized importance records.
 #' @inheritParams draw_varimp
 #' @return Data frame: `variable`, `importance`, `n_available`, `n_folds`, and
-#'   `n_zero`, in descending rank order.
+#'   `n_zero`, in the requested rank order.
 #' @keywords internal
 #' @noRd
 summarize_varimp <- new_generic("summarize_varimp", "data")
@@ -229,11 +229,13 @@ method(summarize_varimp, class_data.frame) <- function(
   rank_by = "magnitude",
   summary = "mean",
   absent = "missing",
-  folds = NULL
+  folds = NULL,
+  decreasing = TRUE
 ) {
   measure <- varimp_measure(data, measure)
   check_character_scalar(rank_by)
   check_enum(rank_by, c("magnitude", "signed"))
+  check_logical_scalar(decreasing)
   check_character_scalar(summary)
   check_enum(summary, c("mean", "median"))
   check_character_scalar(absent)
@@ -327,7 +329,7 @@ method(summarize_varimp, class_data.frame) <- function(
     )
   }
   rank <- if (rank_by == "magnitude") abs(scores[keep]) else scores[keep]
-  keep <- keep[order(-rank, seq_along(rank))]
+  keep <- keep[order(if (decreasing) -rank else rank, seq_along(rank))]
   if (!is.null(top_n)) {
     keep <- head(keep, top_n)
   }
@@ -352,10 +354,19 @@ method(summarize_varimp, class_data.frame) <- function(
 #' @details
 #' Resampled scores are summarized before selection. Magnitude ranking uses
 #' the absolute summary, not the mean absolute fold score. Signed ranking uses
-#' the summary itself. Ties retain first appearance in the input. The strongest
-#' selected variable appears at the top of horizontal bars or the left of
+#' the summary itself. `decreasing = FALSE` selects the smallest ranks first.
+#' Ties retain first appearance in the input. The first selected variable
+#' appears at the top of horizontal bars or the left of
 #' vertical bars or boxes. Zero scores are retained. For distributions, the
 #' summary controls selection and ordering only; boxes use the fold values.
+#' Ranking direction is never inferred from a measure name. For smaller-is-better
+#' scores, use `rank_by = "signed", decreasing = FALSE`. Averaging fold p-values
+#' does not produce a combined p-value; choose a suitable summary outside this
+#' function when the score's interpretation requires it.
+#'
+#' Set `bar_width` to a pixel thickness for separate zero-to-score segments.
+#' This uses native bars and covers the legacy importance `type = "line"`
+#' geometry without connecting different variables or adding a new chart type.
 #'
 #' Explicit NA scores and wholly unavailable folds are excluded from each
 #' variable's summary. Variables with no available score are omitted.
@@ -398,6 +409,8 @@ method(summarize_varimp, class_data.frame) <- function(
 #'   NULL includes all variables with a summary; fractions are not accepted.
 #' @param rank_by Character {"magnitude", "signed"}: Rank by absolute or signed
 #'   summary, respectively.
+#' @param decreasing Logical: Select and display ranks from largest to smallest.
+#'   FALSE selects and displays the smallest ranks first.
 #' @param summary Character {"mean", "median"}: Summary across folds.
 #' @param absent Character {"missing", "zero"}: Meaning of omitted variable
 #'   rows within a fold reporting the selected measure.
@@ -446,6 +459,7 @@ draw_varimp <- function(
   element_id = NULL,
   filename = NULL,
   type = "bar",
+  decreasing = TRUE,
   ...
 ) {
   check_character_scalar(type)
@@ -457,6 +471,7 @@ draw_varimp <- function(
     measure = measure,
     top_n = top_n,
     rank_by = rank_by,
+    decreasing = decreasing,
     summary = summary,
     absent = absent,
     folds = folds

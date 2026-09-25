@@ -166,3 +166,55 @@ test_that("the bar schema declares y as an array of strings", {
   expect_identical(y[["items"]][["type"]], "string")
   expect_identical(s[["properties"]][["type"]][["const"]], "bar")
 })
+
+
+test_that("fixed bar thickness validates and round-trips through the schema", {
+  cfg <- setup_BarConfig(x = "g", y = c("u", "v"), bar_width = 3)
+  expect_identical(cfg@origin[["bar_width"]], "user")
+  expect_null(BarConfig()@bar_width)
+  schema <- chart_schema(
+    BarConfig,
+    id = "https://schema.rtemis.org/chart/bar/v1/schema.json",
+    title = "Bar",
+    description = "Bar chart."
+  )
+  expect_equal(schema[["properties"]][["bar_width"]][["exclusiveMinimum"]], 0)
+  path <- tempfile(fileext = ".json")
+  write_chart_config(cfg, path)
+  expect_identical(read_chart_config(path), cfg)
+  for (horizontal in c(TRUE, FALSE)) {
+    cfg@horizontal <- horizontal
+    opt <- to_list(compile(cfg, data = bar_data()))
+    expect_equal(
+      vapply(opt[["series"]], function(s) s[["barWidth"]], numeric(1)),
+      c(3, 3)
+    )
+  }
+  for (width in list(0, -1, Inf, NA_real_, "20%", c(2, 3))) {
+    expect_error(setup_BarConfig(bar_width = width))
+    expect_error(draw_bar("a", 1, bar_width = width))
+  }
+  expect_null(to_list(compile(
+    setup_BarConfig(x = "g", y = "u"),
+    data = bar_data()
+  ))[["series"]][[1]][["barWidth"]])
+})
+
+test_that("fixed thickness reaches every vector bar styling path", {
+  for (palette in list(NULL, "#123456", c("#123456", "#654321"))) {
+    opt <- draw_bar(c("a", "b"), c(-3, 2), palette = palette, bar_width = 4)[[
+      "x"
+    ]][["option"]]
+    expect_equal(opt[["series"]][[1]][["barWidth"]], 4)
+  }
+  opt <- draw_bar(
+    c("a", "b"),
+    list(u = c(-3, 2), v = c(1, 2)),
+    stack = TRUE,
+    bar_width = 5
+  )[["x"]][["option"]]
+  expect_equal(
+    vapply(opt[["series"]], function(s) s[["barWidth"]], numeric(1)),
+    c(5, 5)
+  )
+})

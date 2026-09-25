@@ -33,7 +33,8 @@
 #'
 #' @param x `rtemis::Supervised` or `rtemis::SupervisedRes`: Fitted model result.
 #' @param ... Additional arguments to [rtemis.draw::draw_varimp()], including `measure`,
-#'   `type`, `top_n`, `rank_by`, `summary`, `absent`, and `title`. Fold IDs come from
+#'   `type`, `top_n`, `rank_by`, `decreasing`, `bar_width`, `summary`, `absent`,
+#'   and `title`. Fold IDs come from
 #'   the model and cannot be overridden.
 #' @return htmlwidget: ECharts importance bars or fold distributions.
 #' @export

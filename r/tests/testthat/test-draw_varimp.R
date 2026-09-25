@@ -234,3 +234,54 @@ test_that("materialized importance bars survive config and data JSON round trips
   expect_length(parsed[["series"]][[1L]][["data"]], 1L)
   expect_true(is.list(parsed[["yAxis"]][["data"]]))
 })
+
+
+test_that("ascending importance selection preserves scores and stable ties", {
+  data <- varimp_data(c(negative = -8, positive = 3, tied = -3, zero = 0))
+  expect_identical(
+    summarize_varimp(data, decreasing = FALSE)[["variable"]],
+    c("zero", "positive", "tied", "negative")
+  )
+  expect_identical(
+    summarize_varimp(data, decreasing = FALSE, rank_by = "signed", top_n = 2)[[
+      "variable"
+    ]],
+    c("negative", "tied")
+  )
+  for (bad in list(NA, NULL, 1, "FALSE", c(TRUE, FALSE))) {
+    expect_error(draw_varimp(data, decreasing = bad))
+  }
+  scores <- data.frame(
+    variable = rep(c("a", "b", "c"), each = 2),
+    fold = rep(c("A", "B"), 3),
+    risk = c(4, 6, 1, 3, 2, 2)
+  )
+  for (horizontal in c(TRUE, FALSE)) {
+    for (type in c("bar", "boxplot")) {
+      args <- list(
+        scores,
+        type = type,
+        top_n = 2,
+        rank_by = "signed",
+        decreasing = FALSE,
+        horizontal = horizontal
+      )
+      if (type == "bar") {
+        args[["bar_width"]] <- 3
+      }
+      opt <- do.call(draw_varimp, args)[["x"]][["option"]]
+      labels <- opt[[if (horizontal) "yAxis" else "xAxis"]][["data"]]
+      expect_identical(labels, if (horizontal) c("c", "b") else c("b", "c"))
+      if (type == "bar") {
+        expect_equal(opt[["series"]][[1]][["barWidth"]], 3)
+        expect_equal(unlist(opt[["series"]][[1]][["data"]]), c(2, 2))
+      } else {
+        points <- opt[["series"]][[2]][["data"]]
+        expect_equal(
+          sort(vapply(points, function(p) p[["value"]][[2]], numeric(1))),
+          c(1, 2, 2, 3)
+        )
+      }
+    }
+  }
+})

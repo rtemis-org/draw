@@ -1483,8 +1483,12 @@ bar_option <- function(
   xlab = NULL,
   ylab = NULL,
   title = NULL,
-  margins = DEFAULT_MARGINS
+  margins = DEFAULT_MARGINS,
+  bar_width = NULL
 ) {
+  # Validate this shared setting through the portable config property on both
+  # the vector and config paths; the low-level ECharts class also allows strings.
+  bar_width <- BarConfig(bar_width = bar_width)@bar_width
   stack_group <- if (stack) "total" else NULL
 
   if (is.list(y) && !is.null(names(y))) {
@@ -1495,13 +1499,19 @@ bar_option <- function(
       BarSeries(
         name = series_names[i],
         data = y[[i]],
+        bar_width = bar_width,
         stack = stack_group,
         color = colors[i]
       )
     })
   } else {
     if (is.null(palette) || length(palette) <= 1L) {
-      series <- list(BarSeries(data = y, stack = stack_group, color = palette))
+      series <- list(BarSeries(
+        data = y,
+        stack = stack_group,
+        color = palette,
+        bar_width = bar_width
+      ))
     } else {
       colors <- rep_len(palette_colors(palette), length(y))
       data_items <- lapply(seq_along(y), function(i) {
@@ -1510,7 +1520,11 @@ bar_option <- function(
           itemStyle = list(color = colors[[i]])
         )
       })
-      series <- list(BarSeries(data = data_items, stack = stack_group))
+      series <- list(BarSeries(
+        data = data_items,
+        stack = stack_group,
+        bar_width = bar_width
+      ))
     }
   }
 
@@ -1553,14 +1567,15 @@ bar_option <- function(
 #' @param palette Optional Character: Bar color or colors. For multiple series,
 #'   colors are applied per series and recycled as needed. For a single series,
 #'   a single color styles the whole series; multiple colors are recycled
-#'   across individual bars. `color` takes precedence over the theme palette.
+#'   across individual bars. `palette` takes precedence over the theme palette.
 #' @param stack Logical: Whether to stack bars.
 #' @param horizontal Logical: Whether to draw horizontal bars.
+#' @inheritParams BarConfig
 #' @param xlab Optional Character: X-axis title (bottom axis).
 #' @param ylab Optional Character: Y-axis title (left axis).
 #' @param title Optional Character: Chart title.
 #' @param theme Optional [Theme]: Theme override. The palette inside the theme can be
-#'   overridden per-chart with the `color` argument.
+#'   overridden per-chart with the `palette` argument.
 #' @param margins Optional Named numeric vector or named list: Plot margins in
 #'   pixels (or percentage strings) for any of `"top"`, `"right"`,
 #'   `"bottom"`, `"left"`. Unspecified sides keep echarts' default auto-sizing.
@@ -1590,7 +1605,8 @@ draw_bar <- function(
   width = NULL,
   height = NULL,
   element_id = NULL,
-  filename = NULL
+  filename = NULL,
+  bar_width = NULL
 ) {
   opt <- bar_option(
     x = x,
@@ -1598,6 +1614,7 @@ draw_bar <- function(
     palette = palette,
     stack = stack,
     horizontal = horizontal,
+    bar_width = bar_width,
     xlab = xlab,
     ylab = ylab,
     title = title,

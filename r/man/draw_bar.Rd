@@ -18,7 +18,8 @@ draw_bar(
   width = NULL,
   height = NULL,
   element_id = NULL,
-  filename = NULL
+  filename = NULL,
+  bar_width = NULL
 )
 }
 \arguments{
@@ -29,7 +30,7 @@ draw_bar(
 \item{palette}{Optional Character: Bar color or colors. For multiple series,
 colors are applied per series and recycled as needed. For a single series,
 a single color styles the whole series; multiple colors are recycled
-across individual bars. \code{color} takes precedence over the theme palette.}
+across individual bars. \code{palette} takes precedence over the theme palette.}
 
 \item{stack}{Logical: Whether to stack bars.}
 
@@ -42,7 +43,7 @@ across individual bars. \code{color} takes precedence over the theme palette.}
 \item{title}{Optional Character: Chart title.}
 
 \item{theme}{Optional \link{Theme}: Theme override. The palette inside the theme can be
-overridden per-chart with the \code{color} argument.}
+overridden per-chart with the \code{palette} argument.}
 
 \item{margins}{Optional Named numeric vector or named list: Plot margins in
 pixels (or percentage strings) for any of \code{"top"}, \code{"right"},
@@ -58,6 +59,9 @@ container. \code{NULL} lets htmlwidgets generate one.}
 
 \item{filename}{Optional Character: If provided, save the widget to this file via
 \code{\link[=save_drawing]{save_drawing()}}.}
+
+\item{bar_width}{Optional Numeric \verb{(0, Inf)}: Bar thickness in pixels.
+NULL lets ECharts size bars from the category spacing.}
 }
 \value{
 htmlwidget: Widget object.
