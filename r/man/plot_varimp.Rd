@@ -10,11 +10,11 @@ plot_varimp(x, ...)
 \item{x}{\code{rtemis::Supervised} or \code{rtemis::SupervisedRes}: Fitted model result.}
 
 \item{...}{Additional arguments to \code{\link[=draw_varimp]{draw_varimp()}}, including \code{measure},
-\code{top_n}, \code{rank_by}, \code{summary}, \code{absent}, and \code{title}. Fold IDs come from
+\code{type}, \code{top_n}, \code{rank_by}, \code{summary}, \code{absent}, and \code{title}. Fold IDs come from
 the model and cannot be overridden.}
 }
 \value{
-htmlwidget: ECharts variable-importance bars.
+htmlwidget: ECharts importance bars or fold distributions.
 }
 \description{
 Draw importance recorded by a rtemis \code{Supervised} or \code{SupervisedRes} object
@@ -33,6 +33,11 @@ from sparse split summaries: omitted variables in a reporting fold have
 zero importance. These measures use \code{absent = "zero"}. Other measures use
 \code{absent = "missing"}; pass \code{absent} explicitly to declare another contract.
 Explicit NA values and wholly unavailable folds are always kept missing.
+
+Use \code{type = "boxplot"} for resampled fold distributions with all contributing
+scores overlaid. Summary bars remain the default. Both views share selection,
+ranking, and the producer's missing-score contract. Ordinary models have no
+fold distribution and require the bar view.
 
 Models without any importance records produce an informative error.
 The default title names the algorithm; \code{title = NULL} omits it.

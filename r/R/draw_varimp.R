@@ -1,6 +1,7 @@
 # draw_varimp.R
 # ::rtemis.draw::
 # 2026- EDG rtemis.org
+# spec: draw/first-cran-release#variable-importance
 
 # %% varimp_data ----
 #' Normalize variable-importance records
@@ -119,8 +120,96 @@ method(varimp_measure, class_data.frame) <- function(data, measure = NULL) {
 }
 
 
+#' Resolve the fold universe and reporting folds for one importance measure
+#' @param data Data frame: Normalized importance records.
+#' @param measure Character: Selected numeric measure column.
+#' @param folds Optional Character: Complete fold IDs, including unavailable folds.
+#' @return List: Full fold IDs and IDs reporting at least one score.
+#' @keywords internal
+#' @noRd
+varimp_fold_info <- new_generic("varimp_fold_info", "data")
+method(varimp_fold_info, class_data.frame) <- function(
+  data,
+  measure,
+  folds = NULL
+) {
+  observed_folds <- unique(data[["fold"]])
+  if (!is.null(folds)) {
+    if (
+      is.null(observed_folds) ||
+        !is.character(folds) ||
+        !is.null(dim(folds)) ||
+        !length(folds) ||
+        anyNA(folds) ||
+        any(!nzchar(trimws(folds))) ||
+        anyDuplicated(folds) ||
+        !all(observed_folds %in% folds)
+    ) {
+      abort(
+        "Supply `folds` as unique nonempty names containing every observed fold, ",
+        "and include a `fold` column in the data.",
+        class = c("rtemis_value_error", "rtemis_input_error")
+      )
+    }
+  }
+  list(
+    ids = folds %||% observed_folds,
+    scored = unique(data[["fold"]][!is.na(data[[measure]])])
+  )
+}
+
+#' Materialize selected variable-by-fold scores for portable boxplots
+#'
+#' Allocate only selected variables, after ranking. Missing rows become zero
+#' only under the same reporting-fold contract used by the summary renderer.
+#' Explicit missing values and entirely unavailable folds remain missing.
+#' @param data Data frame: Normalized importance records with a fold column.
+#' @param selected Data frame: Selected summary rows in display order.
+#' @param measure Character: Selected numeric measure column.
+#' @param absent Character: Validated omitted-row policy.
+#' @param folds Optional Character: Complete fold IDs.
+#' @return List: Wide data, variable column names, and observation column name.
+#' @keywords internal
+#' @noRd
+varimp_distribution <- new_generic("varimp_distribution", "data")
+method(varimp_distribution, class_data.frame) <- function(
+  data,
+  selected,
+  measure,
+  absent,
+  folds = NULL
+) {
+  info <- varimp_fold_info(data, measure, folds)
+  if (is.null(info[["ids"]])) {
+    abort(
+      "Supply fold-level importance records with a `fold` column for type = 'boxplot'.",
+      class = c("rtemis_value_error", "rtemis_input_error")
+    )
+  }
+  variables <- selected[["variable"]]
+  observation <- ".fold"
+  while (observation %in% variables) {
+    observation <- paste0(observation, "_")
+  }
+  wide <- setNames(data.frame(info[["ids"]]), observation)
+  # Index once instead of rescanning all input rows for each selected variable.
+  at <- which(data[["variable"]] %in% variables)
+  rows <- split(at, factor(data[["variable"]][at], levels = variables))
+  for (variable in variables) {
+    at <- rows[[variable]]
+    matched <- match(info[["ids"]], data[["fold"]][at])
+    values <- data[[measure]][at][matched]
+    if (absent == "zero") {
+      values[is.na(matched) & info[["ids"]] %in% info[["scored"]]] <- 0
+    }
+    wide[[variable]] <- values
+  }
+  list(data = wide, columns = variables, observation = observation)
+}
+
+
 # %% summarize_varimp ----
-#' Summarize and select importance records for a bar chart
+#' Summarize and select importance records for either view
 #'
 #' Missing scores are handled before ranking. Ties retain first appearance.
 #' Zero padding uses counts rather than a dense variable-by-fold matrix.
@@ -159,37 +248,16 @@ method(summarize_varimp, class_data.frame) <- function(
       )
     }
   }
-  observed_folds <- unique(data[["fold"]])
-  if (!is.null(folds)) {
-    if (
-      is.null(observed_folds) ||
-        !is.character(folds) ||
-        !is.null(dim(folds)) ||
-        !length(folds) ||
-        anyNA(folds) ||
-        any(!nzchar(trimws(folds))) ||
-        anyDuplicated(folds) ||
-        !all(observed_folds %in% folds)
-    ) {
-      abort(
-        "Supply `folds` as unique nonempty names containing every observed fold, ",
-        "and include a `fold` column in the data.",
-        class = c("rtemis_value_error", "rtemis_input_error")
-      )
-    }
-  }
-  n_folds <- if (is.null(observed_folds)) {
-    1L
-  } else {
-    length(folds %||% observed_folds)
-  }
+  info <- varimp_fold_info(data, measure, folds)
+  observed_folds <- info[["ids"]]
+  n_folds <- if (is.null(observed_folds)) 1L else length(observed_folds)
   variables <- unique(data[["variable"]])
   rows <- split(seq_len(nrow(data)), match(data[["variable"]], variables))
   rows <- rows[as.character(seq_along(variables))]
   # A wholly unavailable fold/measure has no known sparse result. Only folds
   # reporting at least one score can contribute structural zeros. An explicit
   # missing row is still unknown, even when absent rows mean zero.
-  scored_folds <- unique(data[["fold"]][!is.na(data[[measure]])])
+  scored_folds <- info[["scored"]]
   in_scored_fold <- data[["fold"]] %in% scored_folds
   n_zero <- vapply(
     rows,
@@ -276,7 +344,8 @@ method(summarize_varimp, class_data.frame) <- function(
 # %% draw_varimp ----
 #' Draw Variable Importance
 #'
-#' Draw signed importance scores as bars using a [BarConfig]. Numeric input
+#' Draw signed importance summaries with [BarConfig], or fold distributions
+#' with [BoxplotConfig] using `type = "boxplot"`. Numeric input
 #' uses its names as variable labels, or row numbers when unnamed. Tables
 #' preserve named measures and optionally identify resamples with `fold`.
 #'
@@ -285,7 +354,8 @@ method(summarize_varimp, class_data.frame) <- function(
 #' the absolute summary, not the mean absolute fold score. Signed ranking uses
 #' the summary itself. Ties retain first appearance in the input. The strongest
 #' selected variable appears at the top of horizontal bars or the left of
-#' vertical bars. Zero scores are retained.
+#' vertical bars or boxes. Zero scores are retained. For distributions, the
+#' summary controls selection and ordering only; boxes use the fold values.
 #'
 #' Explicit NA scores and wholly unavailable folds are excluded from each
 #' variable's summary. Variables with no available score are omitted.
@@ -298,7 +368,14 @@ method(summarize_varimp, class_data.frame) <- function(
 #' summary describes the available folds, not an estimate guaranteed to be
 #' unbiased for all folds. When any selected variable has incomplete coverage,
 #' category labels show contributing/total fold counts and the score axis says
-#' "available folds". No missing rows are added to the input.
+#' "available folds". The input is never modified.
+#'
+#' Boxplots require fold-level records. Every available score (including known
+#' structural zeros) is overlaid by default, with its fold ID in the tooltip.
+#' Missing values remain missing in the materialized table and are counted in
+#' a caption. Boxes describe resample variability, not a confidence interval.
+#' See [draw_boxplot()] for quartiles, whiskers, and point placement. Use
+#' `whisker = 0` for full-range whiskers, as in the current live importance view.
 #'
 #' For portable rendering, materialize the selected, summarized `label`
 #' and `importance` columns in display order and bind them using
@@ -306,7 +383,11 @@ method(summarize_varimp, class_data.frame) <- function(
 #' contributing/total fold counts alongside these columns. Set `horizontal`,
 #' axis labels, and title explicitly. That table and config reproduce the view
 #' without a fitted model or R callbacks. The raw-data summary and selection
-#' options are not yet part of a shared visualization schema.
+#' options are not yet part of a shared visualization schema. For distributions,
+#' use one numeric column per selected variable and an observation column for
+#' the complete fold universe. Bind those columns and the displayed coverage
+#' labels through [setup_BoxplotConfig()]. Only selected variables are widened;
+#' selection does not discard folds needed to identify structural zeros.
 #'
 #' @param x Numeric vector, single-column matrix, or data frame: Importance
 #'   scores. Tables require `variable` and named numeric measures, optionally
@@ -322,7 +403,8 @@ method(summarize_varimp, class_data.frame) <- function(
 #'   rows within a fold reporting the selected measure.
 #' @param folds Optional Character: Full set of fold IDs, including folds with
 #'   no rows. NULL uses the IDs observed in the `fold` column.
-#' @param horizontal Logical: Draw horizontal bars.
+#' @param horizontal Logical: Draw horizontal bars or boxes.
+#' @param type Character {"bar", "boxplot"}: Summary or fold-distribution view.
 #' @param xlab,ylab Optional Character: Physical axis labels. NULL derives the
 #'   score label from the measure and summary and labels the variable axis.
 #' @param title Optional Character: Chart title.
@@ -331,9 +413,11 @@ method(summarize_varimp, class_data.frame) <- function(
 #'   override its series colors.
 #' @param height Optional Character or Numeric: Widget height. NULL allocates
 #'   space per selected variable for horizontal bars.
-#' @param ... Additional appearance arguments to [setup_BarConfig()], such as
-#'   `palette` and `margin_top`. Data bindings and orientation are set here.
-#' @return htmlwidget: ECharts variable-importance bars.
+#' @param ... Additional settings for [setup_BarConfig()] or
+#'   [setup_BoxplotConfig()], according to `type`. Boxplots accept `boxpoints`,
+#'   `quartiles`, `whisker`, and point styling; unset `boxpoints` shows all scores.
+#'   Data bindings, labels, and orientation are set here.
+#' @return htmlwidget: ECharts importance bars or fold distributions.
 #' @export
 #' @examples
 #' draw_varimp(c(age = 0.8, weight = -0.4, height = 0.2))
@@ -343,6 +427,7 @@ method(summarize_varimp, class_data.frame) <- function(
 #'   gain = c(0.8, 0.4, 0.6)
 #' )
 #' draw_varimp(scores, measure = "gain", absent = "zero")
+#' draw_varimp(scores, measure = "gain", type = "boxplot", absent = "zero")
 draw_varimp <- function(
   x,
   measure = NULL,
@@ -360,8 +445,11 @@ draw_varimp <- function(
   height = NULL,
   element_id = NULL,
   filename = NULL,
+  type = "bar",
   ...
 ) {
+  check_character_scalar(type)
+  check_enum(type, c("bar", "boxplot"))
   data <- varimp_data(x)
   measure <- varimp_measure(data, measure)
   values <- summarize_varimp(
@@ -375,7 +463,7 @@ draw_varimp <- function(
   )
   check_logical_scalar(horizontal)
   score_label <- labelify(
-    if ("fold" %in% names(data)) {
+    if (type == "bar" && "fold" %in% names(data)) {
       paste(summary, measure)
     } else {
       measure
@@ -396,18 +484,53 @@ draw_varimp <- function(
   if (horizontal) {
     values <- values[rev(seq_len(nrow(values))), , drop = FALSE]
   }
-  config <- setup_BarConfig(
-    x = "label",
-    y = "importance",
-    horizontal = horizontal,
-    xlab = xlab %||% if (horizontal) score_label else "Variable",
-    ylab = ylab %||% if (horizontal) "Variable" else score_label,
-    title = title,
-    ...
-  )
+  if (type == "boxplot") {
+    records <- varimp_distribution(data, values, measure, absent, folds)
+    settings <- list(...)
+    reserved <- intersect(names(settings), c("group", "observation", "labels"))
+    if (length(reserved)) {
+      abort(
+        "Omit distribution bindings from `...`: ",
+        paste(reserved, collapse = ", "),
+        ". draw_varimp() sets them from variable and fold identities.",
+        class = c("rtemis_value_error", "rtemis_input_error")
+      )
+    }
+    if (!"boxpoints" %in% names(settings)) {
+      settings[["boxpoints"]] <- "all"
+    }
+    config <- do.call(
+      setup_BoxplotConfig,
+      c(
+        list(
+          x = records[["columns"]],
+          group = NULL,
+          observation = records[["observation"]],
+          labels = values[["label"]],
+          horizontal = horizontal,
+          xlab = xlab %||% if (horizontal) score_label else "Variable",
+          ylab = ylab %||% if (horizontal) "Variable" else score_label,
+          title = title
+        ),
+        settings
+      )
+    )
+    plot_data <- records[["data"]]
+  } else {
+    config <- setup_BarConfig(
+      x = "label",
+      y = "importance",
+      horizontal = horizontal,
+      xlab = xlab %||% if (horizontal) score_label else "Variable",
+      ylab = ylab %||% if (horizontal) "Variable" else score_label,
+      title = title,
+      ...
+    )
+    plot_data <- values
+  }
   draw(
     config,
-    data = values,
+    data = plot_data,
     theme = theme,
     width = width,
     height = height %||%

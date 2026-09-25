@@ -348,6 +348,14 @@ method(boxplot_option, class_any) <- function(
   } else {
     Axis(type = "value", scale = TRUE, name = ylab %||% value_name)
   }
+  # Center names as for bars and lines. End-positioned category names sit
+  # above the zero line and can collide with captions for signed scores.
+  if (!is.null(x_axis@name)) {
+    x_axis@name_location <- "middle"
+  }
+  if (!is.null(y_axis@name)) {
+    y_axis@name_location <- "middle"
+  }
   # Give endpoint markers room without changing their data coordinates.
   # Include only drawn values; hidden outliers do not shrink a box-only plot.
   if (boxpoints != "none") {
@@ -355,12 +363,28 @@ method(boxplot_option, class_any) <- function(
     if (horizontal) {
       x_axis@min <- limits[[1L]]
       x_axis@max <- limits[[2L]]
+      x_axis@axis_label <- AxisLabel(
+        show_min_label = FALSE,
+        show_max_label = FALSE
+      )
     } else {
       y_axis@min <- limits[[1L]]
       y_axis@max <- limits[[2L]]
+      y_axis@axis_label <- AxisLabel(
+        show_min_label = FALSE,
+        show_max_label = FALSE
+      )
     }
   }
   caption <- if (missing) paste(missing, "missing value(s) omitted") else NULL
+  grid <- resolve_margins(margins)
+  if (!is.null(caption)) {
+    grid <- grid %||% Grid()
+    # Keep the disclosure above the plotting region, including its zero line.
+    if (is.null(grid@top) || is.numeric(grid@top)) {
+      grid@top <- max(grid@top %||% 0, if (is.null(title)) 48 else 64)
+    }
+  }
   EChartsOption(
     title = if (!is.null(title) || !is.null(caption)) {
       Title(text = title, subtext = caption)
@@ -371,7 +395,7 @@ method(boxplot_option, class_any) <- function(
     legend = if (multi) Legend(data = as.list(levels)) else NULL,
     x_axis = x_axis,
     y_axis = y_axis,
-    grid = resolve_margins(margins),
+    grid = grid,
     series = c(boxes, Filter(Negate(is.null), overlays))
   )
 }
@@ -388,6 +412,10 @@ method(boxplot_option, class_any) <- function(
 #' All-NA and empty boxes retain their category without a mark; entirely
 #' unavailable input is an error. Missing values are counted in a caption and
 #' never replaced with zero. Missing group assignments are excluded.
+#' Numeric top margins reserve space for a missing-value caption: at least
+#' 64 pixels with a title or 48 without one. Axis titles are centered.
+#' With point overlays, padded range endpoints are unlabeled; interior ticks
+#' retain the backend's numeric formatting and plotted values are unchanged.
 #' Points retain their exact value coordinate. Their perpendicular offsets use
 #' a deterministic base-two sequence in input row order within `point_spread`
 #' times the box width. Zero spread centers every point; coincident points can

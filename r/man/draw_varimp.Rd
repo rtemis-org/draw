@@ -21,6 +21,7 @@ draw_varimp(
   height = NULL,
   element_id = NULL,
   filename = NULL,
+  type = "bar",
   ...
 )
 }
@@ -46,7 +47,7 @@ rows within a fold reporting the selected measure.}
 \item{folds}{Optional Character: Full set of fold IDs, including folds with
 no rows. NULL uses the IDs observed in the \code{fold} column.}
 
-\item{horizontal}{Logical: Draw horizontal bars.}
+\item{horizontal}{Logical: Draw horizontal bars or boxes.}
 
 \item{xlab, ylab}{Optional Character: Physical axis labels. NULL derives the
 score label from the measure and summary and labels the variable axis.}
@@ -67,14 +68,19 @@ container. \code{NULL} lets htmlwidgets generate one.}
 \item{filename}{Optional Character: If provided, save the widget to this file via
 \code{\link[=save_drawing]{save_drawing()}}.}
 
-\item{...}{Additional appearance arguments to \code{\link[=setup_BarConfig]{setup_BarConfig()}}, such as
-\code{palette} and \code{margin_top}. Data bindings and orientation are set here.}
+\item{type}{Character {"bar", "boxplot"}: Summary or fold-distribution view.}
+
+\item{...}{Additional settings for \code{\link[=setup_BarConfig]{setup_BarConfig()}} or
+\code{\link[=setup_BoxplotConfig]{setup_BoxplotConfig()}}, according to \code{type}. Boxplots accept \code{boxpoints},
+\code{quartiles}, \code{whisker}, and point styling; unset \code{boxpoints} shows all scores.
+Data bindings, labels, and orientation are set here.}
 }
 \value{
-htmlwidget: ECharts variable-importance bars.
+htmlwidget: ECharts importance bars or fold distributions.
 }
 \description{
-Draw signed importance scores as bars using a \link{BarConfig}. Numeric input
+Draw signed importance summaries with \link{BarConfig}, or fold distributions
+with \link{BoxplotConfig} using \code{type = "boxplot"}. Numeric input
 uses its names as variable labels, or row numbers when unnamed. Tables
 preserve named measures and optionally identify resamples with \code{fold}.
 }
@@ -83,7 +89,8 @@ Resampled scores are summarized before selection. Magnitude ranking uses
 the absolute summary, not the mean absolute fold score. Signed ranking uses
 the summary itself. Ties retain first appearance in the input. The strongest
 selected variable appears at the top of horizontal bars or the left of
-vertical bars. Zero scores are retained.
+vertical bars or boxes. Zero scores are retained. For distributions, the
+summary controls selection and ordering only; boxes use the fold values.
 
 Explicit NA scores and wholly unavailable folds are excluded from each
 variable's summary. Variables with no available score are omitted.
@@ -96,7 +103,14 @@ Means and medians give each contributing fold equal weight. An incomplete
 summary describes the available folds, not an estimate guaranteed to be
 unbiased for all folds. When any selected variable has incomplete coverage,
 category labels show contributing/total fold counts and the score axis says
-"available folds". No missing rows are added to the input.
+"available folds". The input is never modified.
+
+Boxplots require fold-level records. Every available score (including known
+structural zeros) is overlaid by default, with its fold ID in the tooltip.
+Missing values remain missing in the materialized table and are counted in
+a caption. Boxes describe resample variability, not a confidence interval.
+See \code{\link[=draw_boxplot]{draw_boxplot()}} for quartiles, whiskers, and point placement. Use
+\code{whisker = 0} for full-range whiskers, as in the current live importance view.
 
 For portable rendering, materialize the selected, summarized \code{label}
 and \code{importance} columns in display order and bind them using
@@ -104,7 +118,11 @@ and \code{importance} columns in display order and bind them using
 contributing/total fold counts alongside these columns. Set \code{horizontal},
 axis labels, and title explicitly. That table and config reproduce the view
 without a fitted model or R callbacks. The raw-data summary and selection
-options are not yet part of a shared visualization schema.
+options are not yet part of a shared visualization schema. For distributions,
+use one numeric column per selected variable and an observation column for
+the complete fold universe. Bind those columns and the displayed coverage
+labels through \code{\link[=setup_BoxplotConfig]{setup_BoxplotConfig()}}. Only selected variables are widened;
+selection does not discard folds needed to identify structural zeros.
 }
 \examples{
 draw_varimp(c(age = 0.8, weight = -0.4, height = 0.2))
@@ -114,4 +132,5 @@ scores <- data.frame(
   gain = c(0.8, 0.4, 0.6)
 )
 draw_varimp(scores, measure = "gain", absent = "zero")
+draw_varimp(scores, measure = "gain", type = "boxplot", absent = "zero")
 }

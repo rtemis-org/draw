@@ -105,6 +105,10 @@ outside the fences are outliers; they are never removed from the quartiles.
 All-NA and empty boxes retain their category without a mark; entirely
 unavailable input is an error. Missing values are counted in a caption and
 never replaced with zero. Missing group assignments are excluded.
+Numeric top margins reserve space for a missing-value caption: at least
+64 pixels with a title or 48 without one. Axis titles are centered.
+With point overlays, padded range endpoints are unlabeled; interior ticks
+retain the backend's numeric formatting and plotted values are unchanged.
 Points retain their exact value coordinate. Their perpendicular offsets use
 a deterministic base-two sequence in input row order within \code{point_spread}
 times the box width. Zero spread centers every point; coincident points can

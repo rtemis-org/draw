@@ -155,3 +155,56 @@ test_that("missing importance and inconsistent fold records fail informatively",
   mod@varimp <- mod@varimp[1L]
   expect_error(varimp_plot_data(mod), "one importance result per resample")
 })
+
+test_that("model distributions preserve producer omissions and legacy dispatch", {
+  for (classification in c(FALSE, TRUE)) {
+    mod <- varimp_model_fixture(TRUE, classification)
+    original <- S7::method(rtemis::plot_varimp, S7::S7_class(mod))
+    before <- mod@varimp
+    records <- varimp_plot_data(mod)
+    expect_identical(
+      suppressMessages(plot_varimp(mod, type = "boxplot"))[["x"]],
+      suppressMessages(draw_varimp(
+        records[["data"]],
+        type = "boxplot",
+        folds = records[["folds"]],
+        title = "GLM variable importance"
+      ))[["x"]]
+    )
+    expect_identical(
+      original,
+      S7::method(rtemis::plot_varimp, S7::S7_class(mod))
+    )
+    expect_identical(before, mod@varimp)
+    # Known sparse measures add only the absent row, preserving explicit NA
+    # and entire unavailable folds. List names do not reorder producer IDs.
+    vi <- utils::getFromNamespace("VariableImportance", "rtemis")
+    mod@algorithm <- "CART"
+    mod@varimp <- list(
+      B = vi(data.table::data.table(
+        variable = c("a", "b"),
+        importance = c(8, NA)
+      )),
+      A = vi(data.table::data.table(variable = "b", importance = 4))
+    )
+    opt <- suppressMessages(plot_varimp(mod, type = "boxplot"))[["x"]][[
+      "option"
+    ]]
+    expect_length(opt[["series"]][[2]][["data"]], 3)
+    expect_equal(
+      opt[["series"]][[2]][["data"]][[3]][["value"]][2:3],
+      list(0, "B")
+    )
+    mod@varimp <- list(NULL, mod@varimp[[2]])
+    opt <- suppressMessages(plot_varimp(mod, type = "boxplot"))[["x"]][[
+      "option"
+    ]]
+    expect_length(opt[["series"]][[2]][["data"]], 1)
+    expect_equal(opt[["yAxis"]][["data"]], list("b (1/2 folds)"))
+    expect_match(opt[["title"]][["subtext"]], "1 missing")
+  }
+  expect_error(
+    plot_varimp(varimp_model_fixture(), type = "boxplot"),
+    "fold.*column"
+  )
+})

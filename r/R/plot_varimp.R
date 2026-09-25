@@ -22,15 +22,20 @@
 #' `absent = "missing"`; pass `absent` explicitly to declare another contract.
 #' Explicit NA values and wholly unavailable folds are always kept missing.
 #'
+#' Use `type = "boxplot"` for resampled fold distributions with all contributing
+#' scores overlaid. Summary bars remain the default. Both views share selection,
+#' ranking, and the producer's missing-score contract. Ordinary models have no
+#' fold distribution and require the bar view.
+#'
 #' Models without any importance records produce an informative error.
 #' The default title names the algorithm; `title = NULL` omits it.
 #' See [rtemis.draw::draw_varimp()] for selection, ranking, and missing-score semantics.
 #'
 #' @param x `rtemis::Supervised` or `rtemis::SupervisedRes`: Fitted model result.
 #' @param ... Additional arguments to [rtemis.draw::draw_varimp()], including `measure`,
-#'   `top_n`, `rank_by`, `summary`, `absent`, and `title`. Fold IDs come from
+#'   `type`, `top_n`, `rank_by`, `summary`, `absent`, and `title`. Fold IDs come from
 #'   the model and cannot be overridden.
-#' @return htmlwidget: ECharts variable-importance bars.
+#' @return htmlwidget: ECharts importance bars or fold distributions.
 #' @export
 #' @examplesIf requireNamespace("rtemis", quietly = TRUE)
 #' model <- rtemis::train(
@@ -116,7 +121,7 @@ extract_varimp_plot_data <- function(x) {
 #' @param measure Optional Character: Named importance measure.
 #' @param absent Optional Character: Override the producer's omission contract.
 #' @param title Optional Character: Chart title.
-#' @return htmlwidget: ECharts variable-importance bars.
+#' @return htmlwidget: ECharts importance bars or fold distributions.
 #' @keywords internal
 #' @noRd
 draw_model_varimp <- function(
