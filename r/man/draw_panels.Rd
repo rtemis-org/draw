@@ -44,11 +44,12 @@ file and uses the same layout calculation as the browser.
 }
 \details{
 Child widget widths and heights are replaced by equally sized layout cells.
-Fixed-aspect plotting grids fit within both cell dimensions. Give panels
+Fixed-aspect and square-cell heatmap grids fit within both cell dimensions.
+Dendrograms remain aligned with their heatmap. Give panels
 enough space for their labels and legends. Explicit child themes are kept;
 automatic themes follow the browser, and resolve to light for SVG export.
-Nested layouts, Sigma/MapLibre, child JavaScript hooks, and square-cell
-heatmap sizing are not supported by this initial composition API.
+Nested layouts, Sigma/MapLibre, and child JavaScript hooks are not supported
+by this initial composition API.
 }
 \examples{
 draw_panels(list(draw_bar(c("A", "B"), c(2, 4)),

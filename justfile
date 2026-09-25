@@ -176,3 +176,7 @@ clean:
     rm -rf {{r_dir}}/{{pkg}}.Rcheck
     rm -f {{r_dir}}/{{tarball_glob}}
     @just _msg "Done"
+
+# Inspect installed-package heatmap/A3 browser and vector output (developer QA).
+qa-export output:
+    {{rscript}} r/tools/visual-qa/export.R "{{output}}"

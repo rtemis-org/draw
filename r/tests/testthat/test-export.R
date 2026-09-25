@@ -432,3 +432,58 @@ test_that("native aspect layout reserves labels before fixing the data-area rati
   expect_null(attr(output, "status"), info = paste(output, collapse = "\n"))
   expect_match(paste(output, collapse = "\n"), "Fixed-aspect labels")
 })
+
+
+test_that("SVG export keeps square heatmap cells, themes, and complete panels", {
+  skip_if_not(nzchar(Sys.which("node")), "node not found")
+  m <- matrix(
+    c(-1, 0, 0.5, 1, -0.5, 0.2),
+    2,
+    dimnames = list(c("Row A", "Row B"), c("X", "Y", "Z"))
+  )
+  a <- draw_heatmap(
+    m,
+    square_cells = TRUE,
+    show_values = TRUE,
+    theme = theme_dark()
+  )
+  b <- draw_heatmap(
+    m,
+    square_cells = TRUE,
+    show_values = TRUE,
+    cluster_rows = TRUE,
+    cluster_cols = TRUE,
+    theme = theme_light()
+  )
+  path <- tempfile(fileext = ".svg")
+  on.exit(unlink(path), add = TRUE)
+  for (w in list(a, draw_panels(list(a, b), ncol = 2))) {
+    save_drawing(w, path, width = 1100, height = 500)
+    svg <- paste(readLines(path, warn = FALSE), collapse = "\n")
+    marks <- regmatches(
+      svg,
+      gregexpr('<path[^>]+ecmeta_series_index[^>]+>', svg)
+    )[[1L]]
+    # Native heatmap rectangles are M x y l width 0 l 0 height ... . Inspect
+    # their geometry in the actual exported file, not only render metadata.
+    cells <- marks[grepl('d="M[-0-9.]+ [-0-9.]+l[-0-9.]+ 0l0 [-0-9.]+', marks)]
+    expect_length(cells, if (inherits(w, "rtemis-panels")) 12L else 6L)
+    width <- as.numeric(sub(
+      '.*d="M[-0-9.]+ [-0-9.]+l([-0-9.]+) 0l0 .*',
+      '\\1',
+      cells
+    ))
+    height <- as.numeric(sub(
+      '.*d="M[-0-9.]+ [-0-9.]+l[-0-9.]+ 0l0 ([-0-9.]+).*',
+      '\\1',
+      cells
+    ))
+    expect_equal(width, height, tolerance = 0.02)
+    expect_true(any(grepl('fill="rgb(24,24,24)"', cells, fixed = TRUE)))
+    expect_match(svg, 'fill="(?:#181818|rgb\\(24,24,24\\))"')
+    for (label in c("Row A", "Row B", "0.00")) {
+      expect_match(svg, label, fixed = TRUE)
+    }
+    expect_false(grepl('<image', svg, fixed = TRUE))
+  }
+})

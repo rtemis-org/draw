@@ -1,0 +1,70 @@
+{
+  "rtemis-draw-renderers-1.0.0": {
+    "scripts": [
+      "renderers.js"
+    ],
+    "md5": [
+      "cc8f42fcd19a0bbd23bfdf0b24bcf8c4"
+    ]
+  },
+  "rtemis-panel-layout-1.0.1": {
+    "scripts": [
+      "panels.js",
+      "confusion.js",
+      "panel_widget.js"
+    ],
+    "md5": [
+      "c05b6ea5e304aeb3371ddd22a22c2035",
+      "3651363082c0e387220144668cceb4e1",
+      "88320c7a672053433c91adba7f72ea59"
+    ]
+  },
+  "rtemis-draw-binding-0.5.3": {
+    "scripts": [
+      "rtemis-draw.js"
+    ],
+    "md5": [
+      "56292d839fbe100b8a95420f809af5ef"
+    ]
+  },
+  "rtemis-panel-layout-1.0.2": {
+    "scripts": [
+      "panels.js",
+      "confusion.js",
+      "panel_widget.js"
+    ],
+    "md5": [
+      "0c7163a78618449aff4f2af44579b00b",
+      "3651363082c0e387220144668cceb4e1",
+      "88320c7a672053433c91adba7f72ea59"
+    ]
+  },
+  "rtemis-draw-binding-0.5.4": {
+    "scripts": [
+      "rtemis-draw.js"
+    ],
+    "md5": [
+      "3611e9a391f3109b05a2c51e25f95f3a"
+    ]
+  },
+  "rtemis-panel-layout-1.0.3": {
+    "scripts": [
+      "panels.js",
+      "confusion.js",
+      "panel_widget.js"
+    ],
+    "md5": [
+      "89ed807dd02abb190d5691b734fbff63",
+      "3651363082c0e387220144668cceb4e1",
+      "88320c7a672053433c91adba7f72ea59"
+    ]
+  },
+  "rtemis-draw-binding-0.5.5": {
+    "scripts": [
+      "rtemis-draw.js"
+    ],
+    "md5": [
+      "3611e9a391f3109b05a2c51e25f95f3a"
+    ]
+  }
+}

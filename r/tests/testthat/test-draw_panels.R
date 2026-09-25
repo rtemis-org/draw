@@ -68,7 +68,10 @@ test_that("composition preserves independent payloads and uses the existing widg
     "hooks"
   )
   heat <- draw_heatmap(matrix(1:4, 2), square_cells = TRUE)
-  expect_error(draw_panels(list(heat)), "square_cells")
+  expect_identical(
+    draw_panels(list(heat))[["x"]][["panels"]][[1L]],
+    heat[["x"]]
+  )
 })
 
 test_that("complete SVG exports retain panel marks, labels and styles", {

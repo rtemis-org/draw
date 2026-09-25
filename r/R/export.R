@@ -134,7 +134,21 @@ save_drawing <- function(widget, filename, width = NULL, height = NULL) {
     height,
     aspect = payload[["aspect"]],
     legend_position = payload[["legendPosition"]],
-    confusion = payload[["confusion"]]
+    confusion = payload[["confusion"]],
+    meta = payload[intersect(
+      names(payload),
+      c(
+        "squareCells",
+        "nRows",
+        "nCols",
+        "leftPx",
+        "rightPx",
+        "topPx",
+        "botPx",
+        "colorLight",
+        "colorDark"
+      )
+    )]
   )
 
   invisible(filename)
@@ -272,6 +286,8 @@ method(strip_js, class_any) <- function(
 #' @param aspect Optional List: Fixed-ratio render metadata for a single chart.
 #' @param legend_position Optional Character: Inset ROC legend corner.
 #' @param confusion Optional List: Theme and square-cell constraints for confusion plots.
+#' @param meta Optional List: Declarative heatmap geometry and palette hints shared
+#'   with the browser renderer.
 #' @return Logical, invisibly, indicating successful file copy.
 #' @keywords internal
 #' @noRd
@@ -285,7 +301,8 @@ save_svg_ssr <- function(
   layout = NULL,
   aspect = NULL,
   legend_position = NULL,
-  confusion = NULL
+  confusion = NULL,
+  meta = NULL
 ) {
   node <- Sys.which("node")
   if (!nzchar(node)) {
@@ -305,19 +322,22 @@ save_svg_ssr <- function(
     )
   }
 
-  payload <- list(
-    option = option,
-    panels = panels,
-    layout = layout,
-    aspect = aspect,
-    legendPosition = legend_position,
-    confusion = confusion,
-    theme = theme,
-    width = width,
-    height = height,
-    creator = paste0(
-      "rtemis.draw ",
-      utils::packageVersion("rtemis.draw")
+  payload <- c(
+    meta,
+    list(
+      option = option,
+      panels = panels,
+      layout = layout,
+      aspect = aspect,
+      legendPosition = legend_position,
+      confusion = confusion,
+      theme = theme,
+      width = width,
+      height = height,
+      creator = paste0(
+        "rtemis.draw ",
+        utils::packageVersion("rtemis.draw")
+      )
     )
   )
   json <- jsonlite::toJSON(

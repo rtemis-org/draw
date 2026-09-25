@@ -174,20 +174,7 @@ function rtemisDrawFactory(el, width, height, bounded = false) {
         }
       }
 
-      // Substitute the theme-matched heatmap colour palette when R has
-      // pre-computed both light and dark variants.  The dark palette places
-      // the theme background colour exactly at 0 for diverging scales.
-      if (x.colorLight || x.colorDark) {
-        const hmColors = x.colorDark
-          ? (dark ? x.colorDark : x.colorLight)
-          : x.colorLight;
-        if (hmColors) {
-          visualMaps(x.option).forEach((vm) => {
-            if (!vm.inRange) vm.inRange = {};
-            vm.inRange.color = hmColors;
-          });
-        }
-      }
+      rtemisPanels.prepareColors(echarts, x, themeObj);
 
       chart = echarts.init(el, themeName, {
         renderer: x.renderer || "canvas",
@@ -197,6 +184,7 @@ function rtemisDrawFactory(el, width, height, bounded = false) {
 
       chart.setOption(x.option, true);
       rtemisPanels.fitAxes(chart, x);
+      rtemisPanels.fitHeatmap(chart, x);
       rtemisPanels.positionLegend(echarts, chart, x);
       rtemisPanels.centerVisualMaps(chart, x);
 
@@ -301,7 +289,7 @@ function rtemisDrawFactory(el, width, height, bounded = false) {
         // from the actual container width and the layout margins passed from R.
         // This overrides whatever height htmlwidgets allocated for the container,
         // ensuring cells are always square regardless of viewer window dimensions.
-        if (x.squareCells) {
+        if (x.squareCells && !bounded) {
           const newHeight = squareCellHeight(x, currentWidth);
           el.style.height = `${newHeight}px`;
           currentHeight = newHeight;
@@ -332,11 +320,12 @@ function rtemisDrawFactory(el, width, height, bounded = false) {
 
         if (currentPayload?.squareCells) {
           // Recompute height to keep cells square at the new width
-          const newHeight = squareCellHeight(currentPayload, width);
+          const newHeight = bounded ? height : squareCellHeight(currentPayload, width);
           el.style.height = `${newHeight}px`;
           currentHeight = newHeight;
           if (chart) {
             chart.resize({ width, height: newHeight });
+            rtemisPanels.fitHeatmap(chart, currentPayload);
             rtemisPanels.centerVisualMaps(chart, currentPayload);
           }
           return;

@@ -1,3 +1,6 @@
+# Dependency identities are immutable in cached documents. Change the affected
+# version when scripts change; the binding version comes from DESCRIPTION.
+# Recorded script fingerprints are checked by test-widget_dependencies.R.
 dependencies:
   - name: echarts
     version: 6.1.0
@@ -8,7 +11,7 @@ dependencies:
     src: htmlwidgets/lib/draw
     script: renderers.js
   - name: rtemis-panel-layout
-    version: 1.0.0
+    version: 1.0.3
     src: htmlwidgets/lib/draw
     script:
       - panels.js

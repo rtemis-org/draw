@@ -50,6 +50,7 @@ process.stdin.on("end", () => {
 	const creator = payload.creator || "rtemis.draw";
 	function renderPanel(panel, w, h) {
 		confusion.prepare(echarts, panel, panel.theme, w, h);
+		layout.prepareColors(echarts, panel, panel.theme);
 		const option = panel.option;
 		if (!option) throw new Error("An ECharts option is required for each panel.");
 		const series = Array.isArray(option.series) ? option.series : [option.series];
@@ -66,6 +67,7 @@ process.stdin.on("end", () => {
 				{renderer: "svg", ssr: true, width: w, height: h});
 			chart.setOption(option);
 			layout.fitAxes(chart, panel);
+			layout.fitHeatmap(chart, panel);
 			layout.positionLegend(echarts, chart, panel);
 			layout.centerVisualMaps(chart, panel);
 			return chart.renderToSVGString();

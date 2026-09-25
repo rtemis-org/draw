@@ -108,7 +108,8 @@ Renders an \code{A3} object (from \code{rtemis.a3}) as an interactive ECharts
 amino-acid sequence diagram. The sequence is wrapped into rows in a
 meander/serpentine path, with optional site, region, PTM, processing, and
 variant annotations overlaid as distinct series and collected in a
-vertical legend.
+vertical legend. Legend headings use native rich text and remain available
+in vector SVG exports through \code{\link[=save_drawing]{save_drawing()}}.
 }
 \details{
 Corresponds to \code{createA3EChartsOption()} in

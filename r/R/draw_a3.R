@@ -51,9 +51,9 @@
 .A3_LEGEND_REGION_ICON <- "path://M2 5 H22 V11 H2 Z"
 
 # Sentinel names for legend heading entries (invisible placeholder series)
-.A3_LEGEND_HEADING_REGIONS <- "__legend_heading_regions__"
-.A3_LEGEND_HEADING_PTMS <- "__legend_heading_ptms__"
-.A3_LEGEND_HEADING_PROCESSING <- "__legend_heading_processing__"
+.A3_LEGEND_HEADING_REGIONS <- "{heading|Regions}"
+.A3_LEGEND_HEADING_PTMS <- "{heading|PTMs}"
+.A3_LEGEND_HEADING_PROCESSING <- "{heading|Processing}"
 
 # Amino acid one-letter to full-name lookup
 .A3_AA_NAMES <- c(
@@ -728,18 +728,9 @@ a3_option <- function(
     )
   }
 
-  # JavaScript formatter for legend heading entries (rich text)
-  legend_formatter <- htmlwidgets::JS(sprintf(
-    "function(name) {
-      if (name === '%s') return '{heading|Regions}';
-      if (name === '%s') return '{heading|PTMs}';
-      if (name === '%s') return '{heading|Processing}';
-      return name;
-    }",
-    .A3_LEGEND_HEADING_REGIONS,
-    .A3_LEGEND_HEADING_PTMS,
-    .A3_LEGEND_HEADING_PROCESSING
-  ))
+  # Native rich-text names preserve heading styling in ordinary JSON and SVG.
+  # LegendView.ts renders each name directly when no formatter is supplied;
+  # the empty matching series keep headings separate from annotation toggles.
 
   # ── ECharts option ──────────────────────────────────────────────────────────
   legend_right_inset <- 16
@@ -805,7 +796,6 @@ a3_option <- function(
       bottom = 24,
       width = legend_rail_width,
       data = legend_data,
-      formatter = legend_formatter,
       textStyle = list(
         fontSize = font_size,
         rich = list(
@@ -864,7 +854,8 @@ a3_option <- function(
 #' amino-acid sequence diagram. The sequence is wrapped into rows in a
 #' meander/serpentine path, with optional site, region, PTM, processing, and
 #' variant annotations overlaid as distinct series and collected in a
-#' vertical legend.
+#' vertical legend. Legend headings use native rich text and remain available
+#' in vector SVG exports through [save_drawing()].
 #'
 #' Corresponds to `createA3EChartsOption()` in
 #' `src/lib/a3/visualization/echarts.ts`.

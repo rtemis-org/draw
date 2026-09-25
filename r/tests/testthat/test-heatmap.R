@@ -312,3 +312,73 @@ test_that("vertical heatmap colorbars stay centered on the plotted data", {
   expect_null(attr(output, "status"), info = paste(output, collapse = "\n"))
   expect_match(paste(output, collapse = "\n"), "passed")
 })
+
+
+test_that("square heatmaps keep their geometry in bounded panels and after resize", {
+  skip_if_not(nzchar(Sys.which("node")), "node not found")
+  m <- matrix(
+    seq(-1, 1, length.out = 12),
+    nrow = 3,
+    dimnames = list(c("A", "B", "C"), c("W", "X", "Y", "Z"))
+  )
+  cases <- list(
+    list(),
+    list(cluster_rows = TRUE),
+    list(cluster_cols = TRUE),
+    list(cluster_rows = TRUE, cluster_cols = TRUE),
+    list(
+      cluster_rows = TRUE,
+      cluster_cols = TRUE,
+      dendro_row_side = "left",
+      dendro_col_side = "bottom"
+    )
+  )
+  charts <- unlist(
+    lapply(list(theme_light(), theme_dark()), function(theme) {
+      lapply(cases, function(args) {
+        w <- do.call(
+          draw_heatmap,
+          c(
+            list(x = m, square_cells = TRUE, show_values = TRUE, theme = theme),
+            args
+          )
+        )
+        strip_js(w[["x"]])
+      })
+    }),
+    recursive = FALSE
+  )
+  path <- tempfile(fileext = ".json")
+  on.exit(unlink(path), add = TRUE)
+  jsonlite::write_json(
+    list(
+      charts = charts,
+      echarts = system.file(
+        "htmlwidgets/lib/echarts/echarts.min.js",
+        package = "rtemis.draw"
+      ),
+      layout = system.file(
+        "htmlwidgets/lib/draw/panels.js",
+        package = "rtemis.draw"
+      ),
+      binding = system.file(
+        "htmlwidgets/rtemis-draw.js",
+        package = "rtemis.draw"
+      )
+    ),
+    path,
+    auto_unbox = TRUE,
+    null = "null"
+  )
+  output <- system2(
+    Sys.which("node"),
+    c(
+      shQuote(test_path("fixtures", "heatmap_export_geometry.js")),
+      shQuote(path)
+    ),
+    stdout = TRUE,
+    stderr = TRUE
+  )
+  expect_null(attr(output, "status"), info = paste(output, collapse = "\n"))
+  expect_match(paste(output, collapse = "\n"), "passed")
+})

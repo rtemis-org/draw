@@ -42,7 +42,7 @@ for (const location of ['standalone', 'embedded', 'embedded-direct', 'embedded-h
     window: {MutationObserver: Observer}, MutationObserver: Observer,
     HTMLWidgets: {widget() {}},
     rtemisConfusion: {prepare() {}},
-    rtemisPanels: {fitAxes() {}, positionLegend() {}, centerVisualMaps() {}},
+    rtemisPanels: {fitHeatmap() {}, prepareColors() {}, fitAxes() {}, positionLegend() {}, centerVisualMaps() {}},
     echarts: {registerTheme() {}, init() {return {setOption() {}, dispose() {}};}}
   };
   vm.createContext(context);

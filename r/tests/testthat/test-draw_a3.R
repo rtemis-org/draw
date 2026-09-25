@@ -224,3 +224,37 @@ test_that("draw_a3 n_per_row validation works", {
   a <- rtemis.a3::create_A3("MAEPR")
   expect_error(draw_a3(a, n_per_row = 1L), class = "rtemis_error")
 })
+
+
+test_that("A3 legend headings and annotations survive callback-free SVG export", {
+  skip_if_not_installed("rtemis.a3")
+  skip_if_not(nzchar(Sys.which("node")), "node not found")
+  a <- rtemis.a3::create_A3(
+    "MAEPRQEFEVMEDHAGTYGLGDRK",
+    region = list(
+      Domain = rtemis.a3::annotation_range(matrix(c(3L, 10L), ncol = 2))
+    ),
+    ptm = list(Phosphorylation = rtemis.a3::annotation_position(5L)),
+    processing = list(Cleavage = rtemis.a3::annotation_position(17L))
+  )
+  w <- draw_a3(a, n_per_row = 12L, font_size = 12, marker_size = 16)
+  expect_null(w[["x"]][["option"]][["legend"]][["formatter"]])
+  expect_no_error(strip_js(w[["x"]]))
+  path <- tempfile(fileext = ".svg")
+  on.exit(unlink(path), add = TRUE)
+  for (widget in list(w, draw_panels(list(w, w), ncol = 2))) {
+    save_drawing(widget, path, width = 1400, height = 600)
+    svg <- paste(readLines(path, warn = FALSE), collapse = "\n")
+    for (label in c(
+      "Regions",
+      "PTMs",
+      "Processing",
+      "Domain",
+      "Phosphorylation",
+      "Cleavage"
+    )) {
+      expect_match(svg, paste0(">", label, "</text>"), fixed = TRUE)
+    }
+    expect_false(grepl('<image|__legend_heading|\\{heading\\|', svg))
+  }
+})

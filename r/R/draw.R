@@ -3453,7 +3453,9 @@ heatmap_option <- function(
 #'   the column dendrogram is placed. `"top"` (default) places it above the heatmap.
 #'   `"bottom"` automatically moves column labels to the top.
 #' @param square_cells Optional Logical: Whether to compute widget dimensions so
-#'   cells are square. `NULL` (default) enables this automatically for square
+#'   cells are square in the browser and SVG exports. In panels and exports,
+#'   the matrix and dendrograms fit within the allocated canvas.
+#'   `NULL` (default) enables this automatically for square
 #'   matrices (e.g. correlation matrices). When `TRUE`, both `width` and `height`
 #'   are calculated from the number of cells; supply explicit `width`/`height` to
 #'   override.

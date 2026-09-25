@@ -57,6 +57,58 @@
       width, height, containLabel: false, outerBoundsMode: 'none'
     }});
   }
+  // Fit all heatmap grids as one scene. The row/column dendrogram strips keep
+  // their thickness and remain aligned with the matrix when space is added
+  // around a square-cell plot. Always derive from the original option so a
+  // resize cannot accumulate offsets. GridOption: coord/cartesian/GridModel.ts.
+  function fitHeatmap(chart, payload) {
+    if (!payload.squareCells) return;
+    const {nRows, nCols, leftPx, rightPx, topPx, botPx} = payload;
+    if (![nRows, nCols].every(v => Number.isInteger(v) && v > 0) ||
+        ![leftPx, rightPx, topPx, botPx].every(v => Number.isFinite(v) && v >= 0)) {
+      throw new Error('Supply positive heatmap dimensions and nonnegative pixel margins.');
+    }
+    const availableWidth = chart.getWidth() - leftPx - rightPx;
+    const availableHeight = chart.getHeight() - topPx - botPx;
+    const cell = Math.min(availableWidth / nCols, availableHeight / nRows);
+    if (cell <= 0) throw new Error('Increase figure dimensions to leave room for heatmap cells and margins.');
+    const dx = (availableWidth - nCols * cell) / 2;
+    const dy = (availableHeight - nRows * cell) / 2;
+    const grids = Array.isArray(payload.option.grid) ? payload.option.grid : [payload.option.grid];
+    const update = {grid: grids.map(grid => {
+      const update = {...grid, containLabel: false, outerBoundsMode: 'none'};
+      for (const side of ['left', 'right', 'top', 'bottom']) {
+        if (grid[side] != null) update[side] = grid[side] + (['left', 'right'].includes(side) ? dx : dy);
+      }
+      return update;
+    })};
+    // Keep marginal components with the fitted scene instead of leaving the
+    // colorbar at the far canvas edge when height constrains the matrix.
+    const maps = payload.option.visualMap;
+    if (maps) update.visualMap = (Array.isArray(maps) ? maps : [maps]).map(map => {
+      const side = map.orient === 'horizontal' ? 'bottom' : 'right';
+      const offset = side === 'right' ? dx : dy;
+      const anchor = map[side] === side ? 0 : map[side];
+      return Number.isFinite(anchor) ? {[side]: anchor + offset} : {};
+    });
+    const titles = payload.option.title;
+    if (titles) update.title = (Array.isArray(titles) ? titles : [titles]).map(title =>
+      Number.isFinite(title.left) ? {left: title.left + dx} : {});
+    chart.setOption(update);
+  }
+  // Resolve the precomputed heatmap/spectrogram palettes from the actual theme,
+  // including explicit overrides and offline SVG's resolved light default.
+  // The same choice in both targets avoids exporting a dark plot's white ramp.
+  function prepareColors(echarts, payload, theme) {
+    if (!payload.colorLight && !payload.colorDark) return;
+    const rgb = echarts.color.parse(payload.option.backgroundColor || theme?.backgroundColor || '#ffffff');
+    const dark = rgb && rgb.slice(0, 3).reduce((sum, value, i) => sum + value * [.2126, .7152, .0722][i], 0) < 128;
+    const colors = (dark ? payload.colorDark : payload.colorLight) || payload.colorLight || payload.colorDark;
+    const maps = payload.option.visualMap;
+    (Array.isArray(maps) ? maps : [maps]).filter(Boolean).forEach(map => {
+      map.inRange = {...map.inRange, color: colors};
+    });
+  }
   // Position a ROC legend relative to the measured data area, not the canvas.
   // ECharts LegendModel uses content-sized boxes (ignoreSize: true), so use
   // one anchor per axis. Measure the active font before constraining long
@@ -117,5 +169,5 @@
     });
     if (changed) chart.setOption({visualMap: updates});
   }
-  return {cells, fit, fitAxes, positionLegend, centerVisualMaps};
+  return {cells, fit, fitAxes, fitHeatmap, prepareColors, positionLegend, centerVisualMaps};
 });
