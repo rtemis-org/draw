@@ -1,5 +1,7 @@
 # rtemis.draw 0.5.2
 
+- Add `draw_panels()`, schema-backed panel layouts, and draw-owned model `present()` methods, with combined SVG export.
+
 - Add `draw_metric()` and resampled-model `plot_metric()` methods, with configurable boxplot statistics, observation overlays, and SVG export.
 
 - Add `draw_roc()` and classification `plot_roc()` methods with pooled and per-resample AUC summaries and SVG export.

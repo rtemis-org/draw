@@ -45,50 +45,48 @@ process.stdin.on("end", () => {
 
 	const width = payload.width || 800;
 	const height = payload.height || 600;
-	const option = payload.option;
-	const theme = payload.theme || null;
 	const creator = payload.creator || "rtemis.draw";
-
-	if (!option) {
-		process.stderr.write("render_svg: payload.option is missing\n");
-		process.exit(2);
-	}
-
-	let chart;
-	try {
-		// An unknown renderer can silently produce an empty series, especially
-		// for empty data. Reject it before rendering, independently of data size.
+	function renderPanel(panel, w, h) {
+		const option = panel.option;
+		if (!option) throw new Error("An ECharts option is required for each panel.");
 		const series = Array.isArray(option.series) ? option.series : [option.series];
-		series.filter(Boolean).forEach((item) => {
+		series.filter(Boolean).forEach(item => {
 			if (item.type === "custom" && !rendererNames.includes(item.renderItem)) {
 				throw new Error("Unsupported custom-series renderer. Use a built-in named renderer.");
 			}
+			item.animation = false;
 		});
-		if (theme) {
-			echarts.registerTheme("draw_theme", theme);
-		}
-		chart = echarts.init(null, theme ? "draw_theme" : null, {
-			renderer: "svg",
-			ssr: true,
-			width: width,
-			height: height,
-		});
-
-		// Static output has no animation timeline. Its paths represent the final
-		// scene, including series that normally animate from collapsed geometry.
 		option.animation = false;
-		series.filter(Boolean).forEach((item) => { item.animation = false; });
-		chart.setOption(option);
-
-		const svg = chart.renderToSVGString();
-
-		// Inject creator comment immediately after the opening <svg ...> tag.
-		const svgOut = svg.replace(/(<svg[^>]*>)/, `$1<!-- Created by ${creator} -->`);
-		process.stdout.write(svgOut);
+		let chart;
+		try {
+			chart = echarts.init(null, panel.theme || null,
+				{renderer: "svg", ssr: true, width: w, height: h});
+			chart.setOption(option);
+			return chart.renderToSVGString();
+		} finally {
+			if (chart) chart.dispose();
+		}
+	}
+	try {
+		let svg;
+		if (payload.panels) {
+			const layout = require("../htmlwidgets/lib/draw/panels.js");
+			const cells = layout.cells(payload.panels.length, payload.layout, width, height);
+			const parts = payload.panels.map((panel, i) => {
+				const cell = cells[i];
+				layout.fit(panel, cell.width, cell.height);
+				// Nested SVG viewports clip each independent scene to its cell.
+				// One ECharts module supplies unique clip/style IDs across panels.
+				return renderPanel(panel, cell.width, cell.height).replace("<svg ",
+					`<svg x="${cell.x}" y="${cell.y}" overflow="hidden" `);
+			});
+			svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">${parts.join("")}</svg>`;
+		} else {
+			svg = renderPanel(payload, width, height);
+		}
+		process.stdout.write(svg.replace(/(<svg[^>]*>)/, `$1<!-- Created by ${creator} -->`));
 	} catch (e) {
 		process.stderr.write(`render_svg: ${e.message}\n`);
 		process.exitCode = 1;
-	} finally {
-		if (chart) chart.dispose();
 	}
 });

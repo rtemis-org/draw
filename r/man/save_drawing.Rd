@@ -23,7 +23,8 @@ The \code{filename}, invisibly.
 \description{
 Exports a widget created by \code{\link[=draw]{draw()}} (or any of the \verb{draw_*}
 functions) to a static file. Currently supports ECharts \code{.svg} via Node.js
-server-side rendering. Requires a \code{node} binary on \code{PATH}.
+server-side rendering, including complete \code{\link[=draw_panels]{draw_panels()}} figures. Requires
+a \code{node} binary on \code{PATH}.
 }
 \details{
 Callbacks under tooltips, axis pointers, and interactive toolbox controls

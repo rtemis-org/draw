@@ -1,8 +1,4 @@
-HTMLWidgets.widget({
-  name: "rtemis-draw",
-  type: "output",
-
-  factory: (el, width, height) => {
+function rtemisDrawFactory(el, width, height, bounded = false) {
     let currentWidth = width;
     let currentHeight = height;
     let chart = null;
@@ -131,7 +127,7 @@ HTMLWidgets.widget({
         null;
       if (bgColor) {
         el.style.backgroundColor = bgColor;
-        if (el.parentElement) {
+        if (el.parentElement && !bounded) {
           el.parentElement.style.backgroundColor = bgColor;
         }
       }
@@ -240,6 +236,10 @@ HTMLWidgets.widget({
       if (!x?.aspect || !x.option?.grid) return null;
       // A multi-grid option is out of scope: aspect describes one plotting box.
       if (Array.isArray(x.option.grid)) return null;
+      if (bounded) {
+        rtemisPanels.fit(x, containerWidth, currentHeight);
+        return currentHeight;
+      }
       const box = aspectBox(x.aspect, containerWidth);
       x.option.grid.width = box.gridWidth;
       x.option.grid.height = box.gridHeight;
@@ -297,7 +297,37 @@ HTMLWidgets.widget({
         }
       },
 
+      dispose: () => {
+        stopWatchingTheme();
+        if (chart) chart.dispose();
+        chart = null;
+        currentPayload = null;
+      },
       getChart: () => chart
+    };
+}
+
+// Keep one widget binding for standalone drawings and compositions, including
+// drawOutput()/renderDraw() in Shiny. Children keep independent chart instances.
+HTMLWidgets.widget({
+  name: "rtemis-draw", type: "output",
+  factory: function(el, width, height) {
+    let instance = null;
+    return {
+      renderValue: function(x) {
+        if (instance) instance.dispose();
+        el.replaceChildren();
+        instance = x.panels ? rtemisPanelFactory(el, width, height) :
+          rtemisDrawFactory(el, width, height);
+        instance.renderValue(x);
+      },
+      resize: function(w, h) {
+        width = w; height = h;
+        if (instance) instance.resize(w, h);
+      },
+      getChart: () => instance?.getChart?.() || null,
+      getCharts: () => instance?.getCharts?.() || (instance?.getChart?.() ? [instance.getChart()] : []),
+      dispose: () => { if (instance) instance.dispose(); instance = null; }
     };
   }
 });

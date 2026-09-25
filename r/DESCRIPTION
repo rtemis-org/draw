@@ -91,6 +91,8 @@ Collate:
     'draw_boxplot.R'
     'draw_metric.R'
     'plot_metric.R'
+    'draw_panels.R'
+    'present.R'
     'plot.SupervisedSession.R'
     'export.R'
     'zzz.R'

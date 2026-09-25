@@ -176,6 +176,9 @@ draw_object_session <- function(x, ...) {
     rtemis_class("SupervisedRes")
   ) <- extract_metric_plot_data
   S7::method(plot_metric, rtemis_class("SupervisedRes")) <- draw_model_metric
+  S7::method(present, rtemis_class("Regression")) <- present_regression
+  S7::method(present, rtemis_class("Classification")) <- present_classification
+  S7::method(present, rtemis_class("SupervisedRes")) <- present_resampled
   massglm <- rtemis_class("MassGLM")
   S7::method(massglm_plot_data, massglm) <- extract_massglm_plot_data
   S7::method(plot_manhattan, massglm) <- draw_massglm_manhattan

@@ -10,7 +10,8 @@
 #'
 #' Exports a widget created by [draw()] (or any of the `draw_*`
 #' functions) to a static file. Currently supports ECharts `.svg` via Node.js
-#' server-side rendering. Requires a `node` binary on `PATH`.
+#' server-side rendering, including complete [draw_panels()] figures. Requires
+#' a `node` binary on `PATH`.
 #'
 #' Callbacks under tooltips, axis pointers, and interactive toolbox controls
 #' are omitted. Other JavaScript callbacks are rejected because discarding them
@@ -96,7 +97,7 @@ save_drawing <- function(widget, filename, width = NULL, height = NULL) {
 
   # Reject other backends before looking for an ECharts option. An SVG-shaped
   # file is not proof that the requested network or map was rendered.
-  if (!inherits(widget, "rtemis-draw")) {
+  if (!inherits(widget, "rtemis-draw") && !inherits(widget, "rtemis-panels")) {
     abort(
       "SVG export currently supports ECharts widgets only; ",
       "network, map, and other widget exporters are not implemented.",
@@ -104,6 +105,21 @@ save_drawing <- function(widget, filename, width = NULL, height = NULL) {
     )
   }
   payload <- widget[["x"]]
+  if (inherits(widget, "rtemis-panels")) {
+    panels <- lapply(seq_along(payload[["panels"]]), function(i) {
+      strip_js(payload[["panels"]][[i]], path = paste0("panels[", i, "]"))
+    })
+    save_svg_ssr(
+      NULL,
+      NULL,
+      filename,
+      width,
+      height,
+      panels = panels,
+      layout = payload[["layout"]]
+    )
+    return(invisible(filename))
+  }
   option <- strip_js(payload[["option"]], path = "option")
   option <- static_aspect(option, payload[["aspect"]], width, height)
   # Automatic themes resolve to light for offline export. An explicit theme
@@ -237,10 +253,19 @@ method(strip_js, class_any) <- function(
 #' @param theme Optional List: Prepared ECharts theme.
 #' @param filename Character scalar: Destination path.
 #' @param width,height Numeric scalars: Finite positive image dimensions.
+#' @param panels,layout Optional List: Child payloads and resolved panel layout.
 #' @return Logical, invisibly, indicating successful file copy.
 #' @keywords internal
 #' @noRd
-save_svg_ssr <- function(option, theme, filename, width, height) {
+save_svg_ssr <- function(
+  option,
+  theme,
+  filename,
+  width,
+  height,
+  panels = NULL,
+  layout = NULL
+) {
   node <- Sys.which("node")
   if (!nzchar(node)) {
     abort(
@@ -261,6 +286,8 @@ save_svg_ssr <- function(option, theme, filename, width, height) {
 
   payload <- list(
     option = option,
+    panels = panels,
+    layout = layout,
     theme = theme,
     width = width,
     height = height,
