@@ -1,5 +1,7 @@
 # rtemis.draw 0.5.2
 
+- Add volcano and categorical Manhattan plots, portable significance configuration, and `MassGLM` methods for `plot()` and `plot_manhattan()`, with SVG export.
+
 - Add `draw_varimp()` and draw-owned `plot_varimp()` methods for ordinary and resampled models, with named measures, ranking, and explicit missing-score policies.
 
 - Add `draw_learning_curve()` and a draw-owned `plot_learning()` method for supervised models, including forest averaging and selected-step markers.

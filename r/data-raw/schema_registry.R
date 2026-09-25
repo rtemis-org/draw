@@ -32,6 +32,7 @@ chart_family <- list(
 # here: it comes from `chart_registry()`, the same one `read_chart_config()`
 # uses, so a chart type cannot exist for reading and not for publishing.
 chart_descriptions <- c(
+  significance = "Volcano or categorical significance plots of estimates and adjusted p-values.",
   scatter = paste0(
     "Scatter chart: points at (x, y), optionally sized, grouped, and ",
     "overlaid with a fit and its standard-error band."

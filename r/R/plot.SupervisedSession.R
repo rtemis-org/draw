@@ -171,6 +171,10 @@ draw_object_session <- function(x, ...) {
     S7::method(varimp_plot_data, cls) <- extract_varimp_plot_data
     S7::method(plot_varimp, cls) <- draw_model_varimp
   }
+  massglm <- rtemis_class("MassGLM")
+  S7::method(massglm_plot_data, massglm) <- extract_massglm_plot_data
+  S7::method(plot_manhattan, massglm) <- draw_massglm_manhattan
+  register_massglm_plot(massglm)
   for (name in c("Regression", "RegressionRes")) {
     cls <- rtemis_class(name)
     S7::method(regression_plot_data, cls) <- extract_regression_plot_data
