@@ -19,6 +19,9 @@
 #' Per-resample legends report the unweighted mean and sample SD of defined
 #' fold AUCs, with available/total curve counts. SD is NA for one defined fold.
 #' Pooled AUC is never inferred from per-fold AUCs.
+#' The legend is inset in the chosen corner of the plotting area. Curve identity
+#' and AUC share a line; long labels wrap to the available width. All entries
+#' remain present in static SVG output, without a scrolling legend.
 #'
 #' @param fpr Character: Column containing false positive rates.
 #' @param tpr Character: Column containing true positive rates.
@@ -33,6 +36,7 @@
 #' @param diagonal_color Character: Chance-line color.
 #' @param palette Optional Character: Group colors; unset uses the chart theme.
 #' @param legend Logical: Show group labels and AUC summaries.
+#' @param legend_position Character {"bottom-right", "top-right", "top-left", "bottom-left"}: Corner inside the plotting area for the legend.
 #' @param square Logical: Keep the plotting grid square.
 #' @param line_width Numeric: Curve stroke width in pixels.
 #' @param fold_opacity Numeric: Opacity of individual resample curves.
@@ -108,6 +112,11 @@ ROCConfig <- new_class(
       TRUE,
       description = "Show group labels and AUC summaries."
     ),
+    legend_position = prop_string(
+      "bottom-right",
+      enum = c("bottom-right", "top-right", "top-left", "bottom-left"),
+      description = "Corner inside the plotting area for the legend."
+    ),
     square = prop_boolean(TRUE, description = "Keep the plotting grid square."),
     line_width = prop_float(
       2,
@@ -161,6 +170,7 @@ setup_ROCConfig <- function(
   diagonal_color = "#888888",
   palette = NULL,
   legend = TRUE,
+  legend_position = "bottom-right",
   square = TRUE,
   line_width = 2,
   fold_opacity = 0.45,
@@ -186,6 +196,7 @@ setup_ROCConfig <- function(
     diagonal_color = diagonal_color,
     palette = palette,
     legend = legend,
+    legend_position = legend_position,
     square = square,
     line_width = line_width,
     fold_opacity = fold_opacity,
@@ -206,22 +217,22 @@ method(compile, ROCConfig) <- function(config, data = NULL, ...) {
 }
 
 method(render_meta, ROCConfig) <- function(config, option) {
+  meta <- list(legendPosition = config@legend_position)
   if (!config@square) {
-    return(list())
+    return(meta)
   }
   grid <- option@grid
-  list(
-    aspect = list(
-      ratio = 1,
-      leftPx = grid[["left"]],
-      rightPx = grid[["right"]],
-      topPx = grid[["top"]],
-      botPx = grid[["bottom"]]
-    )
+  meta[["aspect"]] <- list(
+    ratio = 1,
+    leftPx = grid[["left"]],
+    rightPx = grid[["right"]],
+    topPx = grid[["top"]],
+    botPx = grid[["bottom"]]
   )
+  meta
 }
 
-#' Render a ROC config with room for its full legend
+#' Render a ROC config with an inset legend
 #' @inheritParams draw
 #' @param data Optional Data frame: Long ROC records.
 #' @return An ECharts htmlwidget.

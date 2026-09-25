@@ -11,12 +11,12 @@ setup_ConfusionConfig(
   panel = NULL,
   classes = NULL,
   show_metrics = TRUE,
-  digits = 3L,
+  digits = 2L,
   ncol = 2L,
   correct_color = "#0F6A66",
   incorrect_color = "#BE2E5F",
-  low_color = "#FFFFFF",
-  summary_color = "#EEF1F4",
+  low_color = NULL,
+  summary_color = NULL,
   font_size = 12,
   xlab = "Predicted",
   ylab = "Reference",
@@ -37,9 +37,9 @@ setup_ConfusionConfig(
 
 \item{classes}{Optional Character vector: Ordered class labels shared by every panel; unset preserves first appearance.}
 
-\item{show_metrics}{Logical: Show per-class rates, accuracy, and balanced accuracy. Sample size is always shown.}
+\item{show_metrics}{Logical: Show per-class rates, accuracy, and balanced accuracy.}
 
-\item{digits}{Integer: Decimal places for displayed rates.}
+\item{digits}{Integer: Decimal places for rates in cells and hover text.}
 
 \item{ncol}{Integer: Maximum number of panels per row.}
 
@@ -47,9 +47,11 @@ setup_ConfusionConfig(
 
 \item{incorrect_color}{Character: Six-digit hex color at unit fraction for incorrect predictions.}
 
-\item{low_color}{Character: Six-digit hex color at zero row fraction.}
+\item{low_color}{Optional Character: Six-digit hex color at zero row fraction;
+unset uses the active theme background.}
 
-\item{summary_color}{Character: Six-digit hex background for metric cells.}
+\item{summary_color}{Optional Character: Six-digit hex background for metric
+cells; unset uses a faint neutral tint of the active theme background.}
 
 \item{font_size}{Numeric: Cell-label font size in pixels.}
 

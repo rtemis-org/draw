@@ -180,7 +180,7 @@ method(confusion_data, ConfusionConfig) <- function(config, data) {
     if (
       !(is.character(v) || is.factor(v)) ||
         !is.null(dim(v)) ||
-        any(!nzchar(v[!is.na(v)]))
+        any(!nzchar(as.character(v[!is.na(v)])))
     ) {
       abort(
         "Use nonempty character class labels, with missing values for omitted pairs.",
@@ -290,12 +290,15 @@ method(confusion_option, ConfusionConfig) <- function(config, data) {
   k <- length(classes)
   cols <- min(config@ncol, length(panels))
   rows <- ceiling(length(panels) / cols)
-  series <- maps <- grids <- xs <- ys <- titles <- list()
+  series <- maps <- grids <- xs <- ys <- titles <- annotations <- list()
   if (!is.null(config@title)) {
     titles <- list(Title(text = config@title, left = "center", top = 0L))
   }
-  # The explicit cell palette and its contrast labels are portable across host
-  # themes. Use linear sRGB luminance when choosing black or white text.
+  # A compiled native option has a usable light fallback. The shared browser/
+  # SVG layout resolves nullable colors against the actual render theme.
+  low_color <- config@low_color %||% "#FFFFFF"
+  summary_color <- config@summary_color %||% "#EFEFEF"
+  # Use linear sRGB luminance when choosing black or white count text.
   contrast <- function(color) {
     rgb <- as.numeric(grDevices::col2rgb(color)) / 255
     linear <- ifelse(rgb <= .04045, rgb / 12.92, ((rgb + .055) / 1.055)^2.4)
@@ -305,7 +308,7 @@ method(confusion_option, ConfusionConfig) <- function(config, data) {
     if (is.na(value)) {
       "NA"
     } else {
-      formatC(value, format = "f", digits = config@digits)
+      formatC(value, format = "f", digits = config@digits, decimal.mark = ".")
     }
   }
   cell_label <- function(text, color) {
@@ -326,28 +329,36 @@ method(confusion_option, ConfusionConfig) <- function(config, data) {
     top <- top_offset + (100 - top_offset) * ((i - 1L) %/% cols) / rows
     pw <- 100 / cols
     ph <- (100 - top_offset) / rows
-    subtitle <- paste0(
-      "n = ",
-      format(p[["total"]], scientific = FALSE, trim = TRUE),
-      if (p[["omitted"]] > 0) {
-        paste0("; ", p[["omitted"]], " missing pair(s) omitted")
-      }
-    )
     titles[[length(titles) + 1L]] <- Title(
       text = if (length(panels) > 1L || !is.null(config@panel)) {
         p[["name"]]
       } else {
         NULL
       },
-      subtext = subtitle,
       text_style = TextStyle(font_size = config@font_size + 2),
       left = paste0(left + pw / 2, "%"),
       top = paste0(top, "%"),
       text_align = "center"
     )
+    # Counts already show the included observations. Annotate only omissions,
+    # which cannot be recovered from the cells; keep their panel identity.
+    if (p[["omitted"]] > 0) {
+      annotations[[length(annotations) + 1L]] <- list(
+        type = "text",
+        id = paste0("confusion-caption-", i),
+        silent = TRUE,
+        left = paste0(left + pw * .18, "%"),
+        top = paste0(top + ph * .97, "%"),
+        style = list(
+          text = paste0(p[["omitted"]], " missing pair(s) omitted"),
+          fontSize = config@font_size
+        )
+      )
+    }
     base <- length(grids)
     # Count matrix, narrow right/bottom metric strips, and overall summary.
-    # Native percentage layouts work in both browser resize and SVG SSR.
+    # Percentages provide a native fallback; the shared renderer fits square
+    # count cells and aligned metric strips to the measured canvas.
     count_width <- if (config@show_metrics) .56 else .76
     count_height <- if (config@show_metrics) .60 else .74
     layouts <- list(c(.18, .20, count_width, count_height))
@@ -364,9 +375,9 @@ method(confusion_option, ConfusionConfig) <- function(config, data) {
       )
       xlabels <- c(
         xlabels,
-        list(c("Sens.", "Spec."), classes, c("Accuracy", "BA"))
+        list(c("Sens.", "Spec."), classes, "Summary")
       )
-      ylabels <- c(ylabels, list(classes, c("PPV", "NPV"), "Summary"))
+      ylabels <- c(ylabels, list(classes, c("PPV", "NPV"), c("Accuracy", "BA")))
     }
     for (j in seq_along(layouts)) {
       box <- layouts[[j]]
@@ -423,7 +434,7 @@ method(confusion_option, ConfusionConfig) <- function(config, data) {
         arr.ind = TRUE
       )
       hue <- if (correct) config@correct_color else config@incorrect_color
-      ramp <- grDevices::colorRamp(c(config@low_color, hue))
+      ramp <- grDevices::colorRamp(c(low_color, hue))
       marks <- lapply(seq_len(nrow(at)), function(j) {
         # which(..., arr.ind = TRUE) can retain row/col names on a scalar;
         # htmlwidgets preserves named scalars as JSON objects, not coordinates.
@@ -445,7 +456,8 @@ method(confusion_option, ConfusionConfig) <- function(config, data) {
             p[["counts"]][r, column],
             classes[[r]],
             classes[[column]],
-            if (is.na(fraction)) NULL else fraction
+            if (is.na(fraction)) NULL else fraction,
+            format_rate(fraction)
           ),
           label = cell_label(
             format(p[["counts"]][r, column], scientific = FALSE, trim = TRUE),
@@ -460,7 +472,7 @@ method(confusion_option, ConfusionConfig) <- function(config, data) {
         y_axis_index = base,
         item_style = ItemStyle(
           border_width = 1,
-          border_color = config@low_color
+          border_color = low_color
         )
       ))
       s[["dimensions"]] <- as.list(c(
@@ -472,16 +484,24 @@ method(confusion_option, ConfusionConfig) <- function(config, data) {
         "Predicted",
         "Row fraction"
       ))
+      # DimensionDefinition in ECharts util/types.ts supports an independent
+      # displayName and ordinal type. Keep the full numeric fraction above;
+      # the native tooltip reads fixed-decimal text without a JS formatter.
+      s[["dimensions"]][[8L]] <- list(
+        name = "Row fraction label",
+        displayName = "Row fraction",
+        type = "ordinal"
+      )
       s[["encode"]] <- list(
         x = 0L,
         y = 1L,
-        tooltip = as.list(c(4L, 5L, 3L, 6L))
+        tooltip = as.list(c(4L, 5L, 3L, 7L))
       )
       map <- to_list(VisualMap(
         show = FALSE,
         min = 0,
         max = 1,
-        in_range = list(color = c(config@low_color, hue))
+        in_range = list(color = c(low_color, hue))
       ))
       map[["dimension"]] <- 2L
       map[["seriesIndex"]] <- length(series)
@@ -498,31 +518,33 @@ method(confusion_option, ConfusionConfig) <- function(config, data) {
             value = list(m - 1L, j - 1L, 0),
             label = cell_label(
               format_rate(p[[c("sensitivity", "specificity")[[m]]]][[j]]),
-              config@summary_color
+              summary_color
             )
           )
           bottom[[length(bottom) + 1L]] <- list(
             value = list(j - 1L, m - 1L, 0),
             label = cell_label(
               format_rate(p[[c("ppv", "npv")[[m]]]][[j]]),
-              config@summary_color
+              summary_color
             )
           )
         }
       }
+      # Stack the two overall summaries so their names do not compete for
+      # half of an already narrow strip at phone widths.
       overall <- list(
         list(
           value = list(0L, 0L, 0),
           label = cell_label(
             paste0("Accuracy\n", format_rate(p[["accuracy"]])),
-            config@summary_color
+            summary_color
           )
         ),
         list(
-          value = list(1L, 0L, 0),
+          value = list(0L, 1L, 0),
           label = cell_label(
             paste0("BA\n", format_rate(p[["balanced_accuracy"]])),
-            config@summary_color
+            summary_color
           )
         )
       )
@@ -531,7 +553,7 @@ method(confusion_option, ConfusionConfig) <- function(config, data) {
           show = FALSE,
           min = 0,
           max = 1,
-          in_range = list(color = rep(config@summary_color, 2L))
+          in_range = list(color = rep(summary_color, 2L))
         ))
         map[["dimension"]] <- 2L
         map[["seriesIndex"]] <- length(series)
@@ -543,7 +565,7 @@ method(confusion_option, ConfusionConfig) <- function(config, data) {
           silent = TRUE,
           item_style = ItemStyle(
             border_width = 1,
-            border_color = config@low_color
+            border_color = low_color
           )
         )
       }
@@ -551,6 +573,7 @@ method(confusion_option, ConfusionConfig) <- function(config, data) {
   }
   EChartsOption(
     title = titles,
+    graphic = if (length(annotations)) list(elements = annotations),
     grid = grids,
     x_axis = xs,
     y_axis = ys,
@@ -590,6 +613,7 @@ method(draw, ConfusionConfig) <- function(
     element_id = element_id,
     filename = filename,
     animation = animation,
+    meta = render_meta(option, built),
     ...
   )
 }
@@ -607,7 +631,8 @@ method(draw, ConfusionConfig) <- function(
 #' @param y Optional vector: Predicted labels when x contains reference labels.
 #' @inheritParams ConfusionConfig
 #' @param ... Additional named settings for [setup_ConfusionConfig()].
-#' @param theme Optional [Theme]: Chart theme. Cell colors are explicit config settings.
+#' @param theme Optional [Theme]: Chart theme. Color fades and marginal
+#'   backgrounds follow the active theme unless overridden in the config.
 #' @param width,height Optional Numeric or Character: Widget dimensions.
 #' @param element_id Optional Character: HTML element identifier.
 #' @param filename Optional Character: Static output path, currently SVG.

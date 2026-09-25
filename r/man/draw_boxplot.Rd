@@ -107,6 +107,8 @@ unavailable input is an error. Missing values are counted in a caption and
 never replaced with zero. Missing group assignments are excluded.
 Numeric top margins reserve space for a missing-value caption: at least
 64 pixels with a title or 48 without one. Axis titles are centered.
+Every category label is shown so boxes remain identifiable in narrow plots.
+Use a horizontal layout or a larger figure for many or long category names.
 With point overlays, padded range endpoints are unlabeled; interior ticks
 retain the backend's numeric formatting and plotted values are unchanged.
 Points retain their exact value coordinate. Their perpendicular offsets use

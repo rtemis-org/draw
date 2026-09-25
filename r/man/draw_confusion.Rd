@@ -25,7 +25,8 @@ draw_confusion(
 
 \item{...}{Additional named settings for \code{\link[=setup_ConfusionConfig]{setup_ConfusionConfig()}}.}
 
-\item{theme}{Optional \link{Theme}: Chart theme. Cell colors are explicit config settings.}
+\item{theme}{Optional \link{Theme}: Chart theme. Color fades and marginal
+backgrounds follow the active theme unless overridden in the config.}
 
 \item{width, height}{Optional Numeric or Character: Widget dimensions.}
 

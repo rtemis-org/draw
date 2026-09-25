@@ -68,6 +68,10 @@ test_that("classification ROC dispatch is draw-owned and selects available proba
   expect_identical(unique(d[["split"]]), c("Training", "Validation", "Test"))
   expect_equal(unique(d[["auc"]]), .875)
   expect_identical(plot_roc(mod)[["x"]], draw_roc(d)[["x"]])
+  expect_identical(
+    plot_roc(mod, legend_position = "top-right")[["x"]][["legendPosition"]],
+    "top-right"
+  )
   expect_identical(old, S7::method(rtemis::plot_roc, S7::S7_class(mod)))
   expect_identical(
     unique(roc_plot_data(mod, c("test", "training"), labelify = FALSE)[[

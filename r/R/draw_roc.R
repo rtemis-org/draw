@@ -244,6 +244,10 @@ method(roc_input, class_any) <- function(
 #' `[0, 1]`; direction is fixed, and tied scores enter together. No observations
 #' are deduplicated, curves smoothed, or vertices downsampled.
 #' @inheritSection ROCConfig Statistical semantics
+#' @section Legend placement:
+#' Set `legend_position` to `"bottom-right"`, `"top-right"`, `"top-left"`, or
+#' `"bottom-left"` through `...`. The lower-right default usually leaves the
+#' upper-left region occupied by informative ROC curves unobstructed.
 #' @param true_labels Factor, vector, list, or data frame: Reference labels or ROC records.
 #' @param predicted_prob Optional Numeric vector, matrix, or list: Class probabilities.
 #' @param positive Optional Character: Positive class for binary input.
@@ -483,18 +487,19 @@ method(roc_option, ROCConfig) <- function(config, data) {
   fmt <- function(x) {
     if (is.na(x)) "NA" else formatC(x, format = "f", digits = config@digits)
   }
-  # Class identity remains visible even for a single binary curve. Unambiguous
-  # native legend names also group every fold belonging to one class/sample.
+  classes <- unique(vapply(groups, `[[`, character(1), "class"))
+  splits <- unique(vapply(groups, `[[`, character(1), "split"))
+  # Omit the generic single-sample prefix, keeping explicit sample/model names
+  # and class identity. Shared native names toggle all folds in a group.
   labels <- vapply(
     groups,
     function(g) {
       paste0(
-        g[["split"]],
-        ": ",
+        if (!identical(splits, "Sample")) paste0(g[["split"]], ": "),
         g[["class"]],
         if (per_fold) {
           paste0(
-            " | AUC mean ",
+            " (AUC mean ",
             fmt(g[["mean"]]),
             "; SD ",
             fmt(g[["sd"]]),
@@ -502,44 +507,43 @@ method(roc_option, ROCConfig) <- function(config, data) {
             g[["available"]],
             "/",
             g[["total"]],
-            "]"
+            "])"
           )
         } else {
-          paste0(" | AUC ", fmt(g[["mean"]]))
+          paste0(" (AUC ", fmt(g[["mean"]]), ")")
         }
       )
     },
     character(1)
   )
   labels <- make.unique(labels)
-  classes <- unique(vapply(groups, `[[`, character(1), "class"))
-  splits <- unique(vapply(groups, `[[`, character(1), "split"))
   active <- unique(vapply(curves, `[[`, integer(1), "group"))
   legend_names <- labels[active]
-  # A vertical, non-scrolling legend makes every AUC available to static export.
-  right <- if (config@legend) {
-    max(210, max(nchar(legend_names)) * 7 + 36)
-  } else {
-    24
-  }
+  # Inset legends do not consume plotting width or add rows beneath the axes.
+  bottom <- 65
   disclosure <- c(
     if (prepared[["undefined"]]) {
       paste(prepared[["undefined"]], "undefined curve(s) omitted")
     },
     if (prepared[["max_omitted"]]) {
       paste0(
-        "Missing pairs excluded (max ",
+        "Missing pairs excluded:\nmax ",
         prepared[["max_omitted"]],
-        " per curve)"
+        " per curve"
       )
     }
   )
-  top <- if (!is.null(config@title) || length(disclosure)) 65 else 25
+  top <- 25 + if (!is.null(config@title)) 25 else 0
+  if (length(disclosure)) {
+    top <- top +
+      20 +
+      18 * sum(lengths(strsplit(disclosure, "\n", fixed = TRUE)))
+  }
   grid <- to_list(Grid(
     left = 70,
-    right = right,
+    right = 24,
     top = top,
-    bottom = 65,
+    bottom = bottom,
     contain_label = FALSE
   ))
   grid[["outerBoundsMode"]] <- "none"
@@ -612,8 +616,9 @@ method(roc_option, ROCConfig) <- function(config, data) {
   EChartsOption(
     title = Title(
       text = config@title,
-      subtext = if (length(disclosure)) paste(disclosure, collapse = "; "),
-      left = 70
+      subtext = if (length(disclosure)) paste(disclosure, collapse = "\n"),
+      left = "center",
+      text_align = "center"
     ),
     grid = grid,
     x_axis = Axis(
@@ -635,14 +640,20 @@ method(roc_option, ROCConfig) <- function(config, data) {
     legend = Legend(
       show = config@legend,
       orient = "vertical",
-      right = 10,
-      top = top,
-      width = right - 30,
+      # Initial native anchors also make the compiled option useful on its own.
+      # Shared render geometry refines these after square-grid fitting/resizing.
+      left = if (grepl("left$", config@legend_position)) 82,
+      right = if (grepl("right$", config@legend_position)) 36,
+      top = if (startsWith(config@legend_position, "top")) top + 12,
+      bottom = if (startsWith(config@legend_position, "bottom")) bottom + 12,
+      align = "left",
+      padding = 0,
+      item_gap = 6,
       icon = "roundRect",
       item_width = 20,
       item_height = 3,
       data = as.list(legend_names),
-      text_style = TextStyle(font_size = 12)
+      text_style = TextStyle(font_size = 12, line_height = 14)
     ),
     tooltip = Tooltip(trigger = "axis", confine = TRUE),
     series = series

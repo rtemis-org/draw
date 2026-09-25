@@ -11,6 +11,10 @@
 #' Compiles to `HeatmapSeriesOption` in `src/chart/heatmap/HeatmapSeries.ts`,
 #' `GridOption` in `src/coord/cartesian/GridModel.ts`, and continuous visual maps.
 #' `to_list()` emits semantic config keys; `compile()` emits ECharts options.
+#' `draw()` fits square count cells with aligned marginal summaries to the
+#' available canvas. Missing-pair omissions appear below the matrix when present.
+#' The cell counts show included observations without a separate sample-size label. Color fades and
+#' marginal backgrounds follow the active theme unless explicitly overridden.
 #'
 #' @section Statistical semantics:
 #' Color intensity is the fraction within each reference row; labels show raw
@@ -26,13 +30,15 @@
 #' @param count Character: Column containing nonnegative integer frequencies.
 #' @param panel Optional Character: Optional panel-label column; unset draws one matrix.
 #' @param classes Optional Character vector: Ordered class labels shared by every panel; unset preserves first appearance.
-#' @param show_metrics Logical: Show per-class rates, accuracy, and balanced accuracy. Sample size is always shown.
-#' @param digits Integer: Decimal places for displayed rates.
+#' @param show_metrics Logical: Show per-class rates, accuracy, and balanced accuracy.
+#' @param digits Integer: Decimal places for rates in cells and hover text.
 #' @param ncol Integer: Maximum number of panels per row.
 #' @param correct_color Character: Six-digit hex color at unit fraction for correct predictions.
 #' @param incorrect_color Character: Six-digit hex color at unit fraction for incorrect predictions.
-#' @param low_color Character: Six-digit hex color at zero row fraction.
-#' @param summary_color Character: Six-digit hex background for metric cells.
+#' @param low_color Optional Character: Six-digit hex color at zero row fraction;
+#'   unset uses the active theme background.
+#' @param summary_color Optional Character: Six-digit hex background for metric
+#'   cells; unset uses a faint neutral tint of the active theme background.
 #' @param font_size Numeric: Cell-label font size in pixels.
 #' @param xlab Character: Predicted-class axis label.
 #' @param ylab Character: Reference-class axis label.
@@ -75,13 +81,13 @@ ConfusionConfig <- new_class(
     ),
     show_metrics = prop_boolean(
       TRUE,
-      description = "Show per-class rates, accuracy, and balanced accuracy. Sample size is always shown."
+      description = "Show per-class rates, accuracy, and balanced accuracy."
     ),
     digits = prop_integer(
-      3L,
+      2L,
       min = 0L,
       max = 8L,
-      description = "Decimal places for displayed rates."
+      description = "Decimal places for rates in cells and hover text."
     ),
     ncol = prop_integer(
       2L,
@@ -97,12 +103,14 @@ ConfusionConfig <- new_class(
       description = "Six-digit hex color at unit fraction for incorrect predictions."
     ),
     low_color = prop_string(
-      "#FFFFFF",
-      description = "Six-digit hex color at zero row fraction."
+      NULL,
+      nullable = TRUE,
+      description = "Six-digit hex color at zero row fraction; unset uses the active theme background."
     ),
     summary_color = prop_string(
-      "#EEF1F4",
-      description = "Six-digit hex background for metric cells."
+      NULL,
+      nullable = TRUE,
+      description = "Six-digit hex background for metric cells; unset uses a faint neutral theme tint."
     ),
     font_size = prop_float(
       12,
@@ -123,7 +131,10 @@ ConfusionConfig <- new_class(
       "low_color",
       "summary_color"
     )) {
-      if (!grepl("^#[0-9A-Fa-f]{6}$", prop(self, name))) {
+      if (
+        !is.null(prop(self, name)) &&
+          !grepl("^#[0-9A-Fa-f]{6}$", prop(self, name))
+      ) {
         errors <- c(errors, paste0("@", name, " must be a six-digit hex color"))
       }
     }
@@ -154,12 +165,12 @@ setup_ConfusionConfig <- function(
   panel = NULL,
   classes = NULL,
   show_metrics = TRUE,
-  digits = 3L,
+  digits = 2L,
   ncol = 2L,
   correct_color = "#0F6A66",
   incorrect_color = "#BE2E5F",
-  low_color = "#FFFFFF",
-  summary_color = "#EEF1F4",
+  low_color = NULL,
+  summary_color = NULL,
   font_size = 12,
   xlab = "Predicted",
   ylab = "Reference",
@@ -215,3 +226,21 @@ method(compile, ConfusionConfig) <- function(config, data = NULL, ...) {
 }
 
 method(to_list, ConfusionConfig) <- function(x) chart_config_to_list(x)
+
+
+#' Carry theme and square-cell constraints to the shared render layout
+#' @inheritParams render_meta
+#' @return List of portable confusion rendering hints.
+#' @keywords internal
+#' @noRd
+method(render_meta, ConfusionConfig) <- function(config, option) {
+  list(
+    confusion = drop_nulls(list(
+      ncol = config@ncol,
+      metrics = config@show_metrics,
+      fontSize = config@font_size,
+      lowColor = config@low_color,
+      summaryColor = config@summary_color
+    ))
+  )
+}

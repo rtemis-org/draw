@@ -47,7 +47,29 @@ try {
   chart.dispatchAction({ type: 'legendSelect', name: 'Train' });
   chart.resize({ width: 620, height: 400 });
   check(8);
-  process.stdout.write('Box/point geometry, clipping, opacity, legend, and resize passed.');
+  // A 390px Quarto viewport leaves about 344px for the chart. Automatic
+  // category thinning previously hid Test even though all three labels fit.
+  chart.resize({ width: 344, height: 400 });
+  input.phone_option.animation = false;
+  chart.setOption(input.phone_option, true);
+  const names = ['Training', 'Test', 'Validation'];
+  const labels = chart.getZr().storage.getDisplayList(true)
+    .filter(el => el.type === 'tspan' && names.includes(el.style.text));
+  if (labels.length !== names.length) throw new Error('A category label is hidden');
+  const rects = labels.map(el => {
+    const rect = el.getBoundingRect().clone();
+    rect.applyTransform(el.getComputedTransform());
+    if (rect.x < 0 || rect.y < 0 || rect.x + rect.width > 344 || rect.y + rect.height > 400) {
+      throw new Error('A category label is clipped');
+    }
+    return rect;
+  });
+  for (let i = 0; i < rects.length; i++) {
+    for (let j = i + 1; j < rects.length; j++) {
+      if (rects[i].intersect(rects[j])) throw new Error('Category labels overlap');
+    }
+  }
+  process.stdout.write('Box/point geometry, clipping, opacity, legend, resize, and phone labels passed.');
 } finally {
   chart.dispose();
 }

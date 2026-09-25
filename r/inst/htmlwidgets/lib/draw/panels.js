@@ -1,4 +1,5 @@
 // Shared geometry for independent chart panels in browser and SVG export.
+// spec: draw/first-cran-release#current-static-export-boundary
 // Child EChartsOption references stay local to each ECharts instance.
 (function(root, factory) {
   if (typeof module === 'object' && module.exports) module.exports = factory();
@@ -37,8 +38,84 @@
     }
     grid.width = Math.min(available, preferred);
     grid.height = grid.width * a.ratio;
-    grid.containLabel = false;
-    grid.outerBoundsMode = 'none';
+    grid.left = a.leftPx + (width - a.leftPx - a.rightPx - grid.width) / 2;
+    grid.top = a.topPx + (height - a.topPx - a.botPx - grid.height) / 2;
   }
-  return {cells, fit};
+  // Native outer bounds reserve axis-label/name space before we enforce the
+  // data-area ratio. Pinning the unmeasured outer box instead clips labels;
+  // leaving native shrinkage unconstrained makes an identity line non-square.
+  // Shared by standalone widgets, bounded panels, and Node SVG rendering.
+  function fitAxes(chart, payload) {
+    const a = payload.aspect;
+    if (!a) return;
+    const rect = chart.getModel().getComponent('grid').coordinateSystem.getRect();
+    const width = Math.min(rect.width, rect.height / a.ratio);
+    const height = width * a.ratio;
+    chart.setOption({grid: {
+      left: rect.x + (rect.width - width) / 2,
+      top: rect.y + (rect.height - height) / 2,
+      width, height, containLabel: false, outerBoundsMode: 'none'
+    }});
+  }
+  // Position a ROC legend relative to the measured data area, not the canvas.
+  // ECharts LegendModel uses content-sized boxes (ignoreSize: true), so use
+  // one anchor per axis. Measure the active font before constraining long
+  // labels; native wrapping preserves every character in browser and SVG.
+  // spec: draw/first-cran-release#roc-views
+  function positionLegend(echarts, chart, payload) {
+    const position = payload.legendPosition;
+    if (!position) return;
+    const model = chart.getModel().getComponent('legend');
+    if (!model?.get('show')) return;
+    const grid = chart.getModel().getComponent('grid').coordinateSystem.getRect();
+    const inset = 12;
+    const font = model.getModel('textStyle').getFont();
+    const names = model.getData().map(item => item.get('name'));
+    if (!names.length) return;
+    const naturalWidth = Math.max(...names.map(name =>
+      echarts.format.getTextRect(name, font).width));
+    // The native marker-to-label gap is 5px (LegendView._createItem).
+    const available = grid.width - 2 * inset - model.get('itemWidth') - 5;
+    const right = position.endsWith('right');
+    const bottom = position.startsWith('bottom');
+    chart.setOption({legend: {
+      left: right ? null : grid.x + inset,
+      right: right ? chart.getWidth() - grid.x - grid.width + inset : null,
+      top: bottom ? null : grid.y + inset,
+      bottom: bottom ? chart.getHeight() - grid.y - grid.height + inset : null,
+      // Leave short labels unconstrained: measuring then imposing that exact
+      // width can wrap a word because native text layout rounds differently.
+      textStyle: {width: naturalWidth > available ? Math.max(1, available) : null, overflow: 'break'}
+    }});
+  }
+  // A centered vertical colorbar belongs beside the data grid, which may be
+  // offset by titles, rotated labels, or dendrograms. Measure the native view
+  // after layout so its handles and endpoint text are included. Keep this in
+  // the shared renderer so browser resize and vector export agree.
+  function centerVisualMaps(chart, payload) {
+    const definitions = payload.option?.visualMap;
+    if (!definitions) return;
+    const maps = Array.isArray(definitions) ? definitions : [definitions];
+    let changed = false;
+    const updates = maps.map((definition, index) => {
+      if (!['middle', 'center'].includes(definition.top)) return {};
+      const model = chart.getModel().getComponent('visualMap', index);
+      if (!model?.get('show') || model.get('orient') !== 'vertical') return {};
+      const areas = [];
+      model.eachTargetSeries(series => {
+        if (series.subType === 'heatmap' && series.coordinateSystem?.type === 'cartesian2d') {
+          areas.push(series.coordinateSystem.getArea());
+        }
+      });
+      if (!areas.length) return {};
+      const top = Math.min(...areas.map(area => area.y));
+      const bottom = Math.max(...areas.map(area => area.y + area.height));
+      const view = chart.getViewOfComponentModel(model);
+      const height = view.group.getBoundingRect().height;
+      changed = true;
+      return {top: (top + bottom - height) / 2};
+    });
+    if (changed) chart.setOption({visualMap: updates});
+  }
+  return {cells, fit, fitAxes, positionLegend, centerVisualMaps};
 });

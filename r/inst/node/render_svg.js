@@ -25,6 +25,8 @@ const echartsPath = path.resolve(
 const echarts = require(echartsPath);
 const registerRenderers = require("../htmlwidgets/lib/draw/renderers.js");
 const rendererNames = registerRenderers(echarts);
+const layout = require("../htmlwidgets/lib/draw/panels.js");
+const confusion = require("../htmlwidgets/lib/draw/confusion.js");
 
 // Read the entire stdin as UTF-8.
 let raw = "";
@@ -47,6 +49,7 @@ process.stdin.on("end", () => {
 	const height = payload.height || 600;
 	const creator = payload.creator || "rtemis.draw";
 	function renderPanel(panel, w, h) {
+		confusion.prepare(echarts, panel, panel.theme, w, h);
 		const option = panel.option;
 		if (!option) throw new Error("An ECharts option is required for each panel.");
 		const series = Array.isArray(option.series) ? option.series : [option.series];
@@ -62,6 +65,9 @@ process.stdin.on("end", () => {
 			chart = echarts.init(null, panel.theme || null,
 				{renderer: "svg", ssr: true, width: w, height: h});
 			chart.setOption(option);
+			layout.fitAxes(chart, panel);
+			layout.positionLegend(echarts, chart, panel);
+			layout.centerVisualMaps(chart, panel);
 			return chart.renderToSVGString();
 		} finally {
 			if (chart) chart.dispose();
@@ -70,7 +76,6 @@ process.stdin.on("end", () => {
 	try {
 		let svg;
 		if (payload.panels) {
-			const layout = require("../htmlwidgets/lib/draw/panels.js");
 			const cells = layout.cells(payload.panels.length, payload.layout, width, height);
 			const parts = payload.panels.map((panel, i) => {
 				const cell = cells[i];

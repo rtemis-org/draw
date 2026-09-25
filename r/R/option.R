@@ -22,6 +22,8 @@
 #' @param tooltip Optional [Tooltip]: Tooltip configuration.
 #' @param visual_map Optional [VisualMap] or list: Visual map configuration (`visualMap`).
 #'   Required for heatmaps to map data values to colors.
+#' @param graphic Optional list: Native graphic annotations, corresponding to
+#'   `GraphicComponentOption` in `src/component/graphic/GraphicModel.ts`.
 #' @param toolbox Optional list: Toolbox configuration (`toolbox`), e.g. the
 #'   `dataZoom` and `restore` features used by [draw_gantt()].
 #' @param data_zoom Optional [DataZoom] or list of [DataZoom]: Axis zoom
@@ -62,6 +64,10 @@ EChartsOption <- S7::new_class(
     y_axis = S7::new_property(class = S7::class_any, default = NULL),
     tooltip = class_or_null_property(Tooltip),
     visual_map = S7::new_property(class = S7::class_any, default = NULL),
+    graphic = S7::new_property(
+      class = S7::new_union(NULL, S7::class_list),
+      default = NULL
+    ),
     toolbox = S7::new_property(class = S7::class_any, default = NULL),
     data_zoom = S7::new_property(class = S7::class_any, default = NULL),
     # Series (single or list)
@@ -130,7 +136,8 @@ S7::method(to_list, EChartsOption) <- function(x, ...) {
     y_axis = "yAxis",
     tooltip = "tooltip",
     visual_map = "visualMap",
-    toolbox = "toolbox"
+    toolbox = "toolbox",
+    graphic = "graphic"
   )
 
   for (prop_name in names(component_map)) {

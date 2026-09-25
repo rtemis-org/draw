@@ -338,13 +338,25 @@ method(boxplot_option, class_any) <- function(
   } else {
     categories
   }
+  # Native automatic thinning can hide the identity of a whole box, even with
+  # only three short category names at phone widths. Keep those names visible.
   x_axis <- if (horizontal) {
     Axis(type = "value", scale = TRUE, name = xlab %||% value_name)
   } else {
-    Axis(type = "category", data = categories, name = xlab)
+    Axis(
+      type = "category",
+      data = categories,
+      name = xlab,
+      axis_label = AxisLabel(interval = 0)
+    )
   }
   y_axis <- if (horizontal) {
-    Axis(type = "category", data = categories, name = ylab)
+    Axis(
+      type = "category",
+      data = categories,
+      name = ylab,
+      axis_label = AxisLabel(interval = 0)
+    )
   } else {
     Axis(type = "value", scale = TRUE, name = ylab %||% value_name)
   }
@@ -414,6 +426,8 @@ method(boxplot_option, class_any) <- function(
 #' never replaced with zero. Missing group assignments are excluded.
 #' Numeric top margins reserve space for a missing-value caption: at least
 #' 64 pixels with a title or 48 without one. Axis titles are centered.
+#' Every category label is shown so boxes remain identifiable in narrow plots.
+#' Use a horizontal layout or a larger figure for many or long category names.
 #' With point overlays, padded range endpoints are unlabeled; interior ticks
 #' retain the backend's numeric formatting and plotted values are unchanged.
 #' Points retain their exact value coordinate. Their perpendicular offsets use

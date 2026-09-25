@@ -237,3 +237,78 @@ test_that("draw_heatmap with 1 row does not add dendro panel", {
   expect_false(is.list(opt$grid[[1]]))
   expect_s3_class(w, "htmlwidget")
 })
+
+
+test_that("heatmap labels default to two decimals without rounding source values", {
+  m <- matrix(c(.5951098244376296, 1, -.2350528703555328, NA), 2L)
+  defaults <- draw_heatmap(m, show_values = TRUE)[["x"]][["option"]]
+  items <- defaults[["series"]][[1L]][["data"]]
+  expect_identical(
+    vapply(items, function(p) p[["label"]][["formatter"]], ""),
+    c("0.60", "-0.24", "1.00", "")
+  )
+  expect_identical(items[[1L]][["value"]][[3L]], m[1L, 1L])
+  expect_identical(HeatmapConfig()@value_digits, 2L)
+  cfg <- setup_HeatmapConfig(show_values = TRUE, value_digits = 3L)
+  explicit <- draw(cfg, data = m)[["x"]][["option"]]
+  expect_identical(
+    explicit,
+    draw_heatmap(m, show_values = TRUE, value_digits = 3L)[["x"]][["option"]]
+  )
+  expect_identical(
+    explicit[["series"]][[1L]][["data"]][[1L]][["label"]][["formatter"]],
+    "0.595"
+  )
+})
+
+
+test_that("vertical heatmap colorbars stay centered on the plotted data", {
+  skip_if_not(nzchar(Sys.which("node")), "node not found")
+  m <- make_mat(4L)
+  charts <- list(
+    draw_heatmap(m, show_values = TRUE, margins = c(top = 35, bottom = 115)),
+    draw_heatmap(
+      m,
+      show_values = TRUE,
+      cluster_rows = TRUE,
+      cluster_cols = TRUE
+    ),
+    draw_heatmap(
+      m,
+      show_values = TRUE,
+      cluster_cols = TRUE,
+      dendro_col_side = "bottom"
+    ),
+    draw_heatmap(m, show_values = TRUE, colorbar_orient = "horizontal"),
+    draw_heatmap(m, show_values = TRUE, show_colorbar = FALSE)
+  )
+  path <- tempfile(fileext = ".json")
+  on.exit(unlink(path), add = TRUE)
+  jsonlite::write_json(
+    list(
+      charts = lapply(charts, function(w) strip_js(w[["x"]])),
+      echarts = system.file(
+        "htmlwidgets/lib/echarts/echarts.min.js",
+        package = "rtemis.draw"
+      ),
+      layout = system.file(
+        "htmlwidgets/lib/draw/panels.js",
+        package = "rtemis.draw"
+      )
+    ),
+    path,
+    auto_unbox = TRUE,
+    null = "null"
+  )
+  output <- system2(
+    Sys.which("node"),
+    c(
+      shQuote(test_path("fixtures", "heatmap_colorbar.js")),
+      shQuote(path)
+    ),
+    stdout = TRUE,
+    stderr = TRUE
+  )
+  expect_null(attr(output, "status"), info = paste(output, collapse = "\n"))
+  expect_match(paste(output, collapse = "\n"), "passed")
+})

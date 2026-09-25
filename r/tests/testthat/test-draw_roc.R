@@ -202,7 +202,7 @@ test_that("ROC SVG contains curves, chance line, full labels, and a square plott
   on.exit(unlink(path), add = TRUE)
   widget <- draw_roc(roc_test_records(), palette = "#123456", filename = path)
   text <- paste(readLines(path, warn = FALSE), collapse = "\n")
-  expect_match(text, "Sample: yes")
+  expect_match(text, "yes \\(AUC 0.875\\)")
   expect_match(text, "AUC 0.875")
   expect_match(text, 'stroke="#123456"')
   expect_match(text, 'stroke="#888888"')
@@ -217,6 +217,63 @@ test_that("ROC SVG contains curves, chance line, full labels, and a square plott
   expect_equal(grid[["height"]], 500 - 25 - 65)
 })
 
+test_that("classification labels and square ROC axes fit phone and SVG layouts", {
+  skip_if_not(nzchar(Sys.which("node")), "node not found")
+  folds <- roc_test_records()
+  folds[["fold"]] <- "Fold 1"
+  undefined <- folds[1L, ]
+  undefined[["fold"]] <- "Fold 2"
+  undefined[c("fpr", "tpr", "auc")] <- NA_real_
+  folds <- rbind(folds, undefined)
+  folds[["omitted"]] <- 1
+  widgets <- list(
+    draw_roc(
+      list(Training = roc_test_labels(), Test = roc_test_labels()),
+      list(Training = c(.1, .8, .5, .5), Test = c(.5, .5, .5, .5))
+    ),
+    draw_roc(folds, variant = "per_resample"),
+    draw_roc(roc_test_records(), legend = FALSE),
+    draw_confusion(matrix(
+      c(8, 2, 1, 9),
+      2,
+      dimnames = list(c("yes", "no"), c("yes", "no"))
+    ))
+  )
+  path <- tempfile(fileext = ".json")
+  on.exit(unlink(path), add = TRUE)
+  jsonlite::write_json(
+    list(
+      charts = lapply(widgets, `[[`, "x"),
+      echarts = system.file(
+        "htmlwidgets/lib/echarts/echarts.min.js",
+        package = "rtemis.draw"
+      ),
+      confusion = system.file(
+        "htmlwidgets/lib/draw/confusion.js",
+        package = "rtemis.draw"
+      ),
+      layout = system.file(
+        "htmlwidgets/lib/draw/panels.js",
+        package = "rtemis.draw"
+      )
+    ),
+    path,
+    auto_unbox = TRUE,
+    null = "null"
+  )
+  output <- system2(
+    Sys.which("node"),
+    c(
+      shQuote(test_path("fixtures", "classification_geometry.js")),
+      shQuote(path)
+    ),
+    stdout = TRUE,
+    stderr = TRUE
+  )
+  expect_null(attr(output, "status"), info = paste(output, collapse = "\n"))
+  expect_match(paste(output, collapse = "\n"), "passed")
+})
+
 test_that("empirical ROC agrees with the existing rtemis statistical engine", {
   skip_if_not_installed("rtemis")
   y <- roc_test_labels()
@@ -224,6 +281,87 @@ test_that("empirical ROC agrees with the existing rtemis statistical engine", {
   old <- rtemis::roc_curve(y, p)
   new <- roc_input(y, p)
   expect_equal(new[c("class", "fpr", "tpr", "auc")], old)
+})
+
+test_that("ROC legends use compact labels and portable corner placement", {
+  records <- roc_test_records()
+  default <- draw_roc(records)
+  expect_identical(default[["x"]][["legendPosition"]], "bottom-right")
+  expect_identical(
+    default[["x"]][["option"]][["legend"]][["data"]],
+    list("yes (AUC 0.875)")
+  )
+  records[["split"]] <- "Validation"
+  named <- draw_roc(records, legend_position = "top-left")
+  expect_identical(named[["x"]][["legendPosition"]], "top-left")
+  expect_identical(
+    named[["x"]][["option"]][["legend"]][["data"]],
+    list("Validation: yes (AUC 0.875)")
+  )
+  expect_equal(named[["height"]], default[["height"]])
+  expect_identical(
+    draw_roc(records, square = FALSE, legend_position = "bottom-left")[["x"]][[
+      "legendPosition"
+    ]],
+    "bottom-left"
+  )
+})
+
+test_that("ROC legend anchors and complete labels survive resize and selection", {
+  skip_if_not(nzchar(Sys.which("node")), "node not found")
+  multiclass <- do.call(
+    rbind,
+    lapply(c("setosa", "versicolor", "virginica"), function(cl) {
+      records <- roc_test_records()
+      records[["class"]] <- cl
+      records
+    })
+  )
+  folds <- rbind(roc_test_records(), roc_test_records())
+  folds[["fold"]] <- rep(c("one", "two"), each = nrow(folds) / 2)
+  folds[["split"]] <- "Validation sample"
+  corners <- c("bottom-right", "top-right", "top-left", "bottom-left")
+  widgets <- unlist(
+    lapply(corners, function(corner) {
+      list(
+        draw_roc(multiclass, legend_position = corner),
+        draw_roc(
+          folds,
+          variant = "per_resample",
+          legend_position = corner,
+          theme = theme_dark(),
+          square = FALSE
+        )
+      )
+    }),
+    recursive = FALSE
+  )
+  path <- tempfile(fileext = ".json")
+  on.exit(unlink(path), add = TRUE)
+  jsonlite::write_json(
+    list(
+      charts = lapply(widgets, `[[`, "x"),
+      echarts = system.file(
+        "htmlwidgets/lib/echarts/echarts.min.js",
+        package = "rtemis.draw"
+      ),
+      layout = system.file(
+        "htmlwidgets/lib/draw/panels.js",
+        package = "rtemis.draw"
+      )
+    ),
+    path,
+    auto_unbox = TRUE,
+    null = "null"
+  )
+  output <- system2(
+    Sys.which("node"),
+    c(shQuote(test_path("fixtures", "roc_legend.js")), shQuote(path)),
+    stdout = TRUE,
+    stderr = TRUE
+  )
+  expect_null(attr(output, "status"), info = paste(output, collapse = "\n"))
+  expect_match(paste(output, collapse = "\n"), "passed")
 })
 
 test_that("nonfactor binary labels use factor order, independent of row order", {

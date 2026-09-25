@@ -174,6 +174,10 @@ test_that("point layout matches native boxes after legend filtering and resize",
     jsonlite::write_json(
       list(
         option = w[["x"]][["option"]],
+        phone_option = draw_boxplot(
+          list(Training = 1:4, Test = 2:5, Validation = 3:6),
+          horizontal = horizontal
+        )[["x"]][["option"]],
         horizontal = horizontal,
         echarts = system.file(
           "htmlwidgets/lib/echarts/echarts.min.js",

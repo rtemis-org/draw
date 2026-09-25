@@ -260,3 +260,20 @@ test_that("EChartsOption full stacked bar chart", {
   expect_equal(out$series[[1]]$stack, "total")
   expect_equal(out$series[[2]]$stack, "total")
 })
+
+
+test_that("EChartsOption carries native graphic annotations and omits NULL", {
+  graphic <- list(
+    elements = list(list(
+      type = "text",
+      left = 20,
+      style = list(text = "n = 40")
+    ))
+  )
+  expect_identical(
+    to_list(EChartsOption(graphic = graphic))[["graphic"]],
+    graphic
+  )
+  expect_null(to_list(EChartsOption())[["graphic"]])
+  expect_error(EChartsOption(graphic = "annotation"))
+})

@@ -355,13 +355,24 @@ test_that("SVG dimensions follow numeric widget dimensions unless overridden", {
 })
 
 test_that("static aspect layout fits both canvas dimensions and rejects unusable margins", {
-  option <- list(grid = list(left = 50, right = 50, top = 20, bottom = 30))
+  option <- list(
+    grid = list(
+      left = 50,
+      right = 50,
+      top = 20,
+      bottom = 30,
+      outerBoundsMode = "same",
+      outerBoundsContain = "all"
+    )
+  )
   hint <- list(ratio = 2, leftPx = 50, rightPx = 50, topPx = 20, botPx = 30)
   expect_identical(static_aspect(option, NULL, 300, 200), option)
   out <- static_aspect(option, hint, 300, 200)
   expect_equal(out[["grid"]][["width"]], 75)
   expect_equal(out[["grid"]][["height"]], 150)
-  expect_identical(out[["grid"]][["outerBoundsMode"]], "none")
+  expect_identical(out[["grid"]][["outerBoundsMode"]], "same")
+  expect_equal(out[["grid"]][["left"]], 112.5)
+  expect_equal(out[["grid"]][["top"]], 20)
   hint[["widthPx"]] <- 40
   expect_equal(static_aspect(option, hint, 300, 200)[["grid"]][["width"]], 40)
   expect_error(static_aspect(option, hint, 50, 200), "Increase")
@@ -371,4 +382,53 @@ test_that("static aspect layout fits both canvas dimensions and rejects unusable
     static_aspect(list(grid = list(list())), hint, 300, 200),
     "one named"
   )
+})
+
+
+test_that("native aspect layout reserves labels before fixing the data-area ratio", {
+  skip_if_not(nzchar(Sys.which("node")), "node not found")
+  charts <- list(
+    draw_fit(
+      list(Training = 1:6, Test = 1:4),
+      list(
+        Training = c(1.2, 2.1, 3.4, 3.8, 5.1, 5.7),
+        Test = c(1.3, 1.9, 3.2, 4.1)
+      ),
+      title = "Paired predictions"
+    ),
+    draw_line(
+      1:4,
+      c(2, 3, 6, 8),
+      equal_axes = TRUE,
+      xlab = "Progress",
+      ylab = "Response",
+      title = "Equal unit sizes"
+    )
+  )
+  path <- tempfile(fileext = ".json")
+  on.exit(unlink(path), add = TRUE)
+  jsonlite::write_json(
+    list(
+      echarts = system.file(
+        "htmlwidgets/lib/echarts/echarts.min.js",
+        package = "rtemis.draw"
+      ),
+      layout = system.file(
+        "htmlwidgets/lib/draw/panels.js",
+        package = "rtemis.draw"
+      ),
+      charts = lapply(charts, function(w) strip_js(w[["x"]]))
+    ),
+    path,
+    auto_unbox = TRUE,
+    null = "null"
+  )
+  output <- system2(
+    Sys.which("node"),
+    c(shQuote(test_path("fixtures", "aspect_geometry.js")), shQuote(path)),
+    stdout = TRUE,
+    stderr = TRUE
+  )
+  expect_null(attr(output, "status"), info = paste(output, collapse = "\n"))
+  expect_match(paste(output, collapse = "\n"), "Fixed-aspect labels")
 })

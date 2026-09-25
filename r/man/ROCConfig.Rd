@@ -22,6 +22,7 @@ ROCConfig(
   diagonal_color = "#888888",
   palette = NULL,
   legend = TRUE,
+  legend_position = "bottom-right",
   square = TRUE,
   line_width = 2,
   fold_opacity = 0.45,
@@ -70,6 +71,8 @@ authored config; written by the interface that resolved it.}
 
 \item{legend}{Logical: Show group labels and AUC summaries.}
 
+\item{legend_position}{Character {"bottom-right", "top-right", "top-left", "bottom-left"}: Corner inside the plotting area for the legend.}
+
 \item{square}{Logical: Keep the plotting grid square.}
 
 \item{line_width}{Numeric: Curve stroke width in pixels.}
@@ -100,6 +103,9 @@ by missing FPR, TPR, and AUC and is omitted with a visible count.
 Per-resample legends report the unweighted mean and sample SD of defined
 fold AUCs, with available/total curve counts. SD is NA for one defined fold.
 Pooled AUC is never inferred from per-fold AUCs.
+The legend is inset in the chosen corner of the plotting area. Curve identity
+and AUC share a line; long labels wrap to the available width. All entries
+remain present in static SVG output, without a scrolling legend.
 }
 
 \examples{

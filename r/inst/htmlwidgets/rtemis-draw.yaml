@@ -12,4 +12,5 @@ dependencies:
     src: htmlwidgets/lib/draw
     script:
       - panels.js
+      - confusion.js
       - panel_widget.js

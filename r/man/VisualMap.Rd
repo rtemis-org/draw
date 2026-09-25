@@ -47,7 +47,9 @@ Typically \code{list(color = c("blue", "white", "red"))}.}
 
 \item{right}{Optional Numeric or Character: Distance from the right of the container.}
 
-\item{top}{Optional Numeric or Character: Distance from the top of the container.}
+\item{top}{Optional Numeric or Character: Distance from the top of the container.
+For vertical heatmap colorbars, \code{draw()} aligns \code{"middle"} and \code{"center"}
+with the plotted data area.}
 
 \item{bottom}{Optional Numeric or Character: Distance from the bottom of the container.}
 }

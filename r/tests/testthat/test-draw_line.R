@@ -133,7 +133,10 @@ test_that("draw_line: a Date x gets a time axis in epoch milliseconds, in UTC", 
   expect_null(opt$xAxis$data)
   expect_true(opt$useUTC)
   ms <- as.numeric(d) * 86400000
-  expect_equal(opt$series[[1]]$data, list(c(ms[1], 1), c(ms[2], 2), c(ms[3], 3)))
+  expect_equal(
+    opt$series[[1]]$data,
+    list(c(ms[1], 1), c(ms[2], 2), c(ms[3], 3))
+  )
   expect_equal(c(opt$xAxis$min, opt$xAxis$max), calc_limits(ms))
 })
 
@@ -221,7 +224,12 @@ test_that("draw_line zoom = TRUE builds on an explicit or absent bottom margin",
 })
 
 test_that("draw_line zoom leaves a percentage margin and explicit DataZoom alone", {
-  opt <- draw_line(1:5, 1:5, zoom = TRUE, margins = list(bottom = "20%"))$x$option
+  opt <- draw_line(
+    1:5,
+    1:5,
+    zoom = TRUE,
+    margins = list(bottom = "20%")
+  )$x$option
   expect_equal(opt$grid$bottom, "20%")
   slider <- Filter(function(z) identical(z$type, "slider"), opt$dataZoom)[[1]]
   expect_null(slider$bottom)

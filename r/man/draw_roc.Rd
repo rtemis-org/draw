@@ -51,6 +51,13 @@ separately for each curve and disclosed. Scores must be probabilities in
 \verb{[0, 1]}; direction is fixed, and tied scores enter together. No observations
 are deduplicated, curves smoothed, or vertices downsampled.
 }
+\section{Legend placement}{
+
+Set \code{legend_position} to \code{"bottom-right"}, \code{"top-right"}, \code{"top-left"}, or
+\code{"bottom-left"} through \code{...}. The lower-right default usually leaves the
+upper-left region occupied by informative ROC curves unobstructed.
+}
+
 \section{Statistical semantics}{
 
 Vertices are ordered by FPR then TPR and joined without smoothing. Curves
@@ -61,6 +68,9 @@ by missing FPR, TPR, and AUC and is omitted with a visible count.
 Per-resample legends report the unweighted mean and sample SD of defined
 fold AUCs, with available/total curve counts. SD is NA for one defined fold.
 Pooled AUC is never inferred from per-fold AUCs.
+The legend is inset in the chosen corner of the plotting area. Curve identity
+and AUC share a line; long labels wrap to the available width. All entries
+remain present in static SVG output, without a scrolling legend.
 }
 
 \examples{

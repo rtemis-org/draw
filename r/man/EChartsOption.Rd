@@ -12,6 +12,7 @@ EChartsOption(
   y_axis = NULL,
   tooltip = NULL,
   visual_map = NULL,
+  graphic = NULL,
   toolbox = NULL,
   data_zoom = NULL,
   series = NULL,
@@ -42,6 +43,9 @@ EChartsOption(
 
 \item{visual_map}{Optional \link{VisualMap} or list: Visual map configuration (\code{visualMap}).
 Required for heatmaps to map data values to colors.}
+
+\item{graphic}{Optional list: Native graphic annotations, corresponding to
+\code{GraphicComponentOption} in \code{src/component/graphic/GraphicModel.ts}.}
 
 \item{toolbox}{Optional list: Toolbox configuration (\code{toolbox}), e.g. the
 \code{dataZoom} and \code{restore} features used by \code{\link[=draw_gantt]{draw_gantt()}}.}

@@ -18,6 +18,7 @@ setup_ROCConfig(
   diagonal_color = "#888888",
   palette = NULL,
   legend = TRUE,
+  legend_position = "bottom-right",
   square = TRUE,
   line_width = 2,
   fold_opacity = 0.45,
@@ -55,6 +56,8 @@ setup_ROCConfig(
 \item{palette}{Optional Character: Group colors; unset uses the chart theme.}
 
 \item{legend}{Logical: Show group labels and AUC summaries.}
+
+\item{legend_position}{Character {"bottom-right", "top-right", "top-left", "bottom-left"}: Corner inside the plotting area for the legend.}
 
 \item{square}{Logical: Keep the plotting grid square.}
 

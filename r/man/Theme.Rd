@@ -11,6 +11,7 @@ Theme(
   title = NULL,
   legend = NULL,
   tooltip = NULL,
+  data_zoom = NULL,
   line = NULL,
   bar = NULL,
   pie = NULL,
@@ -33,6 +34,10 @@ Theme(
 \item{legend}{Optional Named list: Legend overrides.}
 
 \item{tooltip}{Optional Named list: Tooltip overrides.}
+
+\item{data_zoom}{Optional Named list: Data-zoom defaults using native ECharts
+camelCase fields from \code{SliderDataZoomOption} in
+\code{src/component/dataZoom/SliderZoomModel.ts}.}
 
 \item{line}{Optional Named list: Line-series defaults.}
 

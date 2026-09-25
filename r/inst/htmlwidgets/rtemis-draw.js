@@ -4,7 +4,25 @@ function rtemisDrawFactory(el, width, height, bounded = false) {
     let chart = null;
     let currentPayload = null;
     let renderedDark = null;
+    let currentTheme = null;
     let injectedVisualMapColor = false;
+    let pageBackground = null;
+
+    // A standalone htmlwidgets document belongs to its single chart. Restore
+    // its original styles when that renderer is replaced or detached.
+    const restorePageBackground = () => {
+      pageBackground?.forEach(({element, color}) => {
+        element.style.backgroundColor = color;
+      });
+      pageBackground = null;
+    };
+
+    // Whether `child` is a container's only visible element. vscode-R embeds
+    // the complete saved HTML in #webview-content, so the browser also places
+    // that document's head metadata and dependencies inside the wrapper.
+    const isSoleContent = (container, child) =>
+      Array.from(container.children).every(node => node === child ||
+        ["SCRIPT", "STYLE", "LINK", "META", "TITLE"].includes(node.tagName));
 
     // Detect dark mode from VS Code, RStudio, Quarto, or browser preference
     const isDarkMode = () => {
@@ -95,6 +113,12 @@ function rtemisDrawFactory(el, width, height, bounded = false) {
         themeObj = x.theme;
       }
       renderedDark = dark;
+      currentTheme = themeObj;
+      if (x.confusion && !bounded) {
+        currentHeight = rtemisConfusion.heightForWidth(echarts, x, themeObj, currentWidth);
+        el.style.height = `${currentHeight}px`;
+      }
+      rtemisConfusion.prepare(echarts, x, themeObj, currentWidth, currentHeight);
 
       if (themeObj) {
         // Propagate the global theme text color to visualMap labels.
@@ -118,17 +142,35 @@ function rtemisDrawFactory(el, width, height, bounded = false) {
         themeName = "custom_theme";
       }
 
-      // Sync the widget container (and its immediate parent) background to the
-      // chart background so there is no white gutter around the canvas in
-      // dark-themed viewers, without mutating global body styles.
+      // Match the local wrapper to the chart. htmlwidgets standalone pages
+      // also hard-code a white body; theme that viewport only when this chart
+      // owns its sole widget container. Embedded documents keep their page CSS.
       const bgColor =
-        themeObj?.backgroundColor ||
         x.option?.backgroundColor ||
+        themeObj?.backgroundColor ||
         null;
       if (bgColor) {
         el.style.backgroundColor = bgColor;
-        if (el.parentElement && !bounded) {
+        if (el.parentElement && !bounded &&
+            el.parentElement !== document.body && el.parentElement !== document.documentElement) {
           el.parentElement.style.backgroundColor = bgColor;
+          const host = el.parentElement;
+          // Recognize only the known vscode-R wrapper around an otherwise
+          // standalone widget. A report in that viewer still owns its colors.
+          let pageHost = host;
+          if (host.parentElement?.id === "webview-content" &&
+              isSoleContent(host.parentElement, host)) {
+            pageHost = host.parentElement;
+          }
+          if (host.id === "htmlwidget_container" &&
+              pageHost.parentElement === document.body && host.children.length === 1 &&
+              isSoleContent(document.body, pageHost)) {
+            if (!pageBackground) {
+              pageBackground = [document.documentElement, document.body].map(element =>
+                ({element, color: element.style.backgroundColor}));
+            }
+            pageBackground.forEach(({element}) => { element.style.backgroundColor = bgColor; });
+          }
         }
       }
 
@@ -154,6 +196,9 @@ function rtemisDrawFactory(el, width, height, bounded = false) {
       });
 
       chart.setOption(x.option, true);
+      rtemisPanels.fitAxes(chart, x);
+      rtemisPanels.positionLegend(echarts, chart, x);
+      rtemisPanels.centerVisualMaps(chart, x);
 
       // Double-click resets any dataZoom (e.g. the gantt's inside zoom) back to
       // the full view -- a familiar gesture, in addition to the toolbox reset.
@@ -185,6 +230,7 @@ function rtemisDrawFactory(el, width, height, bounded = false) {
       // hook htmlwidgets does not give us.
       if (!el.isConnected) {
         stopWatchingTheme();
+        restorePageBackground();
         return;
       }
       if (!currentPayload?.autoTheme) return;
@@ -271,12 +317,28 @@ function rtemisDrawFactory(el, width, height, bounded = false) {
         currentWidth = width;
         currentHeight = height;
 
+        if (currentPayload?.confusion) {
+          if (!bounded) {
+            currentHeight = rtemisConfusion.heightForWidth(echarts, currentPayload, currentTheme, width);
+            el.style.height = `${currentHeight}px`;
+          }
+          rtemisConfusion.prepare(echarts, currentPayload, currentTheme, width, currentHeight);
+          if (chart) {
+            chart.resize({width, height: currentHeight});
+            chart.setOption(currentPayload.option, true);
+          }
+          return;
+        }
+
         if (currentPayload?.squareCells) {
           // Recompute height to keep cells square at the new width
           const newHeight = squareCellHeight(currentPayload, width);
           el.style.height = `${newHeight}px`;
           currentHeight = newHeight;
-          if (chart) chart.resize({ width, height: newHeight });
+          if (chart) {
+            chart.resize({ width, height: newHeight });
+            rtemisPanels.centerVisualMaps(chart, currentPayload);
+          }
           return;
         }
 
@@ -291,14 +353,20 @@ function rtemisDrawFactory(el, width, height, bounded = false) {
           if (chart) {
             chart.resize({ width, height: aspectHeight });
             chart.setOption({ grid: currentPayload.option.grid });
+            rtemisPanels.fitAxes(chart, currentPayload);
+            rtemisPanels.positionLegend(echarts, chart, currentPayload);
+            rtemisPanels.centerVisualMaps(chart, currentPayload);
           }
         } else if (chart) {
           chart.resize({ width, height });
+          rtemisPanels.positionLegend(echarts, chart, currentPayload);
+          rtemisPanels.centerVisualMaps(chart, currentPayload);
         }
       },
 
       dispose: () => {
         stopWatchingTheme();
+        restorePageBackground();
         if (chart) chart.dispose();
         chart = null;
         currentPayload = null;

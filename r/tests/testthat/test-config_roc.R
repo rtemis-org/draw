@@ -1,9 +1,16 @@
 test_that("ROC configs validate settings and preserve portable bindings", {
-  cfg <- setup_ROCConfig(fpr = "fp", tpr = "tp", digits = 2)
+  cfg <- setup_ROCConfig(
+    fpr = "fp",
+    tpr = "tp",
+    digits = 2,
+    legend_position = "top-right"
+  )
   expect_s7_class(cfg, ROCConfig)
   expect_identical(cfg@type, "roc")
   expect_identical(cfg@digits, 2L)
   expect_identical(cfg@origin[["fpr"]], "user")
+  expect_identical(cfg@origin[["legend_position"]], "user")
+  expect_identical(setup_ROCConfig()@legend_position, "bottom-right")
   expect_false("auc" %in% names(to_list(cfg)))
   expect_identical(resolve(cfg), cfg)
   for (args in list(
@@ -15,6 +22,8 @@ test_that("ROC configs validate settings and preserve portable bindings", {
     list(line_width = Inf),
     list(fold_opacity = 2),
     list(square = NA),
+    list(legend_position = "outside"),
+    list(legend_position = NA_character_),
     list(palette = character()),
     list(fpr = "")
   )) {
@@ -42,8 +51,16 @@ test_that("ROC configs validate settings and preserve portable bindings", {
   )
   expect_equal(p[["digits"]][["maximum"]], 8)
   expect_equal(p[["fold_opacity"]][["minimum"]], 0)
+  expect_identical(
+    as.character(p[["legend_position"]][["enum"]]),
+    c("bottom-right", "top-right", "top-left", "bottom-left")
+  )
   expect_false(any(vapply(p, function(x) "default" %in% names(x), logical(1))))
   expect_identical(draw(cfg, data = data)[["x"]][["aspect"]][["ratio"]], 1)
+  expect_identical(
+    draw(cfg, data = data)[["x"]][["legendPosition"]],
+    "top-right"
+  )
   expect_null(draw(
     setup_ROCConfig(square = FALSE),
     data = data.frame(fpr = c(0, 1), tpr = c(0, 1))

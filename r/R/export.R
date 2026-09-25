@@ -1,5 +1,6 @@
 # export.R
 # Offline export of draw widgets to static image files.
+# spec: draw/first-cran-release#current-static-export-boundary
 #
 # Currently supports SVG via a small Node.js SSR script that loads the
 # same bundled echarts.min.js used by the htmlwidget and calls
@@ -125,15 +126,25 @@ save_drawing <- function(widget, filename, width = NULL, height = NULL) {
   # Automatic themes resolve to light for offline export. An explicit theme
   # remains the export theme; static output does not query OS preferences.
   theme <- strip_js(payload[["theme"]], path = "theme")
-  save_svg_ssr(option, theme, filename, width, height)
+  save_svg_ssr(
+    option,
+    theme,
+    filename,
+    width,
+    height,
+    aspect = payload[["aspect"]],
+    legend_position = payload[["legendPosition"]],
+    confusion = payload[["confusion"]]
+  )
 
   invisible(filename)
 }
 
 #' Fit a fixed-aspect plotting grid into a static image
 #'
-#' Uses the same ratio and pixel margins as the browser binding. Static export
-#' respects both requested canvas dimensions instead of growing the host height.
+#' Reserves a centered outer box within both requested canvas dimensions.
+#' ECharts first measures axis labels within this box; the shared JavaScript
+#' layout then enforces the exact ratio on the remaining plotting area.
 #' @param x List: Compiled ECharts option.
 #' @param aspect Optional List: Ratio and pixel margins from render_meta().
 #' @param width,height Numeric: Validated canvas dimensions.
@@ -190,8 +201,12 @@ method(static_aspect, class_list) <- function(x, aspect, width, height) {
   }
   grid[["width"]] <- min(preferred, available)
   grid[["height"]] <- grid[["width"]] * aspect[["ratio"]]
-  grid[["containLabel"]] <- FALSE
-  grid[["outerBoundsMode"]] <- "none"
+  grid[["left"]] <- aspect[["leftPx"]] +
+    (width - aspect[["leftPx"]] - aspect[["rightPx"]] - grid[["width"]]) / 2
+  grid[["top"]] <- aspect[["topPx"]] +
+    (height - aspect[["topPx"]] - aspect[["botPx"]] - grid[["height"]]) / 2
+  # Preserve native label containment until it has actually been measured.
+  # Disabling it here clips axis names and lets tick labels overlap the legend.
   x[["grid"]] <- grid
   x
 }
@@ -254,6 +269,9 @@ method(strip_js, class_any) <- function(
 #' @param filename Character scalar: Destination path.
 #' @param width,height Numeric scalars: Finite positive image dimensions.
 #' @param panels,layout Optional List: Child payloads and resolved panel layout.
+#' @param aspect Optional List: Fixed-ratio render metadata for a single chart.
+#' @param legend_position Optional Character: Inset ROC legend corner.
+#' @param confusion Optional List: Theme and square-cell constraints for confusion plots.
 #' @return Logical, invisibly, indicating successful file copy.
 #' @keywords internal
 #' @noRd
@@ -264,7 +282,10 @@ save_svg_ssr <- function(
   width,
   height,
   panels = NULL,
-  layout = NULL
+  layout = NULL,
+  aspect = NULL,
+  legend_position = NULL,
+  confusion = NULL
 ) {
   node <- Sys.which("node")
   if (!nzchar(node)) {
@@ -288,6 +309,9 @@ save_svg_ssr <- function(
     option = option,
     panels = panels,
     layout = layout,
+    aspect = aspect,
+    legendPosition = legend_position,
+    confusion = confusion,
     theme = theme,
     width = width,
     height = height,

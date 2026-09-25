@@ -3,6 +3,8 @@ test_that("confusion configs validate, serialize, and preserve provenance", {
   expect_s7_class(cfg, ConfusionConfig)
   expect_identical(cfg@type, "confusion")
   expect_identical(cfg@digits, 2L)
+  expect_identical(ConfusionConfig()@digits, 2L)
+  expect_identical(setup_ConfusionConfig()@digits, 2L)
   expect_identical(cfg@origin[["classes"]], "user")
   expect_false("panel" %in% names(to_list(cfg)))
   for (args in list(
@@ -52,4 +54,25 @@ test_that("confusion configs validate, serialize, and preserve provenance", {
     function(p) "default" %in% names(p),
     logical(1)
   )))
+})
+
+
+test_that("confusion theme overrides are nullable and round-trip through JSON", {
+  cfg <- setup_ConfusionConfig()
+  expect_null(cfg@low_color)
+  expect_null(cfg@summary_color)
+  expect_false(any(c("low_color", "summary_color") %in% names(to_list(cfg))))
+  expect_error(setup_ConfusionConfig(low_color = "white"), "six-digit hex")
+  expect_error(setup_ConfusionConfig(summary_color = "#fff"), "six-digit hex")
+  for (config in list(
+    cfg,
+    setup_ConfusionConfig(low_color = "#101010", summary_color = "#222222")
+  )) {
+    path <- tempfile(fileext = ".json")
+    on.exit(unlink(path), add = TRUE)
+    write_chart_config(config, path, complete = TRUE)
+    back <- read_chart_config(path)
+    expect_identical(back@low_color, config@low_color)
+    expect_identical(back@summary_color, config@summary_color)
+  }
 })

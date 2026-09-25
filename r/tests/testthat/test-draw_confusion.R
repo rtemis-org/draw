@@ -73,6 +73,26 @@ test_that("confusion rates and macro recall are computed from counts", {
   expect_equal(p2[["balanced_accuracy"]], p[["balanced_accuracy"]])
 })
 
+test_that("frequency tables accept factor labels without losing class identity", {
+  counts <- confusion_test_matrix()
+  records <- as.data.frame(as.table(counts), responseName = "n")
+  names(records)[1:2] <- c("reference", "predicted")
+  config <- setup_ConfusionConfig(classes = rownames(counts))
+  # as.data.frame.table creates factor columns by default. Both interfaces
+  # must accept these ordinary R frequency records, including ordered factors.
+  records[["predicted"]] <- ordered(records[["predicted"]])
+  expect_identical(
+    draw(config, data = records)[["x"]],
+    draw_confusion(counts)[["x"]]
+  )
+  records[["reference"]][[1L]] <- NA
+  summary <- confusion_test_summary(records, classes = rownames(counts))
+  expect_equal(summary[["panels"]][[1L]][["omitted"]], 8)
+  expect_equal(summary[["panels"]][[1L]][["total"]], 12)
+  records[["reference"]] <- factor(c("", "no", "yes", "no"))
+  expect_error(draw(config, data = records), "nonempty character class labels")
+})
+
 test_that("zero denominators and omitted records do not become measured zero rates", {
   x <- matrix(c(5, 0, 0, 0), 2, dimnames = list(c("A", "B"), c("A", "B")))
   p <- confusion_test_summary(confusion_input(x))[["panels"]][[1L]]
@@ -95,6 +115,65 @@ test_that("zero denominators and omitted records do not become measured zero rat
   ]]
   expect_equal(empty[["total"]], 0)
   expect_equal(empty[["omitted"]], 4)
+})
+
+test_that("confusion hover precision is configurable without rounding numeric data", {
+  counts <- matrix(
+    c(8, 7, 4, 26),
+    2,
+    byrow = TRUE,
+    dimnames = list(c("Virginica", "Other"), c("Virginica", "Other"))
+  )
+  for (digits in c(0L, 2L, 3L, 8L)) {
+    widget <- draw_confusion(counts, digits = digits)
+    option <- widget[["x"]][["option"]]
+    first <- option[["series"]][[1L]][["data"]][[1L]][["value"]]
+    expect_equal(first[[3L]], 8 / 15)
+    expect_equal(first[[4L]], 8)
+    expect_equal(first[[7L]], 8 / 15)
+    expect_identical(
+      first[[8L]],
+      formatC(8 / 15, format = "f", digits = digits, decimal.mark = ".")
+    )
+    expect_identical(
+      option[["series"]][[1L]][["encode"]][["tooltip"]],
+      as.list(c(4L, 5L, 3L, 7L))
+    )
+    expect_identical(
+      option[["series"]][[1L]][["dimensions"]][[8L]],
+      list(
+        name = "Row fraction label",
+        displayName = "Row fraction",
+        type = "ordinal"
+      )
+    )
+    expect_identical(strip_js(option), option)
+    # Materialized hover text survives the same plain JSON transport as data.
+    wire <- jsonlite::fromJSON(
+      htmlwidgets:::toJSON(widget[["x"]]),
+      simplifyVector = FALSE
+    )
+    expect_identical(
+      wire[["option"]][["series"]][[1L]][["data"]][[1L]][["value"]][[8L]],
+      first[[8L]]
+    )
+  }
+  default <- draw_confusion(counts)[["x"]][["option"]]
+  expect_identical(
+    default[["series"]][[1L]][["data"]][[1L]][["value"]][[8L]],
+    "0.53"
+  )
+  expect_identical(
+    default[["series"]][[3L]][["data"]][[1L]][["label"]][["formatter"]],
+    "0.53"
+  )
+  sparse <- draw_confusion(matrix(c(4, 0, 0, 0), 2))[["x"]][["option"]][[
+    "series"
+  ]]
+  expect_identical(sparse[[1L]][["data"]][[1L]][["value"]][[8L]], "1.00")
+  expect_identical(sparse[[2L]][["data"]][[2L]][["value"]][[8L]], "0.00")
+  expect_null(sparse[[1L]][["data"]][[2L]][["value"]][[7L]])
+  expect_identical(sparse[[1L]][["data"]][[2L]][["value"]][[8L]], "NA")
 })
 
 test_that("malformed counts and label inputs are rejected", {
@@ -200,7 +279,7 @@ test_that("SVG exports contain the entire count and metric composition", {
     "PPV",
     "NPV",
     "NA",
-    "0.854"
+    "0.85"
   )) {
     expect_true(
       any(grepl(paste0(">", label, "</text>"), svg, fixed = TRUE)),
@@ -209,4 +288,134 @@ test_that("SVG exports contain the entire count and metric composition", {
   }
   expect_true(any(grepl('width="1120"', svg, fixed = TRUE)))
   expect_false(any(grepl("<image|@keyframes|<animate", svg)))
+})
+
+
+test_that("confusion layout uses square native cells and theme-aware colors", {
+  skip_if_not(nzchar(Sys.which("node")), "node not found")
+  counts <- matrix(
+    c(18, 2, 3, 17),
+    2,
+    byrow = TRUE,
+    dimnames = list(c("yes", "no"), c("yes", "no"))
+  )
+  multiclass <- matrix(
+    c(12, 0, 1, 0, 8, 2, 1, 2, 7),
+    3,
+    dimnames = list(c("A", "B", "C"), c("A", "B", "C"))
+  )
+  records <- confusion_input(list(Complete = counts, Incomplete = counts))
+  missing <- records[1L, ]
+  missing[["panel"]] <- "Incomplete"
+  missing[["reference"]] <- NA_character_
+  missing[["n"]] <- 3
+  widgets <- list(
+    draw_confusion(counts),
+    draw_confusion(
+      list(Training = counts, Test = counts),
+      title = "Classification"
+    ),
+    draw_confusion(multiclass),
+    draw_confusion(multiclass, show_metrics = FALSE),
+    draw_confusion(rbind(records, missing)),
+    draw_confusion(counts * 0),
+    draw_confusion(multiclass, theme = theme_dark(bg_color = "#253344")),
+    draw_confusion(counts, summary_color = "#FFFFFF", theme = theme_dark()),
+    draw_confusion(
+      counts,
+      low_color = "#242424",
+      summary_color = "#303030",
+      theme = theme_dark()
+    )
+  )
+  # The R payload contains declarative rendering hints, never theme callbacks.
+  payload <- widgets[[1L]][["x"]]
+  expect_true(payload[["confusion"]][["metrics"]])
+  expect_null(payload[["confusion"]][["lowColor"]])
+  expect_true(all(vapply(
+    payload[["option"]][["title"]],
+    function(t) {
+      is.null(t[["subtext"]])
+    },
+    logical(1)
+  )))
+  expect_null(payload[["option"]][["graphic"]])
+  expect_identical(strip_js(payload), payload)
+  path <- tempfile(fileext = ".json")
+  on.exit(unlink(path), add = TRUE)
+  jsonlite::write_json(
+    list(
+      charts = lapply(widgets, `[[`, "x"),
+      echarts = system.file(
+        "htmlwidgets/lib/echarts/echarts.min.js",
+        package = "rtemis.draw"
+      ),
+      confusion = system.file(
+        "htmlwidgets/lib/draw/confusion.js",
+        package = "rtemis.draw"
+      )
+    ),
+    path,
+    auto_unbox = TRUE,
+    null = "null"
+  )
+  output <- system2(
+    Sys.which("node"),
+    c(
+      shQuote(test_path("fixtures", "confusion_geometry.js")),
+      shQuote(path)
+    ),
+    stdout = TRUE,
+    stderr = TRUE
+  )
+  expect_null(attr(output, "status"), info = paste(output, collapse = "\n"))
+  expect_match(paste(output, collapse = "\n"), "passed")
+})
+
+
+test_that("SVG export resolves confusion colors in standalone and composed charts", {
+  skip_if_not(nzchar(Sys.which("node")), "node not found")
+  plot <- draw_confusion(confusion_test_matrix(), theme = theme_dark())
+  combined <- draw_panels(list(plot, plot), ncol = 2)
+  for (widget in list(plot, combined)) {
+    path <- tempfile(fileext = ".svg")
+    on.exit(unlink(path), add = TRUE)
+    save_drawing(widget, path, width = 1000, height = 600)
+    svg <- paste(readLines(path, warn = FALSE), collapse = "\n")
+    # These native fills require the export entry point to forward the theme
+    # and layout hints; an unprepared fallback would contain pale metric cells.
+    expect_match(svg, 'fill="rgb(36,36,36)"', fixed = TRUE)
+    expect_match(svg, 'stroke="#181818"', fixed = TRUE)
+    expect_false(grepl('>n = ', svg, fixed = TRUE))
+    expect_false(grepl("<image|@keyframes|<animate", svg))
+  }
+})
+
+test_that("confusion captions disclose only missing pairs in the matching panel", {
+  records <- confusion_input(list(
+    Complete = confusion_test_matrix(),
+    Incomplete = confusion_test_matrix()
+  ))
+  missing <- records[1L, ]
+  missing[["panel"]] <- "Incomplete"
+  missing[["reference"]] <- NA_character_
+  missing[["n"]] <- 3
+  records <- rbind(records, missing)
+  for (metrics in c(TRUE, FALSE)) {
+    widget <- draw_confusion(records, show_metrics = metrics)
+    annotations <- widget[["x"]][["option"]][["graphic"]][["elements"]]
+    expect_length(annotations, 1L)
+    expect_identical(annotations[[1L]][["id"]], "confusion-caption-2")
+    expect_identical(
+      annotations[[1L]][["style"]][["text"]],
+      "3 missing pair(s) omitted"
+    )
+    skip_if_not(nzchar(Sys.which("node")), "node not found")
+    path <- tempfile(fileext = ".svg")
+    on.exit(unlink(path), add = TRUE)
+    save_drawing(widget, path, width = 1000, height = 550)
+    svg <- paste(readLines(path, warn = FALSE), collapse = "\n")
+    expect_match(svg, '>3 missing pair(s) omitted</text>', fixed = TRUE)
+    expect_false(grepl('>n = ', svg, fixed = TRUE))
+  }
 })

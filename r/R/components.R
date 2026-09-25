@@ -435,6 +435,8 @@ S7::method(to_list, Tooltip) <- function(x, ...) {
 #' @param left Optional Numeric or Character: Distance from the left of the container.
 #' @param right Optional Numeric or Character: Distance from the right of the container.
 #' @param top Optional Numeric or Character: Distance from the top of the container.
+#'   For vertical heatmap colorbars, `draw()` aligns `"middle"` and `"center"`
+#'   with the plotted data area.
 #' @param bottom Optional Numeric or Character: Distance from the bottom of the container.
 #'
 #' @return `VisualMap` object.
