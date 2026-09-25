@@ -48,7 +48,7 @@ vector/column describes that class. Named columns identify their classes;
 multiclass matrices use names, or factor-level order when unnamed.
 Multiclass curves are one-versus-rest. Missing labels/scores are excluded
 separately for each curve and disclosed. Scores must be probabilities in
-\link{0, 1}; direction is fixed, and tied scores enter together. No observations
+\verb{[0, 1]}; direction is fixed, and tied scores enter together. No observations
 are deduplicated, curves smoothed, or vertices downsampled.
 }
 \section{Statistical semantics}{

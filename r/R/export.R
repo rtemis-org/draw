@@ -14,7 +14,7 @@
 #'
 #' Callbacks under tooltips, axis pointers, and interactive toolbox controls
 #' are omitted. Other JavaScript callbacks are rejected because discarding them
-#' could change visible content. Built-in Gantt and dendrogram renderers are
+#' could change visible content. Built-in Gantt, dendrogram, and boxplot point renderers are
 #' shared with the browser widget and use JSON parameters. Network and map
 #' exports are not yet implemented.
 #'

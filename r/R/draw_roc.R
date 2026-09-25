@@ -241,7 +241,7 @@ method(roc_input, class_any) <- function(
 #' multiclass matrices use names, or factor-level order when unnamed.
 #' Multiclass curves are one-versus-rest. Missing labels/scores are excluded
 #' separately for each curve and disclosed. Scores must be probabilities in
-#' [0, 1]; direction is fixed, and tied scores enter together. No observations
+#' `[0, 1]`; direction is fixed, and tied scores enter together. No observations
 #' are deduplicated, curves smoothed, or vertices downsampled.
 #' @inheritSection ROCConfig Statistical semantics
 #' @param true_labels Factor, vector, list, or data frame: Reference labels or ROC records.

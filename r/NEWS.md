@@ -1,5 +1,7 @@
 # rtemis.draw 0.5.2
 
+- Add `draw_metric()` and resampled-model `plot_metric()` methods, with configurable boxplot statistics, observation overlays, and SVG export.
+
 - Add `draw_roc()` and classification `plot_roc()` methods with pooled and per-resample AUC summaries and SVG export.
 
 - Add `draw_confusion()` and classification `plot_true_pred()` methods with shared count records, per-class summaries, and multi-panel SVG export.

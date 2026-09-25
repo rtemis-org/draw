@@ -11,6 +11,13 @@ BoxplotConfig(
   writer = NULL,
   x = NULL,
   group = NULL,
+  observation = NULL,
+  quartiles = "linear",
+  whisker = 1.5,
+  boxpoints = "none",
+  point_size = 5,
+  point_alpha = 0.6,
+  point_spread = 0.5,
   horizontal = FALSE,
   na_rm = TRUE,
   labels = NULL,
@@ -28,9 +35,7 @@ BoxplotConfig(
 \item{dat_path}{Optional Character: Path to the data, read at draw time. The
 serializable alternative to passing \code{data} to \code{\link[=draw]{draw()}}.}
 
-\item{title}{Optional Character: Chart title. Declared here because it is the
-one property every chart type has; \code{palette} is not (four take a \code{colormap}
-instead), and axis labels and margins are cartesian-only.}
+\item{title}{Optional Character: Chart title.}
 
 \item{origin}{Optional Named character \{"user", "default", "derived"\}: Where
 each value came from, one entry per settable property. Absent on an
@@ -43,15 +48,30 @@ authored config; written by the interface that resolved it.}
 
 \item{group}{Optional Character: Column that splits each box by level.}
 
+\item{observation}{Optional Character: Column identifying observations in point tooltips.}
+
+\item{quartiles}{Character {"linear", "hinges"}: Quartile convention.}
+
+\item{whisker}{Numeric \verb{[0, Inf)}: Finite IQR fence multiplier;
+zero uses full-range whiskers.}
+
+\item{boxpoints}{Character {"none", "all", "outliers"}: Values to overlay.}
+
+\item{point_size}{Numeric \verb{(0, Inf)}: Finite point diameter in pixels.}
+
+\item{point_alpha}{Numeric \verb{[0, 1]}: Point opacity.}
+
+\item{point_spread}{Numeric \verb{[0, 1]}: Fraction of box width occupied by offsets.}
+
 \item{horizontal}{Logical: Draw the boxes horizontally.}
 
-\item{na_rm}{Logical: Drop \code{NA} values before summarizing.}
+\item{na_rm}{Logical: Remove missing values. FALSE rejects missing input.}
 
 \item{labels}{Optional Character: Box labels. \code{NULL} uses the bound column
 names.}
 
 \item{palette}{Optional Character: Box colors, overriding the theme palette
-for this chart. \code{NULL} uses the theme's.}
+for this chart. \code{NULL} uses the package's box colors.}
 
 \item{fill_alpha}{Numeric \verb{[0, 1]}: Box fill opacity.}
 
@@ -69,7 +89,10 @@ A serializable description of a boxplot. Build one with
 }
 \details{
 \code{x} names \strong{one or more} columns, one box each. \code{group} optionally names a
-column that splits every box into one per level.
+column that splits every box into one per level. Statistics and point
+placement follow \code{\link[=draw_boxplot]{draw_boxplot()}}. Compiles to \code{BoxplotSeriesOption} and
+\code{CustomSeriesOption} in ECharts \code{src/chart/boxplot/BoxplotSeries.ts} and
+\code{src/chart/custom/CustomSeries.ts}.
 }
 \examples{
 setup_BoxplotConfig(x = c("mpg", "hp"))@type

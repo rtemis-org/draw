@@ -171,6 +171,11 @@ draw_object_session <- function(x, ...) {
     S7::method(varimp_plot_data, cls) <- extract_varimp_plot_data
     S7::method(plot_varimp, cls) <- draw_model_varimp
   }
+  S7::method(
+    metric_plot_data,
+    rtemis_class("SupervisedRes")
+  ) <- extract_metric_plot_data
+  S7::method(plot_metric, rtemis_class("SupervisedRes")) <- draw_model_metric
   massglm <- rtemis_class("MassGLM")
   S7::method(massglm_plot_data, massglm) <- extract_massglm_plot_data
   S7::method(plot_manhattan, massglm) <- draw_massglm_manhattan

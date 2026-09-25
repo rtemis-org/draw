@@ -10,6 +10,13 @@ setup_BoxplotConfig(
   labels = NULL,
   horizontal = FALSE,
   na_rm = TRUE,
+  observation = NULL,
+  quartiles = "linear",
+  whisker = 1.5,
+  boxpoints = "none",
+  point_size = 5,
+  point_alpha = 0.6,
+  point_spread = 0.5,
   palette = NULL,
   fill_alpha = 0.25,
   xlab = NULL,
@@ -34,18 +41,31 @@ names.}
 
 \item{horizontal}{Logical: Draw the boxes horizontally.}
 
-\item{na_rm}{Logical: Drop \code{NA} values before summarizing.}
+\item{na_rm}{Logical: Remove missing values. FALSE rejects missing input.}
+
+\item{observation}{Optional Character: Column identifying observations in point tooltips.}
+
+\item{quartiles}{Character {"linear", "hinges"}: Quartile convention.}
+
+\item{whisker}{Numeric \verb{[0, Inf)}: Finite IQR fence multiplier;
+zero uses full-range whiskers.}
+
+\item{boxpoints}{Character {"none", "all", "outliers"}: Values to overlay.}
+
+\item{point_size}{Numeric \verb{(0, Inf)}: Finite point diameter in pixels.}
+
+\item{point_alpha}{Numeric \verb{[0, 1]}: Point opacity.}
+
+\item{point_spread}{Numeric \verb{[0, 1]}: Fraction of box width occupied by offsets.}
 
 \item{palette}{Optional Character: Box colors, overriding the theme palette
-for this chart. \code{NULL} uses the theme's.}
+for this chart. \code{NULL} uses the package's box colors.}
 
 \item{fill_alpha}{Numeric \verb{[0, 1]}: Box fill opacity.}
 
 \item{xlab, ylab}{Optional Character: Axis labels.}
 
-\item{title}{Optional Character: Chart title. Declared here because it is the
-one property every chart type has; \code{palette} is not (four take a \code{colormap}
-instead), and axis labels and margins are cartesian-only.}
+\item{title}{Optional Character: Chart title.}
 
 \item{margin_top, margin_right, margin_bottom, margin_left}{Optional Integer
 \verb{[0, Inf)}: Plot margins in pixels.}
