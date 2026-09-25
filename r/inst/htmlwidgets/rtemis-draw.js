@@ -171,6 +171,7 @@ function rtemisDrawFactory(el, width, height, bounded = false, onBackground = ()
       });
 
       chart.setOption(x.option, true);
+      rtemisPanels.fitGantt(echarts, chart, x);
       rtemisA3.fit(chart, x, bounded);
       if (x.a3 && !bounded && x.a3.autoHeight) {
         currentHeight = chart.getHeight();
@@ -351,6 +352,7 @@ function rtemisDrawFactory(el, width, height, bounded = false, onBackground = ()
           }
         } else if (chart) {
           chart.resize({ width, height });
+          rtemisPanels.fitGantt(echarts, chart, currentPayload);
           rtemisPanels.positionLegend(echarts, chart, currentPayload);
           rtemisPanels.centerVisualMaps(chart, currentPayload);
         }

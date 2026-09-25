@@ -74,6 +74,7 @@ process.stdin.on("end", () => {
 			chart = echarts.init(null, panel.theme || null,
 				{renderer: "svg", ssr: true, width: w, height: h});
 			chart.setOption(option);
+			layout.fitGantt(echarts, chart, panel);
 			a3.fit(chart, panel, true);
 			layout.fitAxes(chart, panel);
 			layout.fitHeatmap(chart, panel);

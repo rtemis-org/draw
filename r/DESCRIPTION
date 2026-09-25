@@ -1,6 +1,6 @@
 Package: rtemis.draw
 Title: Interactive Visualization
-Version: 0.5.6
+Version: 0.5.7
 Date: 2026-09-25
 Authors@R:
     person(given = "E.D.", family = "Gennatas", role = c("aut", "cre", "cph"),

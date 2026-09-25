@@ -180,5 +180,76 @@
     });
     if (changed) chart.setOption({visualMap: updates});
   }
-  return {background, cells, fit, fitAxes, fitHeatmap, prepareColors, positionLegend, centerVisualMaps};
+  // Fit the package-owned timeline renderer on every surface. Measure native
+  // legend/text bounds instead of reserving a fixed right-hand strip. ECharts
+  // GridOption, LegendOption and AxisLabelBaseOption are the source contracts
+  // (coord/cartesian/GridModel.ts, component/legend/LegendModel.ts,
+  // coord/axisCommonTypes.ts). No data, zoom or selection settings are replaced.
+  // spec: draw/first-cran-release#responsive-timelines
+  function fitGantt(echarts, chart, payload) {
+    const source = payload.option;
+    const series = Array.isArray(source?.series) ? source.series : [source?.series];
+    if (!series.some(s => s?.renderItem === 'rtemis.gantt.v1') ||
+        !source.grid || Array.isArray(source.grid) ||
+        !source.xAxis || !source.yAxis || Array.isArray(source.xAxis) || Array.isArray(source.yAxis)) return;
+    const width = chart.getWidth(), model = chart.getModel();
+    const y = model.getComponent('yAxis');
+    const font = y.getModel('axisLabel').getFont();
+    const labelWidth = Math.min(width * 0.35, y.get('data').reduce((max, label) =>
+      Math.max(max, echarts.format.getTextRect(String(label), font).width + 2), 0));
+    const update = {grid: {...source.grid},
+      yAxis: {axisLabel: {width: labelWidth, overflow: 'truncate', ...source.yAxis.axisLabel}}};
+    // Only adapt the builder's automatic legend. Explicit low-level placement
+    // remains under the caller's control, including a hidden legend.
+    const automatic = source.legend?.orient === 'vertical' &&
+      source.legend.right === 8 && source.legend.top === 'middle' && source.legend.show !== false;
+    let below = false;
+    if (automatic) {
+      const legend = model.getComponent('legend'), font = legend.getModel('textStyle').getFont();
+      const natural = Math.max(0, ...legend.getData().map(item =>
+        echarts.format.getTextRect(item.get('name'), font).width));
+      const right = Math.max(source.grid.right, natural + legend.get('itemWidth') + 29);
+      below = width - labelWidth - right - 32 < 240;
+      const available = Math.max(24, width - legend.get('itemWidth') - 31);
+      update.legend = {...source.legend, selected: legend.get('selected'), left: below ? 8 : null,
+        right: 8, top: below ? null : 'middle', bottom: below ? 4 : null,
+        orient: below ? 'horizontal' : 'vertical',
+        textStyle: {...source.legend.textStyle,
+          width: below && natural > available ? available : null,
+          overflow: 'break'}};
+      update.grid.right = below ? 16 : right;
+    }
+    // On a narrow surface put the toolbar on a separate header row, keeping
+    // both the title and controls visible. Even untitled charts reserve its row.
+    if (source.toolbox?.show !== false && Number.isFinite(source.toolbox?.top)) {
+      const title = model.getComponent('title'), toolbox = model.getComponent('toolbox');
+      const bounds = component => {
+        if (!component) return null;
+        const group = chart.getViewOfComponentModel(component).group;
+        const rect = group.getBoundingRect().clone();
+        rect.applyTransform(group.getComputedTransform());
+        return rect;
+      };
+      const titleBox = bounds(title), toolsBox = bounds(toolbox);
+      // A centered title can collide with a right-anchored toolbar even when
+      // their combined widths fit. Compare their actual horizontal extents.
+      const overlap = titleBox && toolsBox && titleBox.x < toolsBox.x + toolsBox.width + 8 &&
+        toolsBox.x < titleBox.x + titleBox.width + 8;
+      const top = overlap ? Math.max(source.toolbox.top, titleBox.y + titleBox.height + 8) : source.toolbox.top;
+      update.toolbox = {top};
+      update.grid.top = Math.max(source.grid.top, top + (toolsBox?.height || 14) + 12);
+    }
+    chart.setOption(update);
+    if (below) {
+      const legend = chart.getModel().getComponent('legend');
+      const height = chart.getViewOfComponentModel(legend).group.getBoundingRect().height;
+      chart.setOption({grid: {bottom: source.grid.bottom + height + 12}});
+    }
+    const grid = chart.getModel().getComponent('grid').coordinateSystem.getRect();
+    chart.setOption({xAxis: {
+      splitNumber: source.xAxis.splitNumber ?? Math.max(2, Math.min(5, Math.floor(grid.width / 80))),
+      axisLabel: {hideOverlap: true, ...source.xAxis.axisLabel}
+    }});
+  }
+  return {background, cells, fit, fitAxes, fitHeatmap, prepareColors, positionLegend, centerVisualMaps, fitGantt};
 });

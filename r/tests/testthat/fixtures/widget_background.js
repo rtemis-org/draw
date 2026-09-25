@@ -47,7 +47,7 @@ for (const location of ['standalone', 'embedded', 'embedded-direct', 'embedded-h
     HTMLWidgets: {widget() {}},
     rtemisA3: {fit() {}},
     rtemisConfusion: {prepare() {}},
-    rtemisPanels: {background: require(path.join(directory, 'panels.js')).background, cells: require(path.join(directory, 'panels.js')).cells, fitHeatmap() {}, prepareColors() {}, fitAxes() {}, positionLegend() {}, centerVisualMaps() {}},
+    rtemisPanels: {background: require(path.join(directory, 'panels.js')).background, cells: require(path.join(directory, 'panels.js')).cells, fitHeatmap() {}, fitGantt() {}, prepareColors() {}, fitAxes() {}, positionLegend() {}, centerVisualMaps() {}},
     echarts: {registerTheme() {}, init() {return {setOption() {}, dispose() {}};}}
   };
   vm.createContext(context);

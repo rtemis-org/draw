@@ -197,8 +197,8 @@ gantt_option <- function(
     "function(p){var m=p.marker||'';return m+(p.name||'');}"
   )
 
-  # Tight layout: a vertical legend on the right (so it doesn't waste vertical
-  # space under the bars), with the grid reserving room for it. draw() injects
+  # Initial wide layout: a vertical legend on the right. The shared browser/
+  # SVG fitter measures labels and moves this legend below when needed. draw() injects
   # `outerBoundsMode = "same"`, so these margins are outer bounds and the long
   # category labels still fit inside them.
   has_legend <- !is.null(group)
@@ -275,7 +275,7 @@ gantt_option <- function(
     # Zoom: one `inside` dataZoom per axis -> wheel-zoom + drag-pan on both time
     # and rows. filterMode = "none" is essential for the gantt: zooming the
     # category (row) axis must only reframe the view, never drop bars. Wheel-out
-    # returns to the full view, so no slider/toolbox chrome is needed.
+    # returns to the full view, without adding visible slider tracks.
     data_zoom = if (isTRUE(zoom)) {
       list(
         list(
@@ -311,6 +311,13 @@ gantt_option <- function(
 #' `start` and `end` on a value or time x-axis and grouped into rows by `label`
 #' on the y-axis. Implemented as an ECharts `custom` series (ECharts has no
 #' native Gantt series).
+#'
+#' The legend moves below the plot when a side legend would leave too little
+#' room for the time axis. Tick density follows the available plotting width,
+#' and long task labels are truncated. Default bar tooltips retain the full task
+#' text.
+#' Browser resizing, panel figures, and SVG export share this layout behavior.
+#' Increase `height` when a timeline contains many task rows.
 #'
 #' @param tasks Tabular data (data.frame, data.table, or tibble): One row per
 #'   task bar. Must contain columns `label` (row / category), `start`, and

@@ -250,3 +250,74 @@ test_that("draw_gantt grid gets ECharts 6.1 outerBoundsContain via draw()", {
     "axisLabel"
   )
 })
+
+
+test_that("Gantt layout preserves usable axes and state across narrow resizes", {
+  skip_if_not(nzchar(Sys.which("node")), "node not found")
+  tasks <- data.frame(
+    label = c(
+      "train GLM Regression",
+      "outer_fold 1/5",
+      "train_alg GLM",
+      "predict",
+      "varimp GLM",
+      "metrics"
+    ),
+    start = c(0, 10, 15, 40, 45, 50),
+    end = c(100, 90, 40, 45, 50, 80),
+    kind = c("train", "outer_fold", "train_alg", "predict", "varimp", "metrics")
+  )
+  # Exercise both numeric and absolute time, plus the ungrouped path.
+  widgets <- list(draw_gantt(
+    tasks,
+    group = "kind",
+    title = "Five-fold execution",
+    xlab = "Elapsed (ms)"
+  ))
+  timed <- tasks
+  timed[["start"]] <- as.POSIXct("2026-01-01", tz = "UTC") + tasks[["start"]]
+  timed[["end"]] <- as.POSIXct("2026-01-01", tz = "UTC") + tasks[["end"]]
+  widgets[[2L]] <- draw_gantt(
+    timed,
+    group = "kind",
+    axis_type = "time",
+    title = "Five-fold execution",
+    xlab = "Time"
+  )
+  widgets[[3L]] <- draw_gantt(tasks, title = "Five-fold execution")
+  # A stored initial selection must not replace later interactive changes.
+  widgets[[1L]][["x"]][["option"]][["legend"]][["selected"]] <- list(
+    train = TRUE
+  )
+  input <- tempfile(fileext = ".json")
+  on.exit(unlink(input), add = TRUE)
+  jsonlite::write_json(
+    list(
+      payloads = lapply(widgets, function(w) strip_js(w[["x"]])),
+      echarts = system.file(
+        "htmlwidgets/lib/echarts/echarts.min.js",
+        package = "rtemis.draw"
+      ),
+      layout = system.file(
+        "htmlwidgets/lib/draw/panels.js",
+        package = "rtemis.draw"
+      ),
+      binding = system.file(
+        "htmlwidgets/rtemis-draw.js",
+        package = "rtemis.draw"
+      )
+    ),
+    input,
+    auto_unbox = TRUE,
+    null = "null",
+    digits = NA
+  )
+  out <- system2(
+    Sys.which("node"),
+    c(shQuote(test_path("fixtures", "gantt_geometry.js")), shQuote(input)),
+    stdout = TRUE,
+    stderr = TRUE
+  )
+  expect_null(attr(out, "status"), info = paste(out, collapse = "\n"))
+  expect_match(paste(out, collapse = "\n"), "Gantt bounds")
+})
