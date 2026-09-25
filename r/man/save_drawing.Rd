@@ -4,16 +4,18 @@
 \alias{save_drawing}
 \title{Save a Draw Widget to a File}
 \usage{
-save_drawing(widget, filename, width = 800, height = 600)
+save_drawing(widget, filename, width = NULL, height = NULL)
 }
 \arguments{
 \item{widget}{htmlwidget: A widget returned by \code{\link[=draw]{draw()}} or a \verb{draw_*} function.}
 
 \item{filename}{Character scalar: Nonempty output path with an extension.}
 
-\item{width}{Numeric scalar \verb{(0, Inf)}: Finite image width in pixels.}
+\item{width}{Optional Numeric scalar \verb{(0, Inf)}: Finite image width in pixels.
+Unset uses the widget's numeric width, or 800 for a relative/unspecified width.}
 
-\item{height}{Numeric scalar \verb{(0, Inf)}: Finite image height in pixels.}
+\item{height}{Optional Numeric scalar \verb{(0, Inf)}: Finite image height in pixels.
+Unset uses the widget's numeric height, or 600 for a relative/unspecified height.}
 }
 \value{
 The \code{filename}, invisibly.

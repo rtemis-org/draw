@@ -114,7 +114,7 @@ test_that("export validates paths and image dimensions", {
       class = "rtemis_input_error"
     )
   }
-  for (size in list(NULL, NA_real_, Inf, 0, -1, c(100, 200), "800", 1i)) {
+  for (size in list(NA_real_, Inf, 0, -1, c(100, 200), "800", 1i)) {
     expect_error(
       save_drawing(w, tempfile(fileext = ".svg"), width = size),
       "width",
@@ -324,4 +324,32 @@ test_that("SVG export retains numeric precision in point positions and limits", 
     points
   ))
   expect_equal(y, c(400, 200), tolerance = 0.1)
+})
+
+
+test_that("SVG dimensions follow numeric widget dimensions unless overridden", {
+  skip_if_not(nzchar(Sys.which("node")), "node not found")
+  path <- tempfile(fileext = ".svg")
+  on.exit(unlink(path), add = TRUE)
+  w <- draw_bar(c("A", "B"), c(1, 2), width = 950, height = 450)
+  save_drawing(w, path)
+  expect_match(
+    readLines(path, n = 1L),
+    'width="950" height="450"',
+    fixed = TRUE
+  )
+  save_drawing(w, path, width = 640, height = 360)
+  expect_match(
+    readLines(path, n = 1L),
+    'width="640" height="360"',
+    fixed = TRUE
+  )
+  w[["width"]] <- "100%"
+  w[["height"]] <- NULL
+  save_drawing(w, path)
+  expect_match(
+    readLines(path, n = 1L),
+    'width="800" height="600"',
+    fixed = TRUE
+  )
 })

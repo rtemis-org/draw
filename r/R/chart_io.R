@@ -40,6 +40,7 @@
 chart_registry <- function() {
   list(
     scatter = list(cls = ScatterConfig, setup = "setup_ScatterConfig"),
+    confusion = list(cls = ConfusionConfig, setup = "setup_ConfusionConfig"),
     significance = list(
       cls = SignificanceConfig,
       setup = "setup_SignificanceConfig"

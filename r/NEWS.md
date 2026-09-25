@@ -1,5 +1,7 @@
 # rtemis.draw 0.5.2
 
+- Add `draw_confusion()` and classification `plot_true_pred()` methods with shared count records, per-class summaries, and multi-panel SVG export.
+
 - Add volcano and categorical Manhattan plots, portable significance configuration, and `MassGLM` methods for `plot()` and `plot_manhattan()`, with SVG export.
 
 - Add `draw_varimp()` and draw-owned `plot_varimp()` methods for ordinary and resampled models, with named measures, ranking, and explicit missing-score policies.

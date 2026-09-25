@@ -3,10 +3,10 @@
 # 2026- EDG rtemis.org
 
 # %% plot_true_pred ----
-#' Plot a Regression Model's True Versus Predicted Values
+#' Plot a Model's True Versus Predicted Values
 #'
-#' S7 generic for ECharts plots of rtemis regression results. Methods for
-#' `rtemis::Regression` and `rtemis::RegressionRes` are registered when rtemis
+#' S7 generic for ECharts plots of rtemis regression and classification results.
+#' Ordinary and resampled result methods are registered when rtemis
 #' is installed. Use `rtemis.draw::plot_true_pred()` when both packages are
 #' attached; this generic is separate from `rtemis::plot_true_pred()`.
 #'
@@ -19,14 +19,22 @@
 #'
 #' Rendering is provided by [draw_fit()]. The API uses draw argument names,
 #' including `se`, `square`, `equal_axes`, and `title`, and a draw [Theme].
-#' Supported fits are `"glm"`, `"gam"`, or `NULL`. Classification results are
-#' not yet supported by this generic.
+#' Supported fits are `"glm"`, `"gam"`, or `NULL`.
 #'
-#' @param x `rtemis::Regression` or `rtemis::RegressionRes`: Model result.
-#' @param what Character: `"all"` or a vector of sample names: `"training"`,
+#' Classification uses [draw_confusion()] with stored confusion frequencies
+#' when available, preserving the producer's class order. Otherwise it counts
+#' aligned reference/predicted pairs. An omitted `what` selects test, validation,
+#' then training for an ordinary classifier, or all available samples for a
+#' resampled classifier. Multiple samples share one widget and one export.
+#' Balanced accuracy in this view is macro recall; it is not the legacy
+#' multiclass average of one-versus-rest balanced accuracies. See
+#' [ConfusionConfig] for zero-denominator and pooled-count semantics.
+#'
+#' @param x rtemis regression or classification object: Ordinary or resampled result.
+#' @param what Optional Character: `"all"` or a vector of sample names: `"training"`,
 #'   `"validation"`, `"test"`. Resampled results do not have validation pairs.
-#' @param labelify Logical: Capitalize sample names in the legend.
-#' @param ... Additional arguments to [draw_fit()].
+#' @param labelify Logical: Capitalize sample names in the legend or panel titles.
+#' @param ... Additional arguments to [draw_fit()] or [draw_confusion()].
 #'
 #' @return htmlwidget: ECharts drawing.
 #' @export

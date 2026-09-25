@@ -180,5 +180,16 @@ draw_object_session <- function(x, ...) {
     S7::method(regression_plot_data, cls) <- extract_regression_plot_data
     S7::method(plot_true_pred, cls) <- draw_regression_predictions
   }
+  for (name in c("ClassificationMetrics", "ClassificationMetricsRes")) {
+    S7::method(confusion_input, rtemis_class(name)) <- extract_confusion_metrics
+  }
+  for (name in c("Classification", "ClassificationRes")) {
+    cls <- rtemis_class(name)
+    S7::method(
+      classification_plot_data,
+      cls
+    ) <- extract_classification_plot_data
+    S7::method(plot_true_pred, cls) <- draw_classification_predictions
+  }
   invisible(NULL)
 } # /rtemis.draw::.register_rtemis_methods

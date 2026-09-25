@@ -20,8 +20,10 @@
 #'
 #' @param widget htmlwidget: A widget returned by [draw()] or a `draw_*` function.
 #' @param filename Character scalar: Nonempty output path with an extension.
-#' @param width Numeric scalar `(0, Inf)`: Finite image width in pixels.
-#' @param height Numeric scalar `(0, Inf)`: Finite image height in pixels.
+#' @param width Optional Numeric scalar `(0, Inf)`: Finite image width in pixels.
+#'   Unset uses the widget's numeric width, or 800 for a relative/unspecified width.
+#' @param height Optional Numeric scalar `(0, Inf)`: Finite image height in pixels.
+#'   Unset uses the widget's numeric height, or 600 for a relative/unspecified height.
 #' @return The `filename`, invisibly.
 #' @export
 #'
@@ -33,13 +35,19 @@
 #'   save_drawing(chart, path)
 #'   unlink(path)
 #' }
-save_drawing <- function(widget, filename, width = 800, height = 600) {
+save_drawing <- function(widget, filename, width = NULL, height = NULL) {
   if (!inherits(widget, "htmlwidget")) {
     abort(
       "`widget` must be an htmlwidget returned by draw().",
       class = c("rtemis_type_error", "rtemis_input_error")
     )
   }
+  # Retain numeric widget dimensions for complete panel compositions. Relative
+  # CSS dimensions have no standalone pixel size, so they use the fallback.
+  width <- width %||%
+    if (is.numeric(widget[["width"]])) widget[["width"]] else 800
+  height <- height %||%
+    if (is.numeric(widget[["height"]])) widget[["height"]] else 600
   if (
     !is.character(filename) ||
       length(filename) != 1L ||

@@ -2,26 +2,26 @@
 % Please edit documentation in R/plot_true_pred.R
 \name{plot_true_pred}
 \alias{plot_true_pred}
-\title{Plot a Regression Model's True Versus Predicted Values}
+\title{Plot a Model's True Versus Predicted Values}
 \usage{
 plot_true_pred(x, ...)
 }
 \arguments{
-\item{x}{\code{rtemis::Regression} or \code{rtemis::RegressionRes}: Model result.}
+\item{x}{rtemis regression or classification object: Ordinary or resampled result.}
 
-\item{...}{Additional arguments to \code{\link[=draw_fit]{draw_fit()}}.}
+\item{...}{Additional arguments to \code{\link[=draw_fit]{draw_fit()}} or \code{\link[=draw_confusion]{draw_confusion()}}.}
 
-\item{what}{Character: \code{"all"} or a vector of sample names: \code{"training"},
+\item{what}{Optional Character: \code{"all"} or a vector of sample names: \code{"training"},
 \code{"validation"}, \code{"test"}. Resampled results do not have validation pairs.}
 
-\item{labelify}{Logical: Capitalize sample names in the legend.}
+\item{labelify}{Logical: Capitalize sample names in the legend or panel titles.}
 }
 \value{
 htmlwidget: ECharts drawing.
 }
 \description{
-S7 generic for ECharts plots of rtemis regression results. Methods for
-\code{rtemis::Regression} and \code{rtemis::RegressionRes} are registered when rtemis
+S7 generic for ECharts plots of rtemis regression and classification results.
+Ordinary and resampled result methods are registered when rtemis
 is installed. Use \code{rtemis.draw::plot_true_pred()} when both packages are
 attached; this generic is separate from \code{rtemis::plot_true_pred()}.
 }
@@ -34,8 +34,16 @@ names are checked within each fold before pooling.
 
 Rendering is provided by \code{\link[=draw_fit]{draw_fit()}}. The API uses draw argument names,
 including \code{se}, \code{square}, \code{equal_axes}, and \code{title}, and a draw \link{Theme}.
-Supported fits are \code{"glm"}, \code{"gam"}, or \code{NULL}. Classification results are
-not yet supported by this generic.
+Supported fits are \code{"glm"}, \code{"gam"}, or \code{NULL}.
+
+Classification uses \code{\link[=draw_confusion]{draw_confusion()}} with stored confusion frequencies
+when available, preserving the producer's class order. Otherwise it counts
+aligned reference/predicted pairs. An omitted \code{what} selects test, validation,
+then training for an ordinary classifier, or all available samples for a
+resampled classifier. Multiple samples share one widget and one export.
+Balanced accuracy in this view is macro recall; it is not the legacy
+multiclass average of one-versus-rest balanced accuracies. See
+\link{ConfusionConfig} for zero-denominator and pooled-count semantics.
 }
 \examples{
 \dontshow{if (requireNamespace("rtemis", quietly = TRUE)) withAutoprint(\{ # examplesIf}
