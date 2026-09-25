@@ -305,8 +305,8 @@ render_widget <- function(
 #' @param height Optional Character or Numeric: Widget height.
 #' @param element_id Optional Character: Explicit element ID.
 #' @param filename Optional Character: If provided, the widget is also written to
-#'   this file via [save_drawing()] (ECharts only; other backends warn and
-#'   ignore it). Extension determines the format (currently only `.svg`).
+#'   this file via [save_drawing()] (ECharts only; other backends reject static
+#'   export requests). Extension determines the format (currently only `.svg`).
 #' @param ... Backend-specific arguments, which must be named. ECharts accepts
 #'   `renderer` (Character \{"canvas", "svg"\}) and `meta` (named list of extra
 #'   payload fields, used internally e.g. by [draw_heatmap()]). Any other name
@@ -1521,6 +1521,14 @@ bar_option <- function(
     x_ax <- Axis(type = "category", data = x, name = xlab)
     y_ax <- Axis(type = "value", name = ylab)
   }
+  # End-positioned names consume horizontal plot space for long measure
+  # labels. Match line/scatter charts and let ECharts resolve label clearance.
+  if (!is.null(xlab)) {
+    x_ax@name_location <- "middle"
+  }
+  if (!is.null(ylab)) {
+    y_ax@name_location <- "middle"
+  }
 
   opt <- EChartsOption(
     title = if (!is.null(title)) Title(text = title) else NULL,
@@ -1646,7 +1654,7 @@ scatter_option <- function(
   fit = NULL,
   se = TRUE,
   fit_alpha = 0.25,
-  n_fit = 200,
+  n_fit = 200L,
   palette = NULL,
   xlim = NULL,
   ylim = NULL,
@@ -1656,8 +1664,29 @@ scatter_option <- function(
   xlab = NULL,
   ylab = NULL,
   title = NULL,
-  margins = DEFAULT_MARGINS
+  margins = DEFAULT_MARGINS,
+  se_times = 1.96,
+  rsq = FALSE,
+  diagonal = FALSE,
+  diagonal_color = NULL
 ) {
+  # The same declaration validates the vector and serialized-config routes.
+  n_fit <- clean_int(n_fit)
+  ScatterConfig(
+    fit = fit,
+    se = se,
+    n_fit = n_fit,
+    fit_alpha = fit_alpha,
+    pad = pad,
+    square = square,
+    equal_axes = equal_axes,
+    xlab = xlab,
+    ylab = ylab,
+    se_times = se_times,
+    rsq = rsq,
+    diagonal = diagonal,
+    diagonal_color = diagonal_color
+  )
   validate_axis_lim(xlim, "xlim")
   validate_axis_lim(ylim, "ylim")
   # Asking for a square box *and* equal scaling is a statement about the limits;
@@ -1671,16 +1700,22 @@ scatter_option <- function(
   x_lim <- xlim %||% calc_limits(x, pad)
   y_lim <- ylim %||% calc_limits(y, pad)
 
-  if (!is.null(fit)) {
-    fit <- match.arg(fit, c("glm", "gam"))
-  }
-
   # Helper: compute fit line and CI band for one group
   compute_fit <- function(xv, yv, fit_method, n_pts) {
-    # Drop NA pairs before fitting
-    ok <- !is.na(xv) & !is.na(yv)
+    # A fit needs aligned finite pairs and a residual degree of freedom when
+    # displaying uncertainty. Report the remedy before calling the fitter.
+    ok <- is.finite(xv) & is.finite(yv)
     xv <- xv[ok]
     yv <- yv[ok]
+    minimum <- if (se) 3L else 2L
+    if (length(xv) < minimum || length(unique(xv)) < 2L) {
+      abort(
+        "Each fitted group needs at least ",
+        minimum,
+        " complete pairs and two distinct x values; add observations or set `fit = NULL`.",
+        class = c("rtemis_value_error", "rtemis_input_error")
+      )
+    }
     df <- data.frame(.x = xv, .y = yv)
     if (fit_method == "gam") {
       check_dependencies("mgcv")
@@ -1690,11 +1725,17 @@ scatter_option <- function(
     }
     newdata <- data.frame(.x = seq(min(xv), max(xv), length.out = n_pts))
     pred <- stats::predict(model, newdata = newdata, se.fit = TRUE)
+    total <- sum((yv - mean(yv))^2)
     list(
-      x = newdata$.x,
-      fitted = pred$fit,
-      lower = pred$fit - 1.96 * pred$se.fit,
-      upper = pred$fit + 1.96 * pred$se.fit
+      x = newdata[[".x"]],
+      fitted = pred[["fit"]],
+      lower = pred[["fit"]] - se_times * pred[["se.fit"]],
+      upper = pred[["fit"]] + se_times * pred[["se.fit"]],
+      rsq = if (total > 0) {
+        1 - sum(stats::residuals(model, type = "response")^2) / total
+      } else {
+        NA_real_
+      }
     )
   }
 
@@ -1703,15 +1744,27 @@ scatter_option <- function(
   # legend — clicking a group toggles scatter + fit + CI as a unit.
   fit_series <- function(xv, yv, fit_method, n_pts, group_name, color) {
     p <- compute_fit(xv, yv, fit_method, n_pts)
-    fit_data <- mapply(c, p$x, p$fitted, SIMPLIFY = FALSE)
+    if (rsq) {
+      group_name <- paste0(
+        group_name %||% "Fit",
+        " (R^2 = ",
+        if (is.na(p[["rsq"]])) {
+          "NA"
+        } else {
+          formatC(p[["rsq"]], format = "f", digits = 3L)
+        },
+        ")"
+      )
+    }
+    fit_data <- mapply(c, p[["x"]], p[["fitted"]], SIMPLIFY = FALSE)
 
     out <- list()
 
     if (se) {
       # CI band as a closed polygon: upper bound L->R, lower bound R->L.
       # areaStyle fills the enclosed region. No stacking needed.
-      upper <- mapply(c, p$x, p$upper, SIMPLIFY = FALSE)
-      lower <- mapply(c, rev(p$x), rev(p$lower), SIMPLIFY = FALSE)
+      upper <- mapply(c, p[["x"]], p[["upper"]], SIMPLIFY = FALSE)
+      lower <- mapply(c, rev(p[["x"]]), rev(p[["lower"]]), SIMPLIFY = FALSE)
       ci_data <- c(upper, lower)
       out$ci <- LineSeries(
         name = group_name,
@@ -1776,12 +1829,40 @@ scatter_option <- function(
           as.character(g),
           group_colors[i]
         )
+        if (rsq) {
+          series[[i]]@name <- fs[["fit"]]@name
+        }
         series <- c(series, unname(fs))
       }
     } else {
       color <- rtemis_colors[["teal"]]
       fs <- fit_series(x, y, fit, n_fit, NULL, color)
+      if (rsq) {
+        series[[1L]]@name <- fs[["fit"]]@name
+      }
       series <- c(series, unname(fs))
+    }
+  }
+
+  # An unnamed, silent series does not add a legend entry or intercept hover.
+  # Clip the identity segment to the intersection of the two visible ranges.
+  if (diagonal) {
+    ends <- c(max(x_lim[[1L]], y_lim[[1L]]), min(x_lim[[2L]], y_lim[[2L]]))
+    if (ends[[1L]] < ends[[2L]]) {
+      series <- c(
+        series,
+        list(LineSeries(
+          data = lapply(ends, function(value) c(value, value)),
+          show_symbol = FALSE,
+          silent = TRUE,
+          legend_hover_link = FALSE,
+          line_style = LineStyle(
+            color = diagonal_color %||% "#888888",
+            type = "dashed"
+          ),
+          z = 1L
+        ))
+      )
     }
   }
 
@@ -1807,7 +1888,7 @@ scatter_option <- function(
   opt <- EChartsOption(
     title = if (!is.null(title)) Title(text = title) else NULL,
     tooltip = Tooltip(trigger = "item", formatter = scatter_formatter),
-    legend = if (!is.null(group)) Legend() else NULL,
+    legend = if (!is.null(group) || (!is.null(fit) && rsq)) Legend() else NULL,
     x_axis = Axis(
       type = "value",
       name = xlab,
@@ -1871,11 +1952,17 @@ scatter_option <- function(
 #' @param size Optional Numeric: Symbol sizes.
 #' @param group Optional Vector: Grouping variable for multiple series.
 #' @param fit Optional Character \{"glm", "gam"\}: Fit method. `NULL` disables fitting.
-#'   `"gam"` for [mgcv::gam()]. The fitted line and 95\% confidence band
+#'   `"gam"` for [mgcv::gam()]. The fitted line and standard-error band
 #'   are computed per group when `group` is provided.
 #' @param se Logical: Whether to show the confidence band.
+#' @param se_times Numeric `[0, Inf)`: Standard-error multiplier for the band.
+#' @param rsq Logical: Include the fitted model's R-squared in series labels.
+#'   This describes the overlay fit, not predictive performance against the
+#'   identity line. Constant responses have undefined R-squared, labeled `NA`.
+#' @param diagonal Logical: Draw a dashed identity line within the axis limits.
+#' @param diagonal_color Optional Character: Identity-line color.
 #' @param fit_alpha Numeric `[0, 1]`: Opacity for the confidence-band fill.
-#' @param n_fit Numeric `[1, Inf)`: Number of evaluation points for the fit.
+#' @param n_fit Integer `[2, Inf)`: Number of evaluation points for the fit.
 #' @param palette Optional Character: Series color palette — a single color string or
 #'   character vector that overrides the theme palette for this chart.
 #'   When `group` is set, colors are assigned per group in order. `color` takes
@@ -1932,7 +2019,7 @@ draw_scatter <- function(
   fit = NULL,
   se = TRUE,
   fit_alpha = 0.25,
-  n_fit = 200,
+  n_fit = 200L,
   palette = NULL,
   xlim = NULL,
   ylim = NULL,
@@ -1947,7 +2034,11 @@ draw_scatter <- function(
   width = NULL,
   height = NULL,
   element_id = NULL,
-  filename = NULL
+  filename = NULL,
+  se_times = 1.96,
+  rsq = FALSE,
+  diagonal = FALSE,
+  diagonal_color = NULL
 ) {
   opt <- scatter_option(
     x = x,
@@ -1956,6 +2047,10 @@ draw_scatter <- function(
     group = group,
     fit = fit,
     se = se,
+    se_times = se_times,
+    rsq = rsq,
+    diagonal = diagonal,
+    diagonal_color = diagonal_color,
     fit_alpha = fit_alpha,
     n_fit = n_fit,
     palette = palette,
@@ -3143,7 +3238,28 @@ heatmap_option <- function(
   for (i in seq_len(n_rows)) {
     for (j in seq_len(n_cols)) {
       val <- x[i, j]
-      data_list[[k]] <- list(j - 1L, i - 1L, if (is.na(val)) NULL else val)
+      value <- list(j - 1L, i - 1L, if (is.na(val)) NULL else val)
+      # Materialize visible labels so browser and static output consume JSON,
+      # without requiring a formatter callback at either render target.
+      data_list[[k]] <- if (show_values) {
+        list(
+          value = value,
+          label = list(
+            formatter = if (is.na(val)) {
+              ""
+            } else {
+              formatC(
+                val,
+                format = "f",
+                digits = value_digits,
+                decimal.mark = "."
+              )
+            }
+          )
+        )
+      } else {
+        value
+      }
       k <- k + 1L
     }
   }
@@ -3258,28 +3374,17 @@ heatmap_option <- function(
     ";",
     "return function(p){",
     "if(!p.value||p.value[2]===null||p.value[2]===undefined)return'NA';",
-    "return rn[p.value[1]]+' \u00d7 '+cn[p.value[0]]+': '+p.value[2].toFixed(",
+    # Reuse materialized labels so rounding at a tie cannot make the tooltip
+    # disagree with the visible cell value (R and JS have different tie rules).
+    "var v=p.data&&p.data.label?p.data.label.formatter:p.value[2].toFixed(",
     value_digits,
     ");",
+    "return rn[p.value[1]]+' \u00d7 '+cn[p.value[0]]+': '+v;",
     "}})()"
   ))
 
   # -- 10. Optional in-cell value labels -----------------------------------------
-  label_opt <- if (show_values) {
-    LabelOption(
-      show = TRUE,
-      formatter = htmlwidgets::JS(paste0(
-        "function(p){",
-        "if(!p.value||p.value[2]===null||p.value[2]===undefined)return'';",
-        "return p.value[2].toFixed(",
-        value_digits,
-        ");",
-        "}"
-      ))
-    )
-  } else {
-    NULL
-  }
+  label_opt <- if (show_values) LabelOption(show = TRUE) else NULL
 
   # -- 11. Assemble multi-grid ECharts option ------------------------------------
   # Grid index assignments (depends on which dendro panels are shown):
@@ -3367,36 +3472,10 @@ heatmap_option <- function(
       grid_index = hm_grid_idx
     )
 
-    # renderItem JS for row dendrogram (x-axis = height, y-axis = row position)
-    # Each datum: [left_pos, right_pos, left_h, right_h, merge_h]
-    # The U-shape: (left_h, lp) → (merge_h, lp) → (merge_h, rp) → (right_h, rp)
-    row_render_js <- htmlwidgets::JS(paste0(
-      "function(params,api){",
-      "var lp=api.value(0),rp=api.value(1),",
-      "lh=api.value(2),rh=api.value(3),mh=api.value(4);",
-      "return{type:'polyline',",
-      "shape:{points:[api.coord([lh,lp]),api.coord([mh,lp]),",
-      "api.coord([mh,rp]),api.coord([rh,rp])]},",
-      "style:{stroke:",
-      jsonlite::toJSON(dcolor, auto_unbox = TRUE),
-      ",lineWidth:1,fill:null}};}"
-    ))
-
-    # renderItem JS for col dendrogram (x-axis = col position, y-axis = height)
-    # Each datum: [left_pos, right_pos, left_h, right_h, merge_h]
-    # The U-shape: (lp, left_h) → (lp, merge_h) → (rp, merge_h) → (rp, right_h)
-    col_render_js <- htmlwidgets::JS(paste0(
-      "function(params,api){",
-      "var lp=api.value(0),rp=api.value(1),",
-      "lh=api.value(2),rh=api.value(3),mh=api.value(4);",
-      "return{type:'polyline',",
-      "shape:{points:[api.coord([lp,lh]),api.coord([lp,mh]),",
-      "api.coord([rp,mh]),api.coord([rp,rh])]},",
-      "style:{stroke:",
-      jsonlite::toJSON(dcolor, auto_unbox = TRUE),
-      ",lineWidth:1,fill:null}};}"
-    ))
-
+    # Named renderers keep the resolved option portable JSON. Both targets
+    # share the U-shape geometry in inst/htmlwidgets/lib/draw/renderers.js.
+    # Clip leaf stubs below the displayed height-axis minimum to their own
+    # panel so they cannot extend across adjacent heatmap cells.
     # Build reusable dendro grids and position axes.
     #
     # Row dendro grid: placed on the left (root far-left, leaves adj. to heatmap)
@@ -3503,8 +3582,10 @@ heatmap_option <- function(
           yAxisIndex = 0L,
           data = row_dendro[["data"]],
           silent = TRUE,
+          clip = TRUE,
           animation = FALSE,
-          renderItem = row_render_js
+          renderItem = "rtemis.dendrogram.v1",
+          itemPayload = list(orientation = "row", color = dcolor)
         ),
         list(
           type = "custom",
@@ -3512,8 +3593,10 @@ heatmap_option <- function(
           yAxisIndex = 1L,
           data = col_dendro[["data"]],
           silent = TRUE,
+          clip = TRUE,
           animation = FALSE,
-          renderItem = col_render_js
+          renderItem = "rtemis.dendrogram.v1",
+          itemPayload = list(orientation = "column", color = dcolor)
         ),
         HeatmapSeries(
           data = data_list,
@@ -3544,8 +3627,10 @@ heatmap_option <- function(
           yAxisIndex = 0L,
           data = row_dendro[["data"]],
           silent = TRUE,
+          clip = TRUE,
           animation = FALSE,
-          renderItem = row_render_js
+          renderItem = "rtemis.dendrogram.v1",
+          itemPayload = list(orientation = "row", color = dcolor)
         ),
         HeatmapSeries(
           data = data_list,
@@ -3575,8 +3660,10 @@ heatmap_option <- function(
           yAxisIndex = 0L,
           data = col_dendro[["data"]],
           silent = TRUE,
+          clip = TRUE,
           animation = FALSE,
-          renderItem = col_render_js
+          renderItem = "rtemis.dendrogram.v1",
+          itemPayload = list(orientation = "column", color = dcolor)
         ),
         HeatmapSeries(
           data = data_list,

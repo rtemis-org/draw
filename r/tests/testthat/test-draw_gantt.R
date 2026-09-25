@@ -37,12 +37,25 @@ test_that(".gantt_time_values passes numeric through unchanged", {
 })
 
 
-test_that(".gantt_render_item embeds params and border and is JS", {
-  js <- rtemis.draw:::.gantt_render_item(0.6, 4, "#E53935", 1.5)
-  expect_s3_class(js, "JS_EVAL")
-  expect_match(as.character(js), "0.6", fixed = TRUE)
-  expect_match(as.character(js), "api.visual('color')", fixed = TRUE)
-  expect_match(as.character(js), "#E53935", fixed = TRUE)
+test_that("Gantt renderer settings are plain JSON parameters", {
+  w <- draw_gantt(
+    tasks_df(),
+    bar_height = 0.6,
+    bar_radius = 4,
+    border_color = "#E53935",
+    border_width = 1.5
+  )
+  series <- w[["x"]][["option"]][["series"]][[1L]]
+  expect_identical(series[["renderItem"]], "rtemis.gantt.v1")
+  expect_identical(
+    series[["itemPayload"]],
+    list(
+      barHeight = 0.6,
+      barRadius = 4,
+      borderColor = "#E53935",
+      borderWidth = 1.5
+    )
+  )
 })
 
 

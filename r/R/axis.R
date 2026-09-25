@@ -546,5 +546,11 @@ Axis <- S7::new_class(
 )
 
 S7::method(to_list, Axis) <- function(x, ...) {
-  props_to_list(x)
+  out <- props_to_list(x)
+  # CategoryAxisBaseOption declares data as an array, including one category.
+  # Protect a scalar vector from JSON auto-unboxing without changing items.
+  if (is.atomic(out[["data"]]) && length(out[["data"]]) == 1L) {
+    out[["data"]] <- unname(as.list(out[["data"]]))
+  }
+  out
 }

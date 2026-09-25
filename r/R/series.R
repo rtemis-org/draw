@@ -357,6 +357,10 @@ BarSeries <- S7::new_class(
 
 S7::method(to_list, BarSeries) <- function(x, ...) {
   out <- props_to_list(x)
+  # BarSeriesOption.data is an array even when only one score is selected.
+  if (is.atomic(out[["data"]]) && length(out[["data"]]) == 1L) {
+    out[["data"]] <- unname(as.list(out[["data"]]))
+  }
   out$type <- "bar"
   if (is.list(out$data)) {
     out$data <- unname(out$data)

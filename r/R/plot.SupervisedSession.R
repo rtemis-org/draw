@@ -162,5 +162,19 @@ draw_object_session <- function(x, ...) {
   S7::method(plot, rtemis_class("SupervisedSession")) <- draw_supervised_session
   S7::method(plot_session, rtemis_class("Supervised")) <- draw_object_session
   S7::method(plot_session, rtemis_class("SupervisedRes")) <- draw_object_session
+  S7::method(
+    plot_learning,
+    rtemis_class("Supervised")
+  ) <- draw_model_learning_curve
+  for (name in c("Supervised", "SupervisedRes")) {
+    cls <- rtemis_class(name)
+    S7::method(varimp_plot_data, cls) <- extract_varimp_plot_data
+    S7::method(plot_varimp, cls) <- draw_model_varimp
+  }
+  for (name in c("Regression", "RegressionRes")) {
+    cls <- rtemis_class(name)
+    S7::method(regression_plot_data, cls) <- extract_regression_plot_data
+    S7::method(plot_true_pred, cls) <- draw_regression_predictions
+  }
   invisible(NULL)
 } # /rtemis.draw::.register_rtemis_methods

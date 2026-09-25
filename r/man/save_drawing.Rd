@@ -9,23 +9,26 @@ save_drawing(widget, filename, width = 800, height = 600)
 \arguments{
 \item{widget}{htmlwidget: A widget returned by \code{\link[=draw]{draw()}} or a \verb{draw_*} function.}
 
-\item{filename}{Character: Output file path. Extension determines the format.}
+\item{filename}{Character scalar: Nonempty output path with an extension.}
 
-\item{width}{Numeric: Image width in pixels.}
+\item{width}{Numeric scalar \verb{(0, Inf)}: Finite image width in pixels.}
 
-\item{height}{Numeric: Image height in pixels.}
+\item{height}{Numeric scalar \verb{(0, Inf)}: Finite image height in pixels.}
 }
 \value{
 The \code{filename}, invisibly.
 }
 \description{
 Exports a widget created by \code{\link[=draw]{draw()}} (or any of the \verb{draw_*}
-functions) to a static file. Currently supports \code{.svg} via Node.js
+functions) to a static file. Currently supports ECharts \code{.svg} via Node.js
 server-side rendering. Requires a \code{node} binary on \code{PATH}.
 }
 \details{
-Interactive features (tooltip formatters, event handlers) are stripped
-before rendering — static images cannot express them.
+Callbacks under tooltips, axis pointers, and interactive toolbox controls
+are omitted. Other JavaScript callbacks are rejected because discarding them
+could change visible content. Built-in Gantt and dendrogram renderers are
+shared with the browser widget and use JSON parameters. Network and map
+exports are not yet implemented.
 }
 \examples{
 # SVG export shells out to Node.js, so run it only where node exists.

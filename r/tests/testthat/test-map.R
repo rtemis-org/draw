@@ -225,12 +225,15 @@ test_that("draw_choropleth honours an explicit theme and NA (no theme)", {
   expect_null(wna$x$autoTheme)
 })
 
-test_that("draw_choropleth warns and ignores filename (no static export yet)", {
+test_that("draw_choropleth rejects static export requests", {
   df <- data.frame(iso = "USA", gdp = 1)
-  expect_message(
-    draw_choropleth(df, "iso", "gdp", filename = "map.png"),
-    "not yet supported"
+  path <- tempfile(fileext = ".svg")
+  expect_error(
+    draw_choropleth(df, "iso", "gdp", filename = path),
+    "not yet supported",
+    class = "rtemis_export_error"
   )
+  expect_false(file.exists(path))
 })
 
 test_that("draw_choropleth rejects an invalid resolution / scheme", {

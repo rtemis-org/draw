@@ -100,6 +100,18 @@ test_that("LineSeries item_style and label nest", {
 
 # -- BarSeries ------------------------------------------------------------------
 
+test_that("bar scores remain JSON arrays for a single bar", {
+  for (data in list(3, c(3, 4), list(list(value = 3)))) {
+    out <- jsonlite::fromJSON(
+      jsonlite::toJSON(to_list(BarSeries(data = data)), auto_unbox = TRUE),
+      simplifyVector = FALSE
+    )
+    expect_true(is.list(out[["data"]]))
+    expect_length(out[["data"]], length(data))
+  }
+  expect_null(to_list(BarSeries())[["data"]])
+})
+
 test_that("BarSeries creates with defaults", {
   bs <- BarSeries()
   out <- to_list(bs)

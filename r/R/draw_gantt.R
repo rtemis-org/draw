@@ -3,58 +3,11 @@
 #
 # ECharts (>= 6.1) has no native Gantt series, so a timeline is drawn with a
 # `custom` series: one rectangle per task, positioned on a value/time x-axis
-# and a category y-axis. See the renderItem API in
-# ~/Code/live/node_modules/echarts/types/dist/shared.d.ts
-# (CustomSeriesRenderItemAPI: value(), coord(), size(), visual()).
+# and a category y-axis. The registered renderer uses CustomSeriesRenderItemAPI
+# and itemPayload from ECharts src/chart/custom/CustomSeries.ts. Browser and SVG
+# rendering share inst/htmlwidgets/lib/draw/renderers.js.
 
 # -- Internal helpers -----------------------------------------------------------
-
-# Build the renderItem JS for a Gantt custom series.
-#
-# Each datum value is [rowIndex, start, end]:
-#   - rowIndex maps to the category (y) axis position
-#   - start / end map to the value or time (x) axis
-# The bar height is a fraction of one category band; per-bar fill comes from the
-# datum's itemStyle color via api.visual("color").
-#
-# @param bar_height Numeric (0, 1]: Bar thickness as a fraction of the band.
-# @param bar_radius Numeric [0, Inf): Corner radius in pixels.
-# @return htmlwidgets::JS object.
-# @keywords internal
-# @noRd
-.gantt_render_item <- function(
-  bar_height,
-  bar_radius,
-  border_color,
-  border_width
-) {
-  # A truthy 4th data value (api.value(3)) outlines the bar in border_color
-  # without changing its fill, so callers can flag bars (e.g. failures) while
-  # the fill keeps encoding the group. Absent 4th value -> NaN -> no border.
-  htmlwidgets::JS(sprintf(
-    "function(params,api){
-      var rowIndex=api.value(0);
-      var start=api.coord([api.value(1),rowIndex]);
-      var end=api.coord([api.value(2),rowIndex]);
-      var height=api.size([0,1])[1]*%s;
-      var width=end[0]-start[0];
-      if(width<1){width=1;}
-      var style={fill:api.visual('color')};
-      if(api.value(3)){style.stroke='%s';style.lineWidth=%s;}
-      return{
-        type:'rect',
-        transition:['shape'],
-        shape:{x:start[0],y:start[1]-height/2,width:width,height:height,r:%s},
-        style:style
-      };
-    }",
-    format(bar_height, scientific = FALSE),
-    border_color,
-    format(border_width, scientific = FALSE),
-    format(bar_radius, scientific = FALSE)
-  ))
-}
-
 
 # Coerce a start/end column to the numeric form ECharts expects.
 # POSIXct -> epoch milliseconds (for axis_type = "time"); numerics pass through.
@@ -192,13 +145,6 @@ gantt_option <- function(
     group_colors <- palette[[1L]]
   }
 
-  render_item <- .gantt_render_item(
-    bar_height,
-    bar_radius,
-    border_color,
-    border_width
-  )
-
   make_series <- function(level, col, name) {
     idx <- which(group_vals == level)
     data_items <- lapply(idx, function(i) {
@@ -222,7 +168,13 @@ gantt_option <- function(
     series <- list(
       type = "custom",
       data = data_items,
-      renderItem = render_item,
+      renderItem = "rtemis.gantt.v1",
+      itemPayload = list(
+        barHeight = bar_height,
+        barRadius = bar_radius,
+        borderColor = border_color,
+        borderWidth = border_width
+      ),
       encode = list(x = c(1L, 2L), y = 0L),
       clip = TRUE
     )

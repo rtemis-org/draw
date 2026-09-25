@@ -329,8 +329,10 @@ S7::method(draw, SigmaOption) <- function(
 ) {
   check_dots_empty(...)
   if (!is.null(filename)) {
-    warn(
-      "Static export of network widgets is not yet supported; ignoring `filename`."
+    abort(
+      "Static export of network widgets is not yet supported. ",
+      "Omit `filename` to create an interactive widget.",
+      class = c("rtemis_export_error", "rtemis_input_error")
     )
   }
   render_widget(
@@ -648,9 +650,8 @@ graph_option <- function(
 #' @param width Optional Character or Numeric: Widget width.
 #' @param height Optional Character or Numeric: Widget height.
 #' @param element_id Optional Character: Explicit element ID.
-#' @param filename Optional Character: Currently ignored with a warning (static
-#'   export of network widgets is not yet supported); accepted for signature
-#'   parity with the other `draw_*` functions.
+#' @param filename Optional Character: Static export of network widgets is not yet
+#'   supported. Supplying a path raises an error.
 #' @return htmlwidget.
 #' @export
 #'

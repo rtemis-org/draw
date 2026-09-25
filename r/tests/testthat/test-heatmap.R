@@ -194,11 +194,15 @@ test_that("triangle masking with cluster_rows does not error", {
 
 # -- draw_heatmap(): custom dendro_color --------------------------------------
 
-test_that("dendro_color is embedded in renderItem JS", {
+test_that("dendro_color and orientation are plain renderer parameters", {
   m <- make_mat()
   w <- draw_heatmap(m, cluster_rows = TRUE, dendro_color = "#ff0000")
-  js_str <- as.character(w$x$option$series[[1]]$renderItem)
-  expect_true(grepl("#ff0000", js_str, fixed = TRUE))
+  series <- w[["x"]][["option"]][["series"]][[1L]]
+  expect_identical(series[["renderItem"]], "rtemis.dendrogram.v1")
+  expect_identical(
+    series[["itemPayload"]],
+    list(orientation = "row", color = "#ff0000")
+  )
 })
 
 # -- draw_heatmap(): basic widget structure -----------------------------------

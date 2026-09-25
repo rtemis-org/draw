@@ -15,6 +15,10 @@ ScatterConfig(
   group = NULL,
   fit = NULL,
   se = TRUE,
+  se_times = 1.96,
+  rsq = FALSE,
+  diagonal = FALSE,
+  diagonal_color = NULL,
   n_fit = 200L,
   fit_alpha = 0.25,
   palette = NULL,
@@ -56,6 +60,14 @@ authored config; written by the interface that resolved it.}
 no fit.}
 
 \item{se}{Logical: If TRUE, shade the fit standard-error band.}
+
+\item{se_times}{Numeric \verb{[0, Inf)}: Multiplier for the fitted standard error.}
+
+\item{rsq}{Logical: Include the fitted model's R-squared in series labels.}
+
+\item{diagonal}{Logical: Draw the identity line within the axis limits.}
+
+\item{diagonal_color}{Optional Character: Identity-line color.}
 
 \item{n_fit}{Integer \verb{[2, Inf)}: Points used to draw the fit line.}
 

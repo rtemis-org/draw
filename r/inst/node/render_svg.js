@@ -23,6 +23,8 @@ const echartsPath = path.resolve(
 	"echarts.min.js",
 );
 const echarts = require(echartsPath);
+const registerRenderers = require("../htmlwidgets/lib/draw/renderers.js");
+const rendererNames = registerRenderers(echarts);
 
 // Read the entire stdin as UTF-8.
 let raw = "";
@@ -41,10 +43,10 @@ process.stdin.on("end", () => {
 		process.exit(2);
 	}
 
-	const width   = payload.width   || 800;
-	const height  = payload.height  || 600;
-	const option  = payload.option;
-	const theme   = payload.theme   || null;
+	const width = payload.width || 800;
+	const height = payload.height || 600;
+	const option = payload.option;
+	const theme = payload.theme || null;
 	const creator = payload.creator || "rtemis.draw";
 
 	if (!option) {
@@ -52,23 +54,41 @@ process.stdin.on("end", () => {
 		process.exit(2);
 	}
 
-	if (theme) {
-		echarts.registerTheme("draw_theme", theme);
+	let chart;
+	try {
+		// An unknown renderer can silently produce an empty series, especially
+		// for empty data. Reject it before rendering, independently of data size.
+		const series = Array.isArray(option.series) ? option.series : [option.series];
+		series.filter(Boolean).forEach((item) => {
+			if (item.type === "custom" && !rendererNames.includes(item.renderItem)) {
+				throw new Error("Unsupported custom-series renderer. Use a built-in named renderer.");
+			}
+		});
+		if (theme) {
+			echarts.registerTheme("draw_theme", theme);
+		}
+		chart = echarts.init(null, theme ? "draw_theme" : null, {
+			renderer: "svg",
+			ssr: true,
+			width: width,
+			height: height,
+		});
+
+		// Static output has no animation timeline. Its paths represent the final
+		// scene, including series that normally animate from collapsed geometry.
+		option.animation = false;
+		series.filter(Boolean).forEach((item) => { item.animation = false; });
+		chart.setOption(option);
+
+		const svg = chart.renderToSVGString();
+
+		// Inject creator comment immediately after the opening <svg ...> tag.
+		const svgOut = svg.replace(/(<svg[^>]*>)/, `$1<!-- Created by ${creator} -->`);
+		process.stdout.write(svgOut);
+	} catch (e) {
+		process.stderr.write(`render_svg: ${e.message}\n`);
+		process.exitCode = 1;
+	} finally {
+		if (chart) chart.dispose();
 	}
-
-	const chart = echarts.init(null, theme ? "draw_theme" : null, {
-		renderer: "svg",
-		ssr: true,
-		width: width,
-		height: height,
-	});
-
-	chart.setOption(option);
-
-	const svg = chart.renderToSVGString();
-	chart.dispose();
-
-	// Inject creator comment immediately after the opening <svg ...> tag.
-	const svgOut = svg.replace(/(<svg[^>]*>)/, `$1<!-- Created by ${creator} -->`);
-	process.stdout.write(svgOut);
 });

@@ -3,3 +3,7 @@ dependencies:
     version: 6.1.0
     src: htmlwidgets/lib/echarts
     script: echarts.min.js
+  - name: rtemis-draw-renderers
+    version: 1.0.0
+    src: htmlwidgets/lib/draw
+    script: renderers.js

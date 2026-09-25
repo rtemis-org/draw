@@ -12,7 +12,7 @@ draw_scatter(
   fit = NULL,
   se = TRUE,
   fit_alpha = 0.25,
-  n_fit = 200,
+  n_fit = 200L,
   palette = NULL,
   xlim = NULL,
   ylim = NULL,
@@ -27,7 +27,11 @@ draw_scatter(
   width = NULL,
   height = NULL,
   element_id = NULL,
-  filename = NULL
+  filename = NULL,
+  se_times = 1.96,
+  rsq = FALSE,
+  diagonal = FALSE,
+  diagonal_color = NULL
 )
 }
 \arguments{
@@ -40,14 +44,14 @@ draw_scatter(
 \item{group}{Optional Vector: Grouping variable for multiple series.}
 
 \item{fit}{Optional Character \{"glm", "gam"\}: Fit method. \code{NULL} disables fitting.
-\code{"gam"} for \code{\link[mgcv:gam]{mgcv::gam()}}. The fitted line and 95\\% confidence band
+\code{"gam"} for \code{\link[mgcv:gam]{mgcv::gam()}}. The fitted line and standard-error band
 are computed per group when \code{group} is provided.}
 
 \item{se}{Logical: Whether to show the confidence band.}
 
 \item{fit_alpha}{Numeric \verb{[0, 1]}: Opacity for the confidence-band fill.}
 
-\item{n_fit}{Numeric \verb{[1, Inf)}: Number of evaluation points for the fit.}
+\item{n_fit}{Integer \verb{[2, Inf)}: Number of evaluation points for the fit.}
 
 \item{palette}{Optional Character: Series color palette — a single color string or
 character vector that overrides the theme palette for this chart.
@@ -96,6 +100,16 @@ container. \code{NULL} lets htmlwidgets generate one.}
 
 \item{filename}{Optional Character: If provided, save the widget to this file via
 \code{\link[=save_drawing]{save_drawing()}}.}
+
+\item{se_times}{Numeric \verb{[0, Inf)}: Standard-error multiplier for the band.}
+
+\item{rsq}{Logical: Include the fitted model's R-squared in series labels.
+This describes the overlay fit, not predictive performance against the
+identity line. Constant responses have undefined R-squared, labeled \code{NA}.}
+
+\item{diagonal}{Logical: Draw a dashed identity line within the axis limits.}
+
+\item{diagonal_color}{Optional Character: Identity-line color.}
 }
 \value{
 htmlwidget: Widget object.

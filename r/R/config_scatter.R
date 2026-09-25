@@ -28,6 +28,10 @@
 #' @param fit Optional Character \{"glm", "gam"\}: Fit to overlay. `NULL` draws
 #'   no fit.
 #' @param se Logical: If TRUE, shade the fit standard-error band.
+#' @param se_times Numeric `[0, Inf)`: Multiplier for the fitted standard error.
+#' @param rsq Logical: Include the fitted model's R-squared in series labels.
+#' @param diagonal Logical: Draw the identity line within the axis limits.
+#' @param diagonal_color Optional Character: Identity-line color.
 #' @param n_fit Integer `[2, Inf)`: Points used to draw the fit line.
 #' @param fit_alpha Numeric `[0, 1]`: Opacity of the standard-error band.
 #' @param palette Optional Character: Series colors, overriding the theme
@@ -96,6 +100,24 @@ ScatterConfig <- new_class(
     se = prop_boolean(
       TRUE,
       description = "Shade the fit standard-error band."
+    ),
+    se_times = prop_float(
+      1.96,
+      min = 0,
+      description = "Multiplier for the fitted standard error."
+    ),
+    rsq = prop_boolean(
+      FALSE,
+      description = "Include the fitted model's R-squared in series labels."
+    ),
+    diagonal = prop_boolean(
+      FALSE,
+      description = "Draw the identity line within the axis limits."
+    ),
+    diagonal_color = prop_string(
+      NULL,
+      nullable = TRUE,
+      description = "Identity-line color. Unset uses a neutral gray."
     ),
     n_fit = prop_integer(
       200L,
@@ -249,7 +271,11 @@ setup_ScatterConfig <- function(
   margin_left = NULL,
   dat_path = NULL,
   origin = NULL,
-  writer = NULL
+  writer = NULL,
+  se_times = 1.96,
+  rsq = FALSE,
+  diagonal = FALSE,
+  diagonal_color = NULL
 ) {
   # Which values the caller chose, versus which this function filled in. An
   # explicit `origin` (from read_chart_config()) wins: provenance is carried
@@ -263,7 +289,11 @@ setup_ScatterConfig <- function(
     group = group,
     fit = fit,
     se = se,
-    n_fit = as.integer(n_fit),
+    se_times = se_times,
+    rsq = rsq,
+    diagonal = diagonal,
+    diagonal_color = diagonal_color,
+    n_fit = clean_int(n_fit),
     fit_alpha = fit_alpha,
     palette = palette,
     pad = pad,
@@ -341,6 +371,10 @@ method(compile, ScatterConfig) <- function(config, data = NULL, ...) {
     group = config_column(data, config@group, "group"),
     fit = config@fit,
     se = config@se,
+    se_times = config@se_times,
+    rsq = config@rsq,
+    diagonal = config@diagonal,
+    diagonal_color = config@diagonal_color,
     fit_alpha = config@fit_alpha,
     n_fit = config@n_fit,
     palette = config@palette,

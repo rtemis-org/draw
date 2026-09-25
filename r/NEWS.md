@@ -1,5 +1,11 @@
 # rtemis.draw 0.5.2
 
+- Add `draw_varimp()` and draw-owned `plot_varimp()` methods for ordinary and resampled models, with named measures, ranking, and explicit missing-score policies.
+
+- Add `draw_learning_curve()` and a draw-owned `plot_learning()` method for supervised models, including forest averaging and selected-step markers.
+
+- Add `draw_fit()` and draw-owned `plot_true_pred()` methods for rtemis regression and resampled regression results, with identity lines, fit labels, and matching scatter configuration fields.
+
 - **`draw_sankey()` colors its ribbons and its nodes.** A ribbon now takes the
   color of the node it leaves (`link_color = "source"`, `link_opacity = 0.45`),
   which is what lets a reader follow one source across a diagram; before, the
