@@ -9,16 +9,19 @@
 #' Save a Draw Widget to a File
 #'
 #' Exports a widget created by [draw()] (or any of the `draw_*`
-#' functions) to a static file. Currently supports `.svg` via Node.js
+#' functions) to a static file. Currently supports ECharts `.svg` via Node.js
 #' server-side rendering. Requires a `node` binary on `PATH`.
 #'
-#' Interactive features (tooltip formatters, event handlers) are stripped
-#' before rendering — static images cannot express them.
+#' Callbacks under tooltips, axis pointers, and interactive toolbox controls
+#' are omitted. Other JavaScript callbacks are rejected because discarding them
+#' could change visible content. Built-in Gantt and dendrogram renderers are
+#' shared with the browser widget and use JSON parameters. Network and map
+#' exports are not yet implemented.
 #'
 #' @param widget htmlwidget: A widget returned by [draw()] or a `draw_*` function.
-#' @param filename Character: Output file path. Extension determines the format.
-#' @param width Numeric: Image width in pixels.
-#' @param height Numeric: Image height in pixels.
+#' @param filename Character scalar: Nonempty output path with an extension.
+#' @param width Numeric scalar `(0, Inf)`: Finite image width in pixels.
+#' @param height Numeric scalar `(0, Inf)`: Finite image height in pixels.
 #' @return The `filename`, invisibly.
 #' @export
 #'
@@ -32,69 +35,152 @@
 #' }
 save_drawing <- function(widget, filename, width = 800, height = 600) {
   if (!inherits(widget, "htmlwidget")) {
-    stop("`widget` must be an htmlwidget returned by draw().", call. = FALSE)
+    abort(
+      "`widget` must be an htmlwidget returned by draw().",
+      class = c("rtemis_type_error", "rtemis_input_error")
+    )
+  }
+  if (
+    !is.character(filename) ||
+      length(filename) != 1L ||
+      is.na(filename) ||
+      !nzchar(filename)
+  ) {
+    abort(
+      "Supply one nonempty `filename` with an extension.",
+      class = c("rtemis_value_error", "rtemis_input_error")
+    )
+  }
+  for (name in c("width", "height")) {
+    value <- if (name == "width") width else height
+    if (
+      !is.numeric(value) ||
+        is.complex(value) ||
+        length(value) != 1L ||
+        !is.finite(value) ||
+        value <= 0
+    ) {
+      abort(
+        "Supply a finite positive numeric scalar for `",
+        name,
+        "`.",
+        class = c("rtemis_value_error", "rtemis_input_error")
+      )
+    }
   }
 
   ext <- tolower(tools::file_ext(filename))
   if (!nzchar(ext)) {
-    stop("`filename` must include a file extension (e.g. .svg).", call. = FALSE)
+    abort(
+      "`filename` must include a file extension (e.g. .svg).",
+      class = c("rtemis_value_error", "rtemis_input_error")
+    )
   }
-
-  payload <- widget$x
-  option <- strip_js(payload$option)
-  # auto_theme payloads expose the light theme under `theme`; use it as the
-  # export default. Users can pass theme = theme_dark() at draw() time for
-  # a dark export.
-  theme <- strip_js(payload$theme)
-
-  if (ext == "svg") {
-    save_svg_ssr(option, theme, filename, width, height)
-  } else {
-    stop(
+  if (ext != "svg") {
+    abort(
       "save_drawing() currently only supports .svg (got .",
       ext,
       "). ",
       "PNG/PDF/WEBP support is planned.",
-      call. = FALSE
+      class = c("rtemis_export_error", "rtemis_input_error")
     )
   }
+
+  # Reject other backends before looking for an ECharts option. An SVG-shaped
+  # file is not proof that the requested network or map was rendered.
+  if (!inherits(widget, "rtemis-draw")) {
+    abort(
+      "SVG export currently supports ECharts widgets only; ",
+      "network, map, and other widget exporters are not implemented.",
+      class = c("rtemis_export_error", "rtemis_input_error")
+    )
+  }
+  payload <- widget[["x"]]
+  option <- strip_js(payload[["option"]], path = "option")
+  # Automatic themes resolve to light for offline export. An explicit theme
+  # remains the export theme; static output does not query OS preferences.
+  theme <- strip_js(payload[["theme"]], path = "theme")
+  save_svg_ssr(option, theme, filename, width, height)
 
   invisible(filename)
 }
 
-# Recursively drop any htmlwidgets::JS()-wrapped values. These are raw
-# JavaScript snippets (e.g. custom tooltip formatters) that cannot be
-# serialized into a static SVG.
-strip_js <- function(x) {
-  if (is.null(x)) {
-    return(NULL)
-  }
+#' Prepare an option subtree for static rendering
+#'
+#' Remove interaction-only callbacks; reject callbacks affecting static content.
+#' Preserve positional NULLs in data arrays, including missing heatmap cells.
+#'
+#' @param x Any: Value in a compiled ECharts option or theme.
+#' @param path Character scalar: Diagnostic location in the payload.
+#' @param interactive Logical scalar: Whether this subtree only affects interaction.
+#' @return The subtree without interaction callbacks.
+#' @keywords internal
+#' @noRd
+strip_js <- new_generic("strip_js", "x")
+
+method(strip_js, class_any) <- function(
+  x,
+  path = "option",
+  interactive = FALSE
+) {
   if (inherits(x, "JS_EVAL")) {
-    return(NULL)
+    if (interactive) {
+      return(NULL)
+    }
+    abort(
+      "SVG export cannot preserve the JavaScript callback at `",
+      path,
+      "`. Use materialized values or a built-in named renderer.",
+      class = c("rtemis_export_error", "rtemis_input_error")
+    )
   }
   if (is.list(x)) {
-    x <- lapply(x, strip_js)
-    x <- x[!vapply(x, is.null, logical(1))]
+    keys <- names(x)
+    for (i in seq_along(x)) {
+      key <- if (is.null(keys)) paste0("[", i, "]") else keys[[i]]
+      # Single-bracket assignment retains NULL slots in arrays. Dropping a
+      # missing coordinate would shift the remaining dimensions of a datum.
+      x[i] <- list(strip_js(
+        x[[i]],
+        path = paste0(path, if (is.null(keys)) "" else ".", key),
+        interactive = interactive ||
+          key %in% c("tooltip", "axisPointer", "toolbox")
+      ))
+    }
+    if (!is.null(keys)) {
+      x <- x[!vapply(x, is.null, logical(1))]
+    }
   }
   x
 }
 
+#' Render a static ECharts SVG using Node.js
+#'
+#' Render to a temporary file before replacing the caller's destination.
+#'
+#' @param option List: Prepared ECharts option.
+#' @param theme Optional List: Prepared ECharts theme.
+#' @param filename Character scalar: Destination path.
+#' @param width,height Numeric scalars: Finite positive image dimensions.
+#' @return Logical, invisibly, indicating successful file copy.
+#' @keywords internal
+#' @noRd
 save_svg_ssr <- function(option, theme, filename, width, height) {
   node <- Sys.which("node")
   if (!nzchar(node)) {
-    stop(
+    abort(
       "SVG export requires Node.js. Install it from https://nodejs.org ",
       "or via your package manager (e.g. `brew install node`).",
-      call. = FALSE
+      class = "rtemis_export_error"
     )
   }
 
   script <- system.file("node", "render_svg.js", package = "rtemis.draw")
   if (!nzchar(script)) {
-    stop(
+    abort(
       "Could not locate render_svg.js in the installed package. ",
       "Reinstall rtemis.draw.",
-      call. = FALSE
+      class = "rtemis_export_error"
     )
   }
 
@@ -113,6 +199,7 @@ save_svg_ssr <- function(option, theme, filename, width, height) {
     auto_unbox = TRUE,
     null = "null",
     na = "null",
+    digits = NA,
     force = TRUE
   )
 
@@ -141,18 +228,24 @@ save_svg_ssr <- function(option, theme, filename, width, height) {
     err <- tryCatch(readLines(err_file, warn = FALSE), error = function(e) {
       character()
     })
-    stop(
+    abort(
       "SVG export failed (node exit status ",
       status,
       ").",
       if (length(err)) paste0("\n", paste(err, collapse = "\n")) else "",
-      call. = FALSE
+      class = "rtemis_export_error"
     )
   }
 
   # file.copy rather than file.rename: the temp directory and the destination
   # may sit on different filesystems, where a rename fails.
   if (!file.copy(tmp_out, filename, overwrite = TRUE)) {
-    stop("Could not write the SVG to '", filename, "'.", call. = FALSE)
+    abort(
+      "Could not write the SVG to '",
+      filename,
+      "'. Check the output directory.",
+      class = "rtemis_export_error"
+    )
   }
+  invisible(TRUE)
 }
