@@ -76,15 +76,8 @@ for (const source of input.charts) {
         }
         assert.ok(payload.option.title.every(title => !title.subtext), 'Sample size remains a subtitle');
         assert.ok(!boxes.some(box => box.text.startsWith('n = ')), 'Redundant sample-size footer remains');
-        for (const caption of payload.option.graphic?.elements || []) {
-          const box = boxes.find(box => box.text === caption.style.text);
-          assert.ok(box, 'Missing omission disclosure');
-          const panel = Number(caption.id.split('-').pop()) - 1;
-          const grid = chart.getModel().getComponent('grid', panel * (payload.confusion.metrics ? 4 : 1))
-            .coordinateSystem.getRect();
-          assert.ok(Math.abs(box.rect.x - grid.x) < 0.01 && box.rect.y > grid.y + grid.height,
-            'Omission disclosure is attached to the wrong panel');
-        }
+        assert.ok(!boxes.some(box => /omitted|missing pair/.test(box.text)),
+          'Console diagnostics leaked into the chart');
       } finally { chart.dispose(); }
     }
   }
@@ -92,4 +85,4 @@ for (const source of input.charts) {
   const narrow = confusion.heightForWidth(echarts, payload, payload.theme, 344);
   assert.ok(Number.isFinite(wide) && Number.isFinite(narrow));
 }
-console.log('Confusion squares, theme fades, faint margins, captions, bounds, and resize passed');
+console.log('Confusion squares, theme fades, faint margins, clean labels, bounds, and resize passed');

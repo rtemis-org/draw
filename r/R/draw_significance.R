@@ -293,14 +293,11 @@ method(significance_option, SignificanceConfig) <- function(config, data) {
     )
   }
   if (any(!keep)) {
-    notes <- c(
-      notes,
-      paste(
-        sum(!keep),
-        "outcome(s) omitted;",
-        prepared[["n_tests"]],
-        "tests in family"
-      )
+    msg(
+      sum(!keep),
+      "outcome(s) omitted;",
+      prepared[["n_tests"]],
+      "tests in family"
     )
   }
   x_range <- if (volcano) {

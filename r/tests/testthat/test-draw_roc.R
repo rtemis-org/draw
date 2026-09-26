@@ -168,7 +168,10 @@ test_that("fold AUC summaries count each fold once and keep undefined uncertaint
   expect_equal(out[["undefined"]], 1)
   one <- draw_roc(d, variant = "per_resample")[["x"]][["option"]]
   expect_match(one[["legend"]][["data"]][[1]], "SD NA")
-  widget <- draw_roc(records, variant = "per_resample", palette = "#123456")
+  expect_message(
+    widget <- draw_roc(records, variant = "per_resample", palette = "#123456"),
+    "1 undefined curve"
+  )
   option <- widget[["x"]][["option"]]
   expect_length(option[["legend"]][["data"]], 1)
   expect_null(option[["series"]][[1]][["name"]])
@@ -177,7 +180,7 @@ test_that("fold AUC summaries count each fold once and keep undefined uncertaint
     option[["series"]][[3]][["name"]]
   )
   expect_identical(option[["series"]][[3]][["lineStyle"]][["color"]], "#123456")
-  expect_match(option[["title"]][["subtext"]], "undefined")
+  expect_null(option[["title"]][["subtext"]])
   expect_identical(
     widget[["x"]],
     draw(
@@ -404,7 +407,7 @@ test_that("ROC hover labels round without changing numeric vertices or AUC", {
     )
     expect_identical(
       curve[["encode"]][["tooltip"]],
-      as.list(c(5L, 6L, 7L, 3L, 4L))
+      as.list(c(5L, 6L, 7L, 3L))
     )
     expect_identical(
       curve[["dimensions"]][[8L]],

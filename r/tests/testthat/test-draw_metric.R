@@ -104,7 +104,7 @@ test_that("metric records align folds and disclose missing values without zero f
   w <- suppressMessages(draw_metric(d))[["x"]][["option"]]
   expect_equal(w[["yAxis"]][["name"]], "Rsq")
   expect_lt(w[["yAxis"]][["min"]], -.5)
-  expect_match(w[["title"]][["subtext"]], "1 missing")
+  expect_null(w[["title"]][["subtext"]])
   expect_length(w[["series"]][[2]][["data"]], 5)
   h <- suppressMessages(draw_metric(d, horizontal = TRUE, boxpoints = "none"))[[
     "x"

@@ -63,7 +63,7 @@ not clipped to the unit interval.
 Select one metric per chart. Sample and fold order follow first appearance.
 Absent sample/fold pairs and explicit NA scores remain missing; available
 values alone define each box. Entirely unavailable samples retain an empty
-category, and missing values are disclosed in a caption. Entirely
+category, and missing values are reported in the console. Entirely
 unavailable input is an error. See \code{\link[=draw_boxplot]{draw_boxplot()}} for exact quartile,
 whisker, and point-placement semantics.
 

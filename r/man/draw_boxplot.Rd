@@ -103,10 +103,10 @@ outside the fences are outliers; they are never removed from the quartiles.
 }
 \details{
 All-NA and empty boxes retain their category without a mark; entirely
-unavailable input is an error. Missing values are counted in a caption and
-never replaced with zero. Missing group assignments are excluded.
-Numeric top margins reserve space for a missing-value caption: at least
-64 pixels with a title or 48 without one. Axis titles are centered.
+unavailable input is an error. Missing values are reported in the console
+according to \code{verbosity} and never replaced with zero. Missing group
+assignments are excluded. Axis titles are centered. The category-axis
+baseline is shown only when the plotted value range includes zero.
 Every category label is shown so boxes remain identifiable in narrow plots.
 Use a horizontal layout or a larger figure for many or long category names.
 With point overlays, padded range endpoints are unlabeled; interior ticks

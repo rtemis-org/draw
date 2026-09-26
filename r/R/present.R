@@ -323,9 +323,7 @@ method(comparison_drawing, class_list) <- function(
     )
     missing <- sum(is.na(unlist(values)))
     if (missing) {
-      opt@title <- Title(
-        subtext = paste(missing, "missing metric value(s) omitted")
-      )
+      msg(missing, "missing metric value(s) omitted")
     }
     if (!is.null(ylim)) {
       opt@y_axis@min <- ylim[[1]]

@@ -152,8 +152,8 @@ test_that("resampled ROC distinguishes pooled AUC from mean fold AUC and unavail
   widget <- plot_roc(mod, "training", variant = "per_resample")[["x"]][[
     "option"
   ]]
-  expect_match(widget[["legend"]][["data"]][[1]], "SD NA.*1/2")
-  expect_match(widget[["title"]][["subtext"]], "undefined curve")
+  expect_match(widget[["legend"]][["data"]][[1]], "SD NA[)]$")
+  expect_null(widget[["title"]][["subtext"]])
   pooled <- roc_plot_data(mod, "training")
   expect_equal(unique(pooled[["omitted"]]), 2)
   expect_equal(unique(pooled[["auc"]]), 1)

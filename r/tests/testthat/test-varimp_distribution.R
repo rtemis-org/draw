@@ -45,7 +45,7 @@ test_that("fold distribution materialization agrees with the summary contract", 
   expect_equal(reverse[["data"]][["a"]], rev(out[["data"]][["a"]]))
 })
 
-test_that("importance boxes retain ranking, fold IDs, missing counts and signed values", {
+test_that("importance boxes retain ranking, fold IDs, missing observations and signed values", {
   data <- distribution_fixture()
   for (horizontal in c(TRUE, FALSE)) {
     w <- suppressMessages(draw_varimp(
@@ -58,15 +58,15 @@ test_that("importance boxes retain ranking, fold IDs, missing counts and signed 
     opt <- w[["x"]][["option"]]
     axis <- if (horizontal) "yAxis" else "xAxis"
     value_axis <- if (horizontal) "xAxis" else "yAxis"
-    labels <- c("a (2/5 folds)", "c (3/5 folds)", "b (3/5 folds)")
+    labels <- c("a", "c", "b")
     expect_equal(opt[[axis]][["data"]], if (horizontal) rev(labels) else labels)
-    expect_identical(opt[[value_axis]][["name"]], "Gain (available folds)")
+    expect_identical(opt[[value_axis]][["name"]], "Gain")
     expect_identical(opt[[value_axis]][["nameLocation"]], "middle")
     expect_identical(opt[[axis]][["nameLocation"]], "middle")
-    expect_equal(opt[["grid"]][["top"]], 48)
+    expect_equal(opt[["grid"]][["top"]], 36)
     expect_false(opt[[value_axis]][["axisLabel"]][["showMinLabel"]])
     expect_false(opt[[value_axis]][["axisLabel"]][["showMaxLabel"]])
-    expect_match(opt[["title"]][["subtext"]], "7 missing")
+    expect_null(opt[["title"]][["subtext"]])
     expect_identical(opt[["series"]][[1]][["type"]], "boxplot")
     points <- opt[["series"]][[2]][["data"]]
     expect_length(points, 8)
@@ -90,7 +90,7 @@ test_that("importance boxes retain ranking, fold IDs, missing counts and signed 
       title = "VI",
       margin_top = margin
     ))[["x"]][["option"]]
-    expect_equal(opt[["grid"]][["top"]], max(64, margin))
+    expect_equal(opt[["grid"]][["top"]], margin)
   }
 })
 
@@ -153,13 +153,8 @@ test_that("portable distribution data and config round trips reproduce the view"
     observation = records[["observation"]],
     horizontal = TRUE,
     boxpoints = "all",
-    labels = paste0(
-      selected[["variable"]],
-      " (",
-      selected[["n_available"]],
-      "/3 folds)"
-    ),
-    xlab = "Score (available folds)",
+    labels = selected[["variable"]],
+    xlab = "Score",
     ylab = "Variable"
   )
   path <- tempfile(fileext = ".json")
@@ -204,8 +199,8 @@ test_that("importance distribution SVG retains known zeros and all available sco
     ))
     svg <- paste(readLines(path, warn = FALSE), collapse = "\n")
     expect_match(svg, "Importance distribution")
-    expect_match(svg, "a (2/5 folds)", fixed = TRUE)
-    expect_match(svg, "7 missing")
+    expect_match(svg, ">a</text>", fixed = TRUE)
+    expect_false(grepl("missing|folds\\)", svg))
     expect_match(svg, "#123456", fixed = TRUE)
     expect_false(grepl("<image", svg, fixed = TRUE))
     expect_equal(

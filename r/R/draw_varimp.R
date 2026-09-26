@@ -377,14 +377,14 @@ method(summarize_varimp, class_data.frame) <- function(
 #'
 #' Means and medians give each contributing fold equal weight. An incomplete
 #' summary describes the available folds, not an estimate guaranteed to be
-#' unbiased for all folds. When any selected variable has incomplete coverage,
-#' category labels show contributing/total fold counts and the score axis says
-#' "available folds". The input is never modified.
+#' unbiased for all folds. Incomplete fold coverage is reported in the console;
+#' chart labels retain only the variable and measure names. The input is never
+#' modified.
 #'
 #' Boxplots require fold-level records. Every available score (including known
 #' structural zeros) is overlaid by default, with its fold ID in the tooltip.
-#' Missing values remain missing in the materialized table and are counted in
-#' a caption. Boxes describe resample variability, not a confidence interval.
+#' Missing values remain missing in the materialized table and are reported in
+#' the console. Boxes describe resample variability, not a confidence interval.
 #' See [draw_boxplot()] for quartiles, whiskers, and point placement. Use
 #' `whisker = 0` for full-range whiskers, as in the current live importance view.
 #'
@@ -396,7 +396,7 @@ method(summarize_varimp, class_data.frame) <- function(
 #' without a fitted model or R callbacks. The raw-data summary and selection
 #' options are not yet part of a shared visualization schema. For distributions,
 #' use one numeric column per selected variable and an observation column for
-#' the complete fold universe. Bind those columns and the displayed coverage
+#' the complete fold universe. Bind those columns and the variable
 #' labels through [setup_BoxplotConfig()]. Only selected variables are widened;
 #' selection does not discard folds needed to identify structural zeros.
 #'
@@ -485,16 +485,20 @@ draw_varimp <- function(
     }
   )
   values[["label"]] <- values[["variable"]]
-  if (any(values[["n_available"]] < values[["n_folds"]])) {
-    values[["label"]] <- paste0(
-      values[["variable"]],
-      " (",
-      values[["n_available"]],
-      "/",
-      values[["n_folds"]],
-      " folds)"
+  incomplete <- values[["n_available"]] < values[["n_folds"]]
+  if (type == "bar" && any(incomplete)) {
+    msg(
+      "Importance summaries use available folds:",
+      paste0(
+        values[["variable"]][incomplete],
+        " (",
+        values[["n_available"]][incomplete],
+        "/",
+        values[["n_folds"]][incomplete],
+        " folds)",
+        collapse = "; "
+      )
     )
-    score_label <- paste(score_label, "(available folds)")
   }
   if (horizontal) {
     values <- values[rev(seq_len(nrow(values))), , drop = FALSE]

@@ -114,14 +114,14 @@ tables whose producer omits zero entries. Infinite scores are rejected.
 
 Means and medians give each contributing fold equal weight. An incomplete
 summary describes the available folds, not an estimate guaranteed to be
-unbiased for all folds. When any selected variable has incomplete coverage,
-category labels show contributing/total fold counts and the score axis says
-"available folds". The input is never modified.
+unbiased for all folds. Incomplete fold coverage is reported in the console;
+chart labels retain only the variable and measure names. The input is never
+modified.
 
 Boxplots require fold-level records. Every available score (including known
 structural zeros) is overlaid by default, with its fold ID in the tooltip.
-Missing values remain missing in the materialized table and are counted in
-a caption. Boxes describe resample variability, not a confidence interval.
+Missing values remain missing in the materialized table and are reported in
+the console. Boxes describe resample variability, not a confidence interval.
 See \code{\link[=draw_boxplot]{draw_boxplot()}} for quartiles, whiskers, and point placement. Use
 \code{whisker = 0} for full-range whiskers, as in the current live importance view.
 
@@ -133,7 +133,7 @@ axis labels, and title explicitly. That table and config reproduce the view
 without a fitted model or R callbacks. The raw-data summary and selection
 options are not yet part of a shared visualization schema. For distributions,
 use one numeric column per selected variable and an observation column for
-the complete fold universe. Bind those columns and the displayed coverage
+the complete fold universe. Bind those columns and the variable
 labels through \code{\link[=setup_BoxplotConfig]{setup_BoxplotConfig()}}. Only selected variables are widened;
 selection does not discard folds needed to identify structural zeros.
 }

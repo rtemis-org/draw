@@ -153,7 +153,10 @@ test_that("both functional views compile through the same portable config", {
     opt[["xAxis"]][["data"]],
     as.list(c("same", "missing", "same"))
   )
-  expect_match(opt[["title"]][["subtext"]], "1 outcome.*3 tests")
+  expect_match(
+    opt[["title"]][["subtext"]],
+    "^p = 0 shown at .* [(]triangles[)]$"
+  )
   expect_identical(tail(opt[["series"]], 1)[[1]][["symbol"]], "triangle")
   expect_identical(
     tail(opt[["series"]], 1)[[1]][["name"]],

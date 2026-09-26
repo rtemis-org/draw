@@ -64,7 +64,7 @@ Vertices are ordered by FPR then TPR and joined without smoothing. Curves
 must be monotone and include (0, 0) and (1, 1). Supplied AUC is authoritative
 and may describe a higher-resolution curve. Without an AUC binding, the
 supplied vertices define trapezoidal AUC. An undefined curve is represented
-by missing FPR, TPR, and AUC and is omitted with a visible count.
+by missing FPR, TPR, and AUC and is reported in the console when omitted.
 Per-resample legends report the unweighted mean and sample SD of defined
 fold AUCs, with available/total curve counts. SD is NA for one defined fold.
 Pooled AUC is never inferred from per-fold AUCs.

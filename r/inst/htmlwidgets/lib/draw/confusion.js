@@ -49,9 +49,7 @@
     const header = option.title.slice(titleOffset).some(t => t.text) ? fontSize + 14 : 0;
     const top = 12 + header + (option.xAxis[0].name ? fontSize + 18 : 0) + fontSize + 12;
     const bottom = meta.metrics ? 8 + 2 * (2 * fontSize + 12) : 0;
-    const captions = option.graphic?.elements || [];
-    const footerLines = Math.max(0, ...captions.map(g => g.style.text.split('\n').length));
-    const footer = 12 + (footerLines ? footerLines * (fontSize + 4) + 12 : 0);
+    const footer = 12;
     return {fontSize, family, step, panels, cols, rows, titleOffset, header, left, strip,
       top, bottom, footer, labelWidth, globalTop: titleOffset ? fontSize + 28 : 0};
   }
@@ -112,11 +110,6 @@
       const title = option.title[i + d.titleOffset];
       Object.assign(title, {left: left + side / 2, top: y + 4, textAlign: 'center'});
       title.textStyle = Object.assign({}, title.textStyle, {color: fg});
-      const caption = option.graphic?.elements.find(g => g.id === `confusion-caption-${i + 1}`);
-      if (caption) {
-        Object.assign(caption, {left, top: top + side + d.bottom + 12});
-        Object.assign(caption.style, {fill: muted, fontFamily: d.family, lineHeight: d.fontSize + 4});
-      }
       for (let j = 0; j < seriesStep; j++) {
         const index = i * seriesStep + j;
         const series = option.series[index], map = option.visualMap[index];

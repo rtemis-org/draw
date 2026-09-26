@@ -290,7 +290,7 @@ method(confusion_option, ConfusionConfig) <- function(config, data) {
   k <- length(classes)
   cols <- min(config@ncol, length(panels))
   rows <- ceiling(length(panels) / cols)
-  series <- maps <- grids <- xs <- ys <- titles <- annotations <- list()
+  series <- maps <- grids <- xs <- ys <- titles <- list()
   if (!is.null(config@title)) {
     titles <- list(Title(text = config@title, left = "center", top = 0L))
   }
@@ -340,19 +340,13 @@ method(confusion_option, ConfusionConfig) <- function(config, data) {
       top = paste0(top, "%"),
       text_align = "center"
     )
-    # Counts already show the included observations. Annotate only omissions,
-    # which cannot be recovered from the cells; keep their panel identity.
     if (p[["omitted"]] > 0) {
-      annotations[[length(annotations) + 1L]] <- list(
-        type = "text",
-        id = paste0("confusion-caption-", i),
-        silent = TRUE,
-        left = paste0(left + pw * .18, "%"),
-        top = paste0(top + ph * .97, "%"),
-        style = list(
-          text = paste0(p[["omitted"]], " missing pair(s) omitted"),
-          fontSize = config@font_size
-        )
+      msg(
+        p[["name"]],
+        ": ",
+        p[["omitted"]],
+        " missing pair(s) omitted",
+        sep = ""
       )
     }
     base <- length(grids)
@@ -573,7 +567,6 @@ method(confusion_option, ConfusionConfig) <- function(config, data) {
   }
   EChartsOption(
     title = titles,
-    graphic = if (length(annotations)) list(elements = annotations),
     grid = grids,
     x_axis = xs,
     y_axis = ys,

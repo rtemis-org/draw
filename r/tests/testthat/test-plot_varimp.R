@@ -110,7 +110,7 @@ test_that("fold extraction aligns named measures and retains unavailable folds",
   expect_equal(unlist(option[["series"]][[1L]][["data"]]), c(2, 8))
   expect_identical(
     option[["yAxis"]][["data"]],
-    c("b (1/2 folds)", "a (1/2 folds)")
+    c("b", "a")
   )
 })
 
@@ -200,8 +200,8 @@ test_that("model distributions preserve producer omissions and legacy dispatch",
       "option"
     ]]
     expect_length(opt[["series"]][[2]][["data"]], 1)
-    expect_equal(opt[["yAxis"]][["data"]], list("b (1/2 folds)"))
-    expect_match(opt[["title"]][["subtext"]], "1 missing")
+    expect_equal(opt[["yAxis"]][["data"]], list("b"))
+    expect_null(opt[["title"]][["subtext"]])
   }
   expect_error(
     plot_varimp(varimp_model_fixture(), type = "boxplot"),

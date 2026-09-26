@@ -391,7 +391,7 @@ test_that("SVG export resolves confusion colors in standalone and composed chart
   }
 })
 
-test_that("confusion captions disclose only missing pairs in the matching panel", {
+test_that("confusion omissions are reported in the console without changing the chart", {
   records <- confusion_input(list(
     Complete = confusion_test_matrix(),
     Incomplete = confusion_test_matrix()
@@ -402,20 +402,22 @@ test_that("confusion captions disclose only missing pairs in the matching panel"
   missing[["n"]] <- 3
   records <- rbind(records, missing)
   for (metrics in c(TRUE, FALSE)) {
-    widget <- draw_confusion(records, show_metrics = metrics)
-    annotations <- widget[["x"]][["option"]][["graphic"]][["elements"]]
-    expect_length(annotations, 1L)
-    expect_identical(annotations[[1L]][["id"]], "confusion-caption-2")
-    expect_identical(
-      annotations[[1L]][["style"]][["text"]],
-      "3 missing pair(s) omitted"
+    expect_message(
+      widget <- draw_confusion(records, show_metrics = metrics),
+      "Incomplete: 3 missing pair"
     )
+    complete <- draw_confusion(
+      records[-nrow(records), ],
+      show_metrics = metrics
+    )
+    expect_identical(widget[["x"]], complete[["x"]])
+    expect_null(widget[["x"]][["option"]][["graphic"]])
     skip_if_not(nzchar(Sys.which("node")), "node not found")
     path <- tempfile(fileext = ".svg")
     on.exit(unlink(path), add = TRUE)
     save_drawing(widget, path, width = 1000, height = 550)
     svg <- paste(readLines(path, warn = FALSE), collapse = "\n")
-    expect_match(svg, '>3 missing pair(s) omitted</text>', fixed = TRUE)
+    expect_false(grepl("omitted", svg, fixed = TRUE))
     expect_false(grepl('>n = ', svg, fixed = TRUE))
   }
 })

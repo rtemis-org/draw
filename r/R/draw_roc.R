@@ -507,11 +507,7 @@ method(roc_option, ROCConfig) <- function(config, data) {
             fmt(g[["mean"]]),
             "; SD ",
             fmt(g[["sd"]]),
-            " [",
-            g[["available"]],
-            "/",
-            g[["total"]],
-            "])"
+            ")"
           )
         } else {
           paste0(" (AUC ", fmt(g[["mean"]]), ")")
@@ -525,24 +521,17 @@ method(roc_option, ROCConfig) <- function(config, data) {
   legend_names <- labels[active]
   # Inset legends do not consume plotting width or add rows beneath the axes.
   bottom <- 65
-  disclosure <- c(
-    if (prepared[["undefined"]]) {
-      paste(prepared[["undefined"]], "undefined curve(s) omitted")
-    },
-    if (prepared[["max_omitted"]]) {
-      paste0(
-        "Missing pairs excluded:\nmax ",
-        prepared[["max_omitted"]],
-        " per curve"
-      )
-    }
-  )
-  top <- 25 + if (!is.null(config@title)) 25 else 0
-  if (length(disclosure)) {
-    top <- top +
-      20 +
-      18 * sum(lengths(strsplit(disclosure, "\n", fixed = TRUE)))
+  if (prepared[["undefined"]]) {
+    msg(prepared[["undefined"]], "undefined curve(s) omitted")
   }
+  if (prepared[["max_omitted"]]) {
+    msg(
+      "Missing pairs excluded: at most",
+      prepared[["max_omitted"]],
+      "per curve"
+    )
+  }
+  top <- 25 + if (!is.null(config@title)) 25 else 0
   grid <- to_list(Grid(
     left = 70,
     right = 24,
@@ -640,14 +629,13 @@ method(roc_option, ROCConfig) <- function(config, data) {
     s[["encode"]] <- list(
       x = 0L,
       y = 1L,
-      tooltip = as.list(c(5L, 6L, 7L, 3L, 4L))
+      tooltip = as.list(c(5L, 6L, 7L, 3L))
     )
     series[[length(series) + 1L]] <- s
   }
   EChartsOption(
     title = Title(
       text = config@title,
-      subtext = if (length(disclosure)) paste(disclosure, collapse = "\n"),
       left = "center",
       text_align = "center"
     ),

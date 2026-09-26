@@ -93,7 +93,7 @@ test_that("ordinary comparisons use stored metrics and unique aligned labels", {
   m@metrics_test <- NULL
   partial <- present(list(m, x[[2]]), verbosity = 0L)[["x"]][["option"]]
   expect_true(is.na(partial[["series"]][[2]][["data"]][[1]]))
-  expect_match(partial[["title"]][["subtext"]], "1 missing")
+  expect_null(partial[["title"]][["subtext"]])
   expect_equal(comparison_data(list(m, m))[["splits"]], "Training")
   expect_error(
     present(list(m, m), what = "test", verbosity = 0L),
@@ -144,7 +144,7 @@ test_that("resampled comparisons preserve unequal folds and common panel limits"
   partial <- present(list(A = a, B = b), verbosity = 0L)[["x"]][["panels"]][[
     2
   ]][["option"]]
-  expect_match(partial[["title"]][["subtext"]], "2 missing")
+  expect_null(partial[["title"]][["subtext"]])
   expect_equal(partial[["xAxis"]][["data"]], c("A", "B"))
   expect_length(partial[["series"]][[2]][["data"]], 3)
   expect_equal(comparison_data(list(a, a))[["splits"]], "Training")

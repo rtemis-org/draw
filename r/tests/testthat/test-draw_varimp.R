@@ -159,7 +159,7 @@ test_that("median with implicit zeros agrees with independently completed sample
   expect_identical(summarize_varimp(data, top_n = 1)[["variable"]], "b")
 })
 
-test_that("bars preserve signed values, physical axes, coverage labels, and overrides", {
+test_that("bars preserve signed values, physical axes, clean labels, and overrides", {
   data <- c(a = -8, b = 3, c = 1)
   option <- draw_varimp(data, top_n = 2)[["x"]][["option"]]
   expect_identical(option[["yAxis"]][["data"]], c("b", "a"))
@@ -190,12 +190,15 @@ test_that("bars preserve signed values, physical axes, coverage labels, and over
     fold = c("A", "A", "B"),
     score = c(2, 1, 4)
   )
-  opt <- draw_varimp(sparse)[["x"]][["option"]]
+  expect_message(
+    opt <- draw_varimp(sparse)[["x"]][["option"]],
+    "b [(]1/2 folds[)]"
+  )
   expect_identical(
     opt[["yAxis"]][["data"]],
-    c("b (1/2 folds)", "a (2/2 folds)")
+    c("b", "a")
   )
-  expect_identical(opt[["xAxis"]][["name"]], "Mean Score (available folds)")
+  expect_identical(opt[["xAxis"]][["name"]], "Mean Score")
   expect_error(draw_varimp(data, horizontal = NA))
   expect_error(draw_varimp(data, margin_top = -1L))
 })

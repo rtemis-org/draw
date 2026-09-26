@@ -65,7 +65,7 @@ test_that("missing fold metrics are retained independently of aggregate summarie
   expect_true(is.na(data[["value"]][[2]]))
   w <- suppressMessages(plot_metric(model, "test"))[["x"]][["option"]]
   expect_length(w[["series"]][[2]][["data"]], 2)
-  expect_match(w[["title"]][["subtext"]], "1 missing")
+  expect_null(w[["title"]][["subtext"]])
   model@metrics_test@res_metrics <- folds[1:2]
   expect_error(plot_metric(model), "one metric report")
 })

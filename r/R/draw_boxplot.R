@@ -360,8 +360,7 @@ method(boxplot_option, class_any) <- function(
   } else {
     Axis(type = "value", scale = TRUE, name = ylab %||% value_name)
   }
-  # Center names as for bars and lines. End-positioned category names sit
-  # above the zero line and can collide with captions for signed scores.
+  # Center names as for bars and lines, keeping them outside the plot area.
   if (!is.null(x_axis@name)) {
     x_axis@name_location <- "middle"
   }
@@ -370,6 +369,7 @@ method(boxplot_option, class_any) <- function(
   }
   # Give endpoint markers room without changing their data coordinates.
   # Include only drawn values; hidden outliers do not shrink a box-only plot.
+  limits <- visible_limits
   if (boxpoints != "none") {
     limits <- calc_limits(visible_limits, pad = .05)
     if (horizontal) {
@@ -388,26 +388,20 @@ method(boxplot_option, class_any) <- function(
       )
     }
   }
-  caption <- if (missing) paste(missing, "missing value(s) omitted") else NULL
-  grid <- resolve_margins(margins)
-  if (!is.null(caption)) {
-    grid <- grid %||% Grid()
-    # Keep the disclosure above the plotting region, including its zero line.
-    if (is.null(grid@top) || is.numeric(grid@top)) {
-      grid@top <- max(grid@top %||% 0, if (is.null(title)) 48 else 64)
-    }
+  # ECharts otherwise places the category-axis baseline at the range edge
+  # when zero is absent. Reuse the line/scatter rule: emphasize only zero.
+  if (horizontal) {
+    y_axis@axis_line <- axis_line_for_orthogonal(limits)
+  } else {
+    x_axis@axis_line <- axis_line_for_orthogonal(limits)
   }
   EChartsOption(
-    title = if (!is.null(title) || !is.null(caption)) {
-      Title(text = title, subtext = caption)
-    } else {
-      NULL
-    },
+    title = if (!is.null(title)) Title(text = title) else NULL,
     tooltip = Tooltip(trigger = "item"),
     legend = if (multi) Legend(data = as.list(levels)) else NULL,
     x_axis = x_axis,
     y_axis = y_axis,
-    grid = grid,
+    grid = resolve_margins(margins),
     series = c(boxes, Filter(Negate(is.null), overlays))
   )
 }
@@ -422,10 +416,10 @@ method(boxplot_option, class_any) <- function(
 #' outside the fences are outliers; they are never removed from the quartiles.
 #'
 #' All-NA and empty boxes retain their category without a mark; entirely
-#' unavailable input is an error. Missing values are counted in a caption and
-#' never replaced with zero. Missing group assignments are excluded.
-#' Numeric top margins reserve space for a missing-value caption: at least
-#' 64 pixels with a title or 48 without one. Axis titles are centered.
+#' unavailable input is an error. Missing values are reported in the console
+#' according to `verbosity` and never replaced with zero. Missing group
+#' assignments are excluded. Axis titles are centered. The category-axis
+#' baseline is shown only when the plotted value range includes zero.
 #' Every category label is shown so boxes remain identifiable in narrow plots.
 #' Use a horizontal layout or a larger figure for many or long category names.
 #' With point overlays, padded range endpoints are unlabeled; interior ticks

@@ -85,7 +85,7 @@ Compiles to \code{HeatmapSeriesOption} in \code{src/chart/heatmap/HeatmapSeries.
 \code{GridOption} in \code{src/coord/cartesian/GridModel.ts}, and continuous visual maps.
 \code{to_list()} emits semantic config keys; \code{compile()} emits ECharts options.
 \code{draw()} fits square count cells with aligned marginal summaries to the
-available canvas. Missing-pair omissions appear below the matrix when present.
+available canvas. Missing-pair omissions are reported in the console.
 The cell counts show included observations without a separate sample-size label. Color fades and
 marginal backgrounds follow the active theme unless explicitly overridden.
 }
