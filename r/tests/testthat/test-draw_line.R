@@ -110,7 +110,8 @@ test_that("draw_line group: rejects a list y, a length mismatch, and blocks", {
   )
   expect_error(
     draw_line(1:4, 1:4, group = c("A", "B")),
-    "same length as `y`"
+    "same length",
+    class = "rtemis_length_error"
   )
   expect_error(
     draw_line(

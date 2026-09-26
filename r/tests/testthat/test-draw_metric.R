@@ -74,7 +74,11 @@ test_that("boxplot points preserve every selected row and stable identities with
     draw_boxplot(list(1:3, 1:2), observation = letters[1:3]),
     "identifier"
   )
-  expect_error(draw_boxplot(1:3, group = 1:2), "group value")
+  expect_error(
+    draw_boxplot(1:3, group = 1:2),
+    "one value",
+    class = "rtemis_length_error"
+  )
   expect_error(draw_boxplot(list(1:2, 3:4), labels = "A"), "label")
   expect_error(draw_boxplot(c(NA, NA)), "available")
 })

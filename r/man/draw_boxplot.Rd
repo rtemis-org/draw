@@ -38,7 +38,9 @@ category labels. With \code{group}, every vector must match its length.}
 \item{labels}{Optional Character: One category label per vector. A single
 grouped vector uses group labels instead.}
 
-\item{group}{Optional Atomic vector: Group identities in first-appearance order.}
+\item{group}{Optional Atomic vector or single-column data frame: Group
+identities in first-appearance order. The column name does not add a legend
+or heading; both input forms produce the same plot.}
 
 \item{horizontal}{Logical: Draw horizontal boxes.}
 
@@ -120,4 +122,5 @@ named point renderer, including grouped-box offsets and legend filtering.
 \examples{
 draw_boxplot(list(Training = c(.8, .9, .85), Test = c(.7, .8, .75)),
   boxpoints = "all", observation = c("Fold1", "Fold2", "Fold3"))
+draw_boxplot(iris["Sepal.Length"], group = iris["Species"])
 }

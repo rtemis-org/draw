@@ -46,8 +46,8 @@ category axis with one slot per distinct value, in order of appearance.}
 
 \item{names}{Optional Character: Series names used when \code{y} is an unnamed list.}
 
-\item{group}{Optional Vector: Grouping variable, one value per point. Splits
-a single \code{y} vector into one line per level, named by the level, as
+\item{group}{Optional Atomic vector or single-column data frame: Grouping
+variable, one value per point. Splits a single \code{y} vector into one line per level, named by the level, as
 \code{\link[=draw_scatter]{draw_scatter()}} does for points. Cannot be combined with a list \code{y} or
 with \code{blocks}. Points whose group is \code{NA} are dropped.}
 

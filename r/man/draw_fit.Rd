@@ -26,7 +26,8 @@ draw_fit(
 
 \item{y}{Numeric vector, single-column matrix, or list: Predicted values.}
 
-\item{group}{Optional Vector: Grouping variable for multiple series.}
+\item{group}{Optional Atomic vector or single-column data frame: Grouping
+variable for multiple series.}
 
 \item{fit}{Optional Character \{"glm", "gam"\}: Fit method. \code{NULL} disables fitting.
 \code{"gam"} for \code{\link[mgcv:gam]{mgcv::gam()}}. The fitted line and standard-error band

@@ -28,7 +28,8 @@ draw_density(
 list creates one density trace per element; with \code{group}, each list
 element is split by group into separate traces.}
 
-\item{group}{Optional Vector: Grouping variable for multiple density traces.}
+\item{group}{Optional Atomic vector or single-column data frame: Grouping
+variable for multiple density traces.}
 
 \item{n}{Numeric \verb{[1, Inf)}: Number of equally spaced points for density estimation.}
 

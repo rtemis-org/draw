@@ -896,16 +896,7 @@ line_option <- function(
         class = c("rtemis_value_error", "rtemis_input_error")
       )
     }
-    if (length(group) != length(y)) {
-      abort(
-        "`group` must have the same length as `y` (",
-        length(y),
-        "); got ",
-        length(group),
-        ".",
-        class = c("rtemis_dim_error", "rtemis_input_error")
-      )
-    }
+    group <- group_values(group, length(y))
     # `blocks` is read along `x`, and with `group` each x repeats once per
     # level, so the same run would be shaded once per group.
     if (!is.null(blocks)) {
@@ -1068,8 +1059,8 @@ line_option <- function(
 #'   category axis with one slot per distinct value, in order of appearance.
 #' @param y Numeric or named list: Y values.
 #' @param names Optional Character: Series names used when `y` is an unnamed list.
-#' @param group Optional Vector: Grouping variable, one value per point. Splits
-#'   a single `y` vector into one line per level, named by the level, as
+#' @param group Optional Atomic vector or single-column data frame: Grouping
+#'   variable, one value per point. Splits a single `y` vector into one line per level, named by the level, as
 #'   [draw_scatter()] does for points. Cannot be combined with a list `y` or
 #'   with `blocks`. Points whose group is `NA` are dropped.
 #' @param smooth Logical: Whether to smooth lines.
@@ -1642,7 +1633,8 @@ draw_bar <- function(
 #'
 #' @param x,y Numeric: Point coordinates.
 #' @param size Optional Numeric: Point sizes.
-#' @param group Optional Vector: Grouping variable, one value per point.
+#' @param group Optional Atomic vector or single-column data frame: Grouping
+#'   variable, one value per point.
 #' @param fit Optional Character \{"glm", "gam"\}: Fit to overlay.
 #' @param se Logical: If TRUE, shade the fit standard-error band.
 #' @param fit_alpha Numeric `[0, 1]`: Opacity of the standard-error band.
@@ -1687,6 +1679,7 @@ scatter_option <- function(
   diagonal = FALSE,
   diagonal_color = NULL
 ) {
+  group <- group_values(group, length(x))
   # The same declaration validates the vector and serialized-config routes.
   n_fit <- clean_int(n_fit)
   ScatterConfig(
@@ -1967,7 +1960,8 @@ scatter_option <- function(
 #' @param x Numeric: X values.
 #' @param y Numeric: Y values.
 #' @param size Optional Numeric: Symbol sizes.
-#' @param group Optional Vector: Grouping variable for multiple series.
+#' @param group Optional Atomic vector or single-column data frame: Grouping
+#'   variable for multiple series.
 #' @param fit Optional Character \{"glm", "gam"\}: Fit method. `NULL` disables fitting.
 #'   `"gam"` for [mgcv::gam()]. The fitted line and standard-error band
 #'   are computed per group when `group` is provided.
@@ -2225,6 +2219,7 @@ density_option <- function(
   margins = DEFAULT_MARGINS,
   verbosity = 1L
 ) {
+  group <- group_values(group, if (is.list(x)) lengths(x) else length(x))
   if (is.list(x)) {
     series_names <- names(x)
     if (is.null(series_names) || !all(nzchar(series_names))) {
@@ -2232,14 +2227,6 @@ density_option <- function(
     }
 
     if (!is.null(group)) {
-      lens <- vapply(x, length, integer(1))
-      if (any(lens != length(group))) {
-        stop(
-          "All elements of `x` must match length(group) when `group` is provided.",
-          call. = FALSE
-        )
-      }
-
       group_ok <- !is.na(group)
       if (any(!group_ok)) {
         group <- group[group_ok]
@@ -2413,7 +2400,8 @@ density_option <- function(
 #' @param x Numeric or list: Values used for density estimation. An ungrouped
 #'   list creates one density trace per element; with `group`, each list
 #'   element is split by group into separate traces.
-#' @param group Optional Vector: Grouping variable for multiple density traces.
+#' @param group Optional Atomic vector or single-column data frame: Grouping
+#'   variable for multiple density traces.
 #' @param n Numeric `[1, Inf)`: Number of equally spaced points for density estimation.
 #' @param bw Character or Numeric: Bandwidth passed to [stats::density()].
 #' @param na_rm Logical: Whether to remove `NA` values before
@@ -2505,6 +2493,7 @@ histogram_option <- function(
   title = NULL,
   margins = DEFAULT_MARGINS
 ) {
+  group <- group_values(group, length(x))
   # Compute bin structure from full data for consistent breaks across groups
   h <- graphics::hist(x, breaks = breaks, plot = FALSE)
   bin_labels <- formatC(h$mids, format = "g")
@@ -2554,7 +2543,8 @@ histogram_option <- function(
 #' across groups.
 #'
 #' @param x Numeric: Values used for histogram binning.
-#' @param group Optional Vector: Grouping variable for multiple series.
+#' @param group Optional Atomic vector or single-column data frame: Grouping
+#'   variable for multiple series.
 #' @param breaks Numeric, Character, or Numeric vector: Binning method. A single number (number of bins), a character
 #'   string naming an algorithm (e.g. `"Sturges"`, `"Scott"`, `"FD"`), or a
 #'   numeric vector of break points. Passed to [graphics::hist()].

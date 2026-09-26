@@ -11,7 +11,8 @@
 #'
 #' @param x Numeric vector, single-column matrix, or list: True observations.
 #' @param y Numeric vector, single-column matrix, or list: Predicted values.
-#' @param group Optional Atomic vector: Groups for vector inputs.
+#' @param group Optional Atomic vector or single-column data frame: Groups for
+#'   vector inputs.
 #'
 #' @return Data frame with `true`, `predicted`, and optional `sample` columns.
 #' @keywords internal
@@ -101,17 +102,10 @@ method(true_pred_data, list(class_any, class_any)) <- function(
         class = c("rtemis_value_error", "rtemis_input_error")
       )
     }
-    sample <- if (grouped) rep(labels[[i]], length(a)) else group
-    if (
-      !is.null(sample) &&
-        (!is.atomic(sample) ||
-          !is.null(dim(sample)) ||
-          length(sample) != length(a))
-    ) {
-      abort(
-        "Supply `group` as a vector with one value per observation.",
-        class = c("rtemis_dim_error", "rtemis_input_error")
-      )
+    sample <- if (grouped) {
+      rep(labels[[i]], length(a))
+    } else {
+      group_values(group, length(a))
     }
     keep <- !is.na(a) & !is.na(b)
     if (!is.null(sample)) {

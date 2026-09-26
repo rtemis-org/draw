@@ -159,15 +159,7 @@ method(boxplot_option, class_any) <- function(
   # otherwise excluded rows. Group order follows first appearance.
   x <- lapply(x, boxplot_values, na_rm = na_rm)
   sizes <- lengths(x)
-  if (
-    !is.null(group) &&
-      (!is.atomic(group) || !is.null(dim(group)) || any(sizes != length(group)))
-  ) {
-    abort(
-      "Supply one group value per observation in every boxplot column.",
-      class = c("rtemis_length_error", "rtemis_input_error")
-    )
-  }
+  group <- group_values(group, sizes)
   if (
     !is.null(observation) &&
       (!is.atomic(observation) ||
@@ -434,7 +426,9 @@ method(boxplot_option, class_any) <- function(
 #'   category labels. With `group`, every vector must match its length.
 #' @param labels Optional Character: One category label per vector. A single
 #'   grouped vector uses group labels instead.
-#' @param group Optional Atomic vector: Group identities in first-appearance order.
+#' @param group Optional Atomic vector or single-column data frame: Group
+#'   identities in first-appearance order. The column name does not add a legend
+#'   or heading; both input forms produce the same plot.
 #' @param observation Optional Atomic vector: Observation identifiers in tooltips,
 #'   aligned to every input vector. Unset uses original row numbers.
 #' @param horizontal Logical: Draw horizontal boxes.
@@ -457,6 +451,7 @@ method(boxplot_option, class_any) <- function(
 #' @examples
 #' draw_boxplot(list(Training = c(.8, .9, .85), Test = c(.7, .8, .75)),
 #'   boxpoints = "all", observation = c("Fold1", "Fold2", "Fold3"))
+#' draw_boxplot(iris["Sepal.Length"], group = iris["Species"])
 draw_boxplot <- function(
   x,
   labels = NULL,
