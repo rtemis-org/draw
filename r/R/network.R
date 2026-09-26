@@ -328,14 +328,8 @@ S7::method(draw, SigmaOption) <- function(
   ...
 ) {
   check_dots_empty(...)
-  if (!is.null(filename)) {
-    abort(
-      "Static export of network widgets is not yet supported. ",
-      "Omit `filename` to create an interactive widget.",
-      class = c("rtemis_export_error", "rtemis_input_error")
-    )
-  }
-  render_widget(
+
+  widget <- render_widget(
     "rtemis-graph",
     to_list(option),
     theme = theme,
@@ -343,6 +337,10 @@ S7::method(draw, SigmaOption) <- function(
     height = height,
     element_id = element_id
   )
+  if (!is.null(filename)) {
+    save_drawing(widget, filename, width, height)
+  }
+  widget
 }
 
 # -- Model builders -------------------------------------------------------------

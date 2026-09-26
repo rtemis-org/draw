@@ -478,7 +478,16 @@ render_meta <- new_generic(
   "render_meta",
   "config",
   function(config, option) {
-    S7_dispatch()
+    meta <- S7_dispatch()
+    # Only configurations with ECharts legends opt into this contract.
+    # MapLibre and Sigma do not accept ECharts rendering hints.
+    if ("legend_placement" %in% names(S7_class(config)@properties)) {
+      meta <- c(
+        legend_meta(config@legend_position, config@legend_placement),
+        meta
+      )
+    }
+    meta
   }
 )
 

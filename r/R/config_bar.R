@@ -33,6 +33,7 @@
 #'   the data.
 #' @param margin_top,margin_right,margin_bottom,margin_left Optional Integer
 #'   `[0, Inf)`: Plot margins in pixels.
+#' @inheritParams draw_line legend_position legend_placement
 #' @inheritParams ChartConfig
 #'
 #' @return `BarConfig` object.
@@ -46,75 +47,78 @@ BarConfig <- new_class(
   name = "BarConfig",
   parent = ChartConfig,
   package = "rtemis.draw",
-  properties = list(
-    type = prop_chart_type("bar"),
-    # -- data binding ------------------------------------------------------
-    x = prop_string(
-      NULL,
-      nullable = TRUE,
-      description = "Column holding the categories."
-    ),
-    y = prop_string(
-      NULL,
-      nullable = TRUE,
-      vector = TRUE,
-      description = "Columns holding the values, one series each."
-    ),
-    # -- semantics ---------------------------------------------------------
-    stack = prop_boolean(
-      FALSE,
-      description = "Stack the series instead of grouping them."
-    ),
-    horizontal = prop_boolean(
-      FALSE,
-      description = "Draw the bars horizontally."
-    ),
-    # -- appearance --------------------------------------------------------
-    bar_width = prop_float(
-      NULL,
-      exclusive_min = 0,
-      nullable = TRUE,
-      description = "Bar thickness in pixels. Unset uses automatic category spacing."
-    ),
-    palette = prop_string(
-      NULL,
-      nullable = TRUE,
-      vector = TRUE,
-      description = "Series colors, overriding the theme palette. Unset uses the theme's."
-    ),
-    xlab = prop_string(
-      NULL,
-      nullable = TRUE,
-      description = "X axis label. Unset derives it from the data."
-    ),
-    ylab = prop_string(
-      NULL,
-      nullable = TRUE,
-      description = "Y axis label. Unset derives it from the data."
-    ),
-    margin_top = prop_integer(
-      NULL,
-      min = 0L,
-      nullable = TRUE,
-      description = "Top margin in pixels."
-    ),
-    margin_right = prop_integer(
-      NULL,
-      min = 0L,
-      nullable = TRUE,
-      description = "Right margin in pixels."
-    ),
-    margin_bottom = prop_integer(
-      NULL,
-      min = 0L,
-      nullable = TRUE,
-      description = "Bottom margin in pixels."
-    ),
-    margin_left = prop_integer(
-      NULL,
-      min = 0L,
-      nullable = TRUE,
-      description = "Left margin in pixels."
+  properties = c(
+    legend_properties(),
+    list(
+      type = prop_chart_type("bar"),
+      # -- data binding ------------------------------------------------------
+      x = prop_string(
+        NULL,
+        nullable = TRUE,
+        description = "Column holding the categories."
+      ),
+      y = prop_string(
+        NULL,
+        nullable = TRUE,
+        vector = TRUE,
+        description = "Columns holding the values, one series each."
+      ),
+      # -- semantics ---------------------------------------------------------
+      stack = prop_boolean(
+        FALSE,
+        description = "Stack the series instead of grouping them."
+      ),
+      horizontal = prop_boolean(
+        FALSE,
+        description = "Draw the bars horizontally."
+      ),
+      # -- appearance --------------------------------------------------------
+      bar_width = prop_float(
+        NULL,
+        exclusive_min = 0,
+        nullable = TRUE,
+        description = "Bar thickness in pixels. Unset uses automatic category spacing."
+      ),
+      palette = prop_string(
+        NULL,
+        nullable = TRUE,
+        vector = TRUE,
+        description = "Series colors, overriding the theme palette. Unset uses the theme's."
+      ),
+      xlab = prop_string(
+        NULL,
+        nullable = TRUE,
+        description = "X axis label. Unset derives it from the data."
+      ),
+      ylab = prop_string(
+        NULL,
+        nullable = TRUE,
+        description = "Y axis label. Unset derives it from the data."
+      ),
+      margin_top = prop_integer(
+        NULL,
+        min = 0L,
+        nullable = TRUE,
+        description = "Top margin in pixels."
+      ),
+      margin_right = prop_integer(
+        NULL,
+        min = 0L,
+        nullable = TRUE,
+        description = "Right margin in pixels."
+      ),
+      margin_bottom = prop_integer(
+        NULL,
+        min = 0L,
+        nullable = TRUE,
+        description = "Bottom margin in pixels."
+      ),
+      margin_left = prop_integer(
+        NULL,
+        min = 0L,
+        nullable = TRUE,
+        description = "Left margin in pixels."
+      )
     )
   )
 ) # /rtemis.draw::BarConfig
@@ -164,7 +168,9 @@ setup_BarConfig <- function(
   dat_path = NULL,
   origin = NULL,
   writer = NULL,
-  bar_width = NULL
+  bar_width = NULL,
+  legend_position = "top",
+  legend_placement = "outside"
 ) {
   origin <- origin %||% chart_origin(match.call(), BAR_ORIGIN_NAMES)
   BarConfig(
@@ -182,6 +188,8 @@ setup_BarConfig <- function(
     margin_bottom = margin_bottom,
     margin_left = margin_left,
     dat_path = dat_path,
+    legend_position = legend_position,
+    legend_placement = legend_placement,
     origin = origin,
     writer = writer
   )

@@ -6,9 +6,9 @@
 # series with a vertical legend.
 #
 # Layout and series logic translated from:
-#   ~/Code/rtemislive-draw/src/lib/a3/visualization/layout.ts
-#   ~/Code/rtemislive-draw/src/lib/a3/visualization/echarts.ts
-#   ~/Code/rtemislive-draw/src/lib/a3/visualization/palette.ts
+#   rtemislive: src/lib/a3/visualization/layout.ts
+#   rtemislive: src/lib/a3/visualization/echarts.ts
+#   rtemislive: src/lib/a3/visualization/palette.ts
 
 # ── Annotation color palettes ────────────────────────────────────────────────
 # Identical to the TypeScript DEFAULT_*_PALETTE constants; shared across
@@ -259,20 +259,44 @@ a3_option <- function(
   show_markers = TRUE,
   show_labels = TRUE,
   position_every = 10L,
-  region_opacity = 0.35,
+  region_opacity = 0.3,
   ptm_placement = "radial",
-  residue_fill = "#E7E5E4",
-  residue_stroke = "#44403C",
-  label_color = "#1C1917",
-  pos_label_color = "#78716C",
-  variant_color = "#FA6E1E",
-  disease_variant_color = "#E266AE",
+  residue_fill = NULL,
+  residue_stroke = NULL,
+  label_color = NULL,
+  pos_label_color = NULL,
+  variant_color = NULL,
+  disease_variant_color = NULL,
   enable_zoom = TRUE,
   title = NULL,
   grid = NULL,
   height = NULL
 ) {
   auto_height <- is.null(height)
+  # Match live's A3 theme plus its marker-fill override. Keep both palettes
+  # in ordinary render metadata so automatic browser themes and SVG agree.
+  colors_light <- list(
+    residueFill = residue_fill %||% "#efefef",
+    residueStroke = residue_stroke %||% "#44403C",
+    label = label_color %||% "#1C1917",
+    position = pos_label_color %||% "#78716C",
+    variant = variant_color %||% "#FA6E1E",
+    diseaseVariant = disease_variant_color %||% "#E266AE"
+  )
+  colors_dark <- list(
+    residueFill = residue_fill %||% "#181818",
+    residueStroke = residue_stroke %||% "#a1a1aa",
+    label = label_color %||% "#fafafa",
+    position = pos_label_color %||% "#a1a1aa",
+    variant = variant_color %||% "#fb923c",
+    diseaseVariant = disease_variant_color %||% "#f472b6"
+  )
+  residue_fill <- colors_light[["residueFill"]]
+  residue_stroke <- colors_light[["residueStroke"]]
+  label_color <- colors_light[["label"]]
+  pos_label_color <- colors_light[["position"]]
+  variant_color <- colors_light[["variant"]]
+  disease_variant_color <- colors_light[["diseaseVariant"]]
   # ── Input validation ────────────────────────────────────────────────────────
   if (!S7::S7_inherits(x)) {
     abort(
@@ -382,20 +406,6 @@ a3_option <- function(
   d_idx <- disease_pos[disease_pos >= 1L & disease_pos <= seq_length]
   if (length(d_idx) > 0L) {
     label_cols[d_idx] <- disease_variant_color
-  }
-
-  # ── Auto-compute height ────────────────────────────────────────────────────
-  if (is.null(height)) {
-    # titleMarginTop: matches resolveA3TitleMarginTop() in layout.ts
-    title_margin_top <- if (!is.null(title)) {
-      max(64L, 32L + font_size + 14L)
-    } else {
-      24L
-    }
-    vertical_span <- max_y - min_y
-    height <- ceiling(
-      title_margin_top + 24L + marker_size * 2 * (vertical_span + 1.1)
-    )
   }
 
   # ── Series construction ────────────────────────────────────────────────────
@@ -736,16 +746,12 @@ a3_option <- function(
   # ── ECharts option ──────────────────────────────────────────────────────────
   legend_right_inset <- 16
   legend_rail_width <- 196
-  legend_gap <- 90
-  title_margin_top <- if (!is.null(title)) {
-    max(64L, 32L + font_size + 14L)
-  } else {
-    24L
-  }
+  legend_gap <- 40
+  title_margin_top <- 44L
 
   # Build default grid margins, then apply any user overrides from a Grid object.
   vertical_span <- max_y - min_y
-  grid_height_px <- marker_size * 2 * (vertical_span + 1.1)
+  grid_height_px <- max(1, marker_size, font_size) * (2 * vertical_span + 1)
 
   grid_list <- list(
     left = 24,
@@ -761,12 +767,10 @@ a3_option <- function(
     }
   }
 
-  # Align the legend's first item with the first sequence row.
-  # Re-derived from the actual grid top so a user override keeps legend in sync.
-  # Match the tighter axis padding used by the live layout. The first row
-  # sits 0.7/(vertical_span+1.1) of the way down the plotting area.
-  legend_top <- grid_list[["top"]] +
-    round(grid_height_px * 0.7 / (vertical_span + 1.1))
+  # Match the A3 chart setup in rtemislive: one annotation column at the
+  # upper right, below the title. Native text measurement refines its width
+  # in the shared browser/SVG fitter without changing this anchor.
+  legend_top <- grid_list[["top"]] + 24
 
   option <- list(
     animation = TRUE,
@@ -796,6 +800,7 @@ a3_option <- function(
       right = legend_right_inset,
       bottom = 24,
       width = legend_rail_width,
+      itemGap = 10,
       data = if (length(legend_data)) legend_data else character(0),
       textStyle = list(
         fontSize = font_size,
@@ -815,8 +820,8 @@ a3_option <- function(
   if (!is.null(title)) {
     option[["title"]] <- list(
       text = title,
-      left = "5.5%",
-      top = 32,
+      left = grid_list[["left"]],
+      top = 12,
       textStyle = list(fontSize = font_size)
     )
   }
@@ -846,11 +851,11 @@ a3_option <- function(
   # self-contained and bypasses the S7 class hierarchy intentionally.
 
   # Reserve an initial height for complete legend content. The shared renderer
-  # measures its final wrapped bounds for the actual browser/export width.
+  # measures its final bounds for the actual browser/export width.
   if (auto_height) {
     height <- max(
-      height,
-      title_margin_top + 24 + length(legend_data) * (font_size + 14)
+      grid_list[["top"]] + grid_height_px + grid_list[["bottom"]],
+      legend_top + 24 + length(legend_data) * (font_size + 14)
     )
   }
   list(
@@ -862,7 +867,29 @@ a3_option <- function(
         autoGrid = is.null(grid),
         markerSize = marker_size,
         fontSize = font_size,
-        residueSpacing = residue_spacing
+        residueSpacing = residue_spacing,
+        bodyHeight = grid_height_px,
+        legendGap = legend_gap,
+        colorsLight = colors_light,
+        colorsDark = colors_dark,
+        seriesRoles = as.list(vapply(
+          series,
+          function(s) {
+            switch(
+              as.character(s[["z"]] %||% 0),
+              `10` = "backbone",
+              `40` = "labels",
+              `41` = "positions",
+              ""
+            )
+          },
+          character(1)
+        )),
+        labelRoles = as.list(ifelse(
+          seq_len(seq_length) %in% disease_pos,
+          "diseaseVariant",
+          ifelse(seq_len(seq_length) %in% variant_pos, "variant", "label")
+        ))
       )
     )
   )
@@ -874,11 +901,12 @@ a3_option <- function(
 #' Renders an `A3` object (from `rtemis.a3`) as an interactive ECharts
 #' amino-acid sequence diagram. The sequence is wrapped into rows in a
 #' meander/serpentine path, with optional site, region, PTM, processing, and
-#' variant annotations overlaid as distinct series and collected in a
-#' responsive legend. Legend headings use native rich text and remain available
+#' variant annotations overlaid as distinct series and collected in an
+#' upper-right annotation column, matching rtemislive. Legend headings use
+#' native rich text and remain available
 #' in vector SVG exports through [save_drawing()].
 #'
-#' On narrower surfaces, the legend moves below the sequence and residue
+#' The annotation column stays at the upper right on every surface. Residue
 #' markers, labels, and annotations shrink together to avoid overlap. Row
 #' wrapping remains fixed. Browser height follows the layout unless supplied;
 #' SVG and panel dimensions remain bounded. A custom `grid` retains its layout.
@@ -907,17 +935,18 @@ a3_option <- function(
 #'   Placement of PTM symbols relative to the residue circle.
 #'   `"radial"` centers on the circle edge; `"innerRadial"` places inside;
 #'   `"outerRadial"` places outside.
-#' @param residue_fill Character: Residue circle fill color.
-#' @param residue_stroke Character: Residue circle stroke and backbone line color.
-#' @param label_color Character: Default residue label text color.
-#' @param pos_label_color Character: Position label text color.
-#' @param variant_color Character: Label color for variant residues.
-#' @param disease_variant_color Character: Label color for disease-associated
+#' @param residue_fill Optional Character: Residue circle fill color.
+#' @param residue_stroke Optional Character: Residue circle stroke and backbone line color.
+#' @param label_color Optional Character: Default residue label text color.
+#' @param pos_label_color Optional Character: Position label text color.
+#' @param variant_color Optional Character: Label color for variant residues.
+#' @param disease_variant_color Optional Character: Label color for disease-associated
 #'   variant residues (takes precedence over `variant_color`).
+#'   `NULL` color arguments follow the light/dark A3 theme.
 #' @param enable_zoom Logical: Whether to enable Shift+scroll zoom.
 #' @param title Optional Character: Chart title.
 #' @param grid Optional [Grid]: Override any plot-area margin. The defaults
-#'   (`left = 24`, `top` auto, `right` driven by legend width, `bottom = 24`)
+#'   (margins matching rtemislive, with `right` driven by legend width)
 #'   are merged with the properties of the supplied `Grid` object, so only
 #'   the fields you set are changed — e.g. `Grid(left = 8, top = 8)`.
 #'   `legend_top` is re-derived from the final grid top automatically.
@@ -958,14 +987,14 @@ draw_a3 <- function(
   show_markers = TRUE,
   show_labels = TRUE,
   position_every = 10L,
-  region_opacity = 0.35,
+  region_opacity = 0.3,
   ptm_placement = "radial",
-  residue_fill = "#E7E5E4",
-  residue_stroke = "#44403C",
-  label_color = "#1C1917",
-  pos_label_color = "#78716C",
-  variant_color = "#FA6E1E",
-  disease_variant_color = "#E266AE",
+  residue_fill = NULL,
+  residue_stroke = NULL,
+  label_color = NULL,
+  pos_label_color = NULL,
+  variant_color = NULL,
+  disease_variant_color = NULL,
   enable_zoom = TRUE,
   title = NULL,
   grid = NULL,

@@ -247,3 +247,89 @@ test_that("draw_line tooltip formats values but keeps the axis trigger", {
   expect_s3_class(opt$tooltip$valueFormatter, "JS_EVAL")
   expect_match(opt$tooltip$valueFormatter, "toFixed\\(2\\)")
 })
+
+test_that("categorical line and area baselines depend on the visible value range", {
+  years <- c("2007", "2008", "2009")
+  for (area in c(FALSE, TRUE)) {
+    for (values in list(c(20, 30, 40), c(-40, -30, -20), c(-20, 0, 20))) {
+      opt <- draw_line(years, values, area = area)[["x"]][["option"]]
+      expect_identical(
+        opt[["xAxis"]][["axisLine"]],
+        list(
+          show = min(values) <= 0 && max(values) >= 0,
+          onZero = TRUE
+        )
+      )
+      expect_identical(opt[["xAxis"]][["data"]], years)
+      expect_identical(opt[["series"]][[1]][["data"]], values)
+    }
+    # Explicit limits determine whether zero is visible, not the raw data.
+    clipped <- draw_line(years, c(-20, 30, 40), ylim = c(25, 45), area = area)[[
+      "x"
+    ]][["option"]]
+    expanded <- draw_line(years, c(20, 30, 40), ylim = c(0, 45), area = area)[[
+      "x"
+    ]][["option"]]
+    expect_false(clipped[["xAxis"]][["axisLine"]][["show"]])
+    expect_true(expanded[["xAxis"]][["axisLine"]][["show"]])
+    config <- setup_LineConfig(x = "year", y = "count", area = area)
+    compiled <- to_list(compile(
+      config,
+      data.frame(year = years, count = c(20, 30, 40))
+    ))
+    expect_identical(
+      compiled[["xAxis"]][["axisLine"]],
+      list(show = FALSE, onZero = TRUE)
+    )
+  }
+})
+
+test_that("native categorical line SVG draws emphasis only at zero", {
+  skip_if_not(nzchar(Sys.which("node")), "node not found")
+  charts <- list()
+  for (theme in list(theme_light(), theme_dark())) {
+    for (area in c(FALSE, TRUE)) {
+      for (values in list(c(20, 30, 40), c(-40, -30, -20), c(-20, 0, 20))) {
+        option <- to_list(line_option(
+          c("2007", "2008", "2009"),
+          values,
+          area = area
+        ))
+        # Tooltips contain an R JS_EVAL wrapper and are not part of the native
+        # axis geometry exercised by this plain-JSON fixture.
+        option[["tooltip"]] <- NULL
+        charts[[length(charts) + 1L]] <- list(
+          option = option,
+          theme = to_list(theme),
+          horizontal = FALSE,
+          zero = min(values) <= 0 && max(values) >= 0
+        )
+      }
+    }
+  }
+  path <- tempfile(fileext = ".json")
+  on.exit(unlink(path), add = TRUE)
+  jsonlite::write_json(
+    list(
+      charts = charts,
+      echarts = system.file(
+        "htmlwidgets/lib/echarts/echarts.min.js",
+        package = "rtemis.draw"
+      )
+    ),
+    path,
+    auto_unbox = TRUE,
+    digits = NA
+  )
+  output <- suppressWarnings(system2(
+    "node",
+    c(
+      shQuote(test_path("fixtures", "axis_baseline.js")),
+      shQuote(path)
+    ),
+    stdout = TRUE,
+    stderr = TRUE
+  ))
+  expect_null(attr(output, "status"), info = paste(output, collapse = "\n"))
+  expect_match(paste(output, collapse = "\n"), "passed")
+})

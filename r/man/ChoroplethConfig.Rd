@@ -22,7 +22,6 @@ ChoroplethConfig(
   show_legend = TRUE,
   legend_position = "bottom-right",
   tooltip_position = "top-right",
-  report_position = "bottom-left",
   value_label = NULL
 )
 }
@@ -63,7 +62,7 @@ are binned into classes.}
 
 \item{outline_width}{Numeric \verb{[0, Inf)}: Boundary line width.}
 
-\item{legend_position, tooltip_position, report_position}{Character: Corner
+\item{legend_position, tooltip_position}{Character: Corner
 each overlay is anchored to.}
 
 \item{value_label}{Optional Character: Label for the value in the legend and

@@ -37,6 +37,7 @@
 #' @param xlab,ylab Optional Character: Axis labels.
 #' @param margin_top,margin_right,margin_bottom,margin_left Optional Integer
 #'   `[0, Inf)`: Override the auto-computed margins, per side.
+#' @inheritParams draw_line legend_position legend_placement
 #' @inheritParams ChartConfig
 #'
 #' @return `SpectrogramConfig` object.
@@ -50,110 +51,113 @@ SpectrogramConfig <- new_class(
   name = "SpectrogramConfig",
   parent = ChartConfig,
   package = "rtemis.draw",
-  properties = list(
-    type = prop_chart_type("spectrogram"),
-    # -- semantics: the transform ------------------------------------------
-    sample_rate = prop_float(
-      NULL,
-      min = 0,
-      nullable = TRUE,
-      description = "Signal sample rate in Hz."
-    ),
-    n_fft = prop_integer(256L, min = 2L, description = "FFT window length."),
-    window = prop_string("hanning", description = "Window function."),
-    overlap = prop_float(
-      NULL,
-      min = 0,
-      exclusive_max = 1,
-      nullable = TRUE,
-      description = "Fractional window overlap."
-    ),
-    power = prop_boolean(
-      TRUE,
-      description = "Use the power spectrum rather than magnitude."
-    ),
-    db = prop_boolean(TRUE, description = "Convert to decibels."),
-    db_range = prop_float(
-      80,
-      min = 0,
-      description = "Dynamic range in dB below the peak."
-    ),
-    freq_scale = prop_string(
-      "linear",
-      enum = c("linear", "log", "mel"),
-      description = "Frequency axis scale."
-    ),
-    freq_range = prop_float(
-      NULL,
-      nullable = TRUE,
-      vector = TRUE,
-      min_items = 2L,
-      description = "Frequency axis limits."
-    ),
-    time_range = prop_float(
-      NULL,
-      nullable = TRUE,
-      vector = TRUE,
-      min_items = 2L,
-      description = "Time axis limits."
-    ),
-    # -- appearance --------------------------------------------------------
-    freq_unit = prop_string("Hz", description = "Frequency axis unit."),
-    time_unit = prop_string("s", description = "Time axis unit."),
-    colormap = prop_string(
-      "magma",
-      vector = TRUE,
-      description = paste(
-        "Continuous color scheme, or two or more hex colors defining one."
+  properties = c(
+    legend_properties("right"),
+    list(
+      type = prop_chart_type("spectrogram"),
+      # -- semantics: the transform ------------------------------------------
+      sample_rate = prop_float(
+        NULL,
+        min = 0,
+        nullable = TRUE,
+        description = "Signal sample rate in Hz."
+      ),
+      n_fft = prop_integer(256L, min = 2L, description = "FFT window length."),
+      window = prop_string("hanning", description = "Window function."),
+      overlap = prop_float(
+        NULL,
+        min = 0,
+        exclusive_max = 1,
+        nullable = TRUE,
+        description = "Fractional window overlap."
+      ),
+      power = prop_boolean(
+        TRUE,
+        description = "Use the power spectrum rather than magnitude."
+      ),
+      db = prop_boolean(TRUE, description = "Convert to decibels."),
+      db_range = prop_float(
+        80,
+        min = 0,
+        description = "Dynamic range in dB below the peak."
+      ),
+      freq_scale = prop_string(
+        "linear",
+        enum = c("linear", "log", "mel"),
+        description = "Frequency axis scale."
+      ),
+      freq_range = prop_float(
+        NULL,
+        nullable = TRUE,
+        vector = TRUE,
+        min_items = 2L,
+        description = "Frequency axis limits."
+      ),
+      time_range = prop_float(
+        NULL,
+        nullable = TRUE,
+        vector = TRUE,
+        min_items = 2L,
+        description = "Time axis limits."
+      ),
+      # -- appearance --------------------------------------------------------
+      freq_unit = prop_string("Hz", description = "Frequency axis unit."),
+      time_unit = prop_string("s", description = "Time axis unit."),
+      colormap = prop_string(
+        "magma",
+        vector = TRUE,
+        description = paste(
+          "Continuous color scheme, or two or more hex colors defining one."
+        )
+      ),
+      colormap_reverse = prop_boolean(
+        FALSE,
+        description = "Reverse the color scheme."
+      ),
+      n_colors = prop_integer(
+        256L,
+        min = 2L,
+        description = "Number of discrete colors."
+      ),
+      zlim = prop_float(
+        NULL,
+        nullable = TRUE,
+        vector = TRUE,
+        min_items = 2L,
+        description = "Color-scale limits."
+      ),
+      show_colorbar = prop_boolean(TRUE, description = "Draw the color bar."),
+      colorbar_title = prop_string(
+        NULL,
+        nullable = TRUE,
+        description = "Color bar title."
+      ),
+      xlab = prop_string(NULL, nullable = TRUE, description = "X axis label."),
+      ylab = prop_string(NULL, nullable = TRUE, description = "Y axis label."),
+      margin_top = prop_integer(
+        NULL,
+        min = 0L,
+        nullable = TRUE,
+        description = "Top margin override in pixels."
+      ),
+      margin_right = prop_integer(
+        NULL,
+        min = 0L,
+        nullable = TRUE,
+        description = "Right margin override in pixels."
+      ),
+      margin_bottom = prop_integer(
+        NULL,
+        min = 0L,
+        nullable = TRUE,
+        description = "Bottom margin override in pixels."
+      ),
+      margin_left = prop_integer(
+        NULL,
+        min = 0L,
+        nullable = TRUE,
+        description = "Left margin override in pixels."
       )
-    ),
-    colormap_reverse = prop_boolean(
-      FALSE,
-      description = "Reverse the color scheme."
-    ),
-    n_colors = prop_integer(
-      256L,
-      min = 2L,
-      description = "Number of discrete colors."
-    ),
-    zlim = prop_float(
-      NULL,
-      nullable = TRUE,
-      vector = TRUE,
-      min_items = 2L,
-      description = "Color-scale limits."
-    ),
-    show_colorbar = prop_boolean(TRUE, description = "Draw the color bar."),
-    colorbar_title = prop_string(
-      NULL,
-      nullable = TRUE,
-      description = "Color bar title."
-    ),
-    xlab = prop_string(NULL, nullable = TRUE, description = "X axis label."),
-    ylab = prop_string(NULL, nullable = TRUE, description = "Y axis label."),
-    margin_top = prop_integer(
-      NULL,
-      min = 0L,
-      nullable = TRUE,
-      description = "Top margin override in pixels."
-    ),
-    margin_right = prop_integer(
-      NULL,
-      min = 0L,
-      nullable = TRUE,
-      description = "Right margin override in pixels."
-    ),
-    margin_bottom = prop_integer(
-      NULL,
-      min = 0L,
-      nullable = TRUE,
-      description = "Bottom margin override in pixels."
-    ),
-    margin_left = prop_integer(
-      NULL,
-      min = 0L,
-      nullable = TRUE,
-      description = "Left margin override in pixels."
     )
   )
 ) # /rtemis.draw::SpectrogramConfig
@@ -215,7 +219,9 @@ setup_SpectrogramConfig <- function(
   margin_left = NULL,
   dat_path = NULL,
   origin = NULL,
-  writer = NULL
+  writer = NULL,
+  legend_position = "right",
+  legend_placement = "outside"
 ) {
   origin <- origin %||% chart_origin(match.call(), SPECTROGRAM_ORIGIN_NAMES)
   SpectrogramConfig(
@@ -245,6 +251,8 @@ setup_SpectrogramConfig <- function(
     margin_bottom = margin_bottom,
     margin_left = margin_left,
     dat_path = dat_path,
+    legend_position = legend_position,
+    legend_placement = legend_placement,
     origin = origin,
     writer = writer
   )
@@ -335,7 +343,11 @@ method(draw, SpectrogramConfig) <- function(
     element_id = element_id,
     filename = filename,
     animation = animation,
-    meta = built[["render"]][["meta"]],
+    meta = c(
+      render_meta(option, built[["option"]]),
+      built[["render"]][["meta"]],
+      list(legendTarget = "visualMap")
+    ),
     ...
   )
 }

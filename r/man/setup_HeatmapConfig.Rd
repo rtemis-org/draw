@@ -34,7 +34,9 @@ setup_HeatmapConfig(
   margin_left = NULL,
   dat_path = NULL,
   origin = NULL,
-  writer = NULL
+  writer = NULL,
+  legend_position = if (colorbar_orient == "horizontal") "bottom" else "right",
+  legend_placement = "outside"
 )
 }
 \arguments{
@@ -95,6 +97,15 @@ computed from which arguments were supplied; pass it only when restoring a
 config that already carries provenance.}
 
 \item{writer}{Optional Named character: Which interface wrote the config.}
+
+\item{legend_position}{Character \{"top", "bottom", "left", "right",
+"top-left", "top-right", "bottom-left", "bottom-right"\}: Legend anchor.
+Top/bottom anchors use horizontal rows; left/right anchors use a vertical
+column. Corner anchors align within the top or bottom row.}
+
+\item{legend_placement}{Character \{"outside", "inside"\}: Relation to the
+plotting area. Outside placement reserves space for the complete legend;
+inside placement overlays the data. Neither setting adds a missing legend.}
 }
 \value{
 \link{HeatmapConfig} object.

@@ -24,6 +24,7 @@
 #'   the data.
 #' @param margin_top,margin_right,margin_bottom,margin_left Optional Integer
 #'   `[0, Inf)`: Plot margins in pixels.
+#' @inheritParams draw_line legend_position legend_placement
 #' @inheritParams ChartConfig
 #'
 #' @return `HistogramConfig` object.
@@ -37,65 +38,68 @@ HistogramConfig <- new_class(
   name = "HistogramConfig",
   parent = ChartConfig,
   package = "rtemis.draw",
-  properties = list(
-    type = prop_chart_type("histogram"),
-    # -- data binding ------------------------------------------------------
-    x = prop_string(
-      NULL,
-      nullable = TRUE,
-      description = "Column to bin."
-    ),
-    group = prop_string(
-      NULL,
-      nullable = TRUE,
-      description = "Column to split the bins by, one series per level."
-    ),
-    # -- semantics ---------------------------------------------------------
-    breaks = prop_string(
-      "Sturges",
-      enum = c("Sturges", "Scott", "FD", "Freedman-Diaconis"),
-      description = "Binning rule."
-    ),
-    # -- appearance --------------------------------------------------------
-    palette = prop_string(
-      NULL,
-      nullable = TRUE,
-      vector = TRUE,
-      description = "Series colors, overriding the theme palette. Unset uses the theme's."
-    ),
-    xlab = prop_string(
-      NULL,
-      nullable = TRUE,
-      description = "X axis label. Unset derives it from the data."
-    ),
-    ylab = prop_string(
-      NULL,
-      nullable = TRUE,
-      description = "Y axis label. Unset derives it from the data."
-    ),
-    margin_top = prop_integer(
-      NULL,
-      min = 0L,
-      nullable = TRUE,
-      description = "Top margin in pixels."
-    ),
-    margin_right = prop_integer(
-      NULL,
-      min = 0L,
-      nullable = TRUE,
-      description = "Right margin in pixels."
-    ),
-    margin_bottom = prop_integer(
-      NULL,
-      min = 0L,
-      nullable = TRUE,
-      description = "Bottom margin in pixels."
-    ),
-    margin_left = prop_integer(
-      NULL,
-      min = 0L,
-      nullable = TRUE,
-      description = "Left margin in pixels."
+  properties = c(
+    legend_properties(),
+    list(
+      type = prop_chart_type("histogram"),
+      # -- data binding ------------------------------------------------------
+      x = prop_string(
+        NULL,
+        nullable = TRUE,
+        description = "Column to bin."
+      ),
+      group = prop_string(
+        NULL,
+        nullable = TRUE,
+        description = "Column to split the bins by, one series per level."
+      ),
+      # -- semantics ---------------------------------------------------------
+      breaks = prop_string(
+        "Sturges",
+        enum = c("Sturges", "Scott", "FD", "Freedman-Diaconis"),
+        description = "Binning rule."
+      ),
+      # -- appearance --------------------------------------------------------
+      palette = prop_string(
+        NULL,
+        nullable = TRUE,
+        vector = TRUE,
+        description = "Series colors, overriding the theme palette. Unset uses the theme's."
+      ),
+      xlab = prop_string(
+        NULL,
+        nullable = TRUE,
+        description = "X axis label. Unset derives it from the data."
+      ),
+      ylab = prop_string(
+        NULL,
+        nullable = TRUE,
+        description = "Y axis label. Unset derives it from the data."
+      ),
+      margin_top = prop_integer(
+        NULL,
+        min = 0L,
+        nullable = TRUE,
+        description = "Top margin in pixels."
+      ),
+      margin_right = prop_integer(
+        NULL,
+        min = 0L,
+        nullable = TRUE,
+        description = "Right margin in pixels."
+      ),
+      margin_bottom = prop_integer(
+        NULL,
+        min = 0L,
+        nullable = TRUE,
+        description = "Bottom margin in pixels."
+      ),
+      margin_left = prop_integer(
+        NULL,
+        min = 0L,
+        nullable = TRUE,
+        description = "Left margin in pixels."
+      )
     )
   )
 ) # /rtemis.draw::HistogramConfig
@@ -142,7 +146,9 @@ setup_HistogramConfig <- function(
   margin_left = NULL,
   dat_path = NULL,
   origin = NULL,
-  writer = NULL
+  writer = NULL,
+  legend_position = "top",
+  legend_placement = "outside"
 ) {
   origin <- origin %||% chart_origin(match.call(), HISTOGRAM_ORIGIN_NAMES)
   HistogramConfig(
@@ -158,6 +164,8 @@ setup_HistogramConfig <- function(
     margin_bottom = margin_bottom,
     margin_left = margin_left,
     dat_path = dat_path,
+    legend_position = legend_position,
+    legend_placement = legend_placement,
     origin = origin,
     writer = writer
   )

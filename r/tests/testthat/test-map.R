@@ -83,7 +83,12 @@ test_that("MapLibreOption to_list produces the {model, style} payload shape", {
   expect_equal(out[["style"]][["colorScheme"]], "viridis")
   expect_equal(out[["style"]][["numClasses"]], 7)
   expect_true(all(
-    c("showBoundaries", "outlineWidth", "legendPosition", "reportPosition") %in%
+    c(
+      "showBoundaries",
+      "outlineWidth",
+      "legendPosition",
+      "tooltipPosition"
+    ) %in%
       names(out[["style"]])
   ))
   expect_false("title" %in% names(out))
@@ -225,15 +230,15 @@ test_that("draw_choropleth honours an explicit theme and NA (no theme)", {
   expect_null(wna$x$autoTheme)
 })
 
-test_that("draw_choropleth rejects static export requests", {
-  df <- data.frame(iso = "USA", gdp = 1)
+test_that("draw_choropleth exports map SVG", {
+  skip_if_not(nzchar(Sys.which("node")), "node not found")
   path <- tempfile(fileext = ".svg")
-  expect_error(
-    draw_choropleth(df, "iso", "gdp", filename = path),
-    "not yet supported",
-    class = "rtemis_export_error"
-  )
-  expect_false(file.exists(path))
+  on.exit(unlink(path), add = TRUE)
+  df <- data.frame(iso = "USA", gdp = 1)
+  w <- draw_choropleth(df, "iso", "gdp", filename = path)
+  expect_s3_class(w, "htmlwidget")
+  expect_true(file.exists(path))
+  expect_match(paste(readLines(path, warn = FALSE), collapse = ""), "<svg")
 })
 
 test_that("draw_choropleth rejects an invalid resolution / scheme", {

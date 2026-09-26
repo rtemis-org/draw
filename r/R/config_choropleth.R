@@ -29,7 +29,7 @@
 #' @param opacity Numeric `[0, 1]`: Fill opacity.
 #' @param outline_width Numeric `[0, Inf)`: Boundary line width.
 #' @param show_boundaries,show_legend Logical: Whether to draw each.
-#' @param legend_position,tooltip_position,report_position Character: Corner
+#' @param legend_position,tooltip_position Character: Corner
 #'   each overlay is anchored to.
 #' @param value_label Optional Character: Label for the value in the legend and
 #'   tooltip. `NULL` derives it from the bound column.
@@ -113,11 +113,6 @@ ChoroplethConfig <- new_class(
       enum = map_corners,
       description = "Corner the tooltip is anchored to."
     ),
-    report_position = prop_string(
-      "bottom-left",
-      enum = map_corners,
-      description = "Corner the report panel is anchored to."
-    ),
     value_label = prop_string(
       NULL,
       nullable = TRUE,
@@ -172,7 +167,6 @@ setup_ChoroplethConfig <- function(
   show_legend = TRUE,
   legend_position = "bottom-right",
   tooltip_position = "top-right",
-  report_position = "bottom-left",
   value_label = NULL,
   title = NULL,
   dat_path = NULL,
@@ -194,7 +188,6 @@ setup_ChoroplethConfig <- function(
     show_legend = show_legend,
     legend_position = legend_position,
     tooltip_position = tooltip_position,
-    report_position = report_position,
     value_label = value_label,
     title = title,
     dat_path = dat_path,
@@ -241,7 +234,6 @@ method(compile, ChoroplethConfig) <- function(config, data = NULL, ...) {
     show_legend = config@show_legend,
     legend_position = config@legend_position,
     tooltip_position = config@tooltip_position,
-    report_position = config@report_position,
     title = config@title
   )
 }

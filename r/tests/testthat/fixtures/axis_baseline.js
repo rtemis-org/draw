@@ -25,7 +25,7 @@ for (const item of input.charts) {
     }
     const svg = chart.renderToSVGString();
     assert.ok(!/missing|omitted/.test(svg), 'Console diagnostic leaked into SVG');
-    assert.ok(!svg.includes('<image'), 'Boxplot SVG contains a raster');
+    assert.ok(!svg.includes('<image'), 'Chart SVG contains a raster');
   } finally { chart.dispose(); }
 }
-console.log('Boxplot native zero baselines and clean vector output passed');
+console.log('Native zero baselines and clean vector output passed');

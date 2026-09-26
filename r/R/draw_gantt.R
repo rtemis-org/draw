@@ -312,7 +312,7 @@ gantt_option <- function(
 #' on the y-axis. Implemented as an ECharts `custom` series (ECharts has no
 #' native Gantt series).
 #'
-#' The legend moves below the plot when a side legend would leave too little
+#' The legend uses the shared position/placement controls and reserves enough
 #' room for the time axis. Tick density follows the available plotting width,
 #' and long task labels are truncated. Default bar tooltips retain the full task
 #' text.
@@ -369,6 +369,7 @@ gantt_option <- function(
 #'   status = c("ok", "ok", "ok", "error")
 #' )
 #' draw_gantt(tasks, group = "status")
+#' @inheritParams draw_line legend_position legend_placement
 draw_gantt <- function(
   tasks,
   group = NULL,
@@ -388,7 +389,9 @@ draw_gantt <- function(
   width = NULL,
   height = NULL,
   element_id = NULL,
-  filename = NULL
+  filename = NULL,
+  legend_position = "top",
+  legend_placement = "outside"
 ) {
   opt <- gantt_option(
     tasks = tasks,
@@ -413,6 +416,7 @@ draw_gantt <- function(
     width = width,
     height = height,
     element_id = element_id,
-    filename = filename
+    filename = filename,
+    meta = legend_meta(legend_position, legend_placement)
   )
 }

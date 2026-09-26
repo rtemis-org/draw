@@ -163,7 +163,7 @@ test_that("native boxplot SVG emphasizes zero in both orientations and themes", 
   )
   output <- system2(
     "node",
-    c(shQuote(test_path("fixtures", "boxplot_baseline.js")), shQuote(path)),
+    c(shQuote(test_path("fixtures", "axis_baseline.js")), shQuote(path)),
     stdout = TRUE,
     stderr = TRUE
   )

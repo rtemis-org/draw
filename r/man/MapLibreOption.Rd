@@ -15,7 +15,6 @@ MapLibreOption(
   show_legend = TRUE,
   legend_position = "bottom-right",
   tooltip_position = "top-right",
-  report_position = "bottom-left",
   title = NULL
 )
 }
@@ -46,9 +45,6 @@ schemes \code{"rdbu"}, \code{"rdylgn"}, \code{"spectral"}, \code{"brbg"}.}
 
 \item{tooltip_position}{Character \{"top-left", "top-right", "bottom-left",
 "bottom-right"\}: Hover tooltip corner.}
-
-\item{report_position}{Character \{"top-left", "top-right", "bottom-left",
-"bottom-right"\}: Join-report corner (shows matched / unmatched counts).}
 
 \item{title}{Optional Character: Title (currently surfaced via the value
 label; reserved for future use).}

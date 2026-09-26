@@ -169,6 +169,7 @@ method(true_pred_data, list(class_any, class_any)) <- function(
 #'   list(Training = 1:5, Test = 2:5),
 #'   list(Training = c(1.2, 1.8, 3.3, 3.8, 5.2), Test = c(2.2, 2.7, 4.3, 4.8))
 #' )
+#' @inheritParams draw_line legend_position legend_placement
 draw_fit <- function(
   x,
   y,
@@ -183,7 +184,9 @@ draw_fit <- function(
   equal_axes = TRUE,
   xlab = "True",
   ylab = "Predicted",
-  ...
+  ...,
+  legend_position = "top",
+  legend_placement = "outside"
 ) {
   data <- true_pred_data(x, y, group = group)
   # The shared scatter builder validates these settings against ScatterConfig.
@@ -201,6 +204,8 @@ draw_fit <- function(
     equal_axes = equal_axes,
     xlab = xlab,
     ylab = ylab,
+    legend_position = legend_position,
+    legend_placement = legend_placement,
     ...
   )
 }

@@ -9,6 +9,8 @@ GanttConfig(
   title = NULL,
   origin = NULL,
   writer = NULL,
+  legend_position = "top",
+  legend_placement = "outside",
   label = "label",
   start = "start",
   end = "end",
@@ -40,6 +42,15 @@ authored config; written by the interface that resolved it.}
 
 \item{writer}{Optional Named character: Which interface wrote the config, as
 \code{name} and \code{version}. Absent on an authored config.}
+
+\item{legend_position}{Character \{"top", "bottom", "left", "right",
+"top-left", "top-right", "bottom-left", "bottom-right"\}: Legend anchor.
+Top/bottom anchors use horizontal rows; left/right anchors use a vertical
+column. Corner anchors align within the top or bottom row.}
+
+\item{legend_placement}{Character \{"outside", "inside"\}: Relation to the
+plotting area. Outside placement reserves space for the complete legend;
+inside placement overlays the data. Neither setting adds a missing legend.}
 
 \item{label}{Character: Column naming each task.}
 

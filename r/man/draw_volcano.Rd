@@ -14,6 +14,8 @@ draw_volcano(
   x_thresh = 0,
   annotate_n = 7L,
   ...,
+  legend_position = "top",
+  legend_placement = "outside",
   theme = NULL,
   width = NULL,
   height = NULL,
@@ -40,6 +42,15 @@ draw_volcano(
 
 \item{...}{Additional named settings for \code{\link[=setup_SignificanceConfig]{setup_SignificanceConfig()}}, such as
 \code{reference}, \code{zero_cap}, \code{n_tests}, colors, axis limits, or margins.}
+
+\item{legend_position}{Character \{"top", "bottom", "left", "right",
+"top-left", "top-right", "bottom-left", "bottom-right"\}: Legend anchor.
+Top/bottom anchors use horizontal rows; left/right anchors use a vertical
+column. Corner anchors align within the top or bottom row.}
+
+\item{legend_placement}{Character \{"outside", "inside"\}: Relation to the
+plotting area. Outside placement reserves space for the complete legend;
+inside placement overlays the data. Neither setting adds a missing legend.}
 
 \item{theme}{Optional \link{Theme}: Widget/export theme.}
 

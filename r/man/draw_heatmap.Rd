@@ -34,7 +34,9 @@ draw_heatmap(
   width = NULL,
   height = NULL,
   element_id = NULL,
-  filename = NULL
+  filename = NULL,
+  legend_position = if (colorbar_orient == "horizontal") "bottom" else "right",
+  legend_placement = "outside"
 )
 }
 \arguments{
@@ -141,6 +143,15 @@ container. \code{NULL} lets htmlwidgets generate one.}
 
 \item{filename}{Optional Character: If provided, save the widget to this file via
 \code{\link[=save_drawing]{save_drawing()}}.}
+
+\item{legend_position}{Character \{"top", "bottom", "left", "right",
+"top-left", "top-right", "bottom-left", "bottom-right"\}: Legend anchor.
+Top/bottom anchors use horizontal rows; left/right anchors use a vertical
+column. Corner anchors align within the top or bottom row.}
+
+\item{legend_placement}{Character \{"outside", "inside"\}: Relation to the
+plotting area. Outside placement reserves space for the complete legend;
+inside placement overlays the data. Neither setting adds a missing legend.}
 }
 \value{
 htmlwidget: Widget object.

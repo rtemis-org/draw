@@ -19,7 +19,7 @@
 #' Per-resample legends report the unweighted mean and sample SD of defined
 #' fold AUCs, with available/total curve counts. SD is NA for one defined fold.
 #' Pooled AUC is never inferred from per-fold AUCs.
-#' The legend is inset in the chosen corner of the plotting area. Curve identity
+#' The legend uses the shared position and placement controls. Curve identity
 #' and AUC share a line; long labels wrap to the available width. All entries
 #' remain present in static SVG output, without a scrolling legend.
 #' Hover describes the selected curve, including its resample identifier.
@@ -39,7 +39,7 @@
 #' @param diagonal_color Character: Chance-line color.
 #' @param palette Optional Character: Group colors; unset uses the chart theme.
 #' @param legend Logical: Show group labels and AUC summaries.
-#' @param legend_position Character \{"bottom-right", "top-right", "top-left", "bottom-left"\}: Corner inside the plotting area for the legend.
+#' @inheritParams draw_line
 #' @param square Logical: Keep the plotting grid square.
 #' @param line_width Numeric: Curve stroke width in pixels.
 #' @param fold_opacity Numeric: Opacity of individual resample curves.
@@ -54,91 +54,96 @@ ROCConfig <- new_class(
   name = "ROCConfig",
   parent = ChartConfig,
   package = "rtemis.draw",
-  properties = list(
-    type = prop_chart_type("roc"),
-    fpr = prop_string(
-      "fpr",
-      description = "Column containing false positive rates."
-    ),
-    tpr = prop_string(
-      "tpr",
-      description = "Column containing true positive rates."
-    ),
-    auc = prop_string(
-      NULL,
-      nullable = TRUE,
-      description = "Optional supplied AUC column; unset integrates the supplied vertices."
-    ),
-    class_label = prop_string(
-      NULL,
-      nullable = TRUE,
-      description = "Optional positive-class label column."
-    ),
-    split = prop_string(
-      NULL,
-      nullable = TRUE,
-      description = "Optional sample or model label column."
-    ),
-    fold = prop_string(
-      NULL,
-      nullable = TRUE,
-      description = "Optional resample column; aggregate identifies pooled curves."
-    ),
-    omitted = prop_string(
-      NULL,
-      nullable = TRUE,
-      description = "Optional omitted-observation count column, constant within each curve."
-    ),
-    variant = prop_string(
-      "aggregate",
-      enum = c("aggregate", "per_resample"),
-      description = "Draw pooled curves or separate resample curves."
-    ),
-    digits = prop_integer(
-      3L,
-      min = 0L,
-      max = 8L,
-      description = "Decimal places for AUC labels and tooltip values."
-    ),
-    diagonal = prop_boolean(
-      TRUE,
-      description = "Show an independent chance diagonal."
-    ),
-    diagonal_color = prop_string("#888888", description = "Chance-line color."),
-    palette = prop_string(
-      NULL,
-      nullable = TRUE,
-      vector = TRUE,
-      description = "Group colors; unset uses the chart theme."
-    ),
-    legend = prop_boolean(
-      TRUE,
-      description = "Show group labels and AUC summaries."
-    ),
-    legend_position = prop_string(
-      "bottom-right",
-      enum = c("bottom-right", "top-right", "top-left", "bottom-left"),
-      description = "Corner inside the plotting area for the legend."
-    ),
-    square = prop_boolean(TRUE, description = "Keep the plotting grid square."),
-    line_width = prop_float(
-      2,
-      exclusive_min = 0,
-      description = "Curve stroke width in pixels."
-    ),
-    fold_opacity = prop_float(
-      0.45,
-      min = 0,
-      max = 1,
-      description = "Opacity of individual resample curves."
-    ),
-    xlab = prop_string(
-      "False positive rate",
-      description = "Horizontal axis label."
-    ),
-    ylab = prop_string(
-      "True positive rate",
-      description = "Vertical axis label."
+  properties = c(
+    legend_properties(),
+    list(
+      type = prop_chart_type("roc"),
+      fpr = prop_string(
+        "fpr",
+        description = "Column containing false positive rates."
+      ),
+      tpr = prop_string(
+        "tpr",
+        description = "Column containing true positive rates."
+      ),
+      auc = prop_string(
+        NULL,
+        nullable = TRUE,
+        description = "Optional supplied AUC column; unset integrates the supplied vertices."
+      ),
+      class_label = prop_string(
+        NULL,
+        nullable = TRUE,
+        description = "Optional positive-class label column."
+      ),
+      split = prop_string(
+        NULL,
+        nullable = TRUE,
+        description = "Optional sample or model label column."
+      ),
+      fold = prop_string(
+        NULL,
+        nullable = TRUE,
+        description = "Optional resample column; aggregate identifies pooled curves."
+      ),
+      omitted = prop_string(
+        NULL,
+        nullable = TRUE,
+        description = "Optional omitted-observation count column, constant within each curve."
+      ),
+      variant = prop_string(
+        "aggregate",
+        enum = c("aggregate", "per_resample"),
+        description = "Draw pooled curves or separate resample curves."
+      ),
+      digits = prop_integer(
+        3L,
+        min = 0L,
+        max = 8L,
+        description = "Decimal places for AUC labels and tooltip values."
+      ),
+      diagonal = prop_boolean(
+        TRUE,
+        description = "Show an independent chance diagonal."
+      ),
+      diagonal_color = prop_string(
+        "#888888",
+        description = "Chance-line color."
+      ),
+      palette = prop_string(
+        NULL,
+        nullable = TRUE,
+        vector = TRUE,
+        description = "Group colors; unset uses the chart theme."
+      ),
+      legend = prop_boolean(
+        TRUE,
+        description = "Show group labels and AUC summaries."
+      ),
+
+      square = prop_boolean(
+        TRUE,
+        description = "Keep the plotting grid square."
+      ),
+      line_width = prop_float(
+        2,
+        exclusive_min = 0,
+        description = "Curve stroke width in pixels."
+      ),
+      fold_opacity = prop_float(
+        0.45,
+        min = 0,
+        max = 1,
+        description = "Opacity of individual resample curves."
+      ),
+      xlab = prop_string(
+        "False positive rate",
+        description = "Horizontal axis label."
+      ),
+      ylab = prop_string(
+        "True positive rate",
+        description = "Vertical axis label."
+      )
     )
   ),
   validator = function(self) {
@@ -173,7 +178,8 @@ setup_ROCConfig <- function(
   diagonal_color = "#888888",
   palette = NULL,
   legend = TRUE,
-  legend_position = "bottom-right",
+  legend_position = "top",
+  legend_placement = "outside",
   square = TRUE,
   line_width = 2,
   fold_opacity = 0.45,
@@ -200,6 +206,7 @@ setup_ROCConfig <- function(
     palette = palette,
     legend = legend,
     legend_position = legend_position,
+    legend_placement = legend_placement,
     square = square,
     line_width = line_width,
     fold_opacity = fold_opacity,
@@ -220,7 +227,7 @@ method(compile, ROCConfig) <- function(config, data = NULL, ...) {
 }
 
 method(render_meta, ROCConfig) <- function(config, option) {
-  meta <- list(legendPosition = config@legend_position)
+  meta <- list()
   if (!config@square) {
     return(meta)
   }
@@ -235,7 +242,7 @@ method(render_meta, ROCConfig) <- function(config, option) {
   meta
 }
 
-#' Render a ROC config with an inset legend
+#' Render a ROC config with shared legend layout
 #' @inheritParams draw
 #' @param data Optional Data frame: Long ROC records.
 #' @return An ECharts htmlwidget.

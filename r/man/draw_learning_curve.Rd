@@ -16,7 +16,9 @@ draw_learning_curve(
   height = NULL,
   element_id = NULL,
   filename = NULL,
-  ...
+  ...,
+  legend_position = "top",
+  legend_placement = "outside"
 )
 }
 \arguments{
@@ -53,6 +55,15 @@ container. \code{NULL} lets htmlwidgets generate one.}
 \item{...}{Additional appearance and axis arguments to \code{\link[=setup_LineConfig]{setup_LineConfig()}},
 such as \code{palette}, \code{zoom}, \code{points}, \code{xlim}, and \code{margin_top}. The data
 bindings are determined by the loss table.}
+
+\item{legend_position}{Character \{"top", "bottom", "left", "right",
+"top-left", "top-right", "bottom-left", "bottom-right"\}: Legend anchor.
+Top/bottom anchors use horizontal rows; left/right anchors use a vertical
+column. Corner anchors align within the top or bottom row.}
+
+\item{legend_placement}{Character \{"outside", "inside"\}: Relation to the
+plotting area. Outside placement reserves space for the complete legend;
+inside placement overlays the data. Neither setting adds a missing legend.}
 }
 \value{
 htmlwidget: ECharts learning curve.

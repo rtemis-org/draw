@@ -458,6 +458,40 @@ S7::method(to_list, ScatterSeries) <- function(x, ...) {
 
 # -- PieSeries ------------------------------------------------------------------
 
+#' Pie Label Options
+#'
+#' Outside-label alignment for pie and rose charts. Extends [LabelOption].
+#' Corresponds to `PieLabelOption` in `src/chart/pie/PieSeries.ts`.
+#' ECharts docs: https://echarts.apache.org/en/option.html#series-pie.label
+#'
+#' @inheritParams LabelOption
+#' @param align_to Optional Character \{"none", "labelLine", "edge"\}: Outside-label alignment.
+#' @param edge_distance Optional Numeric or Character: Distance from the plot edge.
+#' @param bleed_margin Optional Numeric: Space outside labels when not edge-aligned.
+#' @param distance_to_label_line Optional Numeric: Gap between label and guide line.
+#' @return A `PieLabelOption` object.
+#' @export
+#' @examples
+#' PieLabelOption(align_to = "edge", edge_distance = 8)
+PieLabelOption <- S7::new_class(
+  "PieLabelOption",
+  parent = LabelOption,
+  properties = list(
+    align_to = prop_string(
+      enum = c("none", "labelLine", "edge"),
+      nullable = TRUE
+    ),
+    edge_distance = numeric_or_string_property(),
+    bleed_margin = numeric_or_null_property(),
+    distance_to_label_line = numeric_or_null_property()
+  )
+)
+
+S7::method(to_list, PieLabelOption) <- function(x, ...) {
+  # Preserve the parent's flattened TextStyle serialization.
+  S7::method(to_list, LabelOption)(x, ...)
+}
+
 #' Pie Series
 #'
 #' Configuration for a pie chart series.

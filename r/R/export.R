@@ -10,15 +10,19 @@
 #' Save a Draw Widget to a File
 #'
 #' Exports a widget created by [draw()] (or any of the `draw_*`
-#' functions) to a static file. Currently supports ECharts `.svg` via Node.js
+#' functions) to a static file. Supports `.svg` for ECharts, Sigma networks, and MapLibre maps via Node.js
 #' server-side rendering, including complete [draw_panels()] figures. Requires
 #' a `node` binary on `PATH`.
 #'
 #' Callbacks under tooltips, axis pointers, and interactive toolbox controls
 #' are omitted. Other JavaScript callbacks are rejected because discarding them
 #' could change visible content. Built-in Gantt, dendrogram, and boxplot point renderers are
-#' shared with the browser widget and use JSON parameters. Network and map
-#' exports are not yet implemented.
+#' shared with the browser widget and use JSON parameters. Networks share their
+#' deterministic layout and styles with the interactive widget. Maps share
+#' geometry, location joins, and color scales and use a Mercator projection.
+#' Exports show the initial configured view; browser camera changes and hover
+#' states are not stored in the R widget. SVG text remains editable. Network
+#' labels are fitted to the page and suppressed when they overlap.
 #'
 #' @param widget htmlwidget: A widget returned by [draw()] or a `draw_*` function.
 #' @param filename Character scalar: Nonempty output path with an extension.
@@ -96,16 +100,30 @@ save_drawing <- function(widget, filename, width = NULL, height = NULL) {
     )
   }
 
-  # Reject other backends before looking for an ECharts option. An SVG-shaped
-  # file is not proof that the requested network or map was rendered.
-  if (!inherits(widget, "rtemis-draw") && !inherits(widget, "rtemis-panels")) {
+  if (
+    !inherits(
+      widget,
+      c("rtemis-draw", "rtemis-panels", "rtemis-graph", "rtemis-map")
+    )
+  ) {
     abort(
-      "SVG export currently supports ECharts widgets only; ",
-      "network, map, and other widget exporters are not implemented.",
+      "SVG export supports rtemis.draw ECharts, network, and map widgets only.",
       class = c("rtemis_export_error", "rtemis_input_error")
     )
   }
   payload <- widget[["x"]]
+  if (inherits(widget, c("rtemis-graph", "rtemis-map"))) {
+    save_svg_ssr(
+      NULL,
+      strip_js(payload[["theme"]], path = "theme"),
+      filename,
+      width,
+      height,
+      backend = if (inherits(widget, "rtemis-graph")) "graph" else "map",
+      scene = strip_js(payload, path = "scene")
+    )
+    return(invisible(filename))
+  }
   if (inherits(widget, "rtemis-panels")) {
     panels <- lapply(seq_along(payload[["panels"]]), function(i) {
       strip_js(payload[["panels"]][[i]], path = paste0("panels[", i, "]"))
@@ -134,6 +152,7 @@ save_drawing <- function(widget, filename, width = NULL, height = NULL) {
     height,
     aspect = payload[["aspect"]],
     legend_position = payload[["legendPosition"]],
+    legend_placement = payload[["legendPlacement"]],
     confusion = payload[["confusion"]],
     meta = payload[intersect(
       names(payload),
@@ -146,6 +165,8 @@ save_drawing <- function(widget, filename, width = NULL, height = NULL) {
         "rightPx",
         "topPx",
         "botPx",
+        "legendTarget",
+        "legendReserveRight",
         "colorLight",
         "colorDark"
       )
@@ -285,10 +306,13 @@ method(strip_js, class_any) <- function(
 #' @param width,height Numeric scalars: Finite positive image dimensions.
 #' @param panels,layout Optional List: Child payloads and resolved panel layout.
 #' @param aspect Optional List: Fixed-ratio render metadata for a single chart.
-#' @param legend_position Optional Character: Inset ROC legend corner.
+#' @param legend_position Optional Character: Legend edge or corner.
+#' @param legend_placement Optional Character: Outside or inside placement.
 #' @param confusion Optional List: Theme and square-cell constraints for confusion plots.
 #' @param meta Optional List: Declarative heatmap geometry and palette hints shared
 #'   with the browser renderer.
+#' @param backend Optional Character: Non-ECharts backend identifier.
+#' @param scene Optional List: Portable network or map widget payload.
 #' @return Logical, invisibly, indicating successful file copy.
 #' @keywords internal
 #' @noRd
@@ -302,8 +326,11 @@ save_svg_ssr <- function(
   layout = NULL,
   aspect = NULL,
   legend_position = NULL,
+  legend_placement = NULL,
   confusion = NULL,
-  meta = NULL
+  meta = NULL,
+  backend = NULL,
+  scene = NULL
 ) {
   node <- Sys.which("node")
   if (!nzchar(node)) {
@@ -327,10 +354,13 @@ save_svg_ssr <- function(
     meta,
     list(
       option = option,
+      backend = backend,
+      scene = scene,
       panels = panels,
       layout = layout,
       aspect = aspect,
       legendPosition = legend_position,
+      legendPlacement = legend_placement,
       confusion = confusion,
       theme = theme,
       width = width,

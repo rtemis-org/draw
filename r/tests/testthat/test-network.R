@@ -271,19 +271,19 @@ test_that("draw(SigmaOption) honours an explicit theme and NA (no theme)", {
   expect_null(wna$x$autoTheme)
 })
 
-test_that("draw(SigmaOption) rejects static export requests", {
+test_that("draw(SigmaOption) exports network SVG", {
+  skip_if_not(nzchar(Sys.which("node")), "node not found")
+  path <- tempfile(fileext = ".svg")
+  on.exit(unlink(path), add = TRUE)
   m <- GraphModel(
     nodes = list(GraphNode(id = "a")),
     edges = list(),
     directed = FALSE
   )
-  path <- tempfile(fileext = ".svg")
-  expect_error(
-    draw(SigmaOption(model = m), filename = path),
-    "not yet supported",
-    class = "rtemis_export_error"
-  )
-  expect_false(file.exists(path))
+  w <- draw(SigmaOption(model = m), filename = path)
+  expect_s3_class(w, "htmlwidget")
+  expect_true(file.exists(path))
+  expect_match(paste(readLines(path, warn = FALSE), collapse = ""), "<svg")
 })
 
 test_that("draw() still renders an EChartsOption and a bare list", {

@@ -9,6 +9,8 @@ SpectrogramConfig(
   title = NULL,
   origin = NULL,
   writer = NULL,
+  legend_position = "right",
+  legend_placement = "outside",
   sample_rate = NULL,
   n_fft = 256L,
   window = "hanning",
@@ -49,6 +51,15 @@ authored config; written by the interface that resolved it.}
 
 \item{writer}{Optional Named character: Which interface wrote the config, as
 \code{name} and \code{version}. Absent on an authored config.}
+
+\item{legend_position}{Character \{"top", "bottom", "left", "right",
+"top-left", "top-right", "bottom-left", "bottom-right"\}: Legend anchor.
+Top/bottom anchors use horizontal rows; left/right anchors use a vertical
+column. Corner anchors align within the top or bottom row.}
+
+\item{legend_placement}{Character \{"outside", "inside"\}: Relation to the
+plotting area. Outside placement reserves space for the complete legend;
+inside placement overlays the data. Neither setting adds a missing legend.}
 
 \item{sample_rate}{Optional Numeric \verb{[0, Inf)}: Signal sample rate in Hz.}
 

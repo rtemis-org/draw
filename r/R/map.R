@@ -213,8 +213,6 @@ S7::method(to_list, MapModel) <- function(x, ...) {
 #'   "bottom-right"\}: Legend corner.
 #' @param tooltip_position Character \{"top-left", "top-right", "bottom-left",
 #'   "bottom-right"\}: Hover tooltip corner.
-#' @param report_position Character \{"top-left", "top-right", "bottom-left",
-#'   "bottom-right"\}: Join-report corner (shows matched / unmatched counts).
 #' @param title Optional Character: Title (currently surfaced via the value
 #'   label; reserved for future use).
 #'
@@ -263,7 +261,6 @@ MapLibreOption <- S7::new_class(
     show_legend = logical_default(TRUE),
     legend_position = map_enum_default(map_corners, "bottom-right"),
     tooltip_position = map_enum_default(map_corners, "top-right"),
-    report_position = map_enum_default(map_corners, "bottom-left"),
     title = prop_string(nullable = TRUE)
   )
 )
@@ -282,8 +279,7 @@ S7::method(to_list, MapLibreOption) <- function(x, ...) {
       outlineWidth = x@outline_width,
       showLegend = x@show_legend,
       legendPosition = x@legend_position,
-      tooltipPosition = x@tooltip_position,
-      reportPosition = x@report_position
+      tooltipPosition = x@tooltip_position
     )
   )
   if (!is.null(x@title)) {
@@ -380,19 +376,12 @@ S7::method(draw, MapLibreOption) <- function(
   ...
 ) {
   check_dots_empty(...)
-  if (!is.null(filename)) {
-    abort(
-      "Static export of map widgets is not yet supported. ",
-      "Omit `filename` to create an interactive widget.",
-      class = c("rtemis_export_error", "rtemis_input_error")
-    )
-  }
 
   payload <- to_list(option)
   resolution <- payload[["model"]][["resolution"]] %||% "country"
   payload[["geo"]] <- load_map_geometry(resolution)
 
-  render_widget(
+  widget <- render_widget(
     "rtemis-map",
     payload,
     theme = theme,
@@ -400,6 +389,10 @@ S7::method(draw, MapLibreOption) <- function(
     height = height,
     element_id = element_id
   )
+  if (!is.null(filename)) {
+    save_drawing(widget, filename, width, height)
+  }
+  widget
 }
 
 # -- Model builder --------------------------------------------------------------
@@ -509,14 +502,12 @@ map_option <- function(
   show_legend = TRUE,
   legend_position = "bottom-right",
   tooltip_position = "top-right",
-  report_position = "bottom-left",
   title = NULL
 ) {
   classification <- match.arg(classification, map_classifications)
   colormap <- match.arg(colormap, map_color_schemes)
   legend_position <- match.arg(legend_position, map_corners)
   tooltip_position <- match.arg(tooltip_position, map_corners)
-  report_position <- match.arg(report_position, map_corners)
 
   option <- MapLibreOption(
     model = model,
@@ -529,7 +520,6 @@ map_option <- function(
     show_legend = show_legend,
     legend_position = legend_position,
     tooltip_position = tooltip_position,
-    report_position = report_position,
     title = title
   )
 
@@ -574,7 +564,6 @@ draw_map <- function(
   show_legend = TRUE,
   legend_position = "bottom-right",
   tooltip_position = "top-right",
-  report_position = "bottom-left",
   title = NULL,
   theme = NULL,
   width = NULL,
@@ -593,7 +582,6 @@ draw_map <- function(
     show_legend = show_legend,
     legend_position = legend_position,
     tooltip_position = tooltip_position,
-    report_position = report_position,
     title = title
   )
 
@@ -673,7 +661,6 @@ draw_choropleth <- function(
   show_legend = TRUE,
   legend_position = "bottom-right",
   tooltip_position = "top-right",
-  report_position = "bottom-left",
   title = NULL,
   theme = NULL,
   width = NULL,
@@ -703,7 +690,6 @@ draw_choropleth <- function(
     show_legend = show_legend,
     legend_position = legend_position,
     tooltip_position = tooltip_position,
-    report_position = report_position,
     title = title,
     theme = theme,
     width = width,

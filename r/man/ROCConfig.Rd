@@ -9,6 +9,8 @@ ROCConfig(
   title = NULL,
   origin = NULL,
   writer = NULL,
+  legend_position = "top",
+  legend_placement = "outside",
   fpr = "fpr",
   tpr = "tpr",
   auc = NULL,
@@ -22,7 +24,6 @@ ROCConfig(
   diagonal_color = "#888888",
   palette = NULL,
   legend = TRUE,
-  legend_position = "bottom-right",
   square = TRUE,
   line_width = 2,
   fold_opacity = 0.45,
@@ -34,9 +35,7 @@ ROCConfig(
 \item{dat_path}{Optional Character: Path to the data, read at draw time. The
 serializable alternative to passing \code{data} to \code{\link[=draw]{draw()}}.}
 
-\item{title}{Optional Character: Chart title. Declared here because it is the
-one property every chart type has; \code{palette} is not (four take a \code{colormap}
-instead), and axis labels and margins are cartesian-only.}
+\item{title}{Optional Character: Chart title.}
 
 \item{origin}{Optional Named character \{"user", "default", "derived"\}: Where
 each value came from, one entry per settable property. Absent on an
@@ -44,6 +43,15 @@ authored config; written by the interface that resolved it.}
 
 \item{writer}{Optional Named character: Which interface wrote the config, as
 \code{name} and \code{version}. Absent on an authored config.}
+
+\item{legend_position}{Character \{"top", "bottom", "left", "right",
+"top-left", "top-right", "bottom-left", "bottom-right"\}: Legend anchor.
+Top/bottom anchors use horizontal rows; left/right anchors use a vertical
+column. Corner anchors align within the top or bottom row.}
+
+\item{legend_placement}{Character \{"outside", "inside"\}: Relation to the
+plotting area. Outside placement reserves space for the complete legend;
+inside placement overlays the data. Neither setting adds a missing legend.}
 
 \item{fpr}{Character: Column containing false positive rates.}
 
@@ -70,8 +78,6 @@ authored config; written by the interface that resolved it.}
 \item{palette}{Optional Character: Group colors; unset uses the chart theme.}
 
 \item{legend}{Logical: Show group labels and AUC summaries.}
-
-\item{legend_position}{Character \{"bottom-right", "top-right", "top-left", "bottom-left"\}: Corner inside the plotting area for the legend.}
 
 \item{square}{Logical: Keep the plotting grid square.}
 
@@ -103,7 +109,7 @@ by missing FPR, TPR, and AUC and is reported in the console when omitted.
 Per-resample legends report the unweighted mean and sample SD of defined
 fold AUCs, with available/total curve counts. SD is NA for one defined fold.
 Pooled AUC is never inferred from per-fold AUCs.
-The legend is inset in the chosen corner of the plotting area. Curve identity
+The legend uses the shared position and placement controls. Curve identity
 and AUC share a line; long labels wrap to the available width. All entries
 remain present in static SVG output, without a scrolling legend.
 Hover describes the selected curve, including its resample identifier.

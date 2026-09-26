@@ -34,6 +34,7 @@
 #' @param xlab,ylab Optional Character: Axis labels.
 #' @param margin_top,margin_right,margin_bottom,margin_left Optional Integer
 #'   `[0, Inf)`: Plot margins in pixels.
+#' @inheritParams draw_line legend_position legend_placement
 #' @inheritParams ChartConfig
 #'
 #' @return `BoxplotConfig` object.
@@ -47,110 +48,113 @@ BoxplotConfig <- new_class(
   name = "BoxplotConfig",
   parent = ChartConfig,
   package = "rtemis.draw",
-  properties = list(
-    type = prop_chart_type("boxplot"),
-    # -- data binding ------------------------------------------------------
-    x = prop_string(
-      NULL,
-      nullable = TRUE,
-      vector = TRUE,
-      description = "Columns to summarize, one box each."
-    ),
-    group = prop_string(
-      NULL,
-      nullable = TRUE,
-      description = "Column that splits each box into one per level."
-    ),
-    observation = prop_string(
-      NULL,
-      nullable = TRUE,
-      description = "Column identifying observations in point tooltips."
-    ),
-    quartiles = prop_string(
-      "linear",
-      enum = c("linear", "hinges"),
-      description = "Linear type-7 quartiles or Tukey hinges."
-    ),
-    whisker = prop_float(
-      1.5,
-      min = 0,
-      description = "IQR multiplier for whisker fences; zero uses the full range."
-    ),
-    boxpoints = prop_string(
-      "none",
-      enum = c("none", "all", "outliers"),
-      description = "Which observed values to overlay."
-    ),
-    point_size = prop_float(
-      5,
-      exclusive_min = 0,
-      description = "Point diameter in pixels."
-    ),
-    point_alpha = prop_float(
-      0.6,
-      min = 0,
-      max = 1,
-      description = "Point opacity."
-    ),
-    point_spread = prop_float(
-      0.5,
-      min = 0,
-      max = 1,
-      description = "Fraction of box width occupied by deterministic point offsets."
-    ),
-    # -- semantics ---------------------------------------------------------
-    horizontal = prop_boolean(
-      FALSE,
-      description = "Draw the boxes horizontally."
-    ),
-    na_rm = prop_boolean(
-      TRUE,
-      description = "Drop missing values before summarizing; false rejects missing input."
-    ),
-    # -- appearance --------------------------------------------------------
-    labels = prop_string(
-      NULL,
-      nullable = TRUE,
-      vector = TRUE,
-      description = "Box labels. Unset uses the bound column names."
-    ),
-    palette = prop_string(
-      NULL,
-      nullable = TRUE,
-      vector = TRUE,
-      description = "Box colors. Unset uses the package box colors."
-    ),
-    fill_alpha = prop_float(
-      0.25,
-      min = 0,
-      max = 1,
-      description = "Box fill opacity."
-    ),
-    xlab = prop_string(NULL, nullable = TRUE, description = "X axis label."),
-    ylab = prop_string(NULL, nullable = TRUE, description = "Y axis label."),
-    margin_top = prop_integer(
-      NULL,
-      min = 0L,
-      nullable = TRUE,
-      description = "Top margin in pixels."
-    ),
-    margin_right = prop_integer(
-      NULL,
-      min = 0L,
-      nullable = TRUE,
-      description = "Right margin in pixels."
-    ),
-    margin_bottom = prop_integer(
-      NULL,
-      min = 0L,
-      nullable = TRUE,
-      description = "Bottom margin in pixels."
-    ),
-    margin_left = prop_integer(
-      NULL,
-      min = 0L,
-      nullable = TRUE,
-      description = "Left margin in pixels."
+  properties = c(
+    legend_properties(),
+    list(
+      type = prop_chart_type("boxplot"),
+      # -- data binding ------------------------------------------------------
+      x = prop_string(
+        NULL,
+        nullable = TRUE,
+        vector = TRUE,
+        description = "Columns to summarize, one box each."
+      ),
+      group = prop_string(
+        NULL,
+        nullable = TRUE,
+        description = "Column that splits each box into one per level."
+      ),
+      observation = prop_string(
+        NULL,
+        nullable = TRUE,
+        description = "Column identifying observations in point tooltips."
+      ),
+      quartiles = prop_string(
+        "linear",
+        enum = c("linear", "hinges"),
+        description = "Linear type-7 quartiles or Tukey hinges."
+      ),
+      whisker = prop_float(
+        1.5,
+        min = 0,
+        description = "IQR multiplier for whisker fences; zero uses the full range."
+      ),
+      boxpoints = prop_string(
+        "none",
+        enum = c("none", "all", "outliers"),
+        description = "Which observed values to overlay."
+      ),
+      point_size = prop_float(
+        5,
+        exclusive_min = 0,
+        description = "Point diameter in pixels."
+      ),
+      point_alpha = prop_float(
+        0.6,
+        min = 0,
+        max = 1,
+        description = "Point opacity."
+      ),
+      point_spread = prop_float(
+        0.5,
+        min = 0,
+        max = 1,
+        description = "Fraction of box width occupied by deterministic point offsets."
+      ),
+      # -- semantics ---------------------------------------------------------
+      horizontal = prop_boolean(
+        FALSE,
+        description = "Draw the boxes horizontally."
+      ),
+      na_rm = prop_boolean(
+        TRUE,
+        description = "Drop missing values before summarizing; false rejects missing input."
+      ),
+      # -- appearance --------------------------------------------------------
+      labels = prop_string(
+        NULL,
+        nullable = TRUE,
+        vector = TRUE,
+        description = "Box labels. Unset uses the bound column names."
+      ),
+      palette = prop_string(
+        NULL,
+        nullable = TRUE,
+        vector = TRUE,
+        description = "Box colors. Unset uses the package box colors."
+      ),
+      fill_alpha = prop_float(
+        0.25,
+        min = 0,
+        max = 1,
+        description = "Box fill opacity."
+      ),
+      xlab = prop_string(NULL, nullable = TRUE, description = "X axis label."),
+      ylab = prop_string(NULL, nullable = TRUE, description = "Y axis label."),
+      margin_top = prop_integer(
+        NULL,
+        min = 0L,
+        nullable = TRUE,
+        description = "Top margin in pixels."
+      ),
+      margin_right = prop_integer(
+        NULL,
+        min = 0L,
+        nullable = TRUE,
+        description = "Right margin in pixels."
+      ),
+      margin_bottom = prop_integer(
+        NULL,
+        min = 0L,
+        nullable = TRUE,
+        description = "Bottom margin in pixels."
+      ),
+      margin_left = prop_integer(
+        NULL,
+        min = 0L,
+        nullable = TRUE,
+        description = "Left margin in pixels."
+      )
     )
   )
 ) # /rtemis.draw::BoxplotConfig
@@ -207,7 +211,9 @@ setup_BoxplotConfig <- function(
   margin_left = NULL,
   dat_path = NULL,
   origin = NULL,
-  writer = NULL
+  writer = NULL,
+  legend_position = "top",
+  legend_placement = "outside"
 ) {
   origin <- origin %||% chart_origin(match.call(), BOXPLOT_ORIGIN_NAMES)
   BoxplotConfig(
@@ -233,6 +239,8 @@ setup_BoxplotConfig <- function(
     margin_bottom = margin_bottom,
     margin_left = margin_left,
     dat_path = dat_path,
+    legend_position = legend_position,
+    legend_placement = legend_placement,
     origin = origin,
     writer = writer
   )

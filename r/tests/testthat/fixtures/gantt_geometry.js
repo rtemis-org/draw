@@ -35,11 +35,11 @@ for (const payload of input.payloads) {
       const legend = model.getComponent('legend');
       if (legend) {
         if (width <= 390) assert.equal(legend.get('orient'), 'horizontal');
-        if (width === 900) assert.equal(legend.get('orient'), 'vertical');
+        if (width === 900) assert.equal(legend.get('orient'), 'horizontal');
         const b = bounds(chart, 'legend');
         assert.ok(b.x >= -1 && b.y >= -1 && b.x + b.width <= width + 1 && b.y + b.height <= 701);
         if (legend.get('orient') === 'horizontal') {
-          assert.ok(b.y > rect.y + rect.height + 25, 'Legend overlaps time labels');
+          assert.ok(b.y + b.height <= rect.y, 'Legend overlaps timeline');
         }
         chart.dispatchAction({type: 'legendUnSelect', name: 'train'});
         chart.dispatchAction({type: 'dataZoom', dataZoomIndex: 0, start: 10, end: 80});
@@ -60,6 +60,7 @@ for (const payload of input.payloads) {
 }
 // Callers using low-level options retain their chosen legend placement.
 const manual = JSON.parse(JSON.stringify(input.payloads[0]));
+delete manual.legendPosition; delete manual.legendPlacement;
 manual.option.legend = {orient: 'horizontal', left: 'center', top: 50};
 const widget = context.rtemisDrawFactory({style: {}, parentElement: body}, 390, 700, true);
 try {

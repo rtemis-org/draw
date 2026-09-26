@@ -45,6 +45,7 @@
 #'   orientation.
 #' @param margin_top,margin_right,margin_bottom,margin_left Optional Integer
 #'   `[0, Inf)`: Override the auto-computed margins, per side.
+#' @inheritParams draw_line legend_position legend_placement
 #' @inheritParams ChartConfig
 #'
 #' @return `HeatmapConfig` object.
@@ -58,141 +59,144 @@ HeatmapConfig <- new_class(
   name = "HeatmapConfig",
   parent = ChartConfig,
   package = "rtemis.draw",
-  properties = list(
-    type = prop_chart_type("heatmap"),
-    # -- data binding: labels for the bound matrix --------------------------
-    row_names = prop_string(
-      NULL,
-      nullable = TRUE,
-      vector = TRUE,
-      description = "Row labels overriding the matrix dimnames."
-    ),
-    col_names = prop_string(
-      NULL,
-      nullable = TRUE,
-      vector = TRUE,
-      description = "Column labels overriding the matrix dimnames."
-    ),
-    # -- semantics ---------------------------------------------------------
-    triangle = prop_string(
-      NULL,
-      enum = c("lower", "upper"),
-      nullable = TRUE,
-      description = "Show only one triangle, for a symmetric matrix."
-    ),
-    cluster_rows = prop_boolean(
-      FALSE,
-      description = "Reorder rows by hierarchical clustering."
-    ),
-    cluster_cols = prop_boolean(
-      FALSE,
-      description = "Reorder columns by hierarchical clustering."
-    ),
-    dist_method = prop_string(
-      "euclidean",
-      description = "Distance measure for clustering."
-    ),
-    hclust_method = prop_string(
-      "complete",
-      description = "Linkage method for clustering."
-    ),
-    square_cells = prop_boolean(
-      NULL,
-      nullable = TRUE,
-      description = "Force square cells, sizing the container to match."
-    ),
-    # -- appearance --------------------------------------------------------
-    show_row_dendro = prop_boolean(
-      TRUE,
-      description = "Draw the row dendrogram."
-    ),
-    show_col_dendro = prop_boolean(
-      TRUE,
-      description = "Draw the column dendrogram."
-    ),
-    dendro_row_width = prop_float(
-      60,
-      min = 0,
-      description = "Row dendrogram panel width in pixels."
-    ),
-    dendro_col_height = prop_float(
-      60,
-      min = 0,
-      description = "Column dendrogram panel height in pixels."
-    ),
-    dendro_color = prop_string(
-      NULL,
-      nullable = TRUE,
-      description = "Dendrogram line color."
-    ),
-    dendro_uniform = prop_boolean(
-      FALSE,
-      description = "Draw dendrograms with uniform branch heights."
-    ),
-    dendro_row_side = prop_string(
-      "right",
-      enum = c("left", "right"),
-      description = "Which side the row dendrogram is drawn on."
-    ),
-    dendro_col_side = prop_string(
-      "top",
-      enum = c("top", "bottom"),
-      description = "Which side the column dendrogram is drawn on."
-    ),
-    colormap = prop_string(
-      NULL,
-      nullable = TRUE,
-      vector = TRUE,
-      description = paste(
-        "Colors defining the continuous scale. Unset derives a theme-aware",
-        "diverging or sequential scale."
+  properties = c(
+    legend_properties("right"),
+    list(
+      type = prop_chart_type("heatmap"),
+      # -- data binding: labels for the bound matrix --------------------------
+      row_names = prop_string(
+        NULL,
+        nullable = TRUE,
+        vector = TRUE,
+        description = "Row labels overriding the matrix dimnames."
+      ),
+      col_names = prop_string(
+        NULL,
+        nullable = TRUE,
+        vector = TRUE,
+        description = "Column labels overriding the matrix dimnames."
+      ),
+      # -- semantics ---------------------------------------------------------
+      triangle = prop_string(
+        NULL,
+        enum = c("lower", "upper"),
+        nullable = TRUE,
+        description = "Show only one triangle, for a symmetric matrix."
+      ),
+      cluster_rows = prop_boolean(
+        FALSE,
+        description = "Reorder rows by hierarchical clustering."
+      ),
+      cluster_cols = prop_boolean(
+        FALSE,
+        description = "Reorder columns by hierarchical clustering."
+      ),
+      dist_method = prop_string(
+        "euclidean",
+        description = "Distance measure for clustering."
+      ),
+      hclust_method = prop_string(
+        "complete",
+        description = "Linkage method for clustering."
+      ),
+      square_cells = prop_boolean(
+        NULL,
+        nullable = TRUE,
+        description = "Force square cells, sizing the container to match."
+      ),
+      # -- appearance --------------------------------------------------------
+      show_row_dendro = prop_boolean(
+        TRUE,
+        description = "Draw the row dendrogram."
+      ),
+      show_col_dendro = prop_boolean(
+        TRUE,
+        description = "Draw the column dendrogram."
+      ),
+      dendro_row_width = prop_float(
+        60,
+        min = 0,
+        description = "Row dendrogram panel width in pixels."
+      ),
+      dendro_col_height = prop_float(
+        60,
+        min = 0,
+        description = "Column dendrogram panel height in pixels."
+      ),
+      dendro_color = prop_string(
+        NULL,
+        nullable = TRUE,
+        description = "Dendrogram line color."
+      ),
+      dendro_uniform = prop_boolean(
+        FALSE,
+        description = "Draw dendrograms with uniform branch heights."
+      ),
+      dendro_row_side = prop_string(
+        "right",
+        enum = c("left", "right"),
+        description = "Which side the row dendrogram is drawn on."
+      ),
+      dendro_col_side = prop_string(
+        "top",
+        enum = c("top", "bottom"),
+        description = "Which side the column dendrogram is drawn on."
+      ),
+      colormap = prop_string(
+        NULL,
+        nullable = TRUE,
+        vector = TRUE,
+        description = paste(
+          "Colors defining the continuous scale. Unset derives a theme-aware",
+          "diverging or sequential scale."
+        )
+      ),
+      zlim = prop_float(
+        NULL,
+        nullable = TRUE,
+        vector = TRUE,
+        min_items = 2L,
+        description = "Color-scale limits."
+      ),
+      show_values = prop_boolean(
+        FALSE,
+        description = "Print each cell's value."
+      ),
+      value_digits = prop_integer(
+        2L,
+        min = 0L,
+        description = "Digits for printed values."
+      ),
+      show_colorbar = prop_boolean(TRUE, description = "Draw the color bar."),
+      colorbar_orient = prop_string(
+        "vertical",
+        enum = c("vertical", "horizontal"),
+        description = "Color bar orientation."
+      ),
+      margin_top = prop_integer(
+        NULL,
+        min = 0L,
+        nullable = TRUE,
+        description = "Top margin override in pixels."
+      ),
+      margin_right = prop_integer(
+        NULL,
+        min = 0L,
+        nullable = TRUE,
+        description = "Right margin override in pixels."
+      ),
+      margin_bottom = prop_integer(
+        NULL,
+        min = 0L,
+        nullable = TRUE,
+        description = "Bottom margin override in pixels."
+      ),
+      margin_left = prop_integer(
+        NULL,
+        min = 0L,
+        nullable = TRUE,
+        description = "Left margin override in pixels."
       )
-    ),
-    zlim = prop_float(
-      NULL,
-      nullable = TRUE,
-      vector = TRUE,
-      min_items = 2L,
-      description = "Color-scale limits."
-    ),
-    show_values = prop_boolean(
-      FALSE,
-      description = "Print each cell's value."
-    ),
-    value_digits = prop_integer(
-      2L,
-      min = 0L,
-      description = "Digits for printed values."
-    ),
-    show_colorbar = prop_boolean(TRUE, description = "Draw the color bar."),
-    colorbar_orient = prop_string(
-      "vertical",
-      enum = c("vertical", "horizontal"),
-      description = "Color bar orientation."
-    ),
-    margin_top = prop_integer(
-      NULL,
-      min = 0L,
-      nullable = TRUE,
-      description = "Top margin override in pixels."
-    ),
-    margin_right = prop_integer(
-      NULL,
-      min = 0L,
-      nullable = TRUE,
-      description = "Right margin override in pixels."
-    ),
-    margin_bottom = prop_integer(
-      NULL,
-      min = 0L,
-      nullable = TRUE,
-      description = "Bottom margin override in pixels."
-    ),
-    margin_left = prop_integer(
-      NULL,
-      min = 0L,
-      nullable = TRUE,
-      description = "Left margin override in pixels."
     )
   )
 ) # /rtemis.draw::HeatmapConfig
@@ -255,7 +259,9 @@ setup_HeatmapConfig <- function(
   margin_left = NULL,
   dat_path = NULL,
   origin = NULL,
-  writer = NULL
+  writer = NULL,
+  legend_position = if (colorbar_orient == "horizontal") "bottom" else "right",
+  legend_placement = "outside"
 ) {
   origin <- origin %||% chart_origin(match.call(), HEATMAP_ORIGIN_NAMES)
   HeatmapConfig(
@@ -287,6 +293,8 @@ setup_HeatmapConfig <- function(
     margin_bottom = margin_bottom,
     margin_left = margin_left,
     dat_path = dat_path,
+    legend_position = legend_position,
+    legend_placement = legend_placement,
     origin = origin,
     writer = writer
   )
@@ -390,7 +398,11 @@ method(draw, HeatmapConfig) <- function(
     element_id = element_id,
     filename = filename,
     animation = animation,
-    meta = built[["render"]][["meta"]],
+    meta = c(
+      render_meta(option, built[["option"]]),
+      built[["render"]][["meta"]],
+      list(legendTarget = "visualMap")
+    ),
     ...
   )
 }

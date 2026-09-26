@@ -53,6 +53,7 @@
 #'   `[0, Inf)`: Plot margins in pixels.
 #' @param dat_path Optional Character: Path to the data, read at draw time. The
 #'   serializable alternative to passing `data` to [draw()].
+#' @inheritParams draw_line legend_position legend_placement
 #' @inheritParams ChartConfig
 #'
 #' @return `ScatterConfig` object.
@@ -67,145 +68,148 @@ ScatterConfig <- new_class(
   name = "ScatterConfig",
   parent = ChartConfig,
   package = "rtemis.draw",
-  properties = list(
-    type = prop_chart_type("scatter"),
-    # -- data binding: column names, never values --------------------------
-    x = prop_string(
-      NULL,
-      nullable = TRUE,
-      description = "Column drawn on the x axis."
-    ),
-    y = prop_string(
-      NULL,
-      nullable = TRUE,
-      description = "Column drawn on the y axis."
-    ),
-    size = prop_string(
-      NULL,
-      nullable = TRUE,
-      description = "Column giving per-point size."
-    ),
-    group = prop_string(
-      NULL,
-      nullable = TRUE,
-      description = "Column to group and color points by."
-    ),
-    # -- semantics ---------------------------------------------------------
-    fit = prop_string(
-      NULL,
-      enum = c("glm", "gam"),
-      nullable = TRUE,
-      description = "Fit to overlay. Unset draws no fit."
-    ),
-    se = prop_boolean(
-      TRUE,
-      description = "Shade the fit standard-error band."
-    ),
-    se_times = prop_float(
-      1.96,
-      min = 0,
-      description = "Multiplier for the fitted standard error."
-    ),
-    rsq = prop_boolean(
-      FALSE,
-      description = "Include the fitted model's R-squared in series labels."
-    ),
-    diagonal = prop_boolean(
-      FALSE,
-      description = "Draw the identity line within the axis limits."
-    ),
-    diagonal_color = prop_string(
-      NULL,
-      nullable = TRUE,
-      description = "Identity-line color. Unset uses a neutral gray."
-    ),
-    n_fit = prop_integer(
-      200L,
-      min = 2L,
-      description = "Points used to draw the fit line."
-    ),
-    # -- appearance --------------------------------------------------------
-    fit_alpha = prop_float(
-      0.25,
-      min = 0,
-      max = 1,
-      description = "Opacity of the standard-error band."
-    ),
-    palette = prop_string(
-      NULL,
-      nullable = TRUE,
-      vector = TRUE,
-      description = "Series colors, overriding the theme palette. Unset uses the theme's."
-    ),
-    square = prop_boolean(
-      FALSE,
-      description = paste(
-        "Draw the plotting box square: equal height and width in pixels,",
-        "excluding axis labels and margins."
+  properties = c(
+    legend_properties(),
+    list(
+      type = prop_chart_type("scatter"),
+      # -- data binding: column names, never values --------------------------
+      x = prop_string(
+        NULL,
+        nullable = TRUE,
+        description = "Column drawn on the x axis."
+      ),
+      y = prop_string(
+        NULL,
+        nullable = TRUE,
+        description = "Column drawn on the y axis."
+      ),
+      size = prop_string(
+        NULL,
+        nullable = TRUE,
+        description = "Column giving per-point size."
+      ),
+      group = prop_string(
+        NULL,
+        nullable = TRUE,
+        description = "Column to group and color points by."
+      ),
+      # -- semantics ---------------------------------------------------------
+      fit = prop_string(
+        NULL,
+        enum = c("glm", "gam"),
+        nullable = TRUE,
+        description = "Fit to overlay. Unset draws no fit."
+      ),
+      se = prop_boolean(
+        TRUE,
+        description = "Shade the fit standard-error band."
+      ),
+      se_times = prop_float(
+        1.96,
+        min = 0,
+        description = "Multiplier for the fitted standard error."
+      ),
+      rsq = prop_boolean(
+        FALSE,
+        description = "Include the fitted model's R-squared in series labels."
+      ),
+      diagonal = prop_boolean(
+        FALSE,
+        description = "Draw the identity line within the axis limits."
+      ),
+      diagonal_color = prop_string(
+        NULL,
+        nullable = TRUE,
+        description = "Identity-line color. Unset uses a neutral gray."
+      ),
+      n_fit = prop_integer(
+        200L,
+        min = 2L,
+        description = "Points used to draw the fit line."
+      ),
+      # -- appearance --------------------------------------------------------
+      fit_alpha = prop_float(
+        0.25,
+        min = 0,
+        max = 1,
+        description = "Opacity of the standard-error band."
+      ),
+      palette = prop_string(
+        NULL,
+        nullable = TRUE,
+        vector = TRUE,
+        description = "Series colors, overriding the theme palette. Unset uses the theme's."
+      ),
+      square = prop_boolean(
+        FALSE,
+        description = paste(
+          "Draw the plotting box square: equal height and width in pixels,",
+          "excluding axis labels and margins."
+        )
+      ),
+      equal_axes = prop_boolean(
+        FALSE,
+        description = paste(
+          "Give one data unit the same size in pixels on both axes. Combined",
+          "with `square`, both axes are made to span the same interval."
+        )
+      ),
+      pad = prop_float(
+        DEFAULT_PAD,
+        min = 0,
+        description = paste(
+          "Fraction of the data range to extend each axis by when the limits",
+          "are not given."
+        )
+      ),
+      xlim = prop_float(
+        NULL,
+        nullable = TRUE,
+        vector = TRUE,
+        min_items = 2L,
+        description = "X axis limits. Unset derives them from the data."
+      ),
+      ylim = prop_float(
+        NULL,
+        nullable = TRUE,
+        vector = TRUE,
+        min_items = 2L,
+        description = "Y axis limits. Unset derives them from the data."
+      ),
+      xlab = prop_string(
+        NULL,
+        nullable = TRUE,
+        description = "X axis label. Unset derives it from the data."
+      ),
+      ylab = prop_string(
+        NULL,
+        nullable = TRUE,
+        description = "Y axis label. Unset derives it from the data."
+      ),
+      margin_top = prop_integer(
+        NULL,
+        min = 0L,
+        nullable = TRUE,
+        description = "Top margin in pixels."
+      ),
+      margin_right = prop_integer(
+        NULL,
+        min = 0L,
+        nullable = TRUE,
+        description = "Right margin in pixels."
+      ),
+      margin_bottom = prop_integer(
+        NULL,
+        min = 0L,
+        nullable = TRUE,
+        description = "Bottom margin in pixels."
+      ),
+      margin_left = prop_integer(
+        NULL,
+        min = 0L,
+        nullable = TRUE,
+        description = "Left margin in pixels."
       )
-    ),
-    equal_axes = prop_boolean(
-      FALSE,
-      description = paste(
-        "Give one data unit the same size in pixels on both axes. Combined",
-        "with `square`, both axes are made to span the same interval."
-      )
-    ),
-    pad = prop_float(
-      DEFAULT_PAD,
-      min = 0,
-      description = paste(
-        "Fraction of the data range to extend each axis by when the limits",
-        "are not given."
-      )
-    ),
-    xlim = prop_float(
-      NULL,
-      nullable = TRUE,
-      vector = TRUE,
-      min_items = 2L,
-      description = "X axis limits. Unset derives them from the data."
-    ),
-    ylim = prop_float(
-      NULL,
-      nullable = TRUE,
-      vector = TRUE,
-      min_items = 2L,
-      description = "Y axis limits. Unset derives them from the data."
-    ),
-    xlab = prop_string(
-      NULL,
-      nullable = TRUE,
-      description = "X axis label. Unset derives it from the data."
-    ),
-    ylab = prop_string(
-      NULL,
-      nullable = TRUE,
-      description = "Y axis label. Unset derives it from the data."
-    ),
-    margin_top = prop_integer(
-      NULL,
-      min = 0L,
-      nullable = TRUE,
-      description = "Top margin in pixels."
-    ),
-    margin_right = prop_integer(
-      NULL,
-      min = 0L,
-      nullable = TRUE,
-      description = "Right margin in pixels."
-    ),
-    margin_bottom = prop_integer(
-      NULL,
-      min = 0L,
-      nullable = TRUE,
-      description = "Bottom margin in pixels."
-    ),
-    margin_left = prop_integer(
-      NULL,
-      min = 0L,
-      nullable = TRUE,
-      description = "Left margin in pixels."
     )
   )
 ) # /rtemis.draw::ScatterConfig
@@ -275,7 +279,9 @@ setup_ScatterConfig <- function(
   se_times = 1.96,
   rsq = FALSE,
   diagonal = FALSE,
-  diagonal_color = NULL
+  diagonal_color = NULL,
+  legend_position = "top",
+  legend_placement = "outside"
 ) {
   # Which values the caller chose, versus which this function filled in. An
   # explicit `origin` (from read_chart_config()) wins: provenance is carried
@@ -309,6 +315,8 @@ setup_ScatterConfig <- function(
     margin_bottom = margin_bottom,
     margin_left = margin_left,
     dat_path = dat_path,
+    legend_position = legend_position,
+    legend_placement = legend_placement,
     origin = origin,
     writer = writer
   )

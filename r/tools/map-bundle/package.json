@@ -2,12 +2,14 @@
   "name": "rtemis-map-bundle",
   "version": "0.0.0",
   "private": true,
-  "description": "Build input for the vendored MapLibre GL + topojson-client + d3-scale-chromatic browser bundle used by the rtemis-map htmlwidget (choropleth maps). Run `npm install && npm run build` to regenerate inst/htmlwidgets/lib/maplibre/rtemis-map-deps.js. Versions are pinned to match rtemislive (~/Code/live).",
+  "description": "Build input for the vendored MapLibre GL + topojson-client + d3-scale-chromatic browser bundle used by the rtemis-map htmlwidget (choropleth maps). Run `npm install && npm run build` to regenerate inst/htmlwidgets/lib/maplibre/rtemis-map-deps.js. Dependencies are pinned.",
   "type": "module",
   "scripts": {
-    "build": "esbuild entry.mjs --bundle --format=iife --global-name=RtemisMap --minify --legal-comments=none --outfile=../../inst/htmlwidgets/lib/maplibre/rtemis-map-deps.js"
+    "build": "esbuild entry.mjs --bundle --format=iife --global-name=RtemisMap --minify --legal-comments=none --outfile=../../inst/htmlwidgets/lib/maplibre/rtemis-map-deps.js",
+    "build:vector": "esbuild vector.mjs --bundle --platform=node --format=cjs --minify --legal-comments=none --outfile=../../inst/node/map-deps.js --banner:js=\"// Bundled licenses: map-deps.LICENSE.txt\""
   },
   "dependencies": {
+    "d3-geo": "3.1.1",
     "d3-scale-chromatic": "3.1.0",
     "maplibre-gl": "5.24.0",
     "topojson-client": "3.1.0"

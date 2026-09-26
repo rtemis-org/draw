@@ -245,9 +245,8 @@ method(roc_input, class_any) <- function(
 #' are deduplicated, curves smoothed, or vertices downsampled.
 #' @inheritSection ROCConfig Statistical semantics
 #' @section Legend placement:
-#' Set `legend_position` to `"bottom-right"`, `"top-right"`, `"top-left"`, or
-#' `"bottom-left"` through `...`. The lower-right default usually leaves the
-#' upper-left region occupied by informative ROC curves unobstructed.
+#' The shared top/outside layout reserves a horizontal band above the plot.
+#' Choose an inside corner to overlay the legend on the data.
 #' @param true_labels Factor, vector, list, or data frame: Reference labels or ROC records.
 #' @param predicted_prob Optional Numeric vector, matrix, or list: Class probabilities.
 #' @param positive Optional Character: Positive class for binary input.
@@ -261,11 +260,14 @@ method(roc_input, class_any) <- function(
 #' @examples
 #' draw_roc(factor(c("no", "yes", "no", "yes")), c(.1, .8, .5, .5))
 #' draw_roc(data.frame(fpr = c(0, 0, 1), tpr = c(0, 1, 1)))
+#' @inheritParams draw_line legend_position legend_placement
 draw_roc <- function(
   true_labels,
   predicted_prob = NULL,
   positive = NULL,
   ...,
+  legend_position = "top",
+  legend_placement = "outside",
   theme = NULL,
   width = NULL,
   height = NULL,
@@ -280,6 +282,8 @@ draw_roc <- function(
     split = binding("split"),
     fold = binding("fold"),
     omitted = binding("omitted"),
+    legend_position = legend_position,
+    legend_placement = legend_placement,
     ...
   )
   draw(
@@ -519,7 +523,7 @@ method(roc_option, ROCConfig) <- function(config, data) {
   labels <- make.unique(labels)
   active <- unique(vapply(curves, `[[`, integer(1), "group"))
   legend_names <- labels[active]
-  # Inset legends do not consume plotting width or add rows beneath the axes.
+  # The shared renderer measures legend space independently of curve geometry.
   bottom <- 65
   if (prepared[["undefined"]]) {
     msg(prepared[["undefined"]], "undefined curve(s) omitted")
@@ -658,14 +662,8 @@ method(roc_option, ROCConfig) <- function(config, data) {
     ),
     legend = Legend(
       show = config@legend,
-      orient = "vertical",
-      # Initial native anchors also make the compiled option useful on its own.
-      # Shared render geometry refines these after square-grid fitting/resizing.
-      left = if (grepl("left$", config@legend_position)) 82,
-      right = if (grepl("right$", config@legend_position)) 36,
-      top = if (startsWith(config@legend_position, "top")) top + 12,
-      bottom = if (startsWith(config@legend_position, "bottom")) bottom + 12,
-      align = "left",
+      orient = "horizontal",
+      # Shared render hints position this native legend after grid measurement.
       padding = 0,
       item_gap = 6,
       icon = "roundRect",

@@ -180,3 +180,11 @@ clean:
 # Inspect installed-package heatmap/A3 browser and vector output (developer QA).
 qa-export output:
     {{rscript}} r/tools/visual-qa/export.R "{{output}}"
+
+# Inspect scatter/line/bar browser interactions and vector output (developer QA).
+qa-foundation output:
+    {{rscript}} r/tools/visual-qa/foundation.R "{{output}}"
+
+# Inspect Sigma/MapLibre browser interactions and genuine vector SVG output.
+qa-backends output:
+    {{rscript}} r/tools/visual-qa/backends.R "{{output}}"

@@ -127,6 +127,7 @@ method(metric_data, class_data.frame) <- function(data, metric = NULL) {
 #'   split = rep(c("Training", "Test"), each = 3), metric = "rsq",
 #'   value = c(.9, .85, .8, .7, .65, .6))
 #' draw_metric(scores)
+#' @inheritParams draw_line legend_position legend_placement
 draw_metric <- function(
   data,
   metric = NULL,
@@ -139,7 +140,9 @@ draw_metric <- function(
   height = NULL,
   element_id = NULL,
   filename = NULL,
-  ...
+  ...,
+  legend_position = "top",
+  legend_placement = "outside"
 ) {
   records <- metric_data(data, metric)
   metric <- records[["metric"]]
@@ -150,6 +153,8 @@ draw_metric <- function(
     horizontal = horizontal,
     xlab = xlab,
     ylab = ylab,
+    legend_position = legend_position,
+    legend_placement = legend_placement,
     ...
   )
   draw(

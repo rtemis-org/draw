@@ -3,3 +3,11 @@ dependencies:
     version: 1.0.0
     src: htmlwidgets/lib/sigma
     script: rtemis-graph-deps.js
+  - name: rtemis-vector-theme
+    version: 1.0.0
+    src: htmlwidgets/lib/draw
+    script: vector_theme.js
+  - name: rtemis-graph-scene
+    version: 1.0.0
+    src: htmlwidgets/lib/draw
+    script: graph_scene.js
