@@ -91,6 +91,14 @@ Draw a timeline (Gantt) chart: one horizontal bar per task, positioned by
 on the y-axis. Implemented as an ECharts \code{custom} series (ECharts has no
 native Gantt series).
 }
+\details{
+The legend moves below the plot when a side legend would leave too little
+room for the time axis. Tick density follows the available plotting width,
+and long task labels are truncated. Default bar tooltips retain the full task
+text.
+Browser resizing, panel figures, and SVG export share this layout behavior.
+Increase \code{height} when a timeline contains many task rows.
+}
 \examples{
 tasks <- data.frame(
   label = c("load", "clean", "train", "predict"),

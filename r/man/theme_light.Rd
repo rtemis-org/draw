@@ -69,6 +69,8 @@ theme_light(
 Returns a light theme. All parameters have sensible defaults; most
 users only need \code{base_font_size}. Title font size defaults to 1.2x
 the base; all other text defaults to 1x.
+Data-zoom sliders use neutral gray controls, including their data preview
+and hover states. Explicit component styles override these theme defaults.
 }
 \examples{
 theme_light(base_font_size = 14)

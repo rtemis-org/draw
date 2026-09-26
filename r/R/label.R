@@ -41,7 +41,7 @@
 LabelOption <- S7::new_class(
   "LabelOption",
   properties = list(
-    show = optional_logical_scalar,
+    show = prop_boolean(default = NULL, nullable = TRUE),
     position = S7::new_property(
       class = S7::class_any,
       default = NULL,
@@ -95,7 +95,7 @@ LabelOption <- S7::new_class(
       }
     ),
     formatter = S7::new_property(class = S7::class_any, default = NULL),
-    silent = optional_logical_scalar,
+    silent = prop_boolean(default = NULL, nullable = TRUE),
     precision = S7::new_property(
       class = S7::class_any,
       default = NULL,
@@ -112,7 +112,7 @@ LabelOption <- S7::new_class(
         "must be a number, 'auto', or NULL"
       }
     ),
-    value_animation = optional_logical_scalar,
+    value_animation = prop_boolean(default = NULL, nullable = TRUE),
     min_margin = numeric_or_null_property(),
     # Text styling -- flattened into the same JSON object in to_list()
     text_style = class_or_null_property(TextStyle)
@@ -157,8 +157,8 @@ S7::method(to_list, LabelOption) <- function(x, ...) {
 LabelLine <- S7::new_class(
   "LabelLine",
   properties = list(
-    show = optional_logical_scalar,
-    show_above = optional_logical_scalar,
+    show = prop_boolean(default = NULL, nullable = TRUE),
+    show_above = prop_boolean(default = NULL, nullable = TRUE),
     length = numeric_or_null_property(),
     length2 = numeric_or_null_property(),
     smooth = S7::new_property(

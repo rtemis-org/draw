@@ -245,6 +245,21 @@ test_that("AxisLabel formatter accepts string", {
 
 # -- Axis -----------------------------------------------------------------------
 
+test_that("category data remains a JSON array for a single category", {
+  for (data in list("one", 1, c("one", "two"), list(list(value = "one")))) {
+    out <- jsonlite::fromJSON(
+      jsonlite::toJSON(
+        to_list(Axis(type = "category", data = data)),
+        auto_unbox = TRUE
+      ),
+      simplifyVector = FALSE
+    )
+    expect_true(is.list(out[["data"]]))
+    expect_length(out[["data"]], length(data))
+  }
+  expect_null(to_list(Axis())[["data"]])
+})
+
 test_that("Axis creates with defaults", {
   ax <- Axis()
   expect_true(S7::S7_inherits(ax, Axis))

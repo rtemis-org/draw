@@ -1,7 +1,7 @@
 Package: rtemis.draw
 Title: Interactive Visualization
-Version: 0.5.1
-Date: 2026-08-17
+Version: 0.5.2
+Date: 2026-09-25
 Authors@R:
     person(given = "E.D.", family = "Gennatas", role = c("aut", "cre", "cph"),
            email = "gennatas@gmail.com",
@@ -20,7 +20,7 @@ Roxygen: list(markdown = TRUE)
 Imports:
     htmlwidgets,
     jsonlite,
-    rtemis.core (>= 0.4.4),
+    rtemis.core (>= 0.4.5),
     S7,
     signal,
     stats,
@@ -28,14 +28,20 @@ Imports:
     utils,
     viridisLite
 Suggests:
+    data.table,
+    htmltools,
     mgcv,
+    pROC,
     rmarkdown,
-    rtemis (>= 1.3.0),
+    rpart,
+    rtemis (>= 1.4.1),
     rtemis.a3,
     shiny,
     testthat (>= 3.0.0)
 Additional_repositories:
     https://rtemis-org.r-universe.dev
+Config/Needs/check:
+    rtemis=rtemis-org/rtemis@4b2f6c7abd4dc09f1baf45410ac08c58ae3335d4
 Config/testthat/edition: 3
 Config/testthat/parallel: true
 Collate:
@@ -73,6 +79,26 @@ Collate:
     'draw_spectrogram.R'
     'config_spectrogram.R'
     'draw_gantt.R'
+    'draw_fit.R'
+    'plot_true_pred.R'
+    'draw_learning_curve.R'
+    'plot_learning.R'
+    'draw_varimp.R'
+    'plot_varimp.R'
+    'config_significance.R'
+    'draw_significance.R'
+    'plot_massglm.R'
+    'config_confusion.R'
+    'draw_confusion.R'
+    'plot_confusion.R'
+    'config_roc.R'
+    'draw_roc.R'
+    'plot_roc.R'
+    'draw_boxplot.R'
+    'draw_metric.R'
+    'plot_metric.R'
+    'draw_panels.R'
+    'present.R'
     'plot.SupervisedSession.R'
     'export.R'
     'zzz.R'

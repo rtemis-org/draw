@@ -18,8 +18,13 @@
 #' `x` names the column along the horizontal axis. `y` names **one or more**
 #' columns, one line each, as [BarConfig] does.
 #'
-#' @param x Optional Character: Column along the horizontal axis.
+#' @param x Optional Character: Column along the horizontal axis. A numeric
+#'   column gets a value axis, a `Date` or `POSIXct` column a time axis with
+#'   adaptively chosen labels, and any other column a category axis.
 #' @param y Optional Character: Columns to plot, one line each.
+#' @param group Optional Character: Column to group and color lines by. Splits
+#'   a single `y` column into one line per level; cannot be combined with
+#'   several `y` columns or with `blocks`.
 #' @param blocks Optional Character: Column whose contiguous runs shade vertical
 #'   background bands.
 #' @param smooth Logical: Draw smoothed lines.
@@ -39,7 +44,8 @@
 #'   ROC curve; the two axes are then made to span the same interval. Requires a
 #'   numeric x.
 #' @param xlim,ylim Optional Numeric: Axis limits, length 2. `NULL` derives them
-#'   from the data, padded by `pad`.
+#'   from the data, padded by `pad`. On a time axis `xlim` is in epoch
+#'   milliseconds, the unit the chart positions by.
 #' @param xlab,ylab Optional Character: Axis labels. `NULL` derives them from
 #'   the data.
 #' @param margin_top,margin_right,margin_bottom,margin_left Optional Integer
@@ -63,7 +69,10 @@ LineConfig <- new_class(
     x = prop_string(
       NULL,
       nullable = TRUE,
-      description = "Column along the horizontal axis."
+      description = paste(
+        "Column along the horizontal axis. Numeric gets a value axis,",
+        "date or date-time a time axis, anything else a category axis."
+      )
     ),
     y = prop_string(
       NULL,
@@ -71,12 +80,17 @@ LineConfig <- new_class(
       vector = TRUE,
       description = "Columns to plot, one line each."
     ),
+    group = prop_string(
+      NULL,
+      nullable = TRUE,
+      description = "Column to group and color lines by."
+    ),
     blocks = prop_string(
       NULL,
       nullable = TRUE,
       description = paste(
         "Column whose contiguous runs shade vertical background bands.",
-        "NA entries produce no band."
+        "Missing entries produce no band."
       )
     ),
     # -- semantics ---------------------------------------------------------
@@ -92,7 +106,7 @@ LineConfig <- new_class(
       NULL,
       nullable = TRUE,
       vector = TRUE,
-      description = "Series colors, overriding the theme palette. NULL uses the theme's."
+      description = "Series colors, overriding the theme palette. Unset uses the theme's."
     ),
     block_color = prop_string(
       NULL,
@@ -133,24 +147,27 @@ LineConfig <- new_class(
       nullable = TRUE,
       vector = TRUE,
       min_items = 2L,
-      description = "X axis limits. NULL derives them from the data."
+      description = paste(
+        "X axis limits. Unset derives them from the data.",
+        "On a time axis, epoch milliseconds."
+      )
     ),
     ylim = prop_float(
       NULL,
       nullable = TRUE,
       vector = TRUE,
       min_items = 2L,
-      description = "Y axis limits. NULL derives them from the data."
+      description = "Y axis limits. Unset derives them from the data."
     ),
     xlab = prop_string(
       NULL,
       nullable = TRUE,
-      description = "X axis label. NULL derives it from the data."
+      description = "X axis label. Unset derives it from the data."
     ),
     ylab = prop_string(
       NULL,
       nullable = TRUE,
-      description = "Y axis label. NULL derives it from the data."
+      description = "Y axis label. Unset derives it from the data."
     ),
     margin_top = prop_integer(
       NULL,
@@ -210,6 +227,7 @@ LINE_ORIGIN_NAMES <- setdiff(
 setup_LineConfig <- function(
   x = NULL,
   y = NULL,
+  group = NULL,
   blocks = NULL,
   smooth = FALSE,
   area = FALSE,
@@ -238,6 +256,7 @@ setup_LineConfig <- function(
   LineConfig(
     x = x,
     y = y,
+    group = group,
     blocks = blocks,
     smooth = smooth,
     area = area,
@@ -277,8 +296,11 @@ method(resolve, LineConfig) <- function(config, data = NULL, ...) {
   )
   # See resolve.ScatterConfig: the limits a square, equally-scaled plot needs
   # are settled here so the document records them. A categorical x has no
-  # interval to share, and the builder rejects that combination.
+  # interval to share, and the builder rejects that combination. A time x has
+  # a position -- epoch milliseconds, as the builder places it -- so its limits
+  # are recorded in that unit, but it is not a scale to equalize with y.
   numeric_x <- if (!is.null(x) && is.numeric(x)) x
+  time_x <- if (!is.null(x) && is_time_axis(x)) time_axis_ms(x)
   common <- equal_axis_limits(
     numeric_x,
     y_all,
@@ -294,7 +316,9 @@ method(resolve, LineConfig) <- function(config, data = NULL, ...) {
       xlab = config@x,
       ylab = if (length(config@y) == 1L) config@y,
       xlim = common[["xlim"]] %||%
-        if (!is.null(numeric_x)) calc_limits(numeric_x, config@pad),
+        if (!is.null(numeric_x %||% time_x)) {
+          calc_limits(numeric_x %||% time_x, config@pad)
+        },
       ylim = common[["ylim"]] %||%
         if (!is.null(y_all)) calc_limits(y_all, config@pad)
     )
@@ -316,6 +340,7 @@ method(compile, LineConfig) <- function(config, data = NULL, ...) {
   line_option(
     x = x,
     y = if (length(values) == 1L) values[[1L]] else values,
+    group = config_column(data, config@group, "group"),
     smooth = config@smooth,
     area = config@area,
     points = config@points,

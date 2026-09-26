@@ -36,12 +36,14 @@ draw_a3(
 \item{x}{\code{A3} object from \code{\link[rtemis.a3:create_A3]{rtemis.a3::create_A3()}} or
 \code{\link[rtemis.a3:read_A3json]{rtemis.a3::read_A3json()}}.}
 
-\item{n_per_row}{Integer \verb{[2, Inf)}: Number of residues per wrapped row.}
+\item{n_per_row}{Integer \verb{[2, Inf)}: Number of residues per wrapped row.
+Reduce this for larger residues on narrow surfaces.}
 
 \item{residue_spacing}{Numeric \verb{(0, Inf)}: Horizontal spacing multiplier.
 Values below \code{1} compress the layout; \code{1} gives natural hex spacing.}
 
-\item{marker_size}{Numeric \verb{(0, Inf)}: Residue circle diameter in pixels.}
+\item{marker_size}{Numeric \verb{(0, Inf)}: Preferred residue circle diameter in
+pixels; reduced with related marks when needed to fit the drawing surface.}
 
 \item{font_size}{Numeric \verb{(0, Inf)}: Base font size in pixels for residue
 and position labels.}
@@ -108,9 +110,15 @@ Renders an \code{A3} object (from \code{rtemis.a3}) as an interactive ECharts
 amino-acid sequence diagram. The sequence is wrapped into rows in a
 meander/serpentine path, with optional site, region, PTM, processing, and
 variant annotations overlaid as distinct series and collected in a
-vertical legend.
+responsive legend. Legend headings use native rich text and remain available
+in vector SVG exports through \code{\link[=save_drawing]{save_drawing()}}.
 }
 \details{
+On narrower surfaces, the legend moves below the sequence and residue
+markers, labels, and annotations shrink together to avoid overlap. Row
+wrapping remains fixed. Browser height follows the layout unless supplied;
+SVG and panel dimensions remain bounded. A custom \code{grid} retains its layout.
+
 Corresponds to \code{createA3EChartsOption()} in
 \code{src/lib/a3/visualization/echarts.ts}.
 }

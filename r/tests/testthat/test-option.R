@@ -121,7 +121,7 @@ test_that("EChartsOption global settings", {
   expect_equal(out$animationDuration, 1000)
   expect_equal(out$animationEasing, "cubicOut")
   expect_equal(out$darkMode, FALSE)
-  expect_equal(out$useUtc, TRUE)
+  expect_equal(out$useUTC, TRUE)
 })
 
 test_that("EChartsOption global text_style", {
@@ -259,4 +259,21 @@ test_that("EChartsOption full stacked bar chart", {
   expect_equal(length(out$series), 2L)
   expect_equal(out$series[[1]]$stack, "total")
   expect_equal(out$series[[2]]$stack, "total")
+})
+
+
+test_that("EChartsOption carries native graphic annotations and omits NULL", {
+  graphic <- list(
+    elements = list(list(
+      type = "text",
+      left = 20,
+      style = list(text = "n = 40")
+    ))
+  )
+  expect_identical(
+    to_list(EChartsOption(graphic = graphic))[["graphic"]],
+    graphic
+  )
+  expect_null(to_list(EChartsOption())[["graphic"]])
+  expect_error(EChartsOption(graphic = "annotation"))
 })

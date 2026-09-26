@@ -6,10 +6,9 @@
 # rtemis.a3 -- a domain structure, not columns -- so this config declares no
 # bindings, only how the diagram is drawn.
 #
-# Its render hint is the widget `height`, computed from how many residue rows
-# the sequence wraps onto. That is a fact about the display surface, so it is
-# handed to `draw()` and never written into a document: the same protein laid
-# out at a different width needs a different height.
+# Its render hints describe preferred glyph sizes and automatic grid/height
+# fitting. These surface constraints go to draw(), separately from the portable
+# config document. Browser and SVG rendering resolve the available space.
 
 # %% A3Config ----
 #' Annotated Protein Diagram Configuration
@@ -25,7 +24,8 @@
 #'   placed relative to the backbone.
 #' @param zoom Logical: Enable the zoom control.
 #' @param residue_spacing Numeric `[0, Inf)`: Gap between residues.
-#' @param marker_size Numeric `[0, Inf)`: Residue marker size.
+#' @param marker_size Numeric `[0, Inf)`: Preferred residue marker size;
+#'   reduced with related marks when needed to fit the surface.
 #' @param font_size Numeric `[0, Inf)`: Residue label font size.
 #' @param line_width Numeric `[0, Inf)`: Backbone line width.
 #' @param show_markers,show_labels Logical: Whether to draw each.
@@ -260,6 +260,7 @@ method(draw, A3Config) <- function(
   data = NULL
 ) {
   built <- a3_built(option, data, width = width)
+  built[["render"]][["a3"]][["autoHeight"]] <- is.null(height)
   draw(
     built[["option"]],
     theme = theme,
@@ -268,6 +269,7 @@ method(draw, A3Config) <- function(
     element_id = element_id,
     filename = filename,
     animation = animation,
+    meta = list(a3 = built[["render"]][["a3"]]),
     ...
   )
 }

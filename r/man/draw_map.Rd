@@ -66,9 +66,8 @@ light/dark auto-detection (matching \code{\link[=draw]{draw()}}).}
 
 \item{element_id}{Optional Character: Explicit element ID.}
 
-\item{filename}{Optional Character: Currently ignored with a warning (static
-export of map widgets is not yet supported); accepted for signature parity
-with the other \verb{draw_*} functions.}
+\item{filename}{Optional Character: Static export of map widgets is not yet
+supported. Supplying a path raises an error.}
 }
 \value{
 htmlwidget.

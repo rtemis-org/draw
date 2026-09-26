@@ -25,3 +25,12 @@ rtemis.draw_version <- utils::packageVersion("rtemis.draw")
     )
   }
 }
+
+#' Restore shared plotting registration when the namespace unloads
+#' @param libpath Character: Library path supplied by the namespace loader.
+#' @return NULL, invisibly.
+#' @keywords internal
+#' @noRd
+.onUnload <- function(libpath) {
+  restore_massglm_plot()
+}

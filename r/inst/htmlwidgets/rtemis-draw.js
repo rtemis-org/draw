@@ -1,46 +1,78 @@
-HTMLWidgets.widget({
-  name: "rtemis-draw",
-  type: "output",
+// Detect dark mode from VS Code, RStudio, Quarto, or browser preference
+function rtemisDrawIsDarkMode() {
+  const body = document.body;
+  // VS Code webview
+  if (body.classList.contains("vscode-dark") ||
+      body.classList.contains("vscode-high-contrast")) {
+    return true;
+  }
+  if (body.classList.contains("vscode-light")) {
+    return false;
+  }
+  // RStudio
+  if (body.classList.contains("rstudio-themes-dark-menus")) {
+    return true;
+  }
+  // Quarto: `toggleBodyColorMode()` in the emitted page sets exactly one of
+  // these on <body>, from the reader's saved choice. It wins over the media
+  // query because the reader picked it explicitly.
+  if (body.classList.contains("quarto-dark")) {
+    return true;
+  }
+  if (body.classList.contains("quarto-light")) {
+    return false;
+  }
+  // Browser / system preference
+  if (window.matchMedia) {
+    return window.matchMedia("(prefers-color-scheme: dark)").matches;
+  }
+  return false;
+}
 
-  factory: (el, width, height) => {
+// Own only a standalone widget document; embedded reports retain page CSS.
+// Record every style we change so replacing/detaching a widget restores its host.
+function rtemisDrawSurface(el, bounded = false) {
+  const saved = new Map();
+  const paintElement = (element, color) => {
+    if (!saved.has(element)) saved.set(element, element.style.backgroundColor);
+    element.style.backgroundColor = color;
+  };
+  // vscode-R embeds saved head metadata beside the widget in #webview-content.
+  const isSoleContent = (container, child) =>
+    Array.from(container.children).every(node => node === child ||
+      ["SCRIPT", "STYLE", "LINK", "META", "TITLE"].includes(node.tagName));
+  return {
+    paint(color) {
+      paintElement(el, color);
+      const host = el.parentElement;
+      if (!host || bounded || host === document.body || host === document.documentElement) return;
+      paintElement(host, color);
+      let pageHost = host;
+      if (host.parentElement?.id === "webview-content" && isSoleContent(host.parentElement, host)) {
+        pageHost = host.parentElement;
+      }
+      if (host.id === "htmlwidget_container" && pageHost.parentElement === document.body &&
+          host.children.length === 1 && isSoleContent(document.body, pageHost)) {
+        paintElement(document.documentElement, color);
+        paintElement(document.body, color);
+      }
+    },
+    restore() {
+      saved.forEach((color, element) => {element.style.backgroundColor = color;});
+      saved.clear();
+    }
+  };
+}
+
+function rtemisDrawFactory(el, width, height, bounded = false, onBackground = () => {}) {
     let currentWidth = width;
     let currentHeight = height;
     let chart = null;
     let currentPayload = null;
     let renderedDark = null;
+    let currentTheme = null;
     let injectedVisualMapColor = false;
-
-    // Detect dark mode from VS Code, RStudio, Quarto, or browser preference
-    const isDarkMode = () => {
-      const body = document.body;
-      // VS Code webview
-      if (body.classList.contains("vscode-dark") ||
-          body.classList.contains("vscode-high-contrast")) {
-        return true;
-      }
-      if (body.classList.contains("vscode-light")) {
-        return false;
-      }
-      // RStudio
-      if (body.classList.contains("rstudio-themes-dark-menus")) {
-        return true;
-      }
-      // Quarto: `toggleBodyColorMode()` in the emitted page sets exactly one of
-      // these on <body>, from the reader's saved choice. It wins over the media
-      // query because the reader picked it explicitly.
-      if (body.classList.contains("quarto-dark")) {
-        return true;
-      }
-      if (body.classList.contains("quarto-light")) {
-        return false;
-      }
-      // Browser / system preference
-      if (window.matchMedia) {
-        return window.matchMedia("(prefers-color-scheme: dark)").matches;
-      }
-      return false;
-    };
-
+    const surface = rtemisDrawSurface(el, bounded);
     // For square-cell heatmaps: compute the required height given a container
     // width, so that grid cells are perfectly square.
     const squareCellHeight = (x, containerWidth) => {
@@ -90,7 +122,7 @@ HTMLWidgets.widget({
 
       let themeName = null;
       let themeObj = null;
-      const dark = isDarkMode();
+      const dark = rtemisDrawIsDarkMode();
 
       if (x.autoTheme) {
         // Auto-detect: pick light or dark theme
@@ -99,6 +131,12 @@ HTMLWidgets.widget({
         themeObj = x.theme;
       }
       renderedDark = dark;
+      currentTheme = themeObj;
+      if (x.confusion && !bounded) {
+        currentHeight = rtemisConfusion.heightForWidth(echarts, x, themeObj, currentWidth);
+        el.style.height = `${currentHeight}px`;
+      }
+      rtemisConfusion.prepare(echarts, x, themeObj, currentWidth, currentHeight);
 
       if (themeObj) {
         // Propagate the global theme text color to visualMap labels.
@@ -122,34 +160,9 @@ HTMLWidgets.widget({
         themeName = "custom_theme";
       }
 
-      // Sync the widget container (and its immediate parent) background to the
-      // chart background so there is no white gutter around the canvas in
-      // dark-themed viewers, without mutating global body styles.
-      const bgColor =
-        themeObj?.backgroundColor ||
-        x.option?.backgroundColor ||
-        null;
-      if (bgColor) {
-        el.style.backgroundColor = bgColor;
-        if (el.parentElement) {
-          el.parentElement.style.backgroundColor = bgColor;
-        }
-      }
-
-      // Substitute the theme-matched heatmap colour palette when R has
-      // pre-computed both light and dark variants.  The dark palette places
-      // the theme background colour exactly at 0 for diverging scales.
-      if (x.colorLight || x.colorDark) {
-        const hmColors = x.colorDark
-          ? (dark ? x.colorDark : x.colorLight)
-          : x.colorLight;
-        if (hmColors) {
-          visualMaps(x.option).forEach((vm) => {
-            if (!vm.inRange) vm.inRange = {};
-            vm.inRange.color = hmColors;
-          });
-        }
-      }
+      const bgColor = x.option?.backgroundColor || themeObj?.backgroundColor || 'transparent';
+      surface.paint(bgColor);
+      rtemisPanels.prepareColors(echarts, x, themeObj);
 
       chart = echarts.init(el, themeName, {
         renderer: x.renderer || "canvas",
@@ -158,6 +171,17 @@ HTMLWidgets.widget({
       });
 
       chart.setOption(x.option, true);
+      rtemisPanels.fitGantt(echarts, chart, x);
+      rtemisA3.fit(chart, x, bounded);
+      if (x.a3 && !bounded && x.a3.autoHeight) {
+        currentHeight = chart.getHeight();
+        el.style.height = `${currentHeight}px`;
+      }
+      onBackground();
+      rtemisPanels.fitAxes(chart, x);
+      rtemisPanels.fitHeatmap(chart, x);
+      rtemisPanels.positionLegend(echarts, chart, x);
+      rtemisPanels.centerVisualMaps(chart, x);
 
       // Double-click resets any dataZoom (e.g. the gantt's inside zoom) back to
       // the full view -- a familiar gesture, in addition to the toolbox reset.
@@ -189,10 +213,12 @@ HTMLWidgets.widget({
       // hook htmlwidgets does not give us.
       if (!el.isConnected) {
         stopWatchingTheme();
+        surface.restore();
+        onBackground();
         return;
       }
       if (!currentPayload?.autoTheme) return;
-      if (isDarkMode() === renderedDark) return;
+      if (rtemisDrawIsDarkMode() === renderedDark) return;
       renderChart(currentPayload);
     };
 
@@ -240,6 +266,10 @@ HTMLWidgets.widget({
       if (!x?.aspect || !x.option?.grid) return null;
       // A multi-grid option is out of scope: aspect describes one plotting box.
       if (Array.isArray(x.option.grid)) return null;
+      if (bounded) {
+        rtemisPanels.fit(x, containerWidth, currentHeight);
+        return currentHeight;
+      }
       const box = aspectBox(x.aspect, containerWidth);
       x.option.grid.width = box.gridWidth;
       x.option.grid.height = box.gridHeight;
@@ -255,7 +285,7 @@ HTMLWidgets.widget({
         // from the actual container width and the layout margins passed from R.
         // This overrides whatever height htmlwidgets allocated for the container,
         // ensuring cells are always square regardless of viewer window dimensions.
-        if (x.squareCells) {
+        if (x.squareCells && !bounded) {
           const newHeight = squareCellHeight(x, currentWidth);
           el.style.height = `${newHeight}px`;
           currentHeight = newHeight;
@@ -271,12 +301,37 @@ HTMLWidgets.widget({
         currentWidth = width;
         currentHeight = height;
 
+        if (currentPayload?.a3 && chart) {
+          chart.resize({width, height});
+          rtemisA3.fit(chart, currentPayload, bounded);
+          currentHeight = chart.getHeight();
+          if (!bounded && currentPayload.a3.autoHeight) el.style.height = `${currentHeight}px`;
+          return;
+        }
+
+        if (currentPayload?.confusion) {
+          if (!bounded) {
+            currentHeight = rtemisConfusion.heightForWidth(echarts, currentPayload, currentTheme, width);
+            el.style.height = `${currentHeight}px`;
+          }
+          rtemisConfusion.prepare(echarts, currentPayload, currentTheme, width, currentHeight);
+          if (chart) {
+            chart.resize({width, height: currentHeight});
+            chart.setOption(currentPayload.option, true);
+          }
+          return;
+        }
+
         if (currentPayload?.squareCells) {
           // Recompute height to keep cells square at the new width
-          const newHeight = squareCellHeight(currentPayload, width);
+          const newHeight = bounded ? height : squareCellHeight(currentPayload, width);
           el.style.height = `${newHeight}px`;
           currentHeight = newHeight;
-          if (chart) chart.resize({ width, height: newHeight });
+          if (chart) {
+            chart.resize({ width, height: newHeight });
+            rtemisPanels.fitHeatmap(chart, currentPayload);
+            rtemisPanels.centerVisualMaps(chart, currentPayload);
+          }
           return;
         }
 
@@ -291,13 +346,50 @@ HTMLWidgets.widget({
           if (chart) {
             chart.resize({ width, height: aspectHeight });
             chart.setOption({ grid: currentPayload.option.grid });
+            rtemisPanels.fitAxes(chart, currentPayload);
+            rtemisPanels.positionLegend(echarts, chart, currentPayload);
+            rtemisPanels.centerVisualMaps(chart, currentPayload);
           }
         } else if (chart) {
           chart.resize({ width, height });
+          rtemisPanels.fitGantt(echarts, chart, currentPayload);
+          rtemisPanels.positionLegend(echarts, chart, currentPayload);
+          rtemisPanels.centerVisualMaps(chart, currentPayload);
         }
       },
 
+      dispose: () => {
+        stopWatchingTheme();
+        surface.restore();
+        if (chart) chart.dispose();
+        chart = null;
+        currentPayload = null;
+      },
       getChart: () => chart
+    };
+}
+
+// Keep one widget binding for standalone drawings and compositions, including
+// drawOutput()/renderDraw() in Shiny. Children keep independent chart instances.
+HTMLWidgets.widget({
+  name: "rtemis-draw", type: "output",
+  factory: function(el, width, height) {
+    let instance = null;
+    return {
+      renderValue: function(x) {
+        if (instance) instance.dispose();
+        el.replaceChildren();
+        instance = x.panels ? rtemisPanelFactory(el, width, height) :
+          rtemisDrawFactory(el, width, height);
+        instance.renderValue(x);
+      },
+      resize: function(w, h) {
+        width = w; height = h;
+        if (instance) instance.resize(w, h);
+      },
+      getChart: () => instance?.getChart?.() || null,
+      getCharts: () => instance?.getCharts?.() || (instance?.getChart?.() ? [instance.getChart()] : []),
+      dispose: () => { if (instance) instance.dispose(); instance = null; }
     };
   }
 });

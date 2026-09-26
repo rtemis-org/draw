@@ -78,7 +78,7 @@ ChartConfig <- new_class(
       NULL,
       nullable = TRUE,
       description = paste(
-        "Path to the data to plot, read at draw time. NULL means the data is",
+        "Path to the data to plot, read at draw time. Unset means the data is",
         "supplied to draw() instead."
       )
     ),

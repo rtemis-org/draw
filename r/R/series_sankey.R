@@ -41,10 +41,10 @@
 SankeyNodeItem <- S7::new_class(
   "SankeyNodeItem",
   properties = list(
-    name = optional_character_scalar,
+    name = prop_string(nullable = TRUE),
     value = numeric_or_null_property(),
-    depth = optional_nonneg_integer_scalar,
-    draggable = optional_logical_scalar,
+    depth = prop_integer(min = 0L, nullable = TRUE),
+    draggable = prop_boolean(default = NULL, nullable = TRUE),
     local_x = numeric_or_null_property(),
     local_y = numeric_or_null_property(),
     label = class_or_null_property(LabelOption),
@@ -108,8 +108,8 @@ S7::method(to_list, SankeyNodeItem) <- function(x, ...) {
 SankeyEdgeItem <- S7::new_class(
   "SankeyEdgeItem",
   properties = list(
-    source = optional_character_scalar,
-    target = optional_character_scalar,
+    source = prop_string(nullable = TRUE),
+    target = prop_string(nullable = TRUE),
     value = numeric_or_null_property(),
     # Accepts LineStyle S7 object or a plain list (allows curveness extension)
     line_style = S7::new_property(class = S7::class_any, default = NULL),
@@ -172,7 +172,7 @@ S7::method(to_list, SankeyEdgeItem) <- function(x, ...) {
 SankeyLevelOption <- S7::new_class(
   "SankeyLevelOption",
   properties = list(
-    depth = nonneg_integer_scalar,
+    depth = prop_integer(min = 0L),
     label = class_or_null_property(LabelOption),
     item_style = class_or_null_property(ItemStyle),
     line_style = S7::new_property(class = S7::class_any, default = NULL)
@@ -239,15 +239,18 @@ S7::method(to_list, SankeyLevelOption) <- function(x, ...) {
 SankeySeries <- S7::new_class(
   "SankeySeries",
   properties = list(
-    name = optional_character_scalar,
+    name = prop_string(nullable = TRUE),
     data = S7::new_property(class = S7::class_any, default = NULL),
     links = S7::new_property(class = S7::class_any, default = NULL),
     levels = S7::new_property(class = S7::class_any, default = NULL),
-    orient = enum(c("horizontal", "vertical"), nullable = TRUE),
+    orient = prop_string(enum = c("horizontal", "vertical"), nullable = TRUE),
     node_width = numeric_or_null_property(),
     node_gap = numeric_or_null_property(),
-    node_align = enum(c("justify", "left", "right"), nullable = TRUE),
-    draggable = optional_logical_scalar,
+    node_align = prop_string(
+      enum = c("justify", "left", "right"),
+      nullable = TRUE
+    ),
+    draggable = prop_boolean(default = NULL, nullable = TRUE),
     layout_iterations = numeric_or_null_property(),
     sort = S7::new_property(
       class = S7::class_any,
@@ -292,7 +295,7 @@ SankeySeries <- S7::new_class(
     right = numeric_or_string_property(),
     top = numeric_or_string_property(),
     bottom = numeric_or_string_property(),
-    silent = optional_logical_scalar,
+    silent = prop_boolean(default = NULL, nullable = TRUE),
     z_level = numeric_or_null_property(),
     z = numeric_or_null_property()
   )

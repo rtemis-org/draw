@@ -16,16 +16,20 @@
 #' [setup_BoxplotConfig()] rather than calling this constructor directly.
 #'
 #' `x` names **one or more** columns, one box each. `group` optionally names a
-#' column that splits every box into one per level.
+#' column that splits every box into one per level. Statistics and point
+#' placement follow [draw_boxplot()]. Compiles to `BoxplotSeriesOption` and
+#' `CustomSeriesOption` in ECharts `src/chart/boxplot/BoxplotSeries.ts` and
+#' `src/chart/custom/CustomSeries.ts`.
 #'
 #' @param x Optional Character: Columns to summarize, one box each.
 #' @param group Optional Character: Column that splits each box by level.
 #' @param labels Optional Character: Box labels. `NULL` uses the bound column
 #'   names.
 #' @param horizontal Logical: Draw the boxes horizontally.
-#' @param na_rm Logical: Drop `NA` values before summarizing.
+#' @inheritParams draw_boxplot
+#' @param observation Optional Character: Column identifying observations in point tooltips.
 #' @param palette Optional Character: Box colors, overriding the theme palette
-#'   for this chart. `NULL` uses the theme's.
+#'   for this chart. `NULL` uses the package's box colors.
 #' @param fill_alpha Numeric `[0, 1]`: Box fill opacity.
 #' @param xlab,ylab Optional Character: Axis labels.
 #' @param margin_top,margin_right,margin_bottom,margin_left Optional Integer
@@ -57,6 +61,43 @@ BoxplotConfig <- new_class(
       nullable = TRUE,
       description = "Column that splits each box into one per level."
     ),
+    observation = prop_string(
+      NULL,
+      nullable = TRUE,
+      description = "Column identifying observations in point tooltips."
+    ),
+    quartiles = prop_string(
+      "linear",
+      enum = c("linear", "hinges"),
+      description = "Linear type-7 quartiles or Tukey hinges."
+    ),
+    whisker = prop_float(
+      1.5,
+      min = 0,
+      description = "IQR multiplier for whisker fences; zero uses the full range."
+    ),
+    boxpoints = prop_string(
+      "none",
+      enum = c("none", "all", "outliers"),
+      description = "Which observed values to overlay."
+    ),
+    point_size = prop_float(
+      5,
+      exclusive_min = 0,
+      description = "Point diameter in pixels."
+    ),
+    point_alpha = prop_float(
+      0.6,
+      min = 0,
+      max = 1,
+      description = "Point opacity."
+    ),
+    point_spread = prop_float(
+      0.5,
+      min = 0,
+      max = 1,
+      description = "Fraction of box width occupied by deterministic point offsets."
+    ),
     # -- semantics ---------------------------------------------------------
     horizontal = prop_boolean(
       FALSE,
@@ -64,20 +105,20 @@ BoxplotConfig <- new_class(
     ),
     na_rm = prop_boolean(
       TRUE,
-      description = "Drop NA values before summarizing."
+      description = "Drop missing values before summarizing; false rejects missing input."
     ),
     # -- appearance --------------------------------------------------------
     labels = prop_string(
       NULL,
       nullable = TRUE,
       vector = TRUE,
-      description = "Box labels. NULL uses the bound column names."
+      description = "Box labels. Unset uses the bound column names."
     ),
     palette = prop_string(
       NULL,
       nullable = TRUE,
       vector = TRUE,
-      description = "Box colors, overriding the theme palette. NULL uses the theme's."
+      description = "Box colors. Unset uses the package box colors."
     ),
     fill_alpha = prop_float(
       0.25,
@@ -148,6 +189,13 @@ setup_BoxplotConfig <- function(
   labels = NULL,
   horizontal = FALSE,
   na_rm = TRUE,
+  observation = NULL,
+  quartiles = "linear",
+  whisker = 1.5,
+  boxpoints = "none",
+  point_size = 5,
+  point_alpha = 0.6,
+  point_spread = 0.5,
   palette = NULL,
   fill_alpha = 0.25,
   xlab = NULL,
@@ -168,6 +216,13 @@ setup_BoxplotConfig <- function(
     labels = labels,
     horizontal = horizontal,
     na_rm = na_rm,
+    observation = observation,
+    quartiles = quartiles,
+    whisker = whisker,
+    boxpoints = boxpoints,
+    point_size = point_size,
+    point_alpha = point_alpha,
+    point_spread = point_spread,
     palette = palette,
     fill_alpha = fill_alpha,
     xlab = xlab,
@@ -214,9 +269,19 @@ method(compile, BoxplotConfig) <- function(config, data = NULL, ...) {
     palette = config@palette,
     fill_alpha = config@fill_alpha,
     na_rm = config@na_rm,
+    observation = config_column(data, config@observation, "observation"),
+    quartiles = config@quartiles,
+    whisker = config@whisker,
+    boxpoints = config@boxpoints,
+    point_size = config@point_size,
+    point_alpha = config@point_alpha,
+    point_spread = config@point_spread,
     xlab = config@xlab,
     ylab = config@ylab,
     title = config@title,
     margins = config_margins(config) %||% DEFAULT_MARGINS
   )
 }
+
+# Convert semantic settings through the shared chart-config serializer.
+method(to_list, BoxplotConfig) <- function(x) chart_config_to_list(x)

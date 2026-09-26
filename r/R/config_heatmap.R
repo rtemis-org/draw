@@ -144,7 +144,7 @@ HeatmapConfig <- new_class(
       nullable = TRUE,
       vector = TRUE,
       description = paste(
-        "Colors defining the continuous scale. NULL derives a theme-aware",
+        "Colors defining the continuous scale. Unset derives a theme-aware",
         "diverging or sequential scale."
       )
     ),

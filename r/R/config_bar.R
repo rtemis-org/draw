@@ -18,10 +18,15 @@
 #' That is the difference from [ScatterConfig], whose `x` and `y` each name
 #' exactly one column.
 #'
+#' Fixed thickness maps to `barWidth` in ECharts' `BaseBarSeriesOption`
+#' (`src/chart/bar/BaseBarSeries.ts`). It applies to either orientation.
+#'
 #' @param x Optional Character: Column holding the categories.
 #' @param y Optional Character: Columns holding the values, one series each.
 #' @param stack Logical: If TRUE, stack the series instead of grouping them.
 #' @param horizontal Logical: If TRUE, draw the bars horizontally.
+#' @param bar_width Optional Numeric `(0, Inf)`: Bar thickness in pixels.
+#'   NULL lets ECharts size bars from the category spacing.
 #' @param palette Optional Character: Series colors, overriding the theme
 #'   palette for this chart. `NULL` uses the theme's.
 #' @param xlab,ylab Optional Character: Axis labels. `NULL` derives them from
@@ -65,21 +70,27 @@ BarConfig <- new_class(
       description = "Draw the bars horizontally."
     ),
     # -- appearance --------------------------------------------------------
+    bar_width = prop_float(
+      NULL,
+      exclusive_min = 0,
+      nullable = TRUE,
+      description = "Bar thickness in pixels. Unset uses automatic category spacing."
+    ),
     palette = prop_string(
       NULL,
       nullable = TRUE,
       vector = TRUE,
-      description = "Series colors, overriding the theme palette. NULL uses the theme's."
+      description = "Series colors, overriding the theme palette. Unset uses the theme's."
     ),
     xlab = prop_string(
       NULL,
       nullable = TRUE,
-      description = "X axis label. NULL derives it from the data."
+      description = "X axis label. Unset derives it from the data."
     ),
     ylab = prop_string(
       NULL,
       nullable = TRUE,
-      description = "Y axis label. NULL derives it from the data."
+      description = "Y axis label. Unset derives it from the data."
     ),
     margin_top = prop_integer(
       NULL,
@@ -152,7 +163,8 @@ setup_BarConfig <- function(
   margin_left = NULL,
   dat_path = NULL,
   origin = NULL,
-  writer = NULL
+  writer = NULL,
+  bar_width = NULL
 ) {
   origin <- origin %||% chart_origin(match.call(), BAR_ORIGIN_NAMES)
   BarConfig(
@@ -160,6 +172,7 @@ setup_BarConfig <- function(
     y = y,
     stack = stack,
     horizontal = horizontal,
+    bar_width = bar_width,
     palette = palette,
     xlab = xlab,
     ylab = ylab,
@@ -230,6 +243,7 @@ method(compile, BarConfig) <- function(config, data = NULL, ...) {
     palette = config@palette,
     stack = config@stack,
     horizontal = config@horizontal,
+    bar_width = config@bar_width,
     xlab = config@xlab,
     ylab = config@ylab,
     title = config@title,

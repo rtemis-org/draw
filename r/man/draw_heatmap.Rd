@@ -92,7 +92,9 @@ the column dendrogram is placed. \code{"top"} (default) places it above the heat
 \code{"bottom"} automatically moves column labels to the top.}
 
 \item{square_cells}{Optional Logical: Whether to compute widget dimensions so
-cells are square. \code{NULL} (default) enables this automatically for square
+cells are square in the browser and SVG exports. In panels and exports,
+the matrix and dendrograms fit within the allocated canvas.
+\code{NULL} (default) enables this automatically for square
 matrices (e.g. correlation matrices). When \code{TRUE}, both \code{width} and \code{height}
 are calculated from the number of cells; supply explicit \code{width}/\code{height} to
 override.}

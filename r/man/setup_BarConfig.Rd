@@ -19,7 +19,8 @@ setup_BarConfig(
   margin_left = NULL,
   dat_path = NULL,
   origin = NULL,
-  writer = NULL
+  writer = NULL,
+  bar_width = NULL
 )
 }
 \arguments{
@@ -52,6 +53,9 @@ computed from which arguments were supplied; pass it only when restoring a
 config that already carries provenance.}
 
 \item{writer}{Optional Named character: Which interface wrote the config.}
+
+\item{bar_width}{Optional Numeric \verb{(0, Inf)}: Bar thickness in pixels.
+NULL lets ECharts size bars from the category spacing.}
 }
 \value{
 \link{BarConfig} object.

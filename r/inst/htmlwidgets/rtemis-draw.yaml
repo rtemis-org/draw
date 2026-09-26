@@ -1,5 +1,20 @@
+# Published dependency identities are immutable; the binding version comes from
+# DESCRIPTION. Unreleased changes require clean documentation builds.
+# Recorded script fingerprints are checked by test-widget_dependencies.R.
 dependencies:
   - name: echarts
     version: 6.1.0
     src: htmlwidgets/lib/echarts
     script: echarts.min.js
+  - name: rtemis-draw-renderers
+    version: 1.0.0
+    src: htmlwidgets/lib/draw
+    script: renderers.js
+  - name: rtemis-panel-layout
+    version: 1.0.5
+    src: htmlwidgets/lib/draw
+    script:
+      - panels.js
+      - confusion.js
+      - a3.js
+      - panel_widget.js

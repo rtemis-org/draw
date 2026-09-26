@@ -32,67 +32,70 @@ chart_family <- list(
 # here: it comes from `chart_registry()`, the same one `read_chart_config()`
 # uses, so a chart type cannot exist for reading and not for publishing.
 chart_descriptions <- c(
+  roc = "Receiver operating characteristic curves with pooled or per-resample AUC summaries.",
+  confusion = "Confusion counts and per-class summaries in one or more panels.",
+  significance = "Volcano or categorical significance plots of estimates and adjusted p-values.",
   scatter = paste0(
     "Scatter chart: points at (x, y), optionally sized, grouped, and ",
-    "overlaid with a fit and its standard-error band. See setup_ScatterConfig."
+    "overlaid with a fit and its standard-error band."
   ),
   bar = paste0(
     "Bar chart: one bar per category, with one series per bound value column, ",
-    "grouped or stacked, vertical or horizontal. See setup_BarConfig."
+    "grouped or stacked, vertical or horizontal."
   ),
   density = paste0(
     "Kernel density chart: the estimated distribution of one column, ",
     "optionally split into one curve per level of a grouping column. ",
-    "See setup_DensityConfig."
+    ""
   ),
   histogram = paste0(
     "Histogram: binned counts of one column, optionally split into one ",
-    "series per level of a grouping column. See setup_HistogramConfig."
+    "series per level of a grouping column."
   ),
   line = paste0(
     "Line chart: one line per bound value column against a shared x column, ",
     "optionally smoothed, filled, and shaded with background bands. ",
-    "See setup_LineConfig."
+    ""
   ),
   pie = paste0(
     "Pie chart: one slice per row, sized by a value column and named by a ",
-    "label column, optionally drawn as a Nightingale rose. See setup_PieConfig."
+    "label column, optionally drawn as a Nightingale rose."
   ),
   boxplot = paste0(
     "Boxplot: one box per bound column, optionally split into one box per ",
-    "level of a grouping column. See setup_BoxplotConfig."
+    "level of a grouping column."
   ),
   gantt = paste0(
     "Gantt chart: one bar per task, bound to a table with a label, a start ",
     "and an end, optionally colored by group and outlined by a flag column. ",
-    "See setup_GanttConfig."
+    ""
   ),
   heatmap = paste0(
     "Heatmap: a numeric matrix shaded by a continuous color scale, optionally ",
     "reordered by hierarchical clustering with dendrograms. ",
-    "See setup_HeatmapConfig."
+    ""
   ),
   a3 = paste0(
     "Annotated protein diagram: a sequence laid out in rows with regions, ",
     "modifications and variants marked. Bound to an A3 object from rtemis.a3. ",
-    "See setup_A3Config."
+    ""
   ),
   spectrogram = paste0(
     "Spectrogram: a signal's frequency content over time, from a raw signal ",
     "via a short-time Fourier transform or from a precomputed matrix. ",
-    "See setup_SpectrogramConfig."
+    ""
   ),
   network = paste0(
     "Network graph: nodes and edges bound to an adjacency matrix or edge ",
     "list, laid out and optionally colored by detected community. Rendered ",
-    "with Sigma.js. See setup_NetworkConfig."
+    "with Sigma.js."
   ),
   choropleth = paste0(
     "Choropleth map: regions shaded by a bound value column, keyed by a ",
-    "location column. Rendered with MapLibre. See setup_ChoroplethConfig."
+    "location column. Rendered with MapLibre."
   ),
   sankey = paste0(
     "Sankey diagram: flows between nodes, bound to a table of links with a ",
-    "source, a target and a magnitude. See setup_SankeyConfig."
+    "source, a target and a magnitude."
   )
 )

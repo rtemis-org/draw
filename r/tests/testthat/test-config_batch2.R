@@ -78,6 +78,21 @@ test_that("line compiles to the same option as the vector path", {
       xlab = "wt"
     )
   )
+  dd <- data.frame(day = as.Date("2025-09-07") + 0:4, v = 1:5)
+  expect_identical(
+    compile(setup_LineConfig(x = "day", y = "v"), data = dd),
+    line_option(x = dd[["day"]], y = dd[["v"]], xlab = "day", ylab = "v")
+  )
+  expect_identical(
+    compile(setup_LineConfig(x = "wt", y = "mpg", group = "cyl"), data = d),
+    line_option(
+      x = d[["wt"]],
+      y = d[["mpg"]],
+      group = d[["cyl"]],
+      xlab = "wt",
+      ylab = "mpg"
+    )
+  )
 })
 
 test_that("pie compiles to the same option as the vector path", {
@@ -161,6 +176,18 @@ test_that("line derives labels and limits like scatter", {
   expect_identical(r@ylab, "mpg")
   expect_length(r@ylim, 2L)
   expect_identical(r@origin[["ylim"]], "derived")
+})
+
+test_that("line derives time-axis limits in epoch milliseconds", {
+  dd <- data.frame(day = as.Date("2025-09-07") + 0:4, v = 1:5)
+  r <- resolve(setup_LineConfig(x = "day", y = "v"), data = dd)
+  expect_identical(r@xlim, calc_limits(as.numeric(dd[["day"]]) * 86400000))
+  expect_identical(r@origin[["xlim"]], "derived")
+  # The recorded limits feed the builder unchanged.
+  expect_identical(
+    compile(r, data = dd)@x_axis@min,
+    r@xlim[[1L]]
+  )
 })
 
 test_that("line derives no value label for several columns", {

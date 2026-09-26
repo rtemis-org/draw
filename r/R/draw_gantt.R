@@ -3,58 +3,11 @@
 #
 # ECharts (>= 6.1) has no native Gantt series, so a timeline is drawn with a
 # `custom` series: one rectangle per task, positioned on a value/time x-axis
-# and a category y-axis. See the renderItem API in
-# ~/Code/live/node_modules/echarts/types/dist/shared.d.ts
-# (CustomSeriesRenderItemAPI: value(), coord(), size(), visual()).
+# and a category y-axis. The registered renderer uses CustomSeriesRenderItemAPI
+# and itemPayload from ECharts src/chart/custom/CustomSeries.ts. Browser and SVG
+# rendering share inst/htmlwidgets/lib/draw/renderers.js.
 
 # -- Internal helpers -----------------------------------------------------------
-
-# Build the renderItem JS for a Gantt custom series.
-#
-# Each datum value is [rowIndex, start, end]:
-#   - rowIndex maps to the category (y) axis position
-#   - start / end map to the value or time (x) axis
-# The bar height is a fraction of one category band; per-bar fill comes from the
-# datum's itemStyle color via api.visual("color").
-#
-# @param bar_height Numeric (0, 1]: Bar thickness as a fraction of the band.
-# @param bar_radius Numeric [0, Inf): Corner radius in pixels.
-# @return htmlwidgets::JS object.
-# @keywords internal
-# @noRd
-.gantt_render_item <- function(
-  bar_height,
-  bar_radius,
-  border_color,
-  border_width
-) {
-  # A truthy 4th data value (api.value(3)) outlines the bar in border_color
-  # without changing its fill, so callers can flag bars (e.g. failures) while
-  # the fill keeps encoding the group. Absent 4th value -> NaN -> no border.
-  htmlwidgets::JS(sprintf(
-    "function(params,api){
-      var rowIndex=api.value(0);
-      var start=api.coord([api.value(1),rowIndex]);
-      var end=api.coord([api.value(2),rowIndex]);
-      var height=api.size([0,1])[1]*%s;
-      var width=end[0]-start[0];
-      if(width<1){width=1;}
-      var style={fill:api.visual('color')};
-      if(api.value(3)){style.stroke='%s';style.lineWidth=%s;}
-      return{
-        type:'rect',
-        transition:['shape'],
-        shape:{x:start[0],y:start[1]-height/2,width:width,height:height,r:%s},
-        style:style
-      };
-    }",
-    format(bar_height, scientific = FALSE),
-    border_color,
-    format(border_width, scientific = FALSE),
-    format(bar_radius, scientific = FALSE)
-  ))
-}
-
 
 # Coerce a start/end column to the numeric form ECharts expects.
 # POSIXct -> epoch milliseconds (for axis_type = "time"); numerics pass through.
@@ -192,13 +145,6 @@ gantt_option <- function(
     group_colors <- palette[[1L]]
   }
 
-  render_item <- .gantt_render_item(
-    bar_height,
-    bar_radius,
-    border_color,
-    border_width
-  )
-
   make_series <- function(level, col, name) {
     idx <- which(group_vals == level)
     data_items <- lapply(idx, function(i) {
@@ -222,7 +168,13 @@ gantt_option <- function(
     series <- list(
       type = "custom",
       data = data_items,
-      renderItem = render_item,
+      renderItem = "rtemis.gantt.v1",
+      itemPayload = list(
+        barHeight = bar_height,
+        barRadius = bar_radius,
+        borderColor = border_color,
+        borderWidth = border_width
+      ),
       encode = list(x = c(1L, 2L), y = 0L),
       clip = TRUE
     )
@@ -245,8 +197,8 @@ gantt_option <- function(
     "function(p){var m=p.marker||'';return m+(p.name||'');}"
   )
 
-  # Tight layout: a vertical legend on the right (so it doesn't waste vertical
-  # space under the bars), with the grid reserving room for it. draw() injects
+  # Initial wide layout: a vertical legend on the right. The shared browser/
+  # SVG fitter measures labels and moves this legend below when needed. draw() injects
   # `outerBoundsMode = "same"`, so these margins are outer bounds and the long
   # category labels still fit inside them.
   has_legend <- !is.null(group)
@@ -323,7 +275,7 @@ gantt_option <- function(
     # Zoom: one `inside` dataZoom per axis -> wheel-zoom + drag-pan on both time
     # and rows. filterMode = "none" is essential for the gantt: zooming the
     # category (row) axis must only reframe the view, never drop bars. Wheel-out
-    # returns to the full view, so no slider/toolbox chrome is needed.
+    # returns to the full view, without adding visible slider tracks.
     data_zoom = if (isTRUE(zoom)) {
       list(
         list(
@@ -359,6 +311,13 @@ gantt_option <- function(
 #' `start` and `end` on a value or time x-axis and grouped into rows by `label`
 #' on the y-axis. Implemented as an ECharts `custom` series (ECharts has no
 #' native Gantt series).
+#'
+#' The legend moves below the plot when a side legend would leave too little
+#' room for the time axis. Tick density follows the available plotting width,
+#' and long task labels are truncated. Default bar tooltips retain the full task
+#' text.
+#' Browser resizing, panel figures, and SVG export share this layout behavior.
+#' Increase `height` when a timeline contains many task rows.
 #'
 #' @param tasks Tabular data (data.frame, data.table, or tibble): One row per
 #'   task bar. Must contain columns `label` (row / category), `start`, and

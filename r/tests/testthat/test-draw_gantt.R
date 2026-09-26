@@ -37,12 +37,25 @@ test_that(".gantt_time_values passes numeric through unchanged", {
 })
 
 
-test_that(".gantt_render_item embeds params and border and is JS", {
-  js <- rtemis.draw:::.gantt_render_item(0.6, 4, "#E53935", 1.5)
-  expect_s3_class(js, "JS_EVAL")
-  expect_match(as.character(js), "0.6", fixed = TRUE)
-  expect_match(as.character(js), "api.visual('color')", fixed = TRUE)
-  expect_match(as.character(js), "#E53935", fixed = TRUE)
+test_that("Gantt renderer settings are plain JSON parameters", {
+  w <- draw_gantt(
+    tasks_df(),
+    bar_height = 0.6,
+    bar_radius = 4,
+    border_color = "#E53935",
+    border_width = 1.5
+  )
+  series <- w[["x"]][["option"]][["series"]][[1L]]
+  expect_identical(series[["renderItem"]], "rtemis.gantt.v1")
+  expect_identical(
+    series[["itemPayload"]],
+    list(
+      barHeight = 0.6,
+      barRadius = 4,
+      borderColor = "#E53935",
+      borderWidth = 1.5
+    )
+  )
 })
 
 
@@ -236,4 +249,75 @@ test_that("draw_gantt grid gets ECharts 6.1 outerBoundsContain via draw()", {
     draw_gantt(tasks_df())$x$option$grid$outerBoundsContain,
     "axisLabel"
   )
+})
+
+
+test_that("Gantt layout preserves usable axes and state across narrow resizes", {
+  skip_if_not(nzchar(Sys.which("node")), "node not found")
+  tasks <- data.frame(
+    label = c(
+      "train GLM Regression",
+      "outer_fold 1/5",
+      "train_alg GLM",
+      "predict",
+      "varimp GLM",
+      "metrics"
+    ),
+    start = c(0, 10, 15, 40, 45, 50),
+    end = c(100, 90, 40, 45, 50, 80),
+    kind = c("train", "outer_fold", "train_alg", "predict", "varimp", "metrics")
+  )
+  # Exercise both numeric and absolute time, plus the ungrouped path.
+  widgets <- list(draw_gantt(
+    tasks,
+    group = "kind",
+    title = "Five-fold execution",
+    xlab = "Elapsed (ms)"
+  ))
+  timed <- tasks
+  timed[["start"]] <- as.POSIXct("2026-01-01", tz = "UTC") + tasks[["start"]]
+  timed[["end"]] <- as.POSIXct("2026-01-01", tz = "UTC") + tasks[["end"]]
+  widgets[[2L]] <- draw_gantt(
+    timed,
+    group = "kind",
+    axis_type = "time",
+    title = "Five-fold execution",
+    xlab = "Time"
+  )
+  widgets[[3L]] <- draw_gantt(tasks, title = "Five-fold execution")
+  # A stored initial selection must not replace later interactive changes.
+  widgets[[1L]][["x"]][["option"]][["legend"]][["selected"]] <- list(
+    train = TRUE
+  )
+  input <- tempfile(fileext = ".json")
+  on.exit(unlink(input), add = TRUE)
+  jsonlite::write_json(
+    list(
+      payloads = lapply(widgets, function(w) strip_js(w[["x"]])),
+      echarts = system.file(
+        "htmlwidgets/lib/echarts/echarts.min.js",
+        package = "rtemis.draw"
+      ),
+      layout = system.file(
+        "htmlwidgets/lib/draw/panels.js",
+        package = "rtemis.draw"
+      ),
+      binding = system.file(
+        "htmlwidgets/rtemis-draw.js",
+        package = "rtemis.draw"
+      )
+    ),
+    input,
+    auto_unbox = TRUE,
+    null = "null",
+    digits = NA
+  )
+  out <- system2(
+    Sys.which("node"),
+    c(shQuote(test_path("fixtures", "gantt_geometry.js")), shQuote(input)),
+    stdout = TRUE,
+    stderr = TRUE
+  )
+  expect_null(attr(out, "status"), info = paste(out, collapse = "\n"))
+  expect_match(paste(out, collapse = "\n"), "Gantt bounds")
 })

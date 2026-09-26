@@ -23,6 +23,50 @@ snake_to_camel <- function(x) {
   gsub("_(\\w)", "\\U\\1", x, perl = TRUE)
 }
 
+# -- Grouping inputs -------------------------------------------------------------
+
+#' Read grouping values from a vector or one-column data frame
+#'
+#' A one-column data frame is an unambiguous vector input. Extract its column
+#' without flattening or coercion so factors, missing values, and row order are
+#' preserved. Column names do not request additional chart labels or legends.
+#'
+#' @param group Optional Atomic vector or data frame: Group identities; a data
+#'   frame must contain exactly one atomic vector column.
+#' @param sizes Optional Numeric: Expected observation counts. Every supplied
+#'   size must match the grouping length; values are never recycled.
+#' @return Optional Atomic vector: The original vector or data-frame column.
+#' @keywords internal
+#' @noRd
+group_values <- new_generic("group_values", "group")
+method(group_values, class_any) <- function(group, sizes = NULL) {
+  if (is.null(group)) {
+    return(NULL)
+  }
+  if (is.data.frame(group)) {
+    if (ncol(group) != 1L) {
+      abort(
+        "Select exactly one column for `group`, or supply a grouping vector.",
+        class = c("rtemis_dim_error", "rtemis_input_error")
+      )
+    }
+    group <- group[[1L]]
+  }
+  if (!is.atomic(group) || !is.null(dim(group))) {
+    abort(
+      "Supply `group` as an atomic vector or a data frame containing one atomic vector column.",
+      class = c("rtemis_type_error", "rtemis_input_error")
+    )
+  }
+  if (any(sizes != length(group))) {
+    abort(
+      "Supply one value of `group` per observation; grouping and data must have the same length.",
+      class = c("rtemis_length_error", "rtemis_input_error")
+    )
+  }
+  group
+}
+
 # -- List utilities --------------------------------------------------------------
 
 #' Drop NULL values from a list

@@ -25,6 +25,9 @@
 #' @param title Optional Named list: Title overrides.
 #' @param legend Optional Named list: Legend overrides.
 #' @param tooltip Optional Named list: Tooltip overrides.
+#' @param data_zoom Optional Named list: Data-zoom defaults using native ECharts
+#'   camelCase fields from `SliderDataZoomOption` in
+#'   `src/component/dataZoom/SliderZoomModel.ts`.
 #' @param line Optional Named list: Line-series defaults.
 #' @param bar Optional Named list: Bar-series defaults.
 #' @param pie Optional Named list: Pie-series defaults.
@@ -44,12 +47,16 @@ Theme <- S7::new_class(
   "Theme",
   properties = list(
     color = color_palette_property(),
-    background_color = optional_character_scalar,
+    background_color = prop_string(nullable = TRUE),
     text_style = class_or_null_property(TextStyle),
     # Component overrides (plain lists)
     title = S7::new_property(class = S7::class_any, default = NULL),
     legend = S7::new_property(class = S7::class_any, default = NULL),
     tooltip = S7::new_property(class = S7::class_any, default = NULL),
+    data_zoom = S7::new_property(
+      class = S7::new_union(NULL, S7::class_list),
+      default = NULL
+    ),
     # Series defaults (plain lists)
     line = S7::new_property(class = S7::class_any, default = NULL),
     bar = S7::new_property(class = S7::class_any, default = NULL),
@@ -81,6 +88,7 @@ S7::method(to_list, Theme) <- function(x, ...) {
     title = "title",
     legend = "legend",
     tooltip = "tooltip",
+    data_zoom = "dataZoom",
     line = "line",
     bar = "bar",
     pie = "pie",
@@ -140,6 +148,7 @@ S7::method(to_list, Theme) <- function(x, ...) {
 #' and `tooltip_color` from `fg_color` when not set, and assembles
 #' the full [Theme] object.
 #'
+#' @param dark Logical: Use neutral slider colors suited to a dark background.
 #' @keywords internal
 #' @noRd
 build_theme <- function(
@@ -160,7 +169,8 @@ build_theme <- function(
   grid_color,
   tooltip_bg,
   tooltip_border_color,
-  tooltip_color
+  tooltip_color,
+  dark = FALSE
 ) {
   # Resolve font sizes from base
   title_font_size <- title_font_size %||% round(base_font_size * 1.2)
@@ -233,6 +243,34 @@ build_theme <- function(
       ))
     ),
     tooltip = if (length(tooltip_cfg) > 0L) tooltip_cfg else NULL,
+    # Neutral controls leave the chart palette to encode data. Set every
+    # accent-bearing slider state, including preview, brush, and hover, so
+    # native blue defaults cannot leak through. Component options still win.
+    # spec: draw/visual-qa-docs#neutral-data-zoom-sliders
+    data_zoom = list(
+      backgroundColor = "rgba(128,128,128,0.06)",
+      borderColor = if (dark) "#606060" else "#b0b0b0",
+      fillerColor = "rgba(128,128,128,0.18)",
+      dataBackground = list(
+        lineStyle = list(color = "#808080"),
+        areaStyle = list(color = "#808080", opacity = 0.12)
+      ),
+      selectedDataBackground = list(
+        lineStyle = list(color = if (dark) "#b0b0b0" else "#707070"),
+        areaStyle = list(color = "#808080", opacity = 0.25)
+      ),
+      handleStyle = list(
+        color = if (dark) "#303030" else "#ffffff",
+        borderColor = if (dark) "#909090" else "#808080"
+      ),
+      moveHandleStyle = list(color = "#909090", opacity = 0.6),
+      brushStyle = list(color = "#808080", opacity = 0.3),
+      textStyle = axis_label_style,
+      emphasis = list(
+        handleStyle = list(borderColor = if (dark) "#cccccc" else "#505050"),
+        moveHandleStyle = list(color = if (dark) "#b0b0b0" else "#707070")
+      )
+    ),
     value_axis = if (length(value_axis_cfg) > 0L) value_axis_cfg else NULL,
     category_axis = if (length(category_axis_cfg) > 0L) {
       category_axis_cfg
@@ -248,6 +286,8 @@ build_theme <- function(
 #' Returns a light theme. All parameters have sensible defaults; most
 #' users only need `base_font_size`. Title font size defaults to 1.2x
 #' the base; all other text defaults to 1x.
+#' Data-zoom sliders use neutral gray controls, including their data preview
+#' and hover states. Explicit component styles override these theme defaults.
 #'
 #' @param base_font_size Numeric `[0, Inf)`: Base font size in pixels for all text.
 #' @param title_font_size Optional Numeric `[0, Inf)`: Title font size.
@@ -319,6 +359,7 @@ theme_light <- function(
 #' Returns a dark theme. All parameters have sensible defaults; most
 #' users only need `base_font_size`. Title font size defaults to 1.2x
 #' the base; all other text defaults to 1x.
+#' Data-zoom sliders use neutral gray controls adapted to dark backgrounds.
 #'
 #' @inheritParams theme_light
 #' @return [Theme]: Theme object.
@@ -364,6 +405,7 @@ theme_dark <- function(
     grid_color = grid_color,
     tooltip_bg = tooltip_bg,
     tooltip_border_color = tooltip_border_color,
-    tooltip_color = tooltip_color
+    tooltip_color = tooltip_color,
+    dark = TRUE
   )
 }

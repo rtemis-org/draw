@@ -194,11 +194,15 @@ test_that("triangle masking with cluster_rows does not error", {
 
 # -- draw_heatmap(): custom dendro_color --------------------------------------
 
-test_that("dendro_color is embedded in renderItem JS", {
+test_that("dendro_color and orientation are plain renderer parameters", {
   m <- make_mat()
   w <- draw_heatmap(m, cluster_rows = TRUE, dendro_color = "#ff0000")
-  js_str <- as.character(w$x$option$series[[1]]$renderItem)
-  expect_true(grepl("#ff0000", js_str, fixed = TRUE))
+  series <- w[["x"]][["option"]][["series"]][[1L]]
+  expect_identical(series[["renderItem"]], "rtemis.dendrogram.v1")
+  expect_identical(
+    series[["itemPayload"]],
+    list(orientation = "row", color = "#ff0000")
+  )
 })
 
 # -- draw_heatmap(): basic widget structure -----------------------------------
@@ -232,4 +236,149 @@ test_that("draw_heatmap with 1 row does not add dendro panel", {
   # Single grid: opt$grid is a named list; its first element is a scalar, not a list
   expect_false(is.list(opt$grid[[1]]))
   expect_s3_class(w, "htmlwidget")
+})
+
+
+test_that("heatmap labels default to two decimals without rounding source values", {
+  m <- matrix(c(.5951098244376296, 1, -.2350528703555328, NA), 2L)
+  defaults <- draw_heatmap(m, show_values = TRUE)[["x"]][["option"]]
+  items <- defaults[["series"]][[1L]][["data"]]
+  expect_identical(
+    vapply(items, function(p) p[["label"]][["formatter"]], ""),
+    c("0.60", "-0.24", "1.00", "")
+  )
+  expect_identical(items[[1L]][["value"]][[3L]], m[1L, 1L])
+  expect_identical(HeatmapConfig()@value_digits, 2L)
+  cfg <- setup_HeatmapConfig(show_values = TRUE, value_digits = 3L)
+  explicit <- draw(cfg, data = m)[["x"]][["option"]]
+  expect_identical(
+    explicit,
+    draw_heatmap(m, show_values = TRUE, value_digits = 3L)[["x"]][["option"]]
+  )
+  expect_identical(
+    explicit[["series"]][[1L]][["data"]][[1L]][["label"]][["formatter"]],
+    "0.595"
+  )
+})
+
+
+test_that("vertical heatmap colorbars stay centered on the plotted data", {
+  skip_if_not(nzchar(Sys.which("node")), "node not found")
+  m <- make_mat(4L)
+  charts <- list(
+    draw_heatmap(m, show_values = TRUE, margins = c(top = 35, bottom = 115)),
+    draw_heatmap(
+      m,
+      show_values = TRUE,
+      cluster_rows = TRUE,
+      cluster_cols = TRUE
+    ),
+    draw_heatmap(
+      m,
+      show_values = TRUE,
+      cluster_cols = TRUE,
+      dendro_col_side = "bottom"
+    ),
+    draw_heatmap(m, show_values = TRUE, colorbar_orient = "horizontal"),
+    draw_heatmap(m, show_values = TRUE, show_colorbar = FALSE)
+  )
+  path <- tempfile(fileext = ".json")
+  on.exit(unlink(path), add = TRUE)
+  jsonlite::write_json(
+    list(
+      charts = lapply(charts, function(w) strip_js(w[["x"]])),
+      echarts = system.file(
+        "htmlwidgets/lib/echarts/echarts.min.js",
+        package = "rtemis.draw"
+      ),
+      layout = system.file(
+        "htmlwidgets/lib/draw/panels.js",
+        package = "rtemis.draw"
+      )
+    ),
+    path,
+    auto_unbox = TRUE,
+    null = "null"
+  )
+  output <- system2(
+    Sys.which("node"),
+    c(
+      shQuote(test_path("fixtures", "heatmap_colorbar.js")),
+      shQuote(path)
+    ),
+    stdout = TRUE,
+    stderr = TRUE
+  )
+  expect_null(attr(output, "status"), info = paste(output, collapse = "\n"))
+  expect_match(paste(output, collapse = "\n"), "passed")
+})
+
+
+test_that("square heatmaps keep their geometry in bounded panels and after resize", {
+  skip_if_not(nzchar(Sys.which("node")), "node not found")
+  m <- matrix(
+    seq(-1, 1, length.out = 12),
+    nrow = 3,
+    dimnames = list(c("A", "B", "C"), c("W", "X", "Y", "Z"))
+  )
+  cases <- list(
+    list(),
+    list(cluster_rows = TRUE),
+    list(cluster_cols = TRUE),
+    list(cluster_rows = TRUE, cluster_cols = TRUE),
+    list(
+      cluster_rows = TRUE,
+      cluster_cols = TRUE,
+      dendro_row_side = "left",
+      dendro_col_side = "bottom"
+    )
+  )
+  charts <- unlist(
+    lapply(list(theme_light(), theme_dark()), function(theme) {
+      lapply(cases, function(args) {
+        w <- do.call(
+          draw_heatmap,
+          c(
+            list(x = m, square_cells = TRUE, show_values = TRUE, theme = theme),
+            args
+          )
+        )
+        strip_js(w[["x"]])
+      })
+    }),
+    recursive = FALSE
+  )
+  path <- tempfile(fileext = ".json")
+  on.exit(unlink(path), add = TRUE)
+  jsonlite::write_json(
+    list(
+      charts = charts,
+      echarts = system.file(
+        "htmlwidgets/lib/echarts/echarts.min.js",
+        package = "rtemis.draw"
+      ),
+      layout = system.file(
+        "htmlwidgets/lib/draw/panels.js",
+        package = "rtemis.draw"
+      ),
+      binding = system.file(
+        "htmlwidgets/rtemis-draw.js",
+        package = "rtemis.draw"
+      )
+    ),
+    path,
+    auto_unbox = TRUE,
+    null = "null"
+  )
+  output <- system2(
+    Sys.which("node"),
+    c(
+      shQuote(test_path("fixtures", "heatmap_export_geometry.js")),
+      shQuote(path)
+    ),
+    stdout = TRUE,
+    stderr = TRUE
+  )
+  expect_null(attr(output, "status"), info = paste(output, collapse = "\n"))
+  expect_match(paste(output, collapse = "\n"), "passed")
 })

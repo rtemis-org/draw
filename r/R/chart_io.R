@@ -39,7 +39,13 @@
 #' names(chart_registry())
 chart_registry <- function() {
   list(
+    roc = list(cls = ROCConfig, setup = "setup_ROCConfig"),
     scatter = list(cls = ScatterConfig, setup = "setup_ScatterConfig"),
+    confusion = list(cls = ConfusionConfig, setup = "setup_ConfusionConfig"),
+    significance = list(
+      cls = SignificanceConfig,
+      setup = "setup_SignificanceConfig"
+    ),
     bar = list(cls = BarConfig, setup = "setup_BarConfig"),
     density = list(cls = DensityConfig, setup = "setup_DensityConfig"),
     histogram = list(cls = HistogramConfig, setup = "setup_HistogramConfig"),

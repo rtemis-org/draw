@@ -1,5 +1,86 @@
+# rtemis.draw 0.5.2
+
+- Add fold distributions to `draw_varimp()` and resampled-model `plot_varimp()` with explicit missing-score policies and SVG export.
+
+- Add `draw_panels()`, schema-backed panel layouts, and draw-owned model `present()` methods, with combined SVG export.
+
+- Add `draw_metric()` and resampled-model `plot_metric()` methods, with configurable boxplot statistics, observation overlays, and SVG export.
+
+- Add `draw_roc()` and classification `plot_roc()` methods with pooled and per-resample AUC summaries and SVG export.
+
+- Add `draw_confusion()` and classification `plot_true_pred()` methods with shared count records, per-class summaries, and multi-panel SVG export.
+
+- Add volcano and categorical Manhattan plots, portable significance configuration, and `MassGLM` methods for `plot()` and `plot_manhattan()`, with SVG export.
+
+- Add `draw_varimp()` and draw-owned `plot_varimp()` methods for ordinary and resampled models, with named measures, ranking, and explicit missing-score policies.
+
+- Add `draw_learning_curve()` and a draw-owned `plot_learning()` method for supervised models, including forest averaging and selected-step markers.
+
+- Add `draw_fit()` and draw-owned `plot_true_pred()` methods for rtemis regression and resampled regression results, with identity lines, fit labels, and matching scatter configuration fields.
+
+- Add grouped lines through `group` in `draw_line()` and `LineConfig`, with per-group colors and legend entries.
+
+- **`draw_sankey()` colors its ribbons and its nodes.** A ribbon now takes the
+  color of the node it leaves (`link_color = "source"`, `link_opacity = 0.45`),
+  which is what lets a reader follow one source across a diagram; before, the
+  theme's link color applied and every ribbon was the same grey. Each node also
+  carries its color on the datum rather than leaving it to the chart-level
+  `color` array, which a theme's series `itemStyle` takes precedence over -- so
+  a `palette` passed to `draw_sankey()` painted the links only and left every
+  node one color. `link_color` accepts `"source"`, `"target"`, `"gradient"` or a
+  color.
+
+- Add `bar_width` to `draw_bar()` and `BarConfig`, and ascending importance selection with `decreasing = FALSE` in `draw_varimp()` and `plot_varimp()`.
+
+- Add configurable inset ROC legends through `legend_position`, defaulting to the bottom-right corner, with compact AUC labels and grouped fold toggles.
+
+- Show one ROC curve per hover and use `digits` for displayed coordinates and AUC without rounding the underlying numeric data.
+
+- Use square confusion cells, color fades toward the active theme background, faint neutral metric backgrounds, and no separate sample-size caption.
+
+- Apply confusion `digits` to both displayed rates and hover fractions, defaulting to two decimal places while retaining integer counts and full-precision numeric data.
+
+- Preserve square heatmap cells and aligned dendrograms in SVG exports and `draw_panels()`, center vertical colorbars beside the matrix, and adapt color ramps to the active theme.
+
+- Support vector SVG export of annotated A3 sequences, including legend headings, and adapt residue sizes and legend placement to narrow drawing surfaces.
+
+- Adapt Gantt legends, task labels, and time ticks to the available width in browser, panel, and SVG output while preserving interactive zoom and legend selections during resize.
+
+- Reserve space for axis text in fixed-aspect plots and improve boxplot category labels and axis-title placement.
+
+- Use neutral gray data-zoom sliders in light and dark themes while preserving explicit style overrides.
+
+- Match standalone and VS Code Viewer backgrounds to the chart, and fill panel gaps with the common child background in browser and SVG output.
+
+- Include all required widget helpers in Quarto output.
+
+- Expand plotting documentation with model diagnostics, classification, importance, significance, fitted-object, sequence, and cross-validation workflows.
+
 # rtemis.draw 0.5.1
 
+- **Every property this package declares through `rtemis.core` now comes from a `prop_*` factory.** The 175 remaining uses of that package's hand-written properties -- `optional_logical_scalar`, `optional_character_scalar`, `enum()` and four others, across the ten ECharts option files -- are replaced by `prop_boolean()`, `prop_string()` and `prop_integer()`. The hand-written properties carry no `PropertySpec`, so `prop_spec()` returns `NULL` for them and a class built on one and its published schema are free to disagree; they are the same defect that retired `bounded_double_property()` in `rtemis.core` 0.4.6, and they are the last of their kind in that package. None was reachable from a published schema -- `chart_schema()` refuses a property with no spec rather than emitting one that omits it -- so the generated corpus is unchanged; what this buys is that `rtemis.core` can now remove them without a coordinated release. Each replacement was checked against the property it replaces over absent, `NULL`, valid, out-of-range, `NA`, vector and wrong-type inputs before the swap, so validation behavior is identical, defaults included.
+
+- **Chart schemas are held to the registry's input-schema contract.**
+  `rtemis.core::assert_config_contract()` now runs on every `schema.json` this
+  package writes. The registry has more than one producer and only `rtemis` was
+  checking itself, so `chart/*` had been publishing documents no gate had ever
+  read -- 32 descriptions naming an R constructor among them. `type` is declared
+  structural at the call site: it says which chart the document is, which nothing
+  can supply on a caller's behalf, so requiring it is not a demand for a value.
+- **No chart description spells a value the way R does.** The sibling of the
+  rule below, and the half it missed: 34 descriptions said "NULL uses the
+  theme's" or "Drop NA values", telling every reader but one to write something
+  no JSON document can hold. They now say what the absent value means -- "Unset
+  uses the theme's". `rtemis.core` 0.4.6 makes this the contract's fifth rule
+  and adds `assert_description_language()`, so a record and a `$defs` entry are
+  checked too, not only the `schema.json` a caller authors. The roxygen
+  `@param` still says `NULL`, which is what an R caller types.
+- **No chart description names an R constructor or function.** Fourteen ended
+  "See `setup_XConfig`."; two more pointed at `graphics::hist` and
+  `stats::density`. The corpus is language-independent, and a description is read
+  by the CLI, by the browser and by a model as often as by an R user, who has the
+  roxygen docs. Passed to `setup_*` is what the roxygen `@param` says; the schema
+  now says what the setting *is*.
 - **Schemas are written by `rtemis.core::write_JSONSchema()`.**
   `write_chart_schema()` is retired: the registry has more than one producer, and
   a document's shape belongs to the registry rather than to whichever package

@@ -113,3 +113,49 @@ test_that("Theme component textStyle overrides propagated values", {
   # Global color still propagated (not overridden at component level)
   expect_equal(out$title$textStyle$color, "#333")
 })
+
+
+test_that("Theme data-zoom overrides serialize and validate their list type", {
+  settings <- list(
+    fillerColor = "#777777",
+    handleStyle = list(color = "#ffffff")
+  )
+  expect_identical(to_list(Theme(data_zoom = settings))[["dataZoom"]], settings)
+  expect_false("dataZoom" %in% names(to_list(Theme())))
+  expect_error(Theme(data_zoom = "gray"))
+  expect_identical(
+    to_list(theme_light())[["dataZoom"]][["handleStyle"]][["color"]],
+    "#ffffff"
+  )
+  expect_identical(
+    to_list(theme_dark())[["dataZoom"]][["handleStyle"]][["color"]],
+    "#303030"
+  )
+})
+
+
+test_that("neutral slider themes survive native rendering and allow chart overrides", {
+  skip_if_not(nzchar(Sys.which("node")), "node not found")
+  path <- tempfile(fileext = ".json")
+  on.exit(unlink(path), add = TRUE)
+  jsonlite::write_json(
+    list(
+      echarts = system.file(
+        "htmlwidgets/lib/echarts/echarts.min.js",
+        package = "rtemis.draw"
+      ),
+      themes = list(to_list(theme_light()), to_list(theme_dark()))
+    ),
+    path,
+    auto_unbox = TRUE,
+    null = "null"
+  )
+  output <- system2(
+    Sys.which("node"),
+    c(shQuote(test_path("fixtures", "slider_theme.js")), shQuote(path)),
+    stdout = TRUE,
+    stderr = TRUE
+  )
+  expect_null(attr(output, "status"), info = paste(output, collapse = "\n"))
+  expect_match(paste(output, collapse = "\n"), "Neutral slider themes")
+})

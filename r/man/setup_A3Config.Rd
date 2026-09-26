@@ -40,7 +40,8 @@ placed relative to the backbone.}
 
 \item{residue_spacing}{Numeric \verb{[0, Inf)}: Gap between residues.}
 
-\item{marker_size}{Numeric \verb{[0, Inf)}: Residue marker size.}
+\item{marker_size}{Numeric \verb{[0, Inf)}: Preferred residue marker size;
+reduced with related marks when needed to fit the surface.}
 
 \item{font_size}{Numeric \verb{[0, Inf)}: Residue label font size.}
 

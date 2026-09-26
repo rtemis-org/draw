@@ -28,7 +28,11 @@ setup_ScatterConfig(
   margin_left = NULL,
   dat_path = NULL,
   origin = NULL,
-  writer = NULL
+  writer = NULL,
+  se_times = 1.96,
+  rsq = FALSE,
+  diagonal = FALSE,
+  diagonal_color = NULL
 )
 }
 \arguments{
@@ -84,6 +88,14 @@ config that already carries provenance.}
 
 \item{writer}{Optional Named character: Which interface wrote the config, as
 \code{name} and \code{version}.}
+
+\item{se_times}{Numeric \verb{[0, Inf)}: Multiplier for the fitted standard error.}
+
+\item{rsq}{Logical: Include the fitted model's R-squared in series labels.}
+
+\item{diagonal}{Logical: Draw the identity line within the axis limits.}
+
+\item{diagonal_color}{Optional Character: Identity-line color.}
 }
 \value{
 \link{ScatterConfig} object.

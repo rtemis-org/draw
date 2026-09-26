@@ -162,5 +162,44 @@ draw_object_session <- function(x, ...) {
   S7::method(plot, rtemis_class("SupervisedSession")) <- draw_supervised_session
   S7::method(plot_session, rtemis_class("Supervised")) <- draw_object_session
   S7::method(plot_session, rtemis_class("SupervisedRes")) <- draw_object_session
+  S7::method(
+    plot_learning,
+    rtemis_class("Supervised")
+  ) <- draw_model_learning_curve
+  for (name in c("Supervised", "SupervisedRes")) {
+    cls <- rtemis_class(name)
+    S7::method(varimp_plot_data, cls) <- extract_varimp_plot_data
+    S7::method(plot_varimp, cls) <- draw_model_varimp
+  }
+  S7::method(
+    metric_plot_data,
+    rtemis_class("SupervisedRes")
+  ) <- extract_metric_plot_data
+  S7::method(plot_metric, rtemis_class("SupervisedRes")) <- draw_model_metric
+  S7::method(present, rtemis_class("Regression")) <- present_regression
+  S7::method(present, rtemis_class("Classification")) <- present_classification
+  S7::method(present, rtemis_class("SupervisedRes")) <- present_resampled
+  massglm <- rtemis_class("MassGLM")
+  S7::method(massglm_plot_data, massglm) <- extract_massglm_plot_data
+  S7::method(plot_manhattan, massglm) <- draw_massglm_manhattan
+  register_massglm_plot(massglm)
+  for (name in c("Regression", "RegressionRes")) {
+    cls <- rtemis_class(name)
+    S7::method(regression_plot_data, cls) <- extract_regression_plot_data
+    S7::method(plot_true_pred, cls) <- draw_regression_predictions
+  }
+  for (name in c("ClassificationMetrics", "ClassificationMetricsRes")) {
+    S7::method(confusion_input, rtemis_class(name)) <- extract_confusion_metrics
+  }
+  for (name in c("Classification", "ClassificationRes")) {
+    cls <- rtemis_class(name)
+    S7::method(
+      classification_plot_data,
+      cls
+    ) <- extract_classification_plot_data
+    S7::method(plot_true_pred, cls) <- draw_classification_predictions
+    S7::method(roc_plot_data, cls) <- extract_roc_plot_data
+    S7::method(plot_roc, cls) <- draw_model_roc
+  }
   invisible(NULL)
 } # /rtemis.draw::.register_rtemis_methods

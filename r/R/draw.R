@@ -305,8 +305,8 @@ render_widget <- function(
 #' @param height Optional Character or Numeric: Widget height.
 #' @param element_id Optional Character: Explicit element ID.
 #' @param filename Optional Character: If provided, the widget is also written to
-#'   this file via [save_drawing()] (ECharts only; other backends warn and
-#'   ignore it). Extension determines the format (currently only `.svg`).
+#'   this file via [save_drawing()] (ECharts only; other backends reject static
+#'   export requests). Extension determines the format (currently only `.svg`).
 #' @param ... Backend-specific arguments, which must be named. ECharts accepts
 #'   `renderer` (Character \{"canvas", "svg"\}) and `meta` (named list of extra
 #'   payload fields, used internally e.g. by [draw_heatmap()]). Any other name
@@ -629,6 +629,122 @@ renderDraw <- function(expr, env = parent.frame(), quoted = FALSE) {
 
 # -- Tier 1: draw_* convenience functions ---------------------------------------
 
+#' Epoch milliseconds for a time axis, keeping the wall-clock reading
+#'
+#' ECharts places and labels a time axis by epoch milliseconds, formatted in
+#' the browser's timezone unless the option sets `useUTC`. A chart built in
+#' one timezone and viewed in another would then move every point: a date at
+#' midnight, sent as the instant it names, reads as the previous evening on a
+#' browser west of it. So the value sent is the instant whose *UTC* reading is
+#' the timestamp's own wall-clock reading, and the option sets `useUTC`, which
+#' together render the timestamp exactly as R prints it wherever it is viewed.
+#'
+#' A `Date` is a count of days from the epoch and needs no timezone at all.
+#' A `POSIXct` is formatted in its own timezone and re-read as UTC.
+#'
+#' @param x Date, POSIXct, or Numeric: Time values, or milliseconds already.
+#'
+#' @return Numeric: Epoch milliseconds, `NA` where `x` is.
+#'
+#' @author EDG
+#' @keywords internal
+#' @noRd
+time_axis_ms <- function(x) {
+  if (inherits(x, "Date")) {
+    return(as.numeric(x) * 86400000)
+  }
+  if (inherits(x, "POSIXt")) {
+    wall <- format(x, "%Y-%m-%d %H:%M:%OS6")
+    utc <- as.POSIXct(wall, tz = "UTC", format = "%Y-%m-%d %H:%M:%OS")
+    return(round(as.numeric(utc) * 1000))
+  }
+  as.numeric(x)
+} # /rtemis.draw::time_axis_ms
+
+
+#' Is a vector a time for a line chart's x axis?
+#'
+#' @param x Vector: The candidate.
+#'
+#' @return Logical: TRUE for `Date` and `POSIXt`.
+#'
+#' @author EDG
+#' @keywords internal
+#' @noRd
+is_time_axis <- function(x) {
+  inherits(x, c("Date", "POSIXt"))
+} # /rtemis.draw::is_time_axis
+
+
+#' Make room under the plot for the zoom slider
+#'
+#' ECharts lays its slider a fixed distance above the container's bottom edge,
+#' where the x-axis title and the legend already sit, and reserves no grid
+#' space for it. This moves the slider up to the top of the bottom margin --
+#' above the legend, which lives in that margin -- and grows the margin so the
+#' axis labels and title clear the slider.
+#'
+#' Only the preset built by `zoom = TRUE` is placed: a caller who passes
+#' [DataZoom] objects has taken over the layout. A percentage bottom margin is
+#' left alone too, since the slider's height is in pixels.
+#'
+#' @param data_zoom List of [DataZoom]: The resolved zoom specs.
+#' @param grid Optional [Grid]: The resolved margins.
+#'
+#' @return Named list: `data_zoom` and `grid`, placed.
+#'
+#' @author EDG
+#' @keywords internal
+#' @noRd
+reserve_slider_room <- function(data_zoom, grid) {
+  # ECharts' own numbers: the slider's filler height, the brush handle it
+  # draws below the filler, and its default grid margin when none is given.
+  slider_height <- 30
+  handle_height <- 7
+  gap <- 8
+  bottom <- if (is.null(grid) || is.null(grid@bottom)) 80 else grid@bottom
+  if (!is.numeric(bottom)) {
+    return(list(data_zoom = data_zoom, grid = grid))
+  }
+  data_zoom <- lapply(data_zoom, function(dz) {
+    if (S7::S7_inherits(dz, DataZoom) && identical(dz@type, "slider")) {
+      dz@bottom <- bottom + handle_height
+      dz@height <- slider_height
+    }
+    dz
+  })
+  grid <- grid %||% Grid()
+  grid@bottom <- bottom + handle_height + slider_height + gap
+  list(data_zoom = data_zoom, grid = grid)
+} # /rtemis.draw::reserve_slider_room
+
+
+#' Tooltip value formatter for plain numbers
+#'
+#' Formats the value part of a tooltip row while leaving ECharts' own layout
+#' -- axis label header, series marker and name, right-aligned value -- in
+#' place. Integers print as they are; other numbers to two decimals, or in
+#' exponent form when they are very large or very small; anything that is not
+#' a finite number passes through.
+#'
+#' @return `JS` function: For `Tooltip(value_formatter = )`.
+#'
+#' @author EDG
+#' @keywords internal
+#' @noRd
+number_value_formatter <- function() {
+  htmlwidgets::JS(
+    "function (v) {
+      if (typeof v !== 'number' || !isFinite(v)) return v;
+      if (Number.isInteger(v)) return String(v);
+      var a = Math.abs(v);
+      if (a >= 1e6 || a < 0.01) return v.toExponential(2);
+      return v.toFixed(2);
+    }"
+  )
+} # /rtemis.draw::number_value_formatter
+
+
 #' Build the ECharts option for a line chart
 #'
 #' The single implementation shared by [draw_line()], which resolves its arguments
@@ -646,6 +762,7 @@ line_option <- function(
   x,
   y,
   names = NULL,
+  group = NULL,
   smooth = FALSE,
   area = FALSE,
   points = TRUE,
@@ -665,29 +782,45 @@ line_option <- function(
   zoom = FALSE,
   margins = DEFAULT_MARGINS
 ) {
+  # Determine axis type: numbers get a value axis, dates and date-times a
+  # time axis, which ECharts spaces by elapsed time and labels adaptively
+  # (years, then months, then days as the span narrows). Anything else is a
+  # category axis with one slot per distinct value.
+  x_type <- if (is.numeric(x)) {
+    "value"
+  } else if (is_time_axis(x)) {
+    "time"
+  } else {
+    "category"
+  }
+
+  # On a time axis, positions are epoch milliseconds (see time_axis_ms()),
+  # and `xlim` may be given as dates, date-times, or milliseconds.
+  x_num <- switch(x_type, value = x, time = time_axis_ms(x), category = NULL)
+  if (x_type == "time" && !is.null(xlim)) {
+    xlim <- time_axis_ms(xlim)
+  }
   validate_axis_lim(xlim, "xlim")
   validate_axis_lim(ylim, "ylim")
 
-  # Determine axis type
-  x_type <- if (is.numeric(x)) "value" else "category"
-
-  # `xlim` only makes sense on a numeric (value) x-axis.
-  if (!is.null(xlim) && x_type != "value") {
+  # `xlim` only makes sense on an axis with a numeric position.
+  if (!is.null(xlim) && x_type == "category") {
     abort(
-      "`xlim` only applies when `x` is numeric.",
+      "`xlim` only applies when `x` is numeric or a date.",
       class = c("rtemis_value_error", "rtemis_input_error")
     )
   }
   if (equal_axes && x_type != "value") {
     abort(
       "`equal_axes` compares the two axes' scales, which needs a numeric x. ",
-      "This chart's x is categorical.",
+      "This chart's x is ",
+      if (x_type == "time") "a date or time." else "categorical.",
       class = c("rtemis_value_error", "rtemis_input_error")
     )
   }
   # Asking for a square box *and* equal scaling is a statement about the limits;
   # settle them before anything reads them.
-  limits <- equal_axis_limits(x, y, xlim, ylim, pad, square, equal_axes)
+  limits <- equal_axis_limits(x_num, y, xlim, ylim, pad, square, equal_axes)
   xlim <- limits[["xlim"]]
   ylim <- limits[["ylim"]]
 
@@ -696,13 +829,31 @@ line_option <- function(
   # against the plot edges while a scatter of the same data got 4% of room --
   # two charts disagreeing about the same question.
   y_all <- if (is.list(y)) unlist(y, use.names = FALSE) else y
-  x_lim <- if (x_type == "value") (xlim %||% calc_limits(x, pad)) else NULL
+  x_lim <- if (!is.null(x_num)) (xlim %||% calc_limits(x_num, pad)) else NULL
   y_lim <- ylim %||% calc_limits(y_all, pad)
 
-  # Format series data: value axes need [x, y] pairs; category axes need y only
-  pair_xy <- function(y_vals) {
-    if (x_type == "value") {
-      mapply(c, x, y_vals, SIMPLIFY = FALSE)
+  # The categories of a category axis, each listed once. Ungrouped data lists
+  # them once already; grouped data repeats them once per level.
+  x_categories <- if (x_type == "category") unique(x) else NULL
+
+  # Format series data: value and time axes need [x, y] pairs; category axes
+  # need y only when every series covers every category in order (the
+  # ungrouped case), and [index, y] pairs when a series covers a subset (the
+  # grouped case). The index is the category's 0-based position on the axis,
+  # which ECharts accepts in place of its name. Matching by name would need
+  # the name spelled the same way here and by the JSON serializer, and for a
+  # factor or other formatted value that is not guaranteed.
+  pair_xy <- function(y_vals, x_vals = x_num, pair_category = FALSE) {
+    if (x_type != "category") {
+      mapply(c, x_vals, y_vals, SIMPLIFY = FALSE, USE.NAMES = FALSE)
+    } else if (pair_category) {
+      mapply(
+        c,
+        match(x_vals, x_categories) - 1L,
+        y_vals,
+        SIMPLIFY = FALSE,
+        USE.NAMES = FALSE
+      )
     } else {
       y_vals
     }
@@ -734,8 +885,44 @@ line_option <- function(
     LineStyle(type = line_style[((i - 1L) %% n) + 1L])
   }
 
-  # Build series
-  if (is.list(y) && !is.null(names(y))) {
+  # Build series. `group` splits a single `y` into one line per level, the way
+  # draw_scatter() splits points; a list `y` is already multi-series, so the
+  # two do not combine.
+  if (!is.null(group)) {
+    if (is.list(y)) {
+      abort(
+        "`group` splits a single `y` vector into one series per level; ",
+        "pass `y` as a list *or* set `group`, not both.",
+        class = c("rtemis_value_error", "rtemis_input_error")
+      )
+    }
+    group <- group_values(group, length(y))
+    # `blocks` is read along `x`, and with `group` each x repeats once per
+    # level, so the same run would be shaded once per group.
+    if (!is.null(blocks)) {
+      abort(
+        "`blocks` is not supported together with `group`.",
+        class = c("rtemis_value_error", "rtemis_input_error")
+      )
+    }
+    # Points with a missing group belong to no line.
+    groups <- unique(group[!is.na(group)])
+    series <- lapply(seq_along(groups), function(i) {
+      idx <- which(!is.na(group) & group == groups[[i]])
+      LineSeries(
+        name = as.character(groups[[i]]),
+        data = pair_xy(
+          y[idx],
+          x_vals = if (x_type == "category") x[idx] else x_num[idx],
+          pair_category = TRUE
+        ),
+        smooth = smooth,
+        show_symbol = show_symbol,
+        line_style = resolve_line_style(i),
+        area_style = if (area) AreaStyle() else NULL
+      )
+    })
+  } else if (is.list(y) && !is.null(names(y))) {
     series_names <- names(y)
     series <- lapply(seq_along(y), function(i) {
       LineSeries(
@@ -772,7 +959,7 @@ line_option <- function(
   # Optional vertical background bands from `blocks` + `block_color`.
   if (!is.null(blocks)) {
     mark_area <- build_block_mark_area(
-      x = x,
+      x = x_num %||% x,
       blocks = blocks,
       block_color = block_color,
       block_opacity = block_opacity
@@ -782,24 +969,34 @@ line_option <- function(
     }
   }
 
-  # Resolve `zoom` argument into an (optional) list of DataZoom specs.
+  # Resolve `zoom` argument into an (optional) list of DataZoom specs. The
+  # `TRUE` preset's slider is given its own band under the plot.
   data_zoom <- resolve_zoom(zoom, axis = "x")
+  grid <- resolve_margins(margins)
+  if (isTRUE(zoom)) {
+    placed <- reserve_slider_room(data_zoom, grid)
+    data_zoom <- placed[["data_zoom"]]
+    grid <- placed[["grid"]]
+  }
 
   opt <- EChartsOption(
     title = if (!is.null(title)) Title(text = title) else NULL,
-    tooltip = Tooltip(trigger = "axis"),
-    legend = if (length(series) > 1L) Legend() else NULL,
+    tooltip = Tooltip(
+      trigger = "axis",
+      value_formatter = number_value_formatter()
+    ),
+    legend = if (length(series) > 1L || !is.null(group)) Legend() else NULL,
     x_axis = Axis(
       type = x_type,
       name = xlab,
       name_location = if (!is.null(xlab)) "middle" else NULL,
-      data = if (x_type == "category") x else NULL,
+      data = x_categories,
       scale = if (x_type == "value") TRUE else NULL,
       min = if (!is.null(x_lim)) x_lim[[1L]] else NULL,
       max = if (!is.null(x_lim)) x_lim[[2L]] else NULL,
-      split_line = if (x_type == "value") no_corner_split_line() else NULL,
-      axis_label = if (x_type == "value") no_corner_axis_label() else NULL,
-      axis_line = if (x_type == "value") {
+      split_line = if (x_type != "category") no_corner_split_line() else NULL,
+      axis_label = if (x_type != "category") no_corner_axis_label() else NULL,
+      axis_line = if (x_type != "category") {
         axis_line_for_orthogonal(y_lim)
       } else {
         NULL
@@ -818,7 +1015,9 @@ line_option <- function(
     ),
     color = palette,
     data_zoom = data_zoom,
-    grid = resolve_margins(margins),
+    grid = grid,
+    # Time positions carry the wall-clock reading as UTC; see time_axis_ms().
+    use_utc = if (x_type == "time") TRUE else NULL,
     series = series
   )
 
@@ -852,9 +1051,18 @@ line_option <- function(
 #' The box itself is solved in the browser, which is the only side that knows
 #' how wide the container is, and re-solved whenever it resizes.
 #'
-#' @param x Vector: X-axis values.
+#' @param x Vector: X-axis values. Numeric values get a value axis. `Date`
+#'   and `POSIXct` values get a time axis: points are spaced by elapsed time
+#'   and the labels are chosen adaptively for the span shown (years, then
+#'   months, then days, down to seconds), and they read as the timestamps do
+#'   in R whatever timezone the chart is viewed in. Anything else gets a
+#'   category axis with one slot per distinct value, in order of appearance.
 #' @param y Numeric or named list: Y values.
 #' @param names Optional Character: Series names used when `y` is an unnamed list.
+#' @param group Optional Atomic vector or single-column data frame: Grouping
+#'   variable, one value per point. Splits a single `y` vector into one line per level, named by the level, as
+#'   [draw_scatter()] does for points. Cannot be combined with a list `y` or
+#'   with `blocks`. Points whose group is `NA` are dropped.
 #' @param smooth Logical: Whether to smooth lines.
 #' @param area Logical: Whether to show area fill.
 #' @param points Logical: Whether to show point markers on each data value.
@@ -875,9 +1083,11 @@ line_option <- function(
 #'   `color` takes precedence over the theme palette (it sets `option.color`).
 #' @param line_style Optional Character \{"solid", "dashed", "dotted"\}: Line dash
 #'   style — one value per series, recycled to match the number of series.
-#' @param xlim Optional Numeric \[length 2\]: X-axis limits `c(min, max)`.
-#'   Only supported when `x` is numeric; passing `xlim` with a non-numeric `x`
-#'   errors. Defaults to `range(x)` (no padding) when `x` is numeric.
+#' @param xlim Optional Numeric, Date, or POSIXct \[length 2\]: X-axis limits
+#'   `c(min, max)`. Only supported when `x` is numeric or a time; passing
+#'   `xlim` with a categorical `x` errors. On a time axis, give it in the same
+#'   class as `x` (or as epoch milliseconds). Defaults to the range of `x`
+#'   extended by `pad`.
 #' @param ylim Optional Numeric \[length 2\]: Y-axis limits `c(min, max)`.
 #' @param pad Numeric `[0, Inf)`: Fraction of the data range to extend each
 #'   axis by when `xlim` / `ylim` are not given. The default matches base R's
@@ -895,9 +1105,10 @@ line_option <- function(
 #' @param theme Optional [Theme]: Theme override. The palette inside the theme can be
 #'   overridden per-chart with the `color` argument.
 #' @param zoom Logical, [DataZoom], or list of [DataZoom]: Enable x-axis zoom.
-#'   `TRUE` adds a slider plus mouse-wheel/drag zoom on the x-axis; `FALSE`
-#'   (default) disables zoom. Pass [DataZoom] objects (or a list of them) for
-#'   full control over zoom behavior and styling.
+#'   `TRUE` adds a slider plus mouse-wheel/drag zoom on the x-axis, with the
+#'   slider given its own band below the axis title; `FALSE` (default)
+#'   disables zoom. Pass [DataZoom] objects (or a list of them) for full
+#'   control over zoom behavior, styling, and placement.
 #' @param margins Optional Named numeric vector or named list: Plot margins in
 #'   pixels (or percentage strings) for any of `"top"`, `"right"`,
 #'   `"bottom"`, `"left"` — e.g. `c(left = 80, right = 20)` or
@@ -928,6 +1139,7 @@ draw_line <- function(
   x,
   y,
   names = NULL,
+  group = NULL,
   smooth = FALSE,
   area = FALSE,
   points = TRUE,
@@ -956,6 +1168,7 @@ draw_line <- function(
     x = x,
     y = y,
     names = names,
+    group = group,
     smooth = smooth,
     area = area,
     points = points,
@@ -1261,8 +1474,12 @@ bar_option <- function(
   xlab = NULL,
   ylab = NULL,
   title = NULL,
-  margins = DEFAULT_MARGINS
+  margins = DEFAULT_MARGINS,
+  bar_width = NULL
 ) {
+  # Validate this shared setting through the portable config property on both
+  # the vector and config paths; the low-level ECharts class also allows strings.
+  bar_width <- BarConfig(bar_width = bar_width)@bar_width
   stack_group <- if (stack) "total" else NULL
 
   if (is.list(y) && !is.null(names(y))) {
@@ -1273,13 +1490,19 @@ bar_option <- function(
       BarSeries(
         name = series_names[i],
         data = y[[i]],
+        bar_width = bar_width,
         stack = stack_group,
         color = colors[i]
       )
     })
   } else {
     if (is.null(palette) || length(palette) <= 1L) {
-      series <- list(BarSeries(data = y, stack = stack_group, color = palette))
+      series <- list(BarSeries(
+        data = y,
+        stack = stack_group,
+        color = palette,
+        bar_width = bar_width
+      ))
     } else {
       colors <- rep_len(palette_colors(palette), length(y))
       data_items <- lapply(seq_along(y), function(i) {
@@ -1288,7 +1511,11 @@ bar_option <- function(
           itemStyle = list(color = colors[[i]])
         )
       })
-      series <- list(BarSeries(data = data_items, stack = stack_group))
+      series <- list(BarSeries(
+        data = data_items,
+        stack = stack_group,
+        bar_width = bar_width
+      ))
     }
   }
 
@@ -1298,6 +1525,14 @@ bar_option <- function(
   } else {
     x_ax <- Axis(type = "category", data = x, name = xlab)
     y_ax <- Axis(type = "value", name = ylab)
+  }
+  # End-positioned names consume horizontal plot space for long measure
+  # labels. Match line/scatter charts and let ECharts resolve label clearance.
+  if (!is.null(xlab)) {
+    x_ax@name_location <- "middle"
+  }
+  if (!is.null(ylab)) {
+    y_ax@name_location <- "middle"
   }
 
   opt <- EChartsOption(
@@ -1323,14 +1558,15 @@ bar_option <- function(
 #' @param palette Optional Character: Bar color or colors. For multiple series,
 #'   colors are applied per series and recycled as needed. For a single series,
 #'   a single color styles the whole series; multiple colors are recycled
-#'   across individual bars. `color` takes precedence over the theme palette.
+#'   across individual bars. `palette` takes precedence over the theme palette.
 #' @param stack Logical: Whether to stack bars.
 #' @param horizontal Logical: Whether to draw horizontal bars.
+#' @inheritParams BarConfig
 #' @param xlab Optional Character: X-axis title (bottom axis).
 #' @param ylab Optional Character: Y-axis title (left axis).
 #' @param title Optional Character: Chart title.
 #' @param theme Optional [Theme]: Theme override. The palette inside the theme can be
-#'   overridden per-chart with the `color` argument.
+#'   overridden per-chart with the `palette` argument.
 #' @param margins Optional Named numeric vector or named list: Plot margins in
 #'   pixels (or percentage strings) for any of `"top"`, `"right"`,
 #'   `"bottom"`, `"left"`. Unspecified sides keep echarts' default auto-sizing.
@@ -1360,7 +1596,8 @@ draw_bar <- function(
   width = NULL,
   height = NULL,
   element_id = NULL,
-  filename = NULL
+  filename = NULL,
+  bar_width = NULL
 ) {
   opt <- bar_option(
     x = x,
@@ -1368,6 +1605,7 @@ draw_bar <- function(
     palette = palette,
     stack = stack,
     horizontal = horizontal,
+    bar_width = bar_width,
     xlab = xlab,
     ylab = ylab,
     title = title,
@@ -1395,7 +1633,8 @@ draw_bar <- function(
 #'
 #' @param x,y Numeric: Point coordinates.
 #' @param size Optional Numeric: Point sizes.
-#' @param group Optional Vector: Grouping variable, one value per point.
+#' @param group Optional Atomic vector or single-column data frame: Grouping
+#'   variable, one value per point.
 #' @param fit Optional Character \{"glm", "gam"\}: Fit to overlay.
 #' @param se Logical: If TRUE, shade the fit standard-error band.
 #' @param fit_alpha Numeric `[0, 1]`: Opacity of the standard-error band.
@@ -1424,7 +1663,7 @@ scatter_option <- function(
   fit = NULL,
   se = TRUE,
   fit_alpha = 0.25,
-  n_fit = 200,
+  n_fit = 200L,
   palette = NULL,
   xlim = NULL,
   ylim = NULL,
@@ -1434,8 +1673,30 @@ scatter_option <- function(
   xlab = NULL,
   ylab = NULL,
   title = NULL,
-  margins = DEFAULT_MARGINS
+  margins = DEFAULT_MARGINS,
+  se_times = 1.96,
+  rsq = FALSE,
+  diagonal = FALSE,
+  diagonal_color = NULL
 ) {
+  group <- group_values(group, length(x))
+  # The same declaration validates the vector and serialized-config routes.
+  n_fit <- clean_int(n_fit)
+  ScatterConfig(
+    fit = fit,
+    se = se,
+    n_fit = n_fit,
+    fit_alpha = fit_alpha,
+    pad = pad,
+    square = square,
+    equal_axes = equal_axes,
+    xlab = xlab,
+    ylab = ylab,
+    se_times = se_times,
+    rsq = rsq,
+    diagonal = diagonal,
+    diagonal_color = diagonal_color
+  )
   validate_axis_lim(xlim, "xlim")
   validate_axis_lim(ylim, "ylim")
   # Asking for a square box *and* equal scaling is a statement about the limits;
@@ -1449,16 +1710,22 @@ scatter_option <- function(
   x_lim <- xlim %||% calc_limits(x, pad)
   y_lim <- ylim %||% calc_limits(y, pad)
 
-  if (!is.null(fit)) {
-    fit <- match.arg(fit, c("glm", "gam"))
-  }
-
   # Helper: compute fit line and CI band for one group
   compute_fit <- function(xv, yv, fit_method, n_pts) {
-    # Drop NA pairs before fitting
-    ok <- !is.na(xv) & !is.na(yv)
+    # A fit needs aligned finite pairs and a residual degree of freedom when
+    # displaying uncertainty. Report the remedy before calling the fitter.
+    ok <- is.finite(xv) & is.finite(yv)
     xv <- xv[ok]
     yv <- yv[ok]
+    minimum <- if (se) 3L else 2L
+    if (length(xv) < minimum || length(unique(xv)) < 2L) {
+      abort(
+        "Each fitted group needs at least ",
+        minimum,
+        " complete pairs and two distinct x values; add observations or set `fit = NULL`.",
+        class = c("rtemis_value_error", "rtemis_input_error")
+      )
+    }
     df <- data.frame(.x = xv, .y = yv)
     if (fit_method == "gam") {
       check_dependencies("mgcv")
@@ -1468,11 +1735,17 @@ scatter_option <- function(
     }
     newdata <- data.frame(.x = seq(min(xv), max(xv), length.out = n_pts))
     pred <- stats::predict(model, newdata = newdata, se.fit = TRUE)
+    total <- sum((yv - mean(yv))^2)
     list(
-      x = newdata$.x,
-      fitted = pred$fit,
-      lower = pred$fit - 1.96 * pred$se.fit,
-      upper = pred$fit + 1.96 * pred$se.fit
+      x = newdata[[".x"]],
+      fitted = pred[["fit"]],
+      lower = pred[["fit"]] - se_times * pred[["se.fit"]],
+      upper = pred[["fit"]] + se_times * pred[["se.fit"]],
+      rsq = if (total > 0) {
+        1 - sum(stats::residuals(model, type = "response")^2) / total
+      } else {
+        NA_real_
+      }
     )
   }
 
@@ -1481,15 +1754,27 @@ scatter_option <- function(
   # legend — clicking a group toggles scatter + fit + CI as a unit.
   fit_series <- function(xv, yv, fit_method, n_pts, group_name, color) {
     p <- compute_fit(xv, yv, fit_method, n_pts)
-    fit_data <- mapply(c, p$x, p$fitted, SIMPLIFY = FALSE)
+    if (rsq) {
+      group_name <- paste0(
+        group_name %||% "Fit",
+        " (R^2 = ",
+        if (is.na(p[["rsq"]])) {
+          "NA"
+        } else {
+          formatC(p[["rsq"]], format = "f", digits = 3L)
+        },
+        ")"
+      )
+    }
+    fit_data <- mapply(c, p[["x"]], p[["fitted"]], SIMPLIFY = FALSE)
 
     out <- list()
 
     if (se) {
       # CI band as a closed polygon: upper bound L->R, lower bound R->L.
       # areaStyle fills the enclosed region. No stacking needed.
-      upper <- mapply(c, p$x, p$upper, SIMPLIFY = FALSE)
-      lower <- mapply(c, rev(p$x), rev(p$lower), SIMPLIFY = FALSE)
+      upper <- mapply(c, p[["x"]], p[["upper"]], SIMPLIFY = FALSE)
+      lower <- mapply(c, rev(p[["x"]]), rev(p[["lower"]]), SIMPLIFY = FALSE)
       ci_data <- c(upper, lower)
       out$ci <- LineSeries(
         name = group_name,
@@ -1554,12 +1839,40 @@ scatter_option <- function(
           as.character(g),
           group_colors[i]
         )
+        if (rsq) {
+          series[[i]]@name <- fs[["fit"]]@name
+        }
         series <- c(series, unname(fs))
       }
     } else {
       color <- rtemis_colors[["teal"]]
       fs <- fit_series(x, y, fit, n_fit, NULL, color)
+      if (rsq) {
+        series[[1L]]@name <- fs[["fit"]]@name
+      }
       series <- c(series, unname(fs))
+    }
+  }
+
+  # An unnamed, silent series does not add a legend entry or intercept hover.
+  # Clip the identity segment to the intersection of the two visible ranges.
+  if (diagonal) {
+    ends <- c(max(x_lim[[1L]], y_lim[[1L]]), min(x_lim[[2L]], y_lim[[2L]]))
+    if (ends[[1L]] < ends[[2L]]) {
+      series <- c(
+        series,
+        list(LineSeries(
+          data = lapply(ends, function(value) c(value, value)),
+          show_symbol = FALSE,
+          silent = TRUE,
+          legend_hover_link = FALSE,
+          line_style = LineStyle(
+            color = diagonal_color %||% "#888888",
+            type = "dashed"
+          ),
+          z = 1L
+        ))
+      )
     }
   }
 
@@ -1585,7 +1898,7 @@ scatter_option <- function(
   opt <- EChartsOption(
     title = if (!is.null(title)) Title(text = title) else NULL,
     tooltip = Tooltip(trigger = "item", formatter = scatter_formatter),
-    legend = if (!is.null(group)) Legend() else NULL,
+    legend = if (!is.null(group) || (!is.null(fit) && rsq)) Legend() else NULL,
     x_axis = Axis(
       type = "value",
       name = xlab,
@@ -1647,13 +1960,20 @@ scatter_option <- function(
 #' @param x Numeric: X values.
 #' @param y Numeric: Y values.
 #' @param size Optional Numeric: Symbol sizes.
-#' @param group Optional Vector: Grouping variable for multiple series.
+#' @param group Optional Atomic vector or single-column data frame: Grouping
+#'   variable for multiple series.
 #' @param fit Optional Character \{"glm", "gam"\}: Fit method. `NULL` disables fitting.
-#'   `"gam"` for [mgcv::gam()]. The fitted line and 95\% confidence band
+#'   `"gam"` for [mgcv::gam()]. The fitted line and standard-error band
 #'   are computed per group when `group` is provided.
 #' @param se Logical: Whether to show the confidence band.
+#' @param se_times Numeric `[0, Inf)`: Standard-error multiplier for the band.
+#' @param rsq Logical: Include the fitted model's R-squared in series labels.
+#'   This describes the overlay fit, not predictive performance against the
+#'   identity line. Constant responses have undefined R-squared, labeled `NA`.
+#' @param diagonal Logical: Draw a dashed identity line within the axis limits.
+#' @param diagonal_color Optional Character: Identity-line color.
 #' @param fit_alpha Numeric `[0, 1]`: Opacity for the confidence-band fill.
-#' @param n_fit Numeric `[1, Inf)`: Number of evaluation points for the fit.
+#' @param n_fit Integer `[2, Inf)`: Number of evaluation points for the fit.
 #' @param palette Optional Character: Series color palette — a single color string or
 #'   character vector that overrides the theme palette for this chart.
 #'   When `group` is set, colors are assigned per group in order. `color` takes
@@ -1710,7 +2030,7 @@ draw_scatter <- function(
   fit = NULL,
   se = TRUE,
   fit_alpha = 0.25,
-  n_fit = 200,
+  n_fit = 200L,
   palette = NULL,
   xlim = NULL,
   ylim = NULL,
@@ -1725,7 +2045,11 @@ draw_scatter <- function(
   width = NULL,
   height = NULL,
   element_id = NULL,
-  filename = NULL
+  filename = NULL,
+  se_times = 1.96,
+  rsq = FALSE,
+  diagonal = FALSE,
+  diagonal_color = NULL
 ) {
   opt <- scatter_option(
     x = x,
@@ -1734,6 +2058,10 @@ draw_scatter <- function(
     group = group,
     fit = fit,
     se = se,
+    se_times = se_times,
+    rsq = rsq,
+    diagonal = diagonal,
+    diagonal_color = diagonal_color,
     fit_alpha = fit_alpha,
     n_fit = n_fit,
     palette = palette,
@@ -1891,6 +2219,7 @@ density_option <- function(
   margins = DEFAULT_MARGINS,
   verbosity = 1L
 ) {
+  group <- group_values(group, if (is.list(x)) lengths(x) else length(x))
   if (is.list(x)) {
     series_names <- names(x)
     if (is.null(series_names) || !all(nzchar(series_names))) {
@@ -1898,14 +2227,6 @@ density_option <- function(
     }
 
     if (!is.null(group)) {
-      lens <- vapply(x, length, integer(1))
-      if (any(lens != length(group))) {
-        stop(
-          "All elements of `x` must match length(group) when `group` is provided.",
-          call. = FALSE
-        )
-      }
-
       group_ok <- !is.na(group)
       if (any(!group_ok)) {
         group <- group[group_ok]
@@ -2079,7 +2400,8 @@ density_option <- function(
 #' @param x Numeric or list: Values used for density estimation. An ungrouped
 #'   list creates one density trace per element; with `group`, each list
 #'   element is split by group into separate traces.
-#' @param group Optional Vector: Grouping variable for multiple density traces.
+#' @param group Optional Atomic vector or single-column data frame: Grouping
+#'   variable for multiple density traces.
 #' @param n Numeric `[1, Inf)`: Number of equally spaced points for density estimation.
 #' @param bw Character or Numeric: Bandwidth passed to [stats::density()].
 #' @param na_rm Logical: Whether to remove `NA` values before
@@ -2171,6 +2493,7 @@ histogram_option <- function(
   title = NULL,
   margins = DEFAULT_MARGINS
 ) {
+  group <- group_values(group, length(x))
   # Compute bin structure from full data for consistent breaks across groups
   h <- graphics::hist(x, breaks = breaks, plot = FALSE)
   bin_labels <- formatC(h$mids, format = "g")
@@ -2220,7 +2543,8 @@ histogram_option <- function(
 #' across groups.
 #'
 #' @param x Numeric: Values used for histogram binning.
-#' @param group Optional Vector: Grouping variable for multiple series.
+#' @param group Optional Atomic vector or single-column data frame: Grouping
+#'   variable for multiple series.
 #' @param breaks Numeric, Character, or Numeric vector: Binning method. A single number (number of bins), a character
 #'   string naming an algorithm (e.g. `"Sturges"`, `"Scott"`, `"FD"`), or a
 #'   numeric vector of break points. Passed to [graphics::hist()].
@@ -2269,357 +2593,6 @@ draw_histogram <- function(
     ylab = ylab,
     title = title,
     margins = margins
-  )
-
-  draw(
-    opt,
-    theme = theme,
-    width = width,
-    height = height,
-    element_id = element_id,
-    filename = filename
-  )
-}
-
-#' Build the ECharts option for a boxplot
-#'
-#' The single implementation shared by [draw_boxplot()], which resolves its arguments
-#' from vectors, and `compile()` on the corresponding [ChartConfig], which
-#' resolves them from a data frame. The render targets stay with the caller.
-#'
-#' @inheritParams draw_boxplot
-#'
-#' @return [EChartsOption]: The option object.
-#'
-#' @author EDG
-#' @keywords internal
-#' @noRd
-boxplot_option <- function(
-  x,
-  labels = NULL,
-  group = NULL,
-  horizontal = FALSE,
-  palette = NULL,
-  fill_alpha = 0.25,
-  na_rm = TRUE,
-  xlab = NULL,
-  ylab = NULL,
-  title = NULL,
-  margins = DEFAULT_MARGINS,
-  verbosity = 1L
-) {
-  # Note: BoxplotSeries `layout` is auto-detected from the category axis
-  # orientation, so we do not set it explicitly. (Our previous mapping
-  # was inverted relative to ECharts conventions.)
-
-  # Resolve user-supplied margins once; reused in every branch below.
-  grid <- resolve_margins(margins)
-
-  # Grouped + single-element (possibly named) list => unwrap to numeric.
-  # Lets callers write draw_boxplot(list(`Body Mass` = x), group = g) and
-  # have the list name label the value axis.
-  value_axis_name <- NULL
-  if (!is.null(group) && is.list(x) && length(x) == 1L) {
-    if (!is.null(names(x)) && nzchar(names(x)[[1]])) {
-      value_axis_name <- names(x)[[1]]
-    }
-    x <- x[[1]]
-  }
-
-  # Axis titles: explicit `xlab`/`ylab` win over the inferred `value_axis_name`.
-  # The value axis is y when vertical and x when horizontal; the opposite side
-  # is the category axis and never receives `value_axis_name`.
-  x_name <- xlab %||% (if (horizontal) value_axis_name else NULL)
-  y_name <- ylab %||% (if (!horizontal) value_axis_name else NULL)
-
-  # Bare numeric vector without group => single box
-  if (is.numeric(x) && is.null(group)) {
-    if (is.null(labels)) {
-      labels <- labelify(deparse(substitute(x)))
-    }
-    x <- list(x)
-  }
-
-  # Use names from an ungrouped named list as category labels unless
-  # labels are supplied explicitly.
-  if (
-    is.null(group) &&
-      is.list(x) &&
-      is.null(labels) &&
-      !is.null(names(x)) &&
-      all(nzchar(names(x)))
-  ) {
-    labels <- names(x)
-    x <- unname(x)
-  }
-
-  # Ensure labels serialize as a JSON array, not a bare string
-  if (!is.null(labels) && length(labels) == 1L) {
-    labels <- as.list(labels)
-  }
-
-  if (!is.null(group) && is.list(x)) {
-    # Multi-variable grouped: categories = variable names, one series per
-    # group level. Each series has one box per variable; ECharts dodges
-    # boxes within each variable's slot — exactly what we want here.
-    var_labels <- names(x)
-    if (is.null(var_labels) || !all(nzchar(var_labels))) {
-      var_labels <- paste0("Var ", seq_along(x))
-    }
-    x <- unname(x)
-
-    lens <- vapply(x, length, integer(1))
-    if (any(lens != length(group))) {
-      stop(
-        "All elements of `x` must match length(group) when `group` is provided.",
-        call. = FALSE
-      )
-    }
-
-    # Exclude observations with missing group assignments so they do not
-    # create an extra boxplot series and shift the visible groups off-center.
-    group_ok <- !is.na(group)
-    if (any(!group_ok)) {
-      group <- group[group_ok]
-      x <- lapply(x, function(v) v[group_ok])
-    }
-
-    groups <- unique(group)
-    group_labels <- as.character(groups)
-    colors <- palette_colors(palette %||% rtemis_colors)
-    colors <- rep_len(colors, length(groups))
-
-    # One series per group level. Each series has length(var_labels)
-    # x points (one box per variable). NAs are dropped per (variable,
-    # group) cell so different variables with different NA patterns are
-    # handled correctly.
-    series <- lapply(seq_along(groups), function(i) {
-      g_idx <- group == groups[i]
-      stats_per_var <- lapply(x, function(v) {
-        vals <- v[g_idx]
-        if (na_rm) {
-          vals <- vals[!is.na(vals)]
-        }
-        grDevices::boxplot.stats(vals)$stats
-      })
-      col <- colors[i]
-      fill <- color_with_alpha(col, fill_alpha)
-      BoxplotSeries(
-        name = group_labels[i],
-        data = stats_per_var,
-        item_style = ItemStyle(color = fill, border_color = col)
-      )
-    })
-
-    if (horizontal) {
-      x_ax <- Axis(type = "value", scale = TRUE, name = x_name)
-      y_ax <- Axis(type = "category", data = var_labels, name = y_name)
-    } else {
-      x_ax <- Axis(type = "category", data = var_labels, name = x_name)
-      y_ax <- Axis(type = "value", scale = TRUE, name = y_name)
-    }
-
-    opt <- EChartsOption(
-      title = if (!is.null(title)) Title(text = title) else NULL,
-      tooltip = Tooltip(trigger = "item"),
-      legend = Legend(),
-      x_axis = x_ax,
-      y_axis = y_ax,
-      grid = grid,
-      series = series
-    )
-  } else if (!is.null(group)) {
-    # Grouped: single numeric vector split by group factor
-    group_ok <- !is.na(group)
-    if (any(!group_ok)) {
-      group <- group[group_ok]
-      x <- x[group_ok]
-    }
-
-    if (na_rm) {
-      na_idx <- is.na(x)
-      n_na <- sum(na_idx)
-      if (n_na > 0L) {
-        msg(
-          "Removed",
-          n_na,
-          "NA",
-          ngettext(n_na, "value", "values"),
-          "from data",
-          verbosity = verbosity
-        )
-        group <- group[!na_idx]
-        x <- x[!na_idx]
-      }
-    }
-
-    groups <- unique(group)
-    group_labels <- as.character(groups)
-    colors <- palette_colors(palette %||% rtemis_colors)
-    colors <- rep_len(colors, length(groups))
-
-    # Single boxplot series with per-item colors. Using one series per
-    # group would cause ECharts to dodge them like grouped bars, shifting
-    # each box away from its category tick.
-    box_items <- lapply(seq_along(groups), function(i) {
-      vals <- x[group == groups[i]]
-      bs <- grDevices::boxplot.stats(vals)
-      col <- colors[i]
-      fill <- color_with_alpha(col, fill_alpha)
-      list(
-        name = group_labels[i],
-        value = bs$stats,
-        itemStyle = list(color = fill, borderColor = col)
-      )
-    })
-
-    series <- BoxplotSeries(data = box_items)
-
-    if (horizontal) {
-      x_ax <- Axis(type = "value", scale = TRUE, name = x_name)
-      y_ax <- Axis(type = "category", data = group_labels, name = y_name)
-    } else {
-      x_ax <- Axis(type = "category", data = group_labels, name = x_name)
-      y_ax <- Axis(type = "value", scale = TRUE, name = y_name)
-    }
-
-    opt <- EChartsOption(
-      title = if (!is.null(title)) Title(text = title) else NULL,
-      tooltip = Tooltip(trigger = "item"),
-      x_axis = x_ax,
-      y_axis = y_ax,
-      grid = grid,
-      series = series
-    )
-  } else {
-    # Ungrouped: list of raw numeric vectors, one per box
-    col <- palette_colors(palette %||% rtemis_colors[["teal"]])
-    fill <- color_with_alpha(col, fill_alpha)
-    item_style <- ItemStyle(color = fill, border_color = col)
-
-    # Compute boxplot stats from raw x, removing NAs per box
-    box_data <- lapply(x, function(v) {
-      if (na_rm) {
-        n_na <- sum(is.na(v))
-        if (n_na > 0L) {
-          msg(
-            "Removed",
-            n_na,
-            "NA",
-            ngettext(n_na, "value", "values"),
-            verbosity = verbosity
-          )
-          v <- v[!is.na(v)]
-        }
-      }
-      grDevices::boxplot.stats(v)$stats
-    })
-    box_data <- unname(box_data)
-
-    if (horizontal) {
-      x_ax <- Axis(type = "value", scale = TRUE, name = x_name)
-      y_ax <- Axis(type = "category", data = labels, name = y_name)
-    } else {
-      x_ax <- Axis(type = "category", data = labels, name = x_name)
-      y_ax <- Axis(type = "value", scale = TRUE, name = y_name)
-    }
-
-    opt <- EChartsOption(
-      title = if (!is.null(title)) Title(text = title) else NULL,
-      tooltip = Tooltip(trigger = "item"),
-      x_axis = x_ax,
-      y_axis = y_ax,
-      grid = grid,
-      series = BoxplotSeries(
-        data = box_data,
-        item_style = item_style
-      )
-    )
-  }
-
-  opt
-} # /rtemis.draw::boxplot_option
-
-
-#' Draw a Boxplot
-#'
-#' Quick boxplot from raw data with optional grouping for multiple traces.
-#' Boxplot statistics (min, Q1, median, Q3, max) are computed automatically
-#' using [grDevices::boxplot.stats()].
-#'
-#' @param x Numeric or list: A list of numeric vectors (one per box), or a single numeric
-#'   vector when `group` is provided. For ungrouped named lists, `names(data)`
-#'   are used as labels when `labels` is not supplied.
-#' @param labels Optional Character: Category labels for each box. Ignored when `group` is
-#'   provided (group levels are used instead). When omitted for ungrouped named
-#'   lists, `names(data)` are used.
-#' @param group Optional Vector: Grouping variable. When provided, `data` must be a
-#'   numeric vector, and boxplot statistics are computed per group. Each group
-#'   gets its own colored series.
-#' @param horizontal Logical: Whether to draw horizontal boxplots.
-#' @param palette Optional Character: Box color or colors. For ungrouped boxplots, a single color used at
-#'   full opacity for borders and at `fill_alpha` opacity for the fill.
-#'   For grouped boxplots, defaults to `rtemis_colors`; recycled as needed.
-#' @param fill_alpha Numeric `[0, 1]`: Opacity for the box fill color.
-#' @param na_rm Logical: Whether to remove `NA` values before
-#'   computing boxplot statistics.
-#' @param xlab Optional Character: X-axis title (bottom axis). Overrides the
-#'   value-axis name inferred from a single-element named list passed as `data`.
-#' @param ylab Optional Character: Y-axis title (left axis). Overrides the
-#'   value-axis name inferred from a single-element named list passed as `data`.
-#' @param title Optional Character: Chart title.
-#' @param theme Optional [Theme]: Theme override.
-#' @param margins Optional Named numeric vector or named list: Plot margins in
-#'   pixels (or percentage strings) for any of `"top"`, `"right"`,
-#'   `"bottom"`, `"left"`. Unspecified sides keep echarts' default auto-sizing.
-#'   See [draw_line()] for details.
-#' @param width Optional Character or Numeric: Widget width.
-#' @param height Optional Character or Numeric: Widget height.
-#' @param verbosity Integer `[0, Inf)`: Verbosity level for removed-`NA` messages.
-#' @param element_id Optional Character: Explicit DOM element ID for the widget
-#'   container. `NULL` lets htmlwidgets generate one.
-#' @param filename Optional Character: If provided, save the widget to this file via
-#'   [save_drawing()].
-#' @return htmlwidget: Widget object.
-#' @export
-#'
-#' @examples
-#' draw_boxplot(
-#'   split(iris[["Sepal.Length"]], iris[["Species"]]),
-#'   ylab = "Sepal length"
-#' )
-draw_boxplot <- function(
-  x,
-  labels = NULL,
-  group = NULL,
-  horizontal = FALSE,
-  palette = NULL,
-  fill_alpha = 0.25,
-  na_rm = TRUE,
-  xlab = NULL,
-  ylab = NULL,
-  title = NULL,
-  theme = NULL,
-  margins = DEFAULT_MARGINS,
-  width = NULL,
-  height = NULL,
-  verbosity = 1L,
-  element_id = NULL,
-  filename = NULL
-) {
-  opt <- boxplot_option(
-    x = x,
-    labels = labels,
-    group = group,
-    horizontal = horizontal,
-    palette = palette,
-    fill_alpha = fill_alpha,
-    na_rm = na_rm,
-    xlab = xlab,
-    ylab = ylab,
-    title = title,
-    margins = margins,
-    verbosity = verbosity
   )
 
   draw(
@@ -2921,7 +2894,28 @@ heatmap_option <- function(
   for (i in seq_len(n_rows)) {
     for (j in seq_len(n_cols)) {
       val <- x[i, j]
-      data_list[[k]] <- list(j - 1L, i - 1L, if (is.na(val)) NULL else val)
+      value <- list(j - 1L, i - 1L, if (is.na(val)) NULL else val)
+      # Materialize visible labels so browser and static output consume JSON,
+      # without requiring a formatter callback at either render target.
+      data_list[[k]] <- if (show_values) {
+        list(
+          value = value,
+          label = list(
+            formatter = if (is.na(val)) {
+              ""
+            } else {
+              formatC(
+                val,
+                format = "f",
+                digits = value_digits,
+                decimal.mark = "."
+              )
+            }
+          )
+        )
+      } else {
+        value
+      }
       k <- k + 1L
     }
   }
@@ -3036,28 +3030,17 @@ heatmap_option <- function(
     ";",
     "return function(p){",
     "if(!p.value||p.value[2]===null||p.value[2]===undefined)return'NA';",
-    "return rn[p.value[1]]+' \u00d7 '+cn[p.value[0]]+': '+p.value[2].toFixed(",
+    # Reuse materialized labels so rounding at a tie cannot make the tooltip
+    # disagree with the visible cell value (R and JS have different tie rules).
+    "var v=p.data&&p.data.label?p.data.label.formatter:p.value[2].toFixed(",
     value_digits,
     ");",
+    "return rn[p.value[1]]+' \u00d7 '+cn[p.value[0]]+': '+v;",
     "}})()"
   ))
 
   # -- 10. Optional in-cell value labels -----------------------------------------
-  label_opt <- if (show_values) {
-    LabelOption(
-      show = TRUE,
-      formatter = htmlwidgets::JS(paste0(
-        "function(p){",
-        "if(!p.value||p.value[2]===null||p.value[2]===undefined)return'';",
-        "return p.value[2].toFixed(",
-        value_digits,
-        ");",
-        "}"
-      ))
-    )
-  } else {
-    NULL
-  }
+  label_opt <- if (show_values) LabelOption(show = TRUE) else NULL
 
   # -- 11. Assemble multi-grid ECharts option ------------------------------------
   # Grid index assignments (depends on which dendro panels are shown):
@@ -3145,36 +3128,10 @@ heatmap_option <- function(
       grid_index = hm_grid_idx
     )
 
-    # renderItem JS for row dendrogram (x-axis = height, y-axis = row position)
-    # Each datum: [left_pos, right_pos, left_h, right_h, merge_h]
-    # The U-shape: (left_h, lp) → (merge_h, lp) → (merge_h, rp) → (right_h, rp)
-    row_render_js <- htmlwidgets::JS(paste0(
-      "function(params,api){",
-      "var lp=api.value(0),rp=api.value(1),",
-      "lh=api.value(2),rh=api.value(3),mh=api.value(4);",
-      "return{type:'polyline',",
-      "shape:{points:[api.coord([lh,lp]),api.coord([mh,lp]),",
-      "api.coord([mh,rp]),api.coord([rh,rp])]},",
-      "style:{stroke:",
-      jsonlite::toJSON(dcolor, auto_unbox = TRUE),
-      ",lineWidth:1,fill:null}};}"
-    ))
-
-    # renderItem JS for col dendrogram (x-axis = col position, y-axis = height)
-    # Each datum: [left_pos, right_pos, left_h, right_h, merge_h]
-    # The U-shape: (lp, left_h) → (lp, merge_h) → (rp, merge_h) → (rp, right_h)
-    col_render_js <- htmlwidgets::JS(paste0(
-      "function(params,api){",
-      "var lp=api.value(0),rp=api.value(1),",
-      "lh=api.value(2),rh=api.value(3),mh=api.value(4);",
-      "return{type:'polyline',",
-      "shape:{points:[api.coord([lp,lh]),api.coord([lp,mh]),",
-      "api.coord([rp,mh]),api.coord([rp,rh])]},",
-      "style:{stroke:",
-      jsonlite::toJSON(dcolor, auto_unbox = TRUE),
-      ",lineWidth:1,fill:null}};}"
-    ))
-
+    # Named renderers keep the resolved option portable JSON. Both targets
+    # share the U-shape geometry in inst/htmlwidgets/lib/draw/renderers.js.
+    # Clip leaf stubs below the displayed height-axis minimum to their own
+    # panel so they cannot extend across adjacent heatmap cells.
     # Build reusable dendro grids and position axes.
     #
     # Row dendro grid: placed on the left (root far-left, leaves adj. to heatmap)
@@ -3281,8 +3238,10 @@ heatmap_option <- function(
           yAxisIndex = 0L,
           data = row_dendro[["data"]],
           silent = TRUE,
+          clip = TRUE,
           animation = FALSE,
-          renderItem = row_render_js
+          renderItem = "rtemis.dendrogram.v1",
+          itemPayload = list(orientation = "row", color = dcolor)
         ),
         list(
           type = "custom",
@@ -3290,8 +3249,10 @@ heatmap_option <- function(
           yAxisIndex = 1L,
           data = col_dendro[["data"]],
           silent = TRUE,
+          clip = TRUE,
           animation = FALSE,
-          renderItem = col_render_js
+          renderItem = "rtemis.dendrogram.v1",
+          itemPayload = list(orientation = "column", color = dcolor)
         ),
         HeatmapSeries(
           data = data_list,
@@ -3322,8 +3283,10 @@ heatmap_option <- function(
           yAxisIndex = 0L,
           data = row_dendro[["data"]],
           silent = TRUE,
+          clip = TRUE,
           animation = FALSE,
-          renderItem = row_render_js
+          renderItem = "rtemis.dendrogram.v1",
+          itemPayload = list(orientation = "row", color = dcolor)
         ),
         HeatmapSeries(
           data = data_list,
@@ -3353,8 +3316,10 @@ heatmap_option <- function(
           yAxisIndex = 0L,
           data = col_dendro[["data"]],
           silent = TRUE,
+          clip = TRUE,
           animation = FALSE,
-          renderItem = col_render_js
+          renderItem = "rtemis.dendrogram.v1",
+          itemPayload = list(orientation = "column", color = dcolor)
         ),
         HeatmapSeries(
           data = data_list,
@@ -3478,7 +3443,9 @@ heatmap_option <- function(
 #'   the column dendrogram is placed. `"top"` (default) places it above the heatmap.
 #'   `"bottom"` automatically moves column labels to the top.
 #' @param square_cells Optional Logical: Whether to compute widget dimensions so
-#'   cells are square. `NULL` (default) enables this automatically for square
+#'   cells are square in the browser and SVG exports. In panels and exports,
+#'   the matrix and dendrograms fit within the allocated canvas.
+#'   `NULL` (default) enables this automatically for square
 #'   matrices (e.g. correlation matrices). When `TRUE`, both `width` and `height`
 #'   are calculated from the number of cells; supply explicit `width`/`height` to
 #'   override.
@@ -3592,6 +3559,68 @@ draw_heatmap <- function(
 
 # -- draw_sankey ----------------------------------------------------------------
 
+# %% .sankey_margins() ----
+#' Space a Sankey needs around its plotting box so no label is cut off
+#'
+#' A node's label is drawn to the right of it, so the labels of the last column
+#' run past the edge of the chart and are clipped. There is no way to measure
+#' text before the browser has it, so the width is estimated from the longest
+#' label: a proportional face averages a little over half its point size per
+#' character.
+#'
+#' The estimate is capped, because a label long enough to need most of the
+#' canvas would leave no canvas for the diagram. Pass `margins` to set any side
+#' exactly, which is what a static export wants.
+#'
+#' @param links data.frame: Links, with `source` and `target`.
+#' @param margins Optional named list or numeric: Any of `left`, `right`, `top`,
+#'   `bottom`, in pixels or as a CSS width. Sides not named are derived.
+#' @param font_size Numeric: Label font size in pixels.
+#' @param width Optional Numeric: Chart width, used to cap the estimate.
+#'
+#' @return Named list of `left`, `right`, `top`, `bottom`.
+#'
+#' @author EDG
+#' @keywords internal
+#' @noRd
+.sankey_margins <- function(
+  links,
+  margins = NULL,
+  font_size = 12,
+  width = NULL
+) {
+  src <- as.character(links[["source"]])
+  tgt <- as.character(links[["target"]])
+  terminal <- setdiff(tgt, src)
+  longest <- if (length(terminal)) max(nchar(terminal)) else 0L
+  canvas <- if (is.numeric(width) && length(width) == 1L) width else 1200
+  # 0.52 em per character is close for the system UI faces these charts use,
+  # and erring wide costs plot area while erring narrow costs the label.
+  estimate <- ceiling(longest * 0.52 * font_size) + 24
+  auto <- list(
+    left = 12,
+    right = max(24, min(estimate, floor(canvas * 0.45))),
+    top = 48,
+    bottom = 24
+  )
+  if (is.null(margins)) {
+    return(auto)
+  }
+  if (!is.list(margins)) {
+    margins <- as.list(margins)
+  }
+  unknown <- setdiff(names(margins), names(auto))
+  if (length(unknown) > 0L) {
+    abort(
+      "`margins` names must be among left, right, top, bottom. Got: ",
+      paste(unknown, collapse = ", "),
+      ".",
+      class = c("rtemis_value_error", "rtemis_input_error")
+    )
+  }
+  utils::modifyList(auto, margins)
+}
+
 #' Build the ECharts option for a Sankey diagram
 #'
 #' The single implementation shared by [draw_sankey()], which resolves its arguments
@@ -3612,7 +3641,12 @@ sankey_option <- function(
   node_gap = NULL,
   node_align = NULL,
   title = NULL,
-  palette = NULL
+  palette = NULL,
+  link_color = "source",
+  link_opacity = 0.45,
+  margins = NULL,
+  label_font_size = 12,
+  width = NULL
 ) {
   rtemis.core::check_tabular(links)
   required_cols <- c("source", "target", "value")
@@ -3633,8 +3667,6 @@ sankey_option <- function(
   node_names <- unique(
     c(as.character(links[["source"]]), as.character(links[["target"]]))
   )
-  nodes <- lapply(node_names, function(n) list(name = n))
-
   # Convert links data.frame rows to a list of named lists
   edge_list <- lapply(seq_len(nrow(links)), function(i) {
     list(
@@ -3648,6 +3680,18 @@ sankey_option <- function(
   # exactly one entry per node. unname() prevents named vectors from
   # serializing as a JSON object instead of an array.
   palette <- unname(rep_len(palette %||% rtemis_colors, length(node_names)))
+  box <- .sankey_margins(links, margins, label_font_size, width)
+
+  # The color is carried on each node rather than left to the chart-level
+  # `color` array: a theme's series itemStyle takes precedence over that array,
+  # which paints every node one color and leaves the palette showing only on the
+  # links. A per-datum itemStyle wins over both, as in draw_gantt().
+  nodes <- lapply(seq_along(node_names), function(i) {
+    list(
+      name = node_names[[i]],
+      itemStyle = list(color = palette[[i]])
+    )
+  })
   opt <- EChartsOption(
     title = if (!is.null(title)) Title(text = title, left = "center") else NULL,
     tooltip = Tooltip(trigger = "item"),
@@ -3658,7 +3702,16 @@ sankey_option <- function(
       orient = orient,
       node_width = node_width,
       node_gap = node_gap,
-      node_align = node_align
+      node_align = node_align,
+      # Links take the color of the node they leave, which is what lets a
+      # reader follow one source across a diagram. Without it the theme's own
+      # link color applies and the palette shows only on the nodes.
+      line_style = list(color = link_color, opacity = link_opacity),
+      label = LabelOption(text_style = TextStyle(font_size = label_font_size)),
+      left = box[["left"]],
+      right = box[["right"]],
+      top = box[["top"]],
+      bottom = box[["bottom"]]
     )
   )
 
@@ -3682,6 +3735,20 @@ sankey_option <- function(
 #' @param title Optional Character: Chart title.
 #' @param palette Optional Character: Node color palette — a single color string or
 #'   a character vector that overrides the theme palette for this chart.
+#' @param link_color Character \{"source", "target", "gradient"\} or a color:
+#'   How ribbons are colored. `"source"`, the default, gives each ribbon the
+#'   color of the node it leaves, which is what lets a reader follow one source
+#'   across the diagram.
+#' @param link_opacity Numeric `[0, 1]`: Ribbon opacity. Below 1 so that
+#'   crossing ribbons blend rather than hide one another.
+#' @param margins Optional named list or numeric: Space around the plotting box,
+#'   as any of `left`, `right`, `top`, `bottom` in pixels or as a CSS width.
+#'   Sides left unnamed are derived from the labels: a node's label is drawn to
+#'   its right, so the last column needs room or its labels are clipped. Set
+#'   them explicitly when preparing a static export, where the exact canvas is
+#'   known.
+#' @param label_font_size Numeric: Node label font size in pixels. Also what the
+#'   derived margins are estimated from.
 #' @param theme Optional [Theme]: Theme override.
 #' @param width Optional Character or Numeric: Widget width.
 #' @param height Optional Character or Numeric: Widget height.
@@ -3706,6 +3773,10 @@ draw_sankey <- function(
   node_align = NULL,
   title = NULL,
   palette = NULL,
+  link_color = "source",
+  link_opacity = 0.45,
+  margins = NULL,
+  label_font_size = 12,
   theme = NULL,
   width = NULL,
   height = NULL,
@@ -3719,7 +3790,12 @@ draw_sankey <- function(
     node_gap = node_gap,
     node_align = node_align,
     title = title,
-    palette = palette
+    palette = palette,
+    link_color = link_color,
+    link_opacity = link_opacity,
+    margins = margins,
+    label_font_size = label_font_size,
+    width = width
   )
 
   draw(

@@ -3,6 +3,7 @@ bartlett
 basemap
 blackman
 breakAll
+CLI
 Choropleth
 choropleth
 circlepack
@@ -62,6 +63,7 @@ rect
 reindexes
 renderer
 roundRect
+roxygen
 RStudio
 rtemis
 rtemislive

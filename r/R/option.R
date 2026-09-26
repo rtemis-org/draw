@@ -22,6 +22,8 @@
 #' @param tooltip Optional [Tooltip]: Tooltip configuration.
 #' @param visual_map Optional [VisualMap] or list: Visual map configuration (`visualMap`).
 #'   Required for heatmaps to map data values to colors.
+#' @param graphic Optional list: Native graphic annotations, corresponding to
+#'   `GraphicComponentOption` in `src/component/graphic/GraphicModel.ts`.
 #' @param toolbox Optional list: Toolbox configuration (`toolbox`), e.g. the
 #'   `dataZoom` and `restore` features used by [draw_gantt()].
 #' @param data_zoom Optional [DataZoom] or list of [DataZoom]: Axis zoom
@@ -62,19 +64,23 @@ EChartsOption <- S7::new_class(
     y_axis = S7::new_property(class = S7::class_any, default = NULL),
     tooltip = class_or_null_property(Tooltip),
     visual_map = S7::new_property(class = S7::class_any, default = NULL),
+    graphic = S7::new_property(
+      class = S7::new_union(NULL, S7::class_list),
+      default = NULL
+    ),
     toolbox = S7::new_property(class = S7::class_any, default = NULL),
     data_zoom = S7::new_property(class = S7::class_any, default = NULL),
     # Series (single or list)
     series = S7::new_property(class = S7::class_any, default = NULL),
     # Global settings
     color = color_palette_property(),
-    background_color = optional_character_scalar,
+    background_color = prop_string(nullable = TRUE),
     text_style = class_or_null_property(TextStyle),
     # Animation
-    animation = optional_logical_scalar,
+    animation = prop_boolean(default = NULL, nullable = TRUE),
     animation_threshold = numeric_or_null_property(),
     animation_duration = numeric_or_null_property(),
-    animation_easing = optional_character_scalar,
+    animation_easing = prop_string(nullable = TRUE),
     animation_delay = numeric_or_null_property(),
     # Other
     dark_mode = S7::new_property(
@@ -93,7 +99,7 @@ EChartsOption <- S7::new_class(
         "must be TRUE, FALSE, 'auto', or NULL"
       }
     ),
-    use_utc = optional_logical_scalar
+    use_utc = prop_boolean(default = NULL, nullable = TRUE)
   )
 )
 
@@ -130,7 +136,8 @@ S7::method(to_list, EChartsOption) <- function(x, ...) {
     y_axis = "yAxis",
     tooltip = "tooltip",
     visual_map = "visualMap",
-    toolbox = "toolbox"
+    toolbox = "toolbox",
+    graphic = "graphic"
   )
 
   for (prop_name in names(component_map)) {
@@ -186,7 +193,12 @@ S7::method(to_list, EChartsOption) <- function(x, ...) {
   for (prop_name in simple_props) {
     val <- S7::prop(x, prop_name)
     if (!is.null(val)) {
-      json_name <- snake_to_camel(prop_name)
+      # ECharts spells this one `useUTC`, not the `useUtc` mechanical casing.
+      json_name <- if (prop_name == "use_utc") {
+        "useUTC"
+      } else {
+        snake_to_camel(prop_name)
+      }
       out[[json_name]] <- val
     }
   }

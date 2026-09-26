@@ -70,7 +70,7 @@ GanttConfig <- new_class(
     border = prop_string(
       NULL,
       nullable = TRUE,
-      description = "Logical column; TRUE outlines the bar."
+      description = "Logical column; a true value outlines the bar."
     ),
     # -- semantics ---------------------------------------------------------
     axis_type = prop_string(
@@ -105,7 +105,7 @@ GanttConfig <- new_class(
       NULL,
       nullable = TRUE,
       vector = TRUE,
-      description = "Bar colors, overriding the theme palette. NULL uses the theme's."
+      description = "Bar colors, overriding the theme palette. Unset uses the theme's."
     ),
     xlab = prop_string(
       NULL,

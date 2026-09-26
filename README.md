@@ -5,3 +5,51 @@
 ![rtemis.draw cover](https://docs.rtemis.org/r/draw/assets/cover.avif)
 
 Interface to JS libraries for high performance interactive visualization using type-checked, validated configuration objects.
+
+## R model integration dependencies
+
+The optional rtemis model plotting methods require `rtemis >= 1.4.1`, whose
+resampled results expose `resample_ids` for consistent fold identities.
+The data-facing `draw_*()` functions do not require rtemis.
+
+Until a compatible rtemis release is available from the configured package
+repositories, R CI installs the development commit pinned in
+`r/DESCRIPTION` under `Config/Needs/check`. Use that same revision when reproducing
+CI locally. Remove this check dependency after `rtemis >= 1.4.1` is published;
+keep the minimum version in `Suggests`. A green check against the pin does not
+establish that release dependencies are available from CRAN or r-universe.
+
+## Maintaining widget assets
+
+htmlwidgets identifies the ECharts binding by the package version in
+`r/DESCRIPTION` and its supporting scripts by the versions in
+`r/inst/htmlwidgets/rtemis-draw.yaml`. Cached documents retain those identities.
+Keep published dependency identities unchanged. When changing a published script
+or its dependency list, advance the affected version and add its script names and
+MD5 fingerprints (with normalized line endings) to
+`r/tests/testthat/fixtures/widget_assets.json`. Changes within an unreleased
+package version can update its fingerprint; remove generated documentation and
+execution caches, then rebuild the entire book against the newly installed package.
+Package versions follow releases, not individual documentation or QA iterations.
+The dependency tests detect changed bytes under an existing identity and load
+the scripts in the order declared for the browser.
+
+After updating the installed package, execute all chapters of a documentation
+book together. Quarto's `freeze: auto` watches document source changes, so it can
+reuse execution results from an older package installation. Use `freeze: false`
+for documentation that needs to exercise the current package on each full build.
+
+## Visual export QA
+
+After installing the current R package, run `just qa-export <output-directory>`
+from this checkout. The developer tool checks square heatmaps, dendrograms,
+independent panels, and A3 diagrams in light/dark themes at wide and narrow
+viewport sizes, including a 390-pixel A3 check.
+It writes HTML, SVG, browser screenshots, and a manifest recording the installed
+package/dependency versions, asset fingerprints, source revision, and results.
+Review the images: geometry assertions alone do not establish visual quality.
+
+This requires Node.js, Chrome, and the R packages `chromote`, `base64enc`, `xml2`,
+`htmlwidgets`, `jsonlite`, `rtemis.a3`, and `rtemis.draw`. Optional `rsvg-convert`
+also produces SVG previews. The command covers these families only; the broader
+visual and interaction audit remains separate.

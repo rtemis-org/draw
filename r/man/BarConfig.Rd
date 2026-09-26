@@ -13,6 +13,7 @@ BarConfig(
   y = NULL,
   stack = FALSE,
   horizontal = FALSE,
+  bar_width = NULL,
   palette = NULL,
   xlab = NULL,
   ylab = NULL,
@@ -45,6 +46,9 @@ authored config; written by the interface that resolved it.}
 
 \item{horizontal}{Logical: If TRUE, draw the bars horizontally.}
 
+\item{bar_width}{Optional Numeric \verb{(0, Inf)}: Bar thickness in pixels.
+NULL lets ECharts size bars from the category spacing.}
+
 \item{palette}{Optional Character: Series colors, overriding the theme
 palette for this chart. \code{NULL} uses the theme's.}
 
@@ -67,6 +71,9 @@ columns, one series each -- a single column draws one set of bars, several
 draw a grouped or stacked chart with the column names as the series names.
 That is the difference from \link{ScatterConfig}, whose \code{x} and \code{y} each name
 exactly one column.
+
+Fixed thickness maps to \code{barWidth} in ECharts' \code{BaseBarSeriesOption}
+(\code{src/chart/bar/BaseBarSeries.ts}). It applies to either orientation.
 }
 \examples{
 setup_BarConfig(x = "cyl", y = "mpg")@type

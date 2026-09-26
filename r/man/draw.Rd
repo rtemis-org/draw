@@ -29,8 +29,8 @@ light/dark auto-detection; \code{NA} disables theming. Applied to every backend.
 \item{element_id}{Optional Character: Explicit element ID.}
 
 \item{filename}{Optional Character: If provided, the widget is also written to
-this file via \code{\link[=save_drawing]{save_drawing()}} (ECharts only; other backends warn and
-ignore it). Extension determines the format (currently only \code{.svg}).}
+this file via \code{\link[=save_drawing]{save_drawing()}} (ECharts only; other backends reject static
+export requests). Extension determines the format (currently only \code{.svg}).}
 
 \item{animation}{Optional Logical: Whether ECharts animates the chart.
 \code{NULL} (default) leaves ECharts' own default in place. \code{FALSE} disables

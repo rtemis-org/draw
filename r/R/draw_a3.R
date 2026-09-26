@@ -51,9 +51,9 @@
 .A3_LEGEND_REGION_ICON <- "path://M2 5 H22 V11 H2 Z"
 
 # Sentinel names for legend heading entries (invisible placeholder series)
-.A3_LEGEND_HEADING_REGIONS <- "__legend_heading_regions__"
-.A3_LEGEND_HEADING_PTMS <- "__legend_heading_ptms__"
-.A3_LEGEND_HEADING_PROCESSING <- "__legend_heading_processing__"
+.A3_LEGEND_HEADING_REGIONS <- "{heading|Regions}"
+.A3_LEGEND_HEADING_PTMS <- "{heading|PTMs}"
+.A3_LEGEND_HEADING_PROCESSING <- "{heading|Processing}"
 
 # Amino acid one-letter to full-name lookup
 .A3_AA_NAMES <- c(
@@ -272,6 +272,7 @@ a3_option <- function(
   grid = NULL,
   height = NULL
 ) {
+  auto_height <- is.null(height)
   # ── Input validation ────────────────────────────────────────────────────────
   if (!S7::S7_inherits(x)) {
     abort(
@@ -393,7 +394,7 @@ a3_option <- function(
     }
     vertical_span <- max_y - min_y
     height <- ceiling(
-      title_margin_top + 24L + marker_size * (2 * vertical_span + 1)
+      title_margin_top + 24L + marker_size * 2 * (vertical_span + 1.1)
     )
   }
 
@@ -728,18 +729,9 @@ a3_option <- function(
     )
   }
 
-  # JavaScript formatter for legend heading entries (rich text)
-  legend_formatter <- htmlwidgets::JS(sprintf(
-    "function(name) {
-      if (name === '%s') return '{heading|Regions}';
-      if (name === '%s') return '{heading|PTMs}';
-      if (name === '%s') return '{heading|Processing}';
-      return name;
-    }",
-    .A3_LEGEND_HEADING_REGIONS,
-    .A3_LEGEND_HEADING_PTMS,
-    .A3_LEGEND_HEADING_PROCESSING
-  ))
+  # Native rich-text names preserve heading styling in ordinary JSON and SVG.
+  # LegendView.ts renders each name directly when no formatter is supplied;
+  # the empty matching series keep headings separate from annotation toggles.
 
   # ── ECharts option ──────────────────────────────────────────────────────────
   legend_right_inset <- 16
@@ -753,7 +745,7 @@ a3_option <- function(
 
   # Build default grid margins, then apply any user overrides from a Grid object.
   vertical_span <- max_y - min_y
-  grid_height_px <- marker_size * (2 * vertical_span + 1)
+  grid_height_px <- marker_size * 2 * (vertical_span + 1.1)
 
   grid_list <- list(
     left = 24,
@@ -771,10 +763,10 @@ a3_option <- function(
 
   # Align the legend's first item with the first sequence row.
   # Re-derived from the actual grid top so a user override keeps legend in sync.
-  # The y-axis spans [min_y-1, max_y+1] over grid_height_px, so the first row
-  # (y=1) sits 1/(vertical_span+2) of the way down.
+  # Match the tighter axis padding used by the live layout. The first row
+  # sits 0.7/(vertical_span+1.1) of the way down the plotting area.
   legend_top <- grid_list[["top"]] +
-    round(grid_height_px / (vertical_span + 2))
+    round(grid_height_px * 0.7 / (vertical_span + 1.1))
 
   option <- list(
     animation = TRUE,
@@ -783,15 +775,15 @@ a3_option <- function(
     grid = grid_list,
     xAxis = list(
       type = "value",
-      min = min_x - 1,
-      max = max_x + 1,
+      min = min_x - 0.2,
+      max = max_x + 0.2,
       show = FALSE,
       axisTick = list(show = FALSE)
     ),
     yAxis = list(
       type = "value",
-      min = min_y - 1,
-      max = max_y + 1,
+      min = min_y - 0.7,
+      max = max_y + 0.4,
       inverse = TRUE,
       show = FALSE,
       scale = TRUE,
@@ -804,8 +796,7 @@ a3_option <- function(
       right = legend_right_inset,
       bottom = 24,
       width = legend_rail_width,
-      data = legend_data,
-      formatter = legend_formatter,
+      data = if (length(legend_data)) legend_data else character(0),
       textStyle = list(
         fontSize = font_size,
         rich = list(
@@ -818,7 +809,7 @@ a3_option <- function(
       )
     ),
     tooltip = list(trigger = "item", confine = TRUE),
-    series = series
+    series = if (length(series)) series else character(0)
   )
 
   if (!is.null(title)) {
@@ -854,7 +845,27 @@ a3_option <- function(
   # Pass the pre-built plain list directly to draw(). The a3 option is
   # self-contained and bypasses the S7 class hierarchy intentionally.
 
-  list(option = option, render = list(height = height))
+  # Reserve an initial height for complete legend content. The shared renderer
+  # measures its final wrapped bounds for the actual browser/export width.
+  if (auto_height) {
+    height <- max(
+      height,
+      title_margin_top + 24 + length(legend_data) * (font_size + 14)
+    )
+  }
+  list(
+    option = option,
+    render = list(
+      height = height,
+      a3 = list(
+        autoHeight = auto_height,
+        autoGrid = is.null(grid),
+        markerSize = marker_size,
+        fontSize = font_size,
+        residueSpacing = residue_spacing
+      )
+    )
+  )
 } # /rtemis.draw::a3_option
 
 
@@ -864,7 +875,13 @@ a3_option <- function(
 #' amino-acid sequence diagram. The sequence is wrapped into rows in a
 #' meander/serpentine path, with optional site, region, PTM, processing, and
 #' variant annotations overlaid as distinct series and collected in a
-#' vertical legend.
+#' responsive legend. Legend headings use native rich text and remain available
+#' in vector SVG exports through [save_drawing()].
+#'
+#' On narrower surfaces, the legend moves below the sequence and residue
+#' markers, labels, and annotations shrink together to avoid overlap. Row
+#' wrapping remains fixed. Browser height follows the layout unless supplied;
+#' SVG and panel dimensions remain bounded. A custom `grid` retains its layout.
 #'
 #' Corresponds to `createA3EChartsOption()` in
 #' `src/lib/a3/visualization/echarts.ts`.
@@ -872,9 +889,11 @@ a3_option <- function(
 #' @param x `A3` object from [rtemis.a3::create_A3()] or
 #'   [rtemis.a3::read_A3json()].
 #' @param n_per_row Integer `[2, Inf)`: Number of residues per wrapped row.
+#'   Reduce this for larger residues on narrow surfaces.
 #' @param residue_spacing Numeric `(0, Inf)`: Horizontal spacing multiplier.
 #'   Values below `1` compress the layout; `1` gives natural hex spacing.
-#' @param marker_size Numeric `(0, Inf)`: Residue circle diameter in pixels.
+#' @param marker_size Numeric `(0, Inf)`: Preferred residue circle diameter in
+#'   pixels; reduced with related marks when needed to fit the drawing surface.
 #' @param font_size Numeric `(0, Inf)`: Base font size in pixels for residue
 #'   and position labels.
 #' @param line_width Numeric `(0, Inf)`: Backbone line width in pixels.
@@ -987,6 +1006,7 @@ draw_a3 <- function(
     width = width,
     height = built[["render"]][["height"]],
     element_id = element_id,
-    filename = filename
+    filename = filename,
+    meta = list(a3 = built[["render"]][["a3"]])
   )
 }
