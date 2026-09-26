@@ -24,13 +24,13 @@
 #' triangles and a caption. No positive p-value is clamped. For identity and
 #' one-minus transforms, zeros are finite and no cap is used.
 #'
-#' @param view Character {"volcano", "manhattan"}: Scatter or categorical bar view.
+#' @param view Character \{"volcano", "manhattan"\}: Scatter or categorical bar view.
 #' @param estimate Character: Column containing coefficients or other signed effects.
 #' @param p_value Character: Column containing unadjusted p-values.
 #' @param label Optional Character: Outcome-label column. Unset generates row labels.
 #' @param p_adjust_method Character: Method from [stats::p.adjust.methods]. Adjustment precedes transformation.
 #' @param n_tests Optional Integer [1, Inf): Hypothesis-family size, at least the number of supplied rows. Unset counts all rows, including missing p-values.
-#' @param p_transform Character {"neg_log10", "identity", "one_minus"}: Named display transform of adjusted p-values.
+#' @param p_transform Character \{"neg_log10", "identity", "one_minus"\}: Named display transform of adjusted p-values.
 #' @param p_thresh Numeric (0, 1]: Significance threshold on adjusted p-values; the comparison is strict.
 #' @param x_thresh Numeric: Effect threshold separating low and high significant results.
 #' @param zero_cap Optional Numeric (0, Inf): Finite display height for zero p-values under neg_log10; must exceed all finite heights and the significance reference. Unset computes a cap one unit above their rounded-up maximum.

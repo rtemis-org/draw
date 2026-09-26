@@ -18,6 +18,8 @@
 
 - Add `draw_fit()` and draw-owned `plot_true_pred()` methods for rtemis regression and resampled regression results, with identity lines, fit labels, and matching scatter configuration fields.
 
+- Add grouped lines through `group` in `draw_line()` and `LineConfig`, with per-group colors and legend entries.
+
 - **`draw_sankey()` colors its ribbons and its nodes.** A ribbon now takes the
   color of the node it leaves (`link_color = "source"`, `link_opacity = 0.45`),
   which is what lets a reader follow one source across a diagram; before, the
@@ -27,6 +29,32 @@
   a `palette` passed to `draw_sankey()` painted the links only and left every
   node one color. `link_color` accepts `"source"`, `"target"`, `"gradient"` or a
   color.
+
+- Add `bar_width` to `draw_bar()` and `BarConfig`, and ascending importance selection with `decreasing = FALSE` in `draw_varimp()` and `plot_varimp()`.
+
+- Add configurable inset ROC legends through `legend_position`, defaulting to the bottom-right corner, with compact AUC labels and grouped fold toggles.
+
+- Show one ROC curve per hover and use `digits` for displayed coordinates and AUC without rounding the underlying numeric data.
+
+- Use square confusion cells, color fades toward the active theme background, faint neutral metric backgrounds, and no separate sample-size caption.
+
+- Apply confusion `digits` to both displayed rates and hover fractions, defaulting to two decimal places while retaining integer counts and full-precision numeric data.
+
+- Preserve square heatmap cells and aligned dendrograms in SVG exports and `draw_panels()`, center vertical colorbars beside the matrix, and adapt color ramps to the active theme.
+
+- Support vector SVG export of annotated A3 sequences, including legend headings, and adapt residue sizes and legend placement to narrow drawing surfaces.
+
+- Adapt Gantt legends, task labels, and time ticks to the available width in browser, panel, and SVG output while preserving interactive zoom and legend selections during resize.
+
+- Reserve space for axis text in fixed-aspect plots and improve boxplot category labels and axis-title placement.
+
+- Use neutral gray data-zoom sliders in light and dark themes while preserving explicit style overrides.
+
+- Match standalone and VS Code Viewer backgrounds to the chart, and fill panel gaps with the common child background in browser and SVG output.
+
+- Include all required widget helpers in Quarto output.
+
+- Expand plotting documentation with model diagnostics, classification, importance, significance, fitted-object, sequence, and cross-validation workflows.
 
 # rtemis.draw 0.5.1
 

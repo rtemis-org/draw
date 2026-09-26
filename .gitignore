@@ -2,6 +2,7 @@
 __dev/
 specs/
 plan/
+AGENTS.md
 
 # macOS
 .DS_Store
@@ -12,7 +13,3 @@ plan/
 
 # Zed
 .zed/
-
-# Agents
-AGENTS.md
-CLAUDE.md

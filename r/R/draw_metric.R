@@ -113,7 +113,7 @@ method(metric_data, class_data.frame) <- function(data, metric = NULL) {
 #'   `metric` identities, and numeric `value` scores (finite or NA).
 #' @param metric Optional Character: Metric to select. May be omitted when the
 #'   table contains one metric.
-#' @param boxpoints Character {"none", "all", "outliers"}: Values to overlay.
+#' @param boxpoints Character \{"none", "all", "outliers"\}: Values to overlay.
 #' @param horizontal Logical: Draw horizontal distributions.
 #' @param xlab,ylab Optional Character: Axis labels. The value axis derives its
 #'   label from the selected metric when omitted; explicit NULL omits it.

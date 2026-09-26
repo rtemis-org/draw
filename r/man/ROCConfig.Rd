@@ -61,7 +61,7 @@ authored config; written by the interface that resolved it.}
 
 \item{variant}{Character: Draw pooled curves or separate resample curves.}
 
-\item{digits}{Integer: Decimal places for AUC labels.}
+\item{digits}{Integer: Decimal places for AUC labels and tooltip values.}
 
 \item{diagonal}{Logical: Show an independent chance diagonal.}
 
@@ -71,7 +71,7 @@ authored config; written by the interface that resolved it.}
 
 \item{legend}{Logical: Show group labels and AUC summaries.}
 
-\item{legend_position}{Character {"bottom-right", "top-right", "top-left", "bottom-left"}: Corner inside the plotting area for the legend.}
+\item{legend_position}{Character \{"bottom-right", "top-right", "top-left", "bottom-left"\}: Corner inside the plotting area for the legend.}
 
 \item{square}{Logical: Keep the plotting grid square.}
 
@@ -106,6 +106,9 @@ Pooled AUC is never inferred from per-fold AUCs.
 The legend is inset in the chosen corner of the plotting area. Curve identity
 and AUC share a line; long labels wrap to the available width. All entries
 remain present in static SVG output, without a scrolling legend.
+Hover describes the selected curve, including its resample identifier.
+Numeric tooltip labels use \code{digits}; coordinates and AUCs retain their full
+precision in the compiled data.
 }
 
 \examples{

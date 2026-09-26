@@ -110,5 +110,13 @@
     "md5": [
       "e45b1d71d348859de694599104c7bbc6"
     ]
+  },
+  "rtemis-draw-binding-0.5.2": {
+    "scripts": [
+      "rtemis-draw.js"
+    ],
+    "md5": [
+      "e45b1d71d348859de694599104c7bbc6"
+    ]
   }
 }

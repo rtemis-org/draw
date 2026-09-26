@@ -16,15 +16,18 @@
 #' Use `rtemis.draw::plot_metric()` when both packages are attached.
 #'
 #' @param x rtemis::SupervisedRes: Resampled fitted model.
-#' @param what Character: `"all"` or unique `"training"` and/or `"test"` samples.
-#' @param metric Optional Character: Stored metric name.
-#' @param ... Additional arguments to [draw_metric()].
+#' @param ... Method arguments, including `what` (Character: `"all"` or unique
+#'   `"training"` and/or `"test"` samples) and `metric` (Optional Character:
+#'   stored metric name), followed by additional arguments to [draw_metric()].
 #' @return htmlwidget: Metric distributions with all observations by default.
 #' @export
 #' @examplesIf requireNamespace("rtemis", quietly = TRUE)
 #' model <- rtemis::train(mtcars[, c("wt", "mpg")],
 #'   hyperparameters = rtemis::setup_GLM(),
-#'   outer_resampling_config = rtemis::setup_KFold(n_resamples = 3L), execution_config = rtemis::setup_SerialExecution(), verbosity = 0L)
+#'   outer_resampling_config = rtemis::setup_KFold(n_resamples = 3L),
+#'   execution_config = rtemis::setup_SerialExecution(),
+#'   verbosity = 0L
+#' )
 #' rtemis.draw::plot_metric(model)
 plot_metric <- new_generic("plot_metric", "x")
 

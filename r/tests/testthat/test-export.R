@@ -487,3 +487,34 @@ test_that("SVG export keeps square heatmap cells, themes, and complete panels", 
     expect_false(grepl('<image', svg, fixed = TRUE))
   }
 })
+
+
+test_that("static export retains visible per-point overrides on transparent line symbols", {
+  skip_if_not(nzchar(Sys.which("node")), "node not found")
+  option <- EChartsOption(
+    x_axis = Axis(type = "value"),
+    y_axis = Axis(type = "value"),
+    series = list(LineSeries(
+      data = list(
+        list(value = c(0, 0), itemStyle = list(opacity = 1)),
+        c(1, 1)
+      ),
+      show_symbol = TRUE,
+      symbol = "circle",
+      symbol_size = 8,
+      item_style = ItemStyle(color = "#123456", opacity = 0)
+    ))
+  )
+  path <- tempfile(fileext = ".svg")
+  on.exit(unlink(path), add = TRUE)
+  save_drawing(draw(option), path)
+  svg <- readLines(path, warn = FALSE)
+  point <- grep(
+    'ecmeta_data_index="0".*ecmeta_ssr_type="chart"',
+    svg,
+    value = TRUE
+  )
+  expect_length(point, 1L)
+  expect_match(point, 'fill="#123456"', fixed = TRUE)
+  expect_false(grepl('fill-opacity="0"', point, fixed = TRUE))
+})

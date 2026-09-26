@@ -50,12 +50,12 @@ authored config; written by the interface that resolved it.}
 
 \item{observation}{Optional Character: Column identifying observations in point tooltips.}
 
-\item{quartiles}{Character {"linear", "hinges"}: Quartile convention.}
+\item{quartiles}{Character \{"linear", "hinges"\}: Quartile convention.}
 
 \item{whisker}{Numeric \verb{[0, Inf)}: Finite IQR fence multiplier;
 zero uses full-range whiskers.}
 
-\item{boxpoints}{Character {"none", "all", "outliers"}: Values to overlay.}
+\item{boxpoints}{Character \{"none", "all", "outliers"\}: Values to overlay.}
 
 \item{point_size}{Numeric \verb{(0, Inf)}: Finite point diameter in pixels.}
 

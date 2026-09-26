@@ -66,6 +66,13 @@ process.stdin.on("end", () => {
 			if (item.type === "custom" && !rendererNames.includes(item.renderItem)) {
 				throw new Error("Unsupported custom-series renderer. Use a built-in named renderer.");
 			}
+			// Transparent line symbols are native hover targets (e.g. ROC points).
+			// Static SVG needs only the curve. All-array data have no per-point
+			// style overrides that could make a symbol visible.
+			if (item.type === "line" && item.itemStyle?.opacity === 0 &&
+				Array.isArray(item.data) && item.data.every(Array.isArray)) {
+				item.showSymbol = false;
+			}
 			item.animation = false;
 		});
 		option.animation = false;

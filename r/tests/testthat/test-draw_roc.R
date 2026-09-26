@@ -276,6 +276,7 @@ test_that("classification labels and square ROC axes fit phone and SVG layouts",
 
 test_that("empirical ROC agrees with the existing rtemis statistical engine", {
   skip_if_not_installed("rtemis")
+  skip_if_not_installed("pROC")
   y <- roc_test_labels()
   p <- c(.1, .8, .5, .5)
   old <- rtemis::roc_curve(y, p)
@@ -368,4 +369,69 @@ test_that("nonfactor binary labels use factor order, independent of row order", 
   d <- roc_input(c(1, 0, 1, 0), c(.8, .2, .9, .1))
   expect_identical(unique(d[["class"]]), "1")
   expect_equal(unique(d[["auc"]]), 1)
+})
+
+
+test_that("ROC hover labels round without changing numeric vertices or AUC", {
+  records <- data.frame(
+    fpr = c(0, 1 / 3, 1),
+    tpr = c(0, 2 / 3, 1),
+    auc = 2 / 3,
+    class = "yes",
+    split = "Test",
+    fold = "Fold 1",
+    omitted = 0L
+  )
+  for (digits in c(0L, 2L, 3L)) {
+    widget <- draw_roc(records, variant = "per_resample", digits = digits)
+    option <- widget[["x"]][["option"]]
+    expect_identical(option[["tooltip"]][["trigger"]], "item")
+    expect_identical(option[["legend"]][["itemStyle"]][["opacity"]], 1)
+    curve <- option[["series"]][[2L]]
+    expect_true(curve[["showSymbol"]])
+    expect_identical(curve[["itemStyle"]][["opacity"]], 0)
+    expect_identical(curve[["emphasis"]][["itemStyle"]][["opacity"]], 1)
+    value <- curve[["data"]][[2L]]
+    expect_equal(unlist(value[1:3]), c(1 / 3, 2 / 3, 2 / 3))
+    expect_identical(
+      unlist(value[6:8]),
+      formatC(
+        c(1 / 3, 2 / 3, 2 / 3),
+        format = "f",
+        digits = digits,
+        decimal.mark = "."
+      )
+    )
+    expect_identical(
+      curve[["encode"]][["tooltip"]],
+      as.list(c(5L, 6L, 7L, 3L, 4L))
+    )
+    expect_identical(
+      curve[["dimensions"]][[8L]],
+      list(
+        name = "AUC label",
+        displayName = "AUC",
+        type = "ordinal"
+      )
+    )
+    # Numeric geometry and ordinal display text must both survive the wire.
+    wire <- jsonlite::fromJSON(
+      htmlwidgets:::toJSON(widget[["x"]]),
+      simplifyVector = FALSE
+    )
+    expect_identical(wire[["option"]][["series"]][[2L]][["data"]][[2L]], value)
+  }
+})
+
+
+test_that("static ROC export omits invisible hover symbols and retains its color key", {
+  skip_if_not(nzchar(Sys.which("node")), "node not found")
+  path <- tempfile(fileext = ".svg")
+  on.exit(unlink(path), add = TRUE)
+  save_drawing(draw_roc(roc_test_records(), palette = "#123456"), path)
+  svg <- paste(readLines(path, warn = FALSE), collapse = "\n")
+  expect_false(grepl('fill-opacity="0"[^>]*ecmeta_ssr_type="chart"', svg))
+  expect_match(svg, 'fill="#123456"', fixed = TRUE)
+  expect_match(svg, 'stroke="#123456"', fixed = TRUE)
+  expect_match(svg, "AUC 0.875", fixed = TRUE)
 })

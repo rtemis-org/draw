@@ -2,12 +2,12 @@ test_that("changed widget assets do not overwrite prior frozen dependencies", {
   site_libs <- tempfile("widget-assets-")
   dir.create(site_libs)
   on.exit(unlink(site_libs, recursive = TRUE), add = TRUE)
-  # These names are the previously shared cache identities. A newly rendered
-  # chapter must not replace the bytes used by an older frozen chapter.
+  # Protect published binding assets and earlier layout dependencies. The
+  # unreleased 0.5.2 binding is rebuilt with the whole documentation book.
   old_files <- file.path(
     site_libs,
     c(
-      "rtemis-draw-binding-0.5.2/rtemis-draw.js",
+      "rtemis-draw-binding-0.5.1/rtemis-draw.js",
       "rtemis-panel-layout-1.0.0/panels.js"
     )
   )
@@ -26,7 +26,7 @@ test_that("changed widget assets do not overwrite prior frozen dependencies", {
   }
   headers <- htmltools::renderDependencies(copied)
   expect_match(headers, "/confusion.js", fixed = TRUE)
-  expect_false(grepl("rtemis-draw-binding-0.5.2/", headers, fixed = TRUE))
+  expect_false(grepl("rtemis-draw-binding-0.5.1/", headers, fixed = TRUE))
   expect_false(grepl("rtemis-panel-layout-1.0.0/", headers, fixed = TRUE))
 })
 
@@ -58,7 +58,7 @@ test_that("declared browser dependencies initialize an ordinary chart", {
   expect_match(paste(output, collapse = "\n"), "Declared dependencies render")
 })
 
-test_that("versioned widget scripts match their immutable recorded contents", {
+test_that("versioned widget scripts match their recorded contents", {
   registry <- jsonlite::read_json(
     test_path("fixtures", "widget_assets.json"),
     simplifyVector = TRUE
@@ -104,8 +104,8 @@ test_that("versioned widget scripts match their immutable recorded contents", {
       recorded[["md5"]],
       info = paste(
         identity,
-        "changed: advance the dependency version and add a new registry entry;",
-        "do not rewrite the previous identity."
+        "changed: advance published dependency versions; for an unpublished",
+        "build, update its fingerprint and rebuild documentation from clean artifacts."
       )
     )
   }

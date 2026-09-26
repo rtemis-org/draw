@@ -30,7 +30,7 @@ draw_manhattan(
 
 \item{p_adjust_method}{Character: Method from \link[stats:p.adjust.methods]{stats::p.adjust.methods}. Adjustment precedes transformation.}
 
-\item{p_transform}{Character {"neg_log10", "identity", "one_minus"}: Named display transform of adjusted p-values.}
+\item{p_transform}{Character \{"neg_log10", "identity", "one_minus"\}: Named display transform of adjusted p-values.}
 
 \item{p_thresh}{Numeric (0, 1]: Significance threshold on adjusted p-values; the comparison is strict.}
 

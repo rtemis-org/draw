@@ -485,7 +485,11 @@ method(roc_option, ROCConfig) <- function(config, data) {
   groups <- prepared[["groups"]]
   per_fold <- config@variant == "per_resample"
   fmt <- function(x) {
-    if (is.na(x)) "NA" else formatC(x, format = "f", digits = config@digits)
+    if (is.na(x)) {
+      "NA"
+    } else {
+      formatC(x, format = "f", digits = config@digits, decimal.mark = ".")
+    }
   }
   classes <- unique(vapply(groups, `[[`, character(1), "class"))
   splits <- unique(vapply(groups, `[[`, character(1), "split"))
@@ -581,7 +585,10 @@ method(roc_option, ROCConfig) <- function(config, data) {
         unname(curve[["tpr"]][[j]]),
         if (is.na(curve[["auc"]])) NULL else curve[["auc"]],
         curve[["fold"]],
-        curve[["omitted"]]
+        curve[["omitted"]],
+        fmt(curve[["fpr"]][[j]]),
+        fmt(curve[["tpr"]][[j]]),
+        fmt(curve[["auc"]])
       )
     })
     s <- to_list(LineSeries(
@@ -589,7 +596,9 @@ method(roc_option, ROCConfig) <- function(config, data) {
       data = points,
       smooth = FALSE,
       step = FALSE,
-      show_symbol = FALSE,
+      show_symbol = TRUE,
+      symbol = "circle",
+      symbol_size = 8,
       connect_nulls = FALSE,
       clip = TRUE,
       line_style = LineStyle(
@@ -600,9 +609,14 @@ method(roc_option, ROCConfig) <- function(config, data) {
           (match(g[["split"]], splits) - 1L) %% 3L + 1L
         ]]
       ),
-      item_style = ItemStyle(color = color),
+      item_style = ItemStyle(color = color, opacity = 0),
       z = 3
     ))
+    # Native transparent symbols provide point hit targets for item tooltips.
+    # Only the hovered point becomes visible; unhovered charts and SVG retain
+    # the line-only appearance. LineSeriesOption inherits emphasis from
+    # SeriesOption (ECharts util/types.ts); no browser-only handler is required.
+    s[["emphasis"]] <- list(itemStyle = list(opacity = 1))
     s[["dimensions"]] <- as.list(c(
       "FPR",
       "TPR",
@@ -610,7 +624,24 @@ method(roc_option, ROCConfig) <- function(config, data) {
       "Resample",
       "Missing pairs"
     ))
-    s[["encode"]] <- list(x = 0L, y = 1L, tooltip = as.list(0:4))
+    # DimensionDefinition (ECharts util/types.ts) separates display text from
+    # full-precision values. Ordinal labels survive JSON without callbacks.
+    # spec: draw/first-cran-release#roc-views
+    s[["dimensions"]] <- c(
+      s[["dimensions"]],
+      lapply(c("FPR", "TPR", "AUC"), function(label) {
+        list(
+          name = paste(label, "label"),
+          displayName = label,
+          type = "ordinal"
+        )
+      })
+    )
+    s[["encode"]] <- list(
+      x = 0L,
+      y = 1L,
+      tooltip = as.list(c(5L, 6L, 7L, 3L, 4L))
+    )
     series[[length(series) + 1L]] <- s
   }
   EChartsOption(
@@ -652,10 +683,12 @@ method(roc_option, ROCConfig) <- function(config, data) {
       icon = "roundRect",
       item_width = 20,
       item_height = 3,
+      # Legend keys stay visible independently of transparent hover targets.
+      item_style = ItemStyle(opacity = 1),
       data = as.list(legend_names),
       text_style = TextStyle(font_size = 12, line_height = 14)
     ),
-    tooltip = Tooltip(trigger = "axis", confine = TRUE),
+    tooltip = Tooltip(trigger = "item", confine = TRUE),
     series = series
   )
 }

@@ -52,7 +52,7 @@ authored config; written by the interface that resolved it.}
 \item{writer}{Optional Named character: Which interface wrote the config, as
 \code{name} and \code{version}. Absent on an authored config.}
 
-\item{view}{Character {"volcano", "manhattan"}: Scatter or categorical bar view.}
+\item{view}{Character \{"volcano", "manhattan"\}: Scatter or categorical bar view.}
 
 \item{estimate}{Character: Column containing coefficients or other signed effects.}
 
@@ -64,7 +64,7 @@ authored config; written by the interface that resolved it.}
 
 \item{n_tests}{Optional Integer [1, Inf): Hypothesis-family size, at least the number of supplied rows. Unset counts all rows, including missing p-values.}
 
-\item{p_transform}{Character {"neg_log10", "identity", "one_minus"}: Named display transform of adjusted p-values.}
+\item{p_transform}{Character \{"neg_log10", "identity", "one_minus"\}: Named display transform of adjusted p-values.}
 
 \item{p_thresh}{Numeric (0, 1]: Significance threshold on adjusted p-values; the comparison is strict.}
 

@@ -22,6 +22,9 @@
 #' The legend is inset in the chosen corner of the plotting area. Curve identity
 #' and AUC share a line; long labels wrap to the available width. All entries
 #' remain present in static SVG output, without a scrolling legend.
+#' Hover describes the selected curve, including its resample identifier.
+#' Numeric tooltip labels use `digits`; coordinates and AUCs retain their full
+#' precision in the compiled data.
 #'
 #' @param fpr Character: Column containing false positive rates.
 #' @param tpr Character: Column containing true positive rates.
@@ -31,12 +34,12 @@
 #' @param fold Optional Character: Optional resample column; aggregate identifies pooled curves.
 #' @param omitted Optional Character: Optional omitted-observation count column, constant within each curve.
 #' @param variant Character: Draw pooled curves or separate resample curves.
-#' @param digits Integer: Decimal places for AUC labels.
+#' @param digits Integer: Decimal places for AUC labels and tooltip values.
 #' @param diagonal Logical: Show an independent chance diagonal.
 #' @param diagonal_color Character: Chance-line color.
 #' @param palette Optional Character: Group colors; unset uses the chart theme.
 #' @param legend Logical: Show group labels and AUC summaries.
-#' @param legend_position Character {"bottom-right", "top-right", "top-left", "bottom-left"}: Corner inside the plotting area for the legend.
+#' @param legend_position Character \{"bottom-right", "top-right", "top-left", "bottom-left"\}: Corner inside the plotting area for the legend.
 #' @param square Logical: Keep the plotting grid square.
 #' @param line_width Numeric: Curve stroke width in pixels.
 #' @param fold_opacity Numeric: Opacity of individual resample curves.
@@ -95,7 +98,7 @@ ROCConfig <- new_class(
       3L,
       min = 0L,
       max = 8L,
-      description = "Decimal places for AUC labels."
+      description = "Decimal places for AUC labels and tooltip values."
     ),
     diagonal = prop_boolean(
       TRUE,

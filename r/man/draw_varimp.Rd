@@ -37,12 +37,12 @@ column other than \code{variable} or \code{fold}; vectors use \code{"importance"
 \item{top_n}{Optional Integer \verb{[1, Inf)}: Maximum number of variables.
 NULL includes all variables with a summary; fractions are not accepted.}
 
-\item{rank_by}{Character {"magnitude", "signed"}: Rank by absolute or signed
+\item{rank_by}{Character \{"magnitude", "signed"\}: Rank by absolute or signed
 summary, respectively.}
 
-\item{summary}{Character {"mean", "median"}: Summary across folds.}
+\item{summary}{Character \{"mean", "median"\}: Summary across folds.}
 
-\item{absent}{Character {"missing", "zero"}: Meaning of omitted variable
+\item{absent}{Character \{"missing", "zero"\}: Meaning of omitted variable
 rows within a fold reporting the selected measure.}
 
 \item{folds}{Optional Character: Full set of fold IDs, including folds with
@@ -69,7 +69,7 @@ container. \code{NULL} lets htmlwidgets generate one.}
 \item{filename}{Optional Character: If provided, save the widget to this file via
 \code{\link[=save_drawing]{save_drawing()}}.}
 
-\item{type}{Character {"bar", "boxplot"}: Summary or fold-distribution view.}
+\item{type}{Character \{"bar", "boxplot"\}: Summary or fold-distribution view.}
 
 \item{decreasing}{Logical: Select and display ranks from largest to smallest.
 FALSE selects and displays the smallest ranks first.}

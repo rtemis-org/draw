@@ -1,5 +1,8 @@
 metric_model_fixture <- function(classification = FALSE) {
   skip_if_not_installed("rtemis")
+  if (classification) {
+    skip_if_not_installed("rpart")
+  }
   rtemis::train(
     if (classification) iris else mtcars[, c("wt", "mpg")],
     hyperparameters = if (classification) {

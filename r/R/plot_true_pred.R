@@ -31,10 +31,11 @@
 #' [ConfusionConfig] for zero-denominator and pooled-count semantics.
 #'
 #' @param x rtemis regression or classification object: Ordinary or resampled result.
-#' @param what Optional Character: `"all"` or a vector of sample names: `"training"`,
-#'   `"validation"`, `"test"`. Resampled results do not have validation pairs.
-#' @param labelify Logical: Capitalize sample names in the legend or panel titles.
-#' @param ... Additional arguments to [draw_fit()] or [draw_confusion()].
+#' @param ... Method arguments, including `what` (Optional Character: `"all"`
+#'   or a vector of `"training"`, `"validation"`, `"test"` sample names) and
+#'   `labelify` (Logical: capitalize sample names in the legend or panel titles),
+#'   followed by additional arguments to [draw_fit()] or [draw_confusion()].
+#'   Resampled results do not have validation pairs.
 #'
 #' @return htmlwidget: ECharts drawing.
 #' @export

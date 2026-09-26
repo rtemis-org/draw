@@ -407,17 +407,17 @@ method(summarize_varimp, class_data.frame) <- function(
 #'   column other than `variable` or `fold`; vectors use `"importance"`.
 #' @param top_n Optional Integer `[1, Inf)`: Maximum number of variables.
 #'   NULL includes all variables with a summary; fractions are not accepted.
-#' @param rank_by Character {"magnitude", "signed"}: Rank by absolute or signed
+#' @param rank_by Character \{"magnitude", "signed"\}: Rank by absolute or signed
 #'   summary, respectively.
 #' @param decreasing Logical: Select and display ranks from largest to smallest.
 #'   FALSE selects and displays the smallest ranks first.
-#' @param summary Character {"mean", "median"}: Summary across folds.
-#' @param absent Character {"missing", "zero"}: Meaning of omitted variable
+#' @param summary Character \{"mean", "median"\}: Summary across folds.
+#' @param absent Character \{"missing", "zero"\}: Meaning of omitted variable
 #'   rows within a fold reporting the selected measure.
 #' @param folds Optional Character: Full set of fold IDs, including folds with
 #'   no rows. NULL uses the IDs observed in the `fold` column.
 #' @param horizontal Logical: Draw horizontal bars or boxes.
-#' @param type Character {"bar", "boxplot"}: Summary or fold-distribution view.
+#' @param type Character \{"bar", "boxplot"\}: Summary or fold-distribution view.
 #' @param xlab,ylab Optional Character: Physical axis labels. NULL derives the
 #'   score label from the measure and summary and labels the variable axis.
 #' @param title Optional Character: Chart title.

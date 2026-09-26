@@ -9,12 +9,11 @@ plot_true_pred(x, ...)
 \arguments{
 \item{x}{rtemis regression or classification object: Ordinary or resampled result.}
 
-\item{...}{Additional arguments to \code{\link[=draw_fit]{draw_fit()}} or \code{\link[=draw_confusion]{draw_confusion()}}.}
-
-\item{what}{Optional Character: \code{"all"} or a vector of sample names: \code{"training"},
-\code{"validation"}, \code{"test"}. Resampled results do not have validation pairs.}
-
-\item{labelify}{Logical: Capitalize sample names in the legend or panel titles.}
+\item{...}{Method arguments, including \code{what} (Optional Character: \code{"all"}
+or a vector of \code{"training"}, \code{"validation"}, \code{"test"} sample names) and
+\code{labelify} (Logical: capitalize sample names in the legend or panel titles),
+followed by additional arguments to \code{\link[=draw_fit]{draw_fit()}} or \code{\link[=draw_confusion]{draw_confusion()}}.
+Resampled results do not have validation pairs.}
 }
 \value{
 htmlwidget: ECharts drawing.

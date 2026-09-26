@@ -444,10 +444,10 @@ method(boxplot_option, class_any) <- function(
 #' @param observation Optional Atomic vector: Observation identifiers in tooltips,
 #'   aligned to every input vector. Unset uses original row numbers.
 #' @param horizontal Logical: Draw horizontal boxes.
-#' @param quartiles Character {"linear", "hinges"}: Quartile convention.
+#' @param quartiles Character \{"linear", "hinges"\}: Quartile convention.
 #' @param whisker Numeric `[0, Inf)`: Finite IQR fence multiplier;
 #'   zero uses full-range whiskers.
-#' @param boxpoints Character {"none", "all", "outliers"}: Values to overlay.
+#' @param boxpoints Character \{"none", "all", "outliers"\}: Values to overlay.
 #' @param point_size Numeric `(0, Inf)`: Finite point diameter in pixels.
 #' @param point_alpha Numeric `[0, 1]`: Point opacity.
 #' @param point_spread Numeric `[0, 1]`: Fraction of box width occupied by offsets.

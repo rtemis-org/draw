@@ -47,7 +47,7 @@ setup_ROCConfig(
 
 \item{variant}{Character: Draw pooled curves or separate resample curves.}
 
-\item{digits}{Integer: Decimal places for AUC labels.}
+\item{digits}{Integer: Decimal places for AUC labels and tooltip values.}
 
 \item{diagonal}{Logical: Show an independent chance diagonal.}
 
@@ -57,7 +57,7 @@ setup_ROCConfig(
 
 \item{legend}{Logical: Show group labels and AUC summaries.}
 
-\item{legend_position}{Character {"bottom-right", "top-right", "top-left", "bottom-left"}: Corner inside the plotting area for the legend.}
+\item{legend_position}{Character \{"bottom-right", "top-right", "top-left", "bottom-left"\}: Corner inside the plotting area for the legend.}
 
 \item{square}{Logical: Keep the plotting grid square.}
 

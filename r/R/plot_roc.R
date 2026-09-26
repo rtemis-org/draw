@@ -17,14 +17,14 @@
 #' binary positive class, defaulting to the first fold's second outcome level.
 #'
 #' @param x rtemis classification object: Ordinary or resampled result.
-#' @param what Character: `"all"` or unique sample names.
-#' @param variant Character: `"aggregate"` or `"per_resample"`.
-#' @param positive Optional Character: Binary positive class.
-#' @param labelify Logical: Capitalize sample labels.
-#' @param ... Additional named arguments to [draw_roc()].
+#' @param ... Method arguments, including `what` (Character: `"all"` or unique
+#'   sample names), `variant` (Character: `"aggregate"` or `"per_resample"`),
+#'   `positive` (Optional Character: binary positive class), and `labelify`
+#'   (Logical: capitalize sample labels), followed by additional named
+#'   arguments to [draw_roc()].
 #' @return An ECharts htmlwidget.
 #' @export
-#' @examplesIf requireNamespace("rtemis", quietly = TRUE)
+#' @examplesIf requireNamespace("rtemis", quietly = TRUE) && requireNamespace("rpart", quietly = TRUE)
 #' model <- rtemis::train(iris, hyperparameters = rtemis::setup_CART(), verbosity = 0L)
 #' rtemis.draw::plot_roc(model)
 plot_roc <- new_generic("plot_roc", "x")

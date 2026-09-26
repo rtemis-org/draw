@@ -4,6 +4,9 @@ present_model_fixture <- function(
   shift = 0
 ) {
   skip_if_not_installed("rtemis")
+  if (classification) {
+    skip_if_not_installed("rpart")
+  }
   data <- if (classification) {
     iris
   } else {

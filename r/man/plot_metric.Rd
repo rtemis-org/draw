@@ -9,11 +9,9 @@ plot_metric(x, ...)
 \arguments{
 \item{x}{rtemis::SupervisedRes: Resampled fitted model.}
 
-\item{...}{Additional arguments to \code{\link[=draw_metric]{draw_metric()}}.}
-
-\item{what}{Character: \code{"all"} or unique \code{"training"} and/or \code{"test"} samples.}
-
-\item{metric}{Optional Character: Stored metric name.}
+\item{...}{Method arguments, including \code{what} (Character: \code{"all"} or unique
+\code{"training"} and/or \code{"test"} samples) and \code{metric} (Optional Character:
+stored metric name), followed by additional arguments to \code{\link[=draw_metric]{draw_metric()}}.}
 }
 \value{
 htmlwidget: Metric distributions with all observations by default.
@@ -36,7 +34,10 @@ Use \code{rtemis.draw::plot_metric()} when both packages are attached.
 \dontshow{if (requireNamespace("rtemis", quietly = TRUE)) withAutoprint(\{ # examplesIf}
 model <- rtemis::train(mtcars[, c("wt", "mpg")],
   hyperparameters = rtemis::setup_GLM(),
-  outer_resampling_config = rtemis::setup_KFold(n_resamples = 3L), execution_config = rtemis::setup_SerialExecution(), verbosity = 0L)
+  outer_resampling_config = rtemis::setup_KFold(n_resamples = 3L),
+  execution_config = rtemis::setup_SerialExecution(),
+  verbosity = 0L
+)
 rtemis.draw::plot_metric(model)
 \dontshow{\}) # examplesIf}
 }

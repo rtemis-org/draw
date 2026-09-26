@@ -9,15 +9,11 @@ plot_roc(x, ...)
 \arguments{
 \item{x}{rtemis classification object: Ordinary or resampled result.}
 
-\item{...}{Additional named arguments to \code{\link[=draw_roc]{draw_roc()}}.}
-
-\item{what}{Character: \code{"all"} or unique sample names.}
-
-\item{variant}{Character: \code{"aggregate"} or \code{"per_resample"}.}
-
-\item{positive}{Optional Character: Binary positive class.}
-
-\item{labelify}{Logical: Capitalize sample labels.}
+\item{...}{Method arguments, including \code{what} (Character: \code{"all"} or unique
+sample names), \code{variant} (Character: \code{"aggregate"} or \code{"per_resample"}),
+\code{positive} (Optional Character: binary positive class), and \code{labelify}
+(Logical: capitalize sample labels), followed by additional named
+arguments to \code{\link[=draw_roc]{draw_roc()}}.}
 }
 \value{
 An ECharts htmlwidget.
@@ -37,7 +33,7 @@ disclosed; they are not zero AUCs. All curves use the same named classes and
 binary positive class, defaulting to the first fold's second outcome level.
 }
 \examples{
-\dontshow{if (requireNamespace("rtemis", quietly = TRUE)) withAutoprint(\{ # examplesIf}
+\dontshow{if (requireNamespace("rtemis", quietly = TRUE) && requireNamespace("rpart", quietly = TRUE)) withAutoprint(\{ # examplesIf}
 model <- rtemis::train(iris, hyperparameters = rtemis::setup_CART(), verbosity = 0L)
 rtemis.draw::plot_roc(model)
 \dontshow{\}) # examplesIf}

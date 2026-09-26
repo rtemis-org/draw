@@ -11,9 +11,13 @@ Interface to JS libraries for high performance interactive visualization using t
 htmlwidgets identifies the ECharts binding by the package version in
 `r/DESCRIPTION` and its supporting scripts by the versions in
 `r/inst/htmlwidgets/rtemis-draw.yaml`. Cached documents retain those identities.
-When changing a script or its dependency list, advance the affected version and
-add its script names and MD5 fingerprints (with normalized line endings) to
-`r/tests/testthat/fixtures/widget_assets.json`. Keep previous entries unchanged.
+Keep published dependency identities unchanged. When changing a published script
+or its dependency list, advance the affected version and add its script names and
+MD5 fingerprints (with normalized line endings) to
+`r/tests/testthat/fixtures/widget_assets.json`. Changes within an unreleased
+package version can update its fingerprint; remove generated documentation and
+execution caches, then rebuild the entire book against the newly installed package.
+Package versions follow releases, not individual documentation or QA iterations.
 The dependency tests detect changed bytes under an existing identity and load
 the scripts in the order declared for the browser.
 

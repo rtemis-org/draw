@@ -71,6 +71,9 @@ Pooled AUC is never inferred from per-fold AUCs.
 The legend is inset in the chosen corner of the plotting area. Curve identity
 and AUC share a line; long labels wrap to the available width. All entries
 remain present in static SVG output, without a scrolling legend.
+Hover describes the selected curve, including its resample identifier.
+Numeric tooltip labels use \code{digits}; coordinates and AUCs retain their full
+precision in the compiled data.
 }
 
 \examples{

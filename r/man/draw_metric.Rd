@@ -26,7 +26,7 @@ draw_metric(
 \item{metric}{Optional Character: Metric to select. May be omitted when the
 table contains one metric.}
 
-\item{boxpoints}{Character {"none", "all", "outliers"}: Values to overlay.}
+\item{boxpoints}{Character \{"none", "all", "outliers"\}: Values to overlay.}
 
 \item{horizontal}{Logical: Draw horizontal distributions.}
 

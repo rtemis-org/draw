@@ -1,5 +1,5 @@
-# Dependency identities are immutable in cached documents. Change the affected
-# version when scripts change; the binding version comes from DESCRIPTION.
+# Published dependency identities are immutable; the binding version comes from
+# DESCRIPTION. Unreleased changes require clean documentation builds.
 # Recorded script fingerprints are checked by test-widget_dependencies.R.
 dependencies:
   - name: echarts
