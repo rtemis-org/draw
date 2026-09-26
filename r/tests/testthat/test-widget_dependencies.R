@@ -63,7 +63,12 @@ test_that("versioned widget scripts match their recorded contents", {
     test_path("fixtures", "widget_assets.json"),
     simplifyVector = TRUE
   )
-  dependencies <- htmlwidgets::getDependency("rtemis-draw", "rtemis.draw")
+  dependencies <- unlist(
+    lapply(c("rtemis-draw", "rtemis-graph", "rtemis-map"), function(name) {
+      htmlwidgets::getDependency(name, "rtemis.draw")
+    }),
+    recursive = FALSE
+  )
   for (dependency in dependencies) {
     if (!startsWith(dependency[["name"]], "rtemis-")) {
       next

@@ -110,6 +110,67 @@ for (anchor in c("top", "top-right", "bottom", "inside")) {
     }
   })
 }
+# Distribution, flow, time-frequency, and independent-panel families.
+species_counts <- table(birds[["species"]])
+links <- as.data.frame(
+  table(source = birds[["species"]], target = birds[["sex"]]),
+  responseName = "value"
+)
+builders[["histogram"]] <- function(theme) {
+  draw_histogram(
+    birds[["bill_len"]],
+    group = birds["species"],
+    xlab = "Bill length (mm)",
+    theme = theme
+  )
+}
+builders[["density"]] <- function(theme) {
+  draw_density(
+    birds[["bill_len"]],
+    group = birds["species"],
+    xlab = "Bill length (mm)",
+    theme = theme
+  )
+}
+builders[["pie"]] <- function(theme) {
+  draw_pie(as.numeric(species_counts), names(species_counts), theme = theme)
+}
+builders[["rose"]] <- function(theme) {
+  draw_pie(
+    as.numeric(species_counts),
+    names(species_counts),
+    rose_type = "radius",
+    theme = theme
+  )
+}
+builders[["sankey"]] <- function(theme) {
+  draw_sankey(links, title = "Penguins by species and sex", theme = theme)
+}
+builders[["spectrogram"]] <- function(theme) {
+  time <- seq(0, 1, by = 1 / 2000)
+  draw_spectrogram(
+    sin(2 * pi * (100 * time + 350 * time^2)),
+    sample_rate = 2000,
+    n_fft = 128L,
+    theme = theme
+  )
+}
+builders[["panels"]] <- function(theme) {
+  draw_panels(
+    list(
+      draw_bar(rownames(counts), by_sex, theme = theme),
+      draw_density(birds[["bill_len"]], group = birds["species"], theme = theme)
+    ),
+    ncol = 2L,
+    height = 600
+  )
+}
+# An optional family filter keeps iterative QA bounded; the unfiltered run is
+# the complete foundation matrix recorded in the manifest.
+selected <- Sys.getenv("DRAW_QA_FAMILIES")
+if (nzchar(selected)) {
+  builders <- builders[strsplit(selected, ",", fixed = TRUE)[[1L]]]
+}
 manifest <- list(
   complete = FALSE,
   expected_cases = length(builders) * 4L,
@@ -226,7 +287,7 @@ tryCatch(
         widget[["height"]] <- 600L
         html <- file.path(out, paste0(name, "-", mode, ".html"))
         htmlwidgets::saveWidget(widget, html, selfcontained = FALSE)
-        for (width in c(1100L, 390L)) {
+        for (width in c(1100L, if (name == "panels") 760L else 390L)) {
           key <- paste(name, mode, width, sep = "-")
           b$Emulation$setDeviceMetricsOverride(
             width = width,
@@ -238,12 +299,35 @@ tryCatch(
           wait_for(
             "!!foundationQA.chart()?.getZr().storage.getDisplayList(true).length"
           )
-          wait_for("foundationQA.chart().getZr().animation.isFinished()")
+          wait_for(
+            "foundationQA.charts().every(c=>c.getZr().animation.isFinished())"
+          )
           evaluate(
             "new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(()=>r(true))))"
           )
           result <- evaluate("foundationQA.scene()")
-          expected_series <- if (name == "scatter") {
+          if (name == "panels") {
+            result[["children"]] <- evaluate(
+              "foundationQA.charts().map(c=>({width:c.getWidth(),height:c.getHeight(),series:c.getModel().getSeries().length}))"
+            )
+            stopifnot(
+              length(result[["children"]]) == 2L,
+              all(vapply(
+                result[["children"]],
+                function(x) {
+                  x[["width"]] > 100 && x[["height"]] > 100 && x[["series"]] > 0
+                },
+                logical(1)
+              ))
+            )
+          }
+          expected_series <- if (
+            name %in% c("pie", "rose", "sankey", "spectrogram")
+          ) {
+            1L
+          } else if (name %in% c("histogram", "density")) {
+            3L
+          } else if (name == "scatter") {
             9L
           } else if (
             name %in% c("line", "area") || startsWith(name, "boxplot_")
@@ -281,10 +365,13 @@ tryCatch(
             svg,
             './/*[local-name()="text"]'
           ))
-          expected <- if (name %in% c("bar", "stacked")) {
+          expected <- if (name %in% c("bar", "stacked", "panels")) {
             names(by_sex)
           } else {
             names(by_species)
+          }
+          if (name == "spectrogram") {
+            expected <- character()
           }
           stopifnot(
             all(expected %in% labels),
@@ -308,28 +395,32 @@ tryCatch(
 
           # Hide every layer belonging to the first legend group, then restore it.
           legend <- evaluate("foundationQA.legend()")
-          result[["legend"]] <- list(name = legend[["name"]], states = list())
-          for (selected in c(FALSE, TRUE)) {
-            click(legend[["point"]])
-            state <- evaluate(paste0(
-              "foundationQA.selection(",
-              jsonlite::toJSON(legend[["name"]], auto_unbox = TRUE),
-              ")"
-            ))
-            stopifnot(
-              identical(state[["selected"]], selected),
-              length(state[["layers"]]) == if (name == "scatter") 3L else 1L,
-              all(vapply(
-                state[["layers"]],
-                function(layer) identical(layer[["filtered"]], !selected),
-                logical(1)
+          if (!is.null(legend)) {
+            result[["legend"]] <- list(name = legend[["name"]], states = list())
+            for (selected in c(FALSE, TRUE)) {
+              click(legend[["point"]])
+              state <- evaluate(paste0(
+                "foundationQA.selection(",
+                jsonlite::toJSON(legend[["name"]], auto_unbox = TRUE),
+                ")"
               ))
-            )
-            result[["legend"]][["states"]][[
-              if (selected) "restored" else "hidden"
-            ]] <- state
+              stopifnot(
+                identical(state[["selected"]], selected),
+                length(state[["layers"]]) == if (name == "scatter") 3L else 1L,
+                all(vapply(
+                  state[["layers"]],
+                  function(layer) identical(layer[["filtered"]], !selected),
+                  logical(1)
+                ))
+              )
+              result[["legend"]][["states"]][[
+                if (selected) "restored" else "hidden"
+              ]] <- state
+            }
           }
-          wait_for("foundationQA.chart().getZr().animation.isFinished()")
+          wait_for(
+            "foundationQA.charts().every(c=>c.getZr().animation.isFinished())"
+          )
           point <- evaluate("foundationQA.hoverPoint()")
           b$Input$dispatchMouseEvent(
             type = "mouseMoved",

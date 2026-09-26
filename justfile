@@ -184,3 +184,7 @@ qa-export output:
 # Inspect scatter/line/bar browser interactions and vector output (developer QA).
 qa-foundation output:
     {{rscript}} r/tools/visual-qa/foundation.R "{{output}}"
+
+# Inspect Sigma/MapLibre browser interactions and genuine vector SVG output.
+qa-backends output:
+    {{rscript}} r/tools/visual-qa/backends.R "{{output}}"

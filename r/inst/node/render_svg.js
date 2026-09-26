@@ -94,7 +94,11 @@ process.stdin.on("end", () => {
 	}
 	try {
 		let svg;
-		if (payload.panels) {
+		if (payload.backend === "graph") {
+      svg = require("./vector.js").graphSVG({...payload.scene, theme:payload.theme, width, height});
+    } else if (payload.backend === "map") {
+      svg = require("./vector.js").mapSVG({...payload.scene, theme:payload.theme, width, height});
+    } else if (payload.panels) {
 			const cells = layout.cells(payload.panels.length, payload.layout, width, height);
 			const parts = payload.panels.map((panel, i) => {
 				const cell = cells[i];

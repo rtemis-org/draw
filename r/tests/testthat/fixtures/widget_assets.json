@@ -127,7 +127,7 @@
       "panel_widget.js"
     ],
     "md5": [
-      "aa94fb18b3dc0c3df4b32484eae36ad7",
+      "e59bbda8bbdf92cb67917f7cccb19692",
       "98e316a5f257b6054521c87c60acf622",
       "d35d723753c796470a8513968a8f15b2",
       "ca5750ba961ca56c09b06a83ae32205e"
@@ -139,6 +139,62 @@
     ],
     "md5": [
       "e45b1d71d348859de694599104c7bbc6"
+    ]
+  },
+  "rtemis-graph-binding-0.5.2.9000": {
+    "scripts": [
+      "rtemis-graph.js"
+    ],
+    "md5": [
+      "299c5acb5c2b3170260b4b94e0647c96"
+    ]
+  },
+  "rtemis-graph-deps-1.0.0": {
+    "scripts": [
+      "rtemis-graph-deps.js"
+    ],
+    "md5": [
+      "76910f062eab78d22531f041ab740f37"
+    ]
+  },
+  "rtemis-graph-scene-1.0.0": {
+    "scripts": [
+      "graph_scene.js"
+    ],
+    "md5": [
+      "e000bdcfba822cda2e39373a4b6257c8"
+    ]
+  },
+  "rtemis-vector-theme-1.0.0": {
+    "scripts": [
+      "vector_theme.js"
+    ],
+    "md5": [
+      "689f9d135a4b24c7184ee61cbf57650d"
+    ]
+  },
+  "rtemis-map-binding-0.5.2.9000": {
+    "scripts": [
+      "rtemis-map.js"
+    ],
+    "md5": [
+      "dfb239d253cad3a0697888e0af1ecfd2"
+    ]
+  },
+  "rtemis-map-deps-1.0.0": {
+    "scripts": [
+      "rtemis-map-deps.js"
+    ],
+    "md5": [
+      "2f05461b2a2e13ee2df23a3d59d2b5ec"
+    ]
+  },
+  "rtemis-map-scene-1.0.0": {
+    "scripts": [
+      "map_scene.js"
+    ],
+    "md5": [
+      "5b0ca490d0248b9a14631b2cdc82d290"
     ]
   }
 }

@@ -2,10 +2,11 @@
   "name": "rtemis-graph-bundle",
   "version": "0.0.0",
   "private": true,
-  "description": "Build input for the vendored Sigma.js + graphology browser bundle used by the rtemis-graph htmlwidget. Run `npm install && npm run build` to regenerate inst/htmlwidgets/lib/sigma/rtemis-graph-deps.js. Versions are pinned to match rtemislive (~/Code/live).",
+  "description": "Build input for the vendored Sigma.js + graphology browser bundle used by the rtemis-graph htmlwidget. Run `npm install && npm run build` to regenerate inst/htmlwidgets/lib/sigma/rtemis-graph-deps.js. Dependencies are pinned.",
   "type": "module",
   "scripts": {
-    "build": "esbuild entry.mjs --bundle --format=iife --global-name=RtemisGraph --minify --legal-comments=none --outfile=../../inst/htmlwidgets/lib/sigma/rtemis-graph-deps.js"
+    "build": "esbuild entry.mjs --bundle --format=iife --global-name=RtemisGraph --minify --legal-comments=none --outfile=../../inst/htmlwidgets/lib/sigma/rtemis-graph-deps.js",
+    "build:vector": "esbuild vector.mjs --bundle --platform=node --format=cjs --minify --legal-comments=none --outfile=../../inst/node/graph-deps.js --banner:js=\"// Bundled licenses: graph-deps.LICENSE.txt\""
   },
   "dependencies": {
     "graphology": "0.26.0",

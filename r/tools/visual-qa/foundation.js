@@ -1,10 +1,11 @@
 // Native chart observations for the installed-package foundation QA script.
 // Interaction is sent through Chrome's pointer API, not dispatchAction().
 window.foundationQA = {
-  chart() {
-    const el = document.querySelector('.rtemis-draw');
-    return el && HTMLWidgets.find('#' + el.id)?.getCharts?.()[0];
+  charts() {
+    const el = document.querySelector('.rtemis-draw, .rtemis-panels');
+    return el && HTMLWidgets.find('#' + el.id)?.getCharts?.() || [];
   },
+  chart() { return this.charts()[0]; },
   bounds(el) {
     const rect = el.getBoundingRect().clone();
     rect.applyTransform(el.getComputedTransform());
@@ -17,6 +18,7 @@ window.foundationQA = {
   legend() {
     const c = this.chart();
     const model = c.getModel().getComponent('legend');
+    if (!model || !model.get('show') || !model.getData().length) return null;
     const group = c.getViewOfComponentModel(model).getContentGroup().children()
       .find(g => g.__legendDataIndex === 0);
     const rect = this.bounds(group);
@@ -25,19 +27,26 @@ window.foundationQA = {
   },
   selection(name) {
     const c = this.chart();
+    const pies = c.getModel().getSeries().filter(s => s.subType === 'pie');
     return {selected: c.getModel().getComponent('legend').isSelected(name),
-      layers: c.getModel().getSeriesByName(name).map(s => ({
-        type: s.subType, filtered: c.getModel().isSeriesFiltered(s)
-      }))};
+      layers: pies.length ? pies.map(s => ({type: 'pie', filtered: s.getData().indexOfName(name) < 0})) :
+        c.getModel().getSeriesByName(name).map(s => ({
+          type: s.subType, filtered: c.getModel().isSeriesFiltered(s)
+        }))};
   },
   hoverPoint() {
     const c = this.chart();
     const series = c.getModel().getSeries().find(s =>
-      s.subType === 'scatter' || s.subType === 'bar' || s.subType === 'line' || s.subType === 'boxplot');
+      ['scatter', 'bar', 'line', 'boxplot', 'pie', 'sankey', 'heatmap'].includes(s.subType));
     const data = series.getData();
     const index = Math.floor(data.count() / 2);
     let point;
-    if (series.subType === 'bar' || series.subType === 'boxplot') {
+    if (series.subType === 'pie') {
+      const sector = data.getItemLayout(index);
+      const angle = (sector.startAngle + sector.endAngle) / 2;
+      const radius = (sector.r + sector.r0) / 2;
+      point = [sector.cx + radius * Math.cos(angle), sector.cy + radius * Math.sin(angle)];
+    } else if (['bar', 'boxplot', 'sankey'].includes(series.subType)) {
       const rect = this.bounds(data.getItemGraphicEl(index));
       point = [rect.x + rect.width / 2, rect.y + rect.height / 2];
     } else {
@@ -65,7 +74,7 @@ window.foundationQA = {
   },
   scene() {
     const c = this.chart();
-    const grid = c.getModel().getComponent('grid').coordinateSystem.getRect();
+    const grid = c.getModel().getComponent('grid')?.coordinateSystem.getRect() || {x:0,y:0,width:c.getWidth(),height:c.getHeight()};
     const text = c.getZr().storage.getDisplayList(true)
       .filter(el => el.type === 'tspan' && !el.ignore && el.style.text)
       .map(el => ({text: el.style.text, ...this.bounds(el)}));

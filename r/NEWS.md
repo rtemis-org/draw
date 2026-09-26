@@ -1,5 +1,15 @@
 # rtemis.draw (development)
 
+- Add genuine SVG export for Sigma networks and MapLibre choropleths through `save_drawing()` and `filename`, with shared layouts, joins, colors, and editable text.
+
+- Make network layouts reproducible across browser draws and exports, and apply theme fonts to network and map overlays.
+
+- Report unmatched map locations in the browser console; remove the on-chart join report and its `report_position` setting.
+
+- Reject invalid logical/list values for numeric-or-string layout properties.
+
+- Keep pie and rose labels within the chart edges and expose typed `PieLabelOption` alignment controls.
+
 - Added consistent legend position and inside/outside placement controls to statistical ECharts drawing functions and configs; categorical legends use a centered outside-top layout, with matching SVG export.
 
 - Match rtemislive's upper-right A3 annotation column and light/dark residue colors, with measured spacing in browser and SVG output.

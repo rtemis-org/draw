@@ -123,7 +123,7 @@
   // Layout the complete categorical legend against measured native geometry.
   // Position and placement are semantic hints, never extra ECharts options.
   // Native LegendView handles row wrapping; measured space is shared by SVG.
-  function positionLegend(echarts, chart, payload) {
+  function layoutLegend(echarts, chart, payload) {
     const position = payload.legendPosition;
     if (!position || payload.legendTarget === 'visualMap') return;
     // Old serialized ROC widgets carry only a corner and retain inset meaning.
@@ -300,6 +300,36 @@
       inside ? lower ? grid.y + grid.height - box.height - gap : grid.y + gap :
       lower ? height - gap - box.height : header;
     chart.setOption({visualMap: {left: x, right: null, top: y, bottom: null}});
+  }
+  // Edge-aligned pie labels need a real text band. ECharts truncates them to
+  // zero width when radius + guide lines consume that band. Fit from authored
+  // radii on every resize, so a narrow host does not permanently shrink a pie.
+  function positionLegend(echarts, chart, payload) {
+    layoutLegend(echarts, chart, payload);
+    const definitions = payload.option?.series;
+    const source = Array.isArray(definitions) ? definitions : [definitions];
+    const updates = source.map((definition, index) => {
+      if (definition?.type !== 'pie' || definition.label?.alignTo !== 'edge') return {};
+      const model = chart.getModel().getSeriesByIndex(index), data = model.getData();
+      const rect = data.getLayout('viewRect');
+      const px = (value, extent) => typeof value === 'string' && value.endsWith('%') ? parseFloat(value)*extent/100 : +value || 0;
+      const base = Math.min(rect.width, rect.height)/2;
+      const radii = Array.isArray(definition.radius) ? definition.radius : [0, definition.radius ?? '75%'];
+      const outer = px(radii[1], base), inner = px(radii[0], base);
+      let band = 0;
+      for (let i=0; i<data.count(); i++) {
+        const label = data.getItemModel(i).getModel('label');
+        if (label.get('show') === false || !['outer','outside'].includes(label.get('position'))) continue;
+        const line = data.getItemModel(i).getModel('labelLine');
+        const width = echarts.format.getTextRect(data.getName(i), label.getFont()).width;
+        band = Math.max(band, width + px(label.get('edgeDistance'),rect.width) +
+          px(line.get('length'),rect.width) + px(line.get('length2'),rect.width) +
+          (label.get('distanceToLabelLine') || 0) + 4);
+      }
+      const radius = Math.min(outer, Math.max(10, rect.width/2 - band));
+      return {radius: [outer ? inner*radius/outer : 0, radius]};
+    });
+    if (updates.some(update => update.radius)) chart.setOption({series: updates});
   }
   // A centered vertical colorbar belongs beside the data grid, which may be
   // offset by titles, rotated labels, or dendrograms. Measure the native view

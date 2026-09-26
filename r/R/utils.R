@@ -268,11 +268,12 @@ numeric_or_string_property <- function(default = NULL) {
         return(NULL)
       }
       if (!is.numeric(value) && !is.character(value)) {
-        "must be a number, string, or NULL"
+        return("must be a number, string, or NULL")
       }
       if (length(value) != 1L) {
-        "must be a single value"
+        return("must be a single value")
       }
+      NULL
     }
   )
 }

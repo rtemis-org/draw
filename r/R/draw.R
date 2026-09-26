@@ -2149,6 +2149,8 @@ pie_option <- function(
       data = data_items,
       radius = radius,
       rose_type = rose_type,
+      # Edge alignment keeps outside labels on the page at narrow widths.
+      label = PieLabelOption(align_to = "edge", edge_distance = 8),
       avoid_label_overlap = TRUE
     )
   )

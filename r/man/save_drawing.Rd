@@ -22,7 +22,7 @@ The \code{filename}, invisibly.
 }
 \description{
 Exports a widget created by \code{\link[=draw]{draw()}} (or any of the \verb{draw_*}
-functions) to a static file. Currently supports ECharts \code{.svg} via Node.js
+functions) to a static file. Supports \code{.svg} for ECharts, Sigma networks, and MapLibre maps via Node.js
 server-side rendering, including complete \code{\link[=draw_panels]{draw_panels()}} figures. Requires
 a \code{node} binary on \code{PATH}.
 }
@@ -30,8 +30,12 @@ a \code{node} binary on \code{PATH}.
 Callbacks under tooltips, axis pointers, and interactive toolbox controls
 are omitted. Other JavaScript callbacks are rejected because discarding them
 could change visible content. Built-in Gantt, dendrogram, and boxplot point renderers are
-shared with the browser widget and use JSON parameters. Network and map
-exports are not yet implemented.
+shared with the browser widget and use JSON parameters. Networks share their
+deterministic layout and styles with the interactive widget. Maps share
+geometry, location joins, and color scales and use a Mercator projection.
+Exports show the initial configured view; browser camera changes and hover
+states are not stored in the R widget. SVG text remains editable. Network
+labels are fitted to the page and suppressed when they overlap.
 }
 \examples{
 # SVG export shells out to Node.js, so run it only where node exists.

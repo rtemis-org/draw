@@ -98,7 +98,7 @@ test_that("unsupported callbacks and backends leave existing output untouched", 
   class(w) <- c("rtemis-network", "htmlwidget")
   expect_error(
     save_drawing(w, path),
-    "ECharts widgets only",
+    "widgets only",
     class = "rtemis_export_error"
   )
   expect_identical(readLines(path), "existing output")
