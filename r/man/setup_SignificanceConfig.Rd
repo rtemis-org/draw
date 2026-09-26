@@ -34,7 +34,9 @@ setup_SignificanceConfig(
   title = NULL,
   dat_path = NULL,
   origin = NULL,
-  writer = NULL
+  writer = NULL,
+  legend_position = "top",
+  legend_placement = "outside"
 )
 }
 \arguments{
@@ -100,6 +102,15 @@ serializable alternative to passing \code{data} to \code{\link[=draw]{draw()}}.}
 \item{origin}{Optional Named character: Per-property provenance.}
 
 \item{writer}{Optional Named character: Interface name and version.}
+
+\item{legend_position}{Character \{"top", "bottom", "left", "right",
+"top-left", "top-right", "bottom-left", "bottom-right"\}: Legend anchor.
+Top/bottom anchors use horizontal rows; left/right anchors use a vertical
+column. Corner anchors align within the top or bottom row.}
+
+\item{legend_placement}{Character \{"outside", "inside"\}: Relation to the
+plotting area. Outside placement reserves space for the complete legend;
+inside placement overlays the data. Neither setting adds a missing legend.}
 }
 \value{
 A \link{SignificanceConfig} object.

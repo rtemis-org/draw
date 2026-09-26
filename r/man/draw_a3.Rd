@@ -14,14 +14,14 @@ draw_a3(
   show_markers = TRUE,
   show_labels = TRUE,
   position_every = 10L,
-  region_opacity = 0.35,
+  region_opacity = 0.3,
   ptm_placement = "radial",
-  residue_fill = "#E7E5E4",
-  residue_stroke = "#44403C",
-  label_color = "#1C1917",
-  pos_label_color = "#78716C",
-  variant_color = "#FA6E1E",
-  disease_variant_color = "#E266AE",
+  residue_fill = NULL,
+  residue_stroke = NULL,
+  label_color = NULL,
+  pos_label_color = NULL,
+  variant_color = NULL,
+  disease_variant_color = NULL,
   enable_zoom = TRUE,
   title = NULL,
   grid = NULL,
@@ -65,25 +65,26 @@ Placement of PTM symbols relative to the residue circle.
 \code{"radial"} centers on the circle edge; \code{"innerRadial"} places inside;
 \code{"outerRadial"} places outside.}
 
-\item{residue_fill}{Character: Residue circle fill color.}
+\item{residue_fill}{Optional Character: Residue circle fill color.}
 
-\item{residue_stroke}{Character: Residue circle stroke and backbone line color.}
+\item{residue_stroke}{Optional Character: Residue circle stroke and backbone line color.}
 
-\item{label_color}{Character: Default residue label text color.}
+\item{label_color}{Optional Character: Default residue label text color.}
 
-\item{pos_label_color}{Character: Position label text color.}
+\item{pos_label_color}{Optional Character: Position label text color.}
 
-\item{variant_color}{Character: Label color for variant residues.}
+\item{variant_color}{Optional Character: Label color for variant residues.}
 
-\item{disease_variant_color}{Character: Label color for disease-associated
-variant residues (takes precedence over \code{variant_color}).}
+\item{disease_variant_color}{Optional Character: Label color for disease-associated
+variant residues (takes precedence over \code{variant_color}).
+\code{NULL} color arguments follow the light/dark A3 theme.}
 
 \item{enable_zoom}{Logical: Whether to enable Shift+scroll zoom.}
 
 \item{title}{Optional Character: Chart title.}
 
 \item{grid}{Optional \link{Grid}: Override any plot-area margin. The defaults
-(\code{left = 24}, \code{top} auto, \code{right} driven by legend width, \code{bottom = 24})
+(margins matching rtemislive, with \code{right} driven by legend width)
 are merged with the properties of the supplied \code{Grid} object, so only
 the fields you set are changed — e.g. \code{Grid(left = 8, top = 8)}.
 \code{legend_top} is re-derived from the final grid top automatically.}
@@ -109,12 +110,13 @@ htmlwidget: Widget object.
 Renders an \code{A3} object (from \code{rtemis.a3}) as an interactive ECharts
 amino-acid sequence diagram. The sequence is wrapped into rows in a
 meander/serpentine path, with optional site, region, PTM, processing, and
-variant annotations overlaid as distinct series and collected in a
-responsive legend. Legend headings use native rich text and remain available
+variant annotations overlaid as distinct series and collected in an
+upper-right annotation column, matching rtemislive. Legend headings use
+native rich text and remain available
 in vector SVG exports through \code{\link[=save_drawing]{save_drawing()}}.
 }
 \details{
-On narrower surfaces, the legend moves below the sequence and residue
+The annotation column stays at the upper right on every surface. Residue
 markers, labels, and annotations shrink together to avoid overlap. Row
 wrapping remains fixed. Browser height follows the layout unless supplied;
 SVG and panel dimensions remain bounded. A custom \code{grid} retains its layout.

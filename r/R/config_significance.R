@@ -50,6 +50,7 @@
 #' @param margin_right Optional Integer [0, Inf): Right plot margin in pixels.
 #' @param margin_bottom Optional Integer [0, Inf): Bottom plot margin in pixels.
 #' @param margin_left Optional Integer [0, Inf): Left plot margin in pixels.
+#' @inheritParams draw_line legend_position legend_placement
 #' @inheritParams ChartConfig
 #' @return A `SignificanceConfig` object.
 #' @export
@@ -60,128 +61,131 @@ SignificanceConfig <- new_class(
   name = "SignificanceConfig",
   parent = ChartConfig,
   package = "rtemis.draw",
-  properties = list(
-    type = prop_chart_type("significance"),
-    view = prop_string(
-      "volcano",
-      enum = c("volcano", "manhattan"),
-      description = "Scatter or categorical bar view."
-    ),
-    estimate = prop_string(
-      "estimate",
-      description = "Column containing coefficients or other signed effects."
-    ),
-    p_value = prop_string(
-      "p_value",
-      description = "Column containing unadjusted p-values."
-    ),
-    label = prop_string(
-      NULL,
-      nullable = TRUE,
-      description = "Outcome-label column. Unset generates row labels."
-    ),
-    p_adjust_method = prop_string(
-      "holm",
-      enum = stats::p.adjust.methods,
-      description = "Multiple-testing adjustment method. Adjustment precedes transformation."
-    ),
-    n_tests = prop_integer(
-      NULL,
-      nullable = TRUE,
-      min = 1L,
-      description = "Hypothesis-family size, at least the number of supplied rows. Unset counts all rows, including missing p-values."
-    ),
-    p_transform = prop_string(
-      "neg_log10",
-      enum = c("neg_log10", "identity", "one_minus"),
-      description = "Named display transform of adjusted p-values."
-    ),
-    p_thresh = prop_float(
-      0.05,
-      exclusive_min = 0,
-      max = 1,
-      description = "Significance threshold on adjusted p-values; the comparison is strict."
-    ),
-    x_thresh = prop_float(
-      0,
-      description = "Effect threshold separating low and high significant results."
-    ),
-    zero_cap = prop_float(
-      NULL,
-      nullable = TRUE,
-      exclusive_min = 0,
-      description = "Finite display height for zero p-values under neg_log10; must exceed all finite heights and the significance reference. Unset computes a cap one unit above their rounded-up maximum."
-    ),
-    annotate_n = prop_integer(
-      7L,
-      min = 0L,
-      description = "Maximum significant feature labels per side in the volcano view, ranked by raw p-value with input-order ties."
-    ),
-    reference = prop_boolean(
-      TRUE,
-      description = "Show the transformed significance threshold and, for volcanoes, the effect threshold."
-    ),
-    legend = prop_boolean(
-      TRUE,
-      description = "Show the nonempty significance groups."
-    ),
-    negative_color = prop_string(
-      "#BE2E5F",
-      description = "Color for significant effects below x_thresh."
-    ),
-    neutral_color = prop_string(
-      "#808080",
-      description = "Color for other results, including effects equal to x_thresh."
-    ),
-    positive_color = prop_string(
-      "#0F6A66",
-      description = "Color for significant effects above x_thresh."
-    ),
-    alpha = prop_float(0.8, min = 0, max = 1, description = "Mark opacity."),
-    point_size = prop_float(
-      8,
-      exclusive_min = 0,
-      description = "Scatter symbol size in pixels."
-    ),
-    xlab = prop_string(NULL, nullable = TRUE, description = "X-axis label."),
-    ylab = prop_string(NULL, nullable = TRUE, description = "Y-axis label."),
-    xlim = prop_float(
-      NULL,
-      nullable = TRUE,
-      vector = TRUE,
-      min_items = 2L,
-      description = "Exactly two increasing finite volcano x-axis limits. Not used by the categorical view."
-    ),
-    ylim = prop_float(
-      NULL,
-      nullable = TRUE,
-      vector = TRUE,
-      min_items = 2L,
-      description = "Exactly two increasing finite y-axis limits."
-    ),
-    margin_top = prop_integer(
-      NULL,
-      nullable = TRUE,
-      min = 0L,
-      description = "Top plot margin in pixels."
-    ),
-    margin_right = prop_integer(
-      NULL,
-      nullable = TRUE,
-      min = 0L,
-      description = "Right plot margin in pixels."
-    ),
-    margin_bottom = prop_integer(
-      NULL,
-      nullable = TRUE,
-      min = 0L,
-      description = "Bottom plot margin in pixels."
-    ),
-    margin_left = prop_integer(
-      NULL,
-      nullable = TRUE,
-      min = 0L,
-      description = "Left plot margin in pixels."
+  properties = c(
+    legend_properties(),
+    list(
+      type = prop_chart_type("significance"),
+      view = prop_string(
+        "volcano",
+        enum = c("volcano", "manhattan"),
+        description = "Scatter or categorical bar view."
+      ),
+      estimate = prop_string(
+        "estimate",
+        description = "Column containing coefficients or other signed effects."
+      ),
+      p_value = prop_string(
+        "p_value",
+        description = "Column containing unadjusted p-values."
+      ),
+      label = prop_string(
+        NULL,
+        nullable = TRUE,
+        description = "Outcome-label column. Unset generates row labels."
+      ),
+      p_adjust_method = prop_string(
+        "holm",
+        enum = stats::p.adjust.methods,
+        description = "Multiple-testing adjustment method. Adjustment precedes transformation."
+      ),
+      n_tests = prop_integer(
+        NULL,
+        nullable = TRUE,
+        min = 1L,
+        description = "Hypothesis-family size, at least the number of supplied rows. Unset counts all rows, including missing p-values."
+      ),
+      p_transform = prop_string(
+        "neg_log10",
+        enum = c("neg_log10", "identity", "one_minus"),
+        description = "Named display transform of adjusted p-values."
+      ),
+      p_thresh = prop_float(
+        0.05,
+        exclusive_min = 0,
+        max = 1,
+        description = "Significance threshold on adjusted p-values; the comparison is strict."
+      ),
+      x_thresh = prop_float(
+        0,
+        description = "Effect threshold separating low and high significant results."
+      ),
+      zero_cap = prop_float(
+        NULL,
+        nullable = TRUE,
+        exclusive_min = 0,
+        description = "Finite display height for zero p-values under neg_log10; must exceed all finite heights and the significance reference. Unset computes a cap one unit above their rounded-up maximum."
+      ),
+      annotate_n = prop_integer(
+        7L,
+        min = 0L,
+        description = "Maximum significant feature labels per side in the volcano view, ranked by raw p-value with input-order ties."
+      ),
+      reference = prop_boolean(
+        TRUE,
+        description = "Show the transformed significance threshold and, for volcanoes, the effect threshold."
+      ),
+      legend = prop_boolean(
+        TRUE,
+        description = "Show the nonempty significance groups."
+      ),
+      negative_color = prop_string(
+        "#BE2E5F",
+        description = "Color for significant effects below x_thresh."
+      ),
+      neutral_color = prop_string(
+        "#808080",
+        description = "Color for other results, including effects equal to x_thresh."
+      ),
+      positive_color = prop_string(
+        "#0F6A66",
+        description = "Color for significant effects above x_thresh."
+      ),
+      alpha = prop_float(0.8, min = 0, max = 1, description = "Mark opacity."),
+      point_size = prop_float(
+        8,
+        exclusive_min = 0,
+        description = "Scatter symbol size in pixels."
+      ),
+      xlab = prop_string(NULL, nullable = TRUE, description = "X-axis label."),
+      ylab = prop_string(NULL, nullable = TRUE, description = "Y-axis label."),
+      xlim = prop_float(
+        NULL,
+        nullable = TRUE,
+        vector = TRUE,
+        min_items = 2L,
+        description = "Exactly two increasing finite volcano x-axis limits. Not used by the categorical view."
+      ),
+      ylim = prop_float(
+        NULL,
+        nullable = TRUE,
+        vector = TRUE,
+        min_items = 2L,
+        description = "Exactly two increasing finite y-axis limits."
+      ),
+      margin_top = prop_integer(
+        NULL,
+        nullable = TRUE,
+        min = 0L,
+        description = "Top plot margin in pixels."
+      ),
+      margin_right = prop_integer(
+        NULL,
+        nullable = TRUE,
+        min = 0L,
+        description = "Right plot margin in pixels."
+      ),
+      margin_bottom = prop_integer(
+        NULL,
+        nullable = TRUE,
+        min = 0L,
+        description = "Bottom plot margin in pixels."
+      ),
+      margin_left = prop_integer(
+        NULL,
+        nullable = TRUE,
+        min = 0L,
+        description = "Left plot margin in pixels."
+      )
     )
   ),
   validator = function(self) {
@@ -261,7 +265,9 @@ setup_SignificanceConfig <- function(
   title = NULL,
   dat_path = NULL,
   origin = NULL,
-  writer = NULL
+  writer = NULL,
+  legend_position = "top",
+  legend_placement = "outside"
 ) {
   origin <- origin %||% chart_origin(match.call(), SIGNIFICANCE_ORIGIN_NAMES)
   SignificanceConfig(
@@ -297,6 +303,8 @@ setup_SignificanceConfig <- function(
     margin_left = if (is.null(margin_left)) NULL else clean_int(margin_left),
     title = title,
     dat_path = dat_path,
+    legend_position = legend_position,
+    legend_placement = legend_placement,
     origin = origin,
     writer = writer
   )

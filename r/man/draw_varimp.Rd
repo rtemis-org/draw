@@ -23,7 +23,9 @@ draw_varimp(
   filename = NULL,
   type = "bar",
   decreasing = TRUE,
-  ...
+  ...,
+  legend_position = "top",
+  legend_placement = "outside"
 )
 }
 \arguments{
@@ -78,6 +80,15 @@ FALSE selects and displays the smallest ranks first.}
 \code{\link[=setup_BoxplotConfig]{setup_BoxplotConfig()}}, according to \code{type}. Boxplots accept \code{boxpoints},
 \code{quartiles}, \code{whisker}, and point styling; unset \code{boxpoints} shows all scores.
 Data bindings, labels, and orientation are set here.}
+
+\item{legend_position}{Character \{"top", "bottom", "left", "right",
+"top-left", "top-right", "bottom-left", "bottom-right"\}: Legend anchor.
+Top/bottom anchors use horizontal rows; left/right anchors use a vertical
+column. Corner anchors align within the top or bottom row.}
+
+\item{legend_placement}{Character \{"outside", "inside"\}: Relation to the
+plotting area. Outside placement reserves space for the complete legend;
+inside placement overlays the data. Neither setting adds a missing legend.}
 }
 \value{
 htmlwidget: ECharts importance bars or fold distributions.

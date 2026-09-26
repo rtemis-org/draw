@@ -3,9 +3,9 @@
 // LegendModel.ts), and series symbol/label styles (util/types.ts).
 // spec: draw/first-cran-release#a3-responsive-surface-layout
 (function(root, factory) {
-  if (typeof module === 'object' && module.exports) module.exports = factory();
-  else root.rtemisA3 = factory();
-})(typeof globalThis !== 'undefined' ? globalThis : this, function() {
+  if (typeof module === 'object' && module.exports) module.exports = factory(require('../echarts/echarts.min.js'));
+  else root.rtemisA3 = factory(root.echarts);
+})(typeof globalThis !== 'undefined' ? globalThis : this, function(echarts) {
   'use strict';
   function fit(chart, payload, bounded = true) {
     const hint = payload.a3;
@@ -15,58 +15,40 @@
     const yRange = source.yAxis.max - source.yAxis.min;
     const marker = hint.markerSize, step = hint.residueSpacing;
     const glyph = Math.max(1, marker, hint.fontSize);
+    const rgb = echarts.color.parse(chart.getModel().get('backgroundColor') || '#ffffff');
+    const dark = rgb && rgb[3] !== 0 && rgb.slice(0, 3).reduce((sum, value, i) => sum + value * [.2126, .7152, .0722][i], 0) < 128;
+    const colors = dark ? hint.colorsDark : hint.colorsLight;
     if (![marker, hint.fontSize].every(v => Number.isFinite(v) && v >= 0) ||
         ![step, xRange, yRange].every(v => Number.isFinite(v) && v > 0)) {
       throw new Error('Supply nonnegative A3 glyph sizes, positive residue spacing, and increasing axis ranges.');
     }
-    let legendHeight = 0, below = false;
     const grid = {...source.grid};
-    if (hint.autoGrid) {
-      const required = xRange / step * (glyph + 4);
-      below = width - grid.left - grid.right < required;
-      // Use one native legend component per annotation family. Plain legend
-      // data deduplicates repeated newline entries; independent groups preserve
-      // headings with their annotations at every width without callbacks.
-      const groups = [];
-      source.legend.data.forEach(entry => {
-        const name = typeof entry === 'string' ? entry : entry.name;
-        if (!groups.length || name.startsWith('{heading|')) groups.push([]);
-        groups[groups.length - 1].push(entry);
-      });
+    {
+      // A3 follows rtemislive's dedicated upper-right annotation rail. Keep
+      // all families in one native legend so their symbols and text share a
+      // left edge. Unlimited layout height prevents ECharts flowing entries
+      // into adjacent columns; measured content sets the required surface.
       const selected = {};
       chart.getModel().eachComponent('legend', model => Object.assign(selected, model.get('selected')));
-      const legends = groups.map((data, index) => ({
-        ...source.legend, id: `rtemis-a3-legend-${index}`, data, selected,
-        orient: below ? 'horizontal' : 'vertical',
-        left: below ? 24 : null, right: below ? 24 : source.legend.right,
-        top: 0, bottom: null,
-        width: below ? Math.max(1, width - 48) : source.legend.width,
-        height: below ? null : 1000000,
-        textStyle: {...source.legend.textStyle, rich: {heading: {
-          ...source.legend.textStyle.rich.heading, padding: [2, 0, 2, 0]
-        }}}
-      }));
-      chart.setOption({legend: legends}, {replaceMerge: ['legend']});
-      const heights = legends.map((_, index) => {
-        const model = chart.getModel().getComponent('legend', index);
-        return chart.getViewOfComponentModel(model).group.getBoundingRect().height;
-      });
-      legendHeight = heights.reduce((sum, value) => sum + value, 0) + Math.max(0, heights.length - 1) * 6;
-      if (below) {
-        grid.right = 24;
-        grid.bottom = 24 + legendHeight + 24;
-      }
-      if (hint.autoHeight && !bounded) {
-        const body = glyph * 2 * yRange;
-        const height = grid.top + (below ? body : Math.max(body, legendHeight)) + grid.bottom;
+      chart.setOption({legend: {
+        ...source.legend, selected, orient: 'vertical', align: 'left',
+        left: null, bottom: null, width: null, height: 1000000
+      }});
+      const model = chart.getModel().getComponent('legend');
+      const box = chart.getViewOfComponentModel(model).group.getBoundingRect();
+      // Like live's measured rail, long annotation names reserve their actual
+      // width. Geometry is derived from the source on every resize, preserving
+      // the gap and avoiding cumulative changes to the sequence or selection.
+      if (hint.autoGrid) grid.right = source.legend.right + box.width + (hint.legendGap ?? 40);
+      if (hint.autoGrid && hint.autoHeight && !bounded) {
+        grid.height = hint.bodyHeight ?? glyph * 2 * yRange;
+        const height = Math.max(
+          grid.top + grid.height + grid.bottom,
+          source.legend.top + box.height + grid.bottom
+        );
         chart.resize({width, height: Math.ceil(height)});
       }
-      let top = below ? chart.getHeight() - 24 - legendHeight : grid.top;
-      chart.setOption({grid, legend: legends.map((legend, index) => {
-        const position = {id: legend.id, top};
-        top += heights[index] + 6;
-        return position;
-      })});
+      chart.setOption({grid});
     }
     // Actual native grid dimensions also respect caller-supplied margins.
     const area = chart.getModel().getComponent('grid').coordinateSystem.getRect();
@@ -87,14 +69,24 @@
       });
       return update;
     };
-    chart.setOption({series: source.series.map(series => ({
-      ...scaled(series, ['symbolSize', 'symbolOffset']),
-      lineStyle: scaled(series.lineStyle, ['width']),
-      itemStyle: scaled(series.itemStyle, ['borderWidth']),
-      data: series.data.map(datum => datum?.label ? {
-        ...datum, label: {...datum.label, ...scaled(datum.label, ['fontSize', 'distance'])}
-      } : datum)
-    }))});
+    chart.setOption({series: source.series.map((series, index) => {
+      const role = hint.seriesRoles?.[index];
+      const backbone = colors && role === 'backbone';
+      return {
+        ...scaled(series, ['symbolSize', 'symbolOffset']),
+        lineStyle: {...scaled(series.lineStyle, ['width']), ...(backbone ? {color: colors.residueStroke} : {})},
+        itemStyle: {...scaled(series.itemStyle, ['borderWidth']), ...(backbone ? {
+          color: colors.residueFill, borderColor: colors.residueStroke
+        } : {})},
+        data: series.data.map((datum, i) => datum?.label ? {
+          ...datum, label: {
+            ...datum.label, ...scaled(datum.label, ['fontSize', 'distance']),
+            ...(colors && role === 'labels' ? {color: colors[hint.labelRoles[i]]} : {}),
+            ...(colors && role === 'positions' ? {color: colors.position} : {})
+          }
+        } : datum)
+      };
+    })});
   }
   return {fit};
 });

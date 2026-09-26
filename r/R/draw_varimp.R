@@ -441,6 +441,7 @@ method(summarize_varimp, class_data.frame) <- function(
 #' )
 #' draw_varimp(scores, measure = "gain", absent = "zero")
 #' draw_varimp(scores, measure = "gain", type = "boxplot", absent = "zero")
+#' @inheritParams draw_line legend_position legend_placement
 draw_varimp <- function(
   x,
   measure = NULL,
@@ -460,7 +461,9 @@ draw_varimp <- function(
   filename = NULL,
   type = "bar",
   decreasing = TRUE,
-  ...
+  ...,
+  legend_position = "top",
+  legend_placement = "outside"
 ) {
   check_character_scalar(type)
   check_enum(type, c("bar", "boxplot"))
@@ -529,7 +532,9 @@ draw_varimp <- function(
           horizontal = horizontal,
           xlab = xlab %||% if (horizontal) score_label else "Variable",
           ylab = ylab %||% if (horizontal) "Variable" else score_label,
-          title = title
+          title = title,
+          legend_position = legend_position,
+          legend_placement = legend_placement
         ),
         settings
       )
@@ -543,6 +548,8 @@ draw_varimp <- function(
       xlab = xlab %||% if (horizontal) score_label else "Variable",
       ylab = ylab %||% if (horizontal) "Variable" else score_label,
       title = title,
+      legend_position = legend_position,
+      legend_placement = legend_placement,
       ...
     )
     plot_data <- values

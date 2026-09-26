@@ -290,7 +290,7 @@ test_that("empirical ROC agrees with the existing rtemis statistical engine", {
 test_that("ROC legends use compact labels and portable corner placement", {
   records <- roc_test_records()
   default <- draw_roc(records)
-  expect_identical(default[["x"]][["legendPosition"]], "bottom-right")
+  expect_identical(default[["x"]][["legendPosition"]], "top")
   expect_identical(
     default[["x"]][["option"]][["legend"]][["data"]],
     list("yes (AUC 0.875)")
@@ -328,11 +328,16 @@ test_that("ROC legend anchors and complete labels survive resize and selection",
   widgets <- unlist(
     lapply(corners, function(corner) {
       list(
-        draw_roc(multiclass, legend_position = corner),
+        draw_roc(
+          multiclass,
+          legend_position = corner,
+          legend_placement = "inside"
+        ),
         draw_roc(
           folds,
           variant = "per_resample",
           legend_position = corner,
+          legend_placement = "inside",
           theme = theme_dark(),
           square = FALSE
         )

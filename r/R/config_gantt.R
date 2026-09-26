@@ -35,6 +35,7 @@
 #' @param palette Optional Character: Bar colors, overriding the theme palette
 #'   for this chart. `NULL` uses the theme's.
 #' @param xlab Optional Character: Time axis label.
+#' @inheritParams draw_line legend_position legend_placement
 #' @inheritParams ChartConfig
 #'
 #' @return `GanttConfig` object.
@@ -48,69 +49,72 @@ GanttConfig <- new_class(
   name = "GanttConfig",
   parent = ChartConfig,
   package = "rtemis.draw",
-  properties = list(
-    type = prop_chart_type("gantt"),
-    # -- data binding: columns of the bound task table ----------------------
-    label = prop_string("label", description = "Column naming each task."),
-    start = prop_string(
-      "start",
-      description = "Column holding each task's start."
-    ),
-    end = prop_string("end", description = "Column holding each task's end."),
-    group = prop_string(
-      NULL,
-      nullable = TRUE,
-      description = "Column to color bars by."
-    ),
-    tooltip = prop_string(
-      NULL,
-      nullable = TRUE,
-      description = "Column holding per-bar tooltip text."
-    ),
-    border = prop_string(
-      NULL,
-      nullable = TRUE,
-      description = "Logical column; a true value outlines the bar."
-    ),
-    # -- semantics ---------------------------------------------------------
-    axis_type = prop_string(
-      "value",
-      enum = c("value", "time"),
-      description = "How the time axis is scaled."
-    ),
-    zoom = prop_boolean(TRUE, description = "Enable the zoom control."),
-    guides = prop_boolean(TRUE, description = "Show guide lines."),
-    # -- appearance --------------------------------------------------------
-    bar_height = prop_float(
-      0.6,
-      min = 0,
-      max = 1,
-      description = "Bar height as a fraction of the row."
-    ),
-    bar_radius = prop_float(
-      0,
-      min = 0,
-      description = "Bar corner radius in pixels."
-    ),
-    border_color = prop_string(
-      "#E53935",
-      description = "Outline color for bordered bars."
-    ),
-    border_width = prop_float(
-      1.5,
-      min = 0,
-      description = "Outline width in pixels."
-    ),
-    palette = prop_string(
-      NULL,
-      nullable = TRUE,
-      vector = TRUE,
-      description = "Bar colors, overriding the theme palette. Unset uses the theme's."
-    ),
-    xlab = prop_string(
-      NULL,
-      nullable = TRUE,
-      description = "Time axis label."
+  properties = c(
+    legend_properties(),
+    list(
+      type = prop_chart_type("gantt"),
+      # -- data binding: columns of the bound task table ----------------------
+      label = prop_string("label", description = "Column naming each task."),
+      start = prop_string(
+        "start",
+        description = "Column holding each task's start."
+      ),
+      end = prop_string("end", description = "Column holding each task's end."),
+      group = prop_string(
+        NULL,
+        nullable = TRUE,
+        description = "Column to color bars by."
+      ),
+      tooltip = prop_string(
+        NULL,
+        nullable = TRUE,
+        description = "Column holding per-bar tooltip text."
+      ),
+      border = prop_string(
+        NULL,
+        nullable = TRUE,
+        description = "Logical column; a true value outlines the bar."
+      ),
+      # -- semantics ---------------------------------------------------------
+      axis_type = prop_string(
+        "value",
+        enum = c("value", "time"),
+        description = "How the time axis is scaled."
+      ),
+      zoom = prop_boolean(TRUE, description = "Enable the zoom control."),
+      guides = prop_boolean(TRUE, description = "Show guide lines."),
+      # -- appearance --------------------------------------------------------
+      bar_height = prop_float(
+        0.6,
+        min = 0,
+        max = 1,
+        description = "Bar height as a fraction of the row."
+      ),
+      bar_radius = prop_float(
+        0,
+        min = 0,
+        description = "Bar corner radius in pixels."
+      ),
+      border_color = prop_string(
+        "#E53935",
+        description = "Outline color for bordered bars."
+      ),
+      border_width = prop_float(
+        1.5,
+        min = 0,
+        description = "Outline width in pixels."
+      ),
+      palette = prop_string(
+        NULL,
+        nullable = TRUE,
+        vector = TRUE,
+        description = "Bar colors, overriding the theme palette. Unset uses the theme's."
+      ),
+      xlab = prop_string(
+        NULL,
+        nullable = TRUE,
+        description = "Time axis label."
+      )
     )
   )
 ) # /rtemis.draw::GanttConfig
@@ -168,7 +172,9 @@ setup_GanttConfig <- function(
   title = NULL,
   dat_path = NULL,
   origin = NULL,
-  writer = NULL
+  writer = NULL,
+  legend_position = "top",
+  legend_placement = "outside"
 ) {
   origin <- origin %||% chart_origin(match.call(), GANTT_ORIGIN_NAMES)
   GanttConfig(
@@ -189,6 +195,8 @@ setup_GanttConfig <- function(
     xlab = xlab,
     title = title,
     dat_path = dat_path,
+    legend_position = legend_position,
+    legend_placement = legend_placement,
     origin = origin,
     writer = writer
   )

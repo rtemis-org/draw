@@ -50,6 +50,7 @@
 #'   the data.
 #' @param margin_top,margin_right,margin_bottom,margin_left Optional Integer
 #'   `[0, Inf)`: Plot margins in pixels.
+#' @inheritParams draw_line legend_position legend_placement
 #' @inheritParams ChartConfig
 #'
 #' @return `LineConfig` object.
@@ -63,135 +64,141 @@ LineConfig <- new_class(
   name = "LineConfig",
   parent = ChartConfig,
   package = "rtemis.draw",
-  properties = list(
-    type = prop_chart_type("line"),
-    # -- data binding ------------------------------------------------------
-    x = prop_string(
-      NULL,
-      nullable = TRUE,
-      description = paste(
-        "Column along the horizontal axis. Numeric gets a value axis,",
-        "date or date-time a time axis, anything else a category axis."
+  properties = c(
+    legend_properties(),
+    list(
+      type = prop_chart_type("line"),
+      # -- data binding ------------------------------------------------------
+      x = prop_string(
+        NULL,
+        nullable = TRUE,
+        description = paste(
+          "Column along the horizontal axis. Numeric gets a value axis,",
+          "date or date-time a time axis, anything else a category axis."
+        )
+      ),
+      y = prop_string(
+        NULL,
+        nullable = TRUE,
+        vector = TRUE,
+        description = "Columns to plot, one line each."
+      ),
+      group = prop_string(
+        NULL,
+        nullable = TRUE,
+        description = "Column to group and color lines by."
+      ),
+      blocks = prop_string(
+        NULL,
+        nullable = TRUE,
+        description = paste(
+          "Column whose contiguous runs shade vertical background bands.",
+          "Missing entries produce no band."
+        )
+      ),
+      # -- semantics ---------------------------------------------------------
+      smooth = prop_boolean(FALSE, description = "Draw smoothed lines."),
+      area = prop_boolean(
+        FALSE,
+        description = "Fill the area under each line."
+      ),
+      points = prop_boolean(
+        TRUE,
+        description = "Show a marker at each data value."
+      ),
+      zoom = prop_boolean(FALSE, description = "Enable the zoom control."),
+      # -- appearance --------------------------------------------------------
+      palette = prop_string(
+        NULL,
+        nullable = TRUE,
+        vector = TRUE,
+        description = "Series colors, overriding the theme palette. Unset uses the theme's."
+      ),
+      block_color = prop_string(
+        NULL,
+        nullable = TRUE,
+        vector = TRUE,
+        description = "Band colors."
+      ),
+      block_opacity = prop_float(
+        0.2,
+        min = 0,
+        max = 1,
+        description = "Band opacity."
+      ),
+      square = prop_boolean(
+        FALSE,
+        description = paste(
+          "Draw the plotting box square: equal height and width in pixels,",
+          "excluding axis labels and margins."
+        )
+      ),
+      equal_axes = prop_boolean(
+        FALSE,
+        description = paste(
+          "Give one data unit the same size in pixels on both axes. Combined",
+          "with `square`, both axes are made to span the same interval."
+        )
+      ),
+      pad = prop_float(
+        DEFAULT_PAD,
+        min = 0,
+        description = paste(
+          "Fraction of the data range to extend each axis by when the limits",
+          "are not given."
+        )
+      ),
+      xlim = prop_float(
+        NULL,
+        nullable = TRUE,
+        vector = TRUE,
+        min_items = 2L,
+        description = paste(
+          "X axis limits. Unset derives them from the data.",
+          "On a time axis, epoch milliseconds."
+        )
+      ),
+      ylim = prop_float(
+        NULL,
+        nullable = TRUE,
+        vector = TRUE,
+        min_items = 2L,
+        description = "Y axis limits. Unset derives them from the data."
+      ),
+      xlab = prop_string(
+        NULL,
+        nullable = TRUE,
+        description = "X axis label. Unset derives it from the data."
+      ),
+      ylab = prop_string(
+        NULL,
+        nullable = TRUE,
+        description = "Y axis label. Unset derives it from the data."
+      ),
+      margin_top = prop_integer(
+        NULL,
+        min = 0L,
+        nullable = TRUE,
+        description = "Top margin in pixels."
+      ),
+      margin_right = prop_integer(
+        NULL,
+        min = 0L,
+        nullable = TRUE,
+        description = "Right margin in pixels."
+      ),
+      margin_bottom = prop_integer(
+        NULL,
+        min = 0L,
+        nullable = TRUE,
+        description = "Bottom margin in pixels."
+      ),
+      margin_left = prop_integer(
+        NULL,
+        min = 0L,
+        nullable = TRUE,
+        description = "Left margin in pixels."
       )
-    ),
-    y = prop_string(
-      NULL,
-      nullable = TRUE,
-      vector = TRUE,
-      description = "Columns to plot, one line each."
-    ),
-    group = prop_string(
-      NULL,
-      nullable = TRUE,
-      description = "Column to group and color lines by."
-    ),
-    blocks = prop_string(
-      NULL,
-      nullable = TRUE,
-      description = paste(
-        "Column whose contiguous runs shade vertical background bands.",
-        "Missing entries produce no band."
-      )
-    ),
-    # -- semantics ---------------------------------------------------------
-    smooth = prop_boolean(FALSE, description = "Draw smoothed lines."),
-    area = prop_boolean(FALSE, description = "Fill the area under each line."),
-    points = prop_boolean(
-      TRUE,
-      description = "Show a marker at each data value."
-    ),
-    zoom = prop_boolean(FALSE, description = "Enable the zoom control."),
-    # -- appearance --------------------------------------------------------
-    palette = prop_string(
-      NULL,
-      nullable = TRUE,
-      vector = TRUE,
-      description = "Series colors, overriding the theme palette. Unset uses the theme's."
-    ),
-    block_color = prop_string(
-      NULL,
-      nullable = TRUE,
-      vector = TRUE,
-      description = "Band colors."
-    ),
-    block_opacity = prop_float(
-      0.2,
-      min = 0,
-      max = 1,
-      description = "Band opacity."
-    ),
-    square = prop_boolean(
-      FALSE,
-      description = paste(
-        "Draw the plotting box square: equal height and width in pixels,",
-        "excluding axis labels and margins."
-      )
-    ),
-    equal_axes = prop_boolean(
-      FALSE,
-      description = paste(
-        "Give one data unit the same size in pixels on both axes. Combined",
-        "with `square`, both axes are made to span the same interval."
-      )
-    ),
-    pad = prop_float(
-      DEFAULT_PAD,
-      min = 0,
-      description = paste(
-        "Fraction of the data range to extend each axis by when the limits",
-        "are not given."
-      )
-    ),
-    xlim = prop_float(
-      NULL,
-      nullable = TRUE,
-      vector = TRUE,
-      min_items = 2L,
-      description = paste(
-        "X axis limits. Unset derives them from the data.",
-        "On a time axis, epoch milliseconds."
-      )
-    ),
-    ylim = prop_float(
-      NULL,
-      nullable = TRUE,
-      vector = TRUE,
-      min_items = 2L,
-      description = "Y axis limits. Unset derives them from the data."
-    ),
-    xlab = prop_string(
-      NULL,
-      nullable = TRUE,
-      description = "X axis label. Unset derives it from the data."
-    ),
-    ylab = prop_string(
-      NULL,
-      nullable = TRUE,
-      description = "Y axis label. Unset derives it from the data."
-    ),
-    margin_top = prop_integer(
-      NULL,
-      min = 0L,
-      nullable = TRUE,
-      description = "Top margin in pixels."
-    ),
-    margin_right = prop_integer(
-      NULL,
-      min = 0L,
-      nullable = TRUE,
-      description = "Right margin in pixels."
-    ),
-    margin_bottom = prop_integer(
-      NULL,
-      min = 0L,
-      nullable = TRUE,
-      description = "Bottom margin in pixels."
-    ),
-    margin_left = prop_integer(
-      NULL,
-      min = 0L,
-      nullable = TRUE,
-      description = "Left margin in pixels."
     )
   )
 ) # /rtemis.draw::LineConfig
@@ -250,7 +257,9 @@ setup_LineConfig <- function(
   margin_left = NULL,
   dat_path = NULL,
   origin = NULL,
-  writer = NULL
+  writer = NULL,
+  legend_position = "top",
+  legend_placement = "outside"
 ) {
   origin <- origin %||% chart_origin(match.call(), LINE_ORIGIN_NAMES)
   LineConfig(
@@ -278,6 +287,8 @@ setup_LineConfig <- function(
     margin_bottom = margin_bottom,
     margin_left = margin_left,
     dat_path = dat_path,
+    legend_position = legend_position,
+    legend_placement = legend_placement,
     origin = origin,
     writer = writer
   )

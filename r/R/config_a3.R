@@ -30,9 +30,10 @@
 #' @param line_width Numeric `[0, Inf)`: Backbone line width.
 #' @param show_markers,show_labels Logical: Whether to draw each.
 #' @param region_opacity Numeric `[0, 1]`: Region band opacity.
-#' @param residue_fill,residue_stroke Character: Residue marker colors.
-#' @param label_color,pos_label_color Character: Label colors.
-#' @param variant_color,disease_variant_color Character: Variant marker colors.
+#' @param residue_fill,residue_stroke Optional Character: Residue marker colors.
+#' @param label_color,pos_label_color Optional Character: Label colors.
+#' @param variant_color,disease_variant_color Optional Character: Variant marker colors.
+#'   `NULL` selects the corresponding light/dark A3 theme color.
 #' @inheritParams ChartConfig
 #'
 #' @return `A3Config` object.
@@ -76,30 +77,39 @@ A3Config <- new_class(
     show_markers = prop_boolean(TRUE, description = "Draw residue markers."),
     show_labels = prop_boolean(TRUE, description = "Draw residue labels."),
     region_opacity = prop_float(
-      0.35,
+      0.3,
       min = 0,
       max = 1,
       description = "Region band opacity."
     ),
     residue_fill = prop_string(
-      "#E7E5E4",
+      NULL,
+      nullable = TRUE,
       description = "Residue marker fill."
     ),
     residue_stroke = prop_string(
-      "#44403C",
+      NULL,
+      nullable = TRUE,
       description = "Residue marker outline."
     ),
-    label_color = prop_string("#1C1917", description = "Residue label color."),
+    label_color = prop_string(
+      NULL,
+      nullable = TRUE,
+      description = "Residue label color."
+    ),
     pos_label_color = prop_string(
-      "#78716C",
+      NULL,
+      nullable = TRUE,
       description = "Position label color."
     ),
     variant_color = prop_string(
-      "#FA6E1E",
+      NULL,
+      nullable = TRUE,
       description = "Variant marker color."
     ),
     disease_variant_color = prop_string(
-      "#E266AE",
+      NULL,
+      nullable = TRUE,
       description = "Disease-variant marker color."
     )
   )
@@ -144,13 +154,13 @@ setup_A3Config <- function(
   line_width = 2,
   show_markers = TRUE,
   show_labels = TRUE,
-  region_opacity = 0.35,
-  residue_fill = "#E7E5E4",
-  residue_stroke = "#44403C",
-  label_color = "#1C1917",
-  pos_label_color = "#78716C",
-  variant_color = "#FA6E1E",
-  disease_variant_color = "#E266AE",
+  region_opacity = 0.3,
+  residue_fill = NULL,
+  residue_stroke = NULL,
+  label_color = NULL,
+  pos_label_color = NULL,
+  variant_color = NULL,
+  disease_variant_color = NULL,
   title = NULL,
   dat_path = NULL,
   origin = NULL,

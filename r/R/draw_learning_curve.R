@@ -188,6 +188,7 @@ method(learning_curve_data, class_data.frame) <- function(
 #'   loss_validation = c(4.5, 2.5, 2, 2.2)
 #' )
 #' draw_learning_curve(losses, unit = "epochs", selected = 3)
+#' @inheritParams draw_line legend_position legend_placement
 draw_learning_curve <- function(
   data,
   unit = attr(data, "unit", exact = TRUE),
@@ -200,7 +201,9 @@ draw_learning_curve <- function(
   height = NULL,
   element_id = NULL,
   filename = NULL,
-  ...
+  ...,
+  legend_position = "top",
+  legend_placement = "outside"
 ) {
   if (!is.null(unit)) {
     check_character_scalar(unit)
@@ -212,6 +215,8 @@ draw_learning_curve <- function(
     xlab = xlab %||% if (is.null(unit)) "Iteration" else labelify(unit),
     ylab = ylab,
     title = title,
+    legend_position = legend_position,
+    legend_placement = legend_placement,
     ...
   )
   draw(

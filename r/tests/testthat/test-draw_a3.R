@@ -198,6 +198,15 @@ test_that("draw_a3 legend is plain and vertical", {
   legend <- w$x$option$legend
   expect_equal(legend$type, "plain")
   expect_equal(legend$orient, "vertical")
+  # rtemislive's A3 setup owns this annotation rail, independently of the
+  # shared categorical legend defaults and their semantic config fields.
+  expect_equal(legend$top, 68)
+  expect_equal(legend$right, 16)
+  expect_equal(legend$itemGap, 10)
+  expect_equal(w[["x"]][["a3"]][["legendGap"]], 40)
+  expect_null(w[["x"]][["legendPosition"]])
+  expect_null(w[["x"]][["legendPlacement"]])
+  expect_false("legend_position" %in% names(A3Config@properties))
 })
 
 test_that("draw_a3 height is auto-computed when NULL", {
@@ -330,4 +339,54 @@ test_that("A3 empty display choices and zero marker configs still export", {
     draw(setup_A3Config(marker_size = 0), data = a),
     path
   ))
+})
+
+
+test_that("A3 automatic colors and overrides share a portable config contract", {
+  skip_if_not_installed("rtemis.a3")
+  fields <- c(
+    "residue_fill",
+    "residue_stroke",
+    "label_color",
+    "pos_label_color",
+    "variant_color",
+    "disease_variant_color"
+  )
+  config <- setup_A3Config()
+  for (field in fields) {
+    expect_null(S7::prop(config, field))
+    expect_error(do.call(setup_A3Config, setNames(list(42), field)))
+  }
+  a <- rtemis.a3::create_A3(
+    "MAEPRQEFEVMEDHAGTYGLGDRK",
+    site = list(
+      `Disease-Associated Variant` = rtemis.a3::annotation_position(4L)
+    )
+  )
+  direct <- draw_a3(a, residue_fill = "#123456", label_color = "#abcdef")
+  config <- setup_A3Config(residue_fill = "#123456", label_color = "#abcdef")
+  expect_identical(draw(config, data = a)[["x"]], direct[["x"]])
+  hint <- direct[["x"]][["a3"]]
+  for (palette in c("colorsLight", "colorsDark")) {
+    expect_identical(hint[[palette]][["residueFill"]], "#123456")
+    expect_identical(hint[[palette]][["label"]], "#abcdef")
+  }
+  expect_identical(hint[["labelRoles"]][[4]], "diseaseVariant")
+  path <- tempfile(fileext = ".json")
+  on.exit(unlink(path), add = TRUE)
+  for (complete in c(FALSE, TRUE)) {
+    write_chart_config(config, path, complete = complete)
+    back <- read_chart_config(path)
+    expect_identical(back@residue_fill, "#123456")
+    expect_null(back@residue_stroke)
+  }
+  if (nzchar(Sys.which("node"))) {
+    svg_path <- tempfile(fileext = ".svg")
+    on.exit(unlink(svg_path), add = TRUE)
+    save_drawing(draw(config, data = a, theme = theme_dark()), svg_path)
+    svg <- paste(readLines(svg_path, warn = FALSE), collapse = "\n")
+    expect_match(svg, "#123456", fixed = TRUE)
+    expect_match(svg, "#abcdef", fixed = TRUE)
+    expect_match(svg, "#f472b6", fixed = TRUE)
+  }
 })

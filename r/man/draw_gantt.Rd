@@ -23,7 +23,9 @@ draw_gantt(
   width = NULL,
   height = NULL,
   element_id = NULL,
-  filename = NULL
+  filename = NULL,
+  legend_position = "top",
+  legend_placement = "outside"
 )
 }
 \arguments{
@@ -81,6 +83,15 @@ container. \code{NULL} lets htmlwidgets generate one.}
 
 \item{filename}{Optional Character: If provided, save the widget to this file
 via \code{\link[=save_drawing]{save_drawing()}}.}
+
+\item{legend_position}{Character \{"top", "bottom", "left", "right",
+"top-left", "top-right", "bottom-left", "bottom-right"\}: Legend anchor.
+Top/bottom anchors use horizontal rows; left/right anchors use a vertical
+column. Corner anchors align within the top or bottom row.}
+
+\item{legend_placement}{Character \{"outside", "inside"\}: Relation to the
+plotting area. Outside placement reserves space for the complete legend;
+inside placement overlays the data. Neither setting adds a missing legend.}
 }
 \value{
 htmlwidget: Widget object.
@@ -92,7 +103,7 @@ on the y-axis. Implemented as an ECharts \code{custom} series (ECharts has no
 native Gantt series).
 }
 \details{
-The legend moves below the plot when a side legend would leave too little
+The legend uses the shared position/placement controls and reserves enough
 room for the time axis. Tick density follows the available plotting width,
 and long task labels are truncated. Default bar tooltips retain the full task
 text.

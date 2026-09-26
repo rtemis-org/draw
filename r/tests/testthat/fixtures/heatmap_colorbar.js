@@ -22,8 +22,10 @@ for (const payload of input.charts) {
         box.applyTransform(view.group.getComputedTransform());
         assert.ok(Math.abs(box.y + box.height / 2 - area.y - area.height / 2) < 1e-7,
           `Colorbar center ${box.y + box.height / 2} differs from grid center ${area.y + area.height / 2}`);
-      } else {
-        assert.equal(model.get('top') ?? null, payload.option.visualMap.top ?? null);
+      } else if (model.get('show')) {
+        const box = chart.getViewOfComponentModel(model).group.getBoundingRect();
+        assert.ok(model.get('top') >= series.coordinateSystem.getArea().y + series.coordinateSystem.getArea().height);
+        assert.ok(box.height > 0);
       }
       const data = series.getData();
       for (let i = 0; i < data.count(); i++) {

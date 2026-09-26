@@ -9,6 +9,8 @@ draw_roc(
   predicted_prob = NULL,
   positive = NULL,
   ...,
+  legend_position = "top",
+  legend_placement = "outside",
   theme = NULL,
   width = NULL,
   height = NULL,
@@ -24,6 +26,15 @@ draw_roc(
 \item{positive}{Optional Character: Positive class for binary input.}
 
 \item{...}{Additional named settings for \code{\link[=setup_ROCConfig]{setup_ROCConfig()}}.}
+
+\item{legend_position}{Character \{"top", "bottom", "left", "right",
+"top-left", "top-right", "bottom-left", "bottom-right"\}: Legend anchor.
+Top/bottom anchors use horizontal rows; left/right anchors use a vertical
+column. Corner anchors align within the top or bottom row.}
+
+\item{legend_placement}{Character \{"outside", "inside"\}: Relation to the
+plotting area. Outside placement reserves space for the complete legend;
+inside placement overlays the data. Neither setting adds a missing legend.}
 
 \item{theme}{Optional \link{Theme}: Chart theme.}
 
@@ -53,9 +64,8 @@ are deduplicated, curves smoothed, or vertices downsampled.
 }
 \section{Legend placement}{
 
-Set \code{legend_position} to \code{"bottom-right"}, \code{"top-right"}, \code{"top-left"}, or
-\code{"bottom-left"} through \code{...}. The lower-right default usually leaves the
-upper-left region occupied by informative ROC curves unobstructed.
+The shared top/outside layout reserves a horizontal band above the plot.
+Choose an inside corner to overlay the legend on the data.
 }
 
 \section{Statistical semantics}{
@@ -68,7 +78,7 @@ by missing FPR, TPR, and AUC and is reported in the console when omitted.
 Per-resample legends report the unweighted mean and sample SD of defined
 fold AUCs, with available/total curve counts. SD is NA for one defined fold.
 Pooled AUC is never inferred from per-fold AUCs.
-The legend is inset in the chosen corner of the plotting area. Curve identity
+The legend uses the shared position and placement controls. Curve identity
 and AUC share a line; long labels wrap to the available width. All entries
 remain present in static SVG output, without a scrolling legend.
 Hover describes the selected curve, including its resample identifier.

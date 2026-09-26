@@ -47,7 +47,10 @@ for (const payload of input.charts) {
         }
       });
       const visualMap = chart.getModel().getComponent('visualMap');
-      near(visualMap.get('right'), (width - payload.leftPx - payload.rightPx - area.width) / 2);
+      const group = chart.getViewOfComponentModel(visualMap).group;
+      const box = group.getBoundingRect().clone(); box.applyTransform(group.getComputedTransform());
+      near(box.y + box.height / 2, area.y + area.height / 2);
+      assert.ok(box.x >= area.x + area.width && box.x + box.width <= width);
       const [min, max] = visualMap.getExtent();
       const selected = [min + (max-min)/4, max - (max-min)/4];
       chart.dispatchAction({type:'selectDataRange', selected});

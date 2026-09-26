@@ -33,11 +33,11 @@ window.foundationQA = {
   hoverPoint() {
     const c = this.chart();
     const series = c.getModel().getSeries().find(s =>
-      s.subType === 'scatter' || s.subType === 'bar' || s.subType === 'line');
+      s.subType === 'scatter' || s.subType === 'bar' || s.subType === 'line' || s.subType === 'boxplot');
     const data = series.getData();
     const index = Math.floor(data.count() / 2);
     let point;
-    if (series.subType === 'bar') {
+    if (series.subType === 'bar' || series.subType === 'boxplot') {
       const rect = this.bounds(data.getItemGraphicEl(index));
       point = [rect.x + rect.width / 2, rect.y + rect.height / 2];
     } else {

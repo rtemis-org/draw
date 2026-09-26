@@ -134,6 +134,7 @@ save_drawing <- function(widget, filename, width = NULL, height = NULL) {
     height,
     aspect = payload[["aspect"]],
     legend_position = payload[["legendPosition"]],
+    legend_placement = payload[["legendPlacement"]],
     confusion = payload[["confusion"]],
     meta = payload[intersect(
       names(payload),
@@ -146,6 +147,8 @@ save_drawing <- function(widget, filename, width = NULL, height = NULL) {
         "rightPx",
         "topPx",
         "botPx",
+        "legendTarget",
+        "legendReserveRight",
         "colorLight",
         "colorDark"
       )
@@ -285,7 +288,8 @@ method(strip_js, class_any) <- function(
 #' @param width,height Numeric scalars: Finite positive image dimensions.
 #' @param panels,layout Optional List: Child payloads and resolved panel layout.
 #' @param aspect Optional List: Fixed-ratio render metadata for a single chart.
-#' @param legend_position Optional Character: Inset ROC legend corner.
+#' @param legend_position Optional Character: Legend edge or corner.
+#' @param legend_placement Optional Character: Outside or inside placement.
 #' @param confusion Optional List: Theme and square-cell constraints for confusion plots.
 #' @param meta Optional List: Declarative heatmap geometry and palette hints shared
 #'   with the browser renderer.
@@ -302,6 +306,7 @@ save_svg_ssr <- function(
   layout = NULL,
   aspect = NULL,
   legend_position = NULL,
+  legend_placement = NULL,
   confusion = NULL,
   meta = NULL
 ) {
@@ -331,6 +336,7 @@ save_svg_ssr <- function(
       layout = layout,
       aspect = aspect,
       legendPosition = legend_position,
+      legendPlacement = legend_placement,
       confusion = confusion,
       theme = theme,
       width = width,

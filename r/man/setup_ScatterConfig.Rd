@@ -32,7 +32,9 @@ setup_ScatterConfig(
   se_times = 1.96,
   rsq = FALSE,
   diagonal = FALSE,
-  diagonal_color = NULL
+  diagonal_color = NULL,
+  legend_position = "top",
+  legend_placement = "outside"
 )
 }
 \arguments{
@@ -96,6 +98,15 @@ config that already carries provenance.}
 \item{diagonal}{Logical: Draw the identity line within the axis limits.}
 
 \item{diagonal_color}{Optional Character: Identity-line color.}
+
+\item{legend_position}{Character \{"top", "bottom", "left", "right",
+"top-left", "top-right", "bottom-left", "bottom-right"\}: Legend anchor.
+Top/bottom anchors use horizontal rows; left/right anchors use a vertical
+column. Corner anchors align within the top or bottom row.}
+
+\item{legend_placement}{Character \{"outside", "inside"\}: Relation to the
+plotting area. Outside placement reserves space for the complete legend;
+inside placement overlays the data. Neither setting adds a missing legend.}
 }
 \value{
 \link{ScatterConfig} object.

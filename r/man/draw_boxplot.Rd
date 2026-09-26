@@ -28,7 +28,9 @@ draw_boxplot(
   boxpoints = "none",
   point_size = 5,
   point_alpha = 0.6,
-  point_spread = 0.5
+  point_spread = 0.5,
+  legend_position = "top",
+  legend_placement = "outside"
 )
 }
 \arguments{
@@ -91,6 +93,15 @@ zero uses full-range whiskers.}
 \item{point_alpha}{Numeric \verb{[0, 1]}: Point opacity.}
 
 \item{point_spread}{Numeric \verb{[0, 1]}: Fraction of box width occupied by offsets.}
+
+\item{legend_position}{Character \{"top", "bottom", "left", "right",
+"top-left", "top-right", "bottom-left", "bottom-right"\}: Legend anchor.
+Top/bottom anchors use horizontal rows; left/right anchors use a vertical
+column. Corner anchors align within the top or bottom row.}
+
+\item{legend_placement}{Character \{"outside", "inside"\}: Relation to the
+plotting area. Outside placement reserves space for the complete legend;
+inside placement overlays the data. Neither setting adds a missing legend.}
 }
 \value{
 htmlwidget: ECharts boxes with optional vector point overlays.

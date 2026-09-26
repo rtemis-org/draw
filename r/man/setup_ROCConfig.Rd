@@ -18,7 +18,8 @@ setup_ROCConfig(
   diagonal_color = "#888888",
   palette = NULL,
   legend = TRUE,
-  legend_position = "bottom-right",
+  legend_position = "top",
+  legend_placement = "outside",
   square = TRUE,
   line_width = 2,
   fold_opacity = 0.45,
@@ -57,7 +58,14 @@ setup_ROCConfig(
 
 \item{legend}{Logical: Show group labels and AUC summaries.}
 
-\item{legend_position}{Character \{"bottom-right", "top-right", "top-left", "bottom-left"\}: Corner inside the plotting area for the legend.}
+\item{legend_position}{Character \{"top", "bottom", "left", "right",
+"top-left", "top-right", "bottom-left", "bottom-right"\}: Legend anchor.
+Top/bottom anchors use horizontal rows; left/right anchors use a vertical
+column. Corner anchors align within the top or bottom row.}
+
+\item{legend_placement}{Character \{"outside", "inside"\}: Relation to the
+plotting area. Outside placement reserves space for the complete legend;
+inside placement overlays the data. Neither setting adds a missing legend.}
 
 \item{square}{Logical: Keep the plotting grid square.}
 
@@ -69,9 +77,7 @@ setup_ROCConfig(
 
 \item{ylab}{Character: Vertical axis label.}
 
-\item{title}{Optional Character: Chart title. Declared here because it is the
-one property every chart type has; \code{palette} is not (four take a \code{colormap}
-instead), and axis labels and margins are cartesian-only.}
+\item{title}{Optional Character: Chart title.}
 
 \item{dat_path}{Optional Character: Path to the data, read at draw time. The
 serializable alternative to passing \code{data} to \code{\link[=draw]{draw()}}.}

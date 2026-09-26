@@ -1,5 +1,9 @@
 # rtemis.draw (development)
 
+- Added consistent legend position and inside/outside placement controls to statistical ECharts drawing functions and configs; categorical legends use a centered outside-top layout, with matching SVG export.
+
+- Match rtemislive's upper-right A3 annotation column and light/dark residue colors, with measured spacing in browser and SVG output.
+
 - Emphasize categorical line and area chart baselines only when zero is visible, matching numeric axes and boxplots.
 
 # rtemis.draw 0.5.2

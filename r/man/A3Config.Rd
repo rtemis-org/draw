@@ -19,13 +19,13 @@ A3Config(
   line_width = 2,
   show_markers = TRUE,
   show_labels = TRUE,
-  region_opacity = 0.35,
-  residue_fill = "#E7E5E4",
-  residue_stroke = "#44403C",
-  label_color = "#1C1917",
-  pos_label_color = "#78716C",
-  variant_color = "#FA6E1E",
-  disease_variant_color = "#E266AE"
+  region_opacity = 0.3,
+  residue_fill = NULL,
+  residue_stroke = NULL,
+  label_color = NULL,
+  pos_label_color = NULL,
+  variant_color = NULL,
+  disease_variant_color = NULL
 )
 }
 \arguments{
@@ -65,11 +65,12 @@ reduced with related marks when needed to fit the surface.}
 
 \item{region_opacity}{Numeric \verb{[0, 1]}: Region band opacity.}
 
-\item{residue_fill, residue_stroke}{Character: Residue marker colors.}
+\item{residue_fill, residue_stroke}{Optional Character: Residue marker colors.}
 
-\item{label_color, pos_label_color}{Character: Label colors.}
+\item{label_color, pos_label_color}{Optional Character: Label colors.}
 
-\item{variant_color, disease_variant_color}{Character: Variant marker colors.}
+\item{variant_color, disease_variant_color}{Optional Character: Variant marker colors.
+\code{NULL} selects the corresponding light/dark A3 theme color.}
 }
 \value{
 \code{A3Config} object.

@@ -25,6 +25,7 @@
 #'   the data.
 #' @param margin_top,margin_right,margin_bottom,margin_left Optional Integer
 #'   `[0, Inf)`: Plot margins in pixels.
+#' @inheritParams draw_line legend_position legend_placement
 #' @inheritParams ChartConfig
 #'
 #' @return `DensityConfig` object.
@@ -38,73 +39,76 @@ DensityConfig <- new_class(
   name = "DensityConfig",
   parent = ChartConfig,
   package = "rtemis.draw",
-  properties = list(
-    type = prop_chart_type("density"),
-    # -- data binding ------------------------------------------------------
-    x = prop_string(
-      NULL,
-      nullable = TRUE,
-      description = "Column to estimate the density of."
-    ),
-    group = prop_string(
-      NULL,
-      nullable = TRUE,
-      description = "Column to split the estimate by, one curve per level."
-    ),
-    # -- semantics ---------------------------------------------------------
-    n = prop_integer(
-      512L,
-      min = 2L,
-      description = "Points at which the density is estimated."
-    ),
-    bw = prop_string(
-      "nrd0",
-      description = "Bandwidth selector."
-    ),
-    na_rm = prop_boolean(
-      TRUE,
-      description = "Drop missing values before estimating."
-    ),
-    # -- appearance --------------------------------------------------------
-    palette = prop_string(
-      NULL,
-      nullable = TRUE,
-      vector = TRUE,
-      description = "Series colors, overriding the theme palette. Unset uses the theme's."
-    ),
-    xlab = prop_string(
-      NULL,
-      nullable = TRUE,
-      description = "X axis label. Unset derives it from the data."
-    ),
-    ylab = prop_string(
-      NULL,
-      nullable = TRUE,
-      description = "Y axis label. Unset derives it from the data."
-    ),
-    margin_top = prop_integer(
-      NULL,
-      min = 0L,
-      nullable = TRUE,
-      description = "Top margin in pixels."
-    ),
-    margin_right = prop_integer(
-      NULL,
-      min = 0L,
-      nullable = TRUE,
-      description = "Right margin in pixels."
-    ),
-    margin_bottom = prop_integer(
-      NULL,
-      min = 0L,
-      nullable = TRUE,
-      description = "Bottom margin in pixels."
-    ),
-    margin_left = prop_integer(
-      NULL,
-      min = 0L,
-      nullable = TRUE,
-      description = "Left margin in pixels."
+  properties = c(
+    legend_properties(),
+    list(
+      type = prop_chart_type("density"),
+      # -- data binding ------------------------------------------------------
+      x = prop_string(
+        NULL,
+        nullable = TRUE,
+        description = "Column to estimate the density of."
+      ),
+      group = prop_string(
+        NULL,
+        nullable = TRUE,
+        description = "Column to split the estimate by, one curve per level."
+      ),
+      # -- semantics ---------------------------------------------------------
+      n = prop_integer(
+        512L,
+        min = 2L,
+        description = "Points at which the density is estimated."
+      ),
+      bw = prop_string(
+        "nrd0",
+        description = "Bandwidth selector."
+      ),
+      na_rm = prop_boolean(
+        TRUE,
+        description = "Drop missing values before estimating."
+      ),
+      # -- appearance --------------------------------------------------------
+      palette = prop_string(
+        NULL,
+        nullable = TRUE,
+        vector = TRUE,
+        description = "Series colors, overriding the theme palette. Unset uses the theme's."
+      ),
+      xlab = prop_string(
+        NULL,
+        nullable = TRUE,
+        description = "X axis label. Unset derives it from the data."
+      ),
+      ylab = prop_string(
+        NULL,
+        nullable = TRUE,
+        description = "Y axis label. Unset derives it from the data."
+      ),
+      margin_top = prop_integer(
+        NULL,
+        min = 0L,
+        nullable = TRUE,
+        description = "Top margin in pixels."
+      ),
+      margin_right = prop_integer(
+        NULL,
+        min = 0L,
+        nullable = TRUE,
+        description = "Right margin in pixels."
+      ),
+      margin_bottom = prop_integer(
+        NULL,
+        min = 0L,
+        nullable = TRUE,
+        description = "Bottom margin in pixels."
+      ),
+      margin_left = prop_integer(
+        NULL,
+        min = 0L,
+        nullable = TRUE,
+        description = "Left margin in pixels."
+      )
     )
   )
 ) # /rtemis.draw::DensityConfig
@@ -153,7 +157,9 @@ setup_DensityConfig <- function(
   margin_left = NULL,
   dat_path = NULL,
   origin = NULL,
-  writer = NULL
+  writer = NULL,
+  legend_position = "top",
+  legend_placement = "outside"
 ) {
   origin <- origin %||% chart_origin(match.call(), DENSITY_ORIGIN_NAMES)
   DensityConfig(
@@ -171,6 +177,8 @@ setup_DensityConfig <- function(
     margin_bottom = margin_bottom,
     margin_left = margin_left,
     dat_path = dat_path,
+    legend_position = legend_position,
+    legend_placement = legend_placement,
     origin = origin,
     writer = writer
   )

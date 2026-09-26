@@ -281,6 +281,7 @@ spectrogram_option <- function(
   validate_range(time_range, "time_range")
   validate_range(zlim, "zlim")
 
+  legend_reserve_right <- if (is.null(margins)) 54 else 0
   # Auto margins if title is set
   if (is.null(margins)) {
     margins <- DEFAULT_MARGINS
@@ -674,7 +675,7 @@ spectrogram_option <- function(
   )
 
   # Pass diverging dark-theme colormap variant to JS (mirrors draw_heatmap)
-  meta <- list()
+  meta <- list(legendReserveRight = legend_reserve_right)
   if (!is.null(dark_pal)) {
     meta[["colorLight"]] <- as.list(pal)
     meta[["colorDark"]] <- as.list(dark_pal)
@@ -768,6 +769,7 @@ spectrogram_option <- function(
 #'   draw_spectrogram(sig, sample_rate = 8000)
 #' }
 #' @export
+#' @inheritParams draw_line legend_position legend_placement
 draw_spectrogram <- function(
   x,
   sample_rate = NULL,
@@ -799,7 +801,9 @@ draw_spectrogram <- function(
   height = NULL,
   element_id = NULL,
   filename = NULL,
-  verbosity = 1L
+  verbosity = 1L,
+  legend_position = "right",
+  legend_placement = "outside"
 ) {
   built <- spectrogram_option(
     x = x,
@@ -837,6 +841,10 @@ draw_spectrogram <- function(
     height = height,
     element_id = element_id,
     filename = filename,
-    meta = built[["render"]][["meta"]]
+    meta = c(
+      legend_meta(legend_position, legend_placement),
+      built[["render"]][["meta"]],
+      list(legendTarget = "visualMap")
+    )
   )
 }

@@ -93,9 +93,26 @@ builders <- list(
     )
   }
 )
+# Reproduce the grouped-boxplot layout and inspect outside/inset alignments.
+for (anchor in c("top", "top-right", "bottom", "inside")) {
+  builders[[paste0("boxplot_", anchor)]] <- local({
+    position <- if (anchor == "inside") "top-right" else anchor
+    placement <- if (anchor == "inside") "inside" else "outside"
+    function(theme) {
+      draw_boxplot(
+        birds[c("bill_len", "bill_dep")],
+        group = birds["species"],
+        labels = c("Bill length (mm)", "Bill depth (mm)"),
+        legend_position = position,
+        legend_placement = placement,
+        theme = theme
+      )
+    }
+  })
+}
 manifest <- list(
   complete = FALSE,
-  expected_cases = 20L,
+  expected_cases = length(builders) * 4L,
   generated_utc = format(Sys.time(), tz = "UTC", usetz = TRUE),
   source_commit = system2("git", c("rev-parse", "HEAD"), stdout = TRUE),
   source_status = system2("git", c("status", "--porcelain"), stdout = TRUE),
@@ -228,7 +245,9 @@ tryCatch(
           result <- evaluate("foundationQA.scene()")
           expected_series <- if (name == "scatter") {
             9L
-          } else if (name %in% c("line", "area")) {
+          } else if (
+            name %in% c("line", "area") || startsWith(name, "boxplot_")
+          ) {
             3L
           } else {
             2L
@@ -359,7 +378,7 @@ tryCatch(
   },
   finally = b$close()
 )
-stopifnot(length(manifest[["cases"]]) == 20L)
+stopifnot(length(manifest[["cases"]]) == manifest[["expected_cases"]])
 manifest[["complete"]] <- TRUE
 jsonlite::write_json(
   manifest,

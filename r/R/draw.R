@@ -1027,6 +1027,14 @@ line_option <- function(
 #'
 #' Quick line chart from x/y data.
 #'
+#' @param legend_position Character \{"top", "bottom", "left", "right",
+#'   "top-left", "top-right", "bottom-left", "bottom-right"\}: Legend anchor.
+#'   Top/bottom anchors use horizontal rows; left/right anchors use a vertical
+#'   column. Corner anchors align within the top or bottom row.
+#' @param legend_placement Character \{"outside", "inside"\}: Relation to the
+#'   plotting area. Outside placement reserves space for the complete legend;
+#'   inside placement overlays the data. Neither setting adds a missing legend.
+#'
 #' @details
 #' Axis baselines emphasize zero only when it is in the visible orthogonal
 #' range. Categorical x axes follow the same rule as numeric and time axes.
@@ -1163,7 +1171,9 @@ draw_line <- function(
   width = NULL,
   height = NULL,
   element_id = NULL,
-  filename = NULL
+  filename = NULL,
+  legend_position = "top",
+  legend_placement = "outside"
 ) {
   opt <- line_option(
     x = x,
@@ -1197,7 +1207,10 @@ draw_line <- function(
     height = height,
     element_id = element_id,
     filename = filename,
-    meta = aspect_meta(opt, square = square, equal_axes = equal_axes)
+    meta = c(
+      legend_meta(legend_position, legend_placement),
+      aspect_meta(opt, square = square, equal_axes = equal_axes)
+    )
   )
 }
 
@@ -1583,6 +1596,7 @@ bar_option <- function(
 #'
 #' @examples
 #' draw_bar(x = c("A", "B", "C"), y = c(3, 7, 2), title = "Counts")
+#' @inheritParams draw_line legend_position legend_placement
 draw_bar <- function(
   x,
   y,
@@ -1598,7 +1612,9 @@ draw_bar <- function(
   height = NULL,
   element_id = NULL,
   filename = NULL,
-  bar_width = NULL
+  bar_width = NULL,
+  legend_position = "top",
+  legend_placement = "outside"
 ) {
   opt <- bar_option(
     x = x,
@@ -1619,7 +1635,8 @@ draw_bar <- function(
     width = width,
     height = height,
     element_id = element_id,
-    filename = filename
+    filename = filename,
+    meta = legend_meta(legend_position, legend_placement)
   )
 }
 
@@ -2023,6 +2040,7 @@ scatter_option <- function(
 #' )
 #'
 #' @export
+#' @inheritParams draw_line legend_position legend_placement
 draw_scatter <- function(
   x,
   y,
@@ -2050,7 +2068,9 @@ draw_scatter <- function(
   se_times = 1.96,
   rsq = FALSE,
   diagonal = FALSE,
-  diagonal_color = NULL
+  diagonal_color = NULL,
+  legend_position = "top",
+  legend_placement = "outside"
 ) {
   opt <- scatter_option(
     x = x,
@@ -2084,7 +2104,10 @@ draw_scatter <- function(
     height = height,
     element_id = element_id,
     filename = filename,
-    meta = aspect_meta(opt, square = square, equal_axes = equal_axes)
+    meta = c(
+      legend_meta(legend_position, legend_placement),
+      aspect_meta(opt, square = square, equal_axes = equal_axes)
+    )
   )
 }
 
@@ -2162,6 +2185,7 @@ pie_option <- function(
 #'   values = c(1048, 735, 580),
 #'   labels = c("Chrome", "Firefox", "Safari")
 #' )
+#' @inheritParams draw_line legend_position legend_placement
 draw_pie <- function(
   values,
   labels,
@@ -2173,7 +2197,9 @@ draw_pie <- function(
   width = NULL,
   height = NULL,
   element_id = NULL,
-  filename = NULL
+  filename = NULL,
+  legend_position = "top",
+  legend_placement = "outside"
 ) {
   opt <- pie_option(
     values = values,
@@ -2190,7 +2216,8 @@ draw_pie <- function(
     width = width,
     height = height,
     element_id = element_id,
-    filename = filename
+    filename = filename,
+    meta = legend_meta(legend_position, legend_placement)
   )
 }
 
@@ -2429,6 +2456,7 @@ density_option <- function(
 #'
 #' @examples
 #' draw_density(iris[["Sepal.Length"]], xlab = "Sepal length")
+#' @inheritParams draw_line legend_position legend_placement
 draw_density <- function(
   x,
   group = NULL,
@@ -2445,7 +2473,9 @@ draw_density <- function(
   height = NULL,
   verbosity = 1L,
   element_id = NULL,
-  filename = NULL
+  filename = NULL,
+  legend_position = "top",
+  legend_placement = "outside"
 ) {
   opt <- density_option(
     x = x,
@@ -2467,7 +2497,8 @@ draw_density <- function(
     width = width,
     height = height,
     element_id = element_id,
-    filename = filename
+    filename = filename,
+    meta = legend_meta(legend_position, legend_placement)
   )
 }
 
@@ -2570,6 +2601,7 @@ histogram_option <- function(
 #'
 #' @examples
 #' draw_histogram(iris[["Sepal.Length"]], xlab = "Sepal length")
+#' @inheritParams draw_line legend_position legend_placement
 draw_histogram <- function(
   x,
   group = NULL,
@@ -2583,7 +2615,9 @@ draw_histogram <- function(
   width = NULL,
   height = NULL,
   element_id = NULL,
-  filename = NULL
+  filename = NULL,
+  legend_position = "top",
+  legend_placement = "outside"
 ) {
   opt <- histogram_option(
     x = x,
@@ -2602,7 +2636,8 @@ draw_histogram <- function(
     width = width,
     height = height,
     element_id = element_id,
-    filename = filename
+    filename = filename,
+    meta = legend_meta(legend_position, legend_placement)
   )
 }
 
@@ -3364,7 +3399,17 @@ heatmap_option <- function(
   # square cells dynamically on init and resize (viewer/browser resize events).
   # hm_left/hm_right/hm_top/hm_bottom are the actual heatmap grid margins so
   # squareCellHeight() measures only the heatmap grid, not the dendro panels.
-  heatmap_meta <- list()
+  heatmap_meta <- list(
+    legendReserveRight = if (
+      show_colorbar &&
+        colorbar_orient == "vertical" &&
+        is.null(user_margins[["right"]])
+    ) {
+      70
+    } else {
+      0
+    }
+  )
   if (square_cells) {
     heatmap_meta <- c(
       heatmap_meta,
@@ -3485,6 +3530,7 @@ heatmap_option <- function(
 #'
 #' @examples
 #' draw_heatmap(cor(mtcars[, 1:5]), title = "Correlation")
+#' @inheritParams draw_line legend_position legend_placement
 draw_heatmap <- function(
   x,
   row_names = NULL,
@@ -3515,7 +3561,9 @@ draw_heatmap <- function(
   width = NULL,
   height = NULL,
   element_id = NULL,
-  filename = NULL
+  filename = NULL,
+  legend_position = if (colorbar_orient == "horizontal") "bottom" else "right",
+  legend_placement = "outside"
 ) {
   built <- heatmap_option(
     width = width,
@@ -3554,7 +3602,11 @@ draw_heatmap <- function(
     height = height,
     element_id = element_id,
     filename = filename,
-    meta = built[["render"]][["meta"]]
+    meta = c(
+      legend_meta(legend_position, legend_placement),
+      built[["render"]][["meta"]],
+      list(legendTarget = "visualMap")
+    )
   )
 }
 

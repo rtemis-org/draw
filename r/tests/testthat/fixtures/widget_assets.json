@@ -118,5 +118,27 @@
     "md5": [
       "e45b1d71d348859de694599104c7bbc6"
     ]
+  },
+  "rtemis-panel-layout-1.0.6": {
+    "scripts": [
+      "panels.js",
+      "confusion.js",
+      "a3.js",
+      "panel_widget.js"
+    ],
+    "md5": [
+      "aa94fb18b3dc0c3df4b32484eae36ad7",
+      "98e316a5f257b6054521c87c60acf622",
+      "d35d723753c796470a8513968a8f15b2",
+      "ca5750ba961ca56c09b06a83ae32205e"
+    ]
+  },
+  "rtemis-draw-binding-0.5.2.9000": {
+    "scripts": [
+      "rtemis-draw.js"
+    ],
+    "md5": [
+      "e45b1d71d348859de694599104c7bbc6"
+    ]
   }
 }

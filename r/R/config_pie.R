@@ -20,6 +20,7 @@
 #'   plain pie.
 #' @param palette Optional Character: Slice colors, overriding the theme
 #'   palette for this chart. `NULL` uses the theme's.
+#' @inheritParams draw_line legend_position legend_placement
 #' @inheritParams ChartConfig
 #'
 #' @return `PieConfig` object.
@@ -33,36 +34,39 @@ PieConfig <- new_class(
   name = "PieConfig",
   parent = ChartConfig,
   package = "rtemis.draw",
-  properties = list(
-    type = prop_chart_type("pie"),
-    # -- data binding ------------------------------------------------------
-    values = prop_string(
-      NULL,
-      nullable = TRUE,
-      description = "Column holding the slice values."
-    ),
-    labels = prop_string(
-      NULL,
-      nullable = TRUE,
-      description = "Column holding the slice labels."
-    ),
-    # -- semantics ---------------------------------------------------------
-    rose_type = prop_string(
-      NULL,
-      enum = c("radius", "area"),
-      nullable = TRUE,
-      description = "Draw as a Nightingale rose chart. Unset draws a plain pie."
-    ),
-    # -- appearance --------------------------------------------------------
-    radius = prop_string(
-      "75%",
-      description = "Outer radius, as a CSS length or percentage."
-    ),
-    palette = prop_string(
-      NULL,
-      nullable = TRUE,
-      vector = TRUE,
-      description = "Slice colors, overriding the theme palette. Unset uses the theme's."
+  properties = c(
+    legend_properties(),
+    list(
+      type = prop_chart_type("pie"),
+      # -- data binding ------------------------------------------------------
+      values = prop_string(
+        NULL,
+        nullable = TRUE,
+        description = "Column holding the slice values."
+      ),
+      labels = prop_string(
+        NULL,
+        nullable = TRUE,
+        description = "Column holding the slice labels."
+      ),
+      # -- semantics ---------------------------------------------------------
+      rose_type = prop_string(
+        NULL,
+        enum = c("radius", "area"),
+        nullable = TRUE,
+        description = "Draw as a Nightingale rose chart. Unset draws a plain pie."
+      ),
+      # -- appearance --------------------------------------------------------
+      radius = prop_string(
+        "75%",
+        description = "Outer radius, as a CSS length or percentage."
+      ),
+      palette = prop_string(
+        NULL,
+        nullable = TRUE,
+        vector = TRUE,
+        description = "Slice colors, overriding the theme palette. Unset uses the theme's."
+      )
     )
   )
 ) # /rtemis.draw::PieConfig
@@ -105,7 +109,9 @@ setup_PieConfig <- function(
   title = NULL,
   dat_path = NULL,
   origin = NULL,
-  writer = NULL
+  writer = NULL,
+  legend_position = "top",
+  legend_placement = "outside"
 ) {
   origin <- origin %||% chart_origin(match.call(), PIE_ORIGIN_NAMES)
   PieConfig(
@@ -116,6 +122,8 @@ setup_PieConfig <- function(
     palette = palette,
     title = title,
     dat_path = dat_path,
+    legend_position = legend_position,
+    legend_placement = legend_placement,
     origin = origin,
     writer = writer
   )

@@ -120,42 +120,193 @@
       map.inRange = {...map.inRange, color: colors};
     });
   }
-  // Position a ROC legend relative to the measured data area, not the canvas.
-  // ECharts LegendModel uses content-sized boxes (ignoreSize: true), so use
-  // one anchor per axis. Measure the active font before constraining long
-  // labels; native wrapping preserves every character in browser and SVG.
-  // spec: draw/first-cran-release#roc-views
+  // Layout the complete categorical legend against measured native geometry.
+  // Position and placement are semantic hints, never extra ECharts options.
+  // Native LegendView handles row wrapping; measured space is shared by SVG.
   function positionLegend(echarts, chart, payload) {
     const position = payload.legendPosition;
-    if (!position) return;
-    const model = chart.getModel().getComponent('legend');
-    if (!model?.get('show')) return;
-    const grid = chart.getModel().getComponent('grid').coordinateSystem.getRect();
-    const inset = 12;
-    const font = model.getModel('textStyle').getFont();
-    const names = model.getData().map(item => item.get('name'));
-    if (!names.length) return;
-    const naturalWidth = Math.max(...names.map(name =>
-      echarts.format.getTextRect(name, font).width));
-    // The native marker-to-label gap is 5px (LegendView._createItem).
-    const available = grid.width - 2 * inset - model.get('itemWidth') - 5;
-    const right = position.endsWith('right');
-    const bottom = position.startsWith('bottom');
-    chart.setOption({legend: {
-      left: right ? null : grid.x + inset,
-      right: right ? chart.getWidth() - grid.x - grid.width + inset : null,
-      top: bottom ? null : grid.y + inset,
-      bottom: bottom ? chart.getHeight() - grid.y - grid.height + inset : null,
-      // Leave short labels unconstrained: measuring then imposing that exact
-      // width can wrap a word because native text layout rounds differently.
-      textStyle: {width: naturalWidth > available ? Math.max(1, available) : null, overflow: 'break'}
-    }});
+    if (!position || payload.legendTarget === 'visualMap') return;
+    // Old serialized ROC widgets carry only a corner and retain inset meaning.
+    const inside = (payload.legendPlacement || 'inside') === 'inside';
+    const vertical = position === 'left' || position === 'right';
+    const lower = position.startsWith('bottom'), right = position.endsWith('right');
+    const left = position.endsWith('left');
+    const width = chart.getWidth(), height = chart.getHeight(), gap = 12;
+    const source = payload.option;
+    let models = [];
+    chart.getModel().eachComponent('legend', model => {
+      if (model.get('show') && model.getData().length) models.push(model);
+    });
+    if (!models.length) return;
+    const bounds = model => {
+      const group = chart.getViewOfComponentModel(model).group;
+      const box = group.getBoundingRect().clone();
+      box.applyTransform(group.getComputedTransform());
+      return box;
+    };
+    const px = (value, extent, fallback) => typeof value === 'number' ? value :
+      typeof value === 'string' && value.endsWith('%') ? parseFloat(value) * extent / 100 : fallback;
+    let header = gap;
+    ['title', 'toolbox'].forEach(type => chart.getModel().eachComponent(type, model => {
+      const box = bounds(model);
+      if (box.width && box.height && box.y < height / 2) header = Math.max(header, box.y + box.height + gap);
+    }));
+    // Restore authored margins on each pass: repeated resize must not accumulate
+    // legend space. The aspect fitter subsequently constrains the data rectangle.
+    let grids = source.grid ? (Array.isArray(source.grid) ? source.grid : [source.grid]).map(g => ({...g})) : [];
+    if (payload.aspect) {
+      const a = payload.aspect;
+      grids = [{...grids[0], left: a.leftPx, right: a.rightPx, top: a.topPx, bottom: a.botPx,
+        width: null, height: null}];
+    }
+    const isGantt = (Array.isArray(source.series) ? source.series : [source.series])
+      .some(s => s?.renderItem === 'rtemis.gantt.v1');
+    if (isGantt) grids = grids.map(g => ({...g, right: 16, top: Math.max(g.top, header)}));
+    if (grids.length) chart.setOption({grid: grids});
+    const area = () => {
+      const model = chart.getModel().getComponent('grid');
+      return model ? model.coordinateSystem.getRect() : {x: gap, y: header, width: width - 2 * gap, height: height - header - gap};
+    };
+    const initial = area();
+    const availableWidth = vertical ? Math.max(60, Math.min(initial.width * .4, 240)) : Math.max(1, initial.width - (inside ? 2 * gap : 0));
+    const availableHeight = Math.max(1, initial.height - (inside ? 2 * gap : 0));
+    const legends = models.map(model => {
+      const font = model.getModel('textStyle').getFont();
+      const natural = Math.max(0, ...model.getData().map(item =>
+        echarts.format.getTextRect(item.get('name'), font).width));
+      const textWidth = Math.max(1, availableWidth - model.get('itemWidth') - 15);
+      return {id: model.id, orient: vertical ? 'vertical' : 'horizontal',
+        left: 0, right: null, top: 0, bottom: null, width: availableWidth,
+        height: vertical ? availableHeight : 1000000,
+        textStyle: {width: natural > textWidth ? textWidth : null, overflow: 'break'}};
+    });
+    chart.setOption({legend: legends});
+    models = models.map(model => chart.getModel().getComponent('legend', model.componentIndex));
+    const boxes = models.map(bounds);
+    // Keep annotation families together, but pack complete components into
+    // horizontal rows instead of giving every family its own full-width band.
+    const rows = [];
+    boxes.forEach((box, index) => {
+      let row = rows[rows.length - 1];
+      if (!row || vertical || row.width + 16 + box.width > availableWidth) {
+        row = {items: [], width: 0, height: 0}; rows.push(row);
+      }
+      row.items.push({index, offset: row.width + (row.items.length ? 16 : 0)});
+      row.width += box.width + (row.items.length > 1 ? 16 : 0);
+      row.height = Math.max(row.height, box.height);
+    });
+    const legendHeight = rows.reduce((sum, row) => sum + row.height, 0) + (rows.length - 1) * 6;
+    const legendWidth = Math.max(...rows.map(row => row.width));
+    const extra = vertical ? legendWidth + gap : legendHeight + gap;
+    if (!inside) {
+      grids = grids.map(g => {
+        const next = {...g};
+        if (vertical) {
+          const side = right ? 'right' : 'left';
+          next[side] = px(g[side], width, 36) + extra;
+        } else if (lower) {
+          next.bottom = px(g.bottom, height, 36) + extra;
+        } else {
+          next.top = Math.max(px(g.top, height, 36), header + extra);
+        }
+        return next;
+      });
+      const update = {};
+      if (grids.length) update.grid = grids;
+      else update.series = (Array.isArray(source.series) ? source.series : [source.series]).map(s => {
+        // Native box-layout series such as pie reserve the same outside bands.
+        if (s?.type !== 'pie') return {};
+        return {left: gap + (vertical && left ? extra : 0), right: gap + (vertical && right ? extra : 0),
+          top: header + (!vertical && !lower ? extra : 0), bottom: gap + (!vertical && lower ? extra : 0)};
+      });
+      // Bottom legends sit below slider controls; move those controls as a band.
+      if (!vertical && lower && source.dataZoom) {
+        update.dataZoom = (Array.isArray(source.dataZoom) ? source.dataZoom : [source.dataZoom]).map(z =>
+          z.type === 'slider' ? {bottom: px(z.bottom, height, 0) + extra} : {});
+      } else if (source.dataZoom) {
+        update.dataZoom = (Array.isArray(source.dataZoom) ? source.dataZoom : [source.dataZoom]).map(z =>
+          z.type === 'slider' ? {bottom: z.bottom ?? null} : {});
+      }
+      chart.setOption(update);
+    }
+    if (payload.aspect) fitAxes(chart, payload);
+    const grid = area();
+    let top = inside ? (lower ? grid.y + grid.height - legendHeight - gap :
+      vertical ? grid.y + (grid.height - legendHeight) / 2 : grid.y + gap) :
+      vertical ? grid.y + (grid.height - legendHeight) / 2 : lower ? height - gap - legendHeight : header;
+    const updates = [];
+    rows.forEach(row => {
+      const x = vertical ? (inside ? (right ? grid.x + grid.width - row.width - gap : grid.x + gap) :
+        right ? width - gap - row.width : gap) :
+        right ? grid.x + grid.width - row.width - (inside ? gap : 0) :
+        left ? grid.x + (inside ? gap : 0) : grid.x + (grid.width - row.width) / 2;
+      row.items.forEach(item => updates.push({id: models[item.index].id,
+        left: x + item.offset, right: null, top, bottom: null}));
+      top += row.height + 6;
+    });
+    chart.setOption({legend: updates});
+  }
+
+  // Continuous legends share anchors/placement but retain a vertical right
+  // default. Their native view includes endpoint text and draggable handles.
+  function positionVisualMaps(chart, payload) {
+    const position = payload.legendPosition;
+    const model = chart.getModel().getComponent('visualMap');
+    if (!position || !model?.get('show')) return;
+    const source = payload.option, gap = 12, width = chart.getWidth(), height = chart.getHeight();
+    const vertical = position === 'left' || position === 'right';
+    const inside = payload.legendPlacement === 'inside';
+    const right = position.endsWith('right'), left = position.endsWith('left'), lower = position.startsWith('bottom');
+    const bounds = component => {
+      const group = chart.getViewOfComponentModel(component).group;
+      const box = group.getBoundingRect().clone(); box.applyTransform(group.getComputedTransform()); return box;
+    };
+    const px = (v, extent) => typeof v === 'string' && v.endsWith('%') ? parseFloat(v) * extent / 100 : +v || 0;
+    const grids = (Array.isArray(source.grid) ? source.grid : [source.grid]).map(g => ({...g}));
+    // Remove only the builder's automatic right-side allowance. User margins
+    // and dendrogram bands remain part of the authored plotting geometry.
+    const reserved = payload.legendReserveRight || 0;
+    grids.forEach(g => {if (g.right != null) g.right = px(g.right, width) - reserved;});
+    chart.setOption({grid: grids, visualMap: {orient: vertical ? 'vertical' : 'horizontal',
+      left: 0, top: 0, right: null, bottom: null,
+      itemHeight: Math.min(140, Math.max(30, (vertical ? height : width) - 160))}});
+    const box = bounds(model);
+    const side = vertical ? (right ? 'right' : 'left') : lower ? 'bottom' : 'top';
+    let header = gap;
+    chart.getModel().eachComponent('title', title => {
+      const t = bounds(title); if (t.width && t.height) header = Math.max(header, t.y + t.height + gap);
+    });
+    const firstTop = Math.min(...grids.map(g => px(g.top, height)));
+    const extra = inside ? 0 : side === 'top' ? Math.max(0, header + box.height + gap - firstTop) :
+      (vertical ? box.width : box.height) + gap;
+    const adjusted = {...payload, option: {...source, grid: grids}, rightPx: payload.rightPx - reserved};
+    grids.forEach(g => {if (g[side] != null) g[side] = px(g[side], vertical ? width : height) + extra;});
+    const key = {top: 'topPx', bottom: 'botPx', left: 'leftPx', right: 'rightPx'}[side];
+    if (Number.isFinite(adjusted[key])) adjusted[key] += extra;
+    chart.setOption({grid: grids});
+    if (payload.squareCells) fitHeatmap(chart, adjusted);
+    const areas = [];
+    model.eachTargetSeries(series => {
+      if (series.subType === 'heatmap' && series.coordinateSystem?.type === 'cartesian2d') areas.push(series.coordinateSystem.getArea());
+    });
+    if (!areas.length) return;
+    const grid = areas[0];
+    // Outside anchors sit beyond axis/dendrogram bands, not across their labels.
+    const dx = payload.squareCells ? Math.max(0, (width - adjusted.leftPx - adjusted.rightPx - grid.width) / 2) : 0;
+    const x = vertical ? (inside ? right ? grid.x + grid.width - box.width - gap : grid.x + gap :
+      right ? width - gap - box.width - dx : gap + dx) :
+      left ? grid.x + (inside ? gap : 0) : right ? grid.x + grid.width - box.width - (inside ? gap : 0) : grid.x + (grid.width - box.width) / 2;
+    let y = vertical ? grid.y + (grid.height - box.height) / 2 :
+      inside ? lower ? grid.y + grid.height - box.height - gap : grid.y + gap :
+      lower ? height - gap - box.height : header;
+    chart.setOption({visualMap: {left: x, right: null, top: y, bottom: null}});
   }
   // A centered vertical colorbar belongs beside the data grid, which may be
   // offset by titles, rotated labels, or dendrograms. Measure the native view
   // after layout so its handles and endpoint text are included. Keep this in
   // the shared renderer so browser resize and vector export agree.
   function centerVisualMaps(chart, payload) {
+    if (payload.legendTarget === 'visualMap') return positionVisualMaps(chart, payload);
     const definitions = payload.option?.visualMap;
     if (!definitions) return;
     const maps = Array.isArray(definitions) ? definitions : [definitions];
@@ -201,7 +352,7 @@
       yAxis: {axisLabel: {width: labelWidth, overflow: 'truncate', ...source.yAxis.axisLabel}}};
     // Only adapt the builder's automatic legend. Explicit low-level placement
     // remains under the caller's control, including a hidden legend.
-    const automatic = source.legend?.orient === 'vertical' &&
+    const automatic = !payload.legendPosition && source.legend?.orient === 'vertical' &&
       source.legend.right === 8 && source.legend.top === 'middle' && source.legend.show !== false;
     let below = false;
     if (automatic) {
