@@ -54,6 +54,7 @@ jobs:
         with:
           working-directory: r
           extra-packages: any::rcmdcheck
+          # Includes the temporary rtemis source pin in Config/Needs/check.
           needs: check
           cache-version: 1
 

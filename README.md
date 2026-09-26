@@ -6,6 +6,19 @@
 
 Interface to JS libraries for high performance interactive visualization using type-checked, validated configuration objects.
 
+## R model integration dependencies
+
+The optional rtemis model plotting methods require `rtemis >= 1.4.1`, whose
+resampled results expose `resample_ids` for consistent fold identities.
+The data-facing `draw_*()` functions do not require rtemis.
+
+Until a compatible rtemis release is available from the configured package
+repositories, R CI installs the development commit pinned in
+`r/DESCRIPTION` under `Config/Needs/check`. Use that same revision when reproducing
+CI locally. Remove this check dependency after `rtemis >= 1.4.1` is published;
+keep the minimum version in `Suggests`. A green check against the pin does not
+establish that release dependencies are available from CRAN or r-universe.
+
 ## Maintaining widget assets
 
 htmlwidgets identifies the ECharts binding by the package version in
