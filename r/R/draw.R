@@ -996,11 +996,9 @@ line_option <- function(
       max = if (!is.null(x_lim)) x_lim[[2L]] else NULL,
       split_line = if (x_type != "category") no_corner_split_line() else NULL,
       axis_label = if (x_type != "category") no_corner_axis_label() else NULL,
-      axis_line = if (x_type != "category") {
-        axis_line_for_orthogonal(y_lim)
-      } else {
-        NULL
-      }
+      # Category axes also fall back to a nonzero range edge when zero is
+      # absent. Apply the same zero-only emphasis as continuous axes.
+      axis_line = axis_line_for_orthogonal(y_lim)
     ),
     y_axis = Axis(
       type = "value",
@@ -1030,6 +1028,9 @@ line_option <- function(
 #' Quick line chart from x/y data.
 #'
 #' @details
+#' Axis baselines emphasize zero only when it is in the visible orthogonal
+#' range. Categorical x axes follow the same rule as numeric and time axes.
+#'
 #' # Square and equally-scaled plots
 #'
 #' `square` and `equal_axes` are separate requests. `square` is about the

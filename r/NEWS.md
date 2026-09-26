@@ -1,3 +1,7 @@
+# rtemis.draw (development)
+
+- Emphasize categorical line and area chart baselines only when zero is visible, matching numeric axes and boxplots.
+
 # rtemis.draw 0.5.2
 
 - Add fold distributions to `draw_varimp()` and resampled-model `plot_varimp()` with explicit missing-score policies and SVG export.

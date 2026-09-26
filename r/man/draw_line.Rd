@@ -138,6 +138,10 @@ htmlwidget: Widget object.
 \description{
 Quick line chart from x/y data.
 }
+\details{
+Axis baselines emphasize zero only when it is in the visible orthogonal
+range. Categorical x axes follow the same rule as numeric and time axes.
+}
 \section{Square and equally-scaled plots}{
 \code{square} and \code{equal_axes} are separate requests. \code{square} is about the
 \emph{shape} of the plotting box: equal height and width in pixels, measured on

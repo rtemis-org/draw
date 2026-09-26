@@ -416,10 +416,11 @@ test_that("draw_line axisLine: on_zero always TRUE; show gated on 0 in orthogona
   expect_equal(w2$x$option$yAxis$axisLine$onZero, TRUE)
 })
 
-test_that("draw_line omits axis_line on category x-axis", {
+test_that("draw_line emphasizes zero on category x-axis", {
   w <- draw_line(x = c("A", "B", "C"), y = c(-1, 0, 1))
-  # Category x-axis: no explicit axis_line override.
-  expect_null(w$x$option$xAxis$axisLine)
+  # A category baseline follows the same zero-only rule as continuous axes.
+  expect_true(w[["x"]][["option"]][["xAxis"]][["axisLine"]][["show"]])
+  expect_true(w[["x"]][["option"]][["xAxis"]][["axisLine"]][["onZero"]])
   # yAxis.axis_line sentinel is x_lim, which is NULL for category x -> NULL.
   expect_null(w$x$option$yAxis$axisLine)
 })
