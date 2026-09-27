@@ -99,6 +99,7 @@ Collate:
     'config_calibration.R'
     'draw_calibration.R'
     'plot_roc.R'
+    'boxplot_layers.R'
     'draw_boxplot.R'
     'draw_metric.R'
     'plot_metric.R'

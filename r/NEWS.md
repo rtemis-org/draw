@@ -1,5 +1,7 @@
 # rtemis.draw 0.5.3
 
+- Add violin distributions, ID-matched paired lines, and supplied comparison brackets to the boxplot family, with native SVG export.
+
 - Add survival curves and survfit adapters with confidence bands, censor ticks, median and landmark annotations, explicit risk tables, portable configuration, and SVG export.
 
 - Add binary calibration plots with quantile or equal-width bins, Brier scores, probability rugs, portable configuration, and SVG export.

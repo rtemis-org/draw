@@ -222,6 +222,45 @@ builders[["survival"]] <- function(theme) {
     theme = theme
   )
 }
+# Distribution layers use real repeated measurements and grouped morphology.
+for (inset in c(FALSE, TRUE)) {
+  builders[[if (inset) "violin_box" else "violin"]] <- local({
+    show_box <- inset
+    function(theme) {
+      draw_violin(
+        birds[c("bill_len", "bill_dep")],
+        group = birds[["species"]],
+        labels = c("Length", "Depth"),
+        show_box = show_box,
+        boxpoints = "all",
+        ylab = "Bill dimensions (mm)",
+        theme = theme
+      )
+    }
+  })
+}
+for (horizontal in c(FALSE, TRUE)) {
+  builders[[if (horizontal) "paired_horizontal" else "paired"]] <- local({
+    orientation <- horizontal
+    function(theme) {
+      draw_violin(
+        datasets::sleep[["extra"]],
+        group = paste("Drug", datasets::sleep[["group"]]),
+        observation = datasets::sleep[["ID"]],
+        paired = TRUE,
+        show_box = TRUE,
+        boxpoints = "all",
+        horizontal = orientation,
+        comparisons = data.frame(
+          from = "Drug 1",
+          to = "Drug 2",
+          label = "Paired p = 0.003"
+        ),
+        theme = theme
+      )
+    }
+  })
+}
 selected <- Sys.getenv("DRAW_QA_FAMILIES")
 if (nzchar(selected)) {
   builders <- builders[strsplit(selected, ",", fixed = TRUE)[[1L]]]
@@ -416,6 +455,10 @@ tryCatch(
             3L
           } else if (name == "scatter") {
             9L
+          } else if (name %in% c("violin", "violin_box")) {
+            9L
+          } else if (startsWith(name, "paired")) {
+            5L
           } else if (name == "survival") {
             17L
           } else if (name == "calibration") {
@@ -461,7 +504,9 @@ tryCatch(
           } else {
             names(by_species)
           }
-          if (name == "spectrogram") {
+          if (startsWith(name, "paired")) {
+            expected <- c("Drug 1", "Drug 2", "Paired p = 0.003")
+          } else if (name == "spectrogram") {
             expected <- character()
           } else if (name %in% c("calibration", "survival")) {
             expected <- unlist(widget[["x"]][["option"]][["legend"]][["data"]])
@@ -501,6 +546,8 @@ tryCatch(
                 identical(state[["selected"]], selected),
                 length(state[["layers"]]) ==
                   if (name == "scatter") {
+                    3L
+                  } else if (name %in% c("violin", "violin_box")) {
                     3L
                   } else if (name == "survival") {
                     8L

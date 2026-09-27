@@ -37,7 +37,7 @@ window.foundationQA = {
   hoverPoint() {
     const c = this.chart();
     const series = c.getModel().getSeries().find(s =>
-      !s.get('silent') && ['scatter', 'bar', 'line', 'boxplot', 'pie', 'sankey', 'heatmap'].includes(s.subType));
+      !s.get('silent') && ['scatter', 'bar', 'line', 'boxplot', 'pie', 'sankey', 'heatmap', 'custom'].includes(s.subType));
     const data = series.getData();
     const index = Math.floor(data.count() / 2);
     let point;
@@ -46,7 +46,7 @@ window.foundationQA = {
       const angle = (sector.startAngle + sector.endAngle) / 2;
       const radius = (sector.r + sector.r0) / 2;
       point = [sector.cx + radius * Math.cos(angle), sector.cy + radius * Math.sin(angle)];
-    } else if (['bar', 'boxplot', 'sankey'].includes(series.subType)) {
+    } else if (['bar', 'boxplot', 'sankey', 'custom'].includes(series.subType)) {
       const rect = this.bounds(data.getItemGraphicEl(index));
       point = [rect.x + rect.width / 2, rect.y + rect.height / 2];
     } else {

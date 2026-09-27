@@ -14,6 +14,14 @@ BoxplotConfig(
   x = NULL,
   group = NULL,
   observation = NULL,
+  geometry = "box",
+  bandwidth = NULL,
+  adjust = 1,
+  density_points = 128L,
+  paired = FALSE,
+  pair_alpha = 0.35,
+  pair_width = 1,
+  comparisons = NULL,
   quartiles = "linear",
   whisker = 1.5,
   boxpoints = "none",
@@ -59,7 +67,24 @@ inside placement overlays the data. Neither setting adds a missing legend.}
 
 \item{group}{Optional Character: Column that splits each box by level.}
 
-\item{observation}{Optional Character: Column identifying observations in point tooltips.}
+\item{observation}{Optional Character: Column identifying observations for tooltips and pairing.}
+
+\item{geometry}{Character \{"box", "violin", "both"\}: Distribution geometry.}
+
+\item{bandwidth}{Optional Numeric \verb{(0, Inf)}: Finite Gaussian kernel bandwidth.}
+
+\item{adjust}{Numeric \verb{(0, Inf)}: Finite bandwidth multiplier.}
+
+\item{density_points}{Integer \verb{[16, 4096]}: Density evaluation grid size.}
+
+\item{paired}{Logical: Connect explicit IDs across adjacent categories.}
+
+\item{pair_alpha}{Numeric \verb{[0, 1]}: Paired line opacity.}
+
+\item{pair_width}{Numeric \verb{(0, Inf)}: Finite paired line width in pixels.}
+
+\item{comparisons}{Optional Character: Name of a comparison data frame in the
+bound data list. Its columns follow \code{\link[=draw_boxplot]{draw_boxplot()}}.}
 
 \item{quartiles}{Character \{"linear", "hinges"\}: Quartile convention.}
 

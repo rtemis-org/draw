@@ -119,7 +119,15 @@ method(boxplot_option, class_any) <- function(
   boxpoints = "none",
   point_size = 5,
   point_alpha = .6,
-  point_spread = .5
+  point_spread = .5,
+  geometry = "box",
+  bandwidth = NULL,
+  adjust = 1,
+  density_points = 128L,
+  paired = FALSE,
+  pair_alpha = .35,
+  pair_width = 1,
+  comparisons = NULL
 ) {
   # Validate the vector entry point through the same property declarations
   # used by JSON configs; no second set of statistical or style defaults.
@@ -128,6 +136,13 @@ method(boxplot_option, class_any) <- function(
     palette = palette,
     fill_alpha = fill_alpha,
     na_rm = na_rm,
+    geometry = geometry,
+    bandwidth = bandwidth,
+    adjust = adjust,
+    density_points = density_points,
+    paired = paired,
+    pair_alpha = pair_alpha,
+    pair_width = pair_width,
     quartiles = quartiles,
     whisker = whisker,
     boxpoints = boxpoints,
@@ -172,6 +187,12 @@ method(boxplot_option, class_any) <- function(
       class = c("rtemis_length_error", "rtemis_input_error")
     )
   }
+  if (paired && is.null(observation)) {
+    abort(
+      "Supply explicit `observation` identifiers when `paired = TRUE`.",
+      class = c("rtemis_null_input", "rtemis_input_error")
+    )
+  }
   variable_names <- names(x)
   if (
     is.null(variable_names) ||
@@ -205,12 +226,17 @@ method(boxplot_option, class_any) <- function(
   nseries <- if (multi) length(levels) else 1L
   boxes <- vector("list", nseries)
   overlays <- vector("list", nseries)
+  layered <- geometry != "box" || paired || !is.null(comparisons)
+  cells <- if (layered) vector("list", nseries) else NULL
   missing <- 0L
   available <- 0L
   visible_limits <- c(Inf, -Inf)
   for (s in seq_len(nseries)) {
     box_data <- vector("list", length(categories))
     point_data <- list()
+    if (layered) {
+      cells[[s]] <- vector("list", length(categories))
+    }
     for (j in seq_along(categories)) {
       column <- if (grouped && !multi) 1L else j
       g <- if (multi) s else j
@@ -228,6 +254,9 @@ method(boxplot_option, class_any) <- function(
         color = color_with_alpha(color, fill_alpha),
         borderColor = color
       )
+      if (geometry == "violin") {
+        style[["opacity"]] <- 0
+      }
       box_data[[j]] <- if (
         grouped && !multi || !grouped && length(unique(colors)) > 1L
       ) {
@@ -247,7 +276,33 @@ method(boxplot_option, class_any) <- function(
         integer()
       }
       at <- summary[["at"]][take]
-      visible <- c(summary[["stats"]], values[at])
+      # Materialize IDs only for pairing: large box-only samples need neither
+      # character identifiers nor a second observation-level layer record.
+      if (layered) {
+        ids <- if (paired) as.character(observation[rows]) else NULL
+        if (paired && anyDuplicated(ids)) {
+          abort(
+            "Use unique observation identifiers within each boxplot category and group.",
+            class = c("rtemis_value_error", "rtemis_input_error")
+          )
+        }
+        cell_offsets <- if (paired) numeric(length(values)) else NULL
+        if (paired) {
+          cell_offsets[at] <- boxplot_offsets(as.numeric(rows[at])) *
+            point_spread
+        }
+        cells[[s]][[j]] <- list(
+          values = values,
+          ids = ids,
+          offsets = cell_offsets,
+          color = color
+        )
+      }
+      visible <- c(
+        summary[["stats"]],
+        values[at],
+        if (geometry != "box" || paired) values
+      )
       visible <- visible[is.finite(visible)]
       if (length(visible)) {
         visible_limits <- c(
@@ -275,9 +330,12 @@ method(boxplot_option, class_any) <- function(
     boxes[[s]] <- BoxplotSeries(
       name = if (multi) levels[[s]] else NULL,
       data = box_data,
+      box_width = if (geometry == "both") c(7, 14) else NULL,
+      silent = if (geometry == "violin") TRUE else NULL,
       item_style = ItemStyle(
         color = color_with_alpha(color, fill_alpha),
-        border_color = color
+        border_color = color,
+        opacity = if (geometry == "violin") 0 else NULL
       )
     )
     if (length(point_data)) {
@@ -320,6 +378,27 @@ method(boxplot_option, class_any) <- function(
       verbosity = verbosity
     )
   }
+  layers <- if (layered) {
+    boxplot_layers(
+      cells,
+      categories,
+      if (multi) levels else NULL,
+      horizontal,
+      geometry,
+      bandwidth,
+      adjust,
+      density_points,
+      paired,
+      pair_alpha,
+      pair_width,
+      fill_alpha,
+      comparisons,
+      visible_limits
+    )
+  } else {
+    list(series = list(), limits = visible_limits)
+  }
+  visible_limits <- layers[["limits"]]
   value_name <- if (grouped && !multi && !is.null(names(x))) {
     names(x)[[1L]]
   } else {
@@ -362,7 +441,9 @@ method(boxplot_option, class_any) <- function(
   # Give endpoint markers room without changing their data coordinates.
   # Include only drawn values; hidden outliers do not shrink a box-only plot.
   limits <- visible_limits
-  if (boxpoints != "none") {
+  if (
+    boxpoints != "none" || geometry != "box" || paired || !is.null(comparisons)
+  ) {
     limits <- calc_limits(visible_limits, pad = .05)
     if (horizontal) {
       x_axis@min <- limits[[1L]]
@@ -390,11 +471,18 @@ method(boxplot_option, class_any) <- function(
   EChartsOption(
     title = if (!is.null(title)) Title(text = title) else NULL,
     tooltip = Tooltip(trigger = "item"),
-    legend = if (multi) Legend(data = as.list(levels)) else NULL,
+    legend = if (multi) {
+      Legend(
+        data = as.list(levels),
+        item_style = if (geometry == "violin") ItemStyle(opacity = 1) else NULL
+      )
+    } else {
+      NULL
+    },
     x_axis = x_axis,
     y_axis = y_axis,
     grid = resolve_margins(margins),
-    series = c(boxes, Filter(Negate(is.null), overlays))
+    series = c(boxes, Filter(Negate(is.null), overlays), layers[["series"]])
   )
 }
 
@@ -422,6 +510,26 @@ method(boxplot_option, class_any) <- function(
 #' overlap. No random state is read or changed. Browser and SVG share the same
 #' named point renderer, including grouped-box offsets and legend filtering.
 #'
+#' Violin densities use a Gaussian kernel with `stats::bw.nrd0()` unless a
+#' numeric bandwidth is supplied, multiplied by `adjust`. They are evaluated
+#' over the observed range and each is scaled to the same maximum width;
+#' widths do not encode sample size or comparable density across groups.
+#' Singleton and constant samples appear as crossbars, without an invented
+#' density. `geometry = "both"` overlays a narrow box on each violin.
+#'
+#' Paired lines join matching explicit observation IDs in adjacent categories
+#' only, within groups for multiple grouped vectors. A missing measurement
+#' leaves a gap. IDs must be unique within each category/group. Lines meet
+#' visible observation points at their deterministic offsets.
+#'
+#' Comparison records annotate supplied results; no statistical test or
+#' multiplicity adjustment is performed. `from` and `to` name categories;
+#' `label` supplies the displayed text. Multiple grouped vectors also require
+#' `from_group` and `to_group`. Optional finite `position` values place brackets
+#' on the value axis; otherwise brackets stack above the observed geometry.
+#' References must identify distinct, nonempty cells. Brackets disappear when
+#' either endpoint's group is hidden. Long labels may require a larger figure.
+#'
 #' @param x Numeric or List: Numeric vectors, one per box; named lists supply
 #'   category labels. With `group`, every vector must match its length.
 #' @param labels Optional Character: One category label per vector. A single
@@ -430,7 +538,16 @@ method(boxplot_option, class_any) <- function(
 #'   identities in first-appearance order. The column name does not add a legend
 #'   or heading; both input forms produce the same plot.
 #' @param observation Optional Atomic vector: Observation identifiers in tooltips,
-#'   aligned to every input vector. Unset uses original row numbers.
+#'   aligned to every input vector. Required for pairing; otherwise unset uses
+#'   original row numbers.
+#' @param geometry Character \{"box", "violin", "both"\}: Distribution geometry.
+#' @param bandwidth Optional Numeric `(0, Inf)`: Finite Gaussian kernel bandwidth.
+#' @param adjust Numeric `(0, Inf)`: Finite bandwidth multiplier.
+#' @param density_points Integer `[16, 4096]`: Density evaluation grid size.
+#' @param paired Logical: Connect explicit IDs across adjacent categories.
+#' @param pair_alpha Numeric `[0, 1]`: Paired line opacity.
+#' @param pair_width Numeric `(0, Inf)`: Finite paired line width in pixels.
+#' @param comparisons Optional Data frame: Category endpoints and comparison labels.
 #' @param horizontal Logical: Draw horizontal boxes.
 #' @param quartiles Character \{"linear", "hinges"\}: Quartile convention.
 #' @param whisker Numeric `[0, Inf)`: Finite IQR fence multiplier;
@@ -479,7 +596,15 @@ draw_boxplot <- function(
   point_alpha = .6,
   point_spread = .5,
   legend_position = "top",
-  legend_placement = "outside"
+  legend_placement = "outside",
+  geometry = "box",
+  bandwidth = NULL,
+  adjust = 1,
+  density_points = 128L,
+  paired = FALSE,
+  pair_alpha = .35,
+  pair_width = 1,
+  comparisons = NULL
 ) {
   opt <- boxplot_option(
     x = x,
@@ -495,12 +620,20 @@ draw_boxplot <- function(
     margins = margins,
     verbosity = verbosity,
     observation = observation,
+    geometry = geometry,
+    bandwidth = bandwidth,
+    adjust = adjust,
+    density_points = density_points,
+    paired = paired,
+    pair_alpha = pair_alpha,
+    pair_width = pair_width,
     quartiles = quartiles,
     whisker = whisker,
     boxpoints = boxpoints,
     point_size = point_size,
     point_alpha = point_alpha,
-    point_spread = point_spread
+    point_spread = point_spread,
+    comparisons = comparisons
   )
   draw(
     opt,
@@ -511,4 +644,21 @@ draw_boxplot <- function(
     filename = filename,
     meta = legend_meta(legend_position, legend_placement)
   )
+}
+
+#' Draw Violin Distributions
+#'
+#' A convenience entry point for [draw_boxplot()] with violin geometry.
+#' Smoothing, grouping, observation overlays, paired lines, comparisons, and
+#' vector export follow the same contract.
+#' @inheritParams draw_boxplot
+#' @param show_box Logical: Overlay a narrow box on each violin.
+#' @param ... Arguments passed to [draw_boxplot()], except `geometry`.
+#' @return htmlwidget: Vector violin distributions.
+#' @export
+#' @examples
+#' draw_violin(iris["Sepal.Length"], group = iris[["Species"]], show_box = TRUE)
+draw_violin <- function(x, ..., show_box = FALSE) {
+  check_logical_scalar(show_box)
+  draw_boxplot(x, ..., geometry = if (show_box) "both" else "violin")
 }
