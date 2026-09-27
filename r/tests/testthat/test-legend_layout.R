@@ -18,6 +18,7 @@ test_that("legend properties share validation, schema, and provenance", {
     PieConfig,
     GanttConfig,
     ROCConfig,
+    CalibrationConfig,
     SignificanceConfig,
     HeatmapConfig,
     SpectrogramConfig
@@ -102,6 +103,11 @@ test_that("high-level and config legend hints agree without adding legends", {
 test_that("native legends reserve space across families, anchors, and resizes", {
   skip_if_not(nzchar(Sys.which("node")), "node not found")
   charts <- list(
+    calibration = draw_calibration(
+      data.frame(observed = c(0, 0, 1, 1), probability = c(0, .3, .8, 1)),
+      n_bins = 2L,
+      title = "Calibration"
+    ),
     boxplot = draw_boxplot(
       iris[1:2],
       group = iris[["Species"]],

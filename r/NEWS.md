@@ -1,4 +1,6 @@
-# rtemis.draw (development)
+# rtemis.draw 0.5.3
+
+- Add binary calibration plots with quantile or equal-width bins, Brier scores, probability rugs, portable configuration, and SVG export.
 
 - Add genuine SVG export for Sigma networks and MapLibre choropleths through `save_drawing()` and `filename`, with shared layouts, joins, colors, and editable text.
 

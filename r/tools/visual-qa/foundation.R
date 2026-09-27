@@ -167,6 +167,42 @@ builders[["panels"]] <- function(theme) {
 }
 # An optional family filter keeps iterative QA bounded; the unfiltered run is
 # the complete foundation matrix recorded in the manifest.
+set.seed(42)
+training_rows <- unlist(lapply(
+  split(seq_len(nrow(iris)), iris[["Species"]]),
+  sample,
+  size = 35L
+))
+training <- iris[training_rows, ]
+testing <- iris[-training_rows, ]
+training[["virginica"]] <- training[["Species"]] == "virginica"
+sepal_model <- glm(
+  virginica ~ Sepal.Length + Sepal.Width,
+  data = training,
+  family = binomial()
+)
+petal_model <- glm(
+  virginica ~ Petal.Width,
+  data = training,
+  family = binomial()
+)
+reference <- factor(ifelse(
+  testing[["Species"]] == "virginica",
+  "Virginica",
+  "Other"
+))
+builders[["calibration"]] <- function(theme) {
+  draw_calibration(
+    list(Sepal = reference, Petal = reference),
+    list(
+      Sepal = predict(sepal_model, testing, type = "response"),
+      Petal = predict(petal_model, testing, type = "response")
+    ),
+    positive = "Virginica",
+    n_bins = 5L,
+    theme = theme
+  )
+}
 selected <- Sys.getenv("DRAW_QA_FAMILIES")
 if (nzchar(selected)) {
   builders <- builders[strsplit(selected, ",", fixed = TRUE)[[1L]]]
@@ -206,6 +242,15 @@ jsonlite::write_json(
   auto_unbox = TRUE,
   pretty = TRUE
 )
+# Chrome requires a nondefault profile for remote debugging. Keep this QA run
+# isolated unless the caller already supplied an explicit profile.
+chrome_args <- chromote::get_chrome_args()
+if (!any(grepl("^--user-data-dir(?:=|$)", chrome_args, perl = TRUE))) {
+  chromote::set_chrome_args(c(
+    chrome_args,
+    paste0("--user-data-dir=", tempfile("draw-foundation-chrome-"))
+  ))
+}
 b <- chromote::ChromoteSession$new(width = 1100, height = 650)
 manifest[["browser"]] <- b$Browser$getVersion()
 b$Page$addScriptToEvaluateOnNewDocument(
@@ -302,9 +347,32 @@ tryCatch(
           wait_for(
             "foundationQA.charts().every(c=>c.getZr().animation.isFinished())"
           )
+          # Fixed-aspect widgets may grow taller than their requested height.
+          # Keep the complete chart in the native pointer/capture viewport.
+          capture_height <- max(
+            650L,
+            evaluate(
+              "Math.ceil(Math.max(...foundationQA.charts().map(c=>c.getDom().getBoundingClientRect().bottom)) + 20)"
+            )
+          )
+          if (capture_height > 650L) {
+            b$Emulation$setDeviceMetricsOverride(
+              width = width,
+              height = capture_height,
+              deviceScaleFactor = 1,
+              mobile = FALSE
+            )
+            wait_for(
+              "foundationQA.charts().every(c=>c.getZr().animation.isFinished())"
+            )
+          }
           evaluate(
             "new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(()=>r(true))))"
           )
+          if (name == "calibration") {
+            wait_for("foundationQA.linePointsAligned()")
+            wait_for("foundationQA.chart().getZr().animation.isFinished()")
+          }
           result <- evaluate("foundationQA.scene()")
           if (name == "panels") {
             result[["children"]] <- evaluate(
@@ -329,6 +397,8 @@ tryCatch(
             3L
           } else if (name == "scatter") {
             9L
+          } else if (name == "calibration") {
+            5L
           } else if (
             name %in% c("line", "area") || startsWith(name, "boxplot_")
           ) {
@@ -372,6 +442,8 @@ tryCatch(
           }
           if (name == "spectrogram") {
             expected <- character()
+          } else if (name == "calibration") {
+            expected <- unlist(widget[["x"]][["option"]][["legend"]][["data"]])
           }
           stopifnot(
             all(expected %in% labels),
@@ -406,7 +478,14 @@ tryCatch(
               ))
               stopifnot(
                 identical(state[["selected"]], selected),
-                length(state[["layers"]]) == if (name == "scatter") 3L else 1L,
+                length(state[["layers"]]) ==
+                  if (name == "scatter") {
+                    3L
+                  } else if (name == "calibration") {
+                    2L
+                  } else {
+                    1L
+                  },
                 all(vapply(
                   state[["layers"]],
                   function(layer) identical(layer[["filtered"]], !selected),

@@ -39,6 +39,10 @@
 #' names(chart_registry())
 chart_registry <- function() {
   list(
+    calibration = list(
+      cls = CalibrationConfig,
+      setup = "setup_CalibrationConfig"
+    ),
     roc = list(cls = ROCConfig, setup = "setup_ROCConfig"),
     scatter = list(cls = ScatterConfig, setup = "setup_ScatterConfig"),
     confusion = list(cls = ConfusionConfig, setup = "setup_ConfusionConfig"),

@@ -37,7 +37,7 @@ window.foundationQA = {
   hoverPoint() {
     const c = this.chart();
     const series = c.getModel().getSeries().find(s =>
-      ['scatter', 'bar', 'line', 'boxplot', 'pie', 'sankey', 'heatmap'].includes(s.subType));
+      !s.get('silent') && ['scatter', 'bar', 'line', 'boxplot', 'pie', 'sankey', 'heatmap'].includes(s.subType));
     const data = series.getData();
     const index = Math.floor(data.count() / 2);
     let point;
@@ -63,6 +63,25 @@ window.foundationQA = {
     const el = view?._tooltipContent?.el;
     return el && getComputedStyle(el).visibility !== 'hidden' &&
       Number(getComputedStyle(el).opacity) > 0 ? el.innerText : '';
+  },
+  // Calibration uses centered line symbols. Check actual rendered positions
+  // after host resizing, which can schedule an update after animation.isFinished.
+  linePointsAligned() {
+    return this.chart().getModel().getSeries().filter(s =>
+      s.subType === 'line' && !s.get('silent')).every(series => {
+      const data = series.getData();
+      for (let i = 0; i < data.count(); i++) {
+        const el = data.getItemGraphicEl(i);
+        if (!el) return false;
+        const rect = this.bounds(el);
+        const point = series.coordinateSystem.dataToPoint([
+          data.get(data.mapDimension('x'), i), data.get(data.mapDimension('y'), i)
+        ]);
+        if (Math.abs(rect.x + rect.width / 2 - point[0]) > 0.1 ||
+            Math.abs(rect.y + rect.height / 2 - point[1]) > 0.1) return false;
+      }
+      return true;
+    });
   },
   center() {
     const rect = this.chart().getModel().getComponent('grid').coordinateSystem.getRect();

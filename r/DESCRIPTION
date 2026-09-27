@@ -1,7 +1,7 @@
 Package: rtemis.draw
 Title: Interactive Visualization
-Version: 0.5.2.9000
-Date: 2026-09-25
+Version: 0.5.3
+Date: 2026-09-26
 Authors@R:
     person(given = "E.D.", family = "Gennatas", role = c("aut", "cre", "cph"),
            email = "gennatas@gmail.com",
@@ -40,8 +40,6 @@ Suggests:
     testthat (>= 3.0.0)
 Additional_repositories:
     https://rtemis-org.r-universe.dev
-Config/Needs/check:
-    rtemis=rtemis-org/rtemis@4b2f6c7abd4dc09f1baf45410ac08c58ae3335d4
 Config/testthat/edition: 3
 Config/testthat/parallel: true
 Collate:
@@ -94,6 +92,8 @@ Collate:
     'plot_confusion.R'
     'config_roc.R'
     'draw_roc.R'
+    'config_calibration.R'
+    'draw_calibration.R'
     'plot_roc.R'
     'draw_boxplot.R'
     'draw_metric.R'

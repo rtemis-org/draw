@@ -24,7 +24,7 @@
       "rtemis-draw.js"
     ],
     "md5": [
-      "56292d839fbe100b8a95420f809af5ef"
+      "e45b1d71d348859de694599104c7bbc6"
     ]
   },
   "rtemis-panel-layout-1.0.2": {
@@ -195,6 +195,22 @@
     ],
     "md5": [
       "5b0ca490d0248b9a14631b2cdc82d290"
+    ]
+  },
+  "rtemis-graph-binding-0.5.3": {
+    "scripts": [
+      "rtemis-graph.js"
+    ],
+    "md5": [
+      "299c5acb5c2b3170260b4b94e0647c96"
+    ]
+  },
+  "rtemis-map-binding-0.5.3": {
+    "scripts": [
+      "rtemis-map.js"
+    ],
+    "md5": [
+      "dfb239d253cad3a0697888e0af1ecfd2"
     ]
   }
 }
