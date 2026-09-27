@@ -19,7 +19,7 @@ Language: en-US
 SystemRequirements: Node.js (>= 18) for optional SVG export
 Roxygen: list(markdown = TRUE)
 Depends:
-    R (>= 4.1.0)
+    R (>= 4.4.0)
 Imports:
     htmltools,
     htmlwidgets,

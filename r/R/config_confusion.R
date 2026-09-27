@@ -39,7 +39,10 @@
 #'   unset uses the active theme background.
 #' @param summary_color Optional Character: Six-digit hex background for metric
 #'   cells; unset uses a faint neutral tint of the active theme background.
-#' @param font_size Numeric: Cell-label font size in pixels.
+#' @param font_size Numeric: Preferred cell-label font size in pixels.
+#'   Constrained surfaces reduce text to fit, down to 8 pixels. Long class
+#'   labels wrap and column labels rotate when needed. Increase figure dimensions
+#'   if labels and metrics cannot fit without overlap.
 #' @param xlab Character: Predicted-class axis label.
 #' @param ylab Character: Reference-class axis label.
 #' @inheritParams ChartConfig

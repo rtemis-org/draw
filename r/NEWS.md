@@ -1,5 +1,11 @@
 # rtemis.draw 0.5.3
 
+- Keep A3 residue tooltips accessible through annotation overlays and include annotation details.
+
+- Fit long confusion-matrix labels and vertical Sankey labels consistently in browser and SVG output.
+
+- Require R >= 4.4.0.
+
 - Change the package license to BSD 3-clause; bundled third-party components retain their own licenses.
 
 - Share structural configuration constraints between S7 validation and generated JSON Schemas.

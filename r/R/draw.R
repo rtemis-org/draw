@@ -3870,6 +3870,14 @@ sankey_option <- function(
   # serializing as a JSON object instead of an array.
   palette <- unname(rep_len(palette %||% rtemis_colors, length(node_names)))
   box <- .sankey_margins(links, margins, label_font_size, width)
+  if (identical(orient, "vertical")) {
+    # Vertical flows need space above/below nodes; the shared renderer measures
+    # wrapped labels against native node widths for browser and SVG surfaces.
+    box <- utils::modifyList(
+      list(left = 12, right = 12, top = 48, bottom = 24),
+      if (is.null(margins)) list() else as.list(margins)
+    )
+  }
 
   # The color is carried on each node rather than left to the chart-level
   # `color` array: a theme's series itemStyle takes precedence over that array,

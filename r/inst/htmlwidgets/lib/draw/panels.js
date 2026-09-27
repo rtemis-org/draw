@@ -318,6 +318,7 @@
   // zero width when radius + guide lines consume that band. Fit from authored
   // radii on every resize, so a narrow host does not permanently shrink a pie.
   function positionLegend(echarts, chart, payload) {
+    fitSankey(echarts, chart, payload);
     layoutLegend(echarts, chart, payload);
     const definitions = payload.option?.series;
     const source = Array.isArray(definitions) ? definitions : [definitions];
@@ -445,5 +446,35 @@
       axisLabel: {hideOverlap: true, ...source.xAxis.axisLabel}
     }});
   }
-  return {background, cells, fit, fitAxes, fitHeatmap, prepareLabels, prepareColors, positionLegend, centerVisualMaps, fitGantt};
+  // Fit default vertical Sankey labels to each native node width. Explicit
+  // label positions/widths remain caller-owned. SankeyNodeItemOption and native
+  // dx/dy geometry: chart/sankey/SankeySeries.ts and SankeyView.ts.
+  function fitSankey(echarts, chart, payload) {
+    const sources = Array.isArray(payload.option.series) ? payload.option.series : [payload.option.series];
+    const updates = sources.map((source, index) => {
+      if (source?.type !== 'sankey' || source.orient !== 'vertical' ||
+          source.label?.position != null || source.label?.width != null) return {};
+      const series = chart.getModel().getSeriesByIndex(index), data = series.getData();
+      const fontSize = series.getModel('label').get('fontSize') || 12;
+      const fontFamily = series.getModel('label').get('fontFamily') || 'sans-serif';
+      const targets = new Set(source.links.map(edge => edge.target));
+      const origins = new Set(source.links.map(edge => edge.source));
+      let top = 0, bottom = 0;
+      const nodes = source.data.map((node, i) => {
+        if (node.label?.position != null || node.label?.width != null) return node;
+        const width = Math.max(1, data.getItemLayout(i).dx - 4);
+        const position = origins.has(node.name) ? 'top' : 'bottom';
+        const label = {...node.label, position, width, overflow:'break', lineHeight:fontSize + 2};
+        const height = new echarts.graphic.Text({style:{text:node.name, fontSize, fontFamily,
+          width, overflow:'break', lineHeight:fontSize + 2}}).getBoundingRect().height + 12;
+        if (!targets.has(node.name)) top = Math.max(top, height);
+        if (!origins.has(node.name)) bottom = Math.max(bottom, height);
+        return {...node, label};
+      });
+      const px = value => typeof value === 'string' && value.endsWith('%') ? parseFloat(value) * chart.getHeight() / 100 : Number(value) || 0;
+      return {data:nodes, top:Math.max(px(source.top), top), bottom:Math.max(px(source.bottom), bottom)};
+    });
+    if (updates.some(update => update.data)) chart.setOption({series:updates});
+  }
+  return {background, cells, fit, fitAxes, fitHeatmap, prepareLabels, prepareColors, positionLegend, centerVisualMaps, fitGantt, fitSankey};
 });

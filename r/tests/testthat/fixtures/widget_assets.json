@@ -252,5 +252,19 @@
       "d35d723753c796470a8513968a8f15b2",
       "ca5750ba961ca56c09b06a83ae32205e"
     ]
+  },
+  "rtemis-panel-layout-1.0.8": {
+    "scripts": [
+      "panels.js",
+      "confusion.js",
+      "a3.js",
+      "panel_widget.js"
+    ],
+    "md5": [
+      "ec52b0f34411dfb611f7c620fab2cbf9",
+      "d5d43b5e56aebb4e51c303776a0e52cd",
+      "d35d723753c796470a8513968a8f15b2",
+      "ca5750ba961ca56c09b06a83ae32205e"
+    ]
   }
 }

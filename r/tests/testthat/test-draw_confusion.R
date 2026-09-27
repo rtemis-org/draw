@@ -328,6 +328,33 @@ test_that("confusion layout uses square native cells and theme-aware colors", {
       theme = theme_dark()
     )
   )
+  # Long names exercise native multiline labels rather than allowing the
+  # left margin to collapse count cells or adjacent column labels to overlap.
+  long_counts <- matrix(
+    c(36, 2, 1, 0, 3, 29, 4, 1, 1, 2, 31, 3, 0, 2, 3, 27),
+    4
+  )
+  dimnames(long_counts) <- rep(
+    list(paste(
+      c("Anterior", "Posterior", "Lateral", "Medial"),
+      "response after treatment"
+    )),
+    2
+  )
+  widgets <- c(
+    widgets,
+    list(
+      draw_confusion(long_counts, font_size = 15),
+      draw_confusion(
+        list(
+          Internal = long_counts,
+          External = long_counts,
+          Temporal = long_counts
+        ),
+        ncol = 3L
+      )
+    )
+  )
   # The R payload contains declarative rendering hints, never theme callbacks.
   payload <- widgets[[1L]][["x"]]
   expect_true(payload[["confusion"]][["metrics"]])

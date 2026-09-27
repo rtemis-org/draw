@@ -8,6 +8,8 @@ Interface to JS libraries for high performance interactive visualization using t
 
 See the [R interface](r/README.md) for documentation and the API reference.
 
+Requires R >= 4.4.0.
+
 ## Plotting rtemis models
 
 The optional rtemis model plotting methods require `rtemis >= 1.4.1`.

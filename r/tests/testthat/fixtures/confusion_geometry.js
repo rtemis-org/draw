@@ -12,7 +12,8 @@ const luminance = rgb => rgb.slice(0, 3).map(v => v / 255)
 for (const source of input.charts) {
   const payload = JSON.parse(JSON.stringify(source));
   for (const theme of [payload.theme, payload.themeDark || payload.theme, payload.theme]) {
-    for (const [width, height] of [[800, 550], [344, 900], [1100, 500]]) {
+    const densePanels = payload.option.grid.length > 4 && payload.option.yAxis[0].data.some(x => x.length > 20);
+    for (const [width, height] of (densePanels ? [[800, 1000], [344, 1500], [1100, 650]] : [[800, 550], [344, 900], [1100, 500]])) {
       confusion.prepare(echarts, payload, theme, width, height);
       payload.option.animation = false;
       const chart = echarts.init(null, theme, {renderer: 'svg', ssr: true, width, height});
@@ -65,14 +66,14 @@ for (const source of input.charts) {
             const rect = el.getBoundingRect().clone();
             rect.applyTransform(el.getComputedTransform());
             assert.ok(rect.x >= -0.5 && rect.y >= -0.5 && rect.x + rect.width <= width + .5 &&
-              rect.y + rect.height <= height + .5, `Clipped ${el.style.text}: ${JSON.stringify(rect)}`);
+              rect.y + rect.height <= height + .5, `Clipped ${el.style.text} at ${width}x${height}: ${JSON.stringify(rect)} grid=${JSON.stringify(payload.option.grid[0])} x=${JSON.stringify(payload.option.xAxis[0])}`);
             return {rect, text: el.style.text};
           });
         for (let i = 0; i < boxes.length; i++) for (let j = i + 1; j < boxes.length; j++) {
           const a = boxes[i].rect, b = boxes[j].rect;
           assert.ok(Math.min(a.x + a.width, b.x + b.width) - Math.max(a.x, b.x) < .5 ||
             Math.min(a.y + a.height, b.y + b.height) - Math.max(a.y, b.y) < .5,
-            `Overlapping ${boxes[i].text} / ${boxes[j].text}`);
+            `Overlapping ${boxes[i].text} / ${boxes[j].text} at ${width}x${height}`);
         }
         assert.ok(payload.option.title.every(title => !title.subtext), 'Sample size remains a subtitle');
         assert.ok(!boxes.some(box => box.text.startsWith('n = ')), 'Redundant sample-size footer remains');
@@ -80,6 +81,9 @@ for (const source of input.charts) {
           'Console diagnostics leaked into the chart');
       } finally { chart.dispose(); }
     }
+  }
+  if (payload.option.yAxis[0].data.some(x => x.length > 20)) {
+    assert.throws(() => confusion.prepare(echarts, payload, payload.theme, 200, 100), /Increase confusion figure dimensions/);
   }
   const wide = confusion.heightForWidth(echarts, payload, payload.theme, 1100);
   const narrow = confusion.heightForWidth(echarts, payload, payload.theme, 344);

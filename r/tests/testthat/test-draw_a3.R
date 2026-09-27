@@ -390,3 +390,51 @@ test_that("A3 automatic colors and overrides share a portable config contract", 
     expect_match(svg, "#f472b6", fixed = TRUE)
   }
 })
+
+
+test_that("A3 residue tooltips include annotations without overlay hit targets", {
+  skip_if_not_installed("rtemis.a3")
+  a <- rtemis.a3::create_A3(
+    "MAEPRQEFEV",
+    region = list(
+      `Domain <A> {a}` = rtemis.a3::annotation_range(matrix(
+        c(2L, 7L),
+        ncol = 2
+      ))
+    ),
+    site = list(Binding = rtemis.a3::annotation_position(4L)),
+    ptm = list(Phosphorylation = rtemis.a3::annotation_position(4L)),
+    processing = list(Cleavage = rtemis.a3::annotation_position(4L)),
+    variant = list(rtemis.a3::annotation_variant(
+      4L,
+      info = list(mutation = "P4A")
+    ))
+  )
+  series <- draw_a3(a)$x$option$series
+  backbone <- series[[which(vapply(
+    series,
+    function(s) identical(s$name, "Primary structure"),
+    logical(1)
+  ))]]
+  text <- backbone$data[[4]]$tooltip$formatter
+  expect_match(text, "4: Proline", fixed = TRUE)
+  expect_match(text, "Regions: Domain &lt;A&gt; &#123;a&#125;", fixed = TRUE)
+  for (label in c(
+    "Sites: Binding",
+    "PTMs: Phosphorylation",
+    "Processing: Cleavage",
+    "Variant"
+  )) {
+    expect_match(text, label, fixed = TRUE)
+  }
+  expect_equal(backbone$data[[1]]$tooltip$formatter, "1: Methionine")
+  for (name in c("Domain <A> {a}", "Binding", "Phosphorylation", "Cleavage")) {
+    expect_true(
+      series[[which(vapply(
+        series,
+        function(s) identical(s$name, name),
+        logical(1)
+      ))]]$silent
+    )
+  }
+})
