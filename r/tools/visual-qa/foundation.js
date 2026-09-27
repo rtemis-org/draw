@@ -39,7 +39,12 @@ window.foundationQA = {
     const series = c.getModel().getSeries().find(s =>
       !s.get('silent') && ['scatter', 'bar', 'line', 'boxplot', 'pie', 'sankey', 'heatmap', 'custom'].includes(s.subType));
     const data = series.getData();
-    const index = Math.floor(data.count() / 2);
+    let index = Math.floor(data.count() / 2);
+    // Empty histogram bins have no hoverable area; choose an observed bin.
+    if (series.option.renderItem === 'rtemis.histogram.v1') {
+      index = Array.from({length: data.count()}, (_, i) => i)
+        .find(i => data.getRawDataItem(i)[3] > 0);
+    }
     let point;
     if (series.subType === 'pie') {
       const sector = data.getItemLayout(index);

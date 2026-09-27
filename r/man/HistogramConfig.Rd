@@ -11,9 +11,20 @@ HistogramConfig(
   writer = NULL,
   legend_position = "top",
   legend_placement = "outside",
+  n = 512L,
+  bw = "nrd0",
+  bandwidth = NULL,
+  kernel = "gaussian",
+  adjust = 1,
+  na_rm = TRUE,
+  fill_alpha = 0.25,
   x = NULL,
   group = NULL,
   breaks = "Sturges",
+  bins = NULL,
+  bin_edges = NULL,
+  normalization = "count",
+  density = FALSE,
   palette = NULL,
   xlab = NULL,
   ylab = NULL,
@@ -47,12 +58,43 @@ column. Corner anchors align within the top or bottom row.}
 plotting area. Outside placement reserves space for the complete legend;
 inside placement overlays the data. Neither setting adds a missing legend.}
 
-\item{x}{Optional Character: Column to bin.}
+\item{n}{Integer \verb{[2, Inf)}: Number of density evaluation points.}
+
+\item{bw}{Character or Numeric: Bandwidth selector (\code{"nrd0"}, \code{"nrd"},
+\code{"ucv"}, \code{"bcv"}, \code{"SJ"}, \code{"SJ-ste"}, \code{"SJ-dpi"}). Numeric input is
+normalized to \code{bandwidth} by the setup function.}
+
+\item{bandwidth}{Optional Numeric \verb{(0, Inf)}: Explicit finite smoothing
+bandwidth in measurement units, overriding the selector.}
+
+\item{kernel}{Character: One of \code{"gaussian"}, \code{"epanechnikov"}, \code{"rectangular"},
+\code{"triangular"}, \code{"biweight"}, \code{"cosine"}, or \code{"optcosine"}.}
+
+\item{adjust}{Numeric \verb{(0, Inf)}: Finite bandwidth multiplier.}
+
+\item{na_rm}{Logical: Whether to remove \code{NA} values before
+computing densities.}
+
+\item{fill_alpha}{Numeric \verb{[0, 1]}: Distribution fill opacity.}
+
+\item{x}{Optional Character: Columns to bin, one distribution per column.}
 
 \item{group}{Optional Character: Column to split the bins by.}
 
-\item{breaks}{Character: Binning rule, passed to \code{\link[graphics:hist]{graphics::hist()}}. One of
-the algorithm names it accepts, e.g. \code{"Sturges"}, \code{"Scott"}, \code{"FD"}.}
+\item{breaks}{Numeric, Character, or Numeric vector: Binning method. A single number (number of bins), a character
+string naming an algorithm (e.g. \code{"Sturges"}, \code{"Scott"}, \code{"FD"}), or a
+numeric vector of break points. Numeric forms are normalized to \code{bins} or
+\code{bin_edges} by the setup function. Bin counts are suggestions to \code{hist()}.}
+
+\item{bins}{Optional Integer \verb{[1, 1000000]}: Suggested bin count.}
+
+\item{bin_edges}{Optional Numeric vector: Finite, strictly increasing edges
+spanning every retained observation. Overrides \code{breaks}; excludes \code{bins}.}
+
+\item{normalization}{Character: \code{"count"}, \code{"probability"}, \code{"percent"},
+\code{"density"}, or \code{"count_density"}.}
+
+\item{density}{Logical: Overlay a kernel density in histogram units.}
 
 \item{palette}{Optional Character: Series colors, overriding the theme
 palette for this chart. \code{NULL} uses the theme's.}
@@ -71,8 +113,10 @@ A serializable description of a histogram. Build one with
 \code{\link[=setup_HistogramConfig]{setup_HistogramConfig()}} rather than calling this constructor directly.
 }
 \details{
-\code{x} names the column to bin. \code{group} optionally names a column to split it
-by, drawing one series per level.
+\code{x} names one or more columns to bin. \code{group} names a column to split them
+by, drawing one series per level. The output uses \code{CustomSeriesOption} in
+ECharts \code{src/chart/custom/CustomSeries.ts} and \code{LineSeriesOption} in
+\code{src/chart/line/LineSeries.ts} for optional density overlays.
 }
 \examples{
 setup_HistogramConfig(x = "mpg")@type

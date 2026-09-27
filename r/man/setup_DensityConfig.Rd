@@ -22,17 +22,23 @@ setup_DensityConfig(
   origin = NULL,
   writer = NULL,
   legend_position = "top",
-  legend_placement = "outside"
+  legend_placement = "outside",
+  bandwidth = NULL,
+  kernel = "gaussian",
+  adjust = 1,
+  fill_alpha = 0.25
 )
 }
 \arguments{
-\item{x}{Optional Character: Column to estimate the density of.}
+\item{x}{Optional Character: Columns to estimate, one distribution per column.}
 
 \item{group}{Optional Character: Column to split the estimate by.}
 
 \item{n}{Integer \verb{[2, Inf)}: Points at which the density is estimated.}
 
-\item{bw}{Character: Bandwidth selector, passed to \code{\link[stats:density]{stats::density()}}.}
+\item{bw}{Character or Numeric: Bandwidth selector (\code{"nrd0"}, \code{"nrd"},
+\code{"ucv"}, \code{"bcv"}, \code{"SJ"}, \code{"SJ-ste"}, \code{"SJ-dpi"}). Numeric input is
+normalized to \code{bandwidth} by the setup function.}
 
 \item{na_rm}{Logical: If TRUE, drop \code{NA} values before estimating.}
 
@@ -66,6 +72,16 @@ column. Corner anchors align within the top or bottom row.}
 \item{legend_placement}{Character \{"outside", "inside"\}: Relation to the
 plotting area. Outside placement reserves space for the complete legend;
 inside placement overlays the data. Neither setting adds a missing legend.}
+
+\item{bandwidth}{Optional Numeric \verb{(0, Inf)}: Explicit finite smoothing
+bandwidth in measurement units, overriding the selector.}
+
+\item{kernel}{Character: One of \code{"gaussian"}, \code{"epanechnikov"}, \code{"rectangular"},
+\code{"triangular"}, \code{"biweight"}, \code{"cosine"}, or \code{"optcosine"}.}
+
+\item{adjust}{Numeric \verb{(0, Inf)}: Finite bandwidth multiplier.}
+
+\item{fill_alpha}{Numeric \verb{[0, 1]}: Distribution fill opacity.}
 }
 \value{
 \link{DensityConfig} object.

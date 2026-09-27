@@ -133,6 +133,40 @@ builders[["density"]] <- function(theme) {
     theme = theme
   )
 }
+builders[["histogram_density"]] <- function(theme) {
+  draw_histogram(
+    birds[["bill_len"]],
+    group = birds[["species"]],
+    normalization = "density",
+    density = TRUE,
+    xlab = "Bill length (mm)",
+    ylab = "Density",
+    theme = theme
+  )
+}
+builders[["histogram_unequal"]] <- function(theme) {
+  draw_histogram(
+    birds[["bill_len"]],
+    group = birds[["species"]],
+    bin_edges = c(30, 35, 40, 50, 60),
+    normalization = "density",
+    density = TRUE,
+    xlab = "Bill length (mm)",
+    ylab = "Density",
+    theme = theme
+  )
+}
+builders[["density_kernel"]] <- function(theme) {
+  draw_density(
+    birds[["bill_len"]],
+    group = birds[["species"]],
+    bandwidth = 2,
+    kernel = "epanechnikov",
+    xlab = "Bill length (mm)",
+    ylab = "Density",
+    theme = theme
+  )
+}
 builders[["pie"]] <- function(theme) {
   draw_pie(as.numeric(species_counts), names(species_counts), theme = theme)
 }
@@ -451,8 +485,10 @@ tryCatch(
             name %in% c("pie", "rose", "sankey", "spectrogram")
           ) {
             1L
-          } else if (name %in% c("histogram", "density")) {
+          } else if (name %in% c("histogram", "density", "density_kernel")) {
             3L
+          } else if (name %in% c("histogram_density", "histogram_unequal")) {
+            6L
           } else if (name == "scatter") {
             9L
           } else if (name %in% c("violin", "violin_box")) {
@@ -551,7 +587,10 @@ tryCatch(
                     3L
                   } else if (name == "survival") {
                     8L
-                  } else if (name == "calibration") {
+                  } else if (
+                    name %in%
+                      c("calibration", "histogram_density", "histogram_unequal")
+                  ) {
                     2L
                   } else {
                     1L
@@ -586,6 +625,21 @@ tryCatch(
             base64enc::base64decode(screenshot[["data"]]),
             file.path(out, paste0(key, "-hover.png"))
           )
+
+          # Density overlays expose evaluated values through native transparent
+          # line symbols, as ROC does. Test a real pointer hover on the curve.
+          if (name %in% c("histogram_density", "histogram_unequal")) {
+            point <- evaluate(
+              "(()=>{const c=foundationQA.chart(),s=c.getModel().getSeries().find(s=>s.subType==='line'),d=s.getData();let i=0;for(let j=1;j<d.count();j++){if(d.getRawDataItem(j)[1]>d.getRawDataItem(i)[1])i=j;}const p=s.coordinateSystem.dataToPoint(d.getRawDataItem(i));return foundationQA.pagePoint(p[0],p[1]);})()"
+            )
+            b$Input$dispatchMouseEvent(
+              type = "mouseMoved",
+              x = point[["x"]],
+              y = point[["y"]]
+            )
+            wait_for("foundationQA.tooltip().length > 0")
+            result[["curve_tooltip"]] <- evaluate("foundationQA.tooltip()")
+          }
 
           # Only line/area expose zoom here; wheel and double-click use real input.
           if (name %in% c("line", "area")) {

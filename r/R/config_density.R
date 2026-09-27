@@ -2,8 +2,8 @@
 # ::rtemis.draw::
 # 2026- EDG rtemis.org
 
-# The density chart's config. Establishes the **one bound column plus a grouping
-# column** shape, which line, histogram and boxplot share.
+# Density settings shared by standalone curves and histogram overlays.
+# One or more numeric columns may be split by a grouping column.
 
 # %% DensityConfig ----
 #' Density Chart Configuration
@@ -11,13 +11,14 @@
 #' A serializable description of a kernel density chart. Build one with
 #' [setup_DensityConfig()] rather than calling this constructor directly.
 #'
-#' `x` names the column to estimate the density of. `group` optionally names a
-#' column to split it by, drawing one curve per level.
+#' `x` names one or more numeric columns. `group` optionally names a
+#' column to split it by, drawing one curve per level. The output uses
+#' `LineSeriesOption` in ECharts `src/chart/line/LineSeries.ts`.
 #'
-#' @param x Optional Character: Column to estimate the density of.
+#' @param x Optional Character: Columns to estimate, one distribution per column.
 #' @param group Optional Character: Column to split the estimate by.
 #' @param n Integer `[2, Inf)`: Points at which the density is estimated.
-#' @param bw Character: Bandwidth selector, passed to [stats::density()].
+#' @inheritParams draw_density bw bandwidth kernel adjust fill_alpha
 #' @param na_rm Logical: If TRUE, drop `NA` values before estimating.
 #' @param palette Optional Character: Series colors, overriding the theme
 #'   palette for this chart. `NULL` uses the theme's.
@@ -47,7 +48,8 @@ DensityConfig <- new_class(
       x = prop_string(
         NULL,
         nullable = TRUE,
-        description = "Column to estimate the density of."
+        vector = TRUE,
+        description = "Columns to estimate the density of."
       ),
       group = prop_string(
         NULL,
@@ -62,7 +64,38 @@ DensityConfig <- new_class(
       ),
       bw = prop_string(
         "nrd0",
-        description = "Bandwidth selector."
+        enum = c("nrd0", "nrd", "ucv", "bcv", "SJ", "SJ-ste", "SJ-dpi"),
+        description = "Bandwidth selector, used when bandwidth is unset."
+      ),
+      bandwidth = prop_float(
+        NULL,
+        nullable = TRUE,
+        exclusive_min = 0,
+        description = "Explicit density bandwidth in measurement units."
+      ),
+      kernel = prop_string(
+        "gaussian",
+        enum = c(
+          "gaussian",
+          "epanechnikov",
+          "rectangular",
+          "triangular",
+          "biweight",
+          "cosine",
+          "optcosine"
+        ),
+        description = "Density smoothing kernel."
+      ),
+      adjust = prop_float(
+        1,
+        exclusive_min = 0,
+        description = "Bandwidth multiplier."
+      ),
+      fill_alpha = prop_float(
+        0.25,
+        min = 0,
+        max = 1,
+        description = "Distribution fill opacity."
       ),
       na_rm = prop_boolean(
         TRUE,
@@ -159,14 +192,36 @@ setup_DensityConfig <- function(
   origin = NULL,
   writer = NULL,
   legend_position = "top",
-  legend_placement = "outside"
+  legend_placement = "outside",
+  bandwidth = NULL,
+  kernel = "gaussian",
+  adjust = 1,
+  fill_alpha = 0.25
 ) {
   origin <- origin %||% chart_origin(match.call(), DENSITY_ORIGIN_NAMES)
+  check_integer_scalar(n)
+  # Normalize the R convenience form to separate portable selector/value fields.
+  if (is.numeric(bw)) {
+    if (!is.null(bandwidth)) {
+      abort(
+        "Supply only one numeric bandwidth: `bw` or `bandwidth`.",
+        class = c("rtemis_value_error", "rtemis_input_error")
+      )
+    }
+    bandwidth <- bw
+    bw <- "nrd0"
+    origin[["bw"]] <- "default"
+    origin[["bandwidth"]] <- "user"
+  }
   DensityConfig(
     x = x,
     group = group,
     n = as.integer(n),
     bw = bw,
+    bandwidth = bandwidth,
+    kernel = kernel,
+    adjust = adjust,
+    fill_alpha = fill_alpha,
     na_rm = na_rm,
     palette = palette,
     xlab = xlab,
@@ -195,7 +250,7 @@ method(resolve, DensityConfig) <- function(config, data = NULL, ...) {
   config_derive(
     config,
     list(
-      xlab = config@x
+      xlab = if (length(config@x) == 1L) config@x else NULL
     )
   )
 }
@@ -206,7 +261,14 @@ method(resolve, DensityConfig) <- function(config, data = NULL, ...) {
 # uses the builder's default, exactly as `draw_density()` does when the caller
 # says nothing.
 method(compile, DensityConfig) <- function(config, data = NULL, ...) {
-  x <- config_column(data, config@x, "x")
+  x <- if (length(config@x) > 1L) {
+    setNames(
+      lapply(config@x, function(column) config_column(data, column, "x")),
+      config@x
+    )
+  } else {
+    config_column(data, config@x, "x")
+  }
   if (is.null(x)) {
     abort(
       "A DensityConfig needs `x` set to draw.",
@@ -218,6 +280,10 @@ method(compile, DensityConfig) <- function(config, data = NULL, ...) {
     group = config_column(data, config@group, "group"),
     n = config@n,
     bw = config@bw,
+    bandwidth = config@bandwidth,
+    kernel = config@kernel,
+    adjust = config@adjust,
+    fill_alpha = config@fill_alpha,
     na_rm = config@na_rm,
     palette = config@palette,
     xlab = config@xlab,

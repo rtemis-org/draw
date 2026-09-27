@@ -2223,217 +2223,32 @@ draw_pie <- function(
   )
 }
 
-#' Build the ECharts option for a density chart
-#'
-#' The single implementation shared by [draw_density()], which resolves its arguments
-#' from vectors, and `compile()` on the corresponding [ChartConfig], which
-#' resolves them from a data frame. The render targets stay with the caller.
-#'
-#' @inheritParams draw_density
-#'
-#' @return [EChartsOption]: The option object.
-#'
-#' @author EDG
-#' @keywords internal
-#' @noRd
-density_option <- function(
-  x,
-  group = NULL,
-  n = 512,
-  bw = "nrd0",
-  na_rm = TRUE,
-  palette = NULL,
-  xlab = NULL,
-  ylab = NULL,
-  title = NULL,
-  margins = DEFAULT_MARGINS,
-  verbosity = 1L
-) {
-  group <- group_values(group, if (is.list(x)) lengths(x) else length(x))
-  if (is.list(x)) {
-    series_names <- names(x)
-    if (is.null(series_names) || !all(nzchar(series_names))) {
-      series_names <- paste0("Series ", seq_along(x))
-    }
-
-    if (!is.null(group)) {
-      group_ok <- !is.na(group)
-      if (any(!group_ok)) {
-        group <- group[group_ok]
-        x <- lapply(x, function(vals) vals[group_ok])
-      }
-
-      groups <- unique(group)
-      group_labels <- as.character(groups)
-      series <- unlist(
-        lapply(seq_along(x), function(i) {
-          vals <- x[[i]]
-          group_i <- group
-
-          if (na_rm) {
-            na_idx <- is.na(vals)
-            n_na <- sum(na_idx)
-            if (n_na > 0L) {
-              msg(
-                "Removed",
-                n_na,
-                "NA",
-                ngettext(n_na, "value", "values"),
-                "from",
-                series_names[[i]],
-                verbosity = verbosity
-              )
-              vals <- vals[!na_idx]
-              group_i <- group_i[!na_idx]
-            }
-          }
-
-          lapply(seq_along(groups), function(j) {
-            g <- groups[[j]]
-            d <- stats::density(vals[group_i == g], n = n, bw = bw)
-            dat <- mapply(c, d$x, d$y, SIMPLIFY = FALSE)
-            LineSeries(
-              name = paste(series_names[[i]], group_labels[[j]], sep = " - "),
-              data = dat,
-              show_symbol = FALSE,
-              area_style = AreaStyle(opacity = 0.25)
-            )
-          })
-        }),
-        recursive = FALSE
-      )
-    } else {
-      series <- lapply(seq_along(x), function(i) {
-        vals <- x[[i]]
-
-        if (na_rm) {
-          na_idx <- is.na(vals)
-          n_na <- sum(na_idx)
-          if (n_na > 0L) {
-            msg(
-              "Removed",
-              n_na,
-              "NA",
-              ngettext(n_na, "value", "values"),
-              "from",
-              series_names[[i]],
-              verbosity = verbosity
-            )
-            vals <- vals[!na_idx]
-          }
-        }
-
-        d <- stats::density(vals, n = n, bw = bw)
-        dat <- mapply(c, d$x, d$y, SIMPLIFY = FALSE)
-        LineSeries(
-          name = series_names[[i]],
-          data = dat,
-          show_symbol = FALSE,
-          area_style = AreaStyle(opacity = 0.25)
-        )
-      })
-    }
-  } else {
-    if (na_rm) {
-      na_idx <- is.na(x)
-      n_na <- sum(na_idx)
-      if (n_na > 0L) {
-        msg(
-          "Removed",
-          n_na,
-          "NA",
-          ngettext(n_na, "value", "values"),
-          "from x",
-          verbosity = verbosity
-        )
-        if (!is.null(group)) {
-          group <- group[!na_idx]
-        }
-        x <- x[!na_idx]
-      }
-    }
-
-    if (!is.null(group)) {
-      groups <- unique(group)
-      series <- lapply(groups, function(g) {
-        d <- stats::density(x[group == g], n = n, bw = bw)
-        dat <- mapply(c, d$x, d$y, SIMPLIFY = FALSE)
-        LineSeries(
-          name = as.character(g),
-          data = dat,
-          show_symbol = FALSE,
-          area_style = AreaStyle(opacity = 0.25)
-        )
-      })
-    } else {
-      d <- stats::density(x, n = n, bw = bw)
-      dat <- mapply(c, d$x, d$y, SIMPLIFY = FALSE)
-      series <- list(LineSeries(
-        data = dat,
-        show_symbol = FALSE,
-        area_style = AreaStyle(opacity = 0.25)
-      ))
-    }
-  }
-
-  density_formatter <- htmlwidgets::JS(
-    "function(params) {
-      function ddSci(x, dp) {
-        dp = dp || 2;
-        var a = Math.abs(x);
-        if (a === 0) return '0.' + '0'.repeat(dp);
-        if (a >= 1e6 || a < Math.pow(10, -dp)) return x.toExponential(1);
-        return x.toFixed(dp);
-      }
-      var out = ddSci(params[0].value[0]) + '<br/>';
-      for (var i = 0; i < params.length; i++) {
-        var p = params[i];
-        var name = p.seriesName ? p.seriesName + ': ' : '';
-        out += p.marker + name + ddSci(p.value[1]) + '<br/>';
-      }
-      return out;
-    }"
-  )
-
-  opt <- EChartsOption(
-    title = if (!is.null(title)) Title(text = title) else NULL,
-    tooltip = Tooltip(trigger = "axis", formatter = density_formatter),
-    legend = if (length(series) > 1L) Legend() else NULL,
-    x_axis = Axis(
-      type = "value",
-      name = xlab,
-      name_location = if (!is.null(xlab)) "middle" else NULL,
-      scale = TRUE
-    ),
-    y_axis = Axis(
-      type = "value",
-      name = ylab,
-      name_location = if (!is.null(ylab)) "middle" else NULL
-    ),
-    grid = resolve_margins(margins),
-    series = series,
-    # Per-chart palette overrides the theme's, as in every other chart.
-    color = palette
-  )
-
-  opt
-} # /rtemis.draw::density_option
-
-
 #' Draw a Density Plot
 #'
 #' Kernel density estimation plot from numeric data, with optional grouping
 #' for multiple traces. A list input creates one density trace per vector when
 #' ungrouped, or one trace per variable/group combination when `group` is
-#' supplied.
+#' supplied. Curves use [stats::density()] with its bandwidth-scaled kernels
+#' and evaluation range extending three bandwidths beyond the data. Empty
+#' samples retain their identity without a curve. Singleton and constant
+#' samples require an explicit bandwidth; no spread is inferred for them.
+#' Missing groups are excluded, and infinite/nonnumeric observations rejected.
 #'
 #' @param x Numeric or list: Values used for density estimation. An ungrouped
 #'   list creates one density trace per element; with `group`, each list
 #'   element is split by group into separate traces.
 #' @param group Optional Atomic vector or single-column data frame: Grouping
 #'   variable for multiple density traces.
-#' @param n Numeric `[1, Inf)`: Number of equally spaced points for density estimation.
-#' @param bw Character or Numeric: Bandwidth passed to [stats::density()].
+#' @param n Integer `[2, Inf)`: Number of density evaluation points.
+#' @param bw Character or Numeric: Bandwidth selector (`"nrd0"`, `"nrd"`,
+#'   `"ucv"`, `"bcv"`, `"SJ"`, `"SJ-ste"`, `"SJ-dpi"`). Numeric input is
+#'   normalized to `bandwidth` by the setup function.
+#' @param bandwidth Optional Numeric `(0, Inf)`: Explicit finite smoothing
+#'   bandwidth in measurement units, overriding the selector.
+#' @param kernel Character: One of `"gaussian"`, `"epanechnikov"`, `"rectangular"`,
+#'   `"triangular"`, `"biweight"`, `"cosine"`, or `"optcosine"`.
+#' @param adjust Numeric `(0, Inf)`: Finite bandwidth multiplier.
+#' @param fill_alpha Numeric `[0, 1]`: Distribution fill opacity.
 #' @param na_rm Logical: Whether to remove `NA` values before
 #'   computing densities.
 #' @param palette Optional Character: Series colors, overriding the theme
@@ -2477,7 +2292,11 @@ draw_density <- function(
   element_id = NULL,
   filename = NULL,
   legend_position = "top",
-  legend_placement = "outside"
+  legend_placement = "outside",
+  bandwidth = NULL,
+  kernel = "gaussian",
+  adjust = 1,
+  fill_alpha = .25
 ) {
   opt <- density_option(
     x = x,
@@ -2490,7 +2309,11 @@ draw_density <- function(
     ylab = ylab,
     title = title,
     margins = margins,
-    verbosity = verbosity
+    verbosity = verbosity,
+    bandwidth = bandwidth,
+    kernel = kernel,
+    adjust = adjust,
+    fill_alpha = fill_alpha
   )
 
   draw(
@@ -2504,84 +2327,41 @@ draw_density <- function(
   )
 }
 
-#' Build the ECharts option for a histogram
-#'
-#' The single implementation shared by [draw_histogram()], which resolves its arguments
-#' from vectors, and `compile()` on the corresponding [ChartConfig], which
-#' resolves them from a data frame. The render targets stay with the caller.
-#'
-#' @inheritParams draw_histogram
-#'
-#' @return [EChartsOption]: The option object.
-#'
-#' @author EDG
-#' @keywords internal
-#' @noRd
-histogram_option <- function(
-  x,
-  group = NULL,
-  breaks = "Sturges",
-  palette = NULL,
-  xlab = NULL,
-  ylab = NULL,
-  title = NULL,
-  margins = DEFAULT_MARGINS
-) {
-  group <- group_values(group, length(x))
-  # Compute bin structure from full data for consistent breaks across groups
-  h <- graphics::hist(x, breaks = breaks, plot = FALSE)
-  bin_labels <- formatC(h$mids, format = "g")
-
-  if (!is.null(group)) {
-    groups <- unique(group)
-    series <- lapply(groups, function(g) {
-      hg <- graphics::hist(x[group == g], breaks = h$breaks, plot = FALSE)
-      BarSeries(name = as.character(g), data = hg$counts)
-    })
-  } else {
-    series <- list(BarSeries(
-      data = h$counts,
-      bar_category_gap = "0%"
-    ))
-  }
-
-  opt <- EChartsOption(
-    title = if (!is.null(title)) Title(text = title) else NULL,
-    tooltip = Tooltip(trigger = "axis"),
-    legend = if (length(series) > 1L) Legend() else NULL,
-    x_axis = Axis(
-      type = "category",
-      data = bin_labels,
-      name = xlab,
-      name_location = if (!is.null(xlab)) "middle" else NULL
-    ),
-    y_axis = Axis(
-      type = "value",
-      name = ylab,
-      name_location = if (!is.null(ylab)) "middle" else NULL
-    ),
-    grid = resolve_margins(margins),
-    series = series,
-    # Per-chart palette overrides the theme's, as in every other chart.
-    color = palette
-  )
-
-  opt
-} # /rtemis.draw::histogram_option
-
-
 #' Draw a Histogram
 #'
 #' Histogram from numeric data, with optional grouping for multiple traces.
 #' Bins are computed using [graphics::hist()] with consistent break points
-#' across groups.
+#' across groups. Rectangles span their actual numeric intervals, including
+#' unequal widths. Grouped samples overlap with translucent fills. Intervals
+#' are right-closed, with the lowest edge included, using `hist()` boundary
+#' tolerance. Missing groups are excluded; empty samples have zero counts.
 #'
-#' @param x Numeric: Values used for histogram binning.
+#' Normalization is within each sample: `"count"` is the raw count;
+#' `"probability"` and `"percent"` divide by sample size (and multiply by 100
+#' for percent). `"density"` divides by sample size and bin width, so total
+#' area is one. `"count_density"` divides only by width, so area is sample size.
+#' Unequal-width bins require one of the two density scales.
+#'
+#' With `density = TRUE`, each curve uses the same settings as [draw_density()]
+#' and is scaled to the chosen histogram units. Count, probability, and percent
+#' curves multiply the estimated density by the common bin width and the
+#' appropriate sample-size factor. Density/count-density curves need no width
+#' factor. The histogram and curve share a color and legend toggle.
+#'
+#' @param x Numeric or List: Values or named numeric vectors to bin.
 #' @param group Optional Atomic vector or single-column data frame: Grouping
 #'   variable for multiple series.
 #' @param breaks Numeric, Character, or Numeric vector: Binning method. A single number (number of bins), a character
 #'   string naming an algorithm (e.g. `"Sturges"`, `"Scott"`, `"FD"`), or a
-#'   numeric vector of break points. Passed to [graphics::hist()].
+#'   numeric vector of break points. Numeric forms are normalized to `bins` or
+#'   `bin_edges` by the setup function. Bin counts are suggestions to `hist()`.
+#' @param bins Optional Integer `[1, 1000000]`: Suggested bin count.
+#' @param bin_edges Optional Numeric vector: Finite, strictly increasing edges
+#'   spanning every retained observation. Overrides `breaks`; excludes `bins`.
+#' @param normalization Character: `"count"`, `"probability"`, `"percent"`,
+#'   `"density"`, or `"count_density"`.
+#' @param density Logical: Overlay a kernel density in histogram units.
+#' @inheritParams draw_density n bw bandwidth kernel adjust fill_alpha na_rm verbosity
 #' @param palette Optional Character: Series colors, overriding the theme
 #'   palette for this chart. `NULL` uses the theme's.
 #' @param xlab Optional Character: X-axis title.
@@ -2619,7 +2399,19 @@ draw_histogram <- function(
   element_id = NULL,
   filename = NULL,
   legend_position = "top",
-  legend_placement = "outside"
+  legend_placement = "outside",
+  bins = NULL,
+  bin_edges = NULL,
+  normalization = "count",
+  density = FALSE,
+  n = 512L,
+  bw = "nrd0",
+  bandwidth = NULL,
+  kernel = "gaussian",
+  adjust = 1,
+  fill_alpha = .25,
+  na_rm = TRUE,
+  verbosity = 1L
 ) {
   opt <- histogram_option(
     x = x,
@@ -2629,7 +2421,19 @@ draw_histogram <- function(
     xlab = xlab,
     ylab = ylab,
     title = title,
-    margins = margins
+    margins = margins,
+    bins = bins,
+    bin_edges = bin_edges,
+    normalization = normalization,
+    density = density,
+    n = n,
+    bw = bw,
+    bandwidth = bandwidth,
+    kernel = kernel,
+    adjust = adjust,
+    fill_alpha = fill_alpha,
+    na_rm = na_rm,
+    verbosity = verbosity
   )
 
   draw(

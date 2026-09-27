@@ -220,5 +220,13 @@
     "md5": [
       "d238ead22bdbc70ee13b17a67c437810"
     ]
+  },
+  "rtemis-draw-renderers-1.2.0": {
+    "scripts": [
+      "renderers.js"
+    ],
+    "md5": [
+      "b5fb9c9240908b9b99977f169657915b"
+    ]
   }
 }

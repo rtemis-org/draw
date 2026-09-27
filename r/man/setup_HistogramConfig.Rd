@@ -20,16 +20,29 @@ setup_HistogramConfig(
   origin = NULL,
   writer = NULL,
   legend_position = "top",
-  legend_placement = "outside"
+  legend_placement = "outside",
+  bins = NULL,
+  bin_edges = NULL,
+  normalization = "count",
+  density = FALSE,
+  n = 512L,
+  bw = "nrd0",
+  bandwidth = NULL,
+  kernel = "gaussian",
+  adjust = 1,
+  fill_alpha = 0.25,
+  na_rm = TRUE
 )
 }
 \arguments{
-\item{x}{Optional Character: Column to bin.}
+\item{x}{Optional Character: Columns to bin, one distribution per column.}
 
 \item{group}{Optional Character: Column to split the bins by.}
 
-\item{breaks}{Character: Binning rule, passed to \code{\link[graphics:hist]{graphics::hist()}}. One of
-the algorithm names it accepts, e.g. \code{"Sturges"}, \code{"Scott"}, \code{"FD"}.}
+\item{breaks}{Numeric, Character, or Numeric vector: Binning method. A single number (number of bins), a character
+string naming an algorithm (e.g. \code{"Sturges"}, \code{"Scott"}, \code{"FD"}), or a
+numeric vector of break points. Numeric forms are normalized to \code{bins} or
+\code{bin_edges} by the setup function. Bin counts are suggestions to \code{hist()}.}
 
 \item{palette}{Optional Character: Series colors, overriding the theme
 palette for this chart. \code{NULL} uses the theme's.}
@@ -61,6 +74,35 @@ column. Corner anchors align within the top or bottom row.}
 \item{legend_placement}{Character \{"outside", "inside"\}: Relation to the
 plotting area. Outside placement reserves space for the complete legend;
 inside placement overlays the data. Neither setting adds a missing legend.}
+
+\item{bins}{Optional Integer \verb{[1, 1000000]}: Suggested bin count.}
+
+\item{bin_edges}{Optional Numeric vector: Finite, strictly increasing edges
+spanning every retained observation. Overrides \code{breaks}; excludes \code{bins}.}
+
+\item{normalization}{Character: \code{"count"}, \code{"probability"}, \code{"percent"},
+\code{"density"}, or \code{"count_density"}.}
+
+\item{density}{Logical: Overlay a kernel density in histogram units.}
+
+\item{n}{Integer \verb{[2, Inf)}: Number of density evaluation points.}
+
+\item{bw}{Character or Numeric: Bandwidth selector (\code{"nrd0"}, \code{"nrd"},
+\code{"ucv"}, \code{"bcv"}, \code{"SJ"}, \code{"SJ-ste"}, \code{"SJ-dpi"}). Numeric input is
+normalized to \code{bandwidth} by the setup function.}
+
+\item{bandwidth}{Optional Numeric \verb{(0, Inf)}: Explicit finite smoothing
+bandwidth in measurement units, overriding the selector.}
+
+\item{kernel}{Character: One of \code{"gaussian"}, \code{"epanechnikov"}, \code{"rectangular"},
+\code{"triangular"}, \code{"biweight"}, \code{"cosine"}, or \code{"optcosine"}.}
+
+\item{adjust}{Numeric \verb{(0, Inf)}: Finite bandwidth multiplier.}
+
+\item{fill_alpha}{Numeric \verb{[0, 1]}: Distribution fill opacity.}
+
+\item{na_rm}{Logical: Whether to remove \code{NA} values before
+computing densities.}
 }
 \value{
 \link{HistogramConfig} object.

@@ -32,6 +32,16 @@
   }
 
   const renderers = {
+    // Data: [lower edge, upper edge, normalized height, raw count]. Numeric
+    // coordinates retain unequal bin widths and align optional density lines.
+    "rtemis.histogram.v1": function (params, api) {
+      const left = api.coord([api.value(0), api.value(2)]);
+      const right = api.coord([api.value(1), 0]);
+      return { type: "rect", shape: {
+        x: Math.min(left[0], right[0]), y: Math.min(left[1], right[1]),
+        width: Math.abs(right[0] - left[0]), height: Math.abs(right[1] - left[1])
+      }, style: { fill: api.visual("color"), opacity: params.itemPayload.fillAlpha } };
+    },
     // Data: [category, exact value, observation ID, deterministic offset].
     "rtemis.boxplot_points.v1": function (params, api) {
       const settings = params.itemPayload;

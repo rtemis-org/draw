@@ -1,5 +1,7 @@
 # rtemis.draw 0.5.3
 
+- Render histogram bins on numeric axes, add normalization and density overlays, and share kernel/bandwidth controls across functional and configuration APIs.
+
 - Add violin distributions, ID-matched paired lines, and supplied comparison brackets to the boxplot family, with native SVG export.
 
 - Add survival curves and survfit adapters with confidence bands, censor ticks, median and landmark annotations, explicit risk tables, portable configuration, and SVG export.
