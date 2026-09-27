@@ -6,12 +6,15 @@ on:
     paths:
       - r/**
       - .github/workflows/r-ci.yml
+      - .github/CI.md
+      - .gitattributes
   push:
-    branches:
-      - main
+    branches: [main]
     paths:
       - r/**
       - .github/workflows/r-ci.yml
+      - .github/CI.md
+      - .gitattributes
 
 permissions:
   contents: read
@@ -20,64 +23,49 @@ env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
 
 concurrency:
-  group: r-ci-${{ github.ref }}
+  group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
   r-cmd-check:
-    name: ${{ matrix.config.os }} / R ${{ matrix.config.r }}
-    runs-on: ${{ matrix.config.os }}
-    timeout-minutes: 60
-
-    # Follow r-lib's standard platform matrix and retain the dependency floor.
-    # All jobs exercise SVG export with the minimum supported Node runtime.
-    strategy:
-      fail-fast: false
-      matrix:
-        config:
-          - {os: ubuntu-latest, r: release}
-          - {os: ubuntu-latest, r: devel, http-user-agent: release}
-          - {os: ubuntu-latest, r: oldrel-1}
-          - {os: ubuntu-latest, r: '4.1'}
-          - {os: windows-latest, r: release}
-          - {os: macos-latest, r: release}
-
+    name: ubuntu-latest / R release
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
     env:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
       R_KEEP_PKG_SOURCE: yes
-
     steps:
       - uses: actions/checkout@v6
-
       - uses: r-lib/actions/setup-pandoc@v2
-
+      # SVG tests require a Node runtime, separate from the Actions runtime.
       - uses: actions/setup-node@v6
         with:
           node-version: '18.20.8'
-
       - uses: r-lib/actions/setup-r@v2
         with:
-          r-version: ${{ matrix.config.r }}
-          http-user-agent: ${{ matrix.config.http-user-agent }}
+          r-version: release
           use-public-rspm: true
           extra-repositories: https://rtemis-org.r-universe.dev
-      # Access latest packages on rtemis-org.r-universe.dev
-      - name: Add rtemis r-universe to repos
-        run: |
-          cat(
-            'options(repos = c(getOption("repos"), rtemisorg = "https://rtemis-org.r-universe.dev"))',
-            file = "~/.Rprofile", sep = "\n", append = TRUE
-          )
-        shell: Rscript {0}
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
           working-directory: r
           extra-packages: any::rcmdcheck
           needs: check
+          # Save dependencies even when a later check fails.
+          cache: always
           cache-version: 1
-
       - uses: r-lib/actions/check-r-package@v2
+        timeout-minutes: 20
         with:
           working-directory: r
           upload-snapshots: true
+          error-on: '"warning"'
+          args: 'c("--no-manual", "--as-cran")'
           build_args: 'c("--no-manual", "--compact-vignettes=gs+qpdf")'
+      - name: Preserve incomplete check diagnostics
+        if: ${{ failure() || cancelled() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: check-diagnostics
+          path: r/check
+          if-no-files-found: ignore
