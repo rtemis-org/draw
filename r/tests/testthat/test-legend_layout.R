@@ -19,6 +19,7 @@ test_that("legend properties share validation, schema, and provenance", {
     GanttConfig,
     ROCConfig,
     CalibrationConfig,
+    SurvivalConfig,
     SignificanceConfig,
     HeatmapConfig,
     SpectrogramConfig
@@ -103,6 +104,10 @@ test_that("high-level and config legend hints agree without adding legends", {
 test_that("native legends reserve space across families, anchors, and resizes", {
   skip_if_not(nzchar(Sys.which("node")), "node not found")
   charts <- list(
+    survival = draw_survival(
+      data.frame(time = c(0, 1, 2), survival = c(1, .8, .4)),
+      title = "Survival"
+    ),
     calibration = draw_calibration(
       data.frame(observed = c(0, 0, 1, 1), probability = c(0, .3, .8, 1)),
       n_bins = 2L,

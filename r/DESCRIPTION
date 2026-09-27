@@ -37,6 +37,7 @@ Suggests:
     rtemis (>= 1.4.1),
     rtemis.a3,
     shiny,
+    survival,
     testthat (>= 3.0.0)
 Additional_repositories:
     https://rtemis-org.r-universe.dev
@@ -92,6 +93,9 @@ Collate:
     'plot_confusion.R'
     'config_roc.R'
     'draw_roc.R'
+    'config_survival.R'
+    'draw_survival.R'
+    'draw_survfit.R'
     'config_calibration.R'
     'draw_calibration.R'
     'plot_roc.R'

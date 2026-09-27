@@ -39,6 +39,7 @@
 #' names(chart_registry())
 chart_registry <- function() {
   list(
+    survival = list(cls = SurvivalConfig, setup = "setup_SurvivalConfig"),
     calibration = list(
       cls = CalibrationConfig,
       setup = "setup_CalibrationConfig"

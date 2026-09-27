@@ -4,6 +4,7 @@
 required <- c(
   "rtemis.draw",
   "mgcv",
+  "survival",
   "htmlwidgets",
   "jsonlite",
   "chromote",
@@ -203,6 +204,24 @@ builders[["calibration"]] <- function(theme) {
     theme = theme
   )
 }
+# Real survival fits exercise all optional native layers together.
+builders[["survival"]] <- function(theme) {
+  patients <- survival::lung
+  patients[["sex"]] <- factor(
+    patients[["sex"]],
+    levels = c(1, 2),
+    labels = c("Male", "Female")
+  )
+  fit <- survival::survfit(survival::Surv(time, status) ~ sex, data = patients)
+  draw_survfit(
+    fit,
+    risk_times = c(0, 250, 500, 750, 1000),
+    show_median = TRUE,
+    landmarks = 365,
+    xlab = "Days",
+    theme = theme
+  )
+}
 selected <- Sys.getenv("DRAW_QA_FAMILIES")
 if (nzchar(selected)) {
   builders <- builders[strsplit(selected, ",", fixed = TRUE)[[1L]]]
@@ -397,6 +416,8 @@ tryCatch(
             3L
           } else if (name == "scatter") {
             9L
+          } else if (name == "survival") {
+            17L
           } else if (name == "calibration") {
             5L
           } else if (
@@ -442,7 +463,7 @@ tryCatch(
           }
           if (name == "spectrogram") {
             expected <- character()
-          } else if (name == "calibration") {
+          } else if (name %in% c("calibration", "survival")) {
             expected <- unlist(widget[["x"]][["option"]][["legend"]][["data"]])
           }
           stopifnot(
@@ -481,6 +502,8 @@ tryCatch(
                 length(state[["layers"]]) ==
                   if (name == "scatter") {
                     3L
+                  } else if (name == "survival") {
+                    8L
                   } else if (name == "calibration") {
                     2L
                   } else {
