@@ -149,17 +149,32 @@ SurvivalConfig <- new_class(
       )
     )
   ),
-  validator = function(self) {
-    if (any(!is.finite(c(self@landmarks, self@line_width, self@censor_size)))) {
-      return(
-        "Use finite landmark times and positive finite line and censor sizes."
-      )
-    }
-    if (is.null(self@lower) != is.null(self@upper)) {
-      return("Bind both lower and upper confidence columns, or neither.")
-    }
-    NULL
-  }
+  validator = config_validator(list(
+    list(
+      schema = list(
+        `if` = list(
+          required = list("lower"),
+          properties = list(lower = list(not = list(type = "null")))
+        ),
+        then = list(
+          properties = list(upper = list(not = list(type = "null")))
+        )
+      ),
+      message = "Bind both lower and upper confidence columns, or neither."
+    ),
+    list(
+      schema = list(
+        `if` = list(
+          required = list("upper"),
+          properties = list(upper = list(not = list(type = "null")))
+        ),
+        then = list(
+          properties = list(lower = list(not = list(type = "null")))
+        )
+      ),
+      message = "Bind both lower and upper confidence columns, or neither."
+    )
+  ))
 )
 
 SURVIVAL_ORIGIN_NAMES <- setdiff(

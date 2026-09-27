@@ -228,6 +228,10 @@ ScatterConfig <- new_class(
         description = "Left margin in pixels."
       )
     )
+  ),
+  validator = config_validator(
+    CONFIG_LIMIT_RULES,
+    extra = config_ordered_limits
   )
 ) # /rtemis.draw::ScatterConfig
 

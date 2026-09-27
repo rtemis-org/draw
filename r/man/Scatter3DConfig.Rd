@@ -18,6 +18,9 @@ Scatter3DConfig(
   view_size = 190,
   point_size = 8,
   opacity = 0.8,
+  mode = "points",
+  order = "input",
+  line_width = 2,
   xlab = NULL,
   ylab = NULL,
   zlab = NULL,
@@ -51,7 +54,14 @@ authored config; written by the interface that resolved it.}
 
 \item{point_size}{Numeric \verb{(0, 100]}: Marker diameter in pixels.}
 
-\item{opacity}{Numeric \verb{[0, 1]}: Marker opacity.}
+\item{opacity}{Numeric \verb{[0, 1]}: Point and line opacity.}
+
+\item{mode}{Character \code{c("points", "lines", "both")}: Geometry to draw.}
+
+\item{order}{Character \code{c("input", "x")}: Order within complete path runs.
+Missing coordinates break paths; sorting never joins across those breaks.}
+
+\item{line_width}{Numeric \verb{(0, 100]}: Path width in pixels.}
 
 \item{xlab, ylab, zlab}{Optional Character: Axis names.}
 

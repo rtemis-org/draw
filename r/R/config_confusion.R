@@ -123,26 +123,17 @@ ConfusionConfig <- new_class(
     ),
     ylab = prop_string("Reference", description = "Reference-class axis label.")
   ),
-  validator = function(self) {
-    errors <- character()
-    for (name in c(
-      "correct_color",
-      "incorrect_color",
-      "low_color",
-      "summary_color"
-    )) {
-      if (
-        !is.null(prop(self, name)) &&
-          !grepl("^#[0-9A-Fa-f]{6}$", prop(self, name))
-      ) {
-        errors <- c(errors, paste0("@", name, " must be a six-digit hex color"))
-      }
-    }
-    if (!is.finite(self@font_size)) {
-      errors <- c(errors, "@font_size must be finite")
-    }
-    if (length(errors)) errors else NULL
-  }
+  validator = config_validator(list(list(
+    schema = list(
+      properties = list(
+        correct_color = list(pattern = "^#[0-9A-Fa-f]{6}$"),
+        incorrect_color = list(pattern = "^#[0-9A-Fa-f]{6}$"),
+        low_color = list(pattern = "^#[0-9A-Fa-f]{6}$"),
+        summary_color = list(pattern = "^#[0-9A-Fa-f]{6}$")
+      )
+    ),
+    message = "Supply a six-digit hex color for confusion color settings."
+  )))
 )
 
 CONFUSION_ORIGIN_NAMES <- setdiff(

@@ -40,7 +40,11 @@ cannot say where its values came from is not complete, whatever it claims.
 }
 
 Neither emits a \code{default}: what an interface fills in is not a fact about
-the document.
+the document. Shared structural class rules are emitted in \code{allOf}, including
+inherited rules. Input schemas allow omitted values to be resolved by an
+interface; record schemas require every value. Numeric ordering, bound-column
+contents, and statistical/data-dependent checks still run during construction
+or compilation and cannot be inferred from JSON Schema validation alone.
 }
 \examples{
 schema <- chart_schema(

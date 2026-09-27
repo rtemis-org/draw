@@ -160,6 +160,21 @@ test_that("load_map_geometry returns embedded topojson + metadata per resolution
   expect_equal(load_map_geometry("county")[["object"]], "counties")
 })
 
+test_that("bundled country boundaries retain their pinned provenance and join keys", {
+  skip_if_not(nzchar(Sys.which("node")), "node not found")
+  result <- system2(
+    Sys.which("node"),
+    c(
+      shQuote(test_path("fixtures", "country_provenance.js")),
+      shQuote(system.file("htmlwidgets/lib/geo", package = "rtemis.draw"))
+    ),
+    stdout = TRUE,
+    stderr = TRUE
+  )
+  expect_null(attr(result, "status"), info = paste(result, collapse = "\n"))
+  expect_match(paste(result, collapse = "\n"), "Country provenance passed")
+})
+
 # -- draw() dispatch + widget ---------------------------------------------------
 
 test_that("draw() dispatches a MapLibreOption to the rtemis-map backend", {

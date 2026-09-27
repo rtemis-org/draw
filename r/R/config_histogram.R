@@ -150,29 +150,66 @@ HistogramConfig <- new_class(
       )
     )
   ),
-  validator = function(self) {
-    if (
-      self@bin_stat != "count" &&
-        (self@normalization != "count" || self@density)
-    ) {
-      return(
-        "Use normalization = 'count' and density = FALSE with non-count bin statistics."
+  validator = config_validator(
+    list(
+      list(
+        schema = list(
+          `if` = list(
+            required = list("bin_stat"),
+            properties = list(
+              bin_stat = list(not = list(const = "count"))
+            )
+          ),
+          then = list(
+            properties = list(
+              normalization = list(const = "count"),
+              density = list(const = FALSE)
+            )
+          )
+        ),
+        message = "Use normalization = 'count' and density = FALSE with non-count bin statistics."
+      ),
+      list(
+        schema = list(
+          `if` = list(
+            required = list("bar_mode"),
+            properties = list(
+              bar_mode = list(not = list(const = "overlay"))
+            )
+          ),
+          then = list(
+            properties = list(
+              mode = list(not = list(const = "ridge")),
+              density = list(const = FALSE)
+            )
+          )
+        ),
+        message = "Use overlay bars with ridgelines or density curves."
+      ),
+      list(
+        schema = list(
+          not = list(
+            required = list("bins", "bin_edges"),
+            properties = list(
+              bins = list(not = list(type = "null")),
+              bin_edges = list(not = list(type = "null"))
+            )
+          )
+        ),
+        message = "Supply bins or bin_edges, not both."
       )
+    ),
+    extra = function(self) {
+      if (
+        !is.null(self@bin_edges) &&
+          any(!is.finite(diff(self@bin_edges)) | diff(self@bin_edges) <= 0)
+      ) {
+        "Supply strictly increasing bin_edges."
+      } else {
+        NULL
+      }
     }
-    if (self@bar_mode != "overlay" && (self@mode == "ridge" || self@density)) {
-      return("Use overlay bars with ridgelines or density curves.")
-    }
-    if (!is.null(self@bins) && !is.null(self@bin_edges)) {
-      return("Supply `bins` or `bin_edges`, not both.")
-    }
-    if (
-      !is.null(self@bin_edges) &&
-        any(!is.finite(diff(self@bin_edges)) | diff(self@bin_edges) <= 0)
-    ) {
-      return("Supply strictly increasing `bin_edges`.")
-    }
-    NULL
-  }
+  )
 ) # /rtemis.draw::HistogramConfig
 
 

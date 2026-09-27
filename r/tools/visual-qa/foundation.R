@@ -377,7 +377,29 @@ builders[["heatmap_annotations"]] <- function(theme) {
     title = "Vehicle correlations"
   )
 }
+# Custom display groups span both effect directions and link capped bars to
+# their cap markers while threshold guides remain independent.
+for (view in c("volcano", "manhattan")) {
+  local({
+    current <- view
+    builders[[paste0("grouped_", current)]] <<- function(theme) {
+      do.call(
+        get(paste0("draw_", current)),
+        list(
+          x = c(-2, -.5, 1, 2),
+          pvals = c(.001, .5, .02, 0),
+          xnames = c("Marker A", "Marker B", "Marker C", "Marker D"),
+          group = c("Assay 1", "Assay 2", "Assay 2", "Assay 1"),
+          p_adjust_method = "holm",
+          theme = theme
+        )
+      )
+    }
+  })
+}
 extra_labels <- list(
+  grouped_volcano = c("Assay 1", "Assay 2"),
+  grouped_manhattan = c("Assay 1", "Assay 2"),
   heatmap_annotations = "{b}",
   ridge = unique(birds[["species"]]),
   histogram_stack = unique(birds[["species"]]),
@@ -605,7 +627,9 @@ tryCatch(
             length(result[["series"]]) == expected_series,
             all(vapply(
               result[["series"]],
-              function(series) series[["count"]] > 0,
+              function(series) {
+                series[["count"]] > 0 || isTRUE(series[["reference"]])
+              },
               logical(1)
             )),
             result[["grid"]][["width"]] > 100,
@@ -691,6 +715,7 @@ tryCatch(
                         "histogram_density",
                         "histogram_unequal",
                         "timeseries",
+                        "grouped_manhattan",
                         "supplied_fit"
                       )
                   ) {
@@ -704,6 +729,18 @@ tryCatch(
                   logical(1)
                 ))
               )
+              if (startsWith(name, "grouped_")) {
+                stopifnot(isTRUE(evaluate(
+                  '(() => {
+                  const c=foundationQA.chart(),m=c.getModel();
+                  const guides=m.getSeries().filter(s=>s.get("silent")&&s.get("markLine.data")?.length);
+                  const named=m.getSeriesByName("Assay 1");
+                  const colors=named.map(s=>s.getData().getVisual("style").fill);
+                  return guides.length===1 && !m.isSeriesFiltered(guides[0]) &&
+                    colors.every(color=>color===colors[0]);
+                })()'
+                )))
+              }
               result[["legend"]][["states"]][[
                 if (selected) "restored" else "hidden"
               ]] <- state

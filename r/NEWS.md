@@ -1,6 +1,10 @@
 # rtemis.draw 0.5.3
 
-- Add interactive 3D scatterplots with portable orthographic cameras and vector SVG export.
+- Share structural configuration constraints between S7 validation and generated JSON Schemas.
+
+- Significance plots accept display groups independently of full-family adjustment and threshold annotations.
+
+- Add interactive 3D points, ordered paths and supplied prediction surfaces with portable orthographic cameras and vector SVG export.
 
 - Add rolling time series, independent secondary series, zeitgeber labels, p-value bars, and protein input adapters.
 
@@ -30,7 +34,7 @@
 
 - Keep pie and rose labels within the chart edges and expose typed `PieLabelOption` alignment controls.
 
-- Added consistent legend position and inside/outside placement controls to statistical ECharts drawing functions and configs; categorical legends use a centered outside-top layout, with matching SVG export.
+- Added consistent legend position and inside/outside placement controls to statistical ECharts drawing functions and configs; categorical legends use a centered outside-top layout.
 
 - Match rtemislive's upper-right A3 annotation column and light/dark residue colors, with measured spacing in browser and SVG output.
 

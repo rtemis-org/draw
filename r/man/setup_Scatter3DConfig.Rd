@@ -21,7 +21,10 @@ setup_Scatter3DConfig(
   title = NULL,
   dat_path = NULL,
   origin = NULL,
-  writer = NULL
+  writer = NULL,
+  mode = "points",
+  order = "input",
+  line_width = 2
 )
 }
 \arguments{
@@ -37,7 +40,7 @@ setup_Scatter3DConfig(
 
 \item{point_size}{Numeric \verb{(0, 100]}: Marker diameter in pixels.}
 
-\item{opacity}{Numeric \verb{[0, 1]}: Marker opacity.}
+\item{opacity}{Numeric \verb{[0, 1]}: Point and line opacity.}
 
 \item{xlab, ylab, zlab}{Optional Character: Axis names.}
 
@@ -56,6 +59,13 @@ authored config; written by the interface that resolved it.}
 
 \item{writer}{Optional Named character: Which interface wrote the config, as
 \code{name} and \code{version}. Absent on an authored config.}
+
+\item{mode}{Character \code{c("points", "lines", "both")}: Geometry to draw.}
+
+\item{order}{Character \code{c("input", "x")}: Order within complete path runs.
+Missing coordinates break paths; sorting never joins across those breaks.}
+
+\item{line_width}{Numeric \verb{(0, 100]}: Path width in pixels.}
 }
 \value{
 Scatter3DConfig: Validated settings.

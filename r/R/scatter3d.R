@@ -14,7 +14,11 @@
 #' @param beta Numeric `[-180, 180]`: Camera azimuth in degrees.
 #' @param view_size Numeric `[175, 400]`: Orthographic viewing extent for a 100-unit cube.
 #' @param point_size Numeric `(0, 100]`: Marker diameter in pixels.
-#' @param opacity Numeric `[0, 1]`: Marker opacity.
+#' @param opacity Numeric `[0, 1]`: Point and line opacity.
+#' @param mode Character `c("points", "lines", "both")`: Geometry to draw.
+#' @param order Character `c("input", "x")`: Order within complete path runs.
+#'   Missing coordinates break paths; sorting never joins across those breaks.
+#' @param line_width Numeric `(0, 100]`: Path width in pixels.
 #' @param xlab,ylab,zlab Optional Character: Axis names.
 #' @param palette Optional Character: Group colors.
 #' @inheritParams ChartConfig
@@ -37,6 +41,22 @@ Scatter3DConfig <- new_class(
     view_size = prop_float(190, min = 175, max = 400),
     point_size = prop_float(8, exclusive_min = 0, max = 100),
     opacity = prop_float(.8, min = 0, max = 1),
+    mode = prop_string(
+      "points",
+      enum = c("points", "lines", "both"),
+      description = "Draw points, paths, or both."
+    ),
+    order = prop_string(
+      "input",
+      enum = c("input", "x"),
+      description = "Order observations within complete path runs."
+    ),
+    line_width = prop_float(
+      2,
+      exclusive_min = 0,
+      max = 100,
+      description = "Path width in pixels."
+    ),
     xlab = prop_string(NULL, nullable = TRUE),
     ylab = prop_string(NULL, nullable = TRUE),
     zlab = prop_string(NULL, nullable = TRUE),
@@ -68,7 +88,10 @@ setup_Scatter3DConfig <- function(
   title = NULL,
   dat_path = NULL,
   origin = NULL,
-  writer = NULL
+  writer = NULL,
+  mode = "points",
+  order = "input",
+  line_width = 2
 ) {
   origin <- origin %||%
     chart_origin(
@@ -85,6 +108,9 @@ setup_Scatter3DConfig <- function(
     view_size = view_size,
     point_size = point_size,
     opacity = opacity,
+    mode = mode,
+    order = order,
+    line_width = line_width,
     xlab = xlab,
     ylab = ylab,
     zlab = zlab,
@@ -151,6 +177,47 @@ method(scatter3d_option, class_any) <- function(x, y, z, group, config) {
       class = c("rtemis_null_input", "rtemis_input_error")
     )
   }
+  groups <- unique(as.character(group[keep]))
+  series <- list()
+  for (g in groups) {
+    indices <- which(!is.na(group) & as.character(group) == g)
+    complete <- keep[indices]
+    runs <- split(indices[complete], cumsum(!complete)[complete])
+    runs <- lapply(runs, function(index) {
+      if (config@order == "x") {
+        index <- index[order(x[index])]
+      }
+      Map(function(a, b, c) list(a, b, c), x[index], y[index], z[index])
+    })
+    if (config@mode %in% c("points", "both")) {
+      series[[length(series) + 1L]] <- list(
+        type = "scatter3D",
+        name = g,
+        symbolSize = config@point_size,
+        itemStyle = list(opacity = config@opacity),
+        data = unlist(runs, recursive = FALSE, use.names = FALSE)
+      )
+    }
+    if (config@mode %in% c("lines", "both")) {
+      for (run in runs) {
+        if (length(run) < 2L) {
+          next
+        }
+        series[[length(series) + 1L]] <- list(
+          type = "line3D",
+          name = g,
+          lineStyle = list(width = config@line_width, opacity = config@opacity),
+          data = run
+        )
+      }
+    }
+  }
+  if (!length(series)) {
+    abort(
+      "Supply at least two consecutive complete observations in a group to draw a 3D path.",
+      class = c("rtemis_value_error", "rtemis_input_error")
+    )
+  }
   values <- lapply(values, `[`, keep)
   group <- as.character(group[keep])
   groups <- unique(group)
@@ -206,20 +273,7 @@ method(scatter3d_option, class_any) <- function(x, y, z, group, config) {
       ),
       rtemisViewSize = config@view_size
     ),
-    series = lapply(groups, function(g) {
-      list(
-        type = "scatter3D",
-        name = g,
-        symbolSize = config@point_size,
-        itemStyle = list(opacity = config@opacity),
-        data = Map(
-          function(a, b, c) list(a, b, c),
-          values[[1]][group == g],
-          values[[2]][group == g],
-          values[[3]][group == g]
-        )
-      )
-    }),
+    series = series,
     color = config@palette,
     legend = if (length(groups) > 1L) {
       Legend(data = as.list(groups))
@@ -231,12 +285,13 @@ method(scatter3d_option, class_any) <- function(x, y, z, group, config) {
   )
 }
 
-#' Draw Interactive Three-Dimensional Scatter Points
+#' Draw Interactive Three-Dimensional Points and Paths
 #'
 #' Uses ECharts-GL in the browser and vector circles, paths, and text for SVG.
 #' The saved view uses the configured camera, not later browser rotations.
-#' Missing coordinate/group rows are omitted together. Groups keep their input
-#' order. A data frame or matrix can supply the first three numeric columns.
+#' Points omit missing coordinate/group rows together. Missing coordinates break
+#' paths within each group; groups keep their input order. A data frame or matrix
+#' can supply the coordinates in its first three columns, which must be numeric.
 #' @param x Numeric, matrix, or data frame: X values, or three coordinate columns.
 #' @param y,z Optional Numeric: Y and Z values for vector x.
 #' @param group Optional vector: Group identities.

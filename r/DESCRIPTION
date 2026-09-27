@@ -12,12 +12,14 @@ Description: Provides a comprehensive R interface to Apache ECharts
     built with S7 classes that mirror the ECharts TypeScript API, with
     convenience functions for common chart types and full htmlwidgets
     integration for use in Quarto, Shiny, and IDE viewers.
-URL: https://www.rtemis.org, https://docs.rtemis.org/draw/r, https://docs.rtemis.org/draw/r-api
+URL: https://www.rtemis.org, https://docs.rtemis.org/r/draw, https://docs.rtemis.org/r/draw-api
 License: GPL (>= 3)
 Encoding: UTF-8
 Language: en-US
 SystemRequirements: Node.js (>= 18) for optional SVG export
 Roxygen: list(markdown = TRUE)
+Depends:
+    R (>= 4.1.0)
 Imports:
     htmltools,
     htmlwidgets,
@@ -31,6 +33,7 @@ Imports:
     viridisLite
 Suggests:
     data.table,
+    jsonvalidate (>= 1.5.0),
     mgcv,
     pROC,
     rmarkdown,
@@ -59,6 +62,7 @@ Collate:
     'legend_layout.R'
     'draw.R'
     'chart_config.R'
+    'config_constraints.R'
     'config_scatter.R'
     'config_bar.R'
     'config_density.R'
@@ -70,6 +74,7 @@ Collate:
     'config_line.R'
     'timeseries.R'
     'scatter3d.R'
+    'surface_layer.R'
     'config_pie.R'
     'config_boxplot.R'
     'config_sankey.R'

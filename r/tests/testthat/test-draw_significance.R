@@ -199,3 +199,105 @@ test_that("significance SVGs contain marks, annotations, thresholds, and zero-ca
     expect_false(any(grepl("<image|@keyframes|<animate", svg)))
   }
 })
+
+
+test_that("display groups preserve full-family adjustment and threshold annotations", {
+  data <- data.frame(
+    estimate = c(-2, 1, -1, 2, 3),
+    p_value = c(.001, .001, .03, .5, .0001),
+    label = LETTERS[1:5],
+    category = c("B", "B", "A", "A", NA)
+  )
+  cfg <- setup_SignificanceConfig(
+    group = "category",
+    label = "label",
+    annotate_n = 1L,
+    palette = c("#123456", "#abcdef")
+  )
+  prepared <- significance_data(cfg, data)[["data"]]
+  expect_equal(
+    prepared[["p_adjusted"]],
+    stats::p.adjust(data[["p_value"]], "holm", n = 5)
+  )
+  expect_identical(prepared[["keep"]], c(TRUE, TRUE, TRUE, TRUE, FALSE))
+  expect_identical(which(prepared[["annotate"]]), c(1L, 2L))
+  expect_identical(prepared[["group"]][1:4], c(1L, 3L, 2L, 2L))
+  option <- to_list(compile(cfg, data))
+  expect_equal(option[["legend"]][["data"]], list("B", "A"))
+  expect_equal(option[["series"]][[1]][["itemStyle"]][["color"]], "#123456")
+  expect_length(option[["series"]][[1]][["data"]], 2L)
+  expect_length(option[["series"]][[3]][["markLine"]][["data"]], 2L)
+  expect_null(option[["series"]][[3]][["name"]])
+  file <- tempfile(fileext = ".json")
+  on.exit(unlink(file))
+  write_chart_config(cfg, file)
+  expect_equal(to_list(compile(read_chart_config(file), data)), option)
+  for (view in c("volcano", "manhattan")) {
+    cfg@view <- view
+    widget <- do.call(
+      get(paste0("draw_", view)),
+      list(
+        x = data[["estimate"]],
+        pvals = data[["p_value"]],
+        xnames = data[["label"]],
+        group = data[["category"]],
+        annotate_n = 1L,
+        palette = cfg@palette
+      )
+    )
+    expect_equal(
+      widget[["x"]][["option"]],
+      draw(cfg, data = data)[["x"]][["option"]]
+    )
+  }
+  expect_error(draw_volcano(1:2, c(.1, .2), group = "A"), "one value")
+  expect_error(draw_volcano(1:2, c(.1, .2), group = c("", "A")), "nonempty")
+  expect_error(draw_volcano(1:2, c(.1, .2), group = c(NA, NA)), "complete")
+  expect_error(setup_SignificanceConfig(palette = "red"), "group binding")
+  expect_error(setup_SignificanceConfig(group = "g", palette = character()))
+})
+
+
+test_that("custom significance groups and capped bars use vector palette colors", {
+  skip_if_not(nzchar(Sys.which("node")), "node not found")
+  for (view in c("volcano", "manhattan")) {
+    for (palette in list(NULL, "#123456", c("#123456", "#abcdef"))) {
+      widget <- do.call(
+        get(paste0("draw_", view)),
+        list(
+          x = c(-2, 0, 2),
+          pvals = c(.01, .5, 0),
+          group = c("B", "A", "B"),
+          p_adjust_method = "none",
+          palette = palette
+        )
+      )
+      file <- tempfile(fileext = ".svg")
+      on.exit(unlink(file), add = TRUE)
+      save_drawing(widget, file)
+      svg <- paste(readLines(file, warn = FALSE), collapse = "\n")
+      expect_false(grepl("<image|NaN", svg))
+      marks <- grep(
+        '<path .*fill="#[[:xdigit:]]{6}".*ecmeta_ssr_type="chart"',
+        strsplit(svg, "\n", fixed = TRUE)[[1]],
+        value = TRUE
+      )
+      mark_colors <- sub('.*fill="(#[[:xdigit:]]{6})".*', "\\1", marks)
+      expect_length(marks, if (view == "volcano") 3L else 4L)
+      expected_counts <- if (length(palette) == 1L) {
+        length(marks)
+      } else {
+        c(1L, if (view == "volcano") 2L else 3L)
+      }
+      expect_equal(sort(as.integer(table(mark_colors))), expected_counts)
+      for (label in c("B", "A")) {
+        expect_match(svg, paste0(">", label, "</text>"), fixed = TRUE)
+      }
+      if (!is.null(palette)) {
+        for (color in palette) {
+          expect_match(svg, color, fixed = TRUE)
+        }
+      }
+    }
+  }
+})

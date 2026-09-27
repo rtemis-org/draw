@@ -276,7 +276,7 @@ test_that("origin is a closed object with an entry per settable property", {
   # chart does not have, and still validate -- which would make "this document
   # says where all its values came from" a claim rather than a check. This is
   # the shape every record.json in the rtemis registry uses.
-  origin <- scatter_schema()[["properties"]][["origin"]]
+  origin <- scatter_schema(complete = TRUE)[["properties"]][["origin"]]
   settable <- setdiff(
     names(ScatterConfig@properties),
     c("type", "origin", "writer")

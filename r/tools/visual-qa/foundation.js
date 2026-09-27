@@ -118,7 +118,8 @@ window.foundationQA = {
     return {width: c.getWidth(), height: c.getHeight(),
       background: c.getModel().get('backgroundColor'),
       series: c.getModel().getSeries().map(s => ({name: s.name, type: s.subType,
-        count: s.getData().count()})),
+        count: s.getData().count(),
+        reference: !!s.get('silent') && !!s.get('markLine.data')?.length})),
       grid: {x: grid.x, y: grid.y, width: grid.width, height: grid.height},
       text, errors: window.__qaErrors};
   }

@@ -2,7 +2,7 @@
 % Please edit documentation in R/scatter3d.R
 \name{draw_scatter3d}
 \alias{draw_scatter3d}
-\title{Draw Interactive Three-Dimensional Scatter Points}
+\title{Draw Interactive Three-Dimensional Points and Paths}
 \usage{
 draw_scatter3d(
   x,
@@ -45,8 +45,9 @@ htmlwidget: Interactive, exportable 3D drawing.
 \description{
 Uses ECharts-GL in the browser and vector circles, paths, and text for SVG.
 The saved view uses the configured camera, not later browser rotations.
-Missing coordinate/group rows are omitted together. Groups keep their input
-order. A data frame or matrix can supply the first three numeric columns.
+Points omit missing coordinate/group rows together. Missing coordinates break
+paths within each group; groups keep their input order. A data frame or matrix
+can supply the coordinates in its first three columns, which must be numeric.
 }
 \examples{
 draw_scatter3d(iris[1:3], group = iris$Species)

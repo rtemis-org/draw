@@ -4,8 +4,7 @@
 
 # JSON Schema generation for the chart config classes.
 #
-# A chart schema is a set of typed properties with descriptions -- nothing
-# more. `rtemis.core`'s `prop_spec()` is already a JSON Schema property fragment
+# A chart schema contains typed properties and shared structural constraints. `rtemis.core`'s `prop_spec()` is already a JSON Schema property fragment
 # in all but spelling (`minimum`, `maximum`, `enum`, `const`, `nullable`,
 # `container`, `min_items`, `unique_items`, `allow_empty`, `description`), so
 # the emitter below is largely a field rename plus a wrapper.
@@ -104,7 +103,11 @@ schema_property <- function(spec) {
     }
     items
   } else if (identical(container, "map")) {
-    list(type = "object", additionalProperties = schema_leaf_type(spec))
+    list(
+      type = "object",
+      additionalProperties = schema_leaf_type(spec),
+      minProperties = as.integer(spec[["min_items"]] %||% 1L)
+    )
   } else {
     schema_leaf_type(spec)
   }
@@ -125,11 +128,9 @@ schema_property <- function(spec) {
 # %% origin_property ----
 #' JSON Schema fragment for a document's `origin` map
 #'
-#' A closed object with one entry per settable property, all required, rather
-#' than an open string-keyed map. That is what makes "this document says where
-#' every one of its values came from" checkable by a validator instead of only
-#' by the writer: a map missing an entry, or naming a property the chart does
-#' not have, fails here.
+#' A closed object with one entry per settable property. Records require every
+#' entry; input documents may retain a nonempty partial provenance map. A record
+#' missing an entry, or any map naming an unknown property, fails validation.
 #'
 #' Matches the `origin` block every `record.json` in the rtemis registry
 #' carries. The chart vocabulary is the three of `ORIGIN_VALUES` a chart can
@@ -150,7 +151,7 @@ origin_property <- function(names, nullable) {
     list(type = "string", enum = I(ORIGIN_VALUES))
   })
   names(entries) <- names
-  list(
+  drop_nulls(list(
     type = if (nullable) c("object", "null") else "object",
     description = paste(
       "Where each value came from: 'user' if the author set it, 'default' if",
@@ -168,9 +169,10 @@ origin_property <- function(names, nullable) {
     readOnly = TRUE,
     `x-rtemis` = list(type = "object", role = "state"),
     properties = entries,
-    required = I(names),
+    required = if (!nullable) I(names) else NULL,
+    minProperties = 1L,
     additionalProperties = FALSE
-  )
+  ))
 } # /rtemis.draw::origin_property
 
 
@@ -236,7 +238,11 @@ writer_property <- function(nullable) {
 #'   cannot say where its values came from is not complete, whatever it claims.
 #'
 #' Neither emits a `default`: what an interface fills in is not a fact about
-#' the document.
+#' the document. Shared structural class rules are emitted in `allOf`, including
+#' inherited rules. Input schemas allow omitted values to be resolved by an
+#' interface; record schemas require every value. Numeric ordering, bound-column
+#' contents, and statistical/data-dependent checks still run during construction
+#' or compilation and cannot be inferred from JSON Schema validation alone.
 #'
 #' @param cls S7 class: A [ChartConfig] subclass.
 #' @param id Character: The schema's `$id` URL.
@@ -324,7 +330,7 @@ chart_schema <- function(
     out[[nm]] <- schema_property(spec)
   }
 
-  list(
+  schema <- list(
     `$schema` = JSON_SCHEMA_DIALECT,
     `$id` = id,
     title = title,
@@ -336,6 +342,16 @@ chart_schema <- function(
     required = I(if (complete) names(out) else "type"),
     additionalProperties = FALSE
   )
+  rules <- list()
+  cursor <- cls
+  while (inherits(cursor, "S7_class")) {
+    rules <- c(attr(cursor@validator, "schema_rules") %||% list(), rules)
+    cursor <- cursor@parent
+  }
+  if (length(rules)) {
+    schema[["allOf"]] <- rules
+  }
+  schema
 } # /rtemis.draw::chart_schema
 
 

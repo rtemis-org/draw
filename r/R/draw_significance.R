@@ -67,6 +67,19 @@ method(significance_data, SignificanceConfig) <- function(config, data) {
       class = c("rtemis_value_error", "rtemis_input_error")
     )
   }
+  display_group <- group_values(
+    config_column(data, config@group, "group"),
+    length(p)
+  )
+  if (!is.null(display_group)) {
+    display_group <- as.character(display_group)
+    if (any(!is.na(display_group) & !nzchar(display_group))) {
+      abort(
+        "Supply nonempty display-group labels or NA.",
+        class = c("rtemis_value_error", "rtemis_input_error")
+      )
+    }
+  }
   n_tests <- config@n_tests %||% length(p)
   if (n_tests < length(p)) {
     abort(
@@ -90,9 +103,12 @@ method(significance_data, SignificanceConfig) <- function(config, data) {
     one_minus = 1 - config@p_thresh
   )
   keep <- !is.na(estimate) & !is.na(p)
+  if (!is.null(display_group)) {
+    keep <- keep & !is.na(display_group)
+  }
   if (!any(keep)) {
     abort(
-      "No outcomes have both an estimate and a p-value; supply at least one complete pair.",
+      "Supply at least one complete estimate/p-value pair with a nonmissing display group when grouping.",
       class = c("rtemis_value_error", "rtemis_input_error")
     )
   }
@@ -128,6 +144,7 @@ method(significance_data, SignificanceConfig) <- function(config, data) {
       p_adjusted = adjusted,
       value = transformed,
       group = group,
+      display_group = display_group %||% rep(NA_character_, length(p)),
       keep = keep,
       capped = capped,
       annotate = annotate,
@@ -165,9 +182,20 @@ method(significance_option, SignificanceConfig) <- function(config, data) {
   if (config@x_thresh == 0) {
     groups <- c("Significant negative", "Other", "Significant positive")
   }
-  present <- sort(unique(d[["group"]][keep]))
+  group_index <- d[["group"]]
+  if (!is.null(config@group)) {
+    groups <- unique(d[["display_group"]][keep])
+    group_index <- match(d[["display_group"]], groups)
+    # NULL leaves palette ownership with the active browser/export theme.
+    colors <- if (is.null(config@palette)) {
+      rep(list(NULL), length(groups))
+    } else {
+      as.list(rep(config@palette, length.out = length(groups)))
+    }
+  }
+  present <- sort(unique(group_index[keep]))
   series <- lapply(present, function(group) {
-    at <- which(keep & d[["group"]] == group)
+    at <- which(keep & group_index == group)
     marks <- lapply(at, function(i) {
       item <- list(
         name = d[["label"]][[i]],
@@ -217,10 +245,14 @@ method(significance_option, SignificanceConfig) <- function(config, data) {
     s[["encode"]] <- list(x = 0L, y = 1L, tooltip = as.list(2:4))
     if (volcano) {
       s[["labelLayout"]] <- list(moveOverlap = "shiftY", hideOverlap = FALSE)
-      s[["labelLine"]] <- list(
+      s[["labelLine"]] <- drop_nulls(list(
         show = TRUE,
-        lineStyle = list(color = colors[[group]])
-      )
+        lineStyle = if (!is.null(colors[[group]])) {
+          list(color = colors[[group]])
+        } else {
+          NULL
+        }
+      ))
     } else {
       # Disjoint significance series share one category position. Each outcome
       # has exactly one bar; disabling grouping prevents horizontal offsets.
@@ -260,8 +292,8 @@ method(significance_option, SignificanceConfig) <- function(config, data) {
   if (!volcano && length(capped_at)) {
     series <- c(
       series,
-      lapply(sort(unique(d[["group"]][capped_at])), function(group) {
-        at <- capped_at[d[["group"]][capped_at] == group]
+      lapply(sort(unique(group_index[capped_at])), function(group) {
+        at <- capped_at[group_index[capped_at] == group]
         to_list(ScatterSeries(
           # Sharing the group's name makes its cap markers follow the same
           # legend toggle as its bars.
@@ -333,6 +365,7 @@ method(significance_option, SignificanceConfig) <- function(config, data) {
     )
   }
   EChartsOption(
+    color = config@palette,
     title = if (!is.null(config@title) || length(notes)) {
       Title(
         text = config@title,
@@ -383,11 +416,17 @@ method(significance_option, SignificanceConfig) <- function(config, data) {
 #' @param x Numeric vector: Estimates, with NA for unavailable values.
 #' @param pvals Numeric vector: Raw p-values in `[0, 1]`, or NA.
 #' @param xnames Optional Character vector: Outcome labels.
-#' @return Data frame with estimate, p_value, and label columns.
+#' @param group Optional vector: One display-group label per outcome.
+#' @return Data frame with estimate, p_value, label, and optional group columns.
 #' @keywords internal
 #' @noRd
 significance_input <- new_generic("significance_input", "x")
-method(significance_input, class_any) <- function(x, pvals, xnames = NULL) {
+method(significance_input, class_any) <- function(
+  x,
+  pvals,
+  xnames = NULL,
+  group = NULL
+) {
   if (length(x) != length(pvals) || !length(x)) {
     abort(
       "Supply equally sized, nonempty estimate and p-value vectors.",
@@ -418,6 +457,7 @@ method(significance_input, class_any) <- function(x, pvals, xnames = NULL) {
       class = c("rtemis_type_error", "rtemis_input_error")
     )
   }
+  data[["group"]] <- group_values(group, length(x))
   as.data.frame(data, stringsAsFactors = FALSE)
 }
 
@@ -431,6 +471,8 @@ method(significance_input, class_any) <- function(x, pvals, xnames = NULL) {
 #' @param x Numeric vector: Signed estimates; NA values have no plotted mark.
 #' @param pvals Numeric vector: Raw p-values in `[0, 1]`, or NA.
 #' @param xnames Optional Character vector: One outcome label per estimate.
+#' @param group Optional vector: One display-group label per outcome; unset uses
+#'   significance and direction. Missing groups omit marks but retain the testing family.
 #' @inheritParams SignificanceConfig
 #' @param ... Additional named settings for [setup_SignificanceConfig()], such as
 #'   `reference`, `zero_cap`, `n_tests`, colors, axis limits, or margins.
@@ -460,12 +502,14 @@ draw_volcano <- function(
   width = NULL,
   height = NULL,
   element_id = NULL,
-  filename = NULL
+  filename = NULL,
+  group = NULL
 ) {
-  data <- significance_input(x, pvals, xnames)
+  data <- significance_input(x, pvals, xnames, group)
   config <- setup_SignificanceConfig(
     view = "volcano",
     label = "label",
+    group = if (!is.null(group)) "group" else NULL,
     p_adjust_method = p_adjust_method,
     p_transform = p_transform,
     p_thresh = p_thresh,
@@ -496,6 +540,8 @@ draw_volcano <- function(
 #' @param x Numeric vector: Signed estimates; NA values have no plotted mark.
 #' @param pvals Numeric vector: Raw p-values in `[0, 1]`, or NA.
 #' @param xnames Optional Character vector: One outcome label per estimate.
+#' @param group Optional vector: One display-group label per outcome; unset uses
+#'   significance and direction. Missing groups omit marks but retain the testing family.
 #' @inheritParams SignificanceConfig
 #' @param ... Additional named settings for [setup_SignificanceConfig()], such as
 #'   `reference`, `zero_cap`, `n_tests`, colors, axis limits, or margins.
@@ -525,12 +571,14 @@ draw_manhattan <- function(
   width = NULL,
   height = NULL,
   element_id = NULL,
-  filename = NULL
+  filename = NULL,
+  group = NULL
 ) {
-  data <- significance_input(x, pvals, xnames)
+  data <- significance_input(x, pvals, xnames, group)
   config <- setup_SignificanceConfig(
     view = "manhattan",
     label = "label",
+    group = if (!is.null(group)) "group" else NULL,
     p_adjust_method = p_adjust_method,
     p_transform = p_transform,
     p_thresh = p_thresh,

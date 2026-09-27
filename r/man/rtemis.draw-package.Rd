@@ -15,8 +15,8 @@ common chart types and full htmlwidgets integration for use in Quarto, Shiny, an
 Useful links:
 \itemize{
   \item \url{https://www.rtemis.org}
-  \item \url{https://docs.rtemis.org/draw/r}
-  \item \url{https://docs.rtemis.org/draw/r-api}
+  \item \url{https://docs.rtemis.org/r/draw}
+  \item \url{https://docs.rtemis.org/r/draw-api}
 }
 
 }
