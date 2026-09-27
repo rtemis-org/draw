@@ -11,3 +11,6 @@ and full htmlwidgets integration for use in Quarto, Shiny, and IDE viewers.
 
 [Docs](https://docs.rtemis.org/r/draw) |
 [API reference](https://docs.rtemis.org/r/draw-api)
+
+Licensed under [BSD 3-clause](LICENSE.md). Bundled third-party components retain
+their [upstream licenses and notices](inst/third-party/README.md).

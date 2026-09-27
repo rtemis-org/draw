@@ -13,7 +13,7 @@ Description: Provides a comprehensive R interface to Apache ECharts
     convenience functions for common chart types and full htmlwidgets
     integration for use in Quarto, Shiny, and IDE viewers.
 URL: https://www.rtemis.org, https://docs.rtemis.org/r/draw, https://docs.rtemis.org/r/draw-api
-License: GPL (>= 3)
+License: BSD_3_clause + file LICENSE
 Encoding: UTF-8
 Language: en-US
 SystemRequirements: Node.js (>= 18) for optional SVG export

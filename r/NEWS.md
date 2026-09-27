@@ -1,5 +1,7 @@
 # rtemis.draw 0.5.3
 
+- Change the package license to BSD 3-clause; bundled third-party components retain their own licenses.
+
 - Share structural configuration constraints between S7 validation and generated JSON Schemas.
 
 - Significance plots accept display groups independently of full-family adjustment and threshold annotations.
