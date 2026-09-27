@@ -21,6 +21,7 @@ setup_BarConfig(
   origin = NULL,
   writer = NULL,
   bar_width = NULL,
+  order = "input",
   legend_position = "top",
   legend_placement = "outside"
 )
@@ -58,6 +59,9 @@ config that already carries provenance.}
 
 \item{bar_width}{Optional Numeric \verb{(0, Inf)}: Bar thickness in pixels.
 NULL lets ECharts size bars from the category spacing.}
+
+\item{order}{Character \verb{\{"input", "increasing", "decreasing"\}}: Order categories
+by their total across series, retaining ties and placing missing totals last.}
 
 \item{legend_position}{Character \{"top", "bottom", "left", "right",
 "top-left", "top-right", "bottom-left", "bottom-right"\}: Legend anchor.

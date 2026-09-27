@@ -96,9 +96,22 @@ window.foundationQA = {
     return this.chart().getModel().findComponents({mainType: 'dataZoom'})
       .map(m => m.getPercentRange());
   },
+  heatmapTracksAligned() {
+    return this.chart().getModel().getSeries().filter(s=>s.get('renderItem')==='rtemis.heatmap_tracks.v1').every(s=>{
+      const data=s.getData(),row=s.get('itemPayload').orientation==='row';
+      for(let i=0;i<data.count();i++) {
+        const center=s.coordinateSystem.dataToPoint(row?[0,i]:[i,0]);
+        for(const mark of data.getItemGraphicEl(i).children()) {
+          const rect=this.bounds(mark),value=row?rect.y+rect.height/2:rect.x+rect.width/2;
+          if(Math.abs(value-center[row?1:0])>.1)return false;
+        }
+      }
+      return true;
+    });
+  },
   scene() {
     const c = this.chart();
-    const grid = c.getModel().getComponent('grid')?.coordinateSystem.getRect() || {x:0,y:0,width:c.getWidth(),height:c.getHeight()};
+    const grid = c.getModel().getSeries().find(s=>s.subType==='heatmap')?.coordinateSystem.getArea() || c.getModel().getComponent('grid')?.coordinateSystem.getRect() || {x:0,y:0,width:c.getWidth(),height:c.getHeight()};
     const text = c.getZr().storage.getDisplayList(true)
       .filter(el => el.type === 'tspan' && !el.ignore && el.style.text)
       .map(el => ({text: el.style.text, ...this.bounds(el)}));

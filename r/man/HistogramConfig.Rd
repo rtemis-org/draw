@@ -11,6 +11,8 @@ HistogramConfig(
   writer = NULL,
   legend_position = "top",
   legend_placement = "outside",
+  mode = "overlap",
+  order = "input",
   n = 512L,
   bw = "nrd0",
   bandwidth = NULL,
@@ -24,6 +26,8 @@ HistogramConfig(
   bins = NULL,
   bin_edges = NULL,
   normalization = "count",
+  bin_stat = "count",
+  bar_mode = "overlay",
   density = FALSE,
   palette = NULL,
   xlab = NULL,
@@ -57,6 +61,13 @@ column. Corner anchors align within the top or bottom row.}
 \item{legend_placement}{Character \{"outside", "inside"\}: Relation to the
 plotting area. Outside placement reserves space for the complete legend;
 inside placement overlays the data. Neither setting adds a missing legend.}
+
+\item{mode}{Character \verb{\{"overlap", "ridge"\}}: Overlay samples or align rows
+on common x and y scales. Ridge rows use sample names in place of a legend.
+Increase figure height for many rows.}
+
+\item{order}{Character \verb{\{"input", "mean", "median"\}}: Sample order. Summary
+orders are decreasing, retain ties in input order, and place empty samples last.}
 
 \item{n}{Integer \verb{[2, Inf)}: Number of density evaluation points.}
 
@@ -93,6 +104,14 @@ spanning every retained observation. Overrides \code{breaks}; excludes \code{bin
 
 \item{normalization}{Character: \code{"count"}, \code{"probability"}, \code{"percent"},
 \code{"density"}, or \code{"count_density"}.}
+
+\item{bin_stat}{Character \verb{\{"count", "sum", "mean", "min", "max"\}}: Statistic of
+x observations in each bin. Empty bins have height zero. Non-count
+statistics require normalization = "count" and density = FALSE.}
+
+\item{bar_mode}{Character \verb{\{"overlay", "group", "stack"\}}: Histogram group layout.
+Stacks accumulate positive and negative values separately. Group/stack
+layouts require mode = "overlap" and density = FALSE.}
 
 \item{density}{Logical: Overlay a kernel density in histogram units.}
 

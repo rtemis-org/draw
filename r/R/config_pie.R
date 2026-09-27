@@ -14,6 +14,7 @@
 #'
 #' @param values Optional Character: Column holding the slice values.
 #' @param labels Optional Character: Column holding the slice labels.
+#' @inheritParams draw_pie label_format percent_digits
 #' @param radius Character: Outer radius, as a CSS length or percentage.
 #' @param rose_type Optional Character \{"radius", "area"\}: Draw as a
 #'   Nightingale rose chart, sizing slices by radius or by area. `NULL` draws a
@@ -49,6 +50,11 @@ PieConfig <- new_class(
         nullable = TRUE,
         description = "Column holding the slice labels."
       ),
+      label_format = prop_string(
+        "name",
+        enum = c("name", "value", "percent", "name_value", "name_percent")
+      ),
+      percent_digits = prop_integer(1L, min = 0L, max = 6L),
       # -- semantics ---------------------------------------------------------
       rose_type = prop_string(
         NULL,
@@ -105,6 +111,8 @@ setup_PieConfig <- function(
   labels = NULL,
   radius = "75%",
   rose_type = NULL,
+  label_format = "name",
+  percent_digits = 1L,
   palette = NULL,
   title = NULL,
   dat_path = NULL,
@@ -119,6 +127,8 @@ setup_PieConfig <- function(
     labels = labels,
     radius = radius,
     rose_type = rose_type,
+    label_format = label_format,
+    percent_digits = clean_int(percent_digits),
     palette = palette,
     title = title,
     dat_path = dat_path,
@@ -154,6 +164,8 @@ method(compile, PieConfig) <- function(config, data = NULL, ...) {
     labels = labels,
     radius = config@radius,
     rose_type = config@rose_type,
+    label_format = config@label_format,
+    percent_digits = config@percent_digits,
     palette = config@palette,
     title = config@title
   )

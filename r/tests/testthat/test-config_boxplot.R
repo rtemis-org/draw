@@ -170,3 +170,38 @@ test_that("native boxplot SVG emphasizes zero in both orientations and themes", 
   expect_null(attr(output, "status"), info = paste(output, collapse = "\n"))
   expect_match(paste(output, collapse = "\n"), "passed")
 })
+
+test_that("boxplot transforms precede grouping and sorting keeps identities", {
+  opt <- to_list(boxplot_option(
+    list(A = c(1, NA, 3), B = c(8, 9, 10)),
+    order = "median"
+  ))
+  expect_equal(opt[["xAxis"]][["data"]], c("B", "A"))
+  expect_equal(boxplot_transform(c(2, NA, 4), "minmax"), c(0, NA, 1))
+  expect_equal(
+    boxplot_transform(c(2, NA, 4), "scale"),
+    as.numeric(scale(c(2, NA, 4)))
+  )
+  expect_equal(boxplot_transform(c(2, NA, 2), "scale"), c(0, NA, 0))
+  opt <- to_list(boxplot_option(
+    c(1, 2, 3, 10),
+    group = c("A", "A", "B", "B"),
+    transform = "minmax",
+    order = "mean"
+  ))
+  expect_equal(opt[["xAxis"]][["data"]], c("B", "A"))
+  expect_equal(opt[["series"]][[1]][["data"]][[1]][["value"]][[3]], 11 / 18)
+  cfg <- setup_BoxplotConfig(
+    x = c("Sepal.Length", "Petal.Length"),
+    order = "mean",
+    transform = "scale"
+  )
+  expect_equal(
+    to_list(compile(
+      read_chart_config(write_chart_config(cfg, tempfile(fileext = ".json"))),
+      iris
+    )),
+    to_list(compile(cfg, iris))
+  )
+  expect_error(setup_BoxplotConfig(transform = "log"))
+})

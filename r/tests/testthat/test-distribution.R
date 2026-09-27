@@ -343,6 +343,27 @@ test_that("numeric histograms and density overlays export exact native geometry"
         theme = to_list(theme)
       )
     }
+    for (layout in c("overlay", "group", "stack")) {
+      for (stat in c("count", "sum", "mean", "min", "max")) {
+        charts[[length(charts) + 1L]] <- list(
+          option = to_list(histogram_option(
+            list(A = c(-2, -1, 0, 1, 2), B = c(-1, 1)),
+            bin_edges = c(-2, 0, 2),
+            bin_stat = stat,
+            bar_mode = layout
+          )),
+          theme = to_list(theme)
+        )
+      }
+    }
+    charts[[length(charts) + 1L]] <- list(
+      option = to_list(histogram_option(
+        list(A = 1:5, B = 3:7),
+        mode = "ridge",
+        bins = 3
+      )),
+      theme = to_list(theme)
+    )
     # A single numeric bin must remain a rectangle, not disappear via unboxing.
     charts[[length(charts) + 1L]] <- list(
       option = to_list(histogram_option(2, bin_edges = c(1, 3))),
@@ -379,4 +400,86 @@ test_that("numeric histograms and density overlays export exact native geometry"
   )
   expect_null(attr(output, "status"), info = paste(output, collapse = "\n"))
   expect_match(paste(output, collapse = "\n"), "passed")
+})
+
+test_that("ridge layouts retain common statistical scales and stable ordering", {
+  samples <- list(Low = 1:8, High = 9:16, Empty = numeric())
+  expect_named(distribution_order(samples, "mean"), c("High", "Low", "Empty"))
+  for (builder in list(density_option, histogram_option)) {
+    opt <- to_list(builder(samples, mode = "ridge", order = "median"))
+    expect_false(opt[["legend"]][["show"]])
+    expect_length(opt[["grid"]], 3)
+    expect_equal(
+      vapply(opt[["yAxis"]], `[[`, "", "name"),
+      c("High", "Low", "Empty")
+    )
+    expect_length(unique(vapply(opt[["yAxis"]], `[[`, 0, "max")), 1)
+    expect_length(unique(vapply(opt[["xAxis"]], `[[`, 0, "min")), 1)
+    expect_equal(vapply(opt[["series"]], `[[`, 0L, "xAxisIndex"), 0:2)
+  }
+  expect_error(setup_DensityConfig(mode = "bad"))
+  expect_error(setup_HistogramConfig(order = "bad"))
+  config <- setup_DensityConfig(
+    x = "Sepal.Length",
+    group = "Species",
+    mode = "ridge"
+  )
+  expect_length(to_list(compile(config, iris))[["grid"]], 3)
+  expect_equal(
+    read_chart_config(write_chart_config(
+      config,
+      tempfile(fileext = ".json")
+    ))@mode,
+    "ridge"
+  )
+})
+
+
+test_that("histogram statistics retain counts and explicit normalization semantics", {
+  x <- c(-2, -1, 0, 1, 2)
+  expected <- list(
+    sum = c(-3, 3),
+    mean = c(-1, 1.5),
+    min = c(-2, 1),
+    max = c(0, 2)
+  )
+  for (stat in names(expected)) {
+    opt <- to_list(histogram_option(
+      x,
+      bin_edges = c(-2, 0, 2),
+      bin_stat = stat
+    ))
+    bins <- opt[["series"]][[1]][["data"]]
+    expect_equal(vapply(bins, `[[`, numeric(1), 3L), expected[[stat]])
+    expect_equal(vapply(bins, `[[`, numeric(1), 4L), c(3, 2))
+  }
+  expect_equal(
+    histogram_stat(c(0, 1 + 1e-10, 2), c(0, 1, 2), "sum"),
+    c(1 + 1e-10, 2)
+  )
+  expect_error(setup_HistogramConfig(
+    bin_stat = "mean",
+    normalization = "density"
+  ))
+  expect_error(setup_HistogramConfig(bin_stat = "sum", density = TRUE))
+  expect_error(setup_HistogramConfig(bar_mode = "stack", density = TRUE))
+  expect_error(setup_HistogramConfig(bar_mode = "group", mode = "ridge"))
+  cfg <- setup_HistogramConfig(
+    x = "value",
+    group = "group",
+    bar_mode = "stack",
+    bin_stat = "sum",
+    bin_edges = c(-2, 0, 2)
+  )
+  data <- data.frame(value = rep(x, 2), group = rep(c("A", "B"), each = 5))
+  opt <- to_list(compile(cfg, data))
+  expect_lt(opt[["yAxis"]][["min"]], -6)
+  expect_gt(opt[["yAxis"]][["max"]], 6)
+  expect_equal(
+    to_list(compile(
+      read_chart_config(write_chart_config(cfg, tempfile(fileext = ".json"))),
+      data
+    )),
+    opt
+  )
 })

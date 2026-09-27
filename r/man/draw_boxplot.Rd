@@ -38,7 +38,9 @@ draw_boxplot(
   paired = FALSE,
   pair_alpha = 0.35,
   pair_width = 1,
-  comparisons = NULL
+  comparisons = NULL,
+  order = "input",
+  transform = "none"
 )
 }
 \arguments{
@@ -127,6 +129,14 @@ inside placement overlays the data. Neither setting adds a missing legend.}
 \item{pair_width}{Numeric \verb{(0, Inf)}: Finite paired line width in pixels.}
 
 \item{comparisons}{Optional Data frame: Category endpoints and comparison labels.}
+
+\item{order}{Character \verb{\{"input", "mean", "median"\}}: Keep input order or sort
+categories by decreasing mean/median after transformation; empty boxes last.}
+
+\item{transform}{Character \verb{\{"none", "scale", "minmax"\}}: Transform each input
+column before grouping. Scale subtracts the mean and divides by the sample
+standard deviation; minmax maps the available range to zero through one.
+Constant columns become zero and missing values remain missing.}
 }
 \value{
 htmlwidget: ECharts boxes with optional vector point overlays.

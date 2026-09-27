@@ -38,7 +38,9 @@ setup_BoxplotConfig(
   paired = FALSE,
   pair_alpha = 0.35,
   pair_width = 1,
-  comparisons = NULL
+  comparisons = NULL,
+  order = "input",
+  transform = "none"
 )
 }
 \arguments{
@@ -114,6 +116,14 @@ inside placement overlays the data. Neither setting adds a missing legend.}
 
 \item{comparisons}{Optional Character: Name of a comparison data frame in the
 bound data list. Its columns follow \code{\link[=draw_boxplot]{draw_boxplot()}}.}
+
+\item{order}{Character \verb{\{"input", "mean", "median"\}}: Keep input order or sort
+categories by decreasing mean/median after transformation; empty boxes last.}
+
+\item{transform}{Character \verb{\{"none", "scale", "minmax"\}}: Transform each input
+column before grouping. Scale subtracts the mean and divides by the sample
+standard deviation; minmax maps the available range to zero through one.
+Constant columns become zero and missing values remain missing.}
 }
 \value{
 \link{BoxplotConfig} object.

@@ -13,6 +13,7 @@ BarConfig(
   legend_placement = "outside",
   x = NULL,
   y = NULL,
+  order = "input",
   stack = FALSE,
   horizontal = FALSE,
   bar_width = NULL,
@@ -52,6 +53,9 @@ inside placement overlays the data. Neither setting adds a missing legend.}
 \item{x}{Optional Character: Column holding the categories.}
 
 \item{y}{Optional Character: Columns holding the values, one series each.}
+
+\item{order}{Character \verb{\{"input", "increasing", "decreasing"\}}: Order categories
+by their total across series, retaining ties and placing missing totals last.}
 
 \item{stack}{Logical: If TRUE, stack the series instead of grouping them.}
 

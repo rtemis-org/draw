@@ -39,6 +39,8 @@
 #' names(chart_registry())
 chart_registry <- function() {
   list(
+    scatter3d = list(cls = Scatter3DConfig, setup = "setup_Scatter3DConfig"),
+    timeseries = list(cls = TimeSeriesConfig, setup = "setup_TimeSeriesConfig"),
     survival = list(cls = SurvivalConfig, setup = "setup_SurvivalConfig"),
     calibration = list(
       cls = CalibrationConfig,

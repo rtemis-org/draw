@@ -14,6 +14,8 @@ BoxplotConfig(
   x = NULL,
   group = NULL,
   observation = NULL,
+  order = "input",
+  transform = "none",
   geometry = "box",
   bandwidth = NULL,
   adjust = 1,
@@ -68,6 +70,14 @@ inside placement overlays the data. Neither setting adds a missing legend.}
 \item{group}{Optional Character: Column that splits each box by level.}
 
 \item{observation}{Optional Character: Column identifying observations for tooltips and pairing.}
+
+\item{order}{Character \verb{\{"input", "mean", "median"\}}: Keep input order or sort
+categories by decreasing mean/median after transformation; empty boxes last.}
+
+\item{transform}{Character \verb{\{"none", "scale", "minmax"\}}: Transform each input
+column before grouping. Scale subtracts the mean and divides by the sample
+standard deviation; minmax maps the available range to zero through one.
+Constant columns become zero and missing values remain missing.}
 
 \item{geometry}{Character \{"box", "violin", "both"\}: Distribution geometry.}
 

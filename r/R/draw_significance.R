@@ -550,3 +550,36 @@ draw_manhattan <- function(
     filename = filename
   )
 }
+
+#' Draw One-Minus-P-Value Bars
+#'
+#' A convenience view of [SignificanceConfig]. Adjustment uses the full supplied
+#' testing family, including missing slots; missing p-values are not plotted.
+#' The reference is at one minus the significance threshold.
+#' @param x Numeric: P-values in `[0, 1]` or NA.
+#' @param xnames Optional Character: Feature labels, otherwise names of x.
+#' @param p_adjust_method Character: A method from [stats::p.adjust.methods].
+#' @param pval_hline Numeric (0, 1): Significance threshold.
+#' @param ... Additional arguments passed to [draw_manhattan()].
+#' @return htmlwidget: Bars showing one minus adjusted p-values.
+#' @export
+#' @examples
+#' draw_pvals(c(A = .01, B = .2, C = .04), p_adjust_method = "holm")
+draw_pvals <- function(
+  x,
+  xnames = names(x),
+  p_adjust_method = "none",
+  pval_hline = .05,
+  ...
+) {
+  draw_manhattan(
+    rep(0, length(x)),
+    x,
+    xnames = xnames,
+    p_adjust_method = p_adjust_method,
+    p_transform = "one_minus",
+    p_thresh = pval_hline,
+    annotate_n = 0L,
+    ...
+  )
+}

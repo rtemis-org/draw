@@ -57,7 +57,9 @@ process.stdin.on("end", () => {
 	const height = payload.height || 600;
 	const creator = payload.creator || "rtemis.draw";
 	function renderPanel(panel, w, h) {
+    if (panel.option?.grid3D) return require("../htmlwidgets/lib/draw/scatter3d.js").svg(panel,w,h);
 		confusion.prepare(echarts, panel, panel.theme, w, h);
+		layout.prepareLabels(panel);
 		layout.prepareColors(echarts, panel, panel.theme);
 		const option = panel.option;
 		if (!option) throw new Error("An ECharts option is required for each panel.");

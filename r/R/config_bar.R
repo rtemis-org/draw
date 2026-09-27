@@ -23,6 +23,8 @@
 #'
 #' @param x Optional Character: Column holding the categories.
 #' @param y Optional Character: Columns holding the values, one series each.
+#' @param order Character `{"input", "increasing", "decreasing"}`: Order categories
+#'   by their total across series, retaining ties and placing missing totals last.
 #' @param stack Logical: If TRUE, stack the series instead of grouping them.
 #' @param horizontal Logical: If TRUE, draw the bars horizontally.
 #' @param bar_width Optional Numeric `(0, Inf)`: Bar thickness in pixels.
@@ -62,6 +64,11 @@ BarConfig <- new_class(
         nullable = TRUE,
         vector = TRUE,
         description = "Columns holding the values, one series each."
+      ),
+      order = prop_string(
+        "input",
+        enum = c("input", "increasing", "decreasing"),
+        description = "Category ordering by total value across series."
       ),
       # -- semantics ---------------------------------------------------------
       stack = prop_boolean(
@@ -169,6 +176,7 @@ setup_BarConfig <- function(
   origin = NULL,
   writer = NULL,
   bar_width = NULL,
+  order = "input",
   legend_position = "top",
   legend_placement = "outside"
 ) {
@@ -179,6 +187,7 @@ setup_BarConfig <- function(
     stack = stack,
     horizontal = horizontal,
     bar_width = bar_width,
+    order = order,
     palette = palette,
     xlab = xlab,
     ylab = ylab,
@@ -252,6 +261,7 @@ method(compile, BarConfig) <- function(config, data = NULL, ...) {
     stack = config@stack,
     horizontal = config@horizontal,
     bar_width = config@bar_width,
+    order = config@order,
     xlab = config@xlab,
     ylab = config@ylab,
     title = config@title,

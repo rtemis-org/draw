@@ -31,7 +31,11 @@ draw_histogram(
   adjust = 1,
   fill_alpha = 0.25,
   na_rm = TRUE,
-  verbosity = 1L
+  verbosity = 1L,
+  mode = "overlap",
+  order = "input",
+  bin_stat = "count",
+  bar_mode = "overlay"
 )
 }
 \arguments{
@@ -110,6 +114,21 @@ bandwidth in measurement units, overriding the selector.}
 computing densities.}
 
 \item{verbosity}{Integer \verb{[0, Inf)}: Verbosity level for removed-\code{NA} messages.}
+
+\item{mode}{Character \verb{\{"overlap", "ridge"\}}: Overlay samples or align rows
+on common x and y scales. Ridge rows use sample names in place of a legend.
+Increase figure height for many rows.}
+
+\item{order}{Character \verb{\{"input", "mean", "median"\}}: Sample order. Summary
+orders are decreasing, retain ties in input order, and place empty samples last.}
+
+\item{bin_stat}{Character \verb{\{"count", "sum", "mean", "min", "max"\}}: Statistic of
+x observations in each bin. Empty bins have height zero. Non-count
+statistics require normalization = "count" and density = FALSE.}
+
+\item{bar_mode}{Character \verb{\{"overlay", "group", "stack"\}}: Histogram group layout.
+Stacks accumulate positive and negative values separately. Group/stack
+layouts require mode = "overlap" and density = FALSE.}
 }
 \value{
 htmlwidget: Widget object.

@@ -29,6 +29,9 @@ HeatmapConfig(
   dendro_col_side = "top",
   colormap = NULL,
   zlim = NULL,
+  show_notes = FALSE,
+  row_cut = NULL,
+  col_cut = NULL,
   show_values = FALSE,
   value_digits = 2L,
   show_colorbar = TRUE,
@@ -96,6 +99,11 @@ panel size in pixels.}
 
 \item{zlim}{Optional Numeric: Color-scale limits, length 2.}
 
+\item{show_notes}{Logical: Print supplied cell notes instead of numeric values.}
+
+\item{row_cut, col_cut}{Optional Integer: Number of clusters for branch coloring,
+requiring a computed or supplied tree.}
+
 \item{show_values}{Logical: Print each cell's value.}
 
 \item{value_digits}{Integer \verb{[0, Inf)}: Digits for printed values.}
@@ -116,7 +124,11 @@ A serializable description of a heatmap. Build one with
 \code{\link[=setup_HeatmapConfig]{setup_HeatmapConfig()}} rather than calling this constructor directly.
 }
 \details{
-The bound data is a numeric matrix. \code{row_names} and \code{col_names} override the
+The bound data is a numeric matrix, or a record containing \code{values} and optional
+\code{row_tree}, \code{col_tree}, \code{cell_notes}, \code{row_colors}, and \code{col_colors} (see
+\code{\link[=draw_heatmap]{draw_heatmap()}}). These annotations remain data, outside the config.
+
+For a matrix, \code{row_names} and \code{col_names} override the
 matrix's own dimnames rather than naming columns to read.
 }
 \examples{

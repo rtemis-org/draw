@@ -31,7 +31,11 @@ setup_HistogramConfig(
   kernel = "gaussian",
   adjust = 1,
   fill_alpha = 0.25,
-  na_rm = TRUE
+  na_rm = TRUE,
+  mode = "overlap",
+  order = "input",
+  bin_stat = "count",
+  bar_mode = "overlay"
 )
 }
 \arguments{
@@ -103,6 +107,21 @@ bandwidth in measurement units, overriding the selector.}
 
 \item{na_rm}{Logical: Whether to remove \code{NA} values before
 computing densities.}
+
+\item{mode}{Character \verb{\{"overlap", "ridge"\}}: Overlay samples or align rows
+on common x and y scales. Ridge rows use sample names in place of a legend.
+Increase figure height for many rows.}
+
+\item{order}{Character \verb{\{"input", "mean", "median"\}}: Sample order. Summary
+orders are decreasing, retain ties in input order, and place empty samples last.}
+
+\item{bin_stat}{Character \verb{\{"count", "sum", "mean", "min", "max"\}}: Statistic of
+x observations in each bin. Empty bins have height zero. Non-count
+statistics require normalization = "count" and density = FALSE.}
+
+\item{bar_mode}{Character \verb{\{"overlay", "group", "stack"\}}: Histogram group layout.
+Stacks accumulate positive and negative values separately. Group/stack
+layouts require mode = "overlap" and density = FALSE.}
 }
 \value{
 \link{HistogramConfig} object.

@@ -1,5 +1,17 @@
 # rtemis.draw 0.5.3
 
+- Add interactive 3D scatterplots with portable orthographic cameras and vector SVG export.
+
+- Add rolling time series, independent secondary series, zeitgeber labels, p-value bars, and protein input adapters.
+
+- Add ridgelines, grouped and stacked histograms, bin statistics, boxplot ordering and transformations, and matrix/table bar inputs.
+
+- Add supplied fit intervals, Cartesian annotations, scatter rugs and point metadata, and pie label formats.
+
+- Add supplied heatmap trees, aligned cell notes and color tracks, and tree-cut branch colors.
+
+- Include pinned JavaScript build inputs and third-party notices in the source package.
+
 - Render histogram bins on numeric axes, add normalization and density overlays, and share kernel/bandwidth controls across functional and configuration APIs.
 
 - Add violin distributions, ID-matched paired lines, and supplied comparison brackets to the boxplot family, with native SVG export.

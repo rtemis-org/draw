@@ -6,7 +6,7 @@
 \usage{
 draw_pie(
   values,
-  labels,
+  labels = NULL,
   radius = "75\%",
   rose_type = NULL,
   palette = NULL,
@@ -17,13 +17,17 @@ draw_pie(
   element_id = NULL,
   filename = NULL,
   legend_position = "top",
-  legend_placement = "outside"
+  legend_placement = "outside",
+  label_format = "name",
+  percent_digits = 1L
 )
 }
 \arguments{
-\item{values}{Numeric: Slice values.}
+\item{values}{Numeric or data frame: Slice values, or a two-column table
+containing labels followed by values. Values must be finite and nonnegative
+with a positive total.}
 
-\item{labels}{Character: Slice labels.}
+\item{labels}{Optional Character: Slice labels; names(values) when omitted.}
 
 \item{radius}{Numeric or Character: Pie radius.}
 
@@ -56,6 +60,10 @@ column. Corner anchors align within the top or bottom row.}
 \item{legend_placement}{Character \{"outside", "inside"\}: Relation to the
 plotting area. Outside placement reserves space for the complete legend;
 inside placement overlays the data. Neither setting adds a missing legend.}
+
+\item{label_format}{Character \verb{\{"name", "value", "percent", "name_value", "name_percent"\}}: Slice label content.}
+
+\item{percent_digits}{Integer \verb{[0, 6]}: Percentage precision.}
 }
 \value{
 htmlwidget: Widget object.

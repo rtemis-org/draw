@@ -295,6 +295,97 @@ for (horizontal in c(FALSE, TRUE)) {
     }
   })
 }
+# Remaining distribution, time-series and supplied-overlay workflows.
+builders[["ridge"]] <- function(theme) {
+  draw_density(
+    birds[["bill_len"]],
+    group = birds[["species"]],
+    mode = "ridge",
+    order = "mean",
+    theme = theme
+  )
+}
+builders[["histogram_stack"]] <- function(theme) {
+  draw_histogram(
+    birds[["bill_len"]],
+    group = birds[["species"]],
+    bar_mode = "stack",
+    theme = theme
+  )
+}
+builders[["histogram_group"]] <- function(theme) {
+  draw_histogram(
+    birds[["bill_len"]],
+    group = birds[["species"]],
+    bar_mode = "group",
+    theme = theme
+  )
+}
+builders[["timeseries"]] <- function(theme) {
+  draw_ts(
+    list(Activity = c(2, 4, 3, 5, 4, 7, 5, 3, 2)),
+    time = seq(0, 48, length.out = 9),
+    window = 3L,
+    theme = theme,
+    zoom = TRUE
+  )
+}
+builders[["zeitgeber"]] <- function(theme) {
+  draw_xt(
+    seq(0, 48, length.out = 9),
+    list(Activity = c(2, 4, 3, 5, 4, 7, 5, 3, 2)),
+    zt = seq(0, 48, length.out = 9) %% 24,
+    show_zt_every = 2L,
+    shade_bin = c(0, 0, 1, 1, 0, 0, 1, 1, 0),
+    theme = theme
+  )
+}
+builders[["supplied_fit"]] <- function(theme) {
+  plot <- draw_scatter(1:5, c(2, 3, 2, 5, 4), rug = TRUE, theme = theme)
+  plot <- draw_add_fit(
+    plot,
+    1:5,
+    c(2, 2.5, 3, 3.5, 4),
+    lower = c(1.5, 2, 2.5, 3, 3.5),
+    upper = c(2.5, 3, 3.5, 4, 4.5),
+    name = "Predicted"
+  )
+  draw_annotate(
+    plot,
+    hline = 3,
+    x = 3,
+    y = 4.5,
+    text = "Reference",
+    bands = list(c(2, 3))
+  )
+}
+builders[["heatmap_annotations"]] <- function(theme) {
+  x <- cor(mtcars[c("mpg", "disp", "hp", "wt")])
+  draw_heatmap(
+    x,
+    row_tree = hclust(dist(x)),
+    col_tree = hclust(dist(t(x))),
+    cell_notes = matrix(c("{b}", rep("Measured note {b}", 15)), 4, 4),
+    show_notes = TRUE,
+    row_colors = c("#18A3AC", "#F48024", "#F48024", "#18A3AC"),
+    col_colors = c("#18A3AC", "#F48024", "#F48024", "#18A3AC"),
+    row_cut = 2L,
+    col_cut = 2L,
+    dendro_col_side = "bottom",
+    theme = theme,
+    square_cells = TRUE,
+    title = "Vehicle correlations"
+  )
+}
+extra_labels <- list(
+  heatmap_annotations = "{b}",
+  ridge = unique(birds[["species"]]),
+  histogram_stack = unique(birds[["species"]]),
+  histogram_group = unique(birds[["species"]]),
+  timeseries = "Activity",
+  zeitgeber = "Activity",
+  supplied_fit = "Reference"
+)
 selected <- Sys.getenv("DRAW_QA_FAMILIES")
 if (nzchar(selected)) {
   builders <- builders[strsplit(selected, ",", fixed = TRUE)[[1L]]]
@@ -465,6 +556,9 @@ tryCatch(
             wait_for("foundationQA.linePointsAligned()")
             wait_for("foundationQA.chart().getZr().animation.isFinished()")
           }
+          if (name == "heatmap_annotations") {
+            stopifnot(isTRUE(evaluate("foundationQA.heatmapTracksAligned()")))
+          }
           result <- evaluate("foundationQA.scene()")
           if (name == "panels") {
             result[["children"]] <- evaluate(
@@ -481,9 +575,9 @@ tryCatch(
               ))
             )
           }
-          expected_series <- if (
-            name %in% c("pie", "rose", "sankey", "spectrogram")
-          ) {
+          expected_series <- if (name %in% names(extra_labels)) {
+            length(widget[["x"]][["option"]][["series"]])
+          } else if (name %in% c("pie", "rose", "sankey", "spectrogram")) {
             1L
           } else if (name %in% c("histogram", "density", "density_kernel")) {
             3L
@@ -547,6 +641,9 @@ tryCatch(
           } else if (name %in% c("calibration", "survival")) {
             expected <- unlist(widget[["x"]][["option"]][["legend"]][["data"]])
           }
+          if (name %in% names(extra_labels)) {
+            expected <- extra_labels[[name]]
+          }
           stopifnot(
             all(expected %in% labels),
             length(xml2::xml_find_all(svg, './/*[local-name()="path"]')) > 0L,
@@ -589,7 +686,13 @@ tryCatch(
                     8L
                   } else if (
                     name %in%
-                      c("calibration", "histogram_density", "histogram_unequal")
+                      c(
+                        "calibration",
+                        "histogram_density",
+                        "histogram_unequal",
+                        "timeseries",
+                        "supplied_fit"
+                      )
                   ) {
                     2L
                   } else {
@@ -606,6 +709,15 @@ tryCatch(
               ]] <- state
             }
           }
+          wait_for(
+            "foundationQA.charts().every(c=>c.getZr().animation.isFinished())"
+          )
+          # Legend actions schedule a fresh render on the next frame. Observe
+          # that render before measuring its hit target (zero-height entering
+          # bars are not yet hoverable even if the previous frame was idle).
+          evaluate(
+            "new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(()=>r(true))))"
+          )
           wait_for(
             "foundationQA.charts().every(c=>c.getZr().animation.isFinished())"
           )

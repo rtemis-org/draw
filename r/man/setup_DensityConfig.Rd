@@ -26,7 +26,9 @@ setup_DensityConfig(
   bandwidth = NULL,
   kernel = "gaussian",
   adjust = 1,
-  fill_alpha = 0.25
+  fill_alpha = 0.25,
+  mode = "overlap",
+  order = "input"
 )
 }
 \arguments{
@@ -82,6 +84,13 @@ bandwidth in measurement units, overriding the selector.}
 \item{adjust}{Numeric \verb{(0, Inf)}: Finite bandwidth multiplier.}
 
 \item{fill_alpha}{Numeric \verb{[0, 1]}: Distribution fill opacity.}
+
+\item{mode}{Character \verb{\{"overlap", "ridge"\}}: Overlay samples or align rows
+on common x and y scales. Ridge rows use sample names in place of a legend.
+Increase figure height for many rows.}
+
+\item{order}{Character \verb{\{"input", "mean", "median"\}}: Sample order. Summary
+orders are decreasing, retain ties in input order, and place empty samples last.}
 }
 \value{
 \link{DensityConfig} object.

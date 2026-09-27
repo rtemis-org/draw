@@ -12,22 +12,36 @@ for (const item of input.charts) {
   chart.setOption(item.option);
   function check(hidden) {
     const model = chart.getModel();
-    const grid = model.getComponent('grid').coordinateSystem.getRect();
-    const pixel = value => chart.convertToPixel({ xAxisIndex: 0, yAxisIndex: 0 }, value);
+
     assert.equal(model.getComponent('xAxis').get('type'), 'value');
     for (const series of model.getSeries()) {
-      if (series.name === 'A') assert.equal(model.isSeriesFiltered(series), hidden);
+      if (series.name === 'A' && item.option.legend?.show!==false) assert.equal(model.isSeriesFiltered(series), hidden);
       if (model.isSeriesFiltered(series)) continue;
       const data = series.getData();
+      const xi=series.get('xAxisIndex')||0, yi=series.get('yAxisIndex')||0;
+      const grid=model.getComponent('grid',model.getComponent('xAxis',xi).get('gridIndex')||0).coordinateSystem.getRect();
+      const pixel=value=>chart.convertToPixel({xAxisIndex:xi,yAxisIndex:yi},value);
       if (series.subType === 'custom') {
         for (let i = 0; i < data.count(); i++) {
           const raw = data.getRawDataItem(i);
           const mark = data.getItemGraphicEl(i);
           assert.equal(mark.type, 'rect');
-          const left = pixel([raw[0], raw[2]]), right = pixel([raw[1], 0]);
-          near(mark.shape.x, left[0]); near(mark.shape.y, left[1]);
+          const settings=series.get('itemPayload');
+          const active=model.getSeries().filter(s=>s.subType==='custom'&&!model.isSeriesFiltered(s));
+          const position=active.indexOf(series);
+          let lo=raw[0],hi=raw[1],base=0;
+          if(settings.mode==='group') {
+            const span=(hi-lo)/active.length;lo+=position*span;hi=lo+span;
+          } else if(settings.mode==='stack') {
+            base=active.slice(0,position).reduce((sum,s)=>{
+              const value=s.getData().getRawDataItem(i)[2];
+              return sum+(Math.sign(value)===Math.sign(raw[2])?value:0);
+            },0);
+          }
+          const left = pixel([lo, base+raw[2]]), right = pixel([hi, base]);
+          near(mark.shape.x, left[0]); near(mark.shape.y, Math.min(left[1],right[1]));
           near(mark.shape.width, right[0] - left[0]);
-          near(mark.shape.height, right[1] - left[1]);
+          near(mark.shape.height, Math.abs(right[1] - left[1]));
           assert.equal(mark.style.opacity, .25);
           assert.ok(left[0] >= grid.x - 1e-7 && right[0] <= grid.x + grid.width + 1e-7, 'Bin clipped horizontally');
           assert.ok(left[1] >= grid.y - 1e-7 && right[1] <= grid.y + grid.height + 1e-7, 'Bin clipped vertically');
@@ -55,7 +69,7 @@ for (const item of input.charts) {
     for (const width of [800, 344]) {
       chart.resize({ width, height: 600 });
       check(false);
-      if (item.option.legend) {
+      if (item.option.legend && item.option.legend.show!==false) {
         chart.dispatchAction({ type: 'legendUnSelect', name: 'A' }); check(true);
         chart.dispatchAction({ type: 'legendSelect', name: 'A' }); check(false);
       }

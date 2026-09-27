@@ -71,6 +71,16 @@ BoxplotConfig <- new_class(
         nullable = TRUE,
         description = "Column identifying observations in point tooltips."
       ),
+      order = prop_string(
+        "input",
+        enum = c("input", "mean", "median"),
+        description = "Order categories by descending mean or median; empty categories last."
+      ),
+      transform = prop_string(
+        "none",
+        enum = c("none", "scale", "minmax"),
+        description = "Transform each input column before grouping; constant columns become zero."
+      ),
       geometry = prop_string(
         "box",
         enum = c("box", "violin", "both"),
@@ -265,7 +275,9 @@ setup_BoxplotConfig <- function(
   paired = FALSE,
   pair_alpha = 0.35,
   pair_width = 1,
-  comparisons = NULL
+  comparisons = NULL,
+  order = "input",
+  transform = "none"
 ) {
   origin <- origin %||% chart_origin(match.call(), BOXPLOT_ORIGIN_NAMES)
   BoxplotConfig(
@@ -275,6 +287,8 @@ setup_BoxplotConfig <- function(
     horizontal = horizontal,
     na_rm = na_rm,
     observation = observation,
+    order = order,
+    transform = transform,
     geometry = geometry,
     bandwidth = bandwidth,
     adjust = adjust,
@@ -338,6 +352,8 @@ method(compile, BoxplotConfig) <- function(config, data = NULL, ...) {
     fill_alpha = config@fill_alpha,
     na_rm = config@na_rm,
     observation = config_column(data, config@observation, "observation"),
+    order = config@order,
+    transform = config@transform,
     geometry = config@geometry,
     bandwidth = config@bandwidth,
     adjust = config@adjust,

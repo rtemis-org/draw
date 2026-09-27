@@ -13,6 +13,8 @@ DensityConfig(
   legend_placement = "outside",
   x = NULL,
   group = NULL,
+  mode = "overlap",
+  order = "input",
   n = 512L,
   bw = "nrd0",
   bandwidth = NULL,
@@ -56,6 +58,13 @@ inside placement overlays the data. Neither setting adds a missing legend.}
 \item{x}{Optional Character: Columns to estimate, one distribution per column.}
 
 \item{group}{Optional Character: Column to split the estimate by.}
+
+\item{mode}{Character \verb{\{"overlap", "ridge"\}}: Overlay samples or align rows
+on common x and y scales. Ridge rows use sample names in place of a legend.
+Increase figure height for many rows.}
+
+\item{order}{Character \verb{\{"input", "mean", "median"\}}: Sample order. Summary
+orders are decreasing, retain ties in input order, and place empty samples last.}
 
 \item{n}{Integer \verb{[2, Inf)}: Points at which the density is estimated.}
 

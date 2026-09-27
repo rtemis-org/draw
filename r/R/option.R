@@ -17,6 +17,8 @@
 #' @param title Optional [Title] or list: Title configuration.
 #' @param legend Optional [Legend] or list: Legend configuration.
 #' @param grid Optional [Grid] or list: Grid configuration.
+#' @param x_axis_3d,y_axis_3d,z_axis_3d,grid_3d Optional List: ECharts-GL
+#'   cartesian axes and grid, as defined by its Axis3D and Grid3DModel sources.
 #' @param x_axis Optional [Axis] or list: X-axis configuration (`xAxis`).
 #' @param y_axis Optional [Axis] or list: Y-axis configuration (`yAxis`).
 #' @param tooltip Optional [Tooltip]: Tooltip configuration.
@@ -59,6 +61,10 @@ EChartsOption <- S7::new_class(
     # Components (single or list)
     title = S7::new_property(class = S7::class_any, default = NULL),
     legend = S7::new_property(class = S7::class_any, default = NULL),
+    x_axis_3d = S7::new_property(class = S7::class_any, default = NULL),
+    y_axis_3d = S7::new_property(class = S7::class_any, default = NULL),
+    z_axis_3d = S7::new_property(class = S7::class_any, default = NULL),
+    grid_3d = S7::new_property(class = S7::class_any, default = NULL),
     grid = S7::new_property(class = S7::class_any, default = NULL),
     x_axis = S7::new_property(class = S7::class_any, default = NULL),
     y_axis = S7::new_property(class = S7::class_any, default = NULL),
@@ -132,6 +138,10 @@ S7::method(to_list, EChartsOption) <- function(x, ...) {
     title = "title",
     legend = "legend",
     grid = "grid",
+    x_axis_3d = "xAxis3D",
+    y_axis_3d = "yAxis3D",
+    z_axis_3d = "zAxis3D",
+    grid_3d = "grid3D",
     x_axis = "xAxis",
     y_axis = "yAxis",
     tooltip = "tooltip",

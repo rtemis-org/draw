@@ -9,6 +9,8 @@ setup_PieConfig(
   labels = NULL,
   radius = "75\%",
   rose_type = NULL,
+  label_format = "name",
+  percent_digits = 1L,
   palette = NULL,
   title = NULL,
   dat_path = NULL,
@@ -28,6 +30,10 @@ setup_PieConfig(
 \item{rose_type}{Optional Character \{"radius", "area"\}: Draw as a
 Nightingale rose chart, sizing slices by radius or by area. \code{NULL} draws a
 plain pie.}
+
+\item{label_format}{Character \verb{\{"name", "value", "percent", "name_value", "name_percent"\}}: Slice label content.}
+
+\item{percent_digits}{Integer \verb{[0, 6]}: Percentage precision.}
 
 \item{palette}{Optional Character: Slice colors, overriding the theme
 palette for this chart. \code{NULL} uses the theme's.}

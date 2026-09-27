@@ -1,7 +1,7 @@
 Package: rtemis.draw
 Title: Interactive Visualization
 Version: 0.5.3
-Date: 2026-09-26
+Date: 2026-09-27
 Authors@R:
     person(given = "E.D.", family = "Gennatas", role = c("aut", "cre", "cph"),
            email = "gennatas@gmail.com",
@@ -16,8 +16,10 @@ URL: https://www.rtemis.org, https://docs.rtemis.org/draw/r, https://docs.rtemis
 License: GPL (>= 3)
 Encoding: UTF-8
 Language: en-US
+SystemRequirements: Node.js (>= 18) for optional SVG export
 Roxygen: list(markdown = TRUE)
 Imports:
+    htmltools,
     htmlwidgets,
     jsonlite,
     rtemis.core (>= 0.4.5),
@@ -29,7 +31,6 @@ Imports:
     viridisLite
 Suggests:
     data.table,
-    htmltools,
     mgcv,
     pROC,
     rmarkdown,
@@ -63,7 +64,12 @@ Collate:
     'config_density.R'
     'config_histogram.R'
     'distribution.R'
+    'annotations.R'
+    'fit_layer.R'
+    'scatter_input.R'
     'config_line.R'
+    'timeseries.R'
+    'scatter3d.R'
     'config_pie.R'
     'config_boxplot.R'
     'config_sankey.R'
@@ -74,8 +80,10 @@ Collate:
     'map.R'
     'config_network.R'
     'config_choropleth.R'
+    'heatmap_input.R'
     'config_heatmap.R'
     'draw_a3.R'
+    'draw_protein.R'
     'config_a3.R'
     'draw_spectrogram.R'
     'config_spectrogram.R'

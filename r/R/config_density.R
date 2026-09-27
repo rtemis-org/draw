@@ -18,7 +18,7 @@
 #' @param x Optional Character: Columns to estimate, one distribution per column.
 #' @param group Optional Character: Column to split the estimate by.
 #' @param n Integer `[2, Inf)`: Points at which the density is estimated.
-#' @inheritParams draw_density bw bandwidth kernel adjust fill_alpha
+#' @inheritParams draw_density bw bandwidth kernel adjust fill_alpha mode order
 #' @param na_rm Logical: If TRUE, drop `NA` values before estimating.
 #' @param palette Optional Character: Series colors, overriding the theme
 #'   palette for this chart. `NULL` uses the theme's.
@@ -55,6 +55,16 @@ DensityConfig <- new_class(
         NULL,
         nullable = TRUE,
         description = "Column to split the estimate by, one curve per level."
+      ),
+      mode = prop_string(
+        "overlap",
+        enum = c("overlap", "ridge"),
+        description = "Overlay samples or align them in separate rows."
+      ),
+      order = prop_string(
+        "input",
+        enum = c("input", "mean", "median"),
+        description = "Sample order; mean and median sort decreasingly, empty samples last."
       ),
       # -- semantics ---------------------------------------------------------
       n = prop_integer(
@@ -196,7 +206,9 @@ setup_DensityConfig <- function(
   bandwidth = NULL,
   kernel = "gaussian",
   adjust = 1,
-  fill_alpha = 0.25
+  fill_alpha = 0.25,
+  mode = "overlap",
+  order = "input"
 ) {
   origin <- origin %||% chart_origin(match.call(), DENSITY_ORIGIN_NAMES)
   check_integer_scalar(n)
@@ -214,6 +226,8 @@ setup_DensityConfig <- function(
     origin[["bandwidth"]] <- "user"
   }
   DensityConfig(
+    mode = mode,
+    order = order,
     x = x,
     group = group,
     n = as.integer(n),
@@ -277,6 +291,8 @@ method(compile, DensityConfig) <- function(config, data = NULL, ...) {
   }
   density_option(
     x = x,
+    mode = config@mode,
+    order = config@order,
     group = config_column(data, config@group, "group"),
     n = config@n,
     bw = config@bw,

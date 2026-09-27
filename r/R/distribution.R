@@ -173,9 +173,13 @@ method(density_option, class_any) <- function(
   bandwidth = NULL,
   kernel = "gaussian",
   adjust = 1,
-  fill_alpha = .25
+  fill_alpha = .25,
+  mode = "overlap",
+  order = "input"
 ) {
   config <- setup_DensityConfig(
+    mode = mode,
+    order = order,
     n = n,
     bw = bw,
     bandwidth = bandwidth,
@@ -184,7 +188,10 @@ method(density_option, class_any) <- function(
     fill_alpha = fill_alpha,
     na_rm = na_rm
   )
-  samples <- distribution_samples(x, group, na_rm, verbosity)
+  samples <- distribution_order(
+    distribution_samples(x, group, na_rm, verbosity),
+    order
+  )
   series <- lapply(seq_along(samples), function(i) {
     estimate <- distribution_density(samples[[i]], config)
     LineSeries(
@@ -194,7 +201,7 @@ method(density_option, class_any) <- function(
       area_style = AreaStyle(opacity = fill_alpha)
     )
   })
-  EChartsOption(
+  option <- EChartsOption(
     title = if (!is.null(title)) Title(text = title) else NULL,
     tooltip = Tooltip(
       trigger = "axis",
@@ -221,6 +228,7 @@ method(density_option, class_any) <- function(
     series = series,
     color = palette
   )
+  distribution_layout(option, names(samples), mode)
 }
 
 #' Compute histogram heights on an explicit normalization scale
@@ -277,9 +285,17 @@ method(histogram_option, class_any) <- function(
   adjust = 1,
   fill_alpha = .25,
   na_rm = TRUE,
-  verbosity = 1L
+  verbosity = 1L,
+  mode = "overlap",
+  order = "input",
+  bin_stat = "count",
+  bar_mode = "overlay"
 ) {
   config <- setup_HistogramConfig(
+    bin_stat = bin_stat,
+    bar_mode = bar_mode,
+    mode = mode,
+    order = order,
     breaks = breaks,
     bins = bins,
     bin_edges = bin_edges,
@@ -293,7 +309,10 @@ method(histogram_option, class_any) <- function(
     fill_alpha = fill_alpha,
     na_rm = na_rm
   )
-  samples <- distribution_samples(x, group, na_rm, verbosity)
+  samples <- distribution_order(
+    distribution_samples(x, group, na_rm, verbosity),
+    order
+  )
   values <- unlist(samples, use.names = FALSE)
   edges <- config@bin_edges
   if (
@@ -313,7 +332,11 @@ method(histogram_option, class_any) <- function(
   }
   widths <- diff(edges)
   equal_width <- max(abs(widths / widths[[1L]] - 1)) < 1e-7
-  if (!equal_width && !normalization %in% c("density", "count_density")) {
+  if (
+    bin_stat == "count" &&
+      !equal_width &&
+      !normalization %in% c("density", "count_density")
+  ) {
     abort(
       "Use `normalization = \"density\"` or `\"count_density\"` for unequal-width bins.",
       class = c("rtemis_value_error", "rtemis_input_error")
@@ -336,7 +359,11 @@ method(histogram_option, class_any) <- function(
     } else {
       integer(length(widths))
     }
-    heights <- histogram_heights(counts, widths, size, normalization)
+    heights <- if (bin_stat == "count") {
+      histogram_heights(counts, widths, size, normalization)
+    } else {
+      histogram_stat(sample, edges, bin_stat)
+    }
     series[[length(series) + 1L]] <- list(
       type = "custom",
       name = names(samples)[[i]],
@@ -348,7 +375,7 @@ method(histogram_option, class_any) <- function(
         "Upper",
         switch(
           normalization,
-          count = "Height",
+          count = if (bin_stat == "count") "Height" else bin_stat,
           probability = "Probability",
           percent = "Percent",
           density = "Density",
@@ -359,7 +386,7 @@ method(histogram_option, class_any) <- function(
       encode = list(
         x = list(0L, 1L),
         y = 2L,
-        tooltip = if (normalization == "count") {
+        tooltip = if (normalization == "count" && bin_stat == "count") {
           list(0L, 1L, 3L)
         } else {
           list(0L, 1L, 2L, 3L)
@@ -402,7 +429,34 @@ method(histogram_option, class_any) <- function(
       series[[length(series) + 1L]] <- curve
     }
   }
-  EChartsOption(
+  # Keep the whole height matrix in the renderer payload so legend filtering
+  # can recompute dodging/stacking without mutating statistical values.
+  bar_indices <- which(vapply(
+    series,
+    function(s) s[["type"]] == "custom",
+    logical(1)
+  ))
+  height_rows <- lapply(series[bar_indices], function(s) {
+    vapply(s[["data"]], `[[`, numeric(1), 3L)
+  })
+  for (i in bar_indices) {
+    series[[i]][["itemPayload"]] <- list(
+      fillAlpha = fill_alpha,
+      mode = bar_mode,
+      seriesIndices = as.list(bar_indices - 1L),
+      heights = lapply(height_rows, as.list)
+    )
+  }
+  totals <- if (bar_mode == "stack") {
+    c(
+      Reduce(`+`, lapply(height_rows, pmax, 0)),
+      Reduce(`+`, lapply(height_rows, pmin, 0))
+    )
+  } else {
+    unlist(height_rows, use.names = FALSE)
+  }
+  limits <- range(c(0, totals))
+  option <- EChartsOption(
     title = if (!is.null(title)) Title(text = title) else NULL,
     tooltip = Tooltip(
       trigger = "item",
@@ -424,7 +478,12 @@ method(histogram_option, class_any) <- function(
     ),
     y_axis = Axis(
       type = "value",
-      min = 0,
+      min = if (limits[[1]] < 0) limits[[1]] * 1.05 else 0,
+      max = if (bar_mode == "stack" && limits[[2]] > 0) {
+        limits[[2]] * 1.05
+      } else {
+        NULL
+      },
       name = ylab,
       name_location = if (!is.null(ylab)) "middle" else NULL
     ),
@@ -432,4 +491,152 @@ method(histogram_option, class_any) <- function(
     series = series,
     color = palette
   )
+  distribution_layout(option, names(samples), mode)
+}
+
+
+#' Order complete samples without separating their observations
+#' @param x Named list: Validated numeric samples.
+#' @param order Character: Input order or decreasing mean/median.
+#' @return List: Ordered samples, with empty samples last for summary ordering.
+#' @keywords internal
+#' @noRd
+distribution_order <- new_generic("distribution_order", "x")
+method(distribution_order, class_list) <- function(x, order) {
+  if (order == "input") {
+    return(x)
+  }
+  summary <- if (order == "mean") mean else stats::median
+  scores <- vapply(
+    x,
+    function(values) {
+      if (length(values)) summary(values) else NA_real_
+    },
+    numeric(1)
+  )
+  x[base::order(scores, decreasing = TRUE, na.last = TRUE)]
+}
+
+#' Align distribution layers on common axes in independent rows
+#'
+#' Uses GridOption and CartesianAxisOption from ECharts coord/cartesian.
+#' Every row retains density/count units; no peak normalization is applied.
+#' @param x EChartsOption: Complete distribution layers.
+#' @param labels Character: Ordered sample names.
+#' @param mode Character: Overlap or ridge layout.
+#' @return EChartsOption: Native multi-grid option for ridge mode.
+#' @keywords internal
+#' @noRd
+distribution_layout <- new_generic("distribution_layout", "x")
+method(distribution_layout, EChartsOption) <- function(x, labels, mode) {
+  if (mode == "overlap") {
+    return(x)
+  }
+  series <- to_list(x)[["series"]]
+  limits <- range(unlist(lapply(series, function(s) {
+    lapply(s[["data"]], function(d) {
+      if (s[["type"]] == "custom") d[1:2] else d[1]
+    })
+  })))
+  heights <- c(
+    0,
+    unlist(lapply(series, function(s) {
+      lapply(s[["data"]], function(d) {
+        d[[if (s[["type"]] == "custom") 3L else 2L]]
+      })
+    }))
+  )
+  minimum <- min(heights)
+  maximum <- max(heights)
+  nrow <- length(labels)
+  x@series <- lapply(series, function(s) {
+    index <- match(s[["name"]], labels) - 1L
+    s[["xAxisIndex"]] <- index
+    s[["yAxisIndex"]] <- index
+    s
+  })
+  x@legend <- Legend(show = FALSE)
+  x@grid <- lapply(seq_along(labels), function(i) {
+    list(
+      left = 100,
+      right = 30,
+      top = paste0(8 + (i - 1) * 80 / nrow, "%"),
+      height = paste0(64 / nrow, "%"),
+      containLabel = FALSE
+    )
+  })
+  x_name <- x@x_axis@name
+  x@x_axis <- lapply(seq_along(labels), function(i) {
+    Axis(
+      type = "value",
+      min = limits[[1]],
+      max = limits[[2]],
+      grid_index = i - 1,
+      name = if (i == nrow) x_name else NULL,
+      name_location = "middle",
+      show = i == nrow
+    )
+  })
+  x@y_axis <- lapply(seq_along(labels), function(i) {
+    Axis(
+      type = "value",
+      min = if (minimum < 0) minimum * 1.05 else 0,
+      max = if (maximum > 0) maximum * 1.05 else 1,
+      grid_index = i - 1,
+      name = labels[[i]],
+      name_location = "middle",
+      name_gap = 55,
+      split_number = 2,
+      axis_label = AxisLabel(show_max_label = FALSE, show_min_label = FALSE)
+    )
+  })
+  x
+}
+
+#' Aggregate observations inside the histogram boundary convention
+#' @param x Numeric: Complete sample observations.
+#' @param edges Numeric: Increasing histogram boundaries.
+#' @param statistic Character: Sum, mean, minimum, or maximum.
+#' @return Numeric: One height per bin, zero for empty bins.
+#' @keywords internal
+#' @noRd
+histogram_stat <- new_generic("histogram_stat", "x")
+method(histogram_stat, class_numeric) <- function(x, edges, statistic) {
+  widths <- diff(edges)
+  if (!length(x)) {
+    return(rep(0, length(widths)))
+  }
+  # Reproduce graphics::hist.default's default 1e-7 boundary tolerance.
+  n <- length(edges)
+  fuzz <- 1e-7 *
+    if (n > 5L) {
+      stats::median(widths)
+    } else if (n <= 3L) {
+      diff(range(x))
+    } else {
+      min(widths)
+    }
+  bins <- cut(
+    x,
+    edges + c(-fuzz, rep(fuzz, n - 1L)),
+    right = TRUE,
+    include.lowest = TRUE,
+    labels = FALSE
+  )
+  fn <- switch(statistic, sum = sum, mean = mean, min = min, max = max)
+  values <- vapply(
+    seq_along(widths),
+    function(i) {
+      selected <- x[bins == i]
+      if (length(selected)) fn(selected) else 0
+    },
+    numeric(1)
+  )
+  if (any(!is.finite(values))) {
+    abort(
+      "Rescale observations to keep bin statistics finite.",
+      class = c("rtemis_value_error", "rtemis_input_error")
+    )
+  }
+  values
 }

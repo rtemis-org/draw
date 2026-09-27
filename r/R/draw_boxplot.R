@@ -127,7 +127,9 @@ method(boxplot_option, class_any) <- function(
   paired = FALSE,
   pair_alpha = .35,
   pair_width = 1,
-  comparisons = NULL
+  comparisons = NULL,
+  order = "input",
+  transform = "none"
 ) {
   # Validate the vector entry point through the same property declarations
   # used by JSON configs; no second set of statistical or style defaults.
@@ -136,6 +138,8 @@ method(boxplot_option, class_any) <- function(
     palette = palette,
     fill_alpha = fill_alpha,
     na_rm = na_rm,
+    order = order,
+    transform = transform,
     geometry = geometry,
     bandwidth = bandwidth,
     adjust = adjust,
@@ -173,6 +177,7 @@ method(boxplot_option, class_any) <- function(
   # Reject invalid values before filtering missing groups, including Inf in
   # otherwise excluded rows. Group order follows first appearance.
   x <- lapply(x, boxplot_values, na_rm = na_rm)
+  x <- lapply(x, boxplot_transform, transform = transform)
   sizes <- lengths(x)
   group <- group_values(group, sizes)
   if (
@@ -213,6 +218,14 @@ method(boxplot_option, class_any) <- function(
       class = c("rtemis_length_error", "rtemis_input_error")
     )
   }
+  if (
+    anyNA(categories) || anyDuplicated(categories) || any(!nzchar(categories))
+  ) {
+    abort(
+      "Supply unique nonmissing category labels for a boxplot.",
+      class = c("rtemis_value_error", "rtemis_input_error")
+    )
+  }
   if (!length(categories)) {
     abort(
       "Supply at least one nonmissing boxplot group.",
@@ -223,6 +236,29 @@ method(boxplot_option, class_any) <- function(
     palette %||% if (grouped) rtemis_colors else rtemis_colors[[1L]]
   ))
   colors <- rep_len(colors, if (grouped) length(levels) else length(x))
+  if (order != "input") {
+    samples <- if (grouped && !multi) {
+      setNames(
+        lapply(levels, function(level) x[[1]][!is.na(group) & group == level]),
+        levels
+      )
+    } else {
+      setNames(x, categories)
+    }
+    ordered <- names(distribution_order(
+      lapply(samples, function(v) v[!is.na(v)]),
+      order
+    ))
+    index <- match(ordered, categories)
+    categories <- categories[index]
+    if (grouped && !multi) {
+      levels <- levels[index]
+      colors <- colors[index]
+    } else {
+      x <- x[index]
+      if (!multi) colors <- colors[index]
+    }
+  }
   nseries <- if (multi) length(levels) else 1L
   boxes <- vector("list", nseries)
   overlays <- vector("list", nseries)
@@ -562,6 +598,12 @@ method(boxplot_option, class_any) <- function(
 #' @param xlab,ylab Optional Character: Axis labels.
 #' @param title Optional Character: Chart title.
 #' @param verbosity Integer `[0, Inf)`: Verbosity for missing-value messages.
+#' @param order Character `{"input", "mean", "median"}`: Keep input order or sort
+#'   categories by decreasing mean/median after transformation; empty boxes last.
+#' @param transform Character `{"none", "scale", "minmax"}`: Transform each input
+#'   column before grouping. Scale subtracts the mean and divides by the sample
+#'   standard deviation; minmax maps the available range to zero through one.
+#'   Constant columns become zero and missing values remain missing.
 #' @inheritParams draw_line
 #' @return htmlwidget: ECharts boxes with optional vector point overlays.
 #' @export
@@ -604,7 +646,9 @@ draw_boxplot <- function(
   paired = FALSE,
   pair_alpha = .35,
   pair_width = 1,
-  comparisons = NULL
+  comparisons = NULL,
+  order = "input",
+  transform = "none"
 ) {
   opt <- boxplot_option(
     x = x,
@@ -620,6 +664,8 @@ draw_boxplot <- function(
     margins = margins,
     verbosity = verbosity,
     observation = observation,
+    order = order,
+    transform = transform,
     geometry = geometry,
     bandwidth = bandwidth,
     adjust = adjust,
@@ -661,4 +707,43 @@ draw_boxplot <- function(
 draw_violin <- function(x, ..., show_box = FALSE) {
   check_logical_scalar(show_box)
   draw_boxplot(x, ..., geometry = if (show_box) "both" else "violin")
+}
+
+#' Transform one distribution while preserving missing observation slots
+#' @param x Numeric: Validated observations.
+#' @param transform Character: None, sample-standardization, or minmax.
+#' @return Numeric: Transformed values with the same observation order.
+#' @keywords internal
+#' @noRd
+boxplot_transform <- new_generic("boxplot_transform", "x")
+method(boxplot_transform, class_numeric) <- function(x, transform) {
+  if (transform == "none" || all(is.na(x))) {
+    return(x)
+  }
+  at <- which(!is.na(x))
+  values <- x[at]
+  offset <- if (transform == "scale") mean(values) else min(values)
+  divisor <- if (transform == "scale") {
+    stats::sd(values)
+  } else {
+    diff(range(values))
+  }
+  if (length(values) > 1L && (!is.finite(offset) || !is.finite(divisor))) {
+    abort(
+      "Rescale values before applying the boxplot transformation.",
+      class = c("rtemis_value_error", "rtemis_input_error")
+    )
+  }
+  x[at] <- if (length(values) == 1L || divisor == 0) {
+    0
+  } else {
+    (values - offset) / divisor
+  }
+  if (any(is.infinite(x))) {
+    abort(
+      "Rescale the values before applying the boxplot transformation.",
+      class = c("rtemis_value_error", "rtemis_input_error")
+    )
+  }
+  x
 }

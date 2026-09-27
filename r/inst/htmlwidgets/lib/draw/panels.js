@@ -107,6 +107,19 @@
       Number.isFinite(title.left) ? {left: title.left + dx} : {});
     chart.setOption(update);
   }
+  // Native label layout knows each cell's final size, after grid fitting and
+  // resizing. Keep literal full notes in data, and truncate only their labels.
+  function prepareLabels(payload) {
+    (payload.option.series || []).forEach(series => {
+      if (!series.rtemisCellNotes) return;
+      series.label = {...series.label, overflow: 'truncate', ellipsis: '...'};
+      series.labelLayout = params => ({
+        width: Math.max(0, params.rect.width - 5),
+        height: Math.max(0, params.rect.height - 3),
+        hideOverlap: true
+      });
+    });
+  }
   // Resolve the precomputed heatmap/spectrogram palettes from the actual theme,
   // including explicit overrides and offline SVG's resolved light default.
   // The same choice in both targets avoids exporting a dark plot's white ramp.
@@ -432,5 +445,5 @@
       axisLabel: {hideOverlap: true, ...source.xAxis.axisLabel}
     }});
   }
-  return {background, cells, fit, fitAxes, fitHeatmap, prepareColors, positionLegend, centerVisualMaps, fitGantt};
+  return {background, cells, fit, fitAxes, fitHeatmap, prepareLabels, prepareColors, positionLegend, centerVisualMaps, fitGantt};
 });
