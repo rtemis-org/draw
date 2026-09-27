@@ -23,6 +23,9 @@ setup_HeatmapConfig(
   dendro_col_side = "top",
   colormap = NULL,
   zlim = NULL,
+  show_notes = FALSE,
+  row_cut = NULL,
+  col_cut = NULL,
   show_values = FALSE,
   value_digits = 2L,
   show_colorbar = TRUE,
@@ -72,6 +75,11 @@ panel size in pixels.}
 \code{NULL} derives a theme-aware diverging or sequential scale.}
 
 \item{zlim}{Optional Numeric: Color-scale limits, length 2.}
+
+\item{show_notes}{Logical: Print supplied cell notes instead of numeric values.}
+
+\item{row_cut, col_cut}{Optional Integer: Number of clusters for branch coloring,
+requiring a computed or supplied tree.}
 
 \item{show_values}{Logical: Print each cell's value.}
 

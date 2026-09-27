@@ -15,6 +15,8 @@ SignificanceConfig(
   estimate = "estimate",
   p_value = "p_value",
   label = NULL,
+  group = NULL,
+  palette = NULL,
   p_adjust_method = "holm",
   n_tests = NULL,
   p_transform = "neg_log10",
@@ -70,6 +72,13 @@ inside placement overlays the data. Neither setting adds a missing legend.}
 \item{p_value}{Character: Column containing unadjusted p-values.}
 
 \item{label}{Optional Character: Outcome-label column. Unset generates row labels.}
+
+\item{group}{Optional Character: Display-group column. Unset colors by significance
+and effect direction. Missing groups omit marks after full-family adjustment.
+Groups never change significance thresholds or annotation ranking.}
+
+\item{palette}{Optional Character vector: Display-group colors in first-appearance
+order; unset uses the theme. Requires a group binding.}
 
 \item{p_adjust_method}{Character: Method from \link[stats:p.adjust.methods]{stats::p.adjust.methods}. Adjustment precedes transformation.}
 

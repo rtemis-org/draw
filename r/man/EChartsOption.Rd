@@ -7,6 +7,10 @@
 EChartsOption(
   title = NULL,
   legend = NULL,
+  x_axis_3d = NULL,
+  y_axis_3d = NULL,
+  z_axis_3d = NULL,
+  grid_3d = NULL,
   grid = NULL,
   x_axis = NULL,
   y_axis = NULL,
@@ -32,6 +36,9 @@ EChartsOption(
 \item{title}{Optional \link{Title} or list: Title configuration.}
 
 \item{legend}{Optional \link{Legend} or list: Legend configuration.}
+
+\item{x_axis_3d, y_axis_3d, z_axis_3d, grid_3d}{Optional List: ECharts-GL
+cartesian axes and grid, as defined by its Axis3D and Grid3DModel sources.}
 
 \item{grid}{Optional \link{Grid} or list: Grid configuration.}
 

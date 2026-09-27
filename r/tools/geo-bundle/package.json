@@ -1,0 +1,16 @@
+{
+  "name": "rtemis-country-boundaries",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Reproducible build of bundled Natural Earth country boundaries; not used at runtime.",
+  "scripts": {
+    "build": "node build.mjs"
+  },
+  "devDependencies": {
+    "mapshaper": "0.7.68"
+  },
+  "engines": {
+    "node": ">=20.11.0"
+  }
+}

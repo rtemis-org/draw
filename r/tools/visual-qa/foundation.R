@@ -4,6 +4,7 @@
 required <- c(
   "rtemis.draw",
   "mgcv",
+  "survival",
   "htmlwidgets",
   "jsonlite",
   "chromote",
@@ -132,6 +133,40 @@ builders[["density"]] <- function(theme) {
     theme = theme
   )
 }
+builders[["histogram_density"]] <- function(theme) {
+  draw_histogram(
+    birds[["bill_len"]],
+    group = birds[["species"]],
+    normalization = "density",
+    density = TRUE,
+    xlab = "Bill length (mm)",
+    ylab = "Density",
+    theme = theme
+  )
+}
+builders[["histogram_unequal"]] <- function(theme) {
+  draw_histogram(
+    birds[["bill_len"]],
+    group = birds[["species"]],
+    bin_edges = c(30, 35, 40, 50, 60),
+    normalization = "density",
+    density = TRUE,
+    xlab = "Bill length (mm)",
+    ylab = "Density",
+    theme = theme
+  )
+}
+builders[["density_kernel"]] <- function(theme) {
+  draw_density(
+    birds[["bill_len"]],
+    group = birds[["species"]],
+    bandwidth = 2,
+    kernel = "epanechnikov",
+    xlab = "Bill length (mm)",
+    ylab = "Density",
+    theme = theme
+  )
+}
 builders[["pie"]] <- function(theme) {
   draw_pie(as.numeric(species_counts), names(species_counts), theme = theme)
 }
@@ -167,6 +202,212 @@ builders[["panels"]] <- function(theme) {
 }
 # An optional family filter keeps iterative QA bounded; the unfiltered run is
 # the complete foundation matrix recorded in the manifest.
+set.seed(42)
+training_rows <- unlist(lapply(
+  split(seq_len(nrow(iris)), iris[["Species"]]),
+  sample,
+  size = 35L
+))
+training <- iris[training_rows, ]
+testing <- iris[-training_rows, ]
+training[["virginica"]] <- training[["Species"]] == "virginica"
+sepal_model <- glm(
+  virginica ~ Sepal.Length + Sepal.Width,
+  data = training,
+  family = binomial()
+)
+petal_model <- glm(
+  virginica ~ Petal.Width,
+  data = training,
+  family = binomial()
+)
+reference <- factor(ifelse(
+  testing[["Species"]] == "virginica",
+  "Virginica",
+  "Other"
+))
+builders[["calibration"]] <- function(theme) {
+  draw_calibration(
+    list(Sepal = reference, Petal = reference),
+    list(
+      Sepal = predict(sepal_model, testing, type = "response"),
+      Petal = predict(petal_model, testing, type = "response")
+    ),
+    positive = "Virginica",
+    n_bins = 5L,
+    theme = theme
+  )
+}
+# Real survival fits exercise all optional native layers together.
+builders[["survival"]] <- function(theme) {
+  patients <- survival::lung
+  patients[["sex"]] <- factor(
+    patients[["sex"]],
+    levels = c(1, 2),
+    labels = c("Male", "Female")
+  )
+  fit <- survival::survfit(survival::Surv(time, status) ~ sex, data = patients)
+  draw_survfit(
+    fit,
+    risk_times = c(0, 250, 500, 750, 1000),
+    show_median = TRUE,
+    landmarks = 365,
+    xlab = "Days",
+    theme = theme
+  )
+}
+# Distribution layers use real repeated measurements and grouped morphology.
+for (inset in c(FALSE, TRUE)) {
+  builders[[if (inset) "violin_box" else "violin"]] <- local({
+    show_box <- inset
+    function(theme) {
+      draw_violin(
+        birds[c("bill_len", "bill_dep")],
+        group = birds[["species"]],
+        labels = c("Length", "Depth"),
+        show_box = show_box,
+        boxpoints = "all",
+        ylab = "Bill dimensions (mm)",
+        theme = theme
+      )
+    }
+  })
+}
+for (horizontal in c(FALSE, TRUE)) {
+  builders[[if (horizontal) "paired_horizontal" else "paired"]] <- local({
+    orientation <- horizontal
+    function(theme) {
+      draw_violin(
+        datasets::sleep[["extra"]],
+        group = paste("Drug", datasets::sleep[["group"]]),
+        observation = datasets::sleep[["ID"]],
+        paired = TRUE,
+        show_box = TRUE,
+        boxpoints = "all",
+        horizontal = orientation,
+        comparisons = data.frame(
+          from = "Drug 1",
+          to = "Drug 2",
+          label = "Paired p = 0.003"
+        ),
+        theme = theme
+      )
+    }
+  })
+}
+# Remaining distribution, time-series and supplied-overlay workflows.
+builders[["ridge"]] <- function(theme) {
+  draw_density(
+    birds[["bill_len"]],
+    group = birds[["species"]],
+    mode = "ridge",
+    order = "mean",
+    theme = theme
+  )
+}
+builders[["histogram_stack"]] <- function(theme) {
+  draw_histogram(
+    birds[["bill_len"]],
+    group = birds[["species"]],
+    bar_mode = "stack",
+    theme = theme
+  )
+}
+builders[["histogram_group"]] <- function(theme) {
+  draw_histogram(
+    birds[["bill_len"]],
+    group = birds[["species"]],
+    bar_mode = "group",
+    theme = theme
+  )
+}
+builders[["timeseries"]] <- function(theme) {
+  draw_ts(
+    list(Activity = c(2, 4, 3, 5, 4, 7, 5, 3, 2)),
+    time = seq(0, 48, length.out = 9),
+    window = 3L,
+    theme = theme,
+    zoom = TRUE
+  )
+}
+builders[["zeitgeber"]] <- function(theme) {
+  draw_xt(
+    seq(0, 48, length.out = 9),
+    list(Activity = c(2, 4, 3, 5, 4, 7, 5, 3, 2)),
+    zt = seq(0, 48, length.out = 9) %% 24,
+    show_zt_every = 2L,
+    shade_bin = c(0, 0, 1, 1, 0, 0, 1, 1, 0),
+    theme = theme
+  )
+}
+builders[["supplied_fit"]] <- function(theme) {
+  plot <- draw_scatter(1:5, c(2, 3, 2, 5, 4), rug = TRUE, theme = theme)
+  plot <- draw_add_fit(
+    plot,
+    1:5,
+    c(2, 2.5, 3, 3.5, 4),
+    lower = c(1.5, 2, 2.5, 3, 3.5),
+    upper = c(2.5, 3, 3.5, 4, 4.5),
+    name = "Predicted"
+  )
+  draw_annotate(
+    plot,
+    hline = 3,
+    x = 3,
+    y = 4.5,
+    text = "Reference",
+    bands = list(c(2, 3))
+  )
+}
+builders[["heatmap_annotations"]] <- function(theme) {
+  x <- cor(mtcars[c("mpg", "disp", "hp", "wt")])
+  draw_heatmap(
+    x,
+    row_tree = hclust(dist(x)),
+    col_tree = hclust(dist(t(x))),
+    cell_notes = matrix(c("{b}", rep("Measured note {b}", 15)), 4, 4),
+    show_notes = TRUE,
+    row_colors = c("#18A3AC", "#F48024", "#F48024", "#18A3AC"),
+    col_colors = c("#18A3AC", "#F48024", "#F48024", "#18A3AC"),
+    row_cut = 2L,
+    col_cut = 2L,
+    dendro_col_side = "bottom",
+    theme = theme,
+    square_cells = TRUE,
+    title = "Vehicle correlations"
+  )
+}
+# Custom display groups span both effect directions and link capped bars to
+# their cap markers while threshold guides remain independent.
+for (view in c("volcano", "manhattan")) {
+  local({
+    current <- view
+    builders[[paste0("grouped_", current)]] <<- function(theme) {
+      do.call(
+        get(paste0("draw_", current)),
+        list(
+          x = c(-2, -.5, 1, 2),
+          pvals = c(.001, .5, .02, 0),
+          xnames = c("Marker A", "Marker B", "Marker C", "Marker D"),
+          group = c("Assay 1", "Assay 2", "Assay 2", "Assay 1"),
+          p_adjust_method = "holm",
+          theme = theme
+        )
+      )
+    }
+  })
+}
+extra_labels <- list(
+  grouped_volcano = c("Assay 1", "Assay 2"),
+  grouped_manhattan = c("Assay 1", "Assay 2"),
+  heatmap_annotations = "{b}",
+  ridge = unique(birds[["species"]]),
+  histogram_stack = unique(birds[["species"]]),
+  histogram_group = unique(birds[["species"]]),
+  timeseries = "Activity",
+  zeitgeber = "Activity",
+  supplied_fit = "Reference"
+)
 selected <- Sys.getenv("DRAW_QA_FAMILIES")
 if (nzchar(selected)) {
   builders <- builders[strsplit(selected, ",", fixed = TRUE)[[1L]]]
@@ -206,6 +447,15 @@ jsonlite::write_json(
   auto_unbox = TRUE,
   pretty = TRUE
 )
+# Chrome requires a nondefault profile for remote debugging. Keep this QA run
+# isolated unless the caller already supplied an explicit profile.
+chrome_args <- chromote::get_chrome_args()
+if (!any(grepl("^--user-data-dir(?:=|$)", chrome_args, perl = TRUE))) {
+  chromote::set_chrome_args(c(
+    chrome_args,
+    paste0("--user-data-dir=", tempfile("draw-foundation-chrome-"))
+  ))
+}
 b <- chromote::ChromoteSession$new(width = 1100, height = 650)
 manifest[["browser"]] <- b$Browser$getVersion()
 b$Page$addScriptToEvaluateOnNewDocument(
@@ -302,9 +552,35 @@ tryCatch(
           wait_for(
             "foundationQA.charts().every(c=>c.getZr().animation.isFinished())"
           )
+          # Fixed-aspect widgets may grow taller than their requested height.
+          # Keep the complete chart in the native pointer/capture viewport.
+          capture_height <- max(
+            650L,
+            evaluate(
+              "Math.ceil(Math.max(...foundationQA.charts().map(c=>c.getDom().getBoundingClientRect().bottom)) + 20)"
+            )
+          )
+          if (capture_height > 650L) {
+            b$Emulation$setDeviceMetricsOverride(
+              width = width,
+              height = capture_height,
+              deviceScaleFactor = 1,
+              mobile = FALSE
+            )
+            wait_for(
+              "foundationQA.charts().every(c=>c.getZr().animation.isFinished())"
+            )
+          }
           evaluate(
             "new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(()=>r(true))))"
           )
+          if (name == "calibration") {
+            wait_for("foundationQA.linePointsAligned()")
+            wait_for("foundationQA.chart().getZr().animation.isFinished()")
+          }
+          if (name == "heatmap_annotations") {
+            stopifnot(isTRUE(evaluate("foundationQA.heatmapTracksAligned()")))
+          }
           result <- evaluate("foundationQA.scene()")
           if (name == "panels") {
             result[["children"]] <- evaluate(
@@ -321,14 +597,24 @@ tryCatch(
               ))
             )
           }
-          expected_series <- if (
-            name %in% c("pie", "rose", "sankey", "spectrogram")
-          ) {
+          expected_series <- if (name %in% names(extra_labels)) {
+            length(widget[["x"]][["option"]][["series"]])
+          } else if (name %in% c("pie", "rose", "sankey", "spectrogram")) {
             1L
-          } else if (name %in% c("histogram", "density")) {
+          } else if (name %in% c("histogram", "density", "density_kernel")) {
             3L
+          } else if (name %in% c("histogram_density", "histogram_unequal")) {
+            6L
           } else if (name == "scatter") {
             9L
+          } else if (name %in% c("violin", "violin_box")) {
+            9L
+          } else if (startsWith(name, "paired")) {
+            5L
+          } else if (name == "survival") {
+            17L
+          } else if (name == "calibration") {
+            5L
           } else if (
             name %in% c("line", "area") || startsWith(name, "boxplot_")
           ) {
@@ -341,7 +627,9 @@ tryCatch(
             length(result[["series"]]) == expected_series,
             all(vapply(
               result[["series"]],
-              function(series) series[["count"]] > 0,
+              function(series) {
+                series[["count"]] > 0 || isTRUE(series[["reference"]])
+              },
               logical(1)
             )),
             result[["grid"]][["width"]] > 100,
@@ -370,8 +658,15 @@ tryCatch(
           } else {
             names(by_species)
           }
-          if (name == "spectrogram") {
+          if (startsWith(name, "paired")) {
+            expected <- c("Drug 1", "Drug 2", "Paired p = 0.003")
+          } else if (name == "spectrogram") {
             expected <- character()
+          } else if (name %in% c("calibration", "survival")) {
+            expected <- unlist(widget[["x"]][["option"]][["legend"]][["data"]])
+          }
+          if (name %in% names(extra_labels)) {
+            expected <- extra_labels[[name]]
           }
           stopifnot(
             all(expected %in% labels),
@@ -406,18 +701,60 @@ tryCatch(
               ))
               stopifnot(
                 identical(state[["selected"]], selected),
-                length(state[["layers"]]) == if (name == "scatter") 3L else 1L,
+                length(state[["layers"]]) ==
+                  if (name == "scatter") {
+                    3L
+                  } else if (name %in% c("violin", "violin_box")) {
+                    3L
+                  } else if (name == "survival") {
+                    8L
+                  } else if (
+                    name %in%
+                      c(
+                        "calibration",
+                        "histogram_density",
+                        "histogram_unequal",
+                        "timeseries",
+                        "grouped_manhattan",
+                        "supplied_fit"
+                      )
+                  ) {
+                    2L
+                  } else {
+                    1L
+                  },
                 all(vapply(
                   state[["layers"]],
                   function(layer) identical(layer[["filtered"]], !selected),
                   logical(1)
                 ))
               )
+              if (startsWith(name, "grouped_")) {
+                stopifnot(isTRUE(evaluate(
+                  '(() => {
+                  const c=foundationQA.chart(),m=c.getModel();
+                  const guides=m.getSeries().filter(s=>s.get("silent")&&s.get("markLine.data")?.length);
+                  const named=m.getSeriesByName("Assay 1");
+                  const colors=named.map(s=>s.getData().getVisual("style").fill);
+                  return guides.length===1 && !m.isSeriesFiltered(guides[0]) &&
+                    colors.every(color=>color===colors[0]);
+                })()'
+                )))
+              }
               result[["legend"]][["states"]][[
                 if (selected) "restored" else "hidden"
               ]] <- state
             }
           }
+          wait_for(
+            "foundationQA.charts().every(c=>c.getZr().animation.isFinished())"
+          )
+          # Legend actions schedule a fresh render on the next frame. Observe
+          # that render before measuring its hit target (zero-height entering
+          # bars are not yet hoverable even if the previous frame was idle).
+          evaluate(
+            "new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(()=>r(true))))"
+          )
           wait_for(
             "foundationQA.charts().every(c=>c.getZr().animation.isFinished())"
           )
@@ -437,6 +774,21 @@ tryCatch(
             base64enc::base64decode(screenshot[["data"]]),
             file.path(out, paste0(key, "-hover.png"))
           )
+
+          # Density overlays expose evaluated values through native transparent
+          # line symbols, as ROC does. Test a real pointer hover on the curve.
+          if (name %in% c("histogram_density", "histogram_unequal")) {
+            point <- evaluate(
+              "(()=>{const c=foundationQA.chart(),s=c.getModel().getSeries().find(s=>s.subType==='line'),d=s.getData();let i=0;for(let j=1;j<d.count();j++){if(d.getRawDataItem(j)[1]>d.getRawDataItem(i)[1])i=j;}const p=s.coordinateSystem.dataToPoint(d.getRawDataItem(i));return foundationQA.pagePoint(p[0],p[1]);})()"
+            )
+            b$Input$dispatchMouseEvent(
+              type = "mouseMoved",
+              x = point[["x"]],
+              y = point[["y"]]
+            )
+            wait_for("foundationQA.tooltip().length > 0")
+            result[["curve_tooltip"]] <- evaluate("foundationQA.tooltip()")
+          }
 
           # Only line/area expose zoom here; wheel and double-click use real input.
           if (name %in% c("line", "area")) {

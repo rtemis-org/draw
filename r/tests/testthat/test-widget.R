@@ -996,10 +996,9 @@ test_that("draw_histogram creates widget", {
   set.seed(1)
   w <- draw_histogram(rnorm(200))
   expect_s3_class(w, "htmlwidget")
-  expect_equal(w$x$option$series[[1]]$type, "bar")
-  expect_equal(w$x$option$xAxis$type, "category")
-  # No gap between bars for histogram look
-  expect_equal(w$x$option$series[[1]]$barCategoryGap, "0%")
+  expect_equal(w$x$option$series[[1]]$type, "custom")
+  expect_equal(w$x$option$xAxis$type, "value")
+  expect_identical(w$x$option$series[[1]]$renderItem, "rtemis.histogram.v1")
 })
 
 test_that("draw_histogram with groups", {
@@ -1017,8 +1016,8 @@ test_that("draw_histogram with groups", {
 test_that("draw_histogram respects breaks parameter", {
   set.seed(1)
   w <- draw_histogram(rnorm(200), breaks = 20)
-  # More breaks = more bins = more category labels
-  expect_true(length(w$x$option$xAxis$data) >= 15L)
+  # hist() treats the requested bin count as a suggestion for pretty breaks.
+  expect_true(length(w$x$option$series[[1]]$data) >= 15L)
 })
 
 # -- margins -------------------------------------------------------------------

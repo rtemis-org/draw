@@ -199,6 +199,14 @@ draw_panels <- function(
     height = height,
     element_id = element_id
   )
+  # Preserve optional backend dependencies (for example ECharts-GL) from children.
+  widget[["dependencies"]] <- htmltools::resolveDependencies(c(
+    widget[["dependencies"]],
+    unlist(
+      lapply(plots, function(plot) plot[["dependencies"]]),
+      recursive = FALSE
+    )
+  ))
   class(widget) <- c(class(widget), "rtemis-panels")
   if (!is.null(filename)) {
     save_drawing(widget, filename)

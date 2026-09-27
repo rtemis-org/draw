@@ -162,6 +162,7 @@ function rtemisDrawFactory(el, width, height, bounded = false, onBackground = ()
 
       const bgColor = x.option?.backgroundColor || themeObj?.backgroundColor || 'transparent';
       surface.paint(bgColor);
+      rtemisPanels.prepareLabels(x);
       rtemisPanels.prepareColors(echarts, x, themeObj);
 
       chart = echarts.init(el, themeName, {
@@ -170,6 +171,7 @@ function rtemisDrawFactory(el, width, height, bounded = false, onBackground = ()
         height: currentHeight
       });
 
+      if (x.option.grid3D) rtemisScatter3D.prepare(x.option, themeObj, currentWidth, currentHeight);
       chart.setOption(x.option, true);
       rtemisPanels.fitGantt(echarts, chart, x);
       rtemisA3.fit(chart, x, bounded);
@@ -301,6 +303,13 @@ function rtemisDrawFactory(el, width, height, bounded = false, onBackground = ()
         currentWidth = width;
         currentHeight = height;
 
+        if (currentPayload?.option?.grid3D && chart) {
+          rtemisScatter3D.prepare(currentPayload.option, currentTheme, width, height);
+          chart.resize({width, height});
+          chart.setOption({grid3D:{left:currentPayload.option.grid3D.left,width:currentPayload.option.grid3D.width,height:currentPayload.option.grid3D.height,viewControl:{orthographicSize:currentPayload.option.grid3D.viewControl.orthographicSize}},
+            xAxis3D:currentPayload.option.xAxis3D,yAxis3D:currentPayload.option.yAxis3D,zAxis3D:currentPayload.option.zAxis3D,graphic:currentPayload.option.graphic});
+          return;
+        }
         if (currentPayload?.a3 && chart) {
           chart.resize({width, height});
           rtemisA3.fit(chart, currentPayload, bounded);

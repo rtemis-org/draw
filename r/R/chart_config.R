@@ -129,6 +129,12 @@ ChartConfig <- new_class(
           "."
         )
       },
+      if (
+        !is.null(self@writer) &&
+          !all(c("name", "version") %in% names(self@writer))
+      ) {
+        "Supply both name and version in writer, or leave writer NULL."
+      },
       if (!is.null(self@writer) && length(writer_extra) > 0L) {
         paste0(
           "@writer takes `name` and `version`; got: ",

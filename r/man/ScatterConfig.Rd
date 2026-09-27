@@ -15,6 +15,9 @@ ScatterConfig(
   y = NULL,
   size = NULL,
   group = NULL,
+  hover = NULL,
+  fit_name = NULL,
+  rug = FALSE,
   fit = NULL,
   se = TRUE,
   se_times = 1.96,
@@ -66,6 +69,12 @@ inside placement overlays the data. Neither setting adds a missing legend.}
 \item{size}{Optional Character: Column giving per-point size.}
 
 \item{group}{Optional Character: Column to group and color points by.}
+
+\item{hover}{Optional Character: Column containing per-observation tooltip labels.}
+
+\item{fit_name}{Optional Character: Label for fitted layers.}
+
+\item{rug}{Logical: Show marginal marks along the x and y axes.}
 
 \item{fit}{Optional Character \{"glm", "gam"\}: Fit to overlay. \code{NULL} draws
 no fit.}

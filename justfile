@@ -188,3 +188,15 @@ qa-foundation output:
 # Inspect Sigma/MapLibre browser interactions and genuine vector SVG output.
 qa-backends output:
     {{rscript}} r/tools/visual-qa/backends.R "{{output}}"
+
+# Inspect native 3D camera projection, rotation and genuine SVG marks.
+qa-scatter3d output:
+    {{rscript}} r/tools/visual-qa/scatter3d.R "{{output}}"
+
+# Native 3D path/surface geometry, legend interaction and vector visibility
+qa-surface3d output:
+    {{rscript}} r/tools/visual-qa/surface3d.R "{{output}}"
+
+# Repeated rendering, theme/resize changes and dense geometry (developer QA).
+qa-lifecycle output:
+    {{rscript}} r/tools/visual-qa/lifecycle.R "{{output}}"

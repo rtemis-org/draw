@@ -2,8 +2,8 @@
 # ::rtemis.draw::
 # 2026- EDG rtemis.org
 
-# The histogram's config. Same binding shape as density -- one bound column plus
-# an optional grouping column -- differing only in its semantics.
+# Histograms share density settings and numeric-column/group bindings.
+# Bin and normalization settings determine their additional statistical contract.
 
 # %% HistogramConfig ----
 #' Histogram Configuration
@@ -11,13 +11,15 @@
 #' A serializable description of a histogram. Build one with
 #' [setup_HistogramConfig()] rather than calling this constructor directly.
 #'
-#' `x` names the column to bin. `group` optionally names a column to split it
-#' by, drawing one series per level.
+#' `x` names one or more columns to bin. `group` names a column to split them
+#' by, drawing one series per level. The output uses `CustomSeriesOption` in
+#' ECharts `src/chart/custom/CustomSeries.ts` and `LineSeriesOption` in
+#' `src/chart/line/LineSeries.ts` for optional density overlays.
 #'
-#' @param x Optional Character: Column to bin.
+#' @param x Optional Character: Columns to bin, one distribution per column.
 #' @param group Optional Character: Column to split the bins by.
-#' @param breaks Character: Binning rule, passed to [graphics::hist()]. One of
-#'   the algorithm names it accepts, e.g. `"Sturges"`, `"Scott"`, `"FD"`.
+#' @inheritParams draw_histogram breaks bins bin_edges normalization density na_rm bin_stat bar_mode
+#' @inheritParams draw_density n bw bandwidth kernel adjust fill_alpha mode order
 #' @param palette Optional Character: Series colors, overriding the theme
 #'   palette for this chart. `NULL` uses the theme's.
 #' @param xlab,ylab Optional Character: Axis labels. `NULL` derives them from
@@ -40,13 +42,26 @@ HistogramConfig <- new_class(
   package = "rtemis.draw",
   properties = c(
     legend_properties(),
+    # Reuse the density declarations so shared controls have identical schemas.
+    DensityConfig@properties[c(
+      "mode",
+      "order",
+      "n",
+      "bw",
+      "bandwidth",
+      "kernel",
+      "adjust",
+      "na_rm",
+      "fill_alpha"
+    )],
     list(
       type = prop_chart_type("histogram"),
       # -- data binding ------------------------------------------------------
       x = prop_string(
         NULL,
         nullable = TRUE,
-        description = "Column to bin."
+        vector = TRUE,
+        description = "Columns to bin."
       ),
       group = prop_string(
         NULL,
@@ -58,6 +73,39 @@ HistogramConfig <- new_class(
         "Sturges",
         enum = c("Sturges", "Scott", "FD", "Freedman-Diaconis"),
         description = "Binning rule."
+      ),
+      bins = prop_integer(
+        NULL,
+        nullable = TRUE,
+        min = 1L,
+        max = 1000000L,
+        description = "Suggested bin count, passed through hist's pretty breaks."
+      ),
+      bin_edges = prop_float(
+        NULL,
+        nullable = TRUE,
+        vector = TRUE,
+        min_items = 2L,
+        description = "Strictly increasing bin edges spanning every retained value."
+      ),
+      normalization = prop_string(
+        "count",
+        enum = c("count", "probability", "percent", "density", "count_density"),
+        description = "Histogram height normalization within each sample."
+      ),
+      bin_stat = prop_string(
+        "count",
+        enum = c("count", "sum", "mean", "min", "max"),
+        description = "Statistic of the x observations falling in each bin."
+      ),
+      bar_mode = prop_string(
+        "overlay",
+        enum = c("overlay", "group", "stack"),
+        description = "Overlay, dodge, or stack histogram groups; stacks separate positive and negative values."
+      ),
+      density = prop_boolean(
+        FALSE,
+        description = "Overlay a kernel density on the histogram scale."
       ),
       # -- appearance --------------------------------------------------------
       palette = prop_string(
@@ -101,6 +149,66 @@ HistogramConfig <- new_class(
         description = "Left margin in pixels."
       )
     )
+  ),
+  validator = config_validator(
+    list(
+      list(
+        schema = list(
+          `if` = list(
+            required = list("bin_stat"),
+            properties = list(
+              bin_stat = list(not = list(const = "count"))
+            )
+          ),
+          then = list(
+            properties = list(
+              normalization = list(const = "count"),
+              density = list(const = FALSE)
+            )
+          )
+        ),
+        message = "Use normalization = 'count' and density = FALSE with non-count bin statistics."
+      ),
+      list(
+        schema = list(
+          `if` = list(
+            required = list("bar_mode"),
+            properties = list(
+              bar_mode = list(not = list(const = "overlay"))
+            )
+          ),
+          then = list(
+            properties = list(
+              mode = list(not = list(const = "ridge")),
+              density = list(const = FALSE)
+            )
+          )
+        ),
+        message = "Use overlay bars with ridgelines or density curves."
+      ),
+      list(
+        schema = list(
+          not = list(
+            required = list("bins", "bin_edges"),
+            properties = list(
+              bins = list(not = list(type = "null")),
+              bin_edges = list(not = list(type = "null"))
+            )
+          )
+        ),
+        message = "Supply bins or bin_edges, not both."
+      )
+    ),
+    extra = function(self) {
+      if (
+        !is.null(self@bin_edges) &&
+          any(!is.finite(diff(self@bin_edges)) | diff(self@bin_edges) <= 0)
+      ) {
+        "Supply strictly increasing bin_edges."
+      } else {
+        NULL
+      }
+    }
   )
 ) # /rtemis.draw::HistogramConfig
 
@@ -148,10 +256,74 @@ setup_HistogramConfig <- function(
   origin = NULL,
   writer = NULL,
   legend_position = "top",
-  legend_placement = "outside"
+  legend_placement = "outside",
+  bins = NULL,
+  bin_edges = NULL,
+  normalization = "count",
+  density = FALSE,
+  n = 512L,
+  bw = "nrd0",
+  bandwidth = NULL,
+  kernel = "gaussian",
+  adjust = 1,
+  fill_alpha = 0.25,
+  na_rm = TRUE,
+  mode = "overlap",
+  order = "input",
+  bin_stat = "count",
+  bar_mode = "overlay"
 ) {
   origin <- origin %||% chart_origin(match.call(), HISTOGRAM_ORIGIN_NAMES)
+  if (is.numeric(breaks)) {
+    if (!is.null(bins) || !is.null(bin_edges)) {
+      abort(
+        "Use numeric `breaks` or `bins`/`bin_edges`, not both.",
+        class = c("rtemis_value_error", "rtemis_input_error")
+      )
+    }
+    if (length(breaks) == 1L) {
+      bins <- breaks
+      origin[["bins"]] <- "user"
+    } else {
+      bin_edges <- breaks
+      origin[["bin_edges"]] <- "user"
+    }
+    breaks <- "Sturges"
+    origin[["breaks"]] <- "default"
+  }
+  if (!is.null(bins)) {
+    check_integer_scalar(bins)
+    bins <- as.integer(bins)
+  }
+  smoothing <- setup_DensityConfig(
+    n = n,
+    bw = bw,
+    bandwidth = bandwidth,
+    kernel = kernel,
+    adjust = adjust,
+    fill_alpha = fill_alpha,
+    na_rm = na_rm
+  )
+  if (is.numeric(bw)) {
+    origin[["bw"]] <- "default"
+    origin[["bandwidth"]] <- "user"
+  }
   HistogramConfig(
+    bin_stat = bin_stat,
+    bar_mode = bar_mode,
+    mode = mode,
+    order = order,
+    bins = bins,
+    bin_edges = bin_edges,
+    normalization = normalization,
+    density = density,
+    n = smoothing@n,
+    bw = smoothing@bw,
+    bandwidth = smoothing@bandwidth,
+    kernel = smoothing@kernel,
+    adjust = smoothing@adjust,
+    fill_alpha = smoothing@fill_alpha,
+    na_rm = smoothing@na_rm,
     x = x,
     group = group,
     breaks = breaks,
@@ -182,7 +354,7 @@ method(resolve, HistogramConfig) <- function(config, data = NULL, ...) {
   config_derive(
     config,
     list(
-      xlab = config@x
+      xlab = if (length(config@x) == 1L) config@x else NULL
     )
   )
 }
@@ -190,7 +362,14 @@ method(resolve, HistogramConfig) <- function(config, data = NULL, ...) {
 
 # %% compile.HistogramConfig ----
 method(compile, HistogramConfig) <- function(config, data = NULL, ...) {
-  x <- config_column(data, config@x, "x")
+  x <- if (length(config@x) > 1L) {
+    setNames(
+      lapply(config@x, function(column) config_column(data, column, "x")),
+      config@x
+    )
+  } else {
+    config_column(data, config@x, "x")
+  }
   if (is.null(x)) {
     abort(
       "A HistogramConfig needs `x` set to draw.",
@@ -199,8 +378,23 @@ method(compile, HistogramConfig) <- function(config, data = NULL, ...) {
   }
   histogram_option(
     x = x,
+    bin_stat = config@bin_stat,
+    bar_mode = config@bar_mode,
+    mode = config@mode,
+    order = config@order,
     group = config_column(data, config@group, "group"),
     breaks = config@breaks,
+    bins = config@bins,
+    bin_edges = config@bin_edges,
+    normalization = config@normalization,
+    density = config@density,
+    n = config@n,
+    bw = config@bw,
+    bandwidth = config@bandwidth,
+    kernel = config@kernel,
+    adjust = config@adjust,
+    fill_alpha = config@fill_alpha,
+    na_rm = config@na_rm,
     palette = config@palette,
     xlab = config@xlab,
     ylab = config@ylab,

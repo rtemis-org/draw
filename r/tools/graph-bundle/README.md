@@ -6,13 +6,13 @@ htmlwidget (network / graph plots via Sigma.js).
 Unlike echarts (which ships a prebuilt UMD), sigma 4 and graphology have no
 single browser global, so we bundle them here with esbuild into one IIFE that
 attaches a `window.RtemisGraph` global. The dependency versions are pinned to
-match rtemislive (`~/Code/live`) so both renderers behave identically.
+match rtemislive so both renderers behave identically.
 
 ## Regenerate the bundle
 
 ```sh
 cd r/tools/graph-bundle
-npm install
+npm ci
 npm run build
 ```
 
@@ -22,8 +22,9 @@ This (re)writes the committed artifact:
 r/inst/htmlwidgets/lib/sigma/rtemis-graph-deps.js
 ```
 
-`node_modules/` and `package-lock.json` are gitignored; only `package.json`,
-`entry.mjs`, and the built artifact are tracked.
+`node_modules/` is excluded. The lockfile pins the build dependency graph.
+Run `npm run build:vector` to regenerate the corresponding Node export bundle.
+Complete third-party notices ship in `inst/third-party/`.
 
 ## What it exposes
 

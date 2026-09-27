@@ -36,7 +36,15 @@ draw_heatmap(
   element_id = NULL,
   filename = NULL,
   legend_position = if (colorbar_orient == "horizontal") "bottom" else "right",
-  legend_placement = "outside"
+  legend_placement = "outside",
+  row_tree = NULL,
+  col_tree = NULL,
+  cell_notes = NULL,
+  row_colors = NULL,
+  col_colors = NULL,
+  show_notes = FALSE,
+  row_cut = NULL,
+  col_cut = NULL
 )
 }
 \arguments{
@@ -152,6 +160,26 @@ column. Corner anchors align within the top or bottom row.}
 \item{legend_placement}{Character \{"outside", "inside"\}: Relation to the
 plotting area. Outside placement reserves space for the complete legend;
 inside placement overlays the data. Neither setting adds a missing legend.}
+
+\item{row_tree, col_tree}{Optional hclust, dendrogram or List: Supplied trees.
+A plain tree record contains \code{merge}, \code{height}, \code{order} and optional \code{labels}.
+Labeled leaves match original matrix dimnames; unlabeled trees are positional.
+Supplied trees determine order and take precedence over computed clustering.
+Triangle masking is unavailable with supplied trees.}
+
+\item{cell_notes}{Optional Character matrix: Literal cell notes for hover.
+Named dimensions align to original matrix identities; otherwise positional.}
+
+\item{row_colors, col_colors}{Optional Character vector, matrix or Data frame:
+R colors, one row per matrix row/column and one column per annotation track.
+Row names, when supplied, match the original matrix identities.}
+
+\item{show_notes}{Logical: Print cell notes instead of numeric value labels.
+Long notes truncate to the cell width; hover retains the full text.}
+
+\item{row_cut, col_cut}{Optional Integer: Number of clusters for branch coloring.
+A cut requires a supplied or computed tree. Cross-cluster branches stay gray
+(or \code{dendro_color}); within-cluster branches share a deterministic color.}
 }
 \value{
 htmlwidget: Widget object.

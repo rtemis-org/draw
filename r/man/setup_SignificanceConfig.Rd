@@ -36,7 +36,9 @@ setup_SignificanceConfig(
   origin = NULL,
   writer = NULL,
   legend_position = "top",
-  legend_placement = "outside"
+  legend_placement = "outside",
+  group = NULL,
+  palette = NULL
 )
 }
 \arguments{
@@ -111,6 +113,13 @@ column. Corner anchors align within the top or bottom row.}
 \item{legend_placement}{Character \{"outside", "inside"\}: Relation to the
 plotting area. Outside placement reserves space for the complete legend;
 inside placement overlays the data. Neither setting adds a missing legend.}
+
+\item{group}{Optional Character: Display-group column. Unset colors by significance
+and effect direction. Missing groups omit marks after full-family adjustment.
+Groups never change significance thresholds or annotation ranking.}
+
+\item{palette}{Optional Character vector: Display-group colors in first-appearance
+order; unset uses the theme. Requires a group binding.}
 }
 \value{
 A \link{SignificanceConfig} object.

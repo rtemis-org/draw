@@ -13,6 +13,8 @@ PieConfig(
   legend_placement = "outside",
   values = NULL,
   labels = NULL,
+  label_format = "name",
+  percent_digits = 1L,
   rose_type = NULL,
   radius = "75\%",
   palette = NULL
@@ -45,6 +47,10 @@ inside placement overlays the data. Neither setting adds a missing legend.}
 \item{values}{Optional Character: Column holding the slice values.}
 
 \item{labels}{Optional Character: Column holding the slice labels.}
+
+\item{label_format}{Character \verb{\{"name", "value", "percent", "name_value", "name_percent"\}}: Slice label content.}
+
+\item{percent_digits}{Integer \verb{[0, 6]}: Percentage precision.}
 
 \item{rose_type}{Optional Character \{"radius", "area"\}: Draw as a
 Nightingale rose chart, sizing slices by radius or by area. \code{NULL} draws a

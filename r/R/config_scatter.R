@@ -27,6 +27,9 @@
 #' @param group Optional Character: Column to group and color points by.
 #' @param fit Optional Character \{"glm", "gam"\}: Fit to overlay. `NULL` draws
 #'   no fit.
+#' @param fit_name Optional Character: Label for fitted layers.
+#' @param rug Logical: Show marginal marks along the x and y axes.
+#' @param hover Optional Character: Column containing per-observation tooltip labels.
 #' @param se Logical: If TRUE, shade the fit standard-error band.
 #' @param se_times Numeric `[0, Inf)`: Multiplier for the fitted standard error.
 #' @param rsq Logical: Include the fitted model's R-squared in series labels.
@@ -92,6 +95,20 @@ ScatterConfig <- new_class(
         NULL,
         nullable = TRUE,
         description = "Column to group and color points by."
+      ),
+      hover = prop_string(
+        NULL,
+        nullable = TRUE,
+        description = "Column containing literal observation tooltip labels."
+      ),
+      fit_name = prop_string(
+        NULL,
+        nullable = TRUE,
+        description = "Label for fitted layers."
+      ),
+      rug = prop_boolean(
+        FALSE,
+        description = "Show marginal marks on both axes."
       ),
       # -- semantics ---------------------------------------------------------
       fit = prop_string(
@@ -211,6 +228,10 @@ ScatterConfig <- new_class(
         description = "Left margin in pixels."
       )
     )
+  ),
+  validator = config_validator(
+    CONFIG_LIMIT_RULES,
+    extra = config_ordered_limits
   )
 ) # /rtemis.draw::ScatterConfig
 
@@ -281,7 +302,10 @@ setup_ScatterConfig <- function(
   diagonal = FALSE,
   diagonal_color = NULL,
   legend_position = "top",
-  legend_placement = "outside"
+  legend_placement = "outside",
+  fit_name = NULL,
+  rug = FALSE,
+  hover = NULL
 ) {
   # Which values the caller chose, versus which this function filled in. An
   # explicit `origin` (from read_chart_config()) wins: provenance is carried
@@ -294,6 +318,9 @@ setup_ScatterConfig <- function(
     size = size,
     group = group,
     fit = fit,
+    fit_name = fit_name,
+    rug = rug,
+    hover = hover,
     se = se,
     se_times = se_times,
     rsq = rsq,
@@ -378,6 +405,9 @@ method(compile, ScatterConfig) <- function(config, data = NULL, ...) {
     size = config_column(data, config@size, "size"),
     group = config_column(data, config@group, "group"),
     fit = config@fit,
+    fit_name = config@fit_name,
+    rug = config@rug,
+    hover = config_column(data, config@hover, "hover"),
     se = config@se,
     se_times = config@se_times,
     rsq = config@rsq,

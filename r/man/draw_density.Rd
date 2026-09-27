@@ -22,7 +22,13 @@ draw_density(
   element_id = NULL,
   filename = NULL,
   legend_position = "top",
-  legend_placement = "outside"
+  legend_placement = "outside",
+  bandwidth = NULL,
+  kernel = "gaussian",
+  adjust = 1,
+  fill_alpha = 0.25,
+  mode = "overlap",
+  order = "input"
 )
 }
 \arguments{
@@ -33,9 +39,11 @@ element is split by group into separate traces.}
 \item{group}{Optional Atomic vector or single-column data frame: Grouping
 variable for multiple density traces.}
 
-\item{n}{Numeric \verb{[1, Inf)}: Number of equally spaced points for density estimation.}
+\item{n}{Integer \verb{[2, Inf)}: Number of density evaluation points.}
 
-\item{bw}{Character or Numeric: Bandwidth passed to \code{\link[stats:density]{stats::density()}}.}
+\item{bw}{Character or Numeric: Bandwidth selector (\code{"nrd0"}, \code{"nrd"},
+\code{"ucv"}, \code{"bcv"}, \code{"SJ"}, \code{"SJ-ste"}, \code{"SJ-dpi"}). Numeric input is
+normalized to \code{bandwidth} by the setup function.}
 
 \item{na_rm}{Logical: Whether to remove \code{NA} values before
 computing densities.}
@@ -76,6 +84,23 @@ column. Corner anchors align within the top or bottom row.}
 \item{legend_placement}{Character \{"outside", "inside"\}: Relation to the
 plotting area. Outside placement reserves space for the complete legend;
 inside placement overlays the data. Neither setting adds a missing legend.}
+
+\item{bandwidth}{Optional Numeric \verb{(0, Inf)}: Explicit finite smoothing
+bandwidth in measurement units, overriding the selector.}
+
+\item{kernel}{Character: One of \code{"gaussian"}, \code{"epanechnikov"}, \code{"rectangular"},
+\code{"triangular"}, \code{"biweight"}, \code{"cosine"}, or \code{"optcosine"}.}
+
+\item{adjust}{Numeric \verb{(0, Inf)}: Finite bandwidth multiplier.}
+
+\item{fill_alpha}{Numeric \verb{[0, 1]}: Distribution fill opacity.}
+
+\item{mode}{Character \verb{\{"overlap", "ridge"\}}: Overlay samples or align rows
+on common x and y scales. Ridge rows use sample names in place of a legend.
+Increase figure height for many rows.}
+
+\item{order}{Character \verb{\{"input", "mean", "median"\}}: Sample order. Summary
+orders are decreasing, retain ties in input order, and place empty samples last.}
 }
 \value{
 htmlwidget: Widget object.
@@ -84,7 +109,11 @@ htmlwidget: Widget object.
 Kernel density estimation plot from numeric data, with optional grouping
 for multiple traces. A list input creates one density trace per vector when
 ungrouped, or one trace per variable/group combination when \code{group} is
-supplied.
+supplied. Curves use \code{\link[stats:density]{stats::density()}} with its bandwidth-scaled kernels
+and evaluation range extending three bandwidths beyond the data. Empty
+samples retain their identity without a curve. Singleton and constant
+samples require an explicit bandwidth; no spread is inferred for them.
+Missing groups are excluded, and infinite/nonnumeric observations rejected.
 }
 \examples{
 draw_density(iris[["Sepal.Length"]], xlab = "Sepal length")

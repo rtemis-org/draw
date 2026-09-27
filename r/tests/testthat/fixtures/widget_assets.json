@@ -24,7 +24,7 @@
       "rtemis-draw.js"
     ],
     "md5": [
-      "56292d839fbe100b8a95420f809af5ef"
+      "576beec7aa5427e36824064e3f43186f"
     ]
   },
   "rtemis-panel-layout-1.0.2": {
@@ -195,6 +195,62 @@
     ],
     "md5": [
       "5b0ca490d0248b9a14631b2cdc82d290"
+    ]
+  },
+  "rtemis-graph-binding-0.5.3": {
+    "scripts": [
+      "rtemis-graph.js"
+    ],
+    "md5": [
+      "299c5acb5c2b3170260b4b94e0647c96"
+    ]
+  },
+  "rtemis-map-binding-0.5.3": {
+    "scripts": [
+      "rtemis-map.js"
+    ],
+    "md5": [
+      "dfb239d253cad3a0697888e0af1ecfd2"
+    ]
+  },
+  "rtemis-draw-renderers-1.1.0": {
+    "scripts": [
+      "renderers.js"
+    ],
+    "md5": [
+      "d238ead22bdbc70ee13b17a67c437810"
+    ]
+  },
+  "rtemis-draw-renderers-1.2.0": {
+    "scripts": [
+      "renderers.js"
+    ],
+    "md5": [
+      "b5fb9c9240908b9b99977f169657915b"
+    ]
+  },
+  "rtemis-draw-renderers-1.3.0": {
+    "scripts": [
+      "renderers.js",
+      "scatter3d.js"
+    ],
+    "md5": [
+      "541d5b0b2e82843a24b623b04625938c",
+      "e9c11316de720e46668ffc86ae66adb8"
+    ]
+  },
+  "rtemis-panel-layout-1.0.7": {
+    "scripts": [
+      "panels.js",
+      "confusion.js",
+      "a3.js",
+      "panel_widget.js"
+    ],
+    "md5": [
+      "a7339bb9890104c6cba5ba694b1067fb",
+      "98e316a5f257b6054521c87c60acf622",
+      "d35d723753c796470a8513968a8f15b2",
+      "ca5750ba961ca56c09b06a83ae32205e"
     ]
   }
 }

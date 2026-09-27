@@ -27,7 +27,9 @@
 #'   names.
 #' @param horizontal Logical: Draw the boxes horizontally.
 #' @inheritParams draw_boxplot
-#' @param observation Optional Character: Column identifying observations in point tooltips.
+#' @param observation Optional Character: Column identifying observations for tooltips and pairing.
+#' @param comparisons Optional Character: Name of a comparison data frame in the
+#'   bound data list. Its columns follow [draw_boxplot()].
 #' @param palette Optional Character: Box colors, overriding the theme palette
 #'   for this chart. `NULL` uses the package's box colors.
 #' @param fill_alpha Numeric `[0, 1]`: Box fill opacity.
@@ -68,6 +70,58 @@ BoxplotConfig <- new_class(
         NULL,
         nullable = TRUE,
         description = "Column identifying observations in point tooltips."
+      ),
+      order = prop_string(
+        "input",
+        enum = c("input", "mean", "median"),
+        description = "Order categories by descending mean or median; empty categories last."
+      ),
+      transform = prop_string(
+        "none",
+        enum = c("none", "scale", "minmax"),
+        description = "Transform each input column before grouping; constant columns become zero."
+      ),
+      geometry = prop_string(
+        "box",
+        enum = c("box", "violin", "both"),
+        description = "Distribution geometry."
+      ),
+      bandwidth = prop_float(
+        NULL,
+        nullable = TRUE,
+        exclusive_min = 0,
+        description = "Gaussian density bandwidth; unset uses bw.nrd0."
+      ),
+      adjust = prop_float(
+        1,
+        exclusive_min = 0,
+        description = "Multiplier for the density bandwidth."
+      ),
+      density_points = prop_integer(
+        128L,
+        min = 16L,
+        max = 4096L,
+        description = "Number of density evaluation points."
+      ),
+      paired = prop_boolean(
+        FALSE,
+        description = "Connect matching observation IDs in adjacent categories."
+      ),
+      pair_alpha = prop_float(
+        0.35,
+        min = 0,
+        max = 1,
+        description = "Paired line opacity."
+      ),
+      pair_width = prop_float(
+        1,
+        exclusive_min = 0,
+        description = "Paired line width in pixels."
+      ),
+      comparisons = prop_string(
+        NULL,
+        nullable = TRUE,
+        description = "Data entry containing comparison endpoint and label records."
       ),
       quartiles = prop_string(
         "linear",
@@ -213,7 +267,17 @@ setup_BoxplotConfig <- function(
   origin = NULL,
   writer = NULL,
   legend_position = "top",
-  legend_placement = "outside"
+  legend_placement = "outside",
+  geometry = "box",
+  bandwidth = NULL,
+  adjust = 1,
+  density_points = 128L,
+  paired = FALSE,
+  pair_alpha = 0.35,
+  pair_width = 1,
+  comparisons = NULL,
+  order = "input",
+  transform = "none"
 ) {
   origin <- origin %||% chart_origin(match.call(), BOXPLOT_ORIGIN_NAMES)
   BoxplotConfig(
@@ -223,6 +287,16 @@ setup_BoxplotConfig <- function(
     horizontal = horizontal,
     na_rm = na_rm,
     observation = observation,
+    order = order,
+    transform = transform,
+    geometry = geometry,
+    bandwidth = bandwidth,
+    adjust = adjust,
+    density_points = density_points,
+    paired = paired,
+    pair_alpha = pair_alpha,
+    pair_width = pair_width,
+    comparisons = comparisons,
     quartiles = quartiles,
     whisker = whisker,
     boxpoints = boxpoints,
@@ -278,6 +352,16 @@ method(compile, BoxplotConfig) <- function(config, data = NULL, ...) {
     fill_alpha = config@fill_alpha,
     na_rm = config@na_rm,
     observation = config_column(data, config@observation, "observation"),
+    order = config@order,
+    transform = config@transform,
+    geometry = config@geometry,
+    bandwidth = config@bandwidth,
+    adjust = config@adjust,
+    density_points = config@density_points,
+    paired = config@paired,
+    pair_alpha = config@pair_alpha,
+    pair_width = config@pair_width,
+    comparisons = config_column(data, config@comparisons, "comparisons"),
     quartiles = config@quartiles,
     whisker = config@whisker,
     boxpoints = config@boxpoints,

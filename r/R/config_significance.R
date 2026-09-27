@@ -28,6 +28,11 @@
 #' @param estimate Character: Column containing coefficients or other signed effects.
 #' @param p_value Character: Column containing unadjusted p-values.
 #' @param label Optional Character: Outcome-label column. Unset generates row labels.
+#' @param group Optional Character: Display-group column. Unset colors by significance
+#'   and effect direction. Missing groups omit marks after full-family adjustment.
+#'   Groups never change significance thresholds or annotation ranking.
+#' @param palette Optional Character vector: Display-group colors in first-appearance
+#'   order; unset uses the theme. Requires a group binding.
 #' @param p_adjust_method Character: Method from [stats::p.adjust.methods]. Adjustment precedes transformation.
 #' @param n_tests Optional Integer [1, Inf): Hypothesis-family size, at least the number of supplied rows. Unset counts all rows, including missing p-values.
 #' @param p_transform Character \{"neg_log10", "identity", "one_minus"\}: Named display transform of adjusted p-values.
@@ -82,6 +87,18 @@ SignificanceConfig <- new_class(
         NULL,
         nullable = TRUE,
         description = "Outcome-label column. Unset generates row labels."
+      ),
+      group = prop_string(
+        NULL,
+        nullable = TRUE,
+        description = "Optional display-group column, independent of significance."
+      ),
+      palette = prop_string(
+        NULL,
+        nullable = TRUE,
+        vector = TRUE,
+        min_items = 1L,
+        description = "Display-group colors in first-appearance order; unset uses the theme."
       ),
       p_adjust_method = prop_string(
         "holm",
@@ -188,36 +205,52 @@ SignificanceConfig <- new_class(
       )
     )
   ),
-  validator = function(self) {
-    errors <- character()
-    for (name in c("p_thresh", "x_thresh", "zero_cap", "alpha", "point_size")) {
-      value <- prop(self, name)
-      if (!is.null(value) && any(!is.finite(value))) {
-        errors <- c(errors, paste0("@", name, " must be finite"))
-      }
-    }
-    for (name in c("xlim", "ylim")) {
-      value <- prop(self, name)
-      if (
-        !is.null(value) &&
-          (length(value) != 2L ||
-            any(!is.finite(value)) ||
-            value[[1L]] >= value[[2L]])
-      ) {
-        errors <- c(
-          errors,
-          paste0("@", name, " must contain two increasing finite limits")
+  validator = config_validator(
+    c(
+      CONFIG_LIMIT_RULES,
+      list(
+        list(
+          schema = list(
+            `if` = list(
+              required = list("palette"),
+              properties = list(
+                palette = list(not = list(type = "null"))
+              )
+            ),
+            then = list(
+              properties = list(group = list(not = list(type = "null")))
+            )
+          ),
+          message = "Supply a group binding with palette, or use the significance color settings."
+        ),
+        list(
+          schema = list(
+            `if` = list(
+              required = list("view"),
+              properties = list(view = list(const = "manhattan"))
+            ),
+            then = list(properties = list(xlim = list(type = "null")))
+          ),
+          message = "Use xlim only for the volcano view."
+        ),
+        list(
+          schema = list(
+            `if` = list(
+              required = list("p_transform"),
+              properties = list(
+                p_transform = list(not = list(const = "neg_log10"))
+              )
+            ),
+            then = list(
+              properties = list(zero_cap = list(type = "null"))
+            )
+          ),
+          message = "Use zero_cap only with neg_log10."
         )
-      }
-    }
-    if (self@view == "manhattan" && !is.null(self@xlim)) {
-      errors <- c(errors, "@xlim is only available for the volcano view")
-    }
-    if (self@p_transform != "neg_log10" && !is.null(self@zero_cap)) {
-      errors <- c(errors, "@zero_cap is only available with neg_log10")
-    }
-    if (length(errors)) errors else NULL
-  }
+      )
+    ),
+    extra = config_ordered_limits
+  )
 )
 
 SIGNIFICANCE_ORIGIN_NAMES <- setdiff(
@@ -267,7 +300,9 @@ setup_SignificanceConfig <- function(
   origin = NULL,
   writer = NULL,
   legend_position = "top",
-  legend_placement = "outside"
+  legend_placement = "outside",
+  group = NULL,
+  palette = NULL
 ) {
   origin <- origin %||% chart_origin(match.call(), SIGNIFICANCE_ORIGIN_NAMES)
   SignificanceConfig(
@@ -275,6 +310,8 @@ setup_SignificanceConfig <- function(
     estimate = estimate,
     p_value = p_value,
     label = label,
+    group = group,
+    palette = palette,
     p_adjust_method = p_adjust_method,
     n_tests = if (is.null(n_tests)) NULL else clean_int(n_tests),
     p_transform = p_transform,

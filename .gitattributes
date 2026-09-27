@@ -1,0 +1,2 @@
+# Geography manifests hash canonical bytes; keep JSON identical on every OS.
+r/inst/htmlwidgets/lib/geo/*.json text eol=lf

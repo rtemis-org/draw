@@ -1,4 +1,30 @@
-# rtemis.draw (development)
+# rtemis.draw 0.5.3
+
+- Change the package license to BSD 3-clause; bundled third-party components retain their own licenses.
+
+- Share structural configuration constraints between S7 validation and generated JSON Schemas.
+
+- Significance plots accept display groups independently of full-family adjustment and threshold annotations.
+
+- Add interactive 3D points, ordered paths and supplied prediction surfaces with portable orthographic cameras and vector SVG export.
+
+- Add rolling time series, independent secondary series, zeitgeber labels, p-value bars, and protein input adapters.
+
+- Add ridgelines, grouped and stacked histograms, bin statistics, boxplot ordering and transformations, and matrix/table bar inputs.
+
+- Add supplied fit intervals, Cartesian annotations, scatter rugs and point metadata, and pie label formats.
+
+- Add supplied heatmap trees, aligned cell notes and color tracks, and tree-cut branch colors.
+
+- Include pinned JavaScript build inputs and third-party notices in the source package.
+
+- Render histogram bins on numeric axes, add normalization and density overlays, and share kernel/bandwidth controls across functional and configuration APIs.
+
+- Add violin distributions, ID-matched paired lines, and supplied comparison brackets to the boxplot family, with native SVG export.
+
+- Add survival curves and survfit adapters with confidence bands, censor ticks, median and landmark annotations, explicit risk tables, portable configuration, and SVG export.
+
+- Add binary calibration plots with quantile or equal-width bins, Brier scores, probability rugs, portable configuration, and SVG export.
 
 - Add genuine SVG export for Sigma networks and MapLibre choropleths through `save_drawing()` and `filename`, with shared layouts, joins, colors, and editable text.
 
@@ -10,7 +36,7 @@
 
 - Keep pie and rose labels within the chart edges and expose typed `PieLabelOption` alignment controls.
 
-- Added consistent legend position and inside/outside placement controls to statistical ECharts drawing functions and configs; categorical legends use a centered outside-top layout, with matching SVG export.
+- Added consistent legend position and inside/outside placement controls to statistical ECharts drawing functions and configs; categorical legends use a centered outside-top layout.
 
 - Match rtemislive's upper-right A3 annotation column and light/dark residue colors, with measured spacing in browser and SVG output.
 

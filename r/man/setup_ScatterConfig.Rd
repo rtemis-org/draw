@@ -34,7 +34,10 @@ setup_ScatterConfig(
   diagonal = FALSE,
   diagonal_color = NULL,
   legend_position = "top",
-  legend_placement = "outside"
+  legend_placement = "outside",
+  fit_name = NULL,
+  rug = FALSE,
+  hover = NULL
 )
 }
 \arguments{
@@ -107,6 +110,12 @@ column. Corner anchors align within the top or bottom row.}
 \item{legend_placement}{Character \{"outside", "inside"\}: Relation to the
 plotting area. Outside placement reserves space for the complete legend;
 inside placement overlays the data. Neither setting adds a missing legend.}
+
+\item{fit_name}{Optional Character: Label for fitted layers.}
+
+\item{rug}{Logical: Show marginal marks along the x and y axes.}
+
+\item{hover}{Optional Character: Column containing per-observation tooltip labels.}
 }
 \value{
 \link{ScatterConfig} object.

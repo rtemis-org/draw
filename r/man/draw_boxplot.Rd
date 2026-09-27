@@ -30,7 +30,17 @@ draw_boxplot(
   point_alpha = 0.6,
   point_spread = 0.5,
   legend_position = "top",
-  legend_placement = "outside"
+  legend_placement = "outside",
+  geometry = "box",
+  bandwidth = NULL,
+  adjust = 1,
+  density_points = 128L,
+  paired = FALSE,
+  pair_alpha = 0.35,
+  pair_width = 1,
+  comparisons = NULL,
+  order = "input",
+  transform = "none"
 )
 }
 \arguments{
@@ -79,7 +89,8 @@ container. \code{NULL} lets htmlwidgets generate one.}
 \code{\link[=save_drawing]{save_drawing()}}.}
 
 \item{observation}{Optional Atomic vector: Observation identifiers in tooltips,
-aligned to every input vector. Unset uses original row numbers.}
+aligned to every input vector. Required for pairing; otherwise unset uses
+original row numbers.}
 
 \item{quartiles}{Character \{"linear", "hinges"\}: Quartile convention.}
 
@@ -102,6 +113,30 @@ column. Corner anchors align within the top or bottom row.}
 \item{legend_placement}{Character \{"outside", "inside"\}: Relation to the
 plotting area. Outside placement reserves space for the complete legend;
 inside placement overlays the data. Neither setting adds a missing legend.}
+
+\item{geometry}{Character \{"box", "violin", "both"\}: Distribution geometry.}
+
+\item{bandwidth}{Optional Numeric \verb{(0, Inf)}: Finite Gaussian kernel bandwidth.}
+
+\item{adjust}{Numeric \verb{(0, Inf)}: Finite bandwidth multiplier.}
+
+\item{density_points}{Integer \verb{[16, 4096]}: Density evaluation grid size.}
+
+\item{paired}{Logical: Connect explicit IDs across adjacent categories.}
+
+\item{pair_alpha}{Numeric \verb{[0, 1]}: Paired line opacity.}
+
+\item{pair_width}{Numeric \verb{(0, Inf)}: Finite paired line width in pixels.}
+
+\item{comparisons}{Optional Data frame: Category endpoints and comparison labels.}
+
+\item{order}{Character \verb{\{"input", "mean", "median"\}}: Keep input order or sort
+categories by decreasing mean/median after transformation; empty boxes last.}
+
+\item{transform}{Character \verb{\{"none", "scale", "minmax"\}}: Transform each input
+column before grouping. Scale subtracts the mean and divides by the sample
+standard deviation; minmax maps the available range to zero through one.
+Constant columns become zero and missing values remain missing.}
 }
 \value{
 htmlwidget: ECharts boxes with optional vector point overlays.
@@ -129,6 +164,26 @@ a deterministic base-two sequence in input row order within \code{point_spread}
 times the box width. Zero spread centers every point; coincident points can
 overlap. No random state is read or changed. Browser and SVG share the same
 named point renderer, including grouped-box offsets and legend filtering.
+
+Violin densities use a Gaussian kernel with \code{stats::bw.nrd0()} unless a
+numeric bandwidth is supplied, multiplied by \code{adjust}. They are evaluated
+over the observed range and each is scaled to the same maximum width;
+widths do not encode sample size or comparable density across groups.
+Singleton and constant samples appear as crossbars, without an invented
+density. \code{geometry = "both"} overlays a narrow box on each violin.
+
+Paired lines join matching explicit observation IDs in adjacent categories
+only, within groups for multiple grouped vectors. A missing measurement
+leaves a gap. IDs must be unique within each category/group. Lines meet
+visible observation points at their deterministic offsets.
+
+Comparison records annotate supplied results; no statistical test or
+multiplicity adjustment is performed. \code{from} and \code{to} name categories;
+\code{label} supplies the displayed text. Multiple grouped vectors also require
+\code{from_group} and \code{to_group}. Optional finite \code{position} values place brackets
+on the value axis; otherwise brackets stack above the observed geometry.
+References must identify distinct, nonempty cells. Brackets disappear when
+either endpoint's group is hidden. Long labels may require a larger figure.
 }
 \examples{
 draw_boxplot(list(Training = c(.8, .9, .85), Test = c(.7, .8, .75)),

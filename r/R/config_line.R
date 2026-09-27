@@ -200,6 +200,29 @@ LineConfig <- new_class(
         description = "Left margin in pixels."
       )
     )
+  ),
+  validator = config_validator(
+    c(
+      CONFIG_LIMIT_RULES,
+      list(
+        list(
+          schema = list(
+            `if` = list(
+              required = list("group"),
+              properties = list(group = list(not = list(type = "null")))
+            ),
+            then = list(
+              properties = list(
+                y = list(maxItems = 1L),
+                blocks = list(type = "null")
+              )
+            )
+          ),
+          message = "Bind group only with a single y column and without blocks."
+        )
+      )
+    ),
+    extra = config_ordered_limits
   )
 ) # /rtemis.draw::LineConfig
 

@@ -16,7 +16,11 @@
 #' A serializable description of a heatmap. Build one with
 #' [setup_HeatmapConfig()] rather than calling this constructor directly.
 #'
-#' The bound data is a numeric matrix. `row_names` and `col_names` override the
+#' The bound data is a numeric matrix, or a record containing `values` and optional
+#' `row_tree`, `col_tree`, `cell_notes`, `row_colors`, and `col_colors` (see
+#' [draw_heatmap()]). These annotations remain data, outside the config.
+#'
+#' For a matrix, `row_names` and `col_names` override the
 #' matrix's own dimnames rather than naming columns to read.
 #'
 #' @param row_names,col_names Optional Character: Labels overriding the matrix
@@ -38,6 +42,9 @@
 #' @param colormap Optional Character: Colors defining the continuous scale.
 #'   `NULL` derives a theme-aware diverging or sequential scale.
 #' @param zlim Optional Numeric: Color-scale limits, length 2.
+#' @param show_notes Logical: Print supplied cell notes instead of numeric values.
+#' @param row_cut,col_cut Optional Integer: Number of clusters for branch coloring,
+#'   requiring a computed or supplied tree.
 #' @param show_values Logical: Print each cell's value.
 #' @param value_digits Integer `[0, Inf)`: Digits for printed values.
 #' @param show_colorbar Logical: Draw the color bar.
@@ -158,6 +165,22 @@ HeatmapConfig <- new_class(
         min_items = 2L,
         description = "Color-scale limits."
       ),
+      show_notes = prop_boolean(
+        FALSE,
+        description = "Print supplied cell notes instead of numeric values."
+      ),
+      row_cut = prop_integer(
+        NULL,
+        min = 1L,
+        nullable = TRUE,
+        description = "Number of clusters for row-tree branch coloring."
+      ),
+      col_cut = prop_integer(
+        NULL,
+        min = 1L,
+        nullable = TRUE,
+        description = "Number of clusters for column-tree branch coloring."
+      ),
       show_values = prop_boolean(
         FALSE,
         description = "Print each cell's value."
@@ -248,6 +271,9 @@ setup_HeatmapConfig <- function(
   dendro_col_side = "top",
   colormap = NULL,
   zlim = NULL,
+  show_notes = FALSE,
+  row_cut = NULL,
+  col_cut = NULL,
   show_values = FALSE,
   value_digits = 2L,
   show_colorbar = TRUE,
@@ -283,6 +309,9 @@ setup_HeatmapConfig <- function(
     dendro_col_side = dendro_col_side,
     colormap = colormap,
     zlim = zlim,
+    show_notes = show_notes,
+    row_cut = row_cut,
+    col_cut = col_cut,
     show_values = show_values,
     value_digits = as.integer(value_digits),
     show_colorbar = show_colorbar,
@@ -364,6 +393,9 @@ heatmap_built <- function(config, data = NULL, width = NULL, height = NULL) {
     square_cells = config@square_cells,
     colormap = config@colormap,
     zlim = config@zlim,
+    show_notes = config@show_notes,
+    row_cut = config@row_cut,
+    col_cut = config@col_cut,
     show_values = config@show_values,
     value_digits = config@value_digits,
     show_colorbar = config@show_colorbar,

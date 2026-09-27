@@ -522,6 +522,22 @@ draw_echarts_option <- function(
     element_id = element_id
   )
 
+  if (!is.null(option[["grid3D"]])) {
+    widget[["dependencies"]] <- c(
+      widget[["dependencies"]],
+      list(
+        htmltools::htmlDependency(
+          "echarts-gl",
+          "2.1.0",
+          src = system.file(
+            "htmlwidgets/lib/echarts-gl",
+            package = "rtemis.draw"
+          ),
+          script = "echarts-gl.min.js"
+        )
+      )
+    )
+  }
   if (!is.null(filename)) {
     save_drawing(widget, filename)
   }
@@ -1481,7 +1497,7 @@ resolve_zoom <- function(zoom, axis = "x") {
 #' @noRd
 bar_option <- function(
   x,
-  y,
+  y = NULL,
   palette = NULL,
   stack = FALSE,
   horizontal = FALSE,
@@ -1489,8 +1505,15 @@ bar_option <- function(
   ylab = NULL,
   title = NULL,
   margins = DEFAULT_MARGINS,
-  bar_width = NULL
+  bar_width = NULL,
+  order = "input"
 ) {
+  input <- bar_input(x, y, order)
+  x <- input[["x"]]
+  y <- input[["y"]]
+  if (!is.list(y) && length(palette) > 1L) {
+    palette <- rep_len(palette, length(x))[input[["index"]]]
+  }
   # Validate this shared setting through the portable config property on both
   # the vector and config paths; the low-level ECharts class also allows strings.
   bar_width <- BarConfig(bar_width = bar_width)@bar_width
@@ -1567,7 +1590,10 @@ bar_option <- function(
 #'
 #' Quick bar chart from x/y data.
 #'
-#' @param x Character: Category labels.
+#' @param x Character or Numeric: Category labels, or values when y is omitted.
+#'   A matrix or two-dimensional table supplies categories in rows and series
+#'   in columns. A one-dimensional table supplies counts and category names.
+#' @inheritParams BarConfig order
 #' @param y Numeric or named list: Bar heights.
 #' @param palette Optional Character: Bar color or colors. For multiple series,
 #'   colors are applied per series and recycled as needed. For a single series,
@@ -1599,7 +1625,7 @@ bar_option <- function(
 #' @inheritParams draw_line legend_position legend_placement
 draw_bar <- function(
   x,
-  y,
+  y = NULL,
   palette = NULL,
   stack = FALSE,
   horizontal = FALSE,
@@ -1613,6 +1639,7 @@ draw_bar <- function(
   element_id = NULL,
   filename = NULL,
   bar_width = NULL,
+  order = "input",
   legend_position = "top",
   legend_placement = "outside"
 ) {
@@ -1623,6 +1650,7 @@ draw_bar <- function(
     stack = stack,
     horizontal = horizontal,
     bar_width = bar_width,
+    order = order,
     xlab = xlab,
     ylab = ylab,
     title = title,
@@ -1695,13 +1723,23 @@ scatter_option <- function(
   se_times = 1.96,
   rsq = FALSE,
   diagonal = FALSE,
-  diagonal_color = NULL
+  diagonal_color = NULL,
+  fit_name = NULL,
+  rug = FALSE,
+  hover = NULL
 ) {
-  group <- group_values(group, length(x))
+  input <- scatter_input(x, y, group, size, hover)
+  x <- input[["x"]]
+  y <- input[["y"]]
+  group <- input[["group"]]
+  size <- input[["size"]]
+  hover <- input[["hover"]]
   # The same declaration validates the vector and serialized-config routes.
   n_fit <- clean_int(n_fit)
   ScatterConfig(
     fit = fit,
+    fit_name = fit_name,
+    rug = rug,
     se = se,
     n_fit = n_fit,
     fit_alpha = fit_alpha,
@@ -1772,6 +1810,9 @@ scatter_option <- function(
   # legend — clicking a group toggles scatter + fit + CI as a unit.
   fit_series <- function(xv, yv, fit_method, n_pts, group_name, color) {
     p <- compute_fit(xv, yv, fit_method, n_pts)
+    if (!is.null(fit_name)) {
+      group_name <- paste(c(group_name, fit_name), collapse = " - ")
+    }
     if (rsq) {
       group_name <- paste0(
         group_name %||% "Fit",
@@ -1827,19 +1868,26 @@ scatter_option <- function(
     series <- lapply(seq_along(groups), function(i) {
       g <- groups[i]
       idx <- group == g
-      dat <- mapply(c, x[idx], y[idx], SIMPLIFY = FALSE)
+      dat <- scatter_points(
+        x[idx],
+        y[idx],
+        if (!is.null(size)) size[idx],
+        if (!is.null(hover)) hover[idx]
+      )
       ScatterSeries(
         name = as.character(g),
         data = dat,
-        symbol_size = if (!is.null(size)) size[idx][1] else NULL,
+
         item_style = ItemStyle(color = group_colors[i])
       )
     })
   } else {
-    dat <- mapply(c, x, y, SIMPLIFY = FALSE)
+    dat <- scatter_points(x, y, size, hover)
     series <- list(ScatterSeries(
       data = dat,
-      symbol_size = size
+      item_style = ItemStyle(
+        color = palette_colors(palette %||% rtemis_colors)[[1L]]
+      )
     ))
   }
 
@@ -1857,21 +1905,48 @@ scatter_option <- function(
           as.character(g),
           group_colors[i]
         )
-        if (rsq) {
+        if (rsq || !is.null(fit_name)) {
           series[[i]]@name <- fs[["fit"]]@name
         }
         series <- c(series, unname(fs))
       }
     } else {
-      color <- rtemis_colors[["teal"]]
+      color <- palette_colors(palette %||% rtemis_colors)[[1L]]
       fs <- fit_series(x, y, fit, n_fit, NULL, color)
-      if (rsq) {
+      if (rsq || !is.null(fit_name)) {
         series[[1L]]@name <- fs[["fit"]]@name
       }
       series <- c(series, unname(fs))
     }
   }
 
+  if (rug) {
+    # Boundary-relative custom marks remain attached to the visible axes during
+    # zoom/resize; their data values and group legend identities stay unchanged.
+    count <- if (is.null(group)) 1L else length(groups)
+    for (i in seq_len(count)) {
+      rows <- if (is.null(group)) seq_along(x) else which(group == groups[[i]])
+      series[[length(series) + 1L]] <- Filter(
+        Negate(is.null),
+        list(
+          type = "custom",
+          name = series[[i]]@name,
+          renderItem = "rtemis.rug.v1",
+          silent = TRUE,
+          clip = TRUE,
+          itemStyle = list(
+            color = if (!is.null(group)) {
+              group_colors[[i]]
+            } else {
+              palette_colors(palette %||% rtemis_colors)[[1L]]
+            }
+          ),
+          data = Map(c, x[rows], y[rows]),
+          encode = list(x = 0L, y = 1L)
+        )
+      )
+    }
+  }
   # An unnamed, silent series does not add a legend entry or intercept hover.
   # Clip the identity segment to the intersection of the two visible ranges.
   if (diagonal) {
@@ -1916,7 +1991,13 @@ scatter_option <- function(
   opt <- EChartsOption(
     title = if (!is.null(title)) Title(text = title) else NULL,
     tooltip = Tooltip(trigger = "item", formatter = scatter_formatter),
-    legend = if (!is.null(group) || (!is.null(fit) && rsq)) Legend() else NULL,
+    legend = if (
+      !is.null(group) || (!is.null(fit) && (rsq || !is.null(fit_name)))
+    ) {
+      Legend()
+    } else {
+      NULL
+    },
     x_axis = Axis(
       type = "value",
       name = xlab,
@@ -1985,6 +2066,9 @@ scatter_option <- function(
 #'   are computed per group when `group` is provided.
 #' @param se Logical: Whether to show the confidence band.
 #' @param se_times Numeric `[0, Inf)`: Standard-error multiplier for the band.
+#' @param fit_name Optional Character: Label for fitted layers.
+#' @param rug Logical: Draw marginal marks on both axes.
+#' @param hover Optional Character: One literal tooltip label per observation.
 #' @param rsq Logical: Include the fitted model's R-squared in series labels.
 #'   This describes the overlay fit, not predictive performance against the
 #'   identity line. Constant responses have undefined R-squared, labeled `NA`.
@@ -2070,7 +2154,10 @@ draw_scatter <- function(
   diagonal = FALSE,
   diagonal_color = NULL,
   legend_position = "top",
-  legend_placement = "outside"
+  legend_placement = "outside",
+  fit_name = NULL,
+  rug = FALSE,
+  hover = NULL
 ) {
   opt <- scatter_option(
     x = x,
@@ -2078,6 +2165,9 @@ draw_scatter <- function(
     size = size,
     group = group,
     fit = fit,
+    fit_name = fit_name,
+    rug = rug,
+    hover = hover,
     se = se,
     se_times = se_times,
     rsq = rsq,
@@ -2126,12 +2216,29 @@ draw_scatter <- function(
 #' @noRd
 pie_option <- function(
   values,
-  labels,
+  labels = NULL,
   radius = "75%",
   rose_type = NULL,
   palette = NULL,
-  title = NULL
+  title = NULL,
+  label_format = "name",
+  percent_digits = 1L
 ) {
+  input <- pie_input(values, labels)
+  values <- input[["values"]]
+  labels <- input[["labels"]]
+  config <- setup_PieConfig(
+    label_format = label_format,
+    percent_digits = percent_digits
+  )
+  formatter <- switch(
+    config@label_format,
+    name = "{b}",
+    value = "{c}",
+    percent = "{d}%",
+    name_value = "{b}: {c}",
+    name_percent = "{b}: {d}%"
+  )
   data_items <- mapply(
     function(v, n) list(value = v, name = n),
     values,
@@ -2150,11 +2257,18 @@ pie_option <- function(
       radius = radius,
       rose_type = rose_type,
       # Edge alignment keeps outside labels on the page at narrow widths.
-      label = PieLabelOption(align_to = "edge", edge_distance = 8),
+      label = PieLabelOption(
+        align_to = "edge",
+        edge_distance = 8,
+        formatter = formatter
+      ),
       avoid_label_overlap = TRUE
     )
   )
 
+  series <- to_list(opt@series)
+  series[["percentPrecision"]] <- config@percent_digits
+  opt@series <- list(series)
   opt
 } # /rtemis.draw::pie_option
 
@@ -2163,8 +2277,12 @@ pie_option <- function(
 #'
 #' Quick pie chart from values and labels.
 #'
-#' @param values Numeric: Slice values.
-#' @param labels Character: Slice labels.
+#' @param values Numeric or data frame: Slice values, or a two-column table
+#'   containing labels followed by values. Values must be finite and nonnegative
+#'   with a positive total.
+#' @param label_format Character `{"name", "value", "percent", "name_value", "name_percent"}`: Slice label content.
+#' @param percent_digits Integer `[0, 6]`: Percentage precision.
+#' @param labels Optional Character: Slice labels; names(values) when omitted.
 #' @param radius Numeric or Character: Pie radius.
 #' @param rose_type Optional Character \{"radius", "area"\}: Nightingale chart type.
 #' @param palette Optional Character: Series color palette — a single color string or
@@ -2190,7 +2308,7 @@ pie_option <- function(
 #' @inheritParams draw_line legend_position legend_placement
 draw_pie <- function(
   values,
-  labels,
+  labels = NULL,
   radius = "75%",
   rose_type = NULL,
   palette = NULL,
@@ -2201,7 +2319,9 @@ draw_pie <- function(
   element_id = NULL,
   filename = NULL,
   legend_position = "top",
-  legend_placement = "outside"
+  legend_placement = "outside",
+  label_format = "name",
+  percent_digits = 1L
 ) {
   opt <- pie_option(
     values = values,
@@ -2209,7 +2329,9 @@ draw_pie <- function(
     radius = radius,
     rose_type = rose_type,
     palette = palette,
-    title = title
+    title = title,
+    label_format = label_format,
+    percent_digits = percent_digits
   )
 
   draw(
@@ -2223,217 +2345,37 @@ draw_pie <- function(
   )
 }
 
-#' Build the ECharts option for a density chart
-#'
-#' The single implementation shared by [draw_density()], which resolves its arguments
-#' from vectors, and `compile()` on the corresponding [ChartConfig], which
-#' resolves them from a data frame. The render targets stay with the caller.
-#'
-#' @inheritParams draw_density
-#'
-#' @return [EChartsOption]: The option object.
-#'
-#' @author EDG
-#' @keywords internal
-#' @noRd
-density_option <- function(
-  x,
-  group = NULL,
-  n = 512,
-  bw = "nrd0",
-  na_rm = TRUE,
-  palette = NULL,
-  xlab = NULL,
-  ylab = NULL,
-  title = NULL,
-  margins = DEFAULT_MARGINS,
-  verbosity = 1L
-) {
-  group <- group_values(group, if (is.list(x)) lengths(x) else length(x))
-  if (is.list(x)) {
-    series_names <- names(x)
-    if (is.null(series_names) || !all(nzchar(series_names))) {
-      series_names <- paste0("Series ", seq_along(x))
-    }
-
-    if (!is.null(group)) {
-      group_ok <- !is.na(group)
-      if (any(!group_ok)) {
-        group <- group[group_ok]
-        x <- lapply(x, function(vals) vals[group_ok])
-      }
-
-      groups <- unique(group)
-      group_labels <- as.character(groups)
-      series <- unlist(
-        lapply(seq_along(x), function(i) {
-          vals <- x[[i]]
-          group_i <- group
-
-          if (na_rm) {
-            na_idx <- is.na(vals)
-            n_na <- sum(na_idx)
-            if (n_na > 0L) {
-              msg(
-                "Removed",
-                n_na,
-                "NA",
-                ngettext(n_na, "value", "values"),
-                "from",
-                series_names[[i]],
-                verbosity = verbosity
-              )
-              vals <- vals[!na_idx]
-              group_i <- group_i[!na_idx]
-            }
-          }
-
-          lapply(seq_along(groups), function(j) {
-            g <- groups[[j]]
-            d <- stats::density(vals[group_i == g], n = n, bw = bw)
-            dat <- mapply(c, d$x, d$y, SIMPLIFY = FALSE)
-            LineSeries(
-              name = paste(series_names[[i]], group_labels[[j]], sep = " - "),
-              data = dat,
-              show_symbol = FALSE,
-              area_style = AreaStyle(opacity = 0.25)
-            )
-          })
-        }),
-        recursive = FALSE
-      )
-    } else {
-      series <- lapply(seq_along(x), function(i) {
-        vals <- x[[i]]
-
-        if (na_rm) {
-          na_idx <- is.na(vals)
-          n_na <- sum(na_idx)
-          if (n_na > 0L) {
-            msg(
-              "Removed",
-              n_na,
-              "NA",
-              ngettext(n_na, "value", "values"),
-              "from",
-              series_names[[i]],
-              verbosity = verbosity
-            )
-            vals <- vals[!na_idx]
-          }
-        }
-
-        d <- stats::density(vals, n = n, bw = bw)
-        dat <- mapply(c, d$x, d$y, SIMPLIFY = FALSE)
-        LineSeries(
-          name = series_names[[i]],
-          data = dat,
-          show_symbol = FALSE,
-          area_style = AreaStyle(opacity = 0.25)
-        )
-      })
-    }
-  } else {
-    if (na_rm) {
-      na_idx <- is.na(x)
-      n_na <- sum(na_idx)
-      if (n_na > 0L) {
-        msg(
-          "Removed",
-          n_na,
-          "NA",
-          ngettext(n_na, "value", "values"),
-          "from x",
-          verbosity = verbosity
-        )
-        if (!is.null(group)) {
-          group <- group[!na_idx]
-        }
-        x <- x[!na_idx]
-      }
-    }
-
-    if (!is.null(group)) {
-      groups <- unique(group)
-      series <- lapply(groups, function(g) {
-        d <- stats::density(x[group == g], n = n, bw = bw)
-        dat <- mapply(c, d$x, d$y, SIMPLIFY = FALSE)
-        LineSeries(
-          name = as.character(g),
-          data = dat,
-          show_symbol = FALSE,
-          area_style = AreaStyle(opacity = 0.25)
-        )
-      })
-    } else {
-      d <- stats::density(x, n = n, bw = bw)
-      dat <- mapply(c, d$x, d$y, SIMPLIFY = FALSE)
-      series <- list(LineSeries(
-        data = dat,
-        show_symbol = FALSE,
-        area_style = AreaStyle(opacity = 0.25)
-      ))
-    }
-  }
-
-  density_formatter <- htmlwidgets::JS(
-    "function(params) {
-      function ddSci(x, dp) {
-        dp = dp || 2;
-        var a = Math.abs(x);
-        if (a === 0) return '0.' + '0'.repeat(dp);
-        if (a >= 1e6 || a < Math.pow(10, -dp)) return x.toExponential(1);
-        return x.toFixed(dp);
-      }
-      var out = ddSci(params[0].value[0]) + '<br/>';
-      for (var i = 0; i < params.length; i++) {
-        var p = params[i];
-        var name = p.seriesName ? p.seriesName + ': ' : '';
-        out += p.marker + name + ddSci(p.value[1]) + '<br/>';
-      }
-      return out;
-    }"
-  )
-
-  opt <- EChartsOption(
-    title = if (!is.null(title)) Title(text = title) else NULL,
-    tooltip = Tooltip(trigger = "axis", formatter = density_formatter),
-    legend = if (length(series) > 1L) Legend() else NULL,
-    x_axis = Axis(
-      type = "value",
-      name = xlab,
-      name_location = if (!is.null(xlab)) "middle" else NULL,
-      scale = TRUE
-    ),
-    y_axis = Axis(
-      type = "value",
-      name = ylab,
-      name_location = if (!is.null(ylab)) "middle" else NULL
-    ),
-    grid = resolve_margins(margins),
-    series = series,
-    # Per-chart palette overrides the theme's, as in every other chart.
-    color = palette
-  )
-
-  opt
-} # /rtemis.draw::density_option
-
-
 #' Draw a Density Plot
 #'
 #' Kernel density estimation plot from numeric data, with optional grouping
 #' for multiple traces. A list input creates one density trace per vector when
 #' ungrouped, or one trace per variable/group combination when `group` is
-#' supplied.
+#' supplied. Curves use [stats::density()] with its bandwidth-scaled kernels
+#' and evaluation range extending three bandwidths beyond the data. Empty
+#' samples retain their identity without a curve. Singleton and constant
+#' samples require an explicit bandwidth; no spread is inferred for them.
+#' Missing groups are excluded, and infinite/nonnumeric observations rejected.
 #'
+#' @param mode Character `{"overlap", "ridge"}`: Overlay samples or align rows
+#'   on common x and y scales. Ridge rows use sample names in place of a legend.
+#'   Increase figure height for many rows.
+#' @param order Character `{"input", "mean", "median"}`: Sample order. Summary
+#'   orders are decreasing, retain ties in input order, and place empty samples last.
 #' @param x Numeric or list: Values used for density estimation. An ungrouped
 #'   list creates one density trace per element; with `group`, each list
 #'   element is split by group into separate traces.
 #' @param group Optional Atomic vector or single-column data frame: Grouping
 #'   variable for multiple density traces.
-#' @param n Numeric `[1, Inf)`: Number of equally spaced points for density estimation.
-#' @param bw Character or Numeric: Bandwidth passed to [stats::density()].
+#' @param n Integer `[2, Inf)`: Number of density evaluation points.
+#' @param bw Character or Numeric: Bandwidth selector (`"nrd0"`, `"nrd"`,
+#'   `"ucv"`, `"bcv"`, `"SJ"`, `"SJ-ste"`, `"SJ-dpi"`). Numeric input is
+#'   normalized to `bandwidth` by the setup function.
+#' @param bandwidth Optional Numeric `(0, Inf)`: Explicit finite smoothing
+#'   bandwidth in measurement units, overriding the selector.
+#' @param kernel Character: One of `"gaussian"`, `"epanechnikov"`, `"rectangular"`,
+#'   `"triangular"`, `"biweight"`, `"cosine"`, or `"optcosine"`.
+#' @param adjust Numeric `(0, Inf)`: Finite bandwidth multiplier.
+#' @param fill_alpha Numeric `[0, 1]`: Distribution fill opacity.
 #' @param na_rm Logical: Whether to remove `NA` values before
 #'   computing densities.
 #' @param palette Optional Character: Series colors, overriding the theme
@@ -2477,7 +2419,13 @@ draw_density <- function(
   element_id = NULL,
   filename = NULL,
   legend_position = "top",
-  legend_placement = "outside"
+  legend_placement = "outside",
+  bandwidth = NULL,
+  kernel = "gaussian",
+  adjust = 1,
+  fill_alpha = .25,
+  mode = "overlap",
+  order = "input"
 ) {
   opt <- density_option(
     x = x,
@@ -2490,7 +2438,13 @@ draw_density <- function(
     ylab = ylab,
     title = title,
     margins = margins,
-    verbosity = verbosity
+    verbosity = verbosity,
+    bandwidth = bandwidth,
+    kernel = kernel,
+    adjust = adjust,
+    fill_alpha = fill_alpha,
+    mode = mode,
+    order = order
   )
 
   draw(
@@ -2504,84 +2458,48 @@ draw_density <- function(
   )
 }
 
-#' Build the ECharts option for a histogram
-#'
-#' The single implementation shared by [draw_histogram()], which resolves its arguments
-#' from vectors, and `compile()` on the corresponding [ChartConfig], which
-#' resolves them from a data frame. The render targets stay with the caller.
-#'
-#' @inheritParams draw_histogram
-#'
-#' @return [EChartsOption]: The option object.
-#'
-#' @author EDG
-#' @keywords internal
-#' @noRd
-histogram_option <- function(
-  x,
-  group = NULL,
-  breaks = "Sturges",
-  palette = NULL,
-  xlab = NULL,
-  ylab = NULL,
-  title = NULL,
-  margins = DEFAULT_MARGINS
-) {
-  group <- group_values(group, length(x))
-  # Compute bin structure from full data for consistent breaks across groups
-  h <- graphics::hist(x, breaks = breaks, plot = FALSE)
-  bin_labels <- formatC(h$mids, format = "g")
-
-  if (!is.null(group)) {
-    groups <- unique(group)
-    series <- lapply(groups, function(g) {
-      hg <- graphics::hist(x[group == g], breaks = h$breaks, plot = FALSE)
-      BarSeries(name = as.character(g), data = hg$counts)
-    })
-  } else {
-    series <- list(BarSeries(
-      data = h$counts,
-      bar_category_gap = "0%"
-    ))
-  }
-
-  opt <- EChartsOption(
-    title = if (!is.null(title)) Title(text = title) else NULL,
-    tooltip = Tooltip(trigger = "axis"),
-    legend = if (length(series) > 1L) Legend() else NULL,
-    x_axis = Axis(
-      type = "category",
-      data = bin_labels,
-      name = xlab,
-      name_location = if (!is.null(xlab)) "middle" else NULL
-    ),
-    y_axis = Axis(
-      type = "value",
-      name = ylab,
-      name_location = if (!is.null(ylab)) "middle" else NULL
-    ),
-    grid = resolve_margins(margins),
-    series = series,
-    # Per-chart palette overrides the theme's, as in every other chart.
-    color = palette
-  )
-
-  opt
-} # /rtemis.draw::histogram_option
-
-
 #' Draw a Histogram
 #'
 #' Histogram from numeric data, with optional grouping for multiple traces.
 #' Bins are computed using [graphics::hist()] with consistent break points
-#' across groups.
+#' across groups. Rectangles span their actual numeric intervals, including
+#' unequal widths. Grouped samples overlap with translucent fills. Intervals
+#' are right-closed, with the lowest edge included, using `hist()` boundary
+#' tolerance. Missing groups are excluded; empty samples have zero counts.
 #'
-#' @param x Numeric: Values used for histogram binning.
+#' Normalization is within each sample: `"count"` is the raw count;
+#' `"probability"` and `"percent"` divide by sample size (and multiply by 100
+#' for percent). `"density"` divides by sample size and bin width, so total
+#' area is one. `"count_density"` divides only by width, so area is sample size.
+#' Unequal-width bins require one of the two density scales.
+#'
+#' With `density = TRUE`, each curve uses the same settings as [draw_density()]
+#' and is scaled to the chosen histogram units. Count, probability, and percent
+#' curves multiply the estimated density by the common bin width and the
+#' appropriate sample-size factor. Density/count-density curves need no width
+#' factor. The histogram and curve share a color and legend toggle.
+#'
+#' @param x Numeric or List: Values or named numeric vectors to bin.
+#' @inheritParams draw_density mode order
 #' @param group Optional Atomic vector or single-column data frame: Grouping
 #'   variable for multiple series.
 #' @param breaks Numeric, Character, or Numeric vector: Binning method. A single number (number of bins), a character
 #'   string naming an algorithm (e.g. `"Sturges"`, `"Scott"`, `"FD"`), or a
-#'   numeric vector of break points. Passed to [graphics::hist()].
+#'   numeric vector of break points. Numeric forms are normalized to `bins` or
+#'   `bin_edges` by the setup function. Bin counts are suggestions to `hist()`.
+#' @param bins Optional Integer `[1, 1000000]`: Suggested bin count.
+#' @param bin_edges Optional Numeric vector: Finite, strictly increasing edges
+#'   spanning every retained observation. Overrides `breaks`; excludes `bins`.
+#' @param normalization Character: `"count"`, `"probability"`, `"percent"`,
+#'   `"density"`, or `"count_density"`.
+#' @param bin_stat Character `{"count", "sum", "mean", "min", "max"}`: Statistic of
+#'   x observations in each bin. Empty bins have height zero. Non-count
+#'   statistics require normalization = "count" and density = FALSE.
+#' @param bar_mode Character `{"overlay", "group", "stack"}`: Histogram group layout.
+#'   Stacks accumulate positive and negative values separately. Group/stack
+#'   layouts require mode = "overlap" and density = FALSE.
+#' @param density Logical: Overlay a kernel density in histogram units.
+#' @inheritParams draw_density n bw bandwidth kernel adjust fill_alpha na_rm verbosity
 #' @param palette Optional Character: Series colors, overriding the theme
 #'   palette for this chart. `NULL` uses the theme's.
 #' @param xlab Optional Character: X-axis title.
@@ -2619,7 +2537,23 @@ draw_histogram <- function(
   element_id = NULL,
   filename = NULL,
   legend_position = "top",
-  legend_placement = "outside"
+  legend_placement = "outside",
+  bins = NULL,
+  bin_edges = NULL,
+  normalization = "count",
+  density = FALSE,
+  n = 512L,
+  bw = "nrd0",
+  bandwidth = NULL,
+  kernel = "gaussian",
+  adjust = 1,
+  fill_alpha = .25,
+  na_rm = TRUE,
+  verbosity = 1L,
+  mode = "overlap",
+  order = "input",
+  bin_stat = "count",
+  bar_mode = "overlay"
 ) {
   opt <- histogram_option(
     x = x,
@@ -2629,7 +2563,23 @@ draw_histogram <- function(
     xlab = xlab,
     ylab = ylab,
     title = title,
-    margins = margins
+    margins = margins,
+    bins = bins,
+    bin_edges = bin_edges,
+    normalization = normalization,
+    density = density,
+    n = n,
+    bw = bw,
+    bandwidth = bandwidth,
+    kernel = kernel,
+    adjust = adjust,
+    fill_alpha = fill_alpha,
+    na_rm = na_rm,
+    verbosity = verbosity,
+    mode = mode,
+    order = order,
+    bin_stat = bin_stat,
+    bar_mode = bar_mode
   )
 
   draw(
@@ -2654,6 +2604,7 @@ draw_histogram <- function(
 #'
 #' @param h `hclust` object returned by [stats::hclust()].
 #' @param uniform Logical: Whether to use uniform heights for rendering.
+#' @param leaf_positions Optional Numeric: Display positions of ordered leaves.
 #' @return Named list with three elements:
 #'   \describe{
 #'     \item{`data`}{Length `n - 1` list of 5-element numeric lists.}
@@ -2662,13 +2613,13 @@ draw_histogram <- function(
 #'   }
 #' @keywords internal
 #' @noRd
-hclust_to_dendro_data <- function(h, uniform = FALSE) {
+hclust_to_dendro_data <- function(h, uniform = FALSE, leaf_positions = NULL) {
   n <- length(h[["order"]])
 
   # leaf_pos[i] = 0-based position of leaf i in the reordered sequence
   leaf_pos <- numeric(n)
   for (p in seq_len(n)) {
-    leaf_pos[h[["order"]][p]] <- p - 1L
+    leaf_pos[h[["order"]][p]] <- (leaf_positions %||% (seq_len(n) - 1L))[[p]]
   }
 
   # node_pos[k] = midpoint position of internal node k
@@ -2700,8 +2651,8 @@ hclust_to_dendro_data <- function(h, uniform = FALSE) {
 
   list(
     data = data,
-    min_height = heights[1L],
-    max_height = heights[n - 1L]
+    min_height = min(heights),
+    max_height = max(heights, .Machine$double.eps)
   )
 }
 
@@ -2795,16 +2746,45 @@ heatmap_option <- function(
   show_colorbar = TRUE,
   colorbar_orient = "vertical",
   title = NULL,
-  margins = NULL
+  margins = NULL,
+  row_tree = NULL,
+  col_tree = NULL,
+  cell_notes = NULL,
+  row_colors = NULL,
+  col_colors = NULL,
+  show_notes = FALSE,
+  row_cut = NULL,
+  col_cut = NULL
 ) {
-  # -- 1. Validate & coerce ------------------------------------------------------
-  if (!is.matrix(x)) {
-    x <- as.matrix(x)
-  }
-  if (!is.numeric(x)) {
+  input <- heatmap_input(
+    x,
+    row_tree,
+    col_tree,
+    cell_notes,
+    row_colors,
+    col_colors
+  )
+  x <- input[["values"]]
+  row_h <- input[["row_tree"]]
+  col_h <- input[["col_tree"]]
+  notes <- input[["cell_notes"]]
+  row_colors <- input[["row_colors"]]
+  col_colors <- input[["col_colors"]]
+  if (
+    !is.logical(show_notes) ||
+      length(show_notes) != 1L ||
+      is.na(show_notes) ||
+      (show_notes && (is.null(notes) || show_values))
+  ) {
     abort(
-      "`x` must be a numeric matrix.",
-      class = c("rtemis_type_error", "rtemis_input_error")
+      "Use show_notes with supplied cell_notes, and choose either notes or numeric value labels.",
+      class = c("rtemis_value_error", "rtemis_input_error")
+    )
+  }
+  if (!is.null(triangle) && (!is.null(row_h) || !is.null(col_h))) {
+    abort(
+      "Use a full matrix with supplied trees; triangle masking removes leaves.",
+      class = c("rtemis_value_error", "rtemis_input_error")
     )
   }
   if (!is.null(triangle)) {
@@ -2821,6 +2801,13 @@ heatmap_option <- function(
   rn <- row_names %||% rownames(x) %||% as.character(seq_len(n_rows))
   cn <- col_names %||% colnames(x) %||% as.character(seq_len(n_cols))
 
+  if (length(rn) != n_rows || length(cn) != n_cols || anyNA(rn) || anyNA(cn)) {
+    abort(
+      "Supply one nonmissing display label per matrix row and column.",
+      class = c("rtemis_value_error", "rtemis_input_error")
+    )
+  }
+
   # -- 3. Triangle masking -------------------------------------------------------
   # For symmetric matrices (e.g. correlation), the diagonal is uninformative
   # (always 1 for correlations), so mask it along with the hidden triangle.
@@ -2833,7 +2820,22 @@ heatmap_option <- function(
     diag(x) <- NA
     rows_keep <- apply(x, 1L, function(r) any(!is.na(r)))
     cols_keep <- apply(x, 2L, function(c) any(!is.na(c)))
+    if (!any(rows_keep) || !any(cols_keep)) {
+      abort(
+        "Choose a triangle containing at least one finite off-diagonal value.",
+        class = c("rtemis_value_error", "rtemis_input_error")
+      )
+    }
     x <- x[rows_keep, cols_keep, drop = FALSE]
+    if (!is.null(notes)) {
+      notes <- notes[rows_keep, cols_keep, drop = FALSE]
+    }
+    if (!is.null(row_colors)) {
+      row_colors <- row_colors[rows_keep, , drop = FALSE]
+    }
+    if (!is.null(col_colors)) {
+      col_colors <- col_colors[cols_keep, , drop = FALSE]
+    }
     rn <- rn[rows_keep]
     cn <- cn[cols_keep]
     n_rows <- nrow(x)
@@ -2842,30 +2844,47 @@ heatmap_option <- function(
 
   # -- 4. Hierarchical clustering (reorders matrix in place) ---------------------
   # hclust objects are retained so dendrograms can be rendered (when requested).
-  row_h <- NULL
-  col_h <- NULL
-  if (cluster_rows && n_rows > 1L) {
+  row_ord <- seq_len(n_rows)
+  col_ord <- seq_len(n_cols)
+  row_positions <- seq_len(n_rows) - 1L
+  col_positions <- seq_len(n_cols) - 1L
+  if (!is.null(row_h)) {
+    row_ord <- row_h[["order"]]
+  } else if (cluster_rows && n_rows > 1L) {
     complete <- rowSums(!is.na(x)) > 0L
     if (sum(complete) > 1L) {
       d <- stats::dist(x[complete, , drop = FALSE], method = dist_method)
       row_h <- stats::hclust(d, method = hclust_method)
-      ord <- seq_len(n_rows)
-      ord[complete] <- which(complete)[row_h[["order"]]]
-      x <- x[ord, , drop = FALSE]
-      rn <- rn[ord]
+      row_ord[complete] <- which(complete)[row_h[["order"]]]
+      row_positions <- which(complete) - 1L
     }
   }
-  if (cluster_cols && n_cols > 1L) {
+  if (!is.null(col_h)) {
+    col_ord <- col_h[["order"]]
+  } else if (cluster_cols && n_cols > 1L) {
     complete <- colSums(!is.na(x)) > 0L
     if (sum(complete) > 1L) {
       d <- stats::dist(t(x[, complete, drop = FALSE]), method = dist_method)
       col_h <- stats::hclust(d, method = hclust_method)
-      ord <- seq_len(n_cols)
-      ord[complete] <- which(complete)[col_h[["order"]]]
-      x <- x[, ord, drop = FALSE]
-      cn <- cn[ord]
+      col_ord[complete] <- which(complete)[col_h[["order"]]]
+      col_positions <- which(complete) - 1L
     }
   }
+  x <- x[row_ord, col_ord, drop = FALSE]
+  rn <- rn[row_ord]
+  cn <- cn[col_ord]
+  if (!is.null(notes)) {
+    notes <- notes[row_ord, col_ord, drop = FALSE]
+  }
+  if (!is.null(row_colors)) {
+    row_colors <- row_colors[row_ord, , drop = FALSE]
+  }
+  if (!is.null(col_colors)) {
+    col_colors <- col_colors[col_ord, , drop = FALSE]
+  }
+  branch_color <- dendro_color %||% "#99999988"
+  row_branch_colors <- heatmap_branch_colors(row_h, row_cut, branch_color)
+  col_branch_colors <- heatmap_branch_colors(col_h, col_cut, branch_color)
 
   # -- 5. Color limits -----------------------------------------------------------
   if (is.null(zlim)) {
@@ -2935,11 +2954,15 @@ heatmap_option <- function(
       value <- list(j - 1L, i - 1L, if (is.na(val)) NULL else val)
       # Materialize visible labels so browser and static output consume JSON,
       # without requiring a formatter callback at either render target.
-      data_list[[k]] <- if (show_values) {
+      data_list[[k]] <- if (show_values || !is.null(notes)) {
         list(
           value = value,
+          name = if (!is.null(notes)) notes[i, j] else "",
+          note = if (!is.null(notes)) notes[i, j] else "",
           label = list(
-            formatter = if (is.na(val)) {
+            formatter = if (show_notes) {
+              "{b}"
+            } else if (is.na(val)) {
               ""
             } else {
               formatC(
@@ -3006,6 +3029,11 @@ heatmap_option <- function(
     bot_px <- user_margins[["bottom"]]
   }
 
+  row_track_px <- if (is.null(row_colors)) 0L else 12L * ncol(row_colors) + 4L
+  col_track_px <- if (is.null(col_colors)) 0L else 12L * ncol(col_colors) + 4L
+  left_px <- left_px + row_track_px
+  bot_px <- bot_px + col_track_px
+
   # Determine which dendrogram panels to show
   # (only possible when there are enough rows/cols to cluster)
   dendro_rows_shown <- !is.null(row_h) && show_row_dendro
@@ -3059,26 +3087,26 @@ heatmap_option <- function(
   cols_json <- jsonlite::toJSON(cn, auto_unbox = FALSE)
   rows_json <- jsonlite::toJSON(rn, auto_unbox = FALSE)
   tooltip_fmt <- htmlwidgets::JS(paste0(
-    "(function(){",
-    "var cn=",
+    "(function(){var cn=",
     cols_json,
-    ";",
-    "var rn=",
+    ";var rn=",
     rows_json,
     ";",
-    "return function(p){",
-    "if(!p.value||p.value[2]===null||p.value[2]===undefined)return'NA';",
-    # Reuse materialized labels so rounding at a tie cannot make the tooltip
-    # disagree with the visible cell value (R and JS have different tie rules).
-    "var v=p.data&&p.data.label?p.data.label.formatter:p.value[2].toFixed(",
+    "function esc(s){return String(s).replace(/[&<>\"']/g,function(c){",
+    "return {'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',\"'\":'&#39;'}[c];});}",
+    "return function(p){if(!p.value)return '';",
+    "var v=p.value[2]==null?'NA':p.value[2].toFixed(",
     value_digits,
     ");",
-    "return rn[p.value[1]]+' \u00d7 '+cn[p.value[0]]+': '+v;",
-    "}})()"
+    "if(p.data&&p.data.label&&",
+    if (show_values) "true" else "false",
+    ")v=p.data.label.formatter;",
+    "return esc(rn[p.value[1]])+' \u00d7 '+esc(cn[p.value[0]])+': '+esc(v)",
+    "+(p.data&&p.data.note?'<br>'+esc(p.data.note):'');};})()"
   ))
 
   # -- 10. Optional in-cell value labels -----------------------------------------
-  label_opt <- if (show_values) LabelOption(show = TRUE) else NULL
+  label_opt <- if (show_values || show_notes) LabelOption(show = TRUE) else NULL
 
   # -- 11. Assemble multi-grid ECharts option ------------------------------------
   # Grid index assignments (depends on which dendro panels are shown):
@@ -3089,6 +3117,7 @@ heatmap_option <- function(
 
   dcolor <- dendro_color %||% "#99999988"
 
+  hm_x_ax_idx <- hm_y_ax_idx <- 0L
   if (!dendro_rows_shown && !dendro_cols_shown) {
     # ── No dendrograms: single grid, unchanged from original logic ───────────
     grids <- Grid(
@@ -3103,7 +3132,7 @@ heatmap_option <- function(
       data = as.list(cn),
       split_area = SplitArea(show = FALSE),
       axis_line = AxisLine(show = FALSE),
-      axis_label = AxisLabel(rotate = rotate),
+      axis_label = AxisLabel(rotate = rotate, margin = 8L + col_track_px),
       boundary_gap = TRUE
     )
     y_axes <- Axis(
@@ -3112,6 +3141,7 @@ heatmap_option <- function(
       inverse = TRUE,
       split_area = SplitArea(show = FALSE),
       axis_line = AxisLine(show = FALSE),
+      axis_label = AxisLabel(margin = 8L + row_track_px),
       boundary_gap = TRUE
     )
     series_list <- list(HeatmapSeries(data = data_list, label = label_opt))
@@ -3119,12 +3149,20 @@ heatmap_option <- function(
     # ── One or two dendrogram panels: multiple grids ─────────────────────────
     # Compute dendrogram segment data (needed for custom series renderItem)
     row_dendro <- if (dendro_rows_shown) {
-      hclust_to_dendro_data(row_h, uniform = dendro_uniform)
+      hclust_to_dendro_data(
+        row_h,
+        uniform = dendro_uniform,
+        leaf_positions = row_positions
+      )
     } else {
       NULL
     }
     col_dendro <- if (dendro_cols_shown) {
-      hclust_to_dendro_data(col_h, uniform = dendro_uniform)
+      hclust_to_dendro_data(
+        col_h,
+        uniform = dendro_uniform,
+        leaf_positions = col_positions
+      )
     } else {
       NULL
     }
@@ -3151,7 +3189,7 @@ heatmap_option <- function(
       data = as.list(cn),
       split_area = SplitArea(show = FALSE),
       axis_line = AxisLine(show = FALSE),
-      axis_label = AxisLabel(rotate = rotate),
+      axis_label = AxisLabel(rotate = rotate, margin = 8L + col_track_px),
       position = if (col_labels_top) "top" else NULL,
       boundary_gap = TRUE,
       grid_index = hm_grid_idx
@@ -3162,6 +3200,7 @@ heatmap_option <- function(
       inverse = TRUE,
       split_area = SplitArea(show = FALSE),
       axis_line = AxisLine(show = FALSE),
+      axis_label = AxisLabel(margin = 8L + row_track_px),
       boundary_gap = TRUE,
       grid_index = hm_grid_idx
     )
@@ -3279,7 +3318,14 @@ heatmap_option <- function(
           clip = TRUE,
           animation = FALSE,
           renderItem = "rtemis.dendrogram.v1",
-          itemPayload = list(orientation = "row", color = dcolor)
+          itemPayload = Filter(
+            Negate(is.null),
+            list(
+              orientation = "row",
+              color = dcolor,
+              colors = row_branch_colors
+            )
+          )
         ),
         list(
           type = "custom",
@@ -3290,7 +3336,14 @@ heatmap_option <- function(
           clip = TRUE,
           animation = FALSE,
           renderItem = "rtemis.dendrogram.v1",
-          itemPayload = list(orientation = "column", color = dcolor)
+          itemPayload = Filter(
+            Negate(is.null),
+            list(
+              orientation = "column",
+              color = dcolor,
+              colors = col_branch_colors
+            )
+          )
         ),
         HeatmapSeries(
           data = data_list,
@@ -3324,7 +3377,14 @@ heatmap_option <- function(
           clip = TRUE,
           animation = FALSE,
           renderItem = "rtemis.dendrogram.v1",
-          itemPayload = list(orientation = "row", color = dcolor)
+          itemPayload = Filter(
+            Negate(is.null),
+            list(
+              orientation = "row",
+              color = dcolor,
+              colors = row_branch_colors
+            )
+          )
         ),
         HeatmapSeries(
           data = data_list,
@@ -3357,7 +3417,14 @@ heatmap_option <- function(
           clip = TRUE,
           animation = FALSE,
           renderItem = "rtemis.dendrogram.v1",
-          itemPayload = list(orientation = "column", color = dcolor)
+          itemPayload = Filter(
+            Negate(is.null),
+            list(
+              orientation = "column",
+              color = dcolor,
+              colors = col_branch_colors
+            )
+          )
         ),
         HeatmapSeries(
           data = data_list,
@@ -3367,6 +3434,37 @@ heatmap_option <- function(
         )
       )
     }
+  }
+
+  heatmap_series_index <- length(series_list) - 1L
+  if (show_notes) {
+    # Resolve text widths at native layout time, in both the browser and SVG.
+    series_list[[heatmap_series_index + 1L]] <- c(
+      to_list(series_list[[heatmap_series_index + 1L]]),
+      list(rtemisCellNotes = TRUE)
+    )
+  }
+  for (direction in c("row", "column")) {
+    tracks <- if (direction == "row") row_colors else col_colors
+    if (is.null(tracks)) {
+      next
+    }
+    track_data <- lapply(seq_len(nrow(tracks)), function(i) list(i - 1L))
+    series_list[[length(series_list) + 1L]] <- list(
+      type = "custom",
+      renderItem = "rtemis.heatmap_tracks.v1",
+      xAxisIndex = hm_x_ax_idx,
+      yAxisIndex = hm_y_ax_idx,
+      data = track_data,
+      silent = TRUE,
+      clip = FALSE,
+      animation = FALSE,
+      itemPayload = list(
+        orientation = direction,
+        top = col_labels_top,
+        colors = lapply(seq_len(nrow(tracks)), function(i) as.list(tracks[i, ]))
+      )
+    )
   }
 
   opt <- EChartsOption(
@@ -3395,6 +3493,11 @@ heatmap_option <- function(
       bottom = if (colorbar_orient == "horizontal") "bottom" else NULL
     ),
     series = series_list
+  )
+
+  opt@visual_map <- c(
+    to_list(opt@visual_map),
+    list(seriesIndex = heatmap_series_index)
   )
 
   # Pass square-cell layout parameters to the JS binding so it can enforce
@@ -3507,6 +3610,21 @@ heatmap_option <- function(
 #' @param zlim Optional Numeric: Length-2 vector `c(min, max)` for the color scale.
 #'   Defaults to the observed data range. For correlation matrices, `c(-1, 1)` is
 #'   recommended.
+#' @param row_tree,col_tree Optional hclust, dendrogram or List: Supplied trees.
+#'   A plain tree record contains `merge`, `height`, `order` and optional `labels`.
+#'   Labeled leaves match original matrix dimnames; unlabeled trees are positional.
+#'   Supplied trees determine order and take precedence over computed clustering.
+#'   Triangle masking is unavailable with supplied trees.
+#' @param cell_notes Optional Character matrix: Literal cell notes for hover.
+#'   Named dimensions align to original matrix identities; otherwise positional.
+#' @param row_colors,col_colors Optional Character vector, matrix or Data frame:
+#'   R colors, one row per matrix row/column and one column per annotation track.
+#'   Row names, when supplied, match the original matrix identities.
+#' @param show_notes Logical: Print cell notes instead of numeric value labels.
+#'   Long notes truncate to the cell width; hover retains the full text.
+#' @param row_cut,col_cut Optional Integer: Number of clusters for branch coloring.
+#'   A cut requires a supplied or computed tree. Cross-cluster branches stay gray
+#'   (or `dendro_color`); within-cluster branches share a deterministic color.
 #' @param show_values Logical: Whether to print the cell value as a label inside
 #'   each cell.
 #' @param value_digits Integer: Decimal places used in cell labels and the tooltip.
@@ -3565,7 +3683,15 @@ draw_heatmap <- function(
   element_id = NULL,
   filename = NULL,
   legend_position = if (colorbar_orient == "horizontal") "bottom" else "right",
-  legend_placement = "outside"
+  legend_placement = "outside",
+  row_tree = NULL,
+  col_tree = NULL,
+  cell_notes = NULL,
+  row_colors = NULL,
+  col_colors = NULL,
+  show_notes = FALSE,
+  row_cut = NULL,
+  col_cut = NULL
 ) {
   built <- heatmap_option(
     width = width,
@@ -3594,7 +3720,15 @@ draw_heatmap <- function(
     show_colorbar = show_colorbar,
     colorbar_orient = colorbar_orient,
     title = title,
-    margins = margins
+    margins = margins,
+    row_tree = row_tree,
+    col_tree = col_tree,
+    cell_notes = cell_notes,
+    row_colors = row_colors,
+    col_colors = col_colors,
+    show_notes = show_notes,
+    row_cut = row_cut,
+    col_cut = col_cut
   )
 
   draw(
@@ -3861,4 +3995,141 @@ draw_sankey <- function(
     element_id = element_id,
     filename = filename
   )
+}
+
+
+#' Normalize bar table/vector input and stable category ordering
+#' @inheritParams draw_bar
+#' @return List: Categories, value series, and their row permutation.
+#' @keywords internal
+#' @noRd
+bar_input <- new_generic("bar_input", "x")
+method(bar_input, class_any) <- function(x, y = NULL, order = "input") {
+  order <- BarConfig(order = order)@order
+  if (inherits(y, "table") && length(dim(y)) == 1L) {
+    y <- as.vector(y)
+  }
+  if (is.data.frame(x) && is.null(y)) {
+    if (!all(vapply(x, is.numeric, logical(1)))) {
+      abort(
+        "Supply numeric columns for bar values.",
+        class = c("rtemis_type_error", "rtemis_input_error")
+      )
+    }
+    x <- as.matrix(x)
+  }
+  if (is.null(y)) {
+    if (length(dim(x)) == 2L) {
+      if (!is.numeric(x)) {
+        abort(
+          "Supply a numeric bar matrix or table.",
+          class = c("rtemis_type_error", "rtemis_input_error")
+        )
+      }
+      y <- setNames(
+        lapply(seq_len(ncol(x)), function(i) as.numeric(x[, i])),
+        colnames(x) %||% paste("Series", seq_len(ncol(x)))
+      )
+      x <- rownames(x) %||% as.character(seq_len(nrow(x)))
+    } else {
+      y <- as.vector(x)
+      x <- if (inherits(x, "table")) {
+        dimnames(x)[[1]]
+      } else {
+        names(x) %||% as.character(seq_along(x))
+      }
+    }
+  }
+  category_list <- is.list(x)
+  x <- as.character(x)
+  values <- if (is.list(y)) y else list(y)
+  if (
+    !length(x) ||
+      anyNA(x) ||
+      anyDuplicated(x) ||
+      !length(values) ||
+      any(
+        !vapply(
+          values,
+          function(v) {
+            is.numeric(v) &&
+              !is.complex(v) &&
+              is.null(dim(v)) &&
+              length(v) == length(x) &&
+              !any(is.infinite(v))
+          },
+          logical(1)
+        )
+      )
+  ) {
+    abort(
+      "Supply distinct categories and equally sized numeric bar series, allowing NA.",
+      class = c("rtemis_value_error", "rtemis_input_error")
+    )
+  }
+  if (
+    is.list(y) &&
+      (is.null(names(y)) ||
+        anyNA(names(y)) ||
+        any(!nzchar(names(y))) ||
+        anyDuplicated(names(y)))
+  ) {
+    abort(
+      "Name every bar series distinctly.",
+      class = c("rtemis_value_error", "rtemis_input_error")
+    )
+  }
+  index <- if (order == "input") {
+    seq_along(x)
+  } else {
+    base::order(
+      Reduce(`+`, values),
+      decreasing = order == "decreasing",
+      na.last = TRUE
+    )
+  }
+  list(
+    x = if (category_list) as.list(x[index]) else x[index],
+    y = if (is.list(y)) lapply(y, `[`, index) else y[index],
+    index = index
+  )
+}
+
+#' Normalize and validate pie slices without recycling labels
+#' @inheritParams draw_pie
+#' @return List: Numeric values and literal labels.
+#' @keywords internal
+#' @noRd
+pie_input <- new_generic("pie_input", "values")
+method(pie_input, class_any) <- function(values, labels = NULL) {
+  if (is.data.frame(values) || is.matrix(values)) {
+    if (ncol(values) != 2L || !is.null(labels)) {
+      abort(
+        "Supply a two-column label/value table alone, or separate values and labels.",
+        class = c("rtemis_value_error", "rtemis_input_error")
+      )
+    }
+    labels <- values[, 1]
+    values <- values[, 2]
+  }
+  labels <- labels %||% names(values) %||% paste("Slice", seq_along(values))
+  if (
+    !is.numeric(values) ||
+      is.complex(values) ||
+      !is.null(dim(values)) ||
+      !length(values) ||
+      any(!is.finite(values)) ||
+      any(values < 0) ||
+      !is.finite(sum(values)) ||
+      sum(values) <= 0 ||
+      length(labels) != length(values) ||
+      anyNA(labels) ||
+      anyDuplicated(as.character(labels))
+  ) {
+    abort(
+      "Supply finite nonnegative slice values with a positive total and distinct, matching labels.",
+      class = c("rtemis_value_error", "rtemis_input_error")
+    )
+  }
+  list(values = unname(values), labels = as.character(labels))
 }

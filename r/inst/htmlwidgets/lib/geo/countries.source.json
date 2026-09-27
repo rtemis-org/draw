@@ -1,0 +1,24 @@
+{
+  "source": "https://raw.githubusercontent.com/nvkelso/natural-earth-vector/v5.1.2/geojson/ne_110m_admin_0_countries.geojson",
+  "source_sha256": "6866c877d39cba9c357620878839b336d569f8c662d3cfab4cb1dbe2d39c977f",
+  "dataset": "Natural Earth 5.1.2, 1:110m admin-0 countries",
+  "license": "Public domain",
+  "build_tool": "mapshaper 0.7.68",
+  "commands": [
+    "-filter",
+    "ISO_A3_EH != '-99'",
+    "-filter-fields",
+    "NAME,ISO_A3_EH",
+    "-rename-fields",
+    "name=NAME",
+    "-rename-layers",
+    "countries",
+    "-o",
+    "format=topojson",
+    "id-field=ISO_A3_EH",
+    "quantization=100000"
+  ],
+  "features": 174,
+  "ids_sha256": "7d5a85863d8d44e38f12170a3d001f63567b5d02658fc7ee178fe01e9c5d0604",
+  "artifact_sha256": "603f93d7c500ab728ecf0db06f0d6fbe8759ba8035aae8679d31f2a5c37454cc"
+}

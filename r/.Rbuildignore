@@ -25,5 +25,6 @@
 ^SKILL\.md$
 ^LICENSE\.md$
 ^justfile$
-^tools$
+^tools/visual-qa$
+^tools/check-rd-sections[.]sh$
 node_modules

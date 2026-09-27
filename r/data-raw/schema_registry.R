@@ -32,6 +32,10 @@ chart_family <- list(
 # here: it comes from `chart_registry()`, the same one `read_chart_config()`
 # uses, so a chart type cannot exist for reading and not for publishing.
 chart_descriptions <- c(
+  scatter3d = "Orthographic 3D points and paths with groups, a portable camera, and vector projection.",
+  timeseries = "Independent time-series records with rolling summaries, dual value axes, shading, and zeitgeber labels.",
+  survival = "Precomputed survival curves with confidence bands, censor ticks, annotations, and explicit risk records.",
+  calibration = "Binary probability calibration with explicit binning, Brier scores, and probability rugs.",
   roc = "Receiver operating characteristic curves with pooled or per-resample AUC summaries.",
   confusion = "Confusion counts and per-class summaries in one or more panels.",
   significance = "Volcano or categorical significance plots of estimates and adjusted p-values.",

@@ -20,7 +20,8 @@ draw_manhattan(
   width = NULL,
   height = NULL,
   element_id = NULL,
-  filename = NULL
+  filename = NULL,
+  group = NULL
 )
 }
 \arguments{
@@ -59,6 +60,9 @@ inside placement overlays the data. Neither setting adds a missing legend.}
 \item{element_id}{Optional Character: HTML element identifier.}
 
 \item{filename}{Optional Character: Static output path, currently SVG.}
+
+\item{group}{Optional vector: One display-group label per outcome; unset uses
+significance and direction. Missing groups omit marks but retain the testing family.}
 }
 \value{
 An ECharts htmlwidget.

@@ -6,7 +6,7 @@
 \usage{
 draw_bar(
   x,
-  y,
+  y = NULL,
   palette = NULL,
   stack = FALSE,
   horizontal = FALSE,
@@ -20,12 +20,15 @@ draw_bar(
   element_id = NULL,
   filename = NULL,
   bar_width = NULL,
+  order = "input",
   legend_position = "top",
   legend_placement = "outside"
 )
 }
 \arguments{
-\item{x}{Character: Category labels.}
+\item{x}{Character or Numeric: Category labels, or values when y is omitted.
+A matrix or two-dimensional table supplies categories in rows and series
+in columns. A one-dimensional table supplies counts and category names.}
 
 \item{y}{Numeric or named list: Bar heights.}
 
@@ -64,6 +67,9 @@ container. \code{NULL} lets htmlwidgets generate one.}
 
 \item{bar_width}{Optional Numeric \verb{(0, Inf)}: Bar thickness in pixels.
 NULL lets ECharts size bars from the category spacing.}
+
+\item{order}{Character \verb{\{"input", "increasing", "decreasing"\}}: Order categories
+by their total across series, retaining ties and placing missing totals last.}
 
 \item{legend_position}{Character \{"top", "bottom", "left", "right",
 "top-left", "top-right", "bottom-left", "bottom-right"\}: Legend anchor.

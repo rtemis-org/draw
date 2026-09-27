@@ -37,16 +37,21 @@ window.foundationQA = {
   hoverPoint() {
     const c = this.chart();
     const series = c.getModel().getSeries().find(s =>
-      ['scatter', 'bar', 'line', 'boxplot', 'pie', 'sankey', 'heatmap'].includes(s.subType));
+      !s.get('silent') && ['scatter', 'bar', 'line', 'boxplot', 'pie', 'sankey', 'heatmap', 'custom'].includes(s.subType));
     const data = series.getData();
-    const index = Math.floor(data.count() / 2);
+    let index = Math.floor(data.count() / 2);
+    // Empty histogram bins have no hoverable area; choose an observed bin.
+    if (series.option.renderItem === 'rtemis.histogram.v1') {
+      index = Array.from({length: data.count()}, (_, i) => i)
+        .find(i => data.getRawDataItem(i)[3] > 0);
+    }
     let point;
     if (series.subType === 'pie') {
       const sector = data.getItemLayout(index);
       const angle = (sector.startAngle + sector.endAngle) / 2;
       const radius = (sector.r + sector.r0) / 2;
       point = [sector.cx + radius * Math.cos(angle), sector.cy + radius * Math.sin(angle)];
-    } else if (['bar', 'boxplot', 'sankey'].includes(series.subType)) {
+    } else if (['bar', 'boxplot', 'sankey', 'custom'].includes(series.subType)) {
       const rect = this.bounds(data.getItemGraphicEl(index));
       point = [rect.x + rect.width / 2, rect.y + rect.height / 2];
     } else {
@@ -64,6 +69,25 @@ window.foundationQA = {
     return el && getComputedStyle(el).visibility !== 'hidden' &&
       Number(getComputedStyle(el).opacity) > 0 ? el.innerText : '';
   },
+  // Calibration uses centered line symbols. Check actual rendered positions
+  // after host resizing, which can schedule an update after animation.isFinished.
+  linePointsAligned() {
+    return this.chart().getModel().getSeries().filter(s =>
+      s.subType === 'line' && !s.get('silent')).every(series => {
+      const data = series.getData();
+      for (let i = 0; i < data.count(); i++) {
+        const el = data.getItemGraphicEl(i);
+        if (!el) return false;
+        const rect = this.bounds(el);
+        const point = series.coordinateSystem.dataToPoint([
+          data.get(data.mapDimension('x'), i), data.get(data.mapDimension('y'), i)
+        ]);
+        if (Math.abs(rect.x + rect.width / 2 - point[0]) > 0.1 ||
+            Math.abs(rect.y + rect.height / 2 - point[1]) > 0.1) return false;
+      }
+      return true;
+    });
+  },
   center() {
     const rect = this.chart().getModel().getComponent('grid').coordinateSystem.getRect();
     return this.pagePoint(rect.x + rect.width / 2, rect.y + rect.height / 2);
@@ -72,16 +96,30 @@ window.foundationQA = {
     return this.chart().getModel().findComponents({mainType: 'dataZoom'})
       .map(m => m.getPercentRange());
   },
+  heatmapTracksAligned() {
+    return this.chart().getModel().getSeries().filter(s=>s.get('renderItem')==='rtemis.heatmap_tracks.v1').every(s=>{
+      const data=s.getData(),row=s.get('itemPayload').orientation==='row';
+      for(let i=0;i<data.count();i++) {
+        const center=s.coordinateSystem.dataToPoint(row?[0,i]:[i,0]);
+        for(const mark of data.getItemGraphicEl(i).children()) {
+          const rect=this.bounds(mark),value=row?rect.y+rect.height/2:rect.x+rect.width/2;
+          if(Math.abs(value-center[row?1:0])>.1)return false;
+        }
+      }
+      return true;
+    });
+  },
   scene() {
     const c = this.chart();
-    const grid = c.getModel().getComponent('grid')?.coordinateSystem.getRect() || {x:0,y:0,width:c.getWidth(),height:c.getHeight()};
+    const grid = c.getModel().getSeries().find(s=>s.subType==='heatmap')?.coordinateSystem.getArea() || c.getModel().getComponent('grid')?.coordinateSystem.getRect() || {x:0,y:0,width:c.getWidth(),height:c.getHeight()};
     const text = c.getZr().storage.getDisplayList(true)
       .filter(el => el.type === 'tspan' && !el.ignore && el.style.text)
       .map(el => ({text: el.style.text, ...this.bounds(el)}));
     return {width: c.getWidth(), height: c.getHeight(),
       background: c.getModel().get('backgroundColor'),
       series: c.getModel().getSeries().map(s => ({name: s.name, type: s.subType,
-        count: s.getData().count()})),
+        count: s.getData().count(),
+        reference: !!s.get('silent') && !!s.get('markLine.data')?.length})),
       grid: {x: grid.x, y: grid.y, width: grid.width, height: grid.height},
       text, errors: window.__qaErrors};
   }
