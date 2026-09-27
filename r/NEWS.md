@@ -1,5 +1,7 @@
 # rtemis.draw 0.5.3
 
+- Remove hover guide lines from bar charts while retaining category tooltips.
+
 - Keep A3 residue tooltips accessible through annotation overlays and include annotation details.
 
 - Fit long confusion-matrix labels and vertical Sankey labels consistently in browser and SVG output.

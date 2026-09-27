@@ -77,6 +77,49 @@ test_that("compile errors when x or y is unset", {
   )
 })
 
+test_that("bar entry points retain category tooltips without hover guides", {
+  d <- bar_data()
+  for (horizontal in c(FALSE, TRUE)) {
+    category_axis <- if (horizontal) "yAxis" else "xAxis"
+    options <- list(
+      draw_bar(d[["g"]], d[["u"]], horizontal = horizontal)[["x"]][["option"]],
+      draw_varimp(c(a = 3, b = 1, c = 4), horizontal = horizontal)[["x"]][[
+        "option"
+      ]]
+    )
+    # Grouped and stacked charts must keep the shared, multi-series tooltip.
+    for (stack in c(FALSE, TRUE)) {
+      options <- c(
+        options,
+        list(
+          draw_bar(
+            d[["g"]],
+            list(u = d[["u"]], v = d[["v"]]),
+            horizontal = horizontal,
+            stack = stack
+          )[["x"]][["option"]],
+          to_list(compile(
+            setup_BarConfig(
+              x = "g",
+              y = c("u", "v"),
+              horizontal = horizontal,
+              stack = stack
+            ),
+            data = d
+          ))
+        )
+      )
+    }
+    for (option in options) {
+      expect_identical(
+        option[[category_axis]][["axisPointer"]][["type"]],
+        "none"
+      )
+      expect_identical(option[["tooltip"]][["trigger"]], "axis")
+    }
+  }
+})
+
 
 # %% resolve ----
 

@@ -1487,6 +1487,7 @@ resolve_zoom <- function(zoom, axis = "x") {
 #' The single implementation shared by [draw_bar()], which resolves its arguments
 #' from vectors, and `compile()` on the corresponding [ChartConfig], which
 #' resolves them from a data frame. The render targets stay with the caller.
+#' Category tooltips retain all series values without drawing a hover guide.
 #'
 #' @inheritParams draw_bar
 #'
@@ -1556,11 +1557,22 @@ bar_option <- function(
     }
   }
 
+  # Hide the redundant category guide while retaining axis tooltips and emphasis.
   if (horizontal) {
     x_ax <- Axis(type = "value", name = xlab)
-    y_ax <- Axis(type = "category", data = x, name = ylab)
+    y_ax <- Axis(
+      type = "category",
+      data = x,
+      name = ylab,
+      axis_pointer = list(type = "none")
+    )
   } else {
-    x_ax <- Axis(type = "category", data = x, name = xlab)
+    x_ax <- Axis(
+      type = "category",
+      data = x,
+      name = xlab,
+      axis_pointer = list(type = "none")
+    )
     y_ax <- Axis(type = "value", name = ylab)
   }
   # End-positioned names consume horizontal plot space for long measure
