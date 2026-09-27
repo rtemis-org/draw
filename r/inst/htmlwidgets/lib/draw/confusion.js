@@ -29,29 +29,54 @@
 
   // Measure text with ECharts' own font metrics, including in headless SVG.
   // A minimum panel width lets a multi-column composition reflow on phones.
-  function dimensions(echarts, payload, theme, width) {
+  function dimensions(echarts, payload, theme, width, height = Infinity) {
     const meta = payload.confusion, option = payload.option;
-    const fontSize = meta.fontSize;
     const family = option.textStyle?.fontFamily || theme?.textStyle?.fontFamily || 'sans-serif';
-    const measure = text => echarts.format.getTextRect(String(text), `${fontSize}px ${family}`).width;
-    const step = meta.metrics ? 4 : 1;
-    const panels = option.grid.length / step;
+    const step = meta.metrics ? 4 : 1, panels = option.grid.length / step;
     const classes = option.yAxis[0].data;
-    const labelWidth = Math.max(...classes.map(measure), meta.metrics ? measure('NPV') : 0);
-    const left = 12 + labelWidth + 10 + (option.yAxis[0].name ? fontSize + 16 : 0);
+    const cols = Math.max(1, Math.min(meta.ncol, panels, Math.floor(width / 360)));
+    const rows = Math.ceil(panels / cols), panelWidth = width / cols;
+    const titleOffset = option.title.length - panels;
     const metricLabels = meta.metrics ? option.series.filter((_, i) => i % 5 >= 2)
       .flatMap(series => series.data.map(d => d.label.formatter)) : [];
-    const rateWidth = Math.max(0, ...metricLabels.map(text => measure(String(text).split('\n').pop())));
-    const strip = meta.metrics ? 2 * (Math.max(measure('Sens.'), measure('Spec.'), rateWidth) + 16) : 0;
-    const cols = Math.max(1, Math.min(meta.ncol, panels, Math.floor(width / Math.max(320, left + strip + 140))));
-    const rows = Math.ceil(panels / cols);
-    const titleOffset = option.title.length - panels;
-    const header = option.title.slice(titleOffset).some(t => t.text) ? fontSize + 14 : 0;
-    const top = 12 + header + (option.xAxis[0].name ? fontSize + 18 : 0) + fontSize + 12;
-    const bottom = meta.metrics ? 8 + 2 * (2 * fontSize + 12) : 0;
-    const footer = 12;
-    return {fontSize, family, step, panels, cols, rows, titleOffset, header, left, strip,
-      top, bottom, footer, labelWidth, globalTop: titleOffset ? fontSize + 28 : 0};
+    // Measure ECharts' native wrapped text. Derive every font and margin from
+    // semantic input on each resize, so a narrow view cannot shrink a later one.
+    for (let fontSize = meta.fontSize; ; fontSize = Math.max(8, fontSize - 1)) {
+      const measure = text => echarts.format.getTextRect(String(text), `${fontSize}px ${family}`).width;
+      const wrappedHeight = (text, width) => new echarts.graphic.Text({style: {
+        text: String(text), fontSize, fontFamily: family, width: Math.max(1, width),
+        overflow: 'break', lineHeight: fontSize + 2
+      }}).getBoundingRect().height;
+      const labelWidth = Math.min(Math.max(...classes.map(measure), meta.metrics ? measure('NPV') : 0), panelWidth * .26);
+      const left = 12 + labelWidth + 10 + (option.yAxis[0].name ? fontSize + 16 : 0);
+      const rateWidth = Math.max(0, ...metricLabels.map(text => measure(String(text).split('\n').pop())));
+      const strip = meta.metrics ? 2 * (Math.max(measure('Sens.'), measure('Spec.'), rateWidth) + 16) : 0;
+      const header = option.title.slice(titleOffset).some(t => t.text) ? meta.fontSize + 14 : 0;
+      const bottom = meta.metrics ? 8 + 2 * (2 * fontSize + 12) : 0;
+      const footer = 12, globalTop = titleOffset ? meta.fontSize + 28 : 0;
+      const availableWidth = panelWidth - left - strip - (strip ? 8 : 0) - 12;
+      const panelHeight = (height - globalTop) / rows;
+      let side = availableWidth, top, columnLabelHeight, columnLabelWidth, columnRotation;
+      // Header wrapping and square-cell size constrain each other on short
+      // surfaces. Iterate conservatively; reducing the font resolves crowding.
+      for (let pass = 0; pass < 20; pass++) {
+        columnRotation = Math.max(...classes.map(measure)) > side / classes.length - 4 ? 90 : 0;
+        columnLabelWidth = columnRotation ? Math.max(labelWidth, Math.min(180, panelHeight * .28)) : Math.max(1, side / classes.length - 4);
+        columnLabelHeight = columnRotation ? Math.min(columnLabelWidth, Math.max(...classes.map(measure))) : fontSize + 2;
+        top = 12 + header + (option.xAxis[0].name ? fontSize + 18 : 0) + columnLabelHeight + 12;
+        const next = Math.max(1, Math.min(availableWidth, panelHeight - top - bottom - footer));
+        if (Math.abs(next - side) < .01) break;
+        side = next;
+      }
+      const rowHeight = Math.max(...classes.map(t => wrappedHeight(t, labelWidth)), ...(columnRotation ? classes.map(t => wrappedHeight(t, columnLabelWidth)) : []));
+      if (Math.max(rowHeight + 2, rateWidth + 4) <= side / classes.length && side > 0) {
+        return {fontSize, family, step, panels, cols, rows, titleOffset, header, left, strip,
+          top, bottom, footer, labelWidth, columnLabelHeight, columnLabelWidth, columnRotation, globalTop};
+      }
+      if (fontSize <= Math.min(8, meta.fontSize)) {
+        throw new Error('Increase confusion figure dimensions or reduce panels per figure to keep class labels and metrics readable.');
+      }
+    }
   }
 
   // Standalone browser widgets may grow vertically when panels wrap. Bounded
@@ -66,7 +91,7 @@
   function prepare(echarts, payload, theme, width, height) {
     if (!payload?.confusion) return;
     const option = payload.option, meta = payload.confusion;
-    const d = dimensions(echarts, payload, theme, width);
+    const d = dimensions(echarts, payload, theme, width, height);
     const bg = option.backgroundColor || theme?.backgroundColor || '#ffffff';
     const fg = option.textStyle?.color || theme?.textStyle?.color || contrast(echarts, bg);
     const low = meta.lowColor || bg;
@@ -100,11 +125,17 @@
           containLabel: false, outerBoundsMode: 'none'
         });
         for (const axis of [option.xAxis[index], option.yAxis[index]]) {
-          axis.axisLabel.color = muted;
+          Object.assign(axis.axisLabel, {color: muted, fontSize: d.fontSize, lineHeight: d.fontSize + 2});
           axis.axisTick = {show: false};
+          // Margins already account for labels; ECharts must not add them twice.
+          axis.nameMoveOverlap = false;
           axis.nameTextStyle = {fontSize: d.fontSize, color: muted};
         }
-        option.xAxis[index].nameGap = d.fontSize + 18;
+        option.xAxis[index].nameGap = d.columnLabelHeight + 18;
+        if (j === 0) {
+          Object.assign(option.xAxis[index].axisLabel, {width: d.columnLabelWidth, rotate: d.columnRotation, overflow: 'break'});
+          Object.assign(option.yAxis[index].axisLabel, {width: d.labelWidth, overflow: 'break'});
+        }
         option.yAxis[index].nameGap = d.labelWidth + 20;
       });
       const title = option.title[i + d.titleOffset];
@@ -120,6 +151,7 @@
           point.label.color = j < 2 ? contrast(echarts, blend(echarts, low, high, point.value[2]))
             : (meta.summaryColor ? contrast(echarts, high) : fg);
           point.label.fontWeight = j < 2 ? 'bold' : 'normal';
+          point.label.fontSize = d.fontSize;
         }
       }
     }

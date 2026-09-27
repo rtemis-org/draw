@@ -200,3 +200,7 @@ qa-surface3d output:
 # Repeated rendering, theme/resize changes and dense geometry (developer QA).
 qa-lifecycle output:
     {{rscript}} r/tools/visual-qa/lifecycle.R "{{output}}"
+
+# Dense labels, annotated proteins and unusual panel layouts (developer QA).
+qa-targeted output:
+    {{rscript}} r/tools/visual-qa/targeted.R "{{output}}"

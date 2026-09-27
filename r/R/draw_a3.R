@@ -415,6 +415,37 @@ a3_option <- function(
   ptm_legend <- list()
   proc_legend <- list()
 
+  # As in rtemislive, residue circles own interaction and annotation overlays
+  # remain visual. Materialize annotation text once; SVG stays callback-free.
+  residue_notes <- rep(list(character()), seq_length)
+  families <- list(
+    Regions = region_anns,
+    Sites = site_anns,
+    PTMs = ptm_anns,
+    Processing = proc_anns
+  )
+  for (family in names(families)) {
+    for (nm in names(families[[family]])) {
+      positions <- unique(a3_flex_positions(families[[family]][[nm]][[
+        "index"
+      ]]))
+      positions <- positions[positions >= 1L & positions <= seq_length]
+      # Escape HTML and ECharts formatter placeholders in authored names.
+      safe_name <- as.character(htmltools::htmlEscape(nm))
+      safe_name <- gsub("{", "&#123;", safe_name, fixed = TRUE)
+      safe_name <- gsub("}", "&#125;", safe_name, fixed = TRUE)
+      for (position in positions) {
+        residue_notes[[position]] <- c(
+          residue_notes[[position]],
+          paste0(family, ": ", safe_name)
+        )
+      }
+    }
+  }
+  for (position in unique(v_idx)) {
+    residue_notes[[position]] <- c(residue_notes[[position]], "Variant")
+  }
+
   # 1. Backbone line (z = 10): primary structure
   if (show_markers) {
     backbone_data <- lapply(seq_len(seq_length), function(i) {
@@ -422,7 +453,12 @@ a3_option <- function(
       res_name <- if (res %in% names(.A3_AA_NAMES)) .A3_AA_NAMES[[res]] else res
       list(
         value = list(xs[[i]], ys[[i]]),
-        tooltip = list(formatter = sprintf("%d: %s", i, res_name))
+        tooltip = list(
+          formatter = paste(
+            c(sprintf("%d: %s", i, res_name), residue_notes[[i]]),
+            collapse = "<br>"
+          )
+        )
       )
     })
     series <- c(
@@ -476,6 +512,7 @@ a3_option <- function(
         type = "line",
         name = nm,
         z = 15L,
+        silent = TRUE,
         data = region_data,
         connectNulls = FALSE,
         showSymbol = FALSE,
@@ -512,6 +549,7 @@ a3_option <- function(
         type = "scatter",
         name = nm,
         z = 20L,
+        silent = TRUE,
         data = site_data,
         symbol = "circle",
         symbolSize = marker_size,
@@ -563,6 +601,7 @@ a3_option <- function(
         type = "scatter",
         name = nm,
         z = 30L,
+        silent = TRUE,
         data = ptm_data,
         symbol = "circle",
         symbolSize = ptm_symbol_size,
@@ -595,6 +634,7 @@ a3_option <- function(
         type = "scatter",
         name = nm,
         z = 31L,
+        silent = TRUE,
         data = proc_data,
         symbol = "triangle",
         symbolRotate = 180,

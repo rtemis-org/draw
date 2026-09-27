@@ -292,3 +292,52 @@ test_that("draw_sankey respects orient argument", {
   series <- w[["x"]][["option"]][["series"]][[1L]]
   expect_equal(series[["orient"]], "vertical")
 })
+
+test_that("vertical Sankey labels fit native nodes in browser and SVG geometry", {
+  skip_if(Sys.which("node") == "", "Node is needed for native geometry")
+  links <- data.frame(
+    source = c(
+      "Screened cohort",
+      "Screened cohort",
+      "Eligible participants",
+      "Eligible participants"
+    ),
+    target = c(
+      "Eligible participants",
+      "Excluded participants",
+      "Treatment arm",
+      "Control arm"
+    ),
+    value = c(80, 20, 40, 40)
+  )
+  widget <- draw_sankey(links, orient = "vertical", label_font_size = 14)
+  expect_equal(widget$x$option$series[[1]]$right, 12)
+  path <- tempfile(fileext = ".json")
+  on.exit(unlink(path), add = TRUE)
+  jsonlite::write_json(
+    list(
+      payload = widget$x,
+      light = to_list(theme_light()),
+      dark = to_list(theme_dark()),
+      echarts = system.file(
+        "htmlwidgets/lib/echarts/echarts.min.js",
+        package = "rtemis.draw"
+      ),
+      layout = system.file(
+        "htmlwidgets/lib/draw/panels.js",
+        package = "rtemis.draw"
+      )
+    ),
+    path,
+    auto_unbox = TRUE,
+    null = "null"
+  )
+  output <- system2(
+    Sys.which("node"),
+    c(shQuote(test_path("fixtures", "sankey_geometry.js")), shQuote(path)),
+    stdout = TRUE,
+    stderr = TRUE
+  )
+  expect_null(attr(output, "status"), info = paste(output, collapse = "\n"))
+  expect_match(paste(output, collapse = "\n"), "passed")
+})

@@ -39,6 +39,9 @@ Remove the extra r-universe repository only when every needed version is on CRAN
 
 ## Package requirements and exceptions
 
+The minimum supported R version is 4.4.0. Include R 4.4 in release qualification;
+routine R-release checks and R-hub defaults do not establish this minimum.
+
 Node.js 18.20.8 is installed explicitly so SVG tests run at the supported floor. Browser/WebGL visual QA remains a separate developer/release task. The existing Linux/release check name is retained. Geography JSON uses LF checkout bytes because provenance checks hash those bytes.
 
 ## Verification and maintenance
