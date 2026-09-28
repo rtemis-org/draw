@@ -4,7 +4,11 @@
 
 ![rtemis.draw cover](https://docs.rtemis.org/r/draw/assets/cover.avif)
 
-Interface to JS libraries for high performance interactive visualization using type-checked, validated configuration objects.
+Create interactive charts, networks, and maps with ECharts, Sigma.js, and
+MapLibre. High-level plotting functions and low-level configuration use
+type-checked, validated S7 objects. Visualizations render as htmlwidgets with
+automatic light/dark themes, integrate with Quarto and Shiny, and support
+SVG output.
 
 See the [R interface](r/README.md) for documentation and the API reference.
 
