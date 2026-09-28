@@ -1,5 +1,8 @@
 # rtemis.draw 0.5.3
 
+- Move model-specific plotting methods to rtemis and remove the rtemis dependency.
+- Export data preparation generics for model-package adapters.
+
 - Remove hover guide lines from bar charts while retaining category tooltips.
 
 - Keep A3 residue tooltips accessible through annotation overlays and include annotation details.

@@ -12,5 +12,6 @@ Requires R >= 4.4.0.
 
 ## Plotting rtemis models
 
-The optional rtemis model plotting methods require `rtemis >= 1.4.1`.
-The data-facing `draw_*()` functions do not require rtemis.
+Model-specific `plot_*()` methods and `present()` belong to rtemis, which uses
+rtemis.draw for rendering. The data-facing `draw_*()` functions work independently
+of rtemis.

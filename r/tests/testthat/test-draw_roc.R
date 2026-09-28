@@ -277,15 +277,6 @@ test_that("classification labels and square ROC axes fit phone and SVG layouts",
   expect_match(paste(output, collapse = "\n"), "passed")
 })
 
-test_that("empirical ROC agrees with the existing rtemis statistical engine", {
-  skip_if_not_installed("rtemis")
-  skip_if_not_installed("pROC")
-  y <- roc_test_labels()
-  p <- c(.1, .8, .5, .5)
-  old <- rtemis::roc_curve(y, p)
-  new <- roc_input(y, p)
-  expect_equal(new[c("class", "fpr", "tpr", "auc")], old)
-})
 
 test_that("ROC legends use compact labels and portable corner placement", {
   records <- roc_test_records()

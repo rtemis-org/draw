@@ -141,7 +141,7 @@ method(learning_curve_data, class_data.frame) <- function(
 #'
 #' Draw training and validation losses against training progress using a
 #' [LineConfig]. This function accepts an ordinary table and does not require
-#' rtemis. Use [rtemis.draw::plot_learning()] to draw the curve of a model.
+#' rtemis. Supply a data frame containing its recorded learning curve.
 #'
 #' @details
 #' Steps are sorted numerically. With a `tree` column, losses are averaged at

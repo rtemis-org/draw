@@ -40,8 +40,8 @@ An ECharts htmlwidget containing every requested panel.
 \description{
 Accepts a square count matrix, a named list of count matrices, long frequency
 records (\code{reference}, \code{predicted}, \code{n}, optional \code{panel}), or paired reference
-and predicted label vectors. With rtemis installed, classification metrics
-objects are also accepted. Matrix columns are aligned by label identity;
+and predicted label vectors. Model packages can add support for metrics
+objects through \code{\link[=confusion_input]{confusion_input()}}. Matrix columns are aligned by label identity;
 their physical order need not match rows. All panels share one class order.
 }
 \section{Statistical semantics}{

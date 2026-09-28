@@ -7,9 +7,14 @@
 #' @param predicted_prob Numeric vector or matrix: Class probabilities.
 #' @param positive Optional Character: Binary positive class.
 #' @return List containing reference labels, class levels, selected classes, and scores.
-#' @keywords internal
-#' @noRd
-roc_probabilities <- new_generic("roc_probabilities", "x")
+#' @export
+#' @examples
+#' roc_probabilities(factor(c("no", "yes")), c(0.1, 0.9))
+roc_probabilities <- new_generic(
+  "roc_probabilities",
+  "x",
+  function(x, predicted_prob, positive = NULL) S7_dispatch()
+)
 method(roc_probabilities, class_any) <- function(
   x,
   predicted_prob,
@@ -113,16 +118,49 @@ method(roc_probabilities, class_any) <- function(
 
 #' Compute empirical ROC vertices with whole tied-score blocks
 #'
-#' spec: draw/first-cran-release#roc-views
 #' Higher scores always indicate the named positive class. Consuming a tied
 #' block at once yields trapezoidal AUC equivalent to half credit for ties.
 #' The direction is never selected from the observed performance.
 #' @param x List: Normalized labels and probabilities from roc_probabilities().
 #' @return Data frame of class, FPR, TPR, AUC, and omitted-pair counts.
-#' @keywords internal
-#' @noRd
-roc_vertices <- new_generic("roc_vertices", "x")
+#' @export
+#' @examples
+#' roc_vertices(roc_probabilities(factor(c("no", "yes")), c(0.1, 0.9)))
+roc_vertices <- new_generic("roc_vertices", "x", function(x) S7_dispatch())
 method(roc_vertices, class_list) <- function(x) {
+  # A model adapter may pool normalized folds or retain an empty fold. Check
+  # that its assembled records still preserve row and class identities.
+  labels <- x[["y"]]
+  levels <- x[["levels"]]
+  classes <- x[["classes"]]
+  probabilities <- x[["prob"]]
+  if (
+    !is.character(labels) ||
+      !is.null(dim(labels)) ||
+      !is.character(levels) ||
+      length(levels) < 2L ||
+      anyNA(levels) ||
+      any(!nzchar(levels)) ||
+      anyDuplicated(levels) ||
+      !is.character(classes) ||
+      !length(classes) ||
+      anyNA(classes) ||
+      anyDuplicated(classes) ||
+      any(!classes %in% levels) ||
+      any(!labels[!is.na(labels)] %in% levels) ||
+      !is.matrix(probabilities) ||
+      !is.numeric(probabilities) ||
+      is.complex(probabilities) ||
+      nrow(probabilities) != length(labels) ||
+      !identical(colnames(probabilities), levels) ||
+      any(!is.finite(probabilities[!is.na(probabilities)])) ||
+      any(probabilities < 0 | probabilities > 1, na.rm = TRUE)
+  ) {
+    abort(
+      "Supply normalized ROC records from roc_probabilities(), preserving row and class identities.",
+      class = c("rtemis_value_error", "rtemis_input_error")
+    )
+  }
   pieces <- lapply(x[["classes"]], function(cl) {
     score <- x[["prob"]][, cl]
     keep <- !is.na(x[["y"]]) & !is.na(score)
