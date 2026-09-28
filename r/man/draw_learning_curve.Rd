@@ -71,7 +71,7 @@ htmlwidget: ECharts learning curve.
 \description{
 Draw training and validation losses against training progress using a
 \link{LineConfig}. This function accepts an ordinary table and does not require
-rtemis. Use \code{\link[=plot_learning]{plot_learning()}} to draw the curve of a model.
+rtemis. Supply a data frame containing its recorded learning curve.
 }
 \details{
 Steps are sorted numerically. With a \code{tree} column, losses are averaged at

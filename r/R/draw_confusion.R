@@ -12,9 +12,14 @@
 #' @param y Optional vector: Predicted labels paired with reference labels in x.
 #' @param classes Optional Character vector: Explicit class order.
 #' @return Data frame with reference, predicted, n, and optionally panel columns.
-#' @keywords internal
-#' @noRd
-confusion_input <- new_generic("confusion_input", "x")
+#' @export
+#' @examples
+#' confusion_input(factor(c("yes", "no")), factor(c("yes", "yes")))
+confusion_input <- new_generic(
+  "confusion_input",
+  "x",
+  function(x, y = NULL, classes = NULL) S7_dispatch()
+)
 method(confusion_input, class_any) <- function(x, y = NULL, classes = NULL) {
   if (!is.null(y)) {
     values <- list(x, y)
@@ -616,8 +621,8 @@ method(draw, ConfusionConfig) <- function(
 #'
 #' Accepts a square count matrix, a named list of count matrices, long frequency
 #' records (`reference`, `predicted`, `n`, optional `panel`), or paired reference
-#' and predicted label vectors. With rtemis installed, classification metrics
-#' objects are also accepted. Matrix columns are aligned by label identity;
+#' and predicted label vectors. Model packages can add support for metrics
+#' objects through [confusion_input()]. Matrix columns are aligned by label identity;
 #' their physical order need not match rows. All panels share one class order.
 #' @inheritSection ConfusionConfig Statistical semantics
 #' @param x Matrix, table, data frame, named list, metrics object, or vector: Counts or reference labels.

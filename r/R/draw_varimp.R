@@ -11,9 +11,10 @@
 #'
 #' @param x Numeric vector, single-column matrix, or data frame: Importance data.
 #' @return Data frame with `variable`, named measures, and optionally `fold`.
-#' @keywords internal
-#' @noRd
-varimp_data <- new_generic("varimp_data", "x")
+#' @export
+#' @examples
+#' varimp_data(c(age = 2, weight = 1))
+varimp_data <- new_generic("varimp_data", "x", function(x) S7_dispatch())
 
 method(varimp_data, class_any) <- function(x) {
   if (

@@ -15,9 +15,14 @@
 #'   vector inputs.
 #'
 #' @return Data frame with `true`, `predicted`, and optional `sample` columns.
-#' @keywords internal
-#' @noRd
-true_pred_data <- new_generic("true_pred_data", c("x", "y"))
+#' @export
+#' @examples
+#' true_pred_data(1:3, c(1.1, 1.9, 3.2))
+true_pred_data <- new_generic(
+  "true_pred_data",
+  c("x", "y"),
+  function(x, y, group = NULL) S7_dispatch()
+)
 
 
 method(true_pred_data, list(class_any, class_any)) <- function(

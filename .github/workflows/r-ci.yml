@@ -6,14 +6,12 @@ on:
     paths:
       - r/**
       - .github/workflows/r-ci.yml
-      - .github/CI.md
       - .gitattributes
   push:
     branches: [main]
     paths:
       - r/**
       - .github/workflows/r-ci.yml
-      - .github/CI.md
       - .gitattributes
 
 permissions:

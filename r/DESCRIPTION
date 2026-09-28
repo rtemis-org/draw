@@ -37,8 +37,6 @@ Suggests:
     mgcv,
     pROC,
     rmarkdown,
-    rpart,
-    rtemis (>= 1.4.1),
     rtemis.a3,
     shiny,
     survival,
@@ -94,17 +92,12 @@ Collate:
     'config_spectrogram.R'
     'draw_gantt.R'
     'draw_fit.R'
-    'plot_true_pred.R'
     'draw_learning_curve.R'
-    'plot_learning.R'
     'draw_varimp.R'
-    'plot_varimp.R'
     'config_significance.R'
     'draw_significance.R'
-    'plot_massglm.R'
     'config_confusion.R'
     'draw_confusion.R'
-    'plot_confusion.R'
     'config_roc.R'
     'draw_roc.R'
     'config_survival.R'
@@ -112,14 +105,10 @@ Collate:
     'draw_survfit.R'
     'config_calibration.R'
     'draw_calibration.R'
-    'plot_roc.R'
     'boxplot_layers.R'
     'draw_boxplot.R'
     'draw_metric.R'
-    'plot_metric.R'
     'draw_panels.R'
-    'present.R'
-    'plot.SupervisedSession.R'
     'export.R'
     'zzz.R'
 Config/roxygen2/version: 8.1.0
