@@ -155,7 +155,7 @@ test_that("calibration direct and config paths share native lines, rugs, and ful
   ]]
   expect_equal(marker[["series"]][[2L]][["lineStyle"]][["opacity"]], 0)
   expect_identical(marker[["legend"]][["data"]], list("Sample"))
-  wire <- htmlwidgets:::toJSON(direct[["x"]])
+  wire <- widget_payload_json(direct)
   expect_false(grepl("function\\s*\\(", wire))
   expect_no_error(jsonlite::fromJSON(wire))
 })

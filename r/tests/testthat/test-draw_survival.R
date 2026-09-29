@@ -83,7 +83,7 @@ test_that("confidence, censor and annotation layers preserve their records", {
     draw_survival(transform(d, n_censor = c(0, -1, 0))),
     "nonnegative"
   )
-  expect_false(grepl("function\\s*\\(", htmlwidgets:::toJSON(widget[["x"]])))
+  expect_false(grepl("function\\s*\\(", widget_payload_json(widget)))
 })
 
 test_that("risk records are explicit and share the curve groups", {

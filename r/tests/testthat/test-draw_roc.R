@@ -192,10 +192,7 @@ test_that("fold AUC summaries count each fold once and keep undefined uncertaint
     "function\\s*\\(",
     jsonlite::toJSON(option, auto_unbox = TRUE)
   ))
-  wire <- jsonlite::fromJSON(
-    htmlwidgets:::toJSON(widget[["x"]]),
-    simplifyVector = FALSE
-  )
+  wire <- widget_wire(widget)
   expect_type(wire[["option"]][["series"]][[2]][["data"]][[1]][[1]], "integer")
 })
 
@@ -414,10 +411,7 @@ test_that("ROC hover labels round without changing numeric vertices or AUC", {
       )
     )
     # Numeric geometry and ordinal display text must both survive the wire.
-    wire <- jsonlite::fromJSON(
-      htmlwidgets:::toJSON(widget[["x"]]),
-      simplifyVector = FALSE
-    )
+    wire <- widget_wire(widget)
     expect_identical(wire[["option"]][["series"]][[2L]][["data"]][[2L]], value)
   }
 })

@@ -739,7 +739,6 @@ draw_graph <- function(
 #' @inheritParams draw_graph
 #' @return htmlwidget.
 #' @examples
-#' \dontrun{
 #' # Correlation matrix
 #' draw_network(cor(mtcars), threshold = 0.5)
 #'
@@ -750,7 +749,6 @@ draw_graph <- function(
 #'   weight = c(1, 2, 0.5)
 #' )
 #' draw_network(edges)
-#' }
 #' @export
 draw_network <- function(
   x,

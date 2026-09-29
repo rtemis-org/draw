@@ -1,0 +1,90 @@
+rtemis.draw as a whole is distributed under the BSD 3-Clause License (see
+LICENSE for the copyright holder and year).
+
+The package bundles the third-party JavaScript libraries and map data listed
+below, so that charts render offline and in self-contained HTML. Each
+component remains under its own license. The complete upstream license and
+notice texts are retained verbatim in inst/third-party/<package>@<version>.txt
+(installed as third-party/), and inst/third-party/README.md explains how each
+file was obtained or built. Build sources and npm lockfiles for the generated
+bundles are in tools/graph-bundle, tools/map-bundle and tools/geo-bundle.
+
+
+Bundled files
+-------------
+
+inst/htmlwidgets/lib/echarts/echarts.min.js
+    ECharts 6.1.0, which includes ZRender 6.1.0. Unmodified upstream
+    distribution file (dist/echarts.min.js from the echarts npm package).
+
+inst/htmlwidgets/lib/echarts-gl/echarts-gl.min.js
+    ECharts-GL 2.1.0, which includes ClayGL 1.3.0. Unmodified upstream
+    distribution file; its LICENSE and .LICENSE.txt companions are retained
+    alongside it.
+
+inst/htmlwidgets/lib/sigma/rtemis-graph-deps.js
+inst/node/graph-deps.js
+    Bundles of sigma, graphology and their dependencies, built with esbuild
+    from tools/graph-bundle. inst/node/graph-deps.LICENSE.txt lists the
+    components in the Node bundle.
+
+inst/htmlwidgets/lib/maplibre/rtemis-map-deps.js
+inst/node/map-deps.js
+    Bundles of MapLibre GL JS, d3-geo, d3-scale-chromatic and topojson-client
+    with their dependencies, built with esbuild from tools/map-bundle.
+    inst/node/map-deps.LICENSE.txt lists the components in the Node bundle.
+
+inst/htmlwidgets/lib/geo/us-10m.topo.json
+    counties-10m.json from us-atlas 3.0.1 (ISC, Copyright 2013-2019 Michael
+    Bostock), unmodified; notice in inst/htmlwidgets/lib/geo/us-atlas-LICENSE.txt.
+    Derived from the U.S. Census Bureau 2017 cartographic boundary files.
+
+inst/htmlwidgets/lib/geo/countries.topo.json
+    Built from Natural Earth 5.1.2 1:110m admin-0 countries, which Natural
+    Earth places in the public domain. Provenance and hashes in
+    inst/htmlwidgets/lib/geo/countries.source.json.
+
+All other files under inst/htmlwidgets and inst/node are part of rtemis.draw.
+
+
+Components
+----------
+
+Component                       Version        License        Copyright holder(s)
+------------------------------  -------------  -------------  -----------------------------------------------
+echarts                         6.1.0          Apache-2.0     The Apache Software Foundation; embedded d3
+                                                              code BSD-3-Clause, Copyright Mike Bostock
+zrender                         6.1.0          BSD-3-Clause   Baidu Inc.
+echarts-gl                      2.1.0          BSD-3-Clause   Baidu Inc.
+claygl                          1.3.0          BSD-2-Clause   Yi Shen
+sigma                           4.0.0-alpha.6  MIT            Alexis Jacomy, Guillaume Plique, Benoît Simard
+graphology                      0.26.0         MIT            Guillaume Plique
+graphology-communities-louvain  2.0.2          MIT            Guillaume Plique
+graphology-indices              0.17.0         MIT            Guillaume Plique
+graphology-layout               0.6.1          MIT            Guillaume Plique
+graphology-layout-forceatlas2   0.10.1         MIT            Guillaume Plique
+graphology-utils                2.5.2          MIT            Guillaume Plique
+mnemonist                       0.39.8         MIT            Guillaume Plique
+obliterator                     2.0.5          MIT            Guillaume Plique
+pandemonium                     2.4.1          MIT            Guillaume Plique
+events                          3.3.0          MIT            Joyent, Inc. and other Node contributors
+maplibre-gl                     5.24.0         BSD-3-Clause   MapLibre contributors; Mapbox (code from
+                                                              mapbox-gl-js v1.13 and earlier); includes code
+                                                              under MIT (Evan Wallace) and BSD-3-Clause
+                                                              (Mike Bostock)
+d3-array                        3.2.4          ISC            Mike Bostock
+d3-color                        3.1.0          ISC            Mike Bostock
+d3-geo                          3.1.1          ISC            Mike Bostock; includes MIT code, Copyright
+                                                              Charles Karney
+d3-interpolate                  3.0.1          ISC            Mike Bostock
+d3-scale-chromatic              3.1.0          ISC            Mike Bostock; ColorBrewer schemes Apache-2.0,
+                                                              Copyright Cynthia Brewer, Mark Harrower and The
+                                                              Pennsylvania State University
+internmap                       2.0.3          ISC            Mike Bostock
+topojson-client                 3.1.0          ISC            Michael Bostock
+us-atlas (data)                 3.0.1          ISC            Michael Bostock
+Natural Earth (data)            5.1.2          Public domain  -
+
+Sources: each component's versioned npm distribution,
+https://www.npmjs.com/package/<component>/v/<version>, which includes its
+unminified source. Natural Earth: https://www.naturalearthdata.com.

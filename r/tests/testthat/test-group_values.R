@@ -57,8 +57,8 @@ test_that("grouped plots accept vector and one-column data-frame inputs equally"
     frame <- call(data.frame(Species = groups))
     expect_identical(frame[["x"]], vector[["x"]])
     expect_identical(
-      htmlwidgets:::toJSON(frame[["x"]]),
-      htmlwidgets:::toJSON(vector[["x"]])
+      widget_payload_json(frame),
+      widget_payload_json(vector)
     )
     expect_error(call(data.frame(a = groups, b = groups)), "exactly one column")
     expect_error(call(data.frame(a = groups[-1L])), "same length")

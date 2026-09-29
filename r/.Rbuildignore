@@ -28,3 +28,6 @@
 ^tools/visual-qa$
 ^tools/check-rd-sections[.]sh$
 node_modules
+^cran-comments\.md$
+^tools/cran-scan[.]R$
+^tools/cran-scan-ignore$

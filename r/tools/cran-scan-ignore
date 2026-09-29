@@ -1,0 +1,7 @@
+# Reviewed findings from tools/cran-scan.R that are not defects.
+# Format: <ID> <where-glob>  # <reason>   (the reason is required)
+# `just cran-scan` fails on any finding not listed here and on entries that
+# no longer match anything, so keep this list short and current.
+
+CODE-SYSTEM R/export.R:*  # save_svg_ssr() finds node with Sys.which() and aborts with install instructions; Node.js is in SystemRequirements
+THIRD-PARTY inst/htmlwidgets/lib/draw  # the package's own renderer code, not bundled third-party code

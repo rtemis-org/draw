@@ -622,7 +622,6 @@ draw_map <- function(
 #' @inheritParams draw_map
 #' @return htmlwidget.
 #' @examples
-#' \dontrun{
 #' # Country choropleth from ISO-A3 codes
 #' df <- data.frame(
 #'   iso = c("USA", "CAN", "MEX", "BRA", "FRA"),
@@ -643,7 +642,6 @@ draw_map <- function(
 #'   classification = "jenks",
 #'   colormap = "viridis"
 #' )
-#' }
 #' @export
 draw_choropleth <- function(
   x,

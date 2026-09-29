@@ -149,10 +149,7 @@ test_that("confusion hover precision is configurable without rounding numeric da
     )
     expect_identical(strip_js(option), option)
     # Materialized hover text survives the same plain JSON transport as data.
-    wire <- jsonlite::fromJSON(
-      htmlwidgets:::toJSON(widget[["x"]]),
-      simplifyVector = FALSE
-    )
+    wire <- widget_wire(widget)
     expect_identical(
       wire[["option"]][["series"]][[1L]][["data"]][[1L]][["value"]][[8L]],
       first[[8L]]

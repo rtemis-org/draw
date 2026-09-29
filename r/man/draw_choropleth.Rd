@@ -100,7 +100,6 @@ abbreviation / full name for US states (5-digit FIPS for counties). A
 join report in the corner surfaces any unmatched keys.
 }
 \examples{
-\dontrun{
 # Country choropleth from ISO-A3 codes
 df <- data.frame(
   iso = c("USA", "CAN", "MEX", "BRA", "FRA"),
@@ -121,5 +120,4 @@ draw_choropleth(
   classification = "jenks",
   colormap = "viridis"
 )
-}
 }

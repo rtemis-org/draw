@@ -13,7 +13,7 @@
 # JSON.
 
 widget_json <- function(w) {
-  as.character(suppressWarnings(htmlwidgets:::toJSON(w[["x"]])))
+  suppressWarnings(widget_payload_json(w))
 }
 
 charts <- function() {
@@ -45,13 +45,20 @@ test_that("the theme palette serializes as a JSON array, not an object", {
 })
 
 test_that("serializing a widget emits no named-vector warning", {
+  # jsonlite reports a named vector with message(), not warning(), so count
+  # both. Build the chart first so only serialization is observed.
   for (nm in names(charts())) {
+    widget <- charts()[[nm]]
     n <- 0L
     withCallingHandlers(
-      htmlwidgets:::toJSON(charts()[[nm]][["x"]]),
+      widget_payload_json(widget),
       warning = function(w) {
         n <<- n + 1L
         invokeRestart("muffleWarning")
+      },
+      message = function(m) {
+        n <<- n + 1L
+        invokeRestart("muffleMessage")
       }
     )
     expect_identical(n, 0L, label = nm)

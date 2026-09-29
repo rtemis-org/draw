@@ -112,7 +112,6 @@ the type of \code{x}. Communities are detected with Louvain and laid out with
 ForceAtlas2 by default.
 }
 \examples{
-\dontrun{
 # Correlation matrix
 draw_network(cor(mtcars), threshold = 0.5)
 
@@ -123,5 +122,4 @@ edges <- data.frame(
   weight = c(1, 2, 0.5)
 )
 draw_network(edges)
-}
 }

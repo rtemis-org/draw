@@ -163,6 +163,80 @@ format-check:
     fi
     @just _msg "Done"
 
+# Catches options/par/setwd changed without on.exit(), writes outside tempdir(),
+# T/F, fixed seeds, unsuppressible output, > 2 cores, DESCRIPTION wording,
+# \dontrun and uncredited bundled code. Reviewed exceptions go in
+# tools/cran-scan-ignore. Pass --offline to skip the CRAN name/dependency lookup.
+# Scan for issues CRAN's manual review rejects and R CMD check misses
+cran-scan *flags:
+    @just _msg "─── Scanning {{pkg}} for CRAN review issues... ───"
+    cd {{r_dir}} && {{rscript}} tools/cran-scan.R . --ignore=tools/cran-scan-ignore --fail {{flags}}
+    @just _msg "Done"
+
+# cran-scan plus the built tarball: size, largest files, stray and binary files
+cran-scan-tarball: build
+    @just _msg "─── Scanning {{pkg}} tarball for CRAN review issues... ───"
+    cd {{r_dir}} && status=0; {{rscript}} tools/cran-scan.R . --tarball="$(ls {{tarball_glob}})" --ignore=tools/cran-scan-ignore --fail || status=$?; rm -f {{tarball_glob}}; exit $status
+    @just _msg "Done"
+
+# CRAN fixes made only in .Rd files are lost on the next roxygenize(). Compares
+# before/after, so uncommitted doc changes that are already current pass.
+# Fail if man/ or NAMESPACE is stale relative to the roxygen comments
+docs-current:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    snap() { git status --porcelain -- {{r_dir}}/man {{r_dir}}/NAMESPACE; git diff -- {{r_dir}}/man {{r_dir}}/NAMESPACE; }
+    before=$(snap | shasum)
+    (cd {{r_dir}} && {{rscript}} -e "roxygen2::roxygenize()" >/dev/null)
+    if [ "$(snap | shasum)" != "$before" ]; then
+        echo "   man/ or NAMESPACE was stale and has been regenerated; review and commit:"
+        git status --short -- {{r_dir}}/man {{r_dir}}/NAMESPACE
+        exit 1
+    fi
+    echo "   man/ and NAMESPACE are current."
+
+# Mirrors CRAN's noSuggests check. Output goes to a temp dir so the main
+# .Rcheck survives.
+# R CMD check --as-cran with Depends/Imports only: finds unconditional Suggests use
+check-cran-depends-only: build
+    @just _msg "─── R CMD check --as-cran with Depends/Imports only on {{pkg}}... ───"
+    cd {{r_dir}} && out="$(mktemp -d)"; status=0; _R_CHECK_DEPENDS_ONLY_=true {{r}} CMD check {{tarball_glob}} --as-cran --no-manual --output="$out" || status=$?; rm -f {{tarball_glob}}; exit $status
+    @just _msg "Done"
+
+# Reads the timings of the last `just check-cran`. CPU > 2.5x elapsed means
+# more than 2 cores.
+# Fail on examples over 5 s elapsed or over 2.5x CPU per elapsed second
+check-timings:
+    @just _msg "─── Checking example timings for {{pkg}}... ───"
+    cd {{r_dir}} && {{rscript}} -e 'f <- "{{pkg}}.Rcheck/{{pkg}}-Ex.timings"; if (!file.exists(f)) stop("no ", f, ": run `just check-cran` first"); t <- utils::read.table(f, header = TRUE); cpu <- t$user + t$system; bad <- t[t$elapsed > 5 | (t$elapsed > 0.5 & cpu > 2.5 * t$elapsed), ]; cat(sprintf("   %d examples, %.1f s elapsed in total; slowest: %s (%.1f s)\n", nrow(t), sum(t$elapsed), t$name[which.max(t$elapsed)], max(t$elapsed))); if (nrow(bad)) { print(bad, row.names = FALSE); quit(status = 1L) }'
+    @just _msg "Done"
+
+# Checks gated by a missing tool are skipped silently or only noted, so a clean
+# local check does not cover them. Reports; does not fail.
+# List tools R CMD check --as-cran needs and which are missing
+cran-tools:
+    @just _msg "─── Checking tools used by R CMD check --as-cran... ───"
+    @missing=0; \
+    for t in pdflatex qpdf tidy; do \
+        if command -v "$t" >/dev/null 2>&1; then echo "   ok       $t"; else echo "   MISSING  $t"; missing=1; fi; \
+    done; \
+    if command -v aspell >/dev/null 2>&1 || command -v hunspell >/dev/null 2>&1; then \
+        echo "   ok       aspell/hunspell"; else echo "   MISSING  aspell/hunspell (DESCRIPTION spell check)"; missing=1; fi; \
+    {{r}} --version | head -1 | sed 's/^/   /'; \
+    if [ $missing -eq 1 ]; then echo "   Checks needing the missing tools did not run: say so in cran-comments.md or install them."; fi
+    @just _msg "Done"
+
+# Nothing leaves this machine; win-devel and rhub-check are separate.
+# Run every local CRAN pre-submission gate in order; stops at the first failure
+cran-prep: cran-tools docs-current cran-scan-tarball check-rd spell urls check-cran check-timings check-cran-depends-only
+
+# Results are emailed to the maintainer address in DESCRIPTION.
+# Upload to win-builder for a Windows R-devel check, as CRAN runs
+win-devel:
+    @just _msg "─── Submitting {{pkg}} to win-builder R-devel... ───"
+    cd {{r_dir}} && {{rscript}} -e "devtools::check_win_devel()"
+    @just _msg "Done"
+
 # Run rhub checks across CRAN platforms
 rhub-check:
     @just _msg "─── Running rhub checks for {{pkg}}... ───"
