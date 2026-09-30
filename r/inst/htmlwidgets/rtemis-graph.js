@@ -23,31 +23,20 @@ HTMLWidgets.widget({
     const { Graph, Sigma } =
       window.RtemisGraph || {};
 
-    // Detect dark mode from VS Code, RStudio, Quarto, or browser preference.
-    // (Mirrors rtemis-draw.js so both renderers theme consistently.)
-    const isDarkMode = () => {
-      const body = document.body;
-      if (
-        body.classList.contains("vscode-dark") ||
-        body.classList.contains("vscode-high-contrast")
-      ) {
-        return true;
-      }
-      if (body.classList.contains("vscode-light")) return false;
-      if (body.classList.contains("rstudio-themes-dark-menus")) return true;
-      if (body.classList.contains("quarto-dark")) return true;
-      if (body.classList.contains("quarto-light")) return false;
-      if (window.matchMedia) {
-        return window.matchMedia("(prefers-color-scheme: dark)").matches;
-      }
-      return false;
-    };
+    // The payload last rendered, and the color scheme it was rendered in, so a
+    // theme change can re-render it (see the watcher below).
+    let currentPayload = null;
+    let renderedDark = null;
 
     // Resolve the active theme list (echarts-shaped) -> the few colors sigma
-    // needs: page background, label color, font family.
-    const resolveTheme = (x) => window.RtemisVectorTheme.resolve(
-      x.autoTheme && isDarkMode() ? x.themeDark : x.theme
-    );
+    // needs: page background, label color, font family. Dark-mode detection is
+    // shared with the other bindings (lib/draw/theme_watch.js).
+    const resolveTheme = (x) => {
+      renderedDark = window.RtemisThemeWatch.isDark();
+      return window.RtemisVectorTheme.resolve(
+        x.autoTheme && renderedDark ? x.themeDark : x.theme
+      );
+    };
 
     // ── small color helpers (ported from GraphCanvas) ──────────────────────
     // Containers: a graph surface plus a hover tooltip + optional title overlay,
@@ -71,7 +60,10 @@ HTMLWidgets.widget({
       "font-weight:600;font-size:14px;display:none;";
     el.appendChild(titleEl);
 
-    const renderGraph = (x) => {
+    // `camera` restores the viewer's pan and zoom when re-rendering the same
+    // graph in a new theme; a new payload starts from the default view.
+    const renderGraph = (x, camera = null) => {
+      currentPayload = x;
       if (!Graph || !Sigma) {
         surface.innerHTML =
           '<div style="padding:1rem;color:#b00">rtemis-graph bundle failed to load (window.RtemisGraph missing).</div>';
@@ -131,6 +123,7 @@ HTMLWidgets.widget({
         nodeReducer: scene.nodeReducer,
         edgeReducer: scene.edgeReducer,
       });
+      if (camera) sigma.getCamera().setState(camera);
 
       // Hover: dim the rest, show a themed tooltip with node name + details.
       sigma.on("enterNode", ({ node }) => {
@@ -169,6 +162,20 @@ HTMLWidgets.widget({
       });
       resizeObserver.observe(surface);
     };
+
+    // Re-render in the new theme when the host switches between light and
+    // dark, keeping the current pan and zoom. The layout is deterministic, so
+    // nodes stay where they were.
+    window.RtemisThemeWatch.watch(el, () => {
+      if (!currentPayload?.autoTheme) return;
+      if (window.RtemisThemeWatch.isDark() === renderedDark) return;
+      const camera = sigma ? sigma.getCamera().getState() : null;
+      renderGraph(currentPayload, camera);
+    }, () => {
+      if (resizeObserver) resizeObserver.disconnect();
+      if (sigma) sigma.kill();
+      sigma = null;
+    });
 
     return {
       getRenderer: () => sigma,

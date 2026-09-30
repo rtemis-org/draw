@@ -279,26 +279,28 @@ render_widget <- function(
   )
 }
 
-#' Render a render-spec option object as an htmlwidget
+#' Render a chart configuration or backend option as an htmlwidget
 #'
-#' `draw()` is the single low-level entry point for every rendering backend in
-#' rtemis.draw. It is an S7 generic that dispatches on the *option object* -- the
-#' complete, validated render spec for one backend -- so the right JS binding is
-#' selected purely by type, with no ambiguity:
+#' `draw()` renders chart configurations and backend option objects as
+#' interactive visualizations. It is an 'S7' generic that dispatches on the
+#' class of `option`:
 #'
-#' - [EChartsOption] -> ECharts (`rtemis-draw` widget)
-#' - [SigmaOption]   -> Sigma.js (`rtemis-graph` widget)
+#' - [ChartConfig] subclasses -> compile the configuration with its data, then
+#'   render using the corresponding backend.
+#' - [EChartsOption] -> 'ECharts' (`rtemis-draw` widget).
+#' - [SigmaOption] -> 'Sigma.js' (`rtemis-graph` widget).
+#' - [MapLibreOption] -> 'MapLibre' (`rtemis-map` widget).
 #'
-#' A plain named list is treated as a raw ECharts option (back-compatible with
-#' the original `draw()`).
+#' A plain named list is treated as a raw 'ECharts' option.
 #'
 #' Theme handling is uniform across backends and lives on `draw()`, not on the
 #' option object: pass `NULL` (default) for light/dark auto-detection (from VS
 #' Code, RStudio, or the browser's `prefers-color-scheme`), `NA` for no theme
 #' (raw backend defaults), or a [Theme] / list to force one.
 #'
-#' @param option [EChartsOption], [SigmaOption], or named list: Render spec to
-#'   draw.
+#' @param option [ChartConfig] subclass, [EChartsOption], [SigmaOption],
+#'   [MapLibreOption], or named list: Chart configuration or render spec to draw.
+#'   All concrete chart configuration classes listed below are supported.
 #' @param theme Optional [Theme], list, or `NA`: Theme override. `NULL` enables
 #'   light/dark auto-detection; `NA` disables theming. Applied to every backend.
 #' @param width Optional Character or Numeric: Widget width.
@@ -307,7 +309,12 @@ render_widget <- function(
 #' @param filename Optional Character: If provided, the widget is also written to
 #'   this file via [save_drawing()] (ECharts only; other backends reject static
 #'   export requests). Extension determines the format (currently only `.svg`).
-#' @param ... Backend-specific arguments, which must be named. ECharts accepts
+#' @param ... Named arguments for the selected method. For [ChartConfig]
+#'   subclasses, `data` supplies the data to plot; its required structure depends
+#'   on the configuration class. If `data` is omitted or `NULL`, the config's
+#'   `dat_path` is read instead.
+#'
+#'   Additional arguments are passed to the rendering backend. ECharts accepts
 #'   `renderer` (Character \{"canvas", "svg"\}) and `meta` (named list of extra
 #'   payload fields, used internally e.g. by [draw_heatmap()]). Any other name
 #'   is an error rather than a silent no-op, so a typo cannot quietly change
@@ -336,7 +343,23 @@ render_widget <- function(
 #' @return htmlwidget: Widget object.
 #' @export
 #'
+#' @section Chart configurations:
+#' Supported [ChartConfig] subclasses are [A3Config], [BarConfig],
+#' [BoxplotConfig], [CalibrationConfig], [ChoroplethConfig], [ConfusionConfig],
+#' [DensityConfig], [GanttConfig], [HeatmapConfig], [HistogramConfig],
+#' [LineConfig], [NetworkConfig], [PieConfig], [ROCConfig], [SankeyConfig],
+#' [ScatterConfig], [Scatter3DConfig], [SignificanceConfig], [SpectrogramConfig],
+#' [SurvivalConfig], and [TimeSeriesConfig]. Use their `setup_*()` functions to
+#' create configurations, then pass the data to `draw()` with `data =` or set
+#' `dat_path` on the configuration. See [compile()] to obtain the backend option
+#' without rendering it.
+#'
 #' @examples
+#' # Render a chart configuration with data.
+#' config <- setup_ScatterConfig(x = "wt", y = "mpg")
+#' draw(config, data = mtcars)
+#'
+#' # Render a backend option directly.
 #' option <- EChartsOption(
 #'   x_axis = Axis(type = "category", data = c("Mon", "Tue", "Wed")),
 #'   y_axis = Axis(type = "value"),

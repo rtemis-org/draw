@@ -24,7 +24,7 @@
       "rtemis-draw.js"
     ],
     "md5": [
-      "576beec7aa5427e36824064e3f43186f"
+      "01cfb7977f12f898a98be6016a486ca2"
     ]
   },
   "rtemis-panel-layout-1.0.2": {
@@ -202,7 +202,7 @@
       "rtemis-graph.js"
     ],
     "md5": [
-      "299c5acb5c2b3170260b4b94e0647c96"
+      "6fc5925b988ac05ececd877f8245a740"
     ]
   },
   "rtemis-map-binding-0.5.3": {
@@ -210,7 +210,7 @@
       "rtemis-map.js"
     ],
     "md5": [
-      "dfb239d253cad3a0697888e0af1ecfd2"
+      "fe08a2195057e97b6421b080e40fbe2b"
     ]
   },
   "rtemis-draw-renderers-1.1.0": {
@@ -265,6 +265,14 @@
       "d5d43b5e56aebb4e51c303776a0e52cd",
       "d35d723753c796470a8513968a8f15b2",
       "ca5750ba961ca56c09b06a83ae32205e"
+    ]
+  },
+  "rtemis-theme-watch-1.0.0": {
+    "scripts": [
+      "theme_watch.js"
+    ],
+    "md5": [
+      "cb88e7763d4869f0a911fc2efd43215f"
     ]
   }
 }

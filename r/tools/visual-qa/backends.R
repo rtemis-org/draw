@@ -105,6 +105,7 @@ manifest[["assets"]] <- tools::md5sum(system.file(
     "htmlwidgets/lib/draw/graph_scene.js",
     "htmlwidgets/lib/draw/map_scene.js",
     "htmlwidgets/lib/draw/vector_theme.js",
+    "htmlwidgets/lib/draw/theme_watch.js",
     "node/vector.js",
     "node/graph-deps.js",
     "node/map-deps.js"

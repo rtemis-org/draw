@@ -11,3 +11,7 @@ dependencies:
     version: 1.0.0
     src: htmlwidgets/lib/draw
     script: map_scene.js
+  - name: rtemis-theme-watch
+    version: 1.0.0
+    src: htmlwidgets/lib/draw
+    script: theme_watch.js

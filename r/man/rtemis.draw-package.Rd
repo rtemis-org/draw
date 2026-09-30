@@ -4,20 +4,84 @@
 \name{rtemis.draw-package}
 \alias{rtemis.draw}
 \alias{rtemis.draw-package}
-\title{rtemis.draw: Drawing Utilities}
+\title{rtemis.draw: Interactive Visualization}
 \description{
-Create interactive visualizations with 'ECharts', 'Sigma.js', and 'MapLibre'.
-High-level plotting functions and low-level configuration use type-checked,
-validated 'S7' objects. Visualizations render through 'htmlwidgets' with
-automatic light/dark themes, integrate with 'Quarto' and 'shiny', and support
-Scalable Vector Graphics (SVG) output.
+Create interactive statistical charts, network graphs and choropleth maps.
+Charts are rendered with 'ECharts', networks with 'Sigma.js' and maps with
+'MapLibre GL JS'. Every visualization is an 'htmlwidgets' widget that
+automatically follows the light or dark theme of wherever it is shown, and
+can be exported to a Scalable Vector Graphics (SVG) file.
 }
+\section{Statistical charts}{
+
+\itemize{
+\item Distributions and comparisons: \code{\link[=draw_scatter]{draw_scatter()}}, \code{\link[=draw_line]{draw_line()}},
+\code{\link[=draw_bar]{draw_bar()}}, \code{\link[=draw_boxplot]{draw_boxplot()}}, \code{\link[=draw_violin]{draw_violin()}}, \code{\link[=draw_histogram]{draw_histogram()}},
+\code{\link[=draw_density]{draw_density()}}, \code{\link[=draw_pie]{draw_pie()}}, \code{\link[=draw_heatmap]{draw_heatmap()}}, \code{\link[=draw_sankey]{draw_sankey()}}.
+\item Time: \code{\link[=draw_ts]{draw_ts()}}, \code{\link[=draw_xt]{draw_xt()}}, \code{\link[=draw_gantt]{draw_gantt()}}, \code{\link[=draw_spectrogram]{draw_spectrogram()}}.
+\item Three dimensions: \code{\link[=draw_scatter3d]{draw_scatter3d()}}, with \code{\link[=draw_add_surface]{draw_add_surface()}}.
+\item Model evaluation: \code{\link[=draw_roc]{draw_roc()}}, \code{\link[=draw_calibration]{draw_calibration()}}, \code{\link[=draw_confusion]{draw_confusion()}},
+\code{\link[=draw_fit]{draw_fit()}}, \code{\link[=draw_varimp]{draw_varimp()}}, \code{\link[=draw_metric]{draw_metric()}}, \code{\link[=draw_learning_curve]{draw_learning_curve()}}.
+\item Time-to-event: \code{\link[=draw_survival]{draw_survival()}}, \code{\link[=draw_survfit]{draw_survfit()}}.
+\item Significance testing: \code{\link[=draw_volcano]{draw_volcano()}}, \code{\link[=draw_manhattan]{draw_manhattan()}},
+\code{\link[=draw_pvals]{draw_pvals()}}.
+\item Sequences: \code{\link[=draw_protein]{draw_protein()}}, \code{\link[=draw_a3]{draw_a3()}}.
+}
+
+Add fitted lines, reference lines, bands and labels with \code{\link[=draw_add_fit]{draw_add_fit()}}
+and \code{\link[=draw_annotate]{draw_annotate()}}, and arrange several charts into one figure with
+\code{\link[=draw_panels]{draw_panels()}}.
+}
+
+\section{Network graphs}{
+
+\code{\link[=draw_network]{draw_network()}} draws a network from an adjacency or correlation matrix, or
+from an edge list, with 'Sigma.js'.
+}
+
+\section{Choropleth maps}{
+
+\code{\link[=draw_choropleth]{draw_choropleth()}} colors countries, U.S. states or U.S. counties by a
+value, with 'MapLibre GL JS'. Boundaries are bundled with the package, so
+maps need no network access.
+}
+
+\section{Configuration}{
+
+Each \verb{draw_*()} function builds a validated 'S7' configuration object,
+e.g. from \code{\link[=setup_ScatterConfig]{setup_ScatterConfig()}}, and renders it. Configurations can be
+written to and read from 'JSON' files with \code{\link[=write_chart_config]{write_chart_config()}} and
+\code{\link[=read_chart_config]{read_chart_config()}}, and \code{\link[=chart_schema]{chart_schema()}} returns the 'JSON' Schema that
+such files validate against. \code{\link[=draw]{draw()}} renders a complete low-level option
+object directly.
+}
+
+\section{Themes}{
+
+By default, visualizations detect whether they are shown on a light or dark
+background in 'RStudio', 'VS Code', 'Quarto' and the browser, style
+themselves to match, and switch when the viewer changes theme, e.g. with the
+'Quarto' light/dark toggle or the operating system setting. Networks and
+maps keep their current pan and zoom when they switch. Pass \code{\link[=theme_light]{theme_light()}}
+or \code{\link[=theme_dark]{theme_dark()}} as \code{theme} to fix a theme.
+}
+
+\section{Output}{
+
+Visualizations display in the 'RStudio' and 'VS Code' viewers, 'R Markdown'
+and 'Quarto' documents, and 'shiny' apps (see \code{\link[=drawOutput]{drawOutput()}} and
+\code{\link[=renderDraw]{renderDraw()}}). All 'JavaScript' is bundled with the package, so HTML
+output works offline. \code{\link[=save_drawing]{save_drawing()}} exports a visualization to an SVG
+file using 'Node.js'.
+}
+
 \seealso{
 Useful links:
 \itemize{
   \item \url{https://www.rtemis.org}
   \item \url{https://docs.rtemis.org/r/draw}
   \item \url{https://docs.rtemis.org/r/draw-api}
+  \item Report bugs at \url{https://github.com/rtemis-org/draw/issues}
 }
 
 }

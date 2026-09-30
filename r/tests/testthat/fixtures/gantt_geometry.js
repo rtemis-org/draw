@@ -11,6 +11,8 @@ const context = {document: {body}, window: {}, HTMLWidgets: {widget() {}},
   echarts: {...echarts, init: (_, theme, options) => echarts.init(null, theme,
     {...options, renderer: 'svg', ssr: true})}};
 vm.createContext(context);
+// The binding's shared theme detection must see this context's stub DOM.
+vm.runInContext(fs.readFileSync(path.join(directory, 'theme_watch.js'), 'utf8'), context);
 vm.runInContext(fs.readFileSync(input.binding, 'utf8'), context);
 function bounds(chart, type) {
   const model = chart.getModel().getComponent(type);

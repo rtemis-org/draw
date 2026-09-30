@@ -18,6 +18,8 @@ const context = {
     echarts.init(null, theme, {...options, renderer: 'svg', ssr: true})}
 };
 vm.createContext(context);
+// The binding's shared theme detection must see this context's stub DOM.
+vm.runInContext(fs.readFileSync(path.join(directory, 'theme_watch.js'), 'utf8'), context);
 vm.runInContext(fs.readFileSync(input.binding, 'utf8'), context);
 const near = (actual, expected) => assert.ok(Math.abs(actual - expected) < 1e-6, `${actual} != ${expected}`);
 for (const payload of input.charts) {

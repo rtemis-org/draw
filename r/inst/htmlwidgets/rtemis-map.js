@@ -37,31 +37,21 @@ HTMLWidgets.widget({
     const OUTLINE_LIGHT = "#cbd5e1"; // slate-300
     const OUTLINE_DARK = "#3f3f46"; // zinc-700
 
-    // ── Dark-mode detection (identical to rtemis-graph.js / rtemis-draw.js) ──
-    const isDarkMode = () => {
-      const body = document.body;
-      if (
-        body.classList.contains("vscode-dark") ||
-        body.classList.contains("vscode-high-contrast")
-      ) {
-        return true;
-      }
-      if (body.classList.contains("vscode-light")) return false;
-      if (body.classList.contains("rstudio-themes-dark-menus")) return true;
-      if (body.classList.contains("quarto-dark")) return true;
-      if (body.classList.contains("quarto-light")) return false;
-      if (window.matchMedia) {
-        return window.matchMedia("(prefers-color-scheme: dark)").matches;
-      }
-      return false;
-    };
+    // The payload last rendered, and the color scheme it was rendered in, so a
+    // theme change can re-render it (see the watcher below).
+    let currentPayload = null;
+    let renderedDark = null;
 
     // Resolve the active theme (echarts-shaped list) -> the few colors the map
     // needs. For an explicit theme we infer dark/light from the background
-    // luminance; for auto mode we detect it from the host.
-    const resolveTheme = (x) => window.RtemisVectorTheme.resolve(
-      x.autoTheme && isDarkMode() ? x.themeDark : x.theme
-    );
+    // luminance; for auto mode we detect it from the host with the detection
+    // shared by all bindings (lib/draw/theme_watch.js).
+    const resolveTheme = (x) => {
+      renderedDark = window.RtemisThemeWatch.isDark();
+      return window.RtemisVectorTheme.resolve(
+        x.autoTheme && renderedDark ? x.themeDark : x.theme
+      );
+    };
 
     const {normalizeKey, fillColorExpression} = window.RtemisMapScene;
 
@@ -112,7 +102,10 @@ HTMLWidgets.widget({
     let valueById = new Map();
     let extrasById = new Map();
 
-    const renderMap = (x) => {
+    // `view` ({center, zoom}) restores the viewer's position when re-rendering
+    // the same map in a new theme; a new payload starts from its own view.
+    const renderMap = (x, view = null) => {
+      currentPayload = x;
       if (!maplibregl || !topojsonFeature || !chromatic) {
         container.innerHTML =
           '<div style="padding:1rem;color:#b00">rtemis-map bundle failed to load (window.RtemisMap missing).</div>';
@@ -145,8 +138,8 @@ HTMLWidgets.widget({
 
       map = new maplibregl.Map({
         container: container,
-        center: geo.center || [0, 20],
-        zoom: geo.zoom != null ? geo.zoom : 0.4,
+        center: view ? view.center : (geo.center || [0, 20]),
+        zoom: view ? view.zoom : (geo.zoom != null ? geo.zoom : 0.4),
         attributionControl: false,
         dragRotate: false,
         canvasContextAttributes: { preserveDrawingBuffer: true },
@@ -334,6 +327,19 @@ HTMLWidgets.widget({
       legendEl.innerHTML = html;
       legendEl.style.display = "block";
     };
+
+    // Re-render in the new theme when the host switches between light and
+    // dark, keeping the current center and zoom.
+    window.RtemisThemeWatch.watch(el, () => {
+      if (!currentPayload?.autoTheme) return;
+      if (window.RtemisThemeWatch.isDark() === renderedDark) return;
+      const view = map ? {center: map.getCenter(), zoom: map.getZoom()} : null;
+      renderMap(currentPayload, view);
+    }, () => {
+      if (resizeObserver) resizeObserver.disconnect();
+      if (map) map.remove();
+      map = null;
+    });
 
     return {
       getRenderer: () => map,

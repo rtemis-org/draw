@@ -12,6 +12,8 @@ const context = {document:{body}, window:{}, HTMLWidgets:{widget() {}},
   rtemisConfusion: require(path.join(directory,'confusion.js')),
   echarts:{...echarts, init:(_,theme,options)=>echarts.init(null,theme,{...options,renderer:'svg',ssr:true})}};
 vm.createContext(context);
+// The binding's shared theme detection must see this context's stub DOM.
+vm.runInContext(fs.readFileSync(path.join(directory,'theme_watch.js'),'utf8'),context);
 vm.runInContext(fs.readFileSync(input.binding,'utf8'),context);
 for (const dark of [false,true]) for (const longNames of [false,true]) for (const bounded of [false,true]) {
   const payload = structuredClone(input.payload);

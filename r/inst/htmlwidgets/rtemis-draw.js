@@ -1,32 +1,7 @@
-// Detect dark mode from VS Code, RStudio, Quarto, or browser preference
+// Kept as a global because panel_widget.js calls it; detection lives in
+// lib/draw/theme_watch.js, shared with the Sigma.js and MapLibre bindings.
 function rtemisDrawIsDarkMode() {
-  const body = document.body;
-  // VS Code webview
-  if (body.classList.contains("vscode-dark") ||
-      body.classList.contains("vscode-high-contrast")) {
-    return true;
-  }
-  if (body.classList.contains("vscode-light")) {
-    return false;
-  }
-  // RStudio
-  if (body.classList.contains("rstudio-themes-dark-menus")) {
-    return true;
-  }
-  // Quarto: `toggleBodyColorMode()` in the emitted page sets exactly one of
-  // these on <body>, from the reader's saved choice. It wins over the media
-  // query because the reader picked it explicitly.
-  if (body.classList.contains("quarto-dark")) {
-    return true;
-  }
-  if (body.classList.contains("quarto-light")) {
-    return false;
-  }
-  // Browser / system preference
-  if (window.matchMedia) {
-    return window.matchMedia("(prefers-color-scheme: dark)").matches;
-  }
-  return false;
+  return RtemisThemeWatch.isDark();
 }
 
 // Own only a standalone widget document; embedded reports retain page CSS.
@@ -206,59 +181,19 @@ function rtemisDrawFactory(el, width, height, bounded = false, onBackground = ()
 
     // Re-render when the effective color scheme changes. The guard compares
     // against the scheme actually rendered, so unrelated body-class churn --
-    // which the observer below sees a lot of -- does not cost a re-render.
-    const onThemeChange = () => {
-      // The observer below is attached to <body>, which outlives this widget:
-      // once the container is gone (Shiny re-rendering dynamic UI, a tab being
-      // torn down) the listener would keep firing on a detached element, and
-      // one leaks per widget ever rendered. Detaching here is the teardown
-      // hook htmlwidgets does not give us.
-      if (!el.isConnected) {
-        stopWatchingTheme();
+    // which the watcher reports a lot of -- does not cost a re-render.
+    const stopWatchingTheme = RtemisThemeWatch.watch(
+      el,
+      () => {
+        if (!currentPayload?.autoTheme) return;
+        if (rtemisDrawIsDarkMode() === renderedDark) return;
+        renderChart(currentPayload);
+      },
+      () => {
         surface.restore();
         onBackground();
-        return;
       }
-      if (!currentPayload?.autoTheme) return;
-      if (rtemisDrawIsDarkMode() === renderedDark) return;
-      renderChart(currentPayload);
-    };
-
-    let stopWatchingTheme = () => {};
-
-    // Two independent triggers, one guard. The media query catches an OS or
-    // browser preference change; the observer catches an in-page toggle, since
-    // Quarto's light/dark switch only rewrites `body.class` -- it fires no event
-    // and does not touch the media query, so without it the page re-themes and
-    // the charts do not.
-    {
-      const teardown = [];
-
-      if (window.matchMedia) {
-        const mq = window.matchMedia("(prefers-color-scheme: dark)");
-        if (mq.addEventListener) {
-          mq.addEventListener("change", onThemeChange);
-          teardown.push(() => mq.removeEventListener("change", onThemeChange));
-        } else if (mq.addListener) {
-          mq.addListener(onThemeChange);
-          teardown.push(() => mq.removeListener(onThemeChange));
-        }
-      }
-
-      if (window.MutationObserver && document.body) {
-        const observer = new MutationObserver(onThemeChange);
-        observer.observe(document.body, {
-          attributes: true,
-          attributeFilter: ["class"]
-        });
-        teardown.push(() => observer.disconnect());
-      }
-
-      stopWatchingTheme = () => {
-        teardown.forEach((off) => off());
-        teardown.length = 0;
-      };
-    }
+    );
 
     // Resolve the grid box and container height for an `aspect` chart at the
     // current container width, writing the result into the option so that the

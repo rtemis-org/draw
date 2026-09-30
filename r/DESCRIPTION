@@ -6,11 +6,16 @@ Authors@R:
     person(given = "E.D.", family = "Gennatas", role = c("aut", "cre", "cph"),
            email = "gennatas@gmail.com",
            comment = c(ORCID = "0000-0001-9280-3609"))
-Description: Create interactive visualizations with 'ECharts', 'Sigma.js',
-    and 'MapLibre'. High-level plotting functions and low-level configuration
-    use type-checked, validated 'S7' objects. Visualizations render through
-    'htmlwidgets' with automatic light/dark themes, integrate with 'Quarto'
-    and 'shiny', and support Scalable Vector Graphics (SVG) output.
+Description: Create interactive statistical charts, network graphs and
+    choropleth maps. Charts are rendered with the 'ECharts' 'JavaScript'
+    library, networks with 'Sigma.js' and maps with 'MapLibre GL JS'.
+    A high-level interface of plotting functions builds a complete
+    visualization from data in a single call, while a low-level interface
+    exposes the underlying validated 'S7' configuration objects for full
+    control over every option. Configurations can be saved to and restored
+    from 'JSON' files. Visualizations display as 'htmlwidgets' that automatically 
+    adapt to light and dark themes, work in 'R Markdown', 'Quarto' and 'shiny', and 
+    can be exported to Scalable Vector Graphics (SVG) files using 'Node.js'.
 URL: https://www.rtemis.org, https://docs.rtemis.org/r/draw, https://docs.rtemis.org/r/draw-api
 BugReports: https://github.com/rtemis-org/draw/issues
 License: BSD_3_clause + file LICENSE

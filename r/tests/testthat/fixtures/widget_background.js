@@ -51,6 +51,8 @@ for (const location of ['standalone', 'embedded', 'embedded-direct', 'embedded-h
     echarts: {registerTheme() {}, init() {return {setOption() {}, dispose() {}};}}
   };
   vm.createContext(context);
+  // The binding's shared theme detection must see this context's stub DOM.
+  vm.runInContext(fs.readFileSync(path.join(directory, 'theme_watch.js'), 'utf8'), context);
   vm.runInContext(source, context);
   vm.runInContext(fs.readFileSync(path.join(directory, 'panel_widget.js'), 'utf8'), context);
   if (kind === 'panels' && location === 'bounded') continue;

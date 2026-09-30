@@ -2,7 +2,7 @@
 % Please edit documentation in R/draw.R
 \name{draw}
 \alias{draw}
-\title{Render a render-spec option object as an htmlwidget}
+\title{Render a chart configuration or backend option as an htmlwidget}
 \usage{
 draw(
   option,
@@ -16,8 +16,9 @@ draw(
 )
 }
 \arguments{
-\item{option}{\link{EChartsOption}, \link{SigmaOption}, or named list: Render spec to
-draw.}
+\item{option}{\link{ChartConfig} subclass, \link{EChartsOption}, \link{SigmaOption},
+\link{MapLibreOption}, or named list: Chart configuration or render spec to draw.
+All concrete chart configuration classes listed below are supported.}
 
 \item{theme}{Optional \link{Theme}, list, or \code{NA}: Theme override. \code{NULL} enables
 light/dark auto-detection; \code{NA} disables theming. Applied to every backend.}
@@ -38,7 +39,12 @@ animation, which matters for charts with many points, where animating
 every interactive update is expensive. Ignored by the Sigma and MapLibre
 backends, which have no ECharts animation to disable.}
 
-\item{...}{Backend-specific arguments, which must be named. ECharts accepts
+\item{...}{Named arguments for the selected method. For \link{ChartConfig}
+subclasses, \code{data} supplies the data to plot; its required structure depends
+on the configuration class. If \code{data} is omitted or \code{NULL}, the config's
+\code{dat_path} is read instead.
+
+Additional arguments are passed to the rendering backend. ECharts accepts
 \code{renderer} (Character \{"canvas", "svg"\}) and \code{meta} (named list of extra
 payload fields, used internally e.g. by \code{\link[=draw_heatmap]{draw_heatmap()}}). Any other name
 is an error rather than a silent no-op, so a typo cannot quietly change
@@ -65,26 +71,45 @@ container width, so neither side can enforce this alone.
 htmlwidget: Widget object.
 }
 \description{
-\code{draw()} is the single low-level entry point for every rendering backend in
-rtemis.draw. It is an S7 generic that dispatches on the \emph{option object} -- the
-complete, validated render spec for one backend -- so the right JS binding is
-selected purely by type, with no ambiguity:
+\code{draw()} renders chart configurations and backend option objects as
+interactive visualizations. It is an 'S7' generic that dispatches on the
+class of \code{option}:
 }
 \details{
 \itemize{
-\item \link{EChartsOption} -> ECharts (\code{rtemis-draw} widget)
-\item \link{SigmaOption}   -> Sigma.js (\code{rtemis-graph} widget)
+\item \link{ChartConfig} subclasses -> compile the configuration with its data, then
+render using the corresponding backend.
+\item \link{EChartsOption} -> 'ECharts' (\code{rtemis-draw} widget).
+\item \link{SigmaOption} -> 'Sigma.js' (\code{rtemis-graph} widget).
+\item \link{MapLibreOption} -> 'MapLibre' (\code{rtemis-map} widget).
 }
 
-A plain named list is treated as a raw ECharts option (back-compatible with
-the original \code{draw()}).
+A plain named list is treated as a raw 'ECharts' option.
 
 Theme handling is uniform across backends and lives on \code{draw()}, not on the
 option object: pass \code{NULL} (default) for light/dark auto-detection (from VS
 Code, RStudio, or the browser's \code{prefers-color-scheme}), \code{NA} for no theme
 (raw backend defaults), or a \link{Theme} / list to force one.
 }
+\section{Chart configurations}{
+
+Supported \link{ChartConfig} subclasses are \link{A3Config}, \link{BarConfig},
+\link{BoxplotConfig}, \link{CalibrationConfig}, \link{ChoroplethConfig}, \link{ConfusionConfig},
+\link{DensityConfig}, \link{GanttConfig}, \link{HeatmapConfig}, \link{HistogramConfig},
+\link{LineConfig}, \link{NetworkConfig}, \link{PieConfig}, \link{ROCConfig}, \link{SankeyConfig},
+\link{ScatterConfig}, \link{Scatter3DConfig}, \link{SignificanceConfig}, \link{SpectrogramConfig},
+\link{SurvivalConfig}, and \link{TimeSeriesConfig}. Use their \verb{setup_*()} functions to
+create configurations, then pass the data to \code{draw()} with \verb{data =} or set
+\code{dat_path} on the configuration. See \code{\link[=compile]{compile()}} to obtain the backend option
+without rendering it.
+}
+
 \examples{
+# Render a chart configuration with data.
+config <- setup_ScatterConfig(x = "wt", y = "mpg")
+draw(config, data = mtcars)
+
+# Render a backend option directly.
 option <- EChartsOption(
   x_axis = Axis(type = "category", data = c("Mon", "Tue", "Wed")),
   y_axis = Axis(type = "value"),
