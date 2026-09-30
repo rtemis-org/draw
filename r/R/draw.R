@@ -1716,9 +1716,13 @@ draw_bar <- function(
 #' @param size Optional Numeric: Point sizes.
 #' @param group Optional Atomic vector or single-column data frame: Grouping
 #'   variable, one value per point.
-#' @param fit Optional Character \{"glm", "gam"\}: Fit to overlay.
+#' @param fit Optional Character: Fit to overlay: `"glm"`, `"gam"`, or an rtemis
+#'   supervised learning algorithm name.
+#' @param fit_params Optional Named list: Arguments passed to the learner.
 #' @param se Logical: If TRUE, shade the fit standard-error band.
 #' @param fit_alpha Numeric `[0, 1]`: Opacity of the standard-error band.
+#' @param point_alpha Optional Numeric `[0, 1]`: Point opacity. `NULL` sets it
+#'   from the number of points drawn.
 #' @param n_fit Integer `[2, Inf)`: Points used to draw the fit.
 #' @param palette Optional Character: Series colors.
 #' @param xlim,ylim Optional Numeric: Axis limits, length 2.
@@ -1742,6 +1746,7 @@ scatter_option <- function(
   size = NULL,
   group = NULL,
   fit = NULL,
+  fit_params = NULL,
   se = TRUE,
   fit_alpha = 0.25,
   n_fit = 200L,
@@ -1761,7 +1766,8 @@ scatter_option <- function(
   diagonal_color = NULL,
   fit_name = NULL,
   rug = FALSE,
-  hover = NULL
+  hover = NULL,
+  point_alpha = NULL
 ) {
   input <- scatter_input(x, y, group, size, hover)
   x <- input[["x"]]
@@ -1773,11 +1779,13 @@ scatter_option <- function(
   n_fit <- clean_int(n_fit)
   ScatterConfig(
     fit = fit,
+    fit_params = fit_params,
     fit_name = fit_name,
     rug = rug,
     se = se,
     n_fit = n_fit,
     fit_alpha = fit_alpha,
+    point_alpha = point_alpha,
     pad = pad,
     square = square,
     equal_axes = equal_axes,
@@ -1800,6 +1808,9 @@ scatter_option <- function(
   # drawn on the axis edges — matches base R `xaxs = "r"` and ggplot2 ~5%.
   x_lim <- xlim %||% calc_limits(x, pad)
   y_lim <- ylim %||% calc_limits(y, pad)
+  # scatter_input() has already dropped incomplete rows, so this counts what is
+  # drawn. Without it, ECharts' own 0.8 default hides overlapping points.
+  point_alpha <- point_alpha %||% auto_alpha(length(x))
 
   # Helper: compute fit line and CI band for one group
   compute_fit <- function(xv, yv, fit_method, n_pts) {
@@ -1817,26 +1828,23 @@ scatter_option <- function(
         class = c("rtemis_value_error", "rtemis_input_error")
       )
     }
-    df <- data.frame(.x = xv, .y = yv)
-    if (fit_method == "gam") {
-      check_dependencies("mgcv")
-      model <- mgcv::gam(.y ~ s(.x), data = df)
-    } else {
-      model <- stats::glm(.y ~ .x, data = df)
-    }
-    newdata <- data.frame(.x = seq(min(xv), max(xv), length.out = n_pts))
-    pred <- stats::predict(model, newdata = newdata, se.fit = TRUE)
-    total <- sum((yv - mean(yv))^2)
+    newdata <- data.frame(x = seq(min(xv), max(xv), length.out = n_pts))
+    pred <- fit_model_values(
+      data.frame(x = xv),
+      yv,
+      newdata,
+      fit_method,
+      se,
+      fit_params
+    )
+    # Learners without standard errors draw no band.
+    band <- pred[["se"]]
     list(
-      x = newdata[[".x"]],
-      fitted = pred[["fit"]],
-      lower = pred[["fit"]] - se_times * pred[["se.fit"]],
-      upper = pred[["fit"]] + se_times * pred[["se.fit"]],
-      rsq = if (total > 0) {
-        1 - sum(stats::residuals(model, type = "response")^2) / total
-      } else {
-        NA_real_
-      }
+      x = newdata[["x"]],
+      fitted = pred[["fitted"]],
+      lower = if (!is.null(band)) pred[["fitted"]] - se_times * band,
+      upper = if (!is.null(band)) pred[["fitted"]] + se_times * band,
+      rsq = pred[["rsq"]]
     )
   }
 
@@ -1864,7 +1872,7 @@ scatter_option <- function(
 
     out <- list()
 
-    if (se) {
+    if (!is.null(p[["lower"]])) {
       # CI band as a closed polygon: upper bound L->R, lower bound R->L.
       # areaStyle fills the enclosed region. No stacking needed.
       upper <- mapply(c, p[["x"]], p[["upper"]], SIMPLIFY = FALSE)
@@ -1912,8 +1920,7 @@ scatter_option <- function(
       ScatterSeries(
         name = as.character(g),
         data = dat,
-
-        item_style = ItemStyle(color = group_colors[i])
+        item_style = ItemStyle(color = group_colors[i], opacity = point_alpha)
       )
     })
   } else {
@@ -1921,7 +1928,8 @@ scatter_option <- function(
     series <- list(ScatterSeries(
       data = dat,
       item_style = ItemStyle(
-        color = palette_colors(palette %||% rtemis_colors)[[1L]]
+        color = palette_colors(palette %||% rtemis_colors)[[1L]],
+        opacity = point_alpha
       )
     ))
   }
@@ -2029,7 +2037,8 @@ scatter_option <- function(
     legend = if (
       !is.null(group) || (!is.null(fit) && (rsq || !is.null(fit_name)))
     ) {
-      Legend()
+      # Keys stay opaque: a key faded like its points reads as a weaker color.
+      Legend(item_style = ItemStyle(opacity = 1))
     } else {
       NULL
     },
@@ -2096,10 +2105,23 @@ scatter_option <- function(
 #' @param size Optional Numeric: Symbol sizes.
 #' @param group Optional Atomic vector or single-column data frame: Grouping
 #'   variable for multiple series.
-#' @param fit Optional Character \{"glm", "gam"\}: Fit method. `NULL` disables fitting.
-#'   `"gam"` for [mgcv::gam()]. The fitted line and standard-error band
-#'   are computed per group when `group` is provided.
-#' @param se Logical: Whether to show the confidence band.
+#' @param fit Optional Character: Model fitted to `y` on `x` and drawn as a line.
+#'   `"glm"` uses [stats::glm()] and `"gam"` uses [mgcv::gam()]. Any other name,
+#'   matched case-insensitively, is an rtemis supervised learning algorithm,
+#'   such as `"LINAD"`, `"CART"` or `"LightGBM"`, trained with its default
+#'   hyperparameters; this requires the rtemis package (>= 1.4.1). `NULL`
+#'   disables fitting. The fitted line and standard-error band are computed per
+#'   group when `group` is provided.
+#' @param fit_params Optional Named list: Arguments passed to the learner named
+#'   in `fit`, as argument-value pairs: to [stats::glm()] for `"glm"`, e.g.
+#'   `list(family = "poisson")`; to [mgcv::gam()] for `"gam"`, where `k` sets
+#'   the basis dimension of the smooth, e.g. `list(k = 5)`; and to the rtemis
+#'   setup function otherwise, e.g. `list(max_leaves = 8)` for `"LINAD"`, whose
+#'   arguments are listed in `?rtemis::setup_LINAD`. `NULL` uses the learner's
+#'   defaults.
+#' @param se Logical: Whether to show the standard-error band. Algorithms
+#'   without standard errors (every rtemis algorithm except GLM, GAM and a few
+#'   others) draw the line alone.
 #' @param se_times Numeric `[0, Inf)`: Standard-error multiplier for the band.
 #' @param fit_name Optional Character: Label for fitted layers.
 #' @param rug Logical: Draw marginal marks on both axes.
@@ -2110,6 +2132,10 @@ scatter_option <- function(
 #' @param diagonal Logical: Draw a dashed identity line within the axis limits.
 #' @param diagonal_color Optional Character: Identity-line color.
 #' @param fit_alpha Numeric `[0, 1]`: Opacity for the confidence-band fill.
+#' @param point_alpha Optional Numeric `[0, 1]`: Point opacity. `NULL` sets it
+#'   from the number of points drawn, as a rough guard against overplotting:
+#'   0.75 at 10 points, 0.57 at 150, 0.45 at 1,000 and 0.3 at 10,000, clamped
+#'   to `[0.15, 0.9]`. Set a value to override.
 #' @param n_fit Integer `[2, Inf)`: Number of evaluation points for the fit.
 #' @param palette Optional Character: Series color palette — a single color string or
 #'   character vector that overrides the theme palette for this chart.
@@ -2166,6 +2192,7 @@ draw_scatter <- function(
   size = NULL,
   group = NULL,
   fit = NULL,
+  fit_params = NULL,
   se = TRUE,
   fit_alpha = 0.25,
   n_fit = 200L,
@@ -2192,7 +2219,8 @@ draw_scatter <- function(
   legend_placement = "outside",
   fit_name = NULL,
   rug = FALSE,
-  hover = NULL
+  hover = NULL,
+  point_alpha = NULL
 ) {
   opt <- scatter_option(
     x = x,
@@ -2200,6 +2228,7 @@ draw_scatter <- function(
     size = size,
     group = group,
     fit = fit,
+    fit_params = fit_params,
     fit_name = fit_name,
     rug = rug,
     hover = hover,
@@ -2209,6 +2238,7 @@ draw_scatter <- function(
     diagonal = diagonal,
     diagonal_color = diagonal_color,
     fit_alpha = fit_alpha,
+    point_alpha = point_alpha,
     n_fit = n_fit,
     palette = palette,
     xlim = xlim,
