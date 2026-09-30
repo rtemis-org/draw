@@ -285,7 +285,7 @@ test_that("categorical line and area baselines depend on the visible value range
 })
 
 test_that("native categorical line SVG draws emphasis only at zero", {
-  skip_if_not(nzchar(Sys.which("node")), "node not found")
+  skip_if_no_node()
   charts <- list()
   for (theme in list(theme_light(), theme_dark())) {
     for (area in c(FALSE, TRUE)) {

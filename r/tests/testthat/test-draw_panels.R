@@ -75,7 +75,7 @@ test_that("composition preserves independent payloads and uses the existing widg
 })
 
 test_that("complete SVG exports retain panel marks, labels and styles", {
-  skip_if_not(nzchar(Sys.which("node")), "node not found")
+  skip_if_no_node()
   a <- draw_boxplot(
     1:4,
     boxpoints = "all",
@@ -122,7 +122,7 @@ test_that("complete SVG exports retain panel marks, labels and styles", {
 })
 
 test_that("panel geometry and fitted aspect use the same module in both renderers", {
-  skip_if_not(nzchar(Sys.which("node")), "node not found")
+  skip_if_no_node()
   code <- paste0(
     "const assert=require('node:assert/strict'); const m=require(",
     jsonlite::toJSON(
@@ -150,7 +150,7 @@ test_that("panel geometry and fitted aspect use the same module in both renderer
 })
 
 test_that("browser panel sizing uses the measured host instead of the viewport", {
-  skip_if_not(nzchar(Sys.which("node")), "node not found")
+  skip_if_no_node()
   out <- system2(
     Sys.which("node"),
     c(
@@ -165,7 +165,7 @@ test_that("browser panel sizing uses the measured host instead of the viewport",
 })
 
 test_that("panel SVG surfaces match common backgrounds and preserve mixed themes", {
-  skip_if_not(nzchar(Sys.which("node")), "node not found")
+  skip_if_no_node()
   path <- tempfile(fileext = ".svg")
   on.exit(unlink(path), add = TRUE)
   dark <- draw_bar(c("A", "B"), 1:2, theme = theme_dark())

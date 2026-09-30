@@ -301,7 +301,7 @@ test_that("distribution tooltips retain the shared numeric formatting", {
 })
 
 test_that("numeric histograms and density overlays export exact native geometry", {
-  skip_if_not(nzchar(Sys.which("node")), "node not found")
+  skip_if_no_node()
   charts <- list()
   for (theme in list(theme_light(), theme_dark())) {
     for (normalization in c(

@@ -139,7 +139,7 @@ test_that("metric records align folds and disclose missing values without zero f
 })
 
 test_that("boxplot and observation marks export as vector geometry", {
-  skip_if_not(nzchar(Sys.which("node")), "node not found")
+  skip_if_no_node()
   for (horizontal in c(FALSE, TRUE)) {
     w <- draw_boxplot(
       list(A = 1:4, B = 5:8),
@@ -165,7 +165,7 @@ test_that("boxplot and observation marks export as vector geometry", {
 })
 
 test_that("point layout matches native boxes after legend filtering and resize", {
-  skip_if_not(nzchar(Sys.which("node")), "node not found")
+  skip_if_no_node()
   for (horizontal in c(FALSE, TRUE)) {
     w <- draw_boxplot(
       list(A = 1:4, B = 5:8),

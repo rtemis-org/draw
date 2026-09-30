@@ -6,7 +6,7 @@
 # watcher behind the ECharts, Sigma.js and MapLibre bindings.
 
 test_that("theme detection and watching behave the same for every binding", {
-  skip_if_not(nzchar(Sys.which("node")), "node not found")
+  skip_if_no_node()
   output <- system2(
     Sys.which("node"),
     c(

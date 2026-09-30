@@ -127,7 +127,7 @@ test_that("3D paths preserve group, sorting, gaps and linked point colors", {
 })
 
 test_that("3D vector visibility splits crossing geometry and preserves topology", {
-  skip_if_not(nzchar(Sys.which("node")), "node not found")
+  skip_if_no_node()
   plot <- draw_scatter3d(
     c(0, 1, 0, 1),
     c(0, 0, 1, 1),

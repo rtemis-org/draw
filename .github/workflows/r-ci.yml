@@ -54,6 +54,9 @@ jobs:
           cache-version: 1
       - uses: r-lib/actions/check-r-package@v2
         timeout-minutes: 20
+        # Node.js tests skip on CRAN; run them here against the Node 18 floor.
+        env:
+          NOT_CRAN: "true"
         with:
           working-directory: r
           upload-snapshots: true

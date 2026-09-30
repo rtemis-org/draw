@@ -125,7 +125,7 @@ test_that("boxplot baselines emphasize zero and never a nonzero range edge", {
 })
 
 test_that("native boxplot SVG emphasizes zero in both orientations and themes", {
-  skip_if_not(nzchar(Sys.which("node")), "node not found")
+  skip_if_no_node()
   charts <- list()
   for (theme in list(theme_light(), theme_dark())) {
     for (horizontal in c(FALSE, TRUE)) {

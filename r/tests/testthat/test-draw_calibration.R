@@ -182,7 +182,7 @@ test_that("calibration observation tables support explicit group bindings and po
 })
 
 test_that("calibration SVG retains actual curve and rug marks", {
-  skip_if_not(nzchar(Sys.which("node")), "node not found")
+  skip_if_no_node()
   d <- data.frame(observed = c(0, 1, 0, 1), probability = c(0, .8, .4, 1))
   path <- tempfile(fileext = ".svg")
   on.exit(unlink(path), add = TRUE)

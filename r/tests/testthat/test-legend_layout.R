@@ -102,7 +102,7 @@ test_that("high-level and config legend hints agree without adding legends", {
 })
 
 test_that("native legends reserve space across families, anchors, and resizes", {
-  skip_if_not(nzchar(Sys.which("node")), "node not found")
+  skip_if_no_node()
   charts <- list(
     survival = draw_survival(
       data.frame(time = c(0, 1, 2), survival = c(1, .8, .4)),

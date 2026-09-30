@@ -172,7 +172,7 @@ test_that("branch colors are stable in displayed cluster order and respect cuts"
 })
 
 test_that("annotated heatmaps preserve native vector geometry after resizing", {
-  skip_if_not(nzchar(Sys.which("node")), "node not found")
+  skip_if_no_node()
   x <- matrix(c(1, 2, 8, 9, 3, 2, 7, 10, 5, 4, 8, 7), 4)
   charts <- list()
   for (theme in list(theme_light(), theme_dark())) {

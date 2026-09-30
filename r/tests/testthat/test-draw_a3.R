@@ -237,7 +237,7 @@ test_that("draw_a3 n_per_row validation works", {
 
 test_that("A3 legend headings and annotations survive callback-free SVG export", {
   skip_if_not_installed("rtemis.a3")
-  skip_if_not(nzchar(Sys.which("node")), "node not found")
+  skip_if_no_node()
   a <- rtemis.a3::create_A3(
     "MAEPRQEFEVMEDHAGTYGLGDRK",
     region = list(
@@ -270,7 +270,7 @@ test_that("A3 legend headings and annotations survive callback-free SVG export",
 
 test_that("A3 shares responsive surface hints and native geometry across renderers", {
   skip_if_not_installed("rtemis.a3")
-  skip_if_not(nzchar(Sys.which("node")), "node not found")
+  skip_if_no_node()
   a <- rtemis.a3::create_A3(
     "MAEPRQEFEVMEDHAGTYGLGDRK",
     region = list(
@@ -327,7 +327,7 @@ test_that("A3 shares responsive surface hints and native geometry across rendere
 
 test_that("A3 empty display choices and zero marker configs still export", {
   skip_if_not_installed("rtemis.a3")
-  skip_if_not(nzchar(Sys.which("node")), "node not found")
+  skip_if_no_node()
   a <- rtemis.a3::create_A3("MAEPR")
   path <- tempfile(fileext = ".svg")
   on.exit(unlink(path), add = TRUE)
@@ -380,7 +380,7 @@ test_that("A3 automatic colors and overrides share a portable config contract", 
     expect_identical(back@residue_fill, "#123456")
     expect_null(back@residue_stroke)
   }
-  if (nzchar(Sys.which("node"))) {
+  if (node_tests_enabled()) {
     svg_path <- tempfile(fileext = ".svg")
     on.exit(unlink(svg_path), add = TRUE)
     save_drawing(draw(config, data = a, theme = theme_dark()), svg_path)

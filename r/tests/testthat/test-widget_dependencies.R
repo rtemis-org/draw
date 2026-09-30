@@ -31,7 +31,7 @@ test_that("changed widget assets do not overwrite prior frozen dependencies", {
 })
 
 test_that("declared browser dependencies initialize an ordinary chart", {
-  skip_if_not(nzchar(Sys.which("node")), "node not found")
+  skip_if_no_node()
   dependencies <- htmlwidgets::getDependency("rtemis-draw", "rtemis.draw")
   scripts <- unlist(
     lapply(dependencies, function(dependency) {

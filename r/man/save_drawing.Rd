@@ -24,7 +24,7 @@ The \code{filename}, invisibly.
 Exports a widget created by \code{\link[=draw]{draw()}} (or any of the \verb{draw_*}
 functions) to a static file. Supports \code{.svg} for ECharts, Sigma networks, and MapLibre maps via Node.js
 server-side rendering, including complete \code{\link[=draw_panels]{draw_panels()}} figures. Requires
-a \code{node} binary on \code{PATH}.
+a Node.js (>= 18) \code{node} binary on \code{PATH}.
 }
 \details{
 Callbacks under tooltips, axis pointers, and interactive toolbox controls
@@ -38,11 +38,12 @@ states are not stored in the R widget. SVG text remains editable. Network
 labels are fitted to the page and suppressed when they overlap.
 }
 \examples{
-# SVG export shells out to Node.js, so run it only where node exists.
-if (nzchar(Sys.which("node"))) {
-  chart <- draw_bar(x = c("A", "B", "C"), y = c(3, 7, 2))
-  path <- file.path(tempdir(), "chart.svg")
-  save_drawing(chart, path)
-  unlink(path)
-}
+chart <- draw_bar(x = c("A", "B", "C"), y = c(3, 7, 2))
+path <- file.path(tempdir(), "chart.svg")
+# SVG export shells out to Node.js; report instead of failing without it.
+tryCatch(
+  save_drawing(chart, path),
+  rtemis_export_error = function(e) message(conditionMessage(e))
+)
+unlink(path)
 }

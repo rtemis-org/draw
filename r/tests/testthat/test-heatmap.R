@@ -263,7 +263,7 @@ test_that("heatmap labels default to two decimals without rounding source values
 
 
 test_that("vertical heatmap colorbars stay centered on the plotted data", {
-  skip_if_not(nzchar(Sys.which("node")), "node not found")
+  skip_if_no_node()
   m <- make_mat(4L)
   charts <- list(
     draw_heatmap(m, show_values = TRUE, margins = c(top = 35, bottom = 115)),
@@ -315,7 +315,7 @@ test_that("vertical heatmap colorbars stay centered on the plotted data", {
 
 
 test_that("square heatmaps keep their geometry in bounded panels and after resize", {
-  skip_if_not(nzchar(Sys.which("node")), "node not found")
+  skip_if_no_node()
   m <- matrix(
     seq(-1, 1, length.out = 12),
     nrow = 3,

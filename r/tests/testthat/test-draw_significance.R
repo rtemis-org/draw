@@ -166,7 +166,7 @@ test_that("both functional views compile through the same portable config", {
 
 
 test_that("significance SVGs contain marks, annotations, thresholds, and zero-cap disclosure", {
-  skip_if_not(nzchar(Sys.which("node")), "node not found")
+  skip_if_no_node()
   for (view in c("volcano", "manhattan")) {
     w <- do.call(
       get(paste0("draw_", view)),
@@ -259,7 +259,7 @@ test_that("display groups preserve full-family adjustment and threshold annotati
 
 
 test_that("custom significance groups and capped bars use vector palette colors", {
-  skip_if_not(nzchar(Sys.which("node")), "node not found")
+  skip_if_no_node()
   for (view in c("volcano", "manhattan")) {
     for (palette in list(NULL, "#123456", c("#123456", "#abcdef"))) {
       widget <- do.call(

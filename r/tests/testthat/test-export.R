@@ -23,19 +23,68 @@ test_that("an unsupported format errors without creating the file", {
 
 
 test_that("a failed SVG export leaves no file at the destination", {
-  skip_if(
-    nzchar(Sys.which("node")),
-    "node is installed, so the export succeeds"
-  )
+  # An unusable node fails the export whether or not one is installed.
+  local_mocked_bindings(node_version = function(node) {
+    numeric_version("16.20.0")
+  })
   w <- draw_bar(x = c("A", "B"), y = c(1, 2))
   path <- tempfile(fileext = ".svg")
-  expect_error(save_drawing(w, path), "Node.js")
+  expect_error(save_drawing(w, path), "Node.js", class = "rtemis_export_error")
   expect_false(file.exists(path))
 })
 
 
+test_that("find_node requires a node binary", {
+  expect_error(
+    find_node(node = ""),
+    "requires Node.js (>= 18)",
+    fixed = TRUE,
+    class = "rtemis_export_error"
+  )
+})
+
+
+test_that("find_node rejects a node older than the minimum version", {
+  expect_error(
+    find_node(node = "/opt/node", version = numeric_version("16.20.0")),
+    "reports version 16.20.0",
+    class = "rtemis_export_error"
+  )
+  expect_error(
+    find_node(
+      node = "/opt/node",
+      version = numeric_version(NA_character_, strict = FALSE)
+    ),
+    "no readable version",
+    class = "rtemis_export_error"
+  )
+})
+
+
+test_that("find_node returns the unnamed path of a supported node", {
+  expect_identical(
+    find_node(
+      node = c(node = "/opt/node"),
+      version = numeric_version(NODE_MIN_VERSION)
+    ),
+    "/opt/node"
+  )
+})
+
+
+test_that("node_version is NA when the binary cannot run", {
+  expect_true(is.na(node_version(file.path(tempdir(), "no-such-node"))))
+})
+
+
+test_that("node_version reads the installed node", {
+  skip_if_no_node()
+  expect_true(node_version(Sys.which("node")) >= NODE_MIN_VERSION)
+})
+
+
 test_that("save_drawing writes the SVG and returns its path invisibly", {
-  skip_if_not(nzchar(Sys.which("node")), "node not found")
+  skip_if_no_node()
   w <- draw_bar(x = c("A", "B"), y = c(1, 2))
   path <- tempfile(fileext = ".svg")
   on.exit(unlink(path), add = TRUE)
@@ -130,7 +179,7 @@ test_that("export validates paths and image dimensions", {
 
 
 test_that("Gantt SVG contains proportional bars, failure outlines, and labels", {
-  skip_if_not(nzchar(Sys.which("node")), "node not found")
+  skip_if_no_node()
   tasks <- data.frame(
     label = c("Load", "Fit", "Predict"),
     start = c(0, 2, 4),
@@ -179,7 +228,7 @@ test_that("Gantt SVG contains proportional bars, failure outlines, and labels", 
 
 
 test_that("Gantt SVG preserves rounded corners and a zero-duration task", {
-  skip_if_not(nzchar(Sys.which("node")), "node not found")
+  skip_if_no_node()
   w <- draw_gantt(
     data.frame(label = c("Milestone", "Run"), start = c(0, 0), end = c(0, 5)),
     palette = "#126789",
@@ -198,7 +247,7 @@ test_that("Gantt SVG preserves rounded corners and a zero-duration task", {
 
 
 test_that("heatmap SVG retains cells, labels, and clipped dendrogram merges", {
-  skip_if_not(nzchar(Sys.which("node")), "node not found")
+  skip_if_no_node()
   m <- matrix(
     c(1.23456, 2, 3, 4, 5, 6),
     nrow = 2L,
@@ -253,7 +302,7 @@ test_that("heatmap SVG retains cells, labels, and clipped dendrogram merges", {
 
 
 test_that("missing heatmap cells remain missing with materialized value labels", {
-  skip_if_not(nzchar(Sys.which("node")), "node not found")
+  skip_if_no_node()
   w <- draw_heatmap(
     matrix(c(1.23456, NA, 2, 3), 2L),
     show_values = TRUE,
@@ -275,7 +324,7 @@ test_that("missing heatmap cells remain missing with materialized value labels",
 
 
 test_that("unknown custom renderers fail without replacing an existing file", {
-  skip_if_not(nzchar(Sys.which("node")), "node not found")
+  skip_if_no_node()
   w <- draw_gantt(data.frame(label = "Task", start = 0, end = 1))
   w[["x"]][["option"]][["series"]][[1L]][["renderItem"]] <- "unregistered"
   # An empty series must still be rejected, rather than silently skipped.
@@ -293,7 +342,7 @@ test_that("unknown custom renderers fail without replacing an existing file", {
 
 
 test_that("SVG export retains numeric precision in point positions and limits", {
-  skip_if_not(nzchar(Sys.which("node")), "node not found")
+  skip_if_no_node()
   w <- draw(list(
     grid = list(
       left = 100,
@@ -328,7 +377,7 @@ test_that("SVG export retains numeric precision in point positions and limits", 
 
 
 test_that("SVG dimensions follow numeric widget dimensions unless overridden", {
-  skip_if_not(nzchar(Sys.which("node")), "node not found")
+  skip_if_no_node()
   path <- tempfile(fileext = ".svg")
   on.exit(unlink(path), add = TRUE)
   w <- draw_bar(c("A", "B"), c(1, 2), width = 950, height = 450)
@@ -386,7 +435,7 @@ test_that("static aspect layout fits both canvas dimensions and rejects unusable
 
 
 test_that("native aspect layout reserves labels before fixing the data-area ratio", {
-  skip_if_not(nzchar(Sys.which("node")), "node not found")
+  skip_if_no_node()
   charts <- list(
     draw_fit(
       list(Training = 1:6, Test = 1:4),
@@ -435,7 +484,7 @@ test_that("native aspect layout reserves labels before fixing the data-area rati
 
 
 test_that("SVG export keeps square heatmap cells, themes, and complete panels", {
-  skip_if_not(nzchar(Sys.which("node")), "node not found")
+  skip_if_no_node()
   m <- matrix(
     c(-1, 0, 0.5, 1, -0.5, 0.2),
     2,
@@ -490,7 +539,7 @@ test_that("SVG export keeps square heatmap cells, themes, and complete panels", 
 
 
 test_that("static export retains visible per-point overrides on transparent line symbols", {
-  skip_if_not(nzchar(Sys.which("node")), "node not found")
+  skip_if_no_node()
   option <- EChartsOption(
     x_axis = Axis(type = "value"),
     y_axis = Axis(type = "value"),

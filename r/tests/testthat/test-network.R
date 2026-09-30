@@ -272,7 +272,7 @@ test_that("draw(SigmaOption) honours an explicit theme and NA (no theme)", {
 })
 
 test_that("draw(SigmaOption) exports network SVG", {
-  skip_if_not(nzchar(Sys.which("node")), "node not found")
+  skip_if_no_node()
   path <- tempfile(fileext = ".svg")
   on.exit(unlink(path), add = TRUE)
   m <- GraphModel(

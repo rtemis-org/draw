@@ -135,7 +135,7 @@ test_that("Theme data-zoom overrides serialize and validate their list type", {
 
 
 test_that("neutral slider themes survive native rendering and allow chart overrides", {
-  skip_if_not(nzchar(Sys.which("node")), "node not found")
+  skip_if_no_node()
   path <- tempfile(fileext = ".json")
   on.exit(unlink(path), add = TRUE)
   jsonlite::write_json(

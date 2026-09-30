@@ -255,7 +255,7 @@ test_that("functional and config rendering agree and every panel has independent
 })
 
 test_that("SVG exports contain the entire count and metric composition", {
-  skip_if_not(nzchar(Sys.which("node")), "node not found")
+  skip_if_no_node()
   path <- tempfile(fileext = ".svg")
   on.exit(unlink(path), add = TRUE)
   draw_confusion(
@@ -289,7 +289,7 @@ test_that("SVG exports contain the entire count and metric composition", {
 
 
 test_that("confusion layout uses square native cells and theme-aware colors", {
-  skip_if_not(nzchar(Sys.which("node")), "node not found")
+  skip_if_no_node()
   counts <- matrix(
     c(18, 2, 3, 17),
     2,
@@ -398,7 +398,7 @@ test_that("confusion layout uses square native cells and theme-aware colors", {
 
 
 test_that("SVG export resolves confusion colors in standalone and composed charts", {
-  skip_if_not(nzchar(Sys.which("node")), "node not found")
+  skip_if_no_node()
   plot <- draw_confusion(confusion_test_matrix(), theme = theme_dark())
   combined <- draw_panels(list(plot, plot), ncol = 2)
   for (widget in list(plot, combined)) {
@@ -436,7 +436,7 @@ test_that("confusion omissions are reported in the console without changing the 
     )
     expect_identical(widget[["x"]], complete[["x"]])
     expect_null(widget[["x"]][["option"]][["graphic"]])
-    skip_if_not(nzchar(Sys.which("node")), "node not found")
+    skip_if_no_node()
     path <- tempfile(fileext = ".svg")
     on.exit(unlink(path), add = TRUE)
     save_drawing(widget, path, width = 1000, height = 550)

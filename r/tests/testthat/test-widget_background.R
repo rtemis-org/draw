@@ -1,5 +1,5 @@
 test_that("standalone viewer backgrounds follow chart themes without changing embedded pages", {
-  skip_if_not(nzchar(Sys.which("node")), "node not found")
+  skip_if_no_node()
   output <- system2(
     Sys.which("node"),
     c(

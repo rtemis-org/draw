@@ -294,7 +294,7 @@ test_that("draw_sankey respects orient argument", {
 })
 
 test_that("vertical Sankey labels fit native nodes in browser and SVG geometry", {
-  skip_if(Sys.which("node") == "", "Node is needed for native geometry")
+  skip_if_no_node()
   links <- data.frame(
     source = c(
       "Screened cohort",

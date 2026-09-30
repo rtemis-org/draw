@@ -200,7 +200,7 @@ test_that("comparisons resolve names without running tests or inventing empty en
 })
 
 test_that("native SVG distribution layers retain geometry through orientation, legend, and resize", {
-  skip_if_not(nzchar(Sys.which("node")), "node not found")
+  skip_if_no_node()
   charts <- list()
   for (horizontal in c(FALSE, TRUE)) {
     for (geometry in c("box", "violin", "both")) {

@@ -112,7 +112,7 @@ test_that("risk records are explicit and share the curve groups", {
 })
 
 test_that("survival SVG retains correct step, band, censor, landmark and risk geometry", {
-  skip_if_not(nzchar(Sys.which("node")), "node not installed")
+  skip_if_no_node()
   d <- data.frame(
     time = c(0, 2, 5),
     survival = c(1, .6, .2),

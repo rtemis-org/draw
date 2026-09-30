@@ -7,12 +7,18 @@
 # `chart.renderToSVGString()`. PNG / PDF / WEBP formats are planned
 # via a chromote fallback.
 
+# Oldest Node.js release the bundled SVG renderers run on; matches
+# SystemRequirements in DESCRIPTION.
+NODE_MIN_VERSION <- "18"
+
+
+# %% save_drawing ----
 #' Save a Draw Widget to a File
 #'
 #' Exports a widget created by [draw()] (or any of the `draw_*`
 #' functions) to a static file. Supports `.svg` for ECharts, Sigma networks, and MapLibre maps via Node.js
 #' server-side rendering, including complete [draw_panels()] figures. Requires
-#' a `node` binary on `PATH`.
+#' a Node.js (>= 18) `node` binary on `PATH`.
 #'
 #' Callbacks under tooltips, axis pointers, and interactive toolbox controls
 #' are omitted. Other JavaScript callbacks are rejected because discarding them
@@ -34,13 +40,14 @@
 #' @export
 #'
 #' @examples
-#' # SVG export shells out to Node.js, so run it only where node exists.
-#' if (nzchar(Sys.which("node"))) {
-#'   chart <- draw_bar(x = c("A", "B", "C"), y = c(3, 7, 2))
-#'   path <- file.path(tempdir(), "chart.svg")
-#'   save_drawing(chart, path)
-#'   unlink(path)
-#' }
+#' chart <- draw_bar(x = c("A", "B", "C"), y = c(3, 7, 2))
+#' path <- file.path(tempdir(), "chart.svg")
+#' # SVG export shells out to Node.js; report instead of failing without it.
+#' tryCatch(
+#'   save_drawing(chart, path),
+#'   rtemis_export_error = function(e) message(conditionMessage(e))
+#' )
+#' unlink(path)
 save_drawing <- function(widget, filename, width = NULL, height = NULL) {
   if (!inherits(widget, "htmlwidget")) {
     abort(
@@ -332,14 +339,7 @@ save_svg_ssr <- function(
   backend = NULL,
   scene = NULL
 ) {
-  node <- Sys.which("node")
-  if (!nzchar(node)) {
-    abort(
-      "SVG export requires Node.js. Install it from https://nodejs.org ",
-      "or via your package manager (e.g. `brew install node`).",
-      class = "rtemis_export_error"
-    )
-  }
+  node <- find_node()
 
   script <- system.file("node", "render_svg.js", package = "rtemis.draw")
   if (!nzchar(script)) {
@@ -426,3 +426,73 @@ save_svg_ssr <- function(
   }
   invisible(TRUE)
 }
+
+
+# %% find_node ----
+#' Locate a Node.js binary that can run the SVG renderer
+#'
+#' The bundled renderers use `node:` module specifiers and other syntax that
+#' older releases reject, so an old `node` on `PATH` fails with a clear
+#' message here instead of a stack trace from inside the renderer.
+#'
+#' @param node Character scalar: Path to the `node` binary, or `""` when none
+#'   was found.
+#' @param version Optional `numeric_version`: Version of `node`; `NA` when it
+#'   could not be read.
+#' @return Character scalar: Path to a `node` binary of at least
+#'   `NODE_MIN_VERSION`.
+#'
+#' @author EDG
+#' @keywords internal
+#' @noRd
+find_node <- function(
+  node = Sys.which("node"),
+  version = node_version(node)
+) {
+  if (!nzchar(node)) {
+    abort(
+      "SVG export requires Node.js (>= ",
+      NODE_MIN_VERSION,
+      "). Install it from https://nodejs.org ",
+      "or via your package manager (e.g. `brew install node`).",
+      class = "rtemis_export_error"
+    )
+  }
+  if (is.na(version) || version < NODE_MIN_VERSION) {
+    abort(
+      "SVG export requires Node.js (>= ",
+      NODE_MIN_VERSION,
+      "), but '",
+      node,
+      "' reports ",
+      if (is.na(version)) {
+        "no readable version"
+      } else {
+        paste0("version ", version)
+      },
+      ". Upgrade Node.js from https://nodejs.org or via your package manager.",
+      class = "rtemis_export_error"
+    )
+  }
+  unname(node)
+} # /rtemis.draw::find_node
+
+
+# %% node_version ----
+#' Read the version of a Node.js binary
+#'
+#' @param node Character scalar: Path to a `node` binary.
+#' @return `numeric_version` scalar, `NA` when `node --version` fails or prints
+#'   something other than a version.
+#'
+#' @author EDG
+#' @keywords internal
+#' @noRd
+node_version <- function(node) {
+  out <- tryCatch(
+    suppressWarnings(system2(node, "--version", stdout = TRUE, stderr = FALSE)),
+    error = function(e) character()
+  )
+  # `node --version` prints e.g. "v24.1.0".
+  numeric_version(sub("^v", "", trimws(out[1L])), strict = FALSE)
+} # /rtemis.draw::node_version

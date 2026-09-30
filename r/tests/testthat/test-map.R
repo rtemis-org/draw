@@ -161,7 +161,7 @@ test_that("load_map_geometry returns embedded topojson + metadata per resolution
 })
 
 test_that("bundled country boundaries retain their pinned provenance and join keys", {
-  skip_if_not(nzchar(Sys.which("node")), "node not found")
+  skip_if_no_node()
   result <- system2(
     Sys.which("node"),
     c(
@@ -246,7 +246,7 @@ test_that("draw_choropleth honours an explicit theme and NA (no theme)", {
 })
 
 test_that("draw_choropleth exports map SVG", {
-  skip_if_not(nzchar(Sys.which("node")), "node not found")
+  skip_if_no_node()
   path <- tempfile(fileext = ".svg")
   on.exit(unlink(path), add = TRUE)
   df <- data.frame(iso = "USA", gdp = 1)

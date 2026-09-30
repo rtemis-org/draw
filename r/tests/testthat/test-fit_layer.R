@@ -28,7 +28,7 @@ test_that("supplied fits preserve paired coordinates and interval bounds", {
 })
 
 test_that("fits, rugs, references and phase labels retain vector geometry", {
-  skip_if_not(nzchar(Sys.which("node")), "node not found")
+  skip_if_no_node()
   charts <- list()
   for (theme in list(theme_light(), theme_dark())) {
     plot <- draw_scatter(1:5, c(2, 3, 2, 5, 4), rug = TRUE, theme = theme)

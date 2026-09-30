@@ -1,7 +1,7 @@
 # Backend contracts exercise shared calculations and real SVG geometry, including
 # failed exports preserving an existing destination.
 test_that("network and map scene calculations have portable vector contracts", {
-  skip_if_not(nzchar(Sys.which("node")), "node not found")
+  skip_if_no_node()
   output <- system2(
     Sys.which("node"),
     c(
@@ -16,7 +16,7 @@ test_that("network and map scene calculations have portable vector contracts", {
 })
 
 test_that("network and map exports retain vector geometry, themes, and labels", {
-  skip_if_not(nzchar(Sys.which("node")), "node not found")
+  skip_if_no_node()
   edges <- data.frame(
     source = c("A & B", "C", "D"),
     target = c("C", "D", "A & B"),

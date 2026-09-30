@@ -253,7 +253,7 @@ test_that("draw_gantt grid gets ECharts 6.1 outerBoundsContain via draw()", {
 
 
 test_that("Gantt layout preserves usable axes and state across narrow resizes", {
-  skip_if_not(nzchar(Sys.which("node")), "node not found")
+  skip_if_no_node()
   tasks <- data.frame(
     label = c(
       "train GLM Regression",

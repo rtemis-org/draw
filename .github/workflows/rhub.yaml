@@ -94,6 +94,9 @@ jobs:
           token: ${{ secrets.RHUB_TOKEN }}
           job-config: ${{ matrix.config.job-config }}
       - uses: r-hub/actions/run-check@v1
+        # Node.js tests skip on CRAN; run them here against the Node 18 floor.
+        env:
+          NOT_CRAN: "true"
         with:
           token: ${{ secrets.RHUB_TOKEN }}
           job-config: ${{ matrix.config.job-config }}
@@ -146,6 +149,9 @@ jobs:
           job-config: ${{ matrix.config.job-config }}
           token: ${{ secrets.RHUB_TOKEN }}
       - uses: r-hub/actions/run-check@v1
+        # Node.js tests skip on CRAN; run them here against the Node 18 floor.
+        env:
+          NOT_CRAN: "true"
         with:
           job-config: ${{ matrix.config.job-config }}
           token: ${{ secrets.RHUB_TOKEN }}

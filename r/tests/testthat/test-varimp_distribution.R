@@ -183,7 +183,7 @@ test_that("portable distribution data and config round trips reproduce the view"
 })
 
 test_that("importance distribution SVG retains known zeros and all available scores", {
-  skip_if_not(nzchar(Sys.which("node")), "node not found")
+  skip_if_no_node()
   path <- tempfile(fileext = ".svg")
   on.exit(unlink(path), add = TRUE)
   for (horizontal in c(TRUE, FALSE)) {

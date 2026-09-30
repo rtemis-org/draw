@@ -197,7 +197,7 @@ test_that("fold AUC summaries count each fold once and keep undefined uncertaint
 })
 
 test_that("ROC SVG contains curves, chance line, full labels, and a square plotting grid", {
-  skip_if(!nzchar(Sys.which("node")))
+  skip_if_no_node()
   path <- tempfile(fileext = ".svg")
   on.exit(unlink(path), add = TRUE)
   widget <- draw_roc(roc_test_records(), palette = "#123456", filename = path)
@@ -218,7 +218,7 @@ test_that("ROC SVG contains curves, chance line, full labels, and a square plott
 })
 
 test_that("classification labels and square ROC axes fit phone and SVG layouts", {
-  skip_if_not(nzchar(Sys.which("node")), "node not found")
+  skip_if_no_node()
   folds <- roc_test_records()
   folds[["fold"]] <- "Fold 1"
   undefined <- folds[1L, ]
@@ -300,7 +300,7 @@ test_that("ROC legends use compact labels and portable corner placement", {
 })
 
 test_that("ROC legend anchors and complete labels survive resize and selection", {
-  skip_if_not(nzchar(Sys.which("node")), "node not found")
+  skip_if_no_node()
   multiclass <- do.call(
     rbind,
     lapply(c("setosa", "versicolor", "virginica"), function(cl) {
@@ -418,7 +418,7 @@ test_that("ROC hover labels round without changing numeric vertices or AUC", {
 
 
 test_that("static ROC export omits invisible hover symbols and retains its color key", {
-  skip_if_not(nzchar(Sys.which("node")), "node not found")
+  skip_if_no_node()
   path <- tempfile(fileext = ".svg")
   on.exit(unlink(path), add = TRUE)
   save_drawing(draw_roc(roc_test_records(), palette = "#123456"), path)
