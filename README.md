@@ -13,9 +13,3 @@ SVG output.
 See the [R interface](r/README.md) for documentation and the API reference.
 
 Requires R >= 4.4.0.
-
-## Plotting rtemis models
-
-Model-specific `plot_*()` methods and `present()` belong to rtemis, which uses
-rtemis.draw for rendering. The data-facing `draw_*()` functions work independently
-of rtemis.
