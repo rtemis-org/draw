@@ -25,8 +25,11 @@
 #' @param x,y Optional Character: Columns drawn on each axis.
 #' @param size Optional Character: Column giving per-point size.
 #' @param group Optional Character: Column to group and color points by.
-#' @param fit Optional Character \{"glm", "gam"\}: Fit to overlay. `NULL` draws
-#'   no fit.
+#' @param fit Optional Character: Fit to overlay: `"glm"`, `"gam"`, or an rtemis
+#'   supervised learning algorithm name such as `"LINAD"`, which requires the
+#'   rtemis package. `NULL` draws no fit. See [draw_scatter()].
+#' @param fit_params Optional Named list: Arguments passed to the learner named
+#'   in `fit`, e.g. `list(max_leaves = 8)` for `"LINAD"`. See [draw_scatter()].
 #' @param fit_name Optional Character: Label for fitted layers.
 #' @param rug Logical: Show marginal marks along the x and y axes.
 #' @param hover Optional Character: Column containing per-observation tooltip labels.
@@ -37,6 +40,9 @@
 #' @param diagonal_color Optional Character: Identity-line color.
 #' @param n_fit Integer `[2, Inf)`: Points used to draw the fit line.
 #' @param fit_alpha Numeric `[0, 1]`: Opacity of the standard-error band.
+#' @param point_alpha Optional Numeric `[0, 1]`: Point opacity. `NULL` sets it
+#'   from the number of points drawn, falling from 0.9 for a handful of points
+#'   to 0.15 for 100,000 or more, so that overlapping points stay visible.
 #' @param palette Optional Character: Series colors, overriding the theme
 #'   palette for this chart. `NULL` uses the theme's.
 #' @param pad Numeric `[0, Inf)`: Fraction of the data range to extend each axis
@@ -113,9 +119,19 @@ ScatterConfig <- new_class(
       # -- semantics ---------------------------------------------------------
       fit = prop_string(
         NULL,
-        enum = c("glm", "gam"),
         nullable = TRUE,
-        description = "Fit to overlay. Unset draws no fit."
+        description = paste(
+          "Fit to overlay: glm, gam, or an rtemis supervised learning",
+          "algorithm name. Unset draws no fit."
+        )
+      ),
+      fit_params = prop_bag(
+        nullable = TRUE,
+        description = paste(
+          "Arguments passed to the learner named in fit: to glm() or gam()",
+          "(k sets each smooth's basis dimension), or to the rtemis",
+          "algorithm's setup function. Unset uses the learner's defaults."
+        )
       ),
       se = prop_boolean(
         TRUE,
@@ -150,6 +166,16 @@ ScatterConfig <- new_class(
         min = 0,
         max = 1,
         description = "Opacity of the standard-error band."
+      ),
+      point_alpha = prop_float(
+        NULL,
+        min = 0,
+        max = 1,
+        nullable = TRUE,
+        description = paste(
+          "Point opacity. Unset sets it from the number of points drawn, so",
+          "that overlapping points stay visible."
+        )
       ),
       palette = prop_string(
         NULL,
@@ -230,7 +256,7 @@ ScatterConfig <- new_class(
     )
   ),
   validator = config_validator(
-    CONFIG_LIMIT_RULES,
+    c(CONFIG_LIMIT_RULES, list(FIT_PARAMS_RULE)),
     extra = config_ordered_limits
   )
 ) # /rtemis.draw::ScatterConfig
@@ -278,6 +304,7 @@ setup_ScatterConfig <- function(
   size = NULL,
   group = NULL,
   fit = NULL,
+  fit_params = NULL,
   se = TRUE,
   n_fit = 200L,
   fit_alpha = 0.25,
@@ -305,7 +332,8 @@ setup_ScatterConfig <- function(
   legend_placement = "outside",
   fit_name = NULL,
   rug = FALSE,
-  hover = NULL
+  hover = NULL,
+  point_alpha = NULL
 ) {
   # Which values the caller chose, versus which this function filled in. An
   # explicit `origin` (from read_chart_config()) wins: provenance is carried
@@ -318,6 +346,7 @@ setup_ScatterConfig <- function(
     size = size,
     group = group,
     fit = fit,
+    fit_params = fit_params,
     fit_name = fit_name,
     rug = rug,
     hover = hover,
@@ -328,6 +357,7 @@ setup_ScatterConfig <- function(
     diagonal_color = diagonal_color,
     n_fit = clean_int(n_fit),
     fit_alpha = fit_alpha,
+    point_alpha = point_alpha,
     palette = palette,
     pad = pad,
     square = square,
@@ -351,8 +381,8 @@ setup_ScatterConfig <- function(
 
 
 # %% resolve.ScatterConfig ----
-# Fill in what the data determines: axis labels from the bound column names and
-# axis limits from the values. Nothing here touches the display surface, and
+# Fill in what the data determines: axis labels from the bound column names,
+# axis limits from the values, and point opacity from how many there are. Nothing here touches the display surface, and
 # nothing is derived for a property the author already set.
 #
 # `palette` is deliberately NOT resolved: it belongs to the interface, and baking
@@ -380,7 +410,16 @@ method(resolve, ScatterConfig) <- function(config, data = NULL, ...) {
       xlab = config@x,
       ylab = config@y,
       xlim = common[["xlim"]] %||% if (!is.null(x)) calc_limits(x, config@pad),
-      ylim = common[["ylim"]] %||% if (!is.null(y)) calc_limits(y, config@pad)
+      ylim = common[["ylim"]] %||% if (!is.null(y)) calc_limits(y, config@pad),
+      point_alpha = if (!is.null(x) && !is.null(y)) {
+        # Count what is drawn: scatter_input() drops incomplete rows.
+        group <- config_column(data, config@group, "group")
+        keep <- !is.na(x) & !is.na(y)
+        if (!is.null(group)) {
+          keep <- keep & !is.na(group)
+        }
+        auto_alpha(sum(keep))
+      }
     )
   )
 }
@@ -405,6 +444,7 @@ method(compile, ScatterConfig) <- function(config, data = NULL, ...) {
     size = config_column(data, config@size, "size"),
     group = config_column(data, config@group, "group"),
     fit = config@fit,
+    fit_params = config@fit_params,
     fit_name = config@fit_name,
     rug = config@rug,
     hover = config_column(data, config@hover, "hover"),
@@ -414,6 +454,7 @@ method(compile, ScatterConfig) <- function(config, data = NULL, ...) {
     diagonal = config@diagonal,
     diagonal_color = config@diagonal_color,
     fit_alpha = config@fit_alpha,
+    point_alpha = config@point_alpha,
     n_fit = config@n_fit,
     palette = config@palette,
     pad = config@pad,
