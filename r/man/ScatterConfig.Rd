@@ -19,6 +19,7 @@ ScatterConfig(
   fit_name = NULL,
   rug = FALSE,
   fit = NULL,
+  fit_params = NULL,
   se = TRUE,
   se_times = 1.96,
   rsq = FALSE,
@@ -26,6 +27,7 @@ ScatterConfig(
   diagonal_color = NULL,
   n_fit = 200L,
   fit_alpha = 0.25,
+  point_alpha = NULL,
   palette = NULL,
   square = FALSE,
   equal_axes = FALSE,
@@ -76,8 +78,12 @@ inside placement overlays the data. Neither setting adds a missing legend.}
 
 \item{rug}{Logical: Show marginal marks along the x and y axes.}
 
-\item{fit}{Optional Character \{"glm", "gam"\}: Fit to overlay. \code{NULL} draws
-no fit.}
+\item{fit}{Optional Character: Fit to overlay: \code{"glm"}, \code{"gam"}, or an rtemis
+supervised learning algorithm name such as \code{"LINAD"}, which requires the
+rtemis package. \code{NULL} draws no fit. See \code{\link[=draw_scatter]{draw_scatter()}}.}
+
+\item{fit_params}{Optional Named list: Arguments passed to the learner named
+in \code{fit}, e.g. \code{list(max_leaves = 8)} for \code{"LINAD"}. See \code{\link[=draw_scatter]{draw_scatter()}}.}
 
 \item{se}{Logical: If TRUE, shade the fit standard-error band.}
 
@@ -92,6 +98,10 @@ no fit.}
 \item{n_fit}{Integer \verb{[2, Inf)}: Points used to draw the fit line.}
 
 \item{fit_alpha}{Numeric \verb{[0, 1]}: Opacity of the standard-error band.}
+
+\item{point_alpha}{Optional Numeric \verb{[0, 1]}: Point opacity. \code{NULL} sets it
+from the number of points drawn, falling from 0.9 for a handful of points
+to 0.15 for 100,000 or more, so that overlapping points stay visible.}
 
 \item{palette}{Optional Character: Series colors, overriding the theme
 palette for this chart. \code{NULL} uses the theme's.}

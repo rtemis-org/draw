@@ -17,14 +17,18 @@ Scatter3DConfig(
   beta = 40,
   view_size = 190,
   point_size = 8,
-  opacity = 0.8,
+  opacity = NULL,
   mode = "points",
   order = "input",
   line_width = 2,
   xlab = NULL,
   ylab = NULL,
   zlab = NULL,
-  palette = NULL
+  palette = NULL,
+  fit = NULL,
+  fit_params = NULL,
+  n_fit = 25L,
+  fit_alpha = 0.35
 )
 }
 \arguments{
@@ -54,7 +58,9 @@ authored config; written by the interface that resolved it.}
 
 \item{point_size}{Numeric \verb{(0, 100]}: Marker diameter in pixels.}
 
-\item{opacity}{Numeric \verb{[0, 1]}: Point and line opacity.}
+\item{opacity}{Optional Numeric \verb{[0, 1]}: Point and line opacity. \code{NULL}
+sets it from the number of complete observations, as in \code{\link[=draw_scatter]{draw_scatter()}}'s
+\code{point_alpha}, and draws paths alone (\code{mode = "lines"}) opaque.}
 
 \item{mode}{Character \code{c("points", "lines", "both")}: Geometry to draw.}
 
@@ -66,6 +72,18 @@ Missing coordinates break paths; sorting never joins across those breaks.}
 \item{xlab, ylab, zlab}{Optional Character: Axis names.}
 
 \item{palette}{Optional Character: Group colors.}
+
+\item{fit}{Optional Character: Model of z on x and y drawn as a surface per
+group: \code{"glm"}, \code{"gam"}, or an rtemis supervised learning algorithm name
+such as \code{"LINAD"}, which requires the rtemis package (>= 1.4.1). See
+\code{\link[=draw_scatter]{draw_scatter()}}. \code{NULL} draws no surface.}
+
+\item{fit_params}{Optional Named list: Arguments passed to the learner named
+in \code{fit}. See \code{\link[=draw_scatter]{draw_scatter()}}.}
+
+\item{n_fit}{Integer \verb{[2, Inf)}: Grid points per axis for fitted surfaces.}
+
+\item{fit_alpha}{Numeric \verb{[0, 1]}: Opacity of fitted surfaces.}
 }
 \value{
 Scatter3DConfig: Validated portable settings.

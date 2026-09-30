@@ -26,10 +26,10 @@ format:
     fi
     @just _msg "Done"
 
-# Generate roxygen2 documentation
+# Generate roxygen2 documentation; fails if roxygen2 reports any problem
 document: format
     @just _msg "─── Documenting {{pkg}} package... ───"
-    cd {{r_dir}} && {{rscript}} -e "roxygen2::roxygenize()"
+    cd {{r_dir}} && {{rscript}} tools/document.R
     @just _msg "Done"
 
 # Document and install the package locally with pak

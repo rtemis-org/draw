@@ -123,13 +123,24 @@ test_that("a nullable property admits null in its type", {
 test_that("a nullable enum lists null as well", {
   # `type` and `enum` must both admit the value, so an enum that omits null
   # would declare a null it then rejects.
-  p <- scatter_schema()[["properties"]][["fit"]]
+  p <- chart_schema(
+    PieConfig,
+    id = "https://schema.rtemis.org/chart/pie/v1/schema.json",
+    title = "rtemis PieConfig",
+    description = "Pie chart."
+  )[["properties"]][["rose_type"]]
   expect_true("null" %in% p[["type"]])
   expect_true(any(vapply(p[["enum"]], is.null, logical(1L))))
   expect_setequal(
     unlist(Filter(Negate(is.null), p[["enum"]])),
-    c("glm", "gam")
+    c("radius", "area")
   )
+})
+
+test_that("a fit is any model name", {
+  p <- scatter_schema()[["properties"]][["fit"]]
+  expect_setequal(p[["type"]], c("string", "null"))
+  expect_null(p[["enum"]])
 })
 
 test_that("bounds are carried across", {

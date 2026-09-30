@@ -496,6 +496,33 @@ test_that("draw_scatter creates widget", {
   expect_equal(w$x$option$xAxis$type, "value")
 })
 
+test_that("draw_scatter sets point opacity from the number of points", {
+  w <- draw_scatter(x = c(1, NA, 3), y = c(4, 5, 6))
+  expect_equal(
+    w$x$option$series[[1]]$itemStyle$opacity,
+    rtemis.draw:::auto_alpha(2)
+  )
+  # Grouped series share the opacity for the whole chart, not per group.
+  w <- draw_scatter(
+    iris$Sepal.Length,
+    iris$Sepal.Width,
+    group = iris$Species
+  )
+  opacity <- vapply(
+    w$x$option$series,
+    function(s) s$itemStyle$opacity,
+    numeric(1)
+  )
+  expect_equal(opacity, rep(rtemis.draw:::auto_alpha(150), 3))
+  expect_equal(w$x$option$legend$itemStyle$opacity, 1)
+  w <- draw_scatter(1:3, 4:6, point_alpha = 0.4)
+  expect_equal(w$x$option$series[[1]]$itemStyle$opacity, 0.4)
+  expect_error(draw_scatter(1:3, 4:6, point_alpha = 2))
+  # draw_fit forwards it.
+  w <- draw_fit(1:5, c(1.2, 1.8, 3.3, 3.8, 5.2), point_alpha = 0.5)
+  expect_equal(w$x$option$series[[1]]$itemStyle$opacity, 0.5)
+})
+
 test_that("draw_scatter with groups", {
   w <- draw_scatter(
     x = c(1, 2, 3, 4),
@@ -529,6 +556,7 @@ test_that("draw_scatter fit = 'glm' adds fit line and CI polygon", {
 })
 
 test_that("draw_scatter fit = 'gam' works", {
+  skip_if_not_installed("mgcv")
   set.seed(1)
   xv <- seq(0, 4 * pi, length.out = 50)
   yv <- sin(xv) + rnorm(50, sd = 0.3)

@@ -150,10 +150,11 @@ method(true_pred_data, list(class_any, class_any)) <- function(
 #'
 #' @details
 #' The overlay uses the same implementation as [draw_scatter()] and
-#' [ScatterConfig]. The fit is GLM or GAM; `fit = NULL` disables it. Missing
-#' pairs and observations with missing groups are dropped together. Infinite
-#' values, unequal pair lengths, and multiple response columns are rejected.
-#' List names are matched before drawing; unnamed lists are paired by position.
+#' [ScatterConfig]. The fit is GLM, GAM, or an rtemis learner named in `fit`;
+#' `fit = NULL` disables it. Missing pairs and observations with missing groups
+#' are dropped together. Infinite values, unequal pair lengths, and multiple
+#' response columns are rejected. List names are matched before drawing;
+#' unnamed lists are paired by position.
 #' Paired `NULL` entries in lists represent unavailable sets and are omitted.
 #'
 #' The equivalent portable configuration is a [ScatterConfig] binding true,

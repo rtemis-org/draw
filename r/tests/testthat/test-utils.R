@@ -138,3 +138,15 @@ test_that("lighten rejects invalid amount", {
   expect_error(rtemis.draw:::lighten("#000000", "a"), "amount")
   expect_error(rtemis.draw:::lighten("#000000", c(0.1, 0.2)), "amount")
 })
+
+test_that("auto_alpha falls with the log of the point count", {
+  auto_alpha <- rtemis.draw:::auto_alpha
+  expect_equal(auto_alpha(10), 0.75)
+  expect_equal(auto_alpha(1000), 0.45)
+  expect_equal(auto_alpha(1e4), 0.3)
+  # Clamped at both ends; an empty count does not reach log10(0).
+  expect_equal(auto_alpha(0), 0.9)
+  expect_equal(auto_alpha(1), 0.9)
+  expect_equal(auto_alpha(1e7), 0.15)
+  expect_true(auto_alpha(150) > auto_alpha(151))
+})

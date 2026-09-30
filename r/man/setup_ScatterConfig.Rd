@@ -10,6 +10,7 @@ setup_ScatterConfig(
   size = NULL,
   group = NULL,
   fit = NULL,
+  fit_params = NULL,
   se = TRUE,
   n_fit = 200L,
   fit_alpha = 0.25,
@@ -37,7 +38,8 @@ setup_ScatterConfig(
   legend_placement = "outside",
   fit_name = NULL,
   rug = FALSE,
-  hover = NULL
+  hover = NULL,
+  point_alpha = NULL
 )
 }
 \arguments{
@@ -47,8 +49,12 @@ setup_ScatterConfig(
 
 \item{group}{Optional Character: Column to group and color points by.}
 
-\item{fit}{Optional Character \{"glm", "gam"\}: Fit to overlay. \code{NULL} draws
-no fit.}
+\item{fit}{Optional Character: Fit to overlay: \code{"glm"}, \code{"gam"}, or an rtemis
+supervised learning algorithm name such as \code{"LINAD"}, which requires the
+rtemis package. \code{NULL} draws no fit. See \code{\link[=draw_scatter]{draw_scatter()}}.}
+
+\item{fit_params}{Optional Named list: Arguments passed to the learner named
+in \code{fit}, e.g. \code{list(max_leaves = 8)} for \code{"LINAD"}. See \code{\link[=draw_scatter]{draw_scatter()}}.}
 
 \item{se}{Logical: If TRUE, shade the fit standard-error band.}
 
@@ -116,6 +122,10 @@ inside placement overlays the data. Neither setting adds a missing legend.}
 \item{rug}{Logical: Show marginal marks along the x and y axes.}
 
 \item{hover}{Optional Character: Column containing per-observation tooltip labels.}
+
+\item{point_alpha}{Optional Numeric \verb{[0, 1]}: Point opacity. \code{NULL} sets it
+from the number of points drawn, falling from 0.9 for a handful of points
+to 0.15 for 100,000 or more, so that overlapping points stay visible.}
 }
 \value{
 \link{ScatterConfig} object.

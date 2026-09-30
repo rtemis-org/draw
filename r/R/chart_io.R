@@ -352,7 +352,12 @@ read_chart_config <- function(x) {
   properties <- entry[["cls"]]@properties
   args <- stats::setNames(
     lapply(names(args), function(nm) {
-      coerce_to_spec(unlist_scalar(args[[nm]]), prop_spec(properties[[nm]]))
+      spec <- prop_spec(properties[[nm]])
+      # An opaque object (prop_bag) keeps the parsed named list as it is.
+      if (identical(spec[["type"]], "object")) {
+        return(args[[nm]])
+      }
+      coerce_to_spec(unlist_scalar(args[[nm]]), spec)
     }),
     names(args)
   )

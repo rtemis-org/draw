@@ -294,16 +294,24 @@ color_with_alpha <- function(color, alpha) {
 }
 
 
-#' Calculate padded axis limits from data
+# %% auto_alpha ----
+#' Choose point opacity from the number of points
 #'
-#' Computes `c(min, max)` from `values` with symmetric padding as a fraction
-#' of the data range.
+#' A rough overplotting heuristic: few points are drawn nearly opaque, and
+#' opacity falls with the log of the count so that stacked points stay
+#' distinguishable. It is 0.75 at 10 points, 0.57 at 150, 0.45 at 1,000 and
+#' 0.3 at 10,000, clamped to `[0.15, 0.9]`.
 #'
-#' @param values Numeric: Data values. `NA` values are ignored.
-#' @param pad Numeric `[0, Inf)`: Fraction of the data range added on each side.
-#' @return Numeric: Length-2 vector `c(min, max)`.
+#' @param n Integer `[0, Inf)`: Number of points drawn.
+#' @return Numeric `[0.15, 0.9]`: Opacity.
+#' @author EDG
 #' @keywords internal
 #' @noRd
+auto_alpha <- function(n) {
+  min(0.9, max(0.15, 0.9 - 0.15 * log10(max(n, 1))))
+}
+
+
 # %% DEFAULT_PAD ----
 # How much room an axis leaves around the data, as a fraction of its range, when
 # limits are not given. 0.04 matches base R's `xaxs = "r"`, which extends the
@@ -314,6 +322,16 @@ color_with_alpha <- function(color, alpha) {
 DEFAULT_PAD <- 0.04
 
 
+#' Calculate padded axis limits from data
+#'
+#' Computes `c(min, max)` from `values` with symmetric padding as a fraction
+#' of the data range.
+#'
+#' @param values Numeric: Data values. `NA` values are ignored.
+#' @param pad Numeric `[0, Inf)`: Fraction of the data range added on each side.
+#' @return Numeric: Length-2 vector `c(min, max)`.
+#' @keywords internal
+#' @noRd
 calc_limits <- function(values, pad = DEFAULT_PAD) {
   rng <- range(values, na.rm = TRUE)
   span <- rng[2] - rng[1]

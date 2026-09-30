@@ -29,7 +29,7 @@ Imports:
     htmltools,
     htmlwidgets,
     jsonlite,
-    rtemis.core (>= 0.4.5),
+    rtemis.core (>= 0.4.6),
     S7,
     signal,
     stats,
@@ -42,6 +42,7 @@ Suggests:
     mgcv,
     pROC,
     rmarkdown,
+    rtemis,
     rtemis.a3,
     shiny,
     survival,
@@ -71,6 +72,7 @@ Collate:
     'distribution.R'
     'annotations.R'
     'fit_layer.R'
+    'fit_model.R'
     'scatter_input.R'
     'config_line.R'
     'timeseries.R'

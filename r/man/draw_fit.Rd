@@ -31,11 +31,17 @@ draw_fit(
 \item{group}{Optional Atomic vector or single-column data frame: Grouping
 variable for multiple series.}
 
-\item{fit}{Optional Character \{"glm", "gam"\}: Fit method. \code{NULL} disables fitting.
-\code{"gam"} for \code{\link[mgcv:gam]{mgcv::gam()}}. The fitted line and standard-error band
-are computed per group when \code{group} is provided.}
+\item{fit}{Optional Character: Model fitted to \code{y} on \code{x} and drawn as a line.
+\code{"glm"} uses \code{\link[stats:glm]{stats::glm()}} and \code{"gam"} uses \code{\link[mgcv:gam]{mgcv::gam()}}. Any other name,
+matched case-insensitively, is an rtemis supervised learning algorithm,
+such as \code{"LINAD"}, \code{"CART"} or \code{"LightGBM"}, trained with its default
+hyperparameters; this requires the rtemis package (>= 1.4.1). \code{NULL}
+disables fitting. The fitted line and standard-error band are computed per
+group when \code{group} is provided.}
 
-\item{se}{Logical: Whether to show the confidence band.}
+\item{se}{Logical: Whether to show the standard-error band. Algorithms
+without standard errors (every rtemis algorithm except GLM, GAM and a few
+others) draw the line alone.}
 
 \item{se_times}{Numeric \verb{[0, Inf)}: Standard-error multiplier for the band.}
 
@@ -82,10 +88,11 @@ Named lists support samples of different lengths, with one fit per sample.
 }
 \details{
 The overlay uses the same implementation as \code{\link[=draw_scatter]{draw_scatter()}} and
-\link{ScatterConfig}. The fit is GLM or GAM; \code{fit = NULL} disables it. Missing
-pairs and observations with missing groups are dropped together. Infinite
-values, unequal pair lengths, and multiple response columns are rejected.
-List names are matched before drawing; unnamed lists are paired by position.
+\link{ScatterConfig}. The fit is GLM, GAM, or an rtemis learner named in \code{fit};
+\code{fit = NULL} disables it. Missing pairs and observations with missing groups
+are dropped together. Infinite values, unequal pair lengths, and multiple
+response columns are rejected. List names are matched before drawing;
+unnamed lists are paired by position.
 Paired \code{NULL} entries in lists represent unavailable sets and are omitted.
 
 The equivalent portable configuration is a \link{ScatterConfig} binding true,

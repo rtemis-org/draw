@@ -35,14 +35,18 @@ test_that("ScatterConfig defaults match the documented values", {
   expect_null(cfg@y)
   expect_null(cfg@fit)
   expect_null(cfg@palette)
+  expect_null(cfg@point_alpha)
   expect_null(cfg@dat_path)
   expect_null(cfg@margin_left)
 })
 
 test_that("ScatterConfig validates its properties", {
-  expect_error(ScatterConfig(fit = "bogus"))
+  # Any name is a valid fit; an unknown one fails when it is fitted.
+  expect_error(ScatterConfig(fit = 1))
   expect_error(ScatterConfig(fit_alpha = 2))
   expect_error(ScatterConfig(fit_alpha = -1))
+  expect_error(ScatterConfig(point_alpha = 1.5))
+  expect_error(ScatterConfig(point_alpha = -0.1))
   expect_error(ScatterConfig(n_fit = 1L))
   expect_error(ScatterConfig(margin_left = -1L))
   # An axis limit is a pair, so a scalar is not one.
@@ -232,6 +236,30 @@ test_that("resolve fills axis limits from the data", {
   expect_length(r@xlim, 2L)
   expect_true(r@xlim[[1L]] <= min(mtcars[["wt"]]))
   expect_true(r@xlim[[2L]] >= max(mtcars[["wt"]]))
+})
+
+test_that("resolve sets point opacity from the number of complete points", {
+  r <- resolve(setup_ScatterConfig(x = "wt", y = "mpg"), data = mtcars)
+  expect_identical(r@point_alpha, rtemis.draw:::auto_alpha(nrow(mtcars)))
+  expect_identical(r@origin[["point_alpha"]], "derived")
+  # Incomplete rows are not drawn, so they are not counted.
+  dat <- mtcars
+  dat[["wt"]][1:2] <- NA
+  dat[["cyl"]][3] <- NA
+  r <- resolve(
+    setup_ScatterConfig(x = "wt", y = "mpg", group = "cyl"),
+    data = dat
+  )
+  expect_identical(r@point_alpha, rtemis.draw:::auto_alpha(nrow(mtcars) - 3L))
+  # An explicit value is kept.
+  r <- resolve(
+    setup_ScatterConfig(x = "wt", y = "mpg", point_alpha = 1),
+    data = mtcars
+  )
+  expect_identical(r@point_alpha, 1)
+  expect_identical(r@origin[["point_alpha"]], "user")
+  # Nothing bound, nothing counted.
+  expect_null(resolve(setup_ScatterConfig(), data = mtcars)@point_alpha)
 })
 
 test_that("resolve marks what it filled as derived", {

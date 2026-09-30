@@ -10,6 +10,7 @@ draw_scatter(
   size = NULL,
   group = NULL,
   fit = NULL,
+  fit_params = NULL,
   se = TRUE,
   fit_alpha = 0.25,
   n_fit = 200L,
@@ -36,7 +37,8 @@ draw_scatter(
   legend_placement = "outside",
   fit_name = NULL,
   rug = FALSE,
-  hover = NULL
+  hover = NULL,
+  point_alpha = NULL
 )
 }
 \arguments{
@@ -49,11 +51,25 @@ draw_scatter(
 \item{group}{Optional Atomic vector or single-column data frame: Grouping
 variable for multiple series.}
 
-\item{fit}{Optional Character \{"glm", "gam"\}: Fit method. \code{NULL} disables fitting.
-\code{"gam"} for \code{\link[mgcv:gam]{mgcv::gam()}}. The fitted line and standard-error band
-are computed per group when \code{group} is provided.}
+\item{fit}{Optional Character: Model fitted to \code{y} on \code{x} and drawn as a line.
+\code{"glm"} uses \code{\link[stats:glm]{stats::glm()}} and \code{"gam"} uses \code{\link[mgcv:gam]{mgcv::gam()}}. Any other name,
+matched case-insensitively, is an rtemis supervised learning algorithm,
+such as \code{"LINAD"}, \code{"CART"} or \code{"LightGBM"}, trained with its default
+hyperparameters; this requires the rtemis package (>= 1.4.1). \code{NULL}
+disables fitting. The fitted line and standard-error band are computed per
+group when \code{group} is provided.}
 
-\item{se}{Logical: Whether to show the confidence band.}
+\item{fit_params}{Optional Named list: Arguments passed to the learner named
+in \code{fit}, as argument-value pairs: to \code{\link[stats:glm]{stats::glm()}} for \code{"glm"}, e.g.
+\code{list(family = "poisson")}; to \code{\link[mgcv:gam]{mgcv::gam()}} for \code{"gam"}, where \code{k} sets
+the basis dimension of the smooth, e.g. \code{list(k = 5)}; and to the rtemis
+setup function otherwise, e.g. \code{list(max_leaves = 8)} for \code{"LINAD"}, whose
+arguments are listed in \code{?rtemis::setup_LINAD}. \code{NULL} uses the learner's
+defaults.}
+
+\item{se}{Logical: Whether to show the standard-error band. Algorithms
+without standard errors (every rtemis algorithm except GLM, GAM and a few
+others) draw the line alone.}
 
 \item{fit_alpha}{Numeric \verb{[0, 1]}: Opacity for the confidence-band fill.}
 
@@ -131,6 +147,11 @@ inside placement overlays the data. Neither setting adds a missing legend.}
 \item{rug}{Logical: Draw marginal marks on both axes.}
 
 \item{hover}{Optional Character: One literal tooltip label per observation.}
+
+\item{point_alpha}{Optional Numeric \verb{[0, 1]}: Point opacity. \code{NULL} sets it
+from the number of points drawn, as a rough guard against overplotting:
+0.75 at 10 points, 0.57 at 150, 0.45 at 1,000 and 0.3 at 10,000, clamped
+to \verb{[0.15, 0.9]}. Set a value to override.}
 }
 \value{
 htmlwidget: Widget object.

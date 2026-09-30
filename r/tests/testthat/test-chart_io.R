@@ -199,7 +199,7 @@ test_that("an invalid value is rejected on read, through the same validator", {
   # Reading goes through setup_*, so a document cannot construct an object a
   # direct call could not.
   path <- tmp_json()
-  writeLines('{"type": "scatter", "x": "wt", "fit": "bogus"}', path)
+  writeLines('{"type": "scatter", "x": "wt", "n_fit": 1}', path)
   expect_error(read_chart_config(path))
 })
 

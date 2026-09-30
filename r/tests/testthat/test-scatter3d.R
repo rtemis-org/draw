@@ -43,3 +43,52 @@ test_that("3D matrix labels and panel dependencies survive composition", {
   names <- vapply(p[["dependencies"]], function(d) d[["name"]], character(1))
   expect_equal(sum(names == "echarts-gl"), 1L)
 })
+
+test_that("3D opacity defaults to the point count and paths alone to opaque", {
+  cfg <- setup_Scatter3DConfig(
+    x = "Sepal.Length",
+    y = "Sepal.Width",
+    z = "Petal.Length",
+    group = "Species"
+  )
+  expect_null(cfg@opacity)
+  expected <- rtemis.draw:::auto_alpha(150)
+  opt <- to_list(compile(cfg, iris))
+  expect_equal(opt[["series"]][[1]][["itemStyle"]][["opacity"]], expected)
+  # resolve() records the same value, so the resolved document draws the same.
+  r <- resolve(cfg, iris)
+  expect_equal(r@opacity, expected)
+  expect_identical(r@origin[["opacity"]], "derived")
+  expect_equal(to_list(compile(r, iris)), opt)
+  # Incomplete rows are not counted.
+  w <- draw_scatter3d(c(1, NA, 3), c(1, 2, 3), c(1, 2, 3))
+  expect_equal(
+    w$x$option$series[[1]]$itemStyle$opacity,
+    rtemis.draw:::auto_alpha(2)
+  )
+  w <- draw_scatter3d(1:4, 1:4, 1:4, mode = "both")
+  opacity <- vapply(
+    w$x$option$series,
+    function(s) (s$itemStyle %||% s$lineStyle)$opacity,
+    numeric(1)
+  )
+  expect_equal(opacity, rep(rtemis.draw:::auto_alpha(4), 2))
+  w <- draw_scatter3d(1:4, 1:4, 1:4, mode = "lines")
+  expect_equal(w$x$option$series[[1]]$lineStyle$opacity, 1)
+  expect_equal(
+    resolve(
+      setup_Scatter3DConfig(
+        x = "a",
+        y = "b",
+        z = "c",
+        mode = "lines"
+      ),
+      data.frame(a = 1:3, b = 1:3, c = 1:3)
+    )@opacity,
+    1
+  )
+  # An explicit value wins.
+  w <- draw_scatter3d(1:4, 1:4, 1:4, opacity = 0.3)
+  expect_equal(w$x$option$series[[1]]$itemStyle$opacity, 0.3)
+  expect_error(setup_Scatter3DConfig(opacity = 2))
+})

@@ -163,6 +163,20 @@ CONFIG_LIMIT_RULES <- list(list(
   message = "Supply exactly two increasing finite axis limits."
 ))
 
+# Learner arguments mean nothing without a learner to pass them to.
+FIT_PARAMS_RULE <- list(
+  schema = list(
+    `if` = list(
+      required = list("fit_params"),
+      properties = list(fit_params = list(not = list(type = "null")))
+    ),
+    then = list(
+      properties = list(fit = list(not = list(type = "null")))
+    )
+  ),
+  message = "Set fit to the learner that fit_params configure."
+)
+
 #' Check ordered axis limits after property validation
 #' @param config ChartConfig: Configuration containing xlim and ylim.
 #' @return Optional Character: Corrective validation messages.
