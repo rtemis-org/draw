@@ -4,7 +4,7 @@
 \name{rtemis.draw-package}
 \alias{rtemis.draw}
 \alias{rtemis.draw-package}
-\title{rtemis.draw: Interactive Visualization}
+\title{rtemis.draw: Schema-Driven Interactive Charts, Network Graphs, and Maps}
 \description{
 Create interactive statistical charts, network graphs and choropleth maps.
 Charts are rendered with 'ECharts', networks with 'Sigma.js' and maps with

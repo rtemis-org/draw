@@ -1,5 +1,5 @@
 Package: rtemis.draw
-Title: Interactive Visualization
+Title: Schema-Driven Interactive Charts, Network Graphs, and Maps
 Version: 0.5.3
 Date: 2026-09-28
 Authors@R:
@@ -11,11 +11,14 @@ Description: Create interactive statistical charts, network graphs and
     library, networks with 'Sigma.js' and maps with 'MapLibre GL JS'.
     A high-level interface of plotting functions builds a complete
     visualization from data in a single call, while a low-level interface
-    exposes the underlying validated 'S7' configuration objects for full
-    control over every option. Configurations can be saved to and restored
-    from 'JSON' files. Visualizations display as 'htmlwidgets' that automatically 
-    adapt to light and dark themes, work in 'R Markdown', 'Quarto' and 'shiny', and 
-    can be exported to Scalable Vector Graphics (SVG) files using 'Node.js'.
+    gives full control over every option. Both are based on the same
+    type-checked and validated 'S7' configuration objects. Configurations
+    can be saved to and restored from 'JSON' files, and each chart type has
+    a published 'JSON Schema' that other interfaces can implement.
+    Visualizations display as 'htmlwidgets' that automatically adapt to
+    light and dark themes, work in 'R Markdown', 'Quarto' and 'shiny', and
+    can be exported to Scalable Vector Graphics (SVG) files using
+    'Node.js'.
 URL: https://www.rtemis.org, https://docs.rtemis.org/r/draw, https://docs.rtemis.org/r/draw-api
 BugReports: https://github.com/rtemis-org/draw/issues
 License: BSD_3_clause + file LICENSE
