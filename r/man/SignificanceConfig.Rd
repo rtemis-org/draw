@@ -26,9 +26,9 @@ SignificanceConfig(
   annotate_n = 7L,
   reference = TRUE,
   legend = TRUE,
-  negative_color = "#2D83D3",
-  neutral_color = "#808080",
-  positive_color = "#C55E28",
+  negative_color = NULL,
+  neutral_color = NULL,
+  positive_color = NULL,
   alpha = 0.8,
   point_size = 8,
   xlab = NULL,
@@ -98,11 +98,14 @@ order; unset uses the theme. Requires a group binding.}
 
 \item{legend}{Logical: Show the nonempty significance groups.}
 
-\item{negative_color}{Character: Color for significant effects below x_thresh.}
+\item{negative_color}{Optional Character: Color for significant effects
+below x_thresh. \code{NULL} uses the theme's negative color.}
 
-\item{neutral_color}{Character: Color for other results, including effects equal to x_thresh.}
+\item{neutral_color}{Optional Character: Color for other results, including
+effects equal to x_thresh. \code{NULL} uses the theme's neutral color.}
 
-\item{positive_color}{Character: Color for significant effects above x_thresh.}
+\item{positive_color}{Optional Character: Color for significant effects
+above x_thresh. \code{NULL} uses the theme's positive color.}
 
 \item{alpha}{Numeric \verb{[0, 1]}: Mark opacity.}
 

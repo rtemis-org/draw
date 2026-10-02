@@ -221,7 +221,7 @@ setup_ROCConfig <- function(
 
 method(resolve, ROCConfig) <- function(config, data = NULL, ...) config
 method(to_list, ROCConfig) <- function(x) chart_config_to_list(x)
-method(compile, ROCConfig) <- function(config, data = NULL, ...) {
+method(compile, ROCConfig) <- function(config, data = NULL, theme = NULL, ...) {
   check_dots_empty(...)
   roc_option(config, data)
 }
@@ -259,7 +259,7 @@ method(draw, ROCConfig) <- function(
   ...,
   data = NULL
 ) {
-  built <- compile(option, data)
+  built <- compile(option, data = data, theme = theme)
   grid <- built@grid
   width <- width %||% (480 + grid[["left"]] + grid[["right"]])
   height <- height %||% (480 + grid[["top"]] + grid[["bottom"]])

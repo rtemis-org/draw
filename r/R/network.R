@@ -564,7 +564,7 @@ graph_from_edge_list <- function(edges, nodes = NULL, directed = FALSE) {
 #'
 #' @inheritParams draw_graph
 #'
-#' @return [SigmaOption]: The option object.
+#' @return [SigmaOption]: The option object, with the edge colors resolved.
 #'
 #' @author EDG
 #' @keywords internal
@@ -583,14 +583,16 @@ graph_option <- function(
   blend_edges = FALSE,
   palette = palette_colors(rtemis_colors),
   node_color = rtemis_colors[["teal"]],
-  positive_color = SIGN_COLORS[["positive"]],
-  negative_color = SIGN_COLORS[["negative"]],
-  title = NULL
+  positive_color = NULL,
+  negative_color = NULL,
+  title = NULL,
+  theme = NULL
 ) {
   layout <- match.arg(layout, c("force", "circular", "circlepack", "random"))
+  # Edge colors are baked into the option, so unset ones come from the theme
+  # here; the rest of the theme is applied by draw()/render_widget().
+  sign <- theme_sign_colors(theme)
 
-  # Assemble the full Sigma render spec, then dispatch through draw(). Theme is
-  # resolved uniformly inside draw()/render_widget(), not here.
   option <- SigmaOption(
     model = model,
     layout = layout,
@@ -605,8 +607,8 @@ graph_option <- function(
     blend_edges = blend_edges,
     palette = as.character(palette),
     node_color = node_color,
-    positive_color = positive_color,
-    negative_color = negative_color,
+    positive_color = positive_color %||% sign[["positive"]],
+    negative_color = negative_color %||% sign[["negative"]],
     title = title
   )
 
@@ -640,8 +642,10 @@ graph_option <- function(
 #' @param palette Character: Categorical colors for communities.
 #' @param node_color Character: Single node color used when `color_by_group` is
 #'   `FALSE`.
-#' @param positive_color Character: Edge color for positive-sign edges.
-#' @param negative_color Character: Edge color for negative-sign edges.
+#' @param positive_color Optional Character: Edge color for positive-sign
+#'   edges. `NULL` uses the theme's positive color.
+#' @param negative_color Optional Character: Edge color for negative-sign
+#'   edges. `NULL` uses the theme's negative color.
 #' @param title Optional Character: Title shown above the network.
 #' @param theme Optional [Theme], list, or `NA`: Theme override. `NULL` enables
 #'   light/dark auto-detection (matching [draw()]).
@@ -674,8 +678,8 @@ draw_graph <- function(
   blend_edges = FALSE,
   palette = palette_colors(rtemis_colors),
   node_color = rtemis_colors[["teal"]],
-  positive_color = SIGN_COLORS[["positive"]],
-  negative_color = SIGN_COLORS[["negative"]],
+  positive_color = NULL,
+  negative_color = NULL,
   title = NULL,
   theme = NULL,
   width = NULL,
@@ -699,7 +703,8 @@ draw_graph <- function(
     node_color = node_color,
     positive_color = positive_color,
     negative_color = negative_color,
-    title = title
+    title = title,
+    theme = theme
   )
 
   draw(
@@ -768,8 +773,8 @@ draw_network <- function(
   blend_edges = FALSE,
   palette = palette_colors(rtemis_colors),
   node_color = rtemis_colors[["teal"]],
-  positive_color = SIGN_COLORS[["positive"]],
-  negative_color = SIGN_COLORS[["negative"]],
+  positive_color = NULL,
+  negative_color = NULL,
   title = NULL,
   theme = NULL,
   width = NULL,

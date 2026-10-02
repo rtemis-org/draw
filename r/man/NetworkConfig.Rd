@@ -24,8 +24,8 @@ NetworkConfig(
   edge_opacity = 0.4,
   palette = NULL,
   node_color = "#6CA3A0",
-  positive_color = "#C55E28",
-  negative_color = "#2D83D3"
+  positive_color = NULL,
+  negative_color = NULL
 )
 }
 \arguments{
@@ -73,7 +73,8 @@ palette. \code{NULL} uses the theme's.}
 
 \item{node_color}{Character: Node color when not colored by group.}
 
-\item{positive_color, negative_color}{Character: Edge colors by sign.}
+\item{positive_color, negative_color}{Optional Character: Edge colors by
+sign. \code{NULL} uses the theme's sign colors.}
 }
 \value{
 \code{NetworkConfig} object.

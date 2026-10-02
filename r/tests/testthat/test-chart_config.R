@@ -437,7 +437,12 @@ test_that("compile() hands its method a resolved config and materialized data", 
     config_derive(config, list(xlab = if (!is.null(data)) names(data)[[1L]]))
   }
   seen <- NULL
-  S7::method(compile, Probe) <- function(config, data = NULL, ...) {
+  S7::method(compile, Probe) <- function(
+    config,
+    data = NULL,
+    theme = NULL,
+    ...
+  ) {
     seen <<- list(xlab = config@xlab, rows = nrow(data))
     NULL
   }

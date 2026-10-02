@@ -334,7 +334,12 @@ method(resolve, BoxplotConfig) <- function(config, data = NULL, ...) {
 # %% compile.BoxplotConfig ----
 # The builder takes a named list, one element per box, and uses the names as
 # labels -- so the bound column names carry through without a `labels` argument.
-method(compile, BoxplotConfig) <- function(config, data = NULL, ...) {
+method(compile, BoxplotConfig) <- function(
+  config,
+  data = NULL,
+  theme = NULL,
+  ...
+) {
   if (is.null(config@x)) {
     abort(
       "A BoxplotConfig needs `x` set to draw.",

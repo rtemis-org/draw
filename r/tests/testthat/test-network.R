@@ -192,7 +192,7 @@ test_that("SigmaOption applies sensible style defaults", {
   expect_equal(opt@node_opacity, 0.95)
   expect_true(opt@scale_by_degree)
   expect_false(opt@color_by_group)
-  expect_equal(opt@node_color, rtemis_colors[[1L]])
+  expect_equal(opt@node_color, rtemis_colors[["teal"]])
   expect_equal(opt@negative_color, SIGN_COLORS[["negative"]])
 })
 

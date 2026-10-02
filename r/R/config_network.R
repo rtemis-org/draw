@@ -43,7 +43,8 @@
 #' @param palette Optional Character: Community colors, overriding the theme
 #'   palette. `NULL` uses the theme's.
 #' @param node_color Character: Node color when not colored by group.
-#' @param positive_color,negative_color Character: Edge colors by sign.
+#' @param positive_color,negative_color Optional Character: Edge colors by
+#'   sign. `NULL` uses the theme's sign colors.
 #' @inheritParams ChartConfig
 #'
 #' @return `NetworkConfig` object.
@@ -119,12 +120,14 @@ NetworkConfig <- new_class(
       description = "Node color when not colored by group."
     ),
     positive_color = prop_string(
-      SIGN_COLORS[["positive"]],
-      description = "Color for positive-weight edges."
+      NULL,
+      nullable = TRUE,
+      description = "Color for positive-weight edges. Unset uses the theme's positive color."
     ),
     negative_color = prop_string(
-      SIGN_COLORS[["negative"]],
-      description = "Color for negative-weight edges."
+      NULL,
+      nullable = TRUE,
+      description = "Color for negative-weight edges. Unset uses the theme's negative color."
     )
   )
 ) # /rtemis.draw::NetworkConfig
@@ -178,8 +181,8 @@ setup_NetworkConfig <- function(
   edge_opacity = 0.4,
   palette = NULL,
   node_color = rtemis_colors[["teal"]],
-  positive_color = SIGN_COLORS[["positive"]],
-  negative_color = SIGN_COLORS[["negative"]],
+  positive_color = NULL,
+  negative_color = NULL,
   title = NULL,
   dat_path = NULL,
   origin = NULL,
@@ -222,7 +225,12 @@ method(resolve, NetworkConfig) <- function(config, data = NULL, ...) {
 # %% compile.NetworkConfig ----
 # `data` is the adjacency matrix, or a list carrying it alongside a node table --
 # one argument has to hold both, and a named list is the least surprising way.
-method(compile, NetworkConfig) <- function(config, data = NULL, ...) {
+method(compile, NetworkConfig) <- function(
+  config,
+  data = NULL,
+  theme = NULL,
+  ...
+) {
   bound <- data
   nodes <- NULL
   if (
@@ -266,6 +274,7 @@ method(compile, NetworkConfig) <- function(config, data = NULL, ...) {
     node_color = config@node_color,
     positive_color = config@positive_color,
     negative_color = config@negative_color,
-    title = config@title
+    title = config@title,
+    theme = theme
   )
 }

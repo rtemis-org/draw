@@ -200,7 +200,12 @@ method(resolve, Scatter3DConfig) <- function(config, data = NULL, ...) {
 method(render_meta, Scatter3DConfig) <- function(config, option) {
   legend_meta("top", "outside")
 }
-method(compile, Scatter3DConfig) <- function(config, data = NULL, ...) {
+method(compile, Scatter3DConfig) <- function(
+  config,
+  data = NULL,
+  theme = NULL,
+  ...
+) {
   scatter3d_option(
     config_column(data, config@x, "x"),
     config_column(data, config@y, "y"),

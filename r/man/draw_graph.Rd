@@ -18,8 +18,8 @@ draw_graph(
   blend_edges = FALSE,
   palette = palette_colors(rtemis_colors),
   node_color = rtemis_colors[["teal"]],
-  positive_color = SIGN_COLORS[["positive"]],
-  negative_color = SIGN_COLORS[["negative"]],
+  positive_color = NULL,
+  negative_color = NULL,
   title = NULL,
   theme = NULL,
   width = NULL,
@@ -62,9 +62,11 @@ node colors instead of by sign.}
 \item{node_color}{Character: Single node color used when \code{color_by_group} is
 \code{FALSE}.}
 
-\item{positive_color}{Character: Edge color for positive-sign edges.}
+\item{positive_color}{Optional Character: Edge color for positive-sign
+edges. \code{NULL} uses the theme's positive color.}
 
-\item{negative_color}{Character: Edge color for negative-sign edges.}
+\item{negative_color}{Optional Character: Edge color for negative-sign
+edges. \code{NULL} uses the theme's negative color.}
 
 \item{title}{Optional Character: Title shown above the network.}
 

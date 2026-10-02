@@ -249,7 +249,7 @@ a3_built <- function(config, data = NULL, width = NULL) {
 
 
 # %% compile.A3Config ----
-method(compile, A3Config) <- function(config, data = NULL, ...) {
+method(compile, A3Config) <- function(config, data = NULL, theme = NULL, ...) {
   a3_built(config, data)[["option"]]
 }
 

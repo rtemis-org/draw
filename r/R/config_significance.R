@@ -42,9 +42,12 @@
 #' @param annotate_n Integer [0, Inf): Maximum significant feature labels per side in the volcano view, ranked by raw p-value with input-order ties.
 #' @param reference Logical: Show the transformed significance threshold and, for volcanoes, the effect threshold.
 #' @param legend Logical: Show the nonempty significance groups.
-#' @param negative_color Character: Color for significant effects below x_thresh.
-#' @param neutral_color Character: Color for other results, including effects equal to x_thresh.
-#' @param positive_color Character: Color for significant effects above x_thresh.
+#' @param negative_color Optional Character: Color for significant effects
+#'   below x_thresh. `NULL` uses the theme's negative color.
+#' @param neutral_color Optional Character: Color for other results, including
+#'   effects equal to x_thresh. `NULL` uses the theme's neutral color.
+#' @param positive_color Optional Character: Color for significant effects
+#'   above x_thresh. `NULL` uses the theme's positive color.
 #' @param alpha Numeric `[0, 1]`: Mark opacity.
 #' @param point_size Numeric (0, Inf): Scatter symbol size in pixels.
 #' @param xlab Optional Character: X-axis label.
@@ -146,16 +149,19 @@ SignificanceConfig <- new_class(
         description = "Show the nonempty significance groups."
       ),
       negative_color = prop_string(
-        SIGN_COLORS[["negative"]],
-        description = "Color for significant effects below x_thresh."
+        NULL,
+        nullable = TRUE,
+        description = "Color for significant effects below x_thresh. Unset uses the theme's negative color."
       ),
       neutral_color = prop_string(
-        SIGN_COLORS[["neutral"]],
-        description = "Color for other results, including effects equal to x_thresh."
+        NULL,
+        nullable = TRUE,
+        description = "Color for other results, including effects equal to x_thresh. Unset uses the theme's neutral color."
       ),
       positive_color = prop_string(
-        SIGN_COLORS[["positive"]],
-        description = "Color for significant effects above x_thresh."
+        NULL,
+        nullable = TRUE,
+        description = "Color for significant effects above x_thresh. Unset uses the theme's positive color."
       ),
       alpha = prop_float(0.8, min = 0, max = 1, description = "Mark opacity."),
       point_size = prop_float(
@@ -282,9 +288,9 @@ setup_SignificanceConfig <- function(
   annotate_n = 7L,
   reference = TRUE,
   legend = TRUE,
-  negative_color = SIGN_COLORS[["negative"]],
-  neutral_color = SIGN_COLORS[["neutral"]],
-  positive_color = SIGN_COLORS[["positive"]],
+  negative_color = NULL,
+  neutral_color = NULL,
+  positive_color = NULL,
   alpha = 0.8,
   point_size = 8,
   xlab = NULL,
@@ -373,9 +379,14 @@ method(resolve, SignificanceConfig) <- function(config, data = NULL, ...) {
   )
 }
 
-method(compile, SignificanceConfig) <- function(config, data = NULL, ...) {
+method(compile, SignificanceConfig) <- function(
+  config,
+  data = NULL,
+  theme = NULL,
+  ...
+) {
   check_dots_empty(...)
-  significance_option(config, data)
+  significance_option(config, data, theme = theme)
 }
 
 # Serialize the semantic configuration; compile() produces the ECharts option.

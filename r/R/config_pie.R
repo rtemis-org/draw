@@ -150,7 +150,7 @@ method(resolve, PieConfig) <- function(config, data = NULL, ...) {
 
 
 # %% compile.PieConfig ----
-method(compile, PieConfig) <- function(config, data = NULL, ...) {
+method(compile, PieConfig) <- function(config, data = NULL, theme = NULL, ...) {
   values <- config_column(data, config@values, "values")
   labels <- config_column(data, config@labels, "labels")
   if (is.null(values) || is.null(labels)) {

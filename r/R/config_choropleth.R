@@ -208,7 +208,12 @@ method(resolve, ChoroplethConfig) <- function(config, data = NULL, ...) {
 # %% compile.ChoroplethConfig ----
 # Builds the MapModel from the bound columns, then styles it -- the same two
 # steps `draw_choropleth()` takes, through the same builder.
-method(compile, ChoroplethConfig) <- function(config, data = NULL, ...) {
+method(compile, ChoroplethConfig) <- function(
+  config,
+  data = NULL,
+  theme = NULL,
+  ...
+) {
   if (is.null(config@location) || is.null(config@value)) {
     abort(
       "A ChoroplethConfig needs both `location` and `value` set to draw.",

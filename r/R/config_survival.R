@@ -251,7 +251,12 @@ setup_SurvivalConfig <- function(
 
 method(resolve, SurvivalConfig) <- function(config, data = NULL, ...) config
 method(to_list, SurvivalConfig) <- function(x) chart_config_to_list(x)
-method(compile, SurvivalConfig) <- function(config, data = NULL, ...) {
+method(compile, SurvivalConfig) <- function(
+  config,
+  data = NULL,
+  theme = NULL,
+  ...
+) {
   check_dots_empty(...)
   survival_option(config, data)
 }

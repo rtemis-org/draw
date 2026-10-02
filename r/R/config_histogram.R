@@ -415,7 +415,12 @@ histogram_config_x <- function(config, data) {
 
 
 # %% compile.HistogramConfig ----
-method(compile, HistogramConfig) <- function(config, data = NULL, ...) {
+method(compile, HistogramConfig) <- function(
+  config,
+  data = NULL,
+  theme = NULL,
+  ...
+) {
   x <- histogram_config_x(config, data)
   if (is.null(x)) {
     abort(

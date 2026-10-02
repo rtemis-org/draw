@@ -241,7 +241,12 @@ setup_CalibrationConfig <- function(
 
 method(resolve, CalibrationConfig) <- function(config, data = NULL, ...) config
 method(to_list, CalibrationConfig) <- function(x) chart_config_to_list(x)
-method(compile, CalibrationConfig) <- function(config, data = NULL, ...) {
+method(compile, CalibrationConfig) <- function(
+  config,
+  data = NULL,
+  theme = NULL,
+  ...
+) {
   check_dots_empty(...)
   calibration_option(config, data)
 }

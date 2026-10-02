@@ -429,7 +429,12 @@ method(resolve, ScatterConfig) <- function(config, data = NULL, ...) {
 # Translate a config into the render option. `resolve()` runs first, so every
 # derivable value is already present and this is a straight hand-off to the same
 # builder `draw_scatter()` uses -- one implementation, two entry points.
-method(compile, ScatterConfig) <- function(config, data = NULL, ...) {
+method(compile, ScatterConfig) <- function(
+  config,
+  data = NULL,
+  theme = NULL,
+  ...
+) {
   x <- config_column(data, config@x, "x")
   y <- config_column(data, config@y, "y")
   if (is.null(x) || is.null(y)) {

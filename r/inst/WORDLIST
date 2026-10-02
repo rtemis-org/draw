@@ -70,6 +70,7 @@ dataMin
 dataZoom
 deduplicated
 desc
+deuteranopia
 directedness
 downsampled
 draggable
@@ -107,6 +108,7 @@ nonmissing
 nonnumeric
 outEdges
 pre
+protanopia
 rect
 renderer
 renderers

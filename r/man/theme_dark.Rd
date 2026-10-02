@@ -22,7 +22,10 @@ theme_dark(
   grid_color = "rgba(255, 255, 255, 0.1)",
   tooltip_bg = "rgba(20, 20, 20, 0.9)",
   tooltip_border_color = "rgba(255, 255, 255, 0.1)",
-  tooltip_color = NULL
+  tooltip_color = NULL,
+  negative_color = SIGN_COLORS[["negative"]],
+  neutral_color = SIGN_COLORS[["neutral"]],
+  positive_color = SIGN_COLORS[["positive"]]
 )
 }
 \arguments{
@@ -61,6 +64,12 @@ theme_dark(
 \item{tooltip_border_color}{Optional Character: Tooltip border color.}
 
 \item{tooltip_color}{Optional Character: Tooltip text color.}
+
+\item{negative_color, neutral_color, positive_color}{Character: Colors for
+negative values, values of neither sign, and positive values, in every
+chart that colors by sign. The defaults, blue, gray and orange, have equal
+perceived lightness, keep at least 3.9:1 contrast on light and dark
+backgrounds, and stay distinguishable under deuteranopia and protanopia.}
 }
 \value{
 \link{Theme}: Theme object.

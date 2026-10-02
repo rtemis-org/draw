@@ -599,7 +599,7 @@ method(draw, ConfusionConfig) <- function(
   ...,
   data = NULL
 ) {
-  built <- compile(option, data = data)
+  built <- compile(option, data = data, theme = theme)
   panels <- length(built@grid) / if (option@show_metrics) 4L else 1L
   cols <- min(option@ncol, panels)
   rows <- ceiling(panels / cols)

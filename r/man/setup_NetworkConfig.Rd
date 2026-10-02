@@ -20,8 +20,8 @@ setup_NetworkConfig(
   edge_opacity = 0.4,
   palette = NULL,
   node_color = rtemis_colors[["teal"]],
-  positive_color = SIGN_COLORS[["positive"]],
-  negative_color = SIGN_COLORS[["negative"]],
+  positive_color = NULL,
+  negative_color = NULL,
   title = NULL,
   dat_path = NULL,
   origin = NULL,
@@ -59,7 +59,8 @@ palette. \code{NULL} uses the theme's.}
 
 \item{node_color}{Character: Node color when not colored by group.}
 
-\item{positive_color, negative_color}{Character: Edge colors by sign.}
+\item{positive_color, negative_color}{Optional Character: Edge colors by
+sign. \code{NULL} uses the theme's sign colors.}
 
 \item{title}{Optional Character: Chart title. Declared here because it is the
 one property every chart type has; \code{palette} is not (four take a \code{colormap}

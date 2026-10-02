@@ -274,7 +274,12 @@ method(resolve, DensityConfig) <- function(config, data = NULL, ...) {
 # `verbosity` is a render target, so it is not a config property: the config path
 # uses the builder's default, exactly as `draw_density()` does when the caller
 # says nothing.
-method(compile, DensityConfig) <- function(config, data = NULL, ...) {
+method(compile, DensityConfig) <- function(
+  config,
+  data = NULL,
+  theme = NULL,
+  ...
+) {
   x <- if (length(config@x) > 1L) {
     setNames(
       lapply(config@x, function(column) config_column(data, column, "x")),

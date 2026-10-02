@@ -111,13 +111,13 @@ override.}
 
 \item{colormap}{Optional Character: Color palette — a vector of 2 or more colors
 defining the continuous color scale from \code{zlim[1]} to \code{zlim[2]}. When \code{NULL}
-(default) a diverging blue-background-orange palette is used when data spans
-zero (with the background color pinned exactly at 0, even for asymmetric
-ranges), otherwise the half of that scale matching the sign of the data:
-blue to background when no value is positive, background to orange when
-no value is negative. Two variants
-(light / dark) are computed automatically and the JS binding selects the
-correct one based on the active theme.}
+(default) a diverging negative-background-positive palette in the theme's
+sign colors is used when data spans zero (with the theme's background
+pinned exactly at 0, even for asymmetric ranges), otherwise the half of
+that scale matching the sign of the data: negative to background when no
+value is positive, background to positive when no value is negative. Two
+variants (light / dark) are computed automatically and the JS binding
+selects the correct one based on the active theme.}
 
 \item{zlim}{Optional Numeric: Length-2 vector \code{c(min, max)} for the color scale.
 Defaults to the observed data range. For correlation matrices, \code{c(-1, 1)} is

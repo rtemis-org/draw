@@ -4,13 +4,19 @@
 \alias{compile}
 \title{Compile a chart config into a render option}
 \usage{
-compile(config, data = NULL, ...)
+compile(config, data = NULL, theme = NULL, ...)
 }
 \arguments{
 \item{config}{\link{ChartConfig}: The chart configuration.}
 
 \item{data}{Optional Data frame or named list: The data to plot. When \code{NULL},
 the config's \code{dat_path} is read instead.}
+
+\item{theme}{Optional \link{Theme}, list, or \code{NA}: The theme the option will be
+drawn with, as in \code{\link[=draw]{draw()}}. Charts that compute colors before the widget
+exists read them from it: sign colors a config leaves unset, and the
+background a color scale fades to. \code{NULL} uses the built-in light and dark
+themes.}
 
 \item{...}{Passed to methods.}
 }

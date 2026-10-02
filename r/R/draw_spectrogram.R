@@ -51,10 +51,18 @@
 # @param n_colors Integer: number of colors to generate.
 # @param reverse Logical: reverse colormap direction.
 # @param zlim Numeric[2]: data range (needed to split diverging colormap).
+# @param theme Optional Theme, list, or NA: supplies the diverging colormap's
+#   sign colors and backgrounds.
 # @return Character vector of hex colors.
 # @keywords internal
 # @noRd
-.spectrogram_palette <- function(colormap, n_colors, reverse, zlim) {
+.spectrogram_palette <- function(
+  colormap,
+  n_colors,
+  reverse,
+  zlim,
+  theme = NULL
+) {
   # viridisLite option letters (viridis() `option` parameter)
   viridis_opts <- c(
     magma = "A",
@@ -87,17 +95,19 @@
       } else {
         zlim %||% c(-1, 1)
       }
+      sign <- theme_sign_colors(theme)
+      bg <- theme_backgrounds(theme)
       cols_light <- diverging_palette(
-        SIGN_COLORS[["negative"]],
-        "#ffffff",
-        SIGN_COLORS[["positive"]],
+        sign[["negative"]],
+        bg[["light"]],
+        sign[["positive"]],
         zlim_sym,
         n = n_colors
       )
       cols_dark <- diverging_palette(
-        SIGN_COLORS[["negative"]],
-        "#181818",
-        SIGN_COLORS[["positive"]],
+        sign[["negative"]],
+        bg[["dark"]],
+        sign[["positive"]],
         zlim_sym,
         n = n_colors
       )
@@ -181,7 +191,8 @@ spectrogram_option <- function(
   xlab = NULL,
   ylab = NULL,
   margins = NULL,
-  verbosity = 1L
+  verbosity = 1L,
+  theme = NULL
 ) {
   # -- 1. Validate scalar arguments ---------------------------------------------
   if (!is.numeric(x) && !is.complex(x)) {
@@ -544,7 +555,13 @@ spectrogram_option <- function(
   }
 
   # -- 10. Palette --------------------------------------------------------------
-  pal <- .spectrogram_palette(colormap, n_colors, colormap_reverse, zlim)
+  pal <- .spectrogram_palette(
+    colormap,
+    n_colors,
+    colormap_reverse,
+    zlim,
+    theme = theme
+  )
   dark_pal <- attr(pal, "dark_variant")
 
   # -- 11. Performance warning for very large spectrograms ---------------------
@@ -733,8 +750,8 @@ spectrogram_option <- function(
 #' @param colormap Character: Color palette. Accepts a \pkg{viridisLite} colormap
 #'   name (`"magma"` (default), `"inferno"`, `"plasma"`,
 #'   `"viridis"`, `"cividis"`, `"mako"`, `"rocket"`, `"turbo"`), `"diverging"`
-#'   for the rtemis blue-background-orange sign scale (suitable for signed data
-#'   such as EEG/MEG amplitudes), or a character vector of >= 2 hex colors for a
+#'   for a negative-background-positive scale in the theme's sign colors
+#'   (suitable for signed data such as EEG/MEG amplitudes), or a character vector of >= 2 hex colors for a
 #'   custom ramp.
 #' @param colormap_reverse Logical: Reverse the colormap direction.
 #' @param n_colors Integer `[2, Inf)`: Number of discrete colors in the
@@ -831,7 +848,8 @@ draw_spectrogram <- function(
     xlab = xlab,
     ylab = ylab,
     margins = margins,
-    verbosity = verbosity
+    verbosity = verbosity,
+    theme = theme
   )
 
   draw(

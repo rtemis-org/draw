@@ -185,6 +185,11 @@ prop_chart_type <- function(type) {
 #' @param config [ChartConfig]: The chart configuration.
 #' @param data Optional Data frame or named list: The data to plot. When `NULL`,
 #'   the config's `dat_path` is read instead.
+#' @param theme Optional [Theme], list, or `NA`: The theme the option will be
+#'   drawn with, as in [draw()]. Charts that compute colors before the widget
+#'   exists read them from it: sign colors a config leaves unset, and the
+#'   background a color scale fades to. `NULL` uses the built-in light and dark
+#'   themes.
 #' @param ... Passed to methods.
 #'
 #' @return Render option object, e.g. [EChartsOption].
@@ -199,7 +204,7 @@ prop_chart_type <- function(type) {
 compile <- new_generic(
   "compile",
   "config",
-  function(config, data = NULL, ...) {
+  function(config, data = NULL, theme = NULL, ...) {
     # Rebinding before S7_dispatch() is what makes "resolved config, real data"
     # an invariant of the generic rather than a convention each method has to
     # remember. `resolve()` is idempotent, so a builder shared with draw() may
@@ -516,7 +521,7 @@ method(draw, ChartConfig) <- function(
   ...,
   data = NULL
 ) {
-  built <- compile(option, data = data)
+  built <- compile(option, data = data, theme = theme)
   meta <- render_meta(option, built)
   # `meta` is the ECharts binding's channel; the Sigma and MapLibre methods have
   # no formal for it. Forwarding an empty one anyway would make draw() an error

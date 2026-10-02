@@ -21,6 +21,10 @@
 #'
 #' @param color Optional Character: Color palette.
 #' @param background_color Optional Character: Chart background color.
+#' @param negative_color,neutral_color,positive_color Optional Character: Colors
+#'   for negative values, values of neither sign, and positive values, in every
+#'   chart that colors by sign. A chart's own color arguments take precedence;
+#'   `NULL` uses the defaults of [theme_light()].
 #' @param text_style Optional [TextStyle]: Global default text style.
 #' @param title Optional Named list: Title overrides.
 #' @param legend Optional Named list: Legend overrides.
@@ -48,6 +52,11 @@ Theme <- S7::new_class(
   properties = list(
     color = color_palette_property(),
     background_color = prop_string(nullable = TRUE),
+    # Read in R by charts that color by sign; they are not ECharts theme keys,
+    # so to_list() leaves them out.
+    negative_color = prop_string(nullable = TRUE),
+    neutral_color = prop_string(nullable = TRUE),
+    positive_color = prop_string(nullable = TRUE),
     text_style = class_or_null_property(TextStyle),
     # Component overrides (plain lists)
     title = S7::new_property(class = S7::class_any, default = NULL),
@@ -170,6 +179,9 @@ build_theme <- function(
   tooltip_bg,
   tooltip_border_color,
   tooltip_color,
+  negative_color,
+  neutral_color,
+  positive_color,
   dark = FALSE
 ) {
   # Resolve font sizes from base
@@ -221,6 +233,9 @@ build_theme <- function(
   Theme(
     color = color,
     background_color = bg_color,
+    negative_color = negative_color,
+    neutral_color = neutral_color,
+    positive_color = positive_color,
     text_style = TextStyle(
       color = fg_color,
       font_family = font_family,
@@ -307,6 +322,11 @@ build_theme <- function(
 #' @param tooltip_bg Optional Character: Tooltip background color.
 #' @param tooltip_border_color Optional Character: Tooltip border color.
 #' @param tooltip_color Optional Character: Tooltip text color.
+#' @param negative_color,neutral_color,positive_color Character: Colors for
+#'   negative values, values of neither sign, and positive values, in every
+#'   chart that colors by sign. The defaults, blue, gray and orange, have equal
+#'   perceived lightness, keep at least 3.9:1 contrast on light and dark
+#'   backgrounds, and stay distinguishable under deuteranopia and protanopia.
 #' @return [Theme]: Theme object.
 #' @export
 #'
@@ -330,7 +350,10 @@ theme_light <- function(
   grid_color = NULL,
   tooltip_bg = NULL,
   tooltip_border_color = NULL,
-  tooltip_color = NULL
+  tooltip_color = NULL,
+  negative_color = SIGN_COLORS[["negative"]],
+  neutral_color = SIGN_COLORS[["neutral"]],
+  positive_color = SIGN_COLORS[["positive"]]
 ) {
   build_theme(
     base_font_size = base_font_size,
@@ -350,7 +373,10 @@ theme_light <- function(
     grid_color = grid_color,
     tooltip_bg = tooltip_bg,
     tooltip_border_color = tooltip_border_color,
-    tooltip_color = tooltip_color
+    tooltip_color = tooltip_color,
+    negative_color = negative_color,
+    neutral_color = neutral_color,
+    positive_color = positive_color
   )
 }
 
@@ -385,7 +411,10 @@ theme_dark <- function(
   grid_color = "rgba(255, 255, 255, 0.1)",
   tooltip_bg = "rgba(20, 20, 20, 0.9)",
   tooltip_border_color = "rgba(255, 255, 255, 0.1)",
-  tooltip_color = NULL
+  tooltip_color = NULL,
+  negative_color = SIGN_COLORS[["negative"]],
+  neutral_color = SIGN_COLORS[["neutral"]],
+  positive_color = SIGN_COLORS[["positive"]]
 ) {
   build_theme(
     base_font_size = base_font_size,
@@ -406,6 +435,9 @@ theme_dark <- function(
     tooltip_bg = tooltip_bg,
     tooltip_border_color = tooltip_border_color,
     tooltip_color = tooltip_color,
+    negative_color = negative_color,
+    neutral_color = neutral_color,
+    positive_color = positive_color,
     dark = TRUE
   )
 }

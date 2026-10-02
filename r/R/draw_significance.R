@@ -181,20 +181,27 @@ reference_label_margin <- function(label) {
 #' place annotations clear of each other.
 #'
 #' @inheritParams significance_data
+#' @param theme Optional [Theme], list, or `NA`: Supplies the sign colors the
+#'   config leaves unset.
 #' @return An [EChartsOption] with portable series data and configuration.
 #' @keywords internal
 #' @noRd
 significance_option <- new_generic("significance_option", "config")
 
-method(significance_option, SignificanceConfig) <- function(config, data) {
+method(significance_option, SignificanceConfig) <- function(
+  config,
+  data,
+  theme = NULL
+) {
   prepared <- significance_data(config, data)
   d <- prepared[["data"]]
   keep <- d[["keep"]]
   volcano <- config@view == "volcano"
+  sign <- theme_sign_colors(theme)
   colors <- c(
-    config@negative_color,
-    config@neutral_color,
-    config@positive_color
+    config@negative_color %||% sign[["negative"]],
+    config@neutral_color %||% sign[["neutral"]],
+    config@positive_color %||% sign[["positive"]]
   )
   groups <- c("Significant low", "Other", "Significant high")
   if (config@x_thresh == 0) {

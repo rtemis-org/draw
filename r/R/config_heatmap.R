@@ -341,8 +341,13 @@ method(resolve, HeatmapConfig) <- function(config, data = NULL, ...) {
 # %% compile.HeatmapConfig ----
 # Returns the option only, which is `compile()`'s contract. The render hints the
 # builder also produces are recomputed by `draw()` -- see the method below.
-method(compile, HeatmapConfig) <- function(config, data = NULL, ...) {
-  heatmap_built(config, data)[["option"]]
+method(compile, HeatmapConfig) <- function(
+  config,
+  data = NULL,
+  theme = NULL,
+  ...
+) {
+  heatmap_built(config, data, theme = theme)[["option"]]
 }
 
 
@@ -362,13 +367,21 @@ method(compile, HeatmapConfig) <- function(config, data = NULL, ...) {
 #' @param data Optional Matrix: The matrix to plot.
 #' @param width,height Optional Numeric or Character: Requested widget size,
 #'   which square-cell sizing solves against.
+#' @param theme Optional [Theme], list, or `NA`: Supplies the sign colors and
+#'   backgrounds the default color scale is built from.
 #'
 #' @return Named list: `option` and `render`.
 #'
 #' @author EDG
 #' @keywords internal
 #' @noRd
-heatmap_built <- function(config, data = NULL, width = NULL, height = NULL) {
+heatmap_built <- function(
+  config,
+  data = NULL,
+  width = NULL,
+  height = NULL,
+  theme = NULL
+) {
   bound <- config_data(config, data)
   config <- resolve(config, data = bound)
   heatmap_option(
@@ -401,7 +414,8 @@ heatmap_built <- function(config, data = NULL, width = NULL, height = NULL) {
     show_colorbar = config@show_colorbar,
     colorbar_orient = config@colorbar_orient,
     title = config@title,
-    margins = config_margins(config)
+    margins = config_margins(config),
+    theme = theme
   )
 } # /rtemis.draw::heatmap_built
 
@@ -421,7 +435,13 @@ method(draw, HeatmapConfig) <- function(
   ...,
   data = NULL
 ) {
-  built <- heatmap_built(option, data, width = width, height = height)
+  built <- heatmap_built(
+    option,
+    data,
+    width = width,
+    height = height,
+    theme = theme
+  )
   draw(
     built[["option"]],
     theme = theme,

@@ -242,7 +242,7 @@ bar_value_label <- function(config) {
 # %% compile.BarConfig ----
 # One bound column becomes a single series; several become a named list, one per
 # column, which is the shape `bar_option()` already takes from `draw_bar()`.
-method(compile, BarConfig) <- function(config, data = NULL, ...) {
+method(compile, BarConfig) <- function(config, data = NULL, theme = NULL, ...) {
   x <- config_column(data, config@x, "x")
   if (is.null(x) || is.null(config@y)) {
     abort(

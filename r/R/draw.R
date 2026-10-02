@@ -2826,7 +2826,8 @@ heatmap_option <- function(
   col_colors = NULL,
   show_notes = FALSE,
   row_cut = NULL,
-  col_cut = NULL
+  col_cut = NULL,
+  theme = NULL
 ) {
   input <- heatmap_input(
     x,
@@ -2971,38 +2972,40 @@ heatmap_option <- function(
   color_auto <- is.null(colormap)
 
   if (color_auto) {
-    bg_light <- "#ffffff"
-    bg_dark <- "#181818" # default bg from theme_dark()
+    sign <- theme_sign_colors(theme)
+    bg <- theme_backgrounds(theme)
+    bg_light <- bg[["light"]]
+    bg_dark <- bg[["dark"]]
 
     if (zlim[1L] < 0 && zlim[2L] > 0) {
       # Diverging: negative -> bg -> positive, midpoint pinned to 0
       color_light <- diverging_palette(
-        SIGN_COLORS[["negative"]],
+        sign[["negative"]],
         bg_light,
-        SIGN_COLORS[["positive"]],
+        sign[["positive"]],
         zlim
       )
       color_dark <- diverging_palette(
-        SIGN_COLORS[["negative"]],
+        sign[["negative"]],
         bg_dark,
-        SIGN_COLORS[["positive"]],
+        sign[["positive"]],
         zlim
       )
     } else if (zlim[2L] <= 0) {
       # All non-positive: negative -> bg, the diverging scale's lower half
       color_light <- grDevices::colorRampPalette(
-        c(SIGN_COLORS[["negative"]], bg_light)
+        c(sign[["negative"]], bg_light)
       )(101L)
       color_dark <- grDevices::colorRampPalette(
-        c(SIGN_COLORS[["negative"]], bg_dark)
+        c(sign[["negative"]], bg_dark)
       )(101L)
     } else {
       # All non-negative: bg -> positive, the diverging scale's upper half
       color_light <- grDevices::colorRampPalette(
-        c(bg_light, SIGN_COLORS[["positive"]])
+        c(bg_light, sign[["positive"]])
       )(101L)
       color_dark <- grDevices::colorRampPalette(
-        c(bg_dark, SIGN_COLORS[["positive"]])
+        c(bg_dark, sign[["positive"]])
       )(101L)
     }
 
@@ -3674,13 +3677,13 @@ heatmap_option <- function(
 #'   override.
 #' @param colormap Optional Character: Color palette — a vector of 2 or more colors
 #'   defining the continuous color scale from `zlim[1]` to `zlim[2]`. When `NULL`
-#'   (default) a diverging blue-background-orange palette is used when data spans
-#'   zero (with the background color pinned exactly at 0, even for asymmetric
-#'   ranges), otherwise the half of that scale matching the sign of the data:
-#'   blue to background when no value is positive, background to orange when
-#'   no value is negative. Two variants
-#'   (light / dark) are computed automatically and the JS binding selects the
-#'   correct one based on the active theme.
+#'   (default) a diverging negative-background-positive palette in the theme's
+#'   sign colors is used when data spans zero (with the theme's background
+#'   pinned exactly at 0, even for asymmetric ranges), otherwise the half of
+#'   that scale matching the sign of the data: negative to background when no
+#'   value is positive, background to positive when no value is negative. Two
+#'   variants (light / dark) are computed automatically and the JS binding
+#'   selects the correct one based on the active theme.
 #' @param zlim Optional Numeric: Length-2 vector `c(min, max)` for the color scale.
 #'   Defaults to the observed data range. For correlation matrices, `c(-1, 1)` is
 #'   recommended.
@@ -3802,7 +3805,8 @@ draw_heatmap <- function(
     col_colors = col_colors,
     show_notes = show_notes,
     row_cut = row_cut,
-    col_cut = col_cut
+    col_cut = col_cut,
+    theme = theme
   )
 
   draw(

@@ -215,7 +215,12 @@ method(resolve, GanttConfig) <- function(config, data = NULL, ...) {
 # The builder expects the conventional column names, so the bound columns are
 # renamed into them. The optional roles keep their own names, since the builder
 # takes those as column names rather than as values.
-method(compile, GanttConfig) <- function(config, data = NULL, ...) {
+method(compile, GanttConfig) <- function(
+  config,
+  data = NULL,
+  theme = NULL,
+  ...
+) {
   tasks <- data.frame(
     label = config_column(data, config@label, "label"),
     start = config_column(data, config@start, "start"),

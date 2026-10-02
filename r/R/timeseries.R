@@ -413,7 +413,12 @@ method(resolve, TimeSeriesConfig) <- function(config, data = NULL, ...) {
   )
 }
 
-method(compile, TimeSeriesConfig) <- function(config, data = NULL, ...) {
+method(compile, TimeSeriesConfig) <- function(
+  config,
+  data = NULL,
+  theme = NULL,
+  ...
+) {
   values <- lapply(config@y, function(name) config_column(data, name, "y"))
   names(values) <- config@y
   if (!length(values)) {

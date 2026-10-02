@@ -214,7 +214,12 @@ method(resolve, ConfusionConfig) <- function(config, data = NULL, ...) {
   config_derive(config, list(classes = labels))
 }
 
-method(compile, ConfusionConfig) <- function(config, data = NULL, ...) {
+method(compile, ConfusionConfig) <- function(
+  config,
+  data = NULL,
+  theme = NULL,
+  ...
+) {
   check_dots_empty(...)
   confusion_option(config, data)
 }

@@ -361,7 +361,12 @@ method(resolve, LineConfig) <- function(config, data = NULL, ...) {
 
 
 # %% compile.LineConfig ----
-method(compile, LineConfig) <- function(config, data = NULL, ...) {
+method(compile, LineConfig) <- function(
+  config,
+  data = NULL,
+  theme = NULL,
+  ...
+) {
   x <- config_column(data, config@x, "x")
   if (is.null(x) || is.null(config@y)) {
     abort(

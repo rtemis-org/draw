@@ -172,7 +172,12 @@ method(resolve, SankeyConfig) <- function(config, data = NULL, ...) {
 # The builder expects the conventional column names, so the bound columns are
 # renamed into them here. That is what lets a table calling them anything else
 # be plotted without the caller reshaping it first.
-method(compile, SankeyConfig) <- function(config, data = NULL, ...) {
+method(compile, SankeyConfig) <- function(
+  config,
+  data = NULL,
+  theme = NULL,
+  ...
+) {
   links <- data.frame(
     source = config_column(data, config@source, "source"),
     target = config_column(data, config@target, "target"),

@@ -7,6 +7,9 @@
 Theme(
   color = NULL,
   background_color = NULL,
+  negative_color = NULL,
+  neutral_color = NULL,
+  positive_color = NULL,
   text_style = NULL,
   title = NULL,
   legend = NULL,
@@ -26,6 +29,11 @@ Theme(
 \item{color}{Optional Character: Color palette.}
 
 \item{background_color}{Optional Character: Chart background color.}
+
+\item{negative_color, neutral_color, positive_color}{Optional Character: Colors
+for negative values, values of neither sign, and positive values, in every
+chart that colors by sign. A chart's own color arguments take precedence;
+\code{NULL} uses the defaults of \code{\link[=theme_light]{theme_light()}}.}
 
 \item{text_style}{Optional \link{TextStyle}: Global default text style.}
 

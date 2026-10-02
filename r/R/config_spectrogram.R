@@ -277,13 +277,15 @@ method(resolve, SpectrogramConfig) <- function(config, data = NULL, ...) {
 #'
 #' @param config [SpectrogramConfig]: The chart configuration.
 #' @param data Optional Numeric or Matrix: Signal or spectrogram matrix.
+#' @param theme Optional [Theme], list, or `NA`: Supplies the diverging
+#'   colormap's sign colors and backgrounds.
 #'
 #' @return Named list: `option` and `render`.
 #'
 #' @author EDG
 #' @keywords internal
 #' @noRd
-spectrogram_built <- function(config, data = NULL) {
+spectrogram_built <- function(config, data = NULL, theme = NULL) {
   bound <- config_data(config, data)
   config <- resolve(config, data = bound)
   spectrogram_option(
@@ -309,14 +311,20 @@ spectrogram_built <- function(config, data = NULL) {
     title = config@title,
     xlab = config@xlab,
     ylab = config@ylab,
-    margins = config_margins(config)
+    margins = config_margins(config),
+    theme = theme
   )
 } # /rtemis.draw::spectrogram_built
 
 
 # %% compile.SpectrogramConfig ----
-method(compile, SpectrogramConfig) <- function(config, data = NULL, ...) {
-  spectrogram_built(config, data)[["option"]]
+method(compile, SpectrogramConfig) <- function(
+  config,
+  data = NULL,
+  theme = NULL,
+  ...
+) {
+  spectrogram_built(config, data, theme = theme)[["option"]]
 }
 
 
@@ -334,7 +342,7 @@ method(draw, SpectrogramConfig) <- function(
   ...,
   data = NULL
 ) {
-  built <- spectrogram_built(option, data)
+  built <- spectrogram_built(option, data, theme = theme)
   draw(
     built[["option"]],
     theme = theme,
