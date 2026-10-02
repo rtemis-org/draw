@@ -1,7 +1,7 @@
 Package: rtemis.draw
 Title: Schema-Driven Interactive Charts, Network Graphs, and Maps
-Version: 0.5.3
-Date: 2026-09-28
+Version: 0.5.4
+Date: 2026-10-02
 Authors@R:
     person(given = "E.D.", family = "Gennatas", role = c("aut", "cre", "cph"),
            email = "gennatas@gmail.com",
