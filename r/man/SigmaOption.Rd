@@ -18,8 +18,8 @@ SigmaOption(
   blend_edges = FALSE,
   palette = as.character(rtemis_colors),
   node_color = rtemis_colors[["teal"]],
-  positive_color = rtemis_colors[["teal"]],
-  negative_color = "#ff9e1f",
+  positive_color = "#C55E28",
+  negative_color = "#2D83D3",
   title = NULL
 )
 }

@@ -42,7 +42,9 @@ for (const item of input.charts) {
           near(mark.shape.x, left[0]); near(mark.shape.y, Math.min(left[1],right[1]));
           near(mark.shape.width, right[0] - left[0]);
           near(mark.shape.height, Math.abs(right[1] - left[1]));
-          assert.equal(mark.style.opacity, .25);
+          assert.equal(mark.style.fillOpacity, settings.fillAlpha);
+          assert.equal(mark.style.strokeOpacity, settings.borderAlpha);
+          assert.equal(mark.style.stroke, mark.style.fill, 'Border color differs from fill');
           assert.ok(left[0] >= grid.x - 1e-7 && right[0] <= grid.x + grid.width + 1e-7, 'Bin clipped horizontally');
           assert.ok(left[1] >= grid.y - 1e-7 && right[1] <= grid.y + grid.height + 1e-7, 'Bin clipped vertically');
         }

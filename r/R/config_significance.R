@@ -146,15 +146,15 @@ SignificanceConfig <- new_class(
         description = "Show the nonempty significance groups."
       ),
       negative_color = prop_string(
-        "#BE2E5F",
+        SIGN_COLORS[["negative"]],
         description = "Color for significant effects below x_thresh."
       ),
       neutral_color = prop_string(
-        "#808080",
+        SIGN_COLORS[["neutral"]],
         description = "Color for other results, including effects equal to x_thresh."
       ),
       positive_color = prop_string(
-        "#0F6A66",
+        SIGN_COLORS[["positive"]],
         description = "Color for significant effects above x_thresh."
       ),
       alpha = prop_float(0.8, min = 0, max = 1, description = "Mark opacity."),
@@ -282,9 +282,9 @@ setup_SignificanceConfig <- function(
   annotate_n = 7L,
   reference = TRUE,
   legend = TRUE,
-  negative_color = "#BE2E5F",
-  neutral_color = "#808080",
-  positive_color = "#0F6A66",
+  negative_color = SIGN_COLORS[["negative"]],
+  neutral_color = SIGN_COLORS[["neutral"]],
+  positive_color = SIGN_COLORS[["positive"]],
   alpha = 0.8,
   point_size = 8,
   xlab = NULL,

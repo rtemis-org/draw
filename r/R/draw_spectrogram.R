@@ -88,16 +88,16 @@
         zlim %||% c(-1, 1)
       }
       cols_light <- diverging_palette(
-        rtemis_colors[["teal"]],
+        SIGN_COLORS[["negative"]],
         "#ffffff",
-        rtemis_colors[["orange"]],
+        SIGN_COLORS[["positive"]],
         zlim_sym,
         n = n_colors
       )
       cols_dark <- diverging_palette(
-        rtemis_colors[["teal"]],
+        SIGN_COLORS[["negative"]],
         "#181818",
-        rtemis_colors[["orange"]],
+        SIGN_COLORS[["positive"]],
         zlim_sym,
         n = n_colors
       )
@@ -733,7 +733,7 @@ spectrogram_option <- function(
 #' @param colormap Character: Color palette. Accepts a \pkg{viridisLite} colormap
 #'   name (`"magma"` (default), `"inferno"`, `"plasma"`,
 #'   `"viridis"`, `"cividis"`, `"mako"`, `"rocket"`, `"turbo"`), `"diverging"`
-#'   for the rtemis teal-background-orange scale (suitable for signed data
+#'   for the rtemis blue-background-orange sign scale (suitable for signed data
 #'   such as EEG/MEG amplitudes), or a character vector of >= 2 hex colors for a
 #'   custom ramp.
 #' @param colormap_reverse Logical: Reverse the colormap direction.

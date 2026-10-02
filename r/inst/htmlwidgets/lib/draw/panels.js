@@ -109,8 +109,15 @@
   }
   // Native label layout knows each cell's final size, after grid fitting and
   // resizing. Keep literal full notes in data, and truncate only their labels.
+  // Series flagged rtemisRepelLabels share one placement state per chart, so
+  // labels of different series avoid each other too.
   function prepareLabels(payload) {
+    let repel = null;
     (payload.option.series || []).forEach(series => {
+      if (series.rtemisRepelLabels) {
+        repel = repel || repelLabels();
+        series.labelLayout = repel;
+      }
       if (!series.rtemisCellNotes) return;
       series.label = {...series.label, overflow: 'truncate', ellipsis: '...'};
       series.labelLayout = params => ({
@@ -119,6 +126,51 @@
         hideOverlap: true
       });
     });
+  }
+  // ECharts moves only detached labels (label/LabelManager.ts): under a static
+  // labelLayout a scatter label stays attached to its symbol, and moveOverlap
+  // has no effect. Returning a position detaches the label, so placement
+  // happens here. Each label takes the first candidate around its point that
+  // clears every label and labeled point placed before it in the same layout
+  // pass, and keeps its default spot when none does. ECharts calls the callback once per label, in
+  // order, on every layout pass; a repeated label marks the start of a new
+  // synchronous pass (export fitting, resize), and a microtask clears state
+  // between asynchronous ones such as a legend toggle.
+  function repelLabels() {
+    let placed = [];
+    let seen = new Set();
+    let clearQueued = false;
+    const clear = () => { placed = []; seen = new Set(); };
+    const overlaps = (a, b) => a.x < b.x + b.width && b.x < a.x + a.width &&
+      a.y < b.y + b.height && b.y < a.y + a.height;
+    return params => {
+      const key = `${params.seriesIndex}:${params.dataIndex}`;
+      if (seen.has(key)) clear();
+      seen.add(key);
+      if (!clearQueued) {
+        clearQueued = true;
+        Promise.resolve().then(() => { clear(); clearQueued = false; });
+      }
+      const host = params.rect, label = params.labelRect;
+      const w = label.width, h = label.height, gap = 2, step = h + gap;
+      const cx = host.x + host.width / 2, cy = host.y + host.height / 2;
+      const above = host.y - gap - h, below = host.y + host.height + gap;
+      const right = host.x + host.width + gap, left = host.x - gap - w;
+      const candidates = [{x: label.x, y: label.y},
+        {x: cx - w / 2, y: below}, {x: right, y: cy - h / 2}, {x: left, y: cy - h / 2}];
+      for (let k = 1; k <= 6; k++) {
+        candidates.push({x: cx - w / 2, y: above - k * step}, {x: cx - w / 2, y: below + k * step},
+          {x: right, y: cy - h / 2 - k * step}, {x: left, y: cy - h / 2 - k * step},
+          {x: right, y: cy - h / 2 + k * step}, {x: left, y: cy - h / 2 + k * step});
+      }
+      // Later labels must not cover this label's point either.
+      placed.push({x: host.x, y: host.y, width: host.width, height: host.height});
+      const fits = c => c.x >= 0 && c.y >= 0 &&
+        placed.every(p => !overlaps({x: c.x, y: c.y, width: w, height: h}, p));
+      const spot = candidates.find(fits) || candidates[0];
+      placed.push({x: spot.x, y: spot.y, width: w, height: h});
+      return {x: spot.x, y: spot.y, align: 'left', verticalAlign: 'top'};
+    };
   }
   // Resolve the precomputed heatmap/spectrogram palettes from the actual theme,
   // including explicit overrides and offline SVG's resolved light default.

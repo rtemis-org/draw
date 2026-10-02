@@ -29,7 +29,8 @@ draw_histogram(
   bandwidth = NULL,
   kernel = "gaussian",
   adjust = 1,
-  fill_alpha = 0.25,
+  fill_alpha = NULL,
+  border_alpha = 1,
   na_rm = TRUE,
   verbosity = 1L,
   mode = "overlap",
@@ -108,7 +109,12 @@ bandwidth in measurement units, overriding the selector.}
 
 \item{adjust}{Numeric \verb{(0, Inf)}: Finite bandwidth multiplier.}
 
-\item{fill_alpha}{Numeric \verb{[0, 1]}: Distribution fill opacity.}
+\item{fill_alpha}{Optional Numeric \verb{[0, 1]}: Bar fill opacity. \code{NULL} uses
+0.5 when overlaid groups overlap (\code{bar_mode = "overlay"} with more than
+one nonempty group outside ridge mode) and 0.75 otherwise.}
+
+\item{border_alpha}{Numeric \verb{[0, 1]}: Opacity of the bar borders, drawn in
+the series color. 0 draws no border.}
 
 \item{na_rm}{Logical: Whether to remove \code{NA} values before
 computing densities.}

@@ -2564,7 +2564,12 @@ draw_density <- function(
 #'   Stacks accumulate positive and negative values separately. Group/stack
 #'   layouts require mode = "overlap" and density = FALSE.
 #' @param density Logical: Overlay a kernel density in histogram units.
-#' @inheritParams draw_density n bw bandwidth kernel adjust fill_alpha na_rm verbosity
+#' @param fill_alpha Optional Numeric `[0, 1]`: Bar fill opacity. `NULL` uses
+#'   0.5 when overlaid groups overlap (`bar_mode = "overlay"` with more than
+#'   one nonempty group outside ridge mode) and 0.75 otherwise.
+#' @param border_alpha Numeric `[0, 1]`: Opacity of the bar borders, drawn in
+#'   the series color. 0 draws no border.
+#' @inheritParams draw_density n bw bandwidth kernel adjust na_rm verbosity
 #' @param palette Optional Character: Series colors, overriding the theme
 #'   palette for this chart. `NULL` uses the theme's.
 #' @param xlab Optional Character: X-axis title.
@@ -2612,7 +2617,8 @@ draw_histogram <- function(
   bandwidth = NULL,
   kernel = "gaussian",
   adjust = 1,
-  fill_alpha = .25,
+  fill_alpha = NULL,
+  border_alpha = 1,
   na_rm = TRUE,
   verbosity = 1L,
   mode = "overlap",
@@ -2639,6 +2645,7 @@ draw_histogram <- function(
     kernel = kernel,
     adjust = adjust,
     fill_alpha = fill_alpha,
+    border_alpha = border_alpha,
     na_rm = na_rm,
     verbosity = verbosity,
     mode = mode,
@@ -2968,34 +2975,34 @@ heatmap_option <- function(
     bg_dark <- "#181818" # default bg from theme_dark()
 
     if (zlim[1L] < 0 && zlim[2L] > 0) {
-      # Diverging: teal(neg) -> bg -> orange(pos), midpoint pinned to 0
+      # Diverging: negative -> bg -> positive, midpoint pinned to 0
       color_light <- diverging_palette(
-        rtemis_colors[["teal"]],
+        SIGN_COLORS[["negative"]],
         bg_light,
-        rtemis_colors[["orange"]],
+        SIGN_COLORS[["positive"]],
         zlim
       )
       color_dark <- diverging_palette(
-        rtemis_colors[["teal"]],
+        SIGN_COLORS[["negative"]],
         bg_dark,
-        rtemis_colors[["orange"]],
+        SIGN_COLORS[["positive"]],
         zlim
       )
     } else if (zlim[2L] <= 0) {
-      # All non-positive: orange -> bg
+      # All non-positive: negative -> bg, the diverging scale's lower half
       color_light <- grDevices::colorRampPalette(
-        c(rtemis_colors[["orange"]], bg_light)
+        c(SIGN_COLORS[["negative"]], bg_light)
       )(101L)
       color_dark <- grDevices::colorRampPalette(
-        c(rtemis_colors[["orange"]], bg_dark)
+        c(SIGN_COLORS[["negative"]], bg_dark)
       )(101L)
     } else {
-      # All non-negative: bg -> teal
+      # All non-negative: bg -> positive, the diverging scale's upper half
       color_light <- grDevices::colorRampPalette(
-        c(bg_light, rtemis_colors[["teal"]])
+        c(bg_light, SIGN_COLORS[["positive"]])
       )(101L)
       color_dark <- grDevices::colorRampPalette(
-        c(bg_dark, rtemis_colors[["teal"]])
+        c(bg_dark, SIGN_COLORS[["positive"]])
       )(101L)
     }
 
@@ -3667,9 +3674,11 @@ heatmap_option <- function(
 #'   override.
 #' @param colormap Optional Character: Color palette — a vector of 2 or more colors
 #'   defining the continuous color scale from `zlim[1]` to `zlim[2]`. When `NULL`
-#'   (default) a diverging teal–background–orange palette is used when data spans
+#'   (default) a diverging blue-background-orange palette is used when data spans
 #'   zero (with the background color pinned exactly at 0, even for asymmetric
-#'   ranges), otherwise a sequential single-hue palette is used. Two variants
+#'   ranges), otherwise the half of that scale matching the sign of the data:
+#'   blue to background when no value is positive, background to orange when
+#'   no value is negative. Two variants
 #'   (light / dark) are computed automatically and the JS binding selects the
 #'   correct one based on the active theme.
 #' @param zlim Optional Numeric: Length-2 vector `c(min, max)` for the color scale.

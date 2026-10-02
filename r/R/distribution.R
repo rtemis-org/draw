@@ -259,6 +259,29 @@ method(histogram_heights, class_numeric) <- function(
   )
 }
 
+#' Default histogram bar opacity
+#'
+#' Bars are more translucent where they can overlap: overlaid bars of more
+#' than one nonempty sample. Dodged, stacked, ridge and single-sample bars
+#' never cover one another and are drawn more solidly.
+#'
+#' @param samples List: Samples as returned by `distribution_samples()`.
+#' @param bar_mode Character \{"overlay", "group", "stack"\}: Histogram group
+#'   layout.
+#' @param mode Character \{"overlap", "ridge"\}: Distribution layout.
+#' @return Numeric scalar: 0.5 when bars overlap, 0.75 otherwise.
+#'
+#' @author EDG
+#' @keywords internal
+#' @noRd
+histogram_fill_alpha <- function(samples, bar_mode, mode) {
+  overlap <- bar_mode == "overlay" &&
+    mode == "overlap" &&
+    sum(lengths(samples) > 0L) > 1L
+  if (overlap) 0.5 else 0.75
+} # /rtemis.draw::histogram_fill_alpha
+
+
 #' Build numeric-axis histogram bins and optional density curves
 #' @inheritParams draw_histogram
 #' @return EChartsOption: Native rectangles and optional density lines.
@@ -283,7 +306,8 @@ method(histogram_option, class_any) <- function(
   bandwidth = NULL,
   kernel = "gaussian",
   adjust = 1,
-  fill_alpha = .25,
+  fill_alpha = NULL,
+  border_alpha = 1,
   na_rm = TRUE,
   verbosity = 1L,
   mode = "overlap",
@@ -307,12 +331,15 @@ method(histogram_option, class_any) <- function(
     kernel = kernel,
     adjust = adjust,
     fill_alpha = fill_alpha,
+    border_alpha = border_alpha,
     na_rm = na_rm
   )
   samples <- distribution_order(
     distribution_samples(x, group, na_rm, verbosity),
     order
   )
+  fill_alpha <- config@fill_alpha %||%
+    histogram_fill_alpha(samples, bar_mode, mode)
   values <- unlist(samples, use.names = FALSE)
   edges <- config@bin_edges
   if (
@@ -392,7 +419,10 @@ method(histogram_option, class_any) <- function(
           list(0L, 1L, 2L, 3L)
         }
       ),
-      itemPayload = list(fillAlpha = fill_alpha),
+      itemPayload = list(
+        fillAlpha = fill_alpha,
+        borderAlpha = config@border_alpha
+      ),
       data = Map(
         function(lo, hi, height, count) list(lo, hi, height, count),
         head(edges, -1L),
@@ -442,6 +472,7 @@ method(histogram_option, class_any) <- function(
   for (i in bar_indices) {
     series[[i]][["itemPayload"]] <- list(
       fillAlpha = fill_alpha,
+      borderAlpha = config@border_alpha,
       mode = bar_mode,
       seriesIndices = as.list(bar_indices - 1L),
       heights = lapply(height_rows, as.list)

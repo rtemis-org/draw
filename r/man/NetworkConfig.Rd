@@ -24,8 +24,8 @@ NetworkConfig(
   edge_opacity = 0.4,
   palette = NULL,
   node_color = "#6CA3A0",
-  positive_color = "#6CA3A0",
-  negative_color = "#ff9e1f"
+  positive_color = "#C55E28",
+  negative_color = "#2D83D3"
 )
 }
 \arguments{

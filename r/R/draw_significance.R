@@ -157,10 +157,28 @@ method(significance_data, SignificanceConfig) <- function(config, data) {
 }
 
 
+#' Right margin that holds the significance threshold label
+#'
+#' The threshold label sits past the grid's right edge, so the margin must fit
+#' it. ECharts places a reference-line label 5 px from the line end in 12 px
+#' sans-serif; 0.6 em per character overestimates its glyphs, so the estimate
+#' errs toward spare space rather than clipping.
+#'
+#' @param label Character: Threshold label text.
+#' @return Integer: Right margin in pixels, at least the 36 px default.
+#' @keywords internal
+#' @noRd
+reference_label_margin <- function(label) {
+  max(36L, as.integer(ceiling(nchar(label) * 12 * 0.6)) + 5L + 8L)
+}
+
+
 #' Compile materialized significance marks to ECharts
 #'
 #' Uses native scatter/bar data, labels, and reference lines. No JavaScript
-#' callback is needed for visible marks or tooltip values.
+#' callback is needed for visible marks or tooltip values. Volcano series carry
+#' `rtemisRepelLabels`, which the shared browser/SVG label layout reads to
+#' place annotations clear of each other.
 #'
 #' @inheritParams significance_data
 #' @return An [EChartsOption] with portable series data and configuration.
@@ -244,7 +262,9 @@ method(significance_option, SignificanceConfig) <- function(config, data) {
     ))
     s[["encode"]] <- list(x = 0L, y = 1L, tooltip = as.list(2:4))
     if (volcano) {
-      s[["labelLayout"]] <- list(moveOverlap = "shiftY", hideOverlap = FALSE)
+      # ECharts' own moveOverlap cannot move labels attached to scatter
+      # symbols; the shared label layout places flagged series' labels.
+      s[["rtemisRepelLabels"]] <- TRUE
       s[["labelLine"]] <- drop_nulls(list(
         show = TRUE,
         lineStyle = if (!is.null(colors[[group]])) {
@@ -260,12 +280,14 @@ method(significance_option, SignificanceConfig) <- function(config, data) {
     }
     s
   })
+  threshold_label <- paste0("p < ", format(config@p_thresh, trim = TRUE))
   if (config@reference) {
     refs <- list(list(
       yAxis = prepared[["threshold"]],
       label = list(
-        formatter = paste0("p < ", format(config@p_thresh, trim = TRUE)),
-        position = "insideEndTop"
+        formatter = threshold_label,
+        # Outside the grid's right edge, where no mark can sit under it.
+        position = "end"
       )
     ))
     if (volcano) {
@@ -403,7 +425,8 @@ method(significance_option, SignificanceConfig) <- function(config, data) {
     ),
     grid = Grid(
       left = config@margin_left %||% 60L,
-      right = config@margin_right %||% 36L,
+      right = config@margin_right %||%
+        if (config@reference) reference_label_margin(threshold_label) else 36L,
       top = config@margin_top %||% if (length(notes)) 70L else 42L,
       bottom = config@margin_bottom %||% if (config@legend) 68L else 40L
     ),

@@ -274,11 +274,11 @@ SigmaOption <- S7::new_class(
     ),
     positive_color = S7::new_property(
       S7::class_character,
-      default = quote(rtemis_colors[["teal"]])
+      default = SIGN_COLORS[["positive"]]
     ),
     negative_color = S7::new_property(
       S7::class_character,
-      default = "#ff9e1f"
+      default = SIGN_COLORS[["negative"]]
     ),
     title = prop_string(nullable = TRUE)
   )
@@ -583,8 +583,8 @@ graph_option <- function(
   blend_edges = FALSE,
   palette = palette_colors(rtemis_colors),
   node_color = rtemis_colors[["teal"]],
-  positive_color = rtemis_colors[["teal"]],
-  negative_color = "#ff9e1f",
+  positive_color = SIGN_COLORS[["positive"]],
+  negative_color = SIGN_COLORS[["negative"]],
   title = NULL
 ) {
   layout <- match.arg(layout, c("force", "circular", "circlepack", "random"))
@@ -674,8 +674,8 @@ draw_graph <- function(
   blend_edges = FALSE,
   palette = palette_colors(rtemis_colors),
   node_color = rtemis_colors[["teal"]],
-  positive_color = rtemis_colors[["teal"]],
-  negative_color = "#ff9e1f",
+  positive_color = SIGN_COLORS[["positive"]],
+  negative_color = SIGN_COLORS[["negative"]],
   title = NULL,
   theme = NULL,
   width = NULL,
@@ -768,8 +768,8 @@ draw_network <- function(
   blend_edges = FALSE,
   palette = palette_colors(rtemis_colors),
   node_color = rtemis_colors[["teal"]],
-  positive_color = rtemis_colors[["teal"]],
-  negative_color = "#ff9e1f",
+  positive_color = SIGN_COLORS[["positive"]],
+  negative_color = SIGN_COLORS[["negative"]],
   title = NULL,
   theme = NULL,
   width = NULL,

@@ -284,12 +284,90 @@ test_that("functional and config density controls and numeric conveniences round
     "bandwidth",
     "kernel",
     "adjust",
-    "fill_alpha",
     "na_rm"
   )) {
     expect_identical(hist_schema[[field]], density_schema[[field]])
   }
   expect_equal(hist_schema[["bin_edges"]][["minItems"]], 2L)
+  # Bar opacity is the histogram's own: unset resolves from the data.
+  expect_identical(
+    hist_schema[["fill_alpha"]][["type"]],
+    c("number", "null")
+  )
+})
+
+
+test_that("histogram bars are more translucent where overlaid groups overlap", {
+  payload <- function(...) {
+    series <- to_list(histogram_option(...))[["series"]]
+    bars <- Filter(function(s) identical(s[["type"]], "custom"), series)
+    lapply(bars, `[[`, "itemPayload")
+  }
+  bar_alpha <- function(...) {
+    unique(vapply(payload(...), function(p) p[["fillAlpha"]], 1))
+  }
+  two <- list(A = c(1, 2, 2, 3), B = c(2, 3, 3, 4))
+  expect_identical(bar_alpha(c(1, 2, 2, 3)), 0.75)
+  expect_identical(bar_alpha(two), 0.5)
+  expect_identical(bar_alpha(two, bar_mode = "group"), 0.75)
+  expect_identical(bar_alpha(two, bar_mode = "stack"), 0.75)
+  expect_identical(bar_alpha(two, mode = "ridge"), 0.75)
+  # An empty sample draws no bars, so it cannot overlap.
+  expect_identical(
+    bar_alpha(list(A = c(1, 2, 2, 3), B = numeric()), verbosity = 0L),
+    0.75
+  )
+  expect_identical(bar_alpha(two, fill_alpha = 0.2), 0.2)
+  expect_identical(bar_alpha(c(1, 2, 2, 3), fill_alpha = 1), 1)
+  expect_error(setup_HistogramConfig(fill_alpha = 2))
+})
+
+
+test_that("histogram bar borders are drawn at border_alpha", {
+  border_alpha <- function(...) {
+    series <- to_list(histogram_option(...))[["series"]]
+    bars <- Filter(function(s) identical(s[["type"]], "custom"), series)
+    unique(vapply(bars, function(s) s[["itemPayload"]][["borderAlpha"]], 1))
+  }
+  two <- list(A = c(1, 2, 2, 3), B = c(2, 3, 3, 4))
+  expect_identical(border_alpha(two), 1)
+  expect_identical(border_alpha(two, border_alpha = 0), 0)
+  expect_identical(border_alpha(two, bar_mode = "stack", border_alpha = .4), .4)
+  expect_identical(setup_HistogramConfig()@border_alpha, 1)
+  expect_error(setup_HistogramConfig(border_alpha = -1))
+  expect_error(setup_HistogramConfig(border_alpha = NULL))
+  cfg <- setup_HistogramConfig(x = "mpg", border_alpha = .3)
+  path <- tempfile(fileext = ".json")
+  on.exit(unlink(path), add = TRUE)
+  write_chart_config(cfg, path)
+  expect_identical(read_chart_config(path)@border_alpha, .3)
+})
+
+
+test_that("resolving a histogram config records the bar opacity drawn", {
+  one <- resolve(setup_HistogramConfig(x = "mpg"), data = mtcars)
+  expect_identical(one@fill_alpha, 0.75)
+  grouped <- resolve(
+    setup_HistogramConfig(x = "mpg", group = "am"),
+    data = mtcars
+  )
+  expect_identical(grouped@fill_alpha, 0.5)
+  dodged <- resolve(
+    setup_HistogramConfig(x = "mpg", group = "am", bar_mode = "group"),
+    data = mtcars
+  )
+  expect_identical(dodged@fill_alpha, 0.75)
+  columns <- resolve(
+    setup_HistogramConfig(x = c("mpg", "qsec")),
+    data = mtcars
+  )
+  expect_identical(columns@fill_alpha, 0.5)
+  explicit <- resolve(
+    setup_HistogramConfig(x = "mpg", group = "am", fill_alpha = 0.3),
+    data = mtcars
+  )
+  expect_identical(explicit@fill_alpha, 0.3)
+  expect_null(resolve(setup_HistogramConfig())@fill_alpha)
 })
 
 test_that("distribution tooltips retain the shared numeric formatting", {

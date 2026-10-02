@@ -84,7 +84,10 @@ test_that("group and annotation semantics handle boundaries, ties, and missing g
   s <- w[["x"]][["option"]][["series"]]
   expect_length(s, 2L)
   expect_identical(s[[1L]][["name"]], "Significant positive")
-  expect_identical(s[[1L]][["itemStyle"]][["color"]], "#0F6A66")
+  expect_identical(
+    s[[1L]][["itemStyle"]][["color"]],
+    SIGN_COLORS[["positive"]]
+  )
   expect_null(s[[2L]][["name"]])
   expect_length(s[[2L]][["markLine"]][["data"]], 2L)
 })
@@ -187,7 +190,7 @@ test_that("significance SVGs contain marks, annotations, thresholds, and zero-ca
       value = TRUE
     )
     expect_length(marks, if (view == "volcano") 3L else 4L)
-    for (color in c("#BE2E5F", "#808080", "#0F6A66")) {
+    for (color in SIGN_COLORS) {
       expect_true(any(grepl(color, marks, fixed = TRUE)))
     }
     for (label in c("Alpha", "Gamma", "Evidence")) {
@@ -300,4 +303,95 @@ test_that("custom significance groups and capped bars use vector palette colors"
       }
     }
   }
+})
+
+
+test_that("volcano annotations and threshold labels clear marks and each other", {
+  # Clustered strong effects put many annotations in one corner of the plot.
+  estimate <- c(
+    -1.80,
+    -1.78,
+    -1.50,
+    -1.45,
+    -1.35,
+    -1.32,
+    1.20,
+    1.22,
+    1.25,
+    1.83,
+    1.85,
+    seq(-0.5, 0.5, length.out = 20)
+  )
+  p_value <- c(
+    1e-6,
+    2e-6,
+    3e-6,
+    4e-6,
+    5e-6,
+    2e-6,
+    1e-6,
+    2e-6,
+    3e-6,
+    4e-6,
+    5e-6,
+    rep(0.5, 20)
+  )
+  label <- paste0("feature_", seq_along(estimate))
+  volcano <- draw_volcano(estimate, p_value, label, annotate_n = 11L)
+  manhattan <- draw_manhattan(estimate, p_value, label)
+  series <- volcano[["x"]][["option"]][["series"]]
+  named <- Filter(function(s) !is.null(s[["name"]]), series)
+  # The flag is the whole contract: ECharts' static labelLayout cannot move a
+  # label attached to a scatter symbol.
+  for (s in named) {
+    expect_true(s[["rtemisRepelLabels"]])
+    expect_null(s[["labelLayout"]])
+  }
+  for (w in list(volcano, manhattan)) {
+    opt <- w[["x"]][["option"]]
+    ref <- Filter(function(s) !is.null(s[["markLine"]]), opt[["series"]])[[1L]]
+    expect_identical(
+      ref[["markLine"]][["data"]][[1L]][["label"]][["position"]],
+      "end"
+    )
+    expect_gte(opt[["grid"]][["right"]], reference_label_margin("p < 0.05"))
+  }
+  # A supplied margin wins over the reserved space.
+  expect_identical(
+    draw_manhattan(estimate, p_value, label, margin_right = 10L)[["x"]][[
+      "option"
+    ]][["grid"]][["right"]],
+    10L
+  )
+
+  skip_if_no_node()
+  options <- tempfile(fileext = ".json")
+  on.exit(unlink(options), add = TRUE)
+  writeLines(
+    jsonlite::toJSON(
+      list(
+        volcano = volcano[["x"]][["option"]],
+        manhattan = manhattan[["x"]][["option"]]
+      ),
+      auto_unbox = TRUE,
+      null = "null",
+      digits = NA
+    ),
+    options
+  )
+  output <- system2(
+    Sys.which("node"),
+    c(
+      shQuote(test_path("fixtures", "significance_labels.js")),
+      shQuote(system.file(package = "rtemis.draw")),
+      shQuote(options)
+    ),
+    stdout = TRUE,
+    stderr = TRUE
+  )
+  expect_null(attr(output, "status"), info = paste(output, collapse = "\n"))
+  expect_match(
+    paste(output, collapse = "\n"),
+    "Significance labels clear marks and each other"
+  )
 })

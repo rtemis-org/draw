@@ -18,8 +18,8 @@
 #'
 #' @param x Optional Character: Columns to bin, one distribution per column.
 #' @param group Optional Character: Column to split the bins by.
-#' @inheritParams draw_histogram breaks bins bin_edges normalization density na_rm bin_stat bar_mode
-#' @inheritParams draw_density n bw bandwidth kernel adjust fill_alpha mode order
+#' @inheritParams draw_histogram breaks bins bin_edges normalization density na_rm bin_stat bar_mode fill_alpha border_alpha
+#' @inheritParams draw_density n bw bandwidth kernel adjust mode order
 #' @param palette Optional Character: Series colors, overriding the theme
 #'   palette for this chart. `NULL` uses the theme's.
 #' @param xlab,ylab Optional Character: Axis labels. `NULL` derives them from
@@ -51,8 +51,7 @@ HistogramConfig <- new_class(
       "bandwidth",
       "kernel",
       "adjust",
-      "na_rm",
-      "fill_alpha"
+      "na_rm"
     )],
     list(
       type = prop_chart_type("histogram"),
@@ -108,6 +107,22 @@ HistogramConfig <- new_class(
         description = "Overlay a kernel density on the histogram scale."
       ),
       # -- appearance --------------------------------------------------------
+      fill_alpha = prop_float(
+        NULL,
+        min = 0,
+        max = 1,
+        nullable = TRUE,
+        description = paste(
+          "Bar fill opacity. Unset uses 0.5 when overlaid groups overlap and",
+          "0.75 otherwise."
+        )
+      ),
+      border_alpha = prop_float(
+        1,
+        min = 0,
+        max = 1,
+        description = "Bar border opacity. 0 draws no border."
+      ),
       palette = prop_string(
         NULL,
         nullable = TRUE,
@@ -266,7 +281,8 @@ setup_HistogramConfig <- function(
   bandwidth = NULL,
   kernel = "gaussian",
   adjust = 1,
-  fill_alpha = 0.25,
+  fill_alpha = NULL,
+  border_alpha = 1,
   na_rm = TRUE,
   mode = "overlap",
   order = "input",
@@ -301,7 +317,6 @@ setup_HistogramConfig <- function(
     bandwidth = bandwidth,
     kernel = kernel,
     adjust = adjust,
-    fill_alpha = fill_alpha,
     na_rm = na_rm
   )
   if (is.numeric(bw)) {
@@ -322,7 +337,8 @@ setup_HistogramConfig <- function(
     bandwidth = smoothing@bandwidth,
     kernel = smoothing@kernel,
     adjust = smoothing@adjust,
-    fill_alpha = smoothing@fill_alpha,
+    fill_alpha = fill_alpha,
+    border_alpha = border_alpha,
     na_rm = smoothing@na_rm,
     x = x,
     group = group,
@@ -345,31 +361,62 @@ setup_HistogramConfig <- function(
 
 
 # %% resolve.HistogramConfig ----
-# Only the x label: it is the name of the bound column. The y axis shows a bin count,
-# which has no name in the data -- and a constant like "Density" would be an
-# invented default, not a derivation. Labels come from names; no name, no label.
-# If such a label is wanted it belongs in the builder, applying to the vector
-# path too, rather than being written into the document by one of them.
+# The x label and the bar opacity. The label is the name of the bound column. The y
+# axis shows a bin count, which has no name in the data -- and a constant like
+# "Density" would be an invented default, not a derivation. Labels come from
+# names; no name, no label. If such a label is wanted it belongs in the builder,
+# applying to the vector path too, rather than being written into the document
+# by one of them. The opacity depends on whether bars overlap, which the data
+# decides through the number of nonempty samples.
 method(resolve, HistogramConfig) <- function(config, data = NULL, ...) {
+  x <- histogram_config_x(config, data)
   config_derive(
     config,
     list(
-      xlab = if (length(config@x) == 1L) config@x else NULL
+      xlab = if (length(config@x) == 1L) config@x else NULL,
+      fill_alpha = if (!is.null(x)) {
+        histogram_fill_alpha(
+          distribution_samples(
+            x,
+            config_column(data, config@group, "group"),
+            config@na_rm,
+            verbosity = 0L
+          ),
+          config@bar_mode,
+          config@mode
+        )
+      }
     )
   )
 }
 
 
-# %% compile.HistogramConfig ----
-method(compile, HistogramConfig) <- function(config, data = NULL, ...) {
-  x <- if (length(config@x) > 1L) {
-    setNames(
+# %% histogram_config_x ----
+#' Read the bound x columns of a histogram config
+#'
+#' @param config HistogramConfig: Config naming the columns.
+#' @param data Optional data.frame: Data the columns are read from.
+#' @return Numeric vector for one column, named list for several, or `NULL`
+#'   when nothing is bound.
+#'
+#' @author EDG
+#' @keywords internal
+#' @noRd
+histogram_config_x <- function(config, data) {
+  if (length(config@x) > 1L) {
+    stats::setNames(
       lapply(config@x, function(column) config_column(data, column, "x")),
       config@x
     )
   } else {
     config_column(data, config@x, "x")
   }
+} # /rtemis.draw::histogram_config_x
+
+
+# %% compile.HistogramConfig ----
+method(compile, HistogramConfig) <- function(config, data = NULL, ...) {
+  x <- histogram_config_x(config, data)
   if (is.null(x)) {
     abort(
       "A HistogramConfig needs `x` set to draw.",
@@ -394,6 +441,7 @@ method(compile, HistogramConfig) <- function(config, data = NULL, ...) {
     kernel = config@kernel,
     adjust = config@adjust,
     fill_alpha = config@fill_alpha,
+    border_alpha = config@border_alpha,
     na_rm = config@na_rm,
     palette = config@palette,
     xlab = config@xlab,

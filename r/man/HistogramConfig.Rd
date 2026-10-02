@@ -19,7 +19,6 @@ HistogramConfig(
   kernel = "gaussian",
   adjust = 1,
   na_rm = TRUE,
-  fill_alpha = 0.25,
   x = NULL,
   group = NULL,
   breaks = "Sturges",
@@ -29,6 +28,8 @@ HistogramConfig(
   bin_stat = "count",
   bar_mode = "overlay",
   density = FALSE,
+  fill_alpha = NULL,
+  border_alpha = 1,
   palette = NULL,
   xlab = NULL,
   ylab = NULL,
@@ -86,8 +87,6 @@ bandwidth in measurement units, overriding the selector.}
 \item{na_rm}{Logical: Whether to remove \code{NA} values before
 computing densities.}
 
-\item{fill_alpha}{Numeric \verb{[0, 1]}: Distribution fill opacity.}
-
 \item{x}{Optional Character: Columns to bin, one distribution per column.}
 
 \item{group}{Optional Character: Column to split the bins by.}
@@ -114,6 +113,13 @@ Stacks accumulate positive and negative values separately. Group/stack
 layouts require mode = "overlap" and density = FALSE.}
 
 \item{density}{Logical: Overlay a kernel density in histogram units.}
+
+\item{fill_alpha}{Optional Numeric \verb{[0, 1]}: Bar fill opacity. \code{NULL} uses
+0.5 when overlaid groups overlap (\code{bar_mode = "overlay"} with more than
+one nonempty group outside ridge mode) and 0.75 otherwise.}
+
+\item{border_alpha}{Numeric \verb{[0, 1]}: Opacity of the bar borders, drawn in
+the series color. 0 draws no border.}
 
 \item{palette}{Optional Character: Series colors, overriding the theme
 palette for this chart. \code{NULL} uses the theme's.}

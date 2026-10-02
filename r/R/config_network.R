@@ -115,15 +115,15 @@ NetworkConfig <- new_class(
       description = "Community colors, overriding the theme palette. Unset uses the theme's."
     ),
     node_color = prop_string(
-      "#6CA3A0",
+      rtemis_colors[["teal"]],
       description = "Node color when not colored by group."
     ),
     positive_color = prop_string(
-      "#6CA3A0",
+      SIGN_COLORS[["positive"]],
       description = "Color for positive-weight edges."
     ),
     negative_color = prop_string(
-      "#ff9e1f",
+      SIGN_COLORS[["negative"]],
       description = "Color for negative-weight edges."
     )
   )
@@ -178,8 +178,8 @@ setup_NetworkConfig <- function(
   edge_opacity = 0.4,
   palette = NULL,
   node_color = rtemis_colors[["teal"]],
-  positive_color = rtemis_colors[["teal"]],
-  negative_color = "#ff9e1f",
+  positive_color = SIGN_COLORS[["positive"]],
+  negative_color = SIGN_COLORS[["negative"]],
   title = NULL,
   dat_path = NULL,
   origin = NULL,

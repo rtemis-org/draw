@@ -14,3 +14,20 @@
 #' @importFrom rtemis.core rtemis_colors
 #' @export
 rtemis.core::rtemis_colors
+
+
+# %% SIGN_COLORS ----
+# The meaning of a value's sign in every chart that colors by sign: significance
+# plots, network edge weights, and the diverging and one-sided heatmap and
+# spectrogram scales. Cool for negative, warm for positive, gray for neither.
+# Both ends sit at OKLCH lightness 0.60 and chroma 0.147 (blue on the hue of
+# `rtemis_colors[["blue"]]`, a red-shifted orange), so neither sign outweighs
+# the other, both keep at least 3.9:1 contrast on light and dark backgrounds,
+# and they stay apart from each other and from the gray under deuteranopia and
+# protanopia. Remeasure all three, under both deficiencies, when changing
+# either end.
+SIGN_COLORS <- c(
+  negative = "#2D83D3",
+  neutral = "#808080",
+  positive = "#C55E28"
+)

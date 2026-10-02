@@ -95,7 +95,7 @@ e.g. \code{c(20, 8000)}. Applied after STFT computation.}
 \item{colormap}{Character: Color palette. Accepts a \pkg{viridisLite} colormap
 name (\code{"magma"} (default), \code{"inferno"}, \code{"plasma"},
 \code{"viridis"}, \code{"cividis"}, \code{"mako"}, \code{"rocket"}, \code{"turbo"}), \code{"diverging"}
-for the rtemis teal-background-orange scale (suitable for signed data
+for the rtemis blue-background-orange sign scale (suitable for signed data
 such as EEG/MEG amplitudes), or a character vector of >= 2 hex colors for a
 custom ramp.}
 
