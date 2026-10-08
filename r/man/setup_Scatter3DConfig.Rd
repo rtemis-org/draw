@@ -28,7 +28,9 @@ setup_Scatter3DConfig(
   fit = NULL,
   fit_params = NULL,
   n_fit = 25L,
-  fit_alpha = 0.35
+  fit_alpha = 0.35,
+  projection = "perspective",
+  distance = 250
 )
 }
 \arguments{
@@ -84,6 +86,12 @@ in \code{fit}. See \code{\link[=draw_scatter]{draw_scatter()}}.}
 \item{n_fit}{Integer \verb{[2, Inf)}: Grid points per axis for fitted surfaces.}
 
 \item{fit_alpha}{Numeric \verb{[0, 1]}: Opacity of fitted surfaces.}
+
+\item{projection}{Character \{"perspective", "orthographic"\}: Camera projection.}
+
+\item{distance}{Numeric \verb{[100, 400]}: Perspective camera distance from the center
+of the 100-unit cube. Narrow and portrait layouts increase the distance
+to preserve space for axes.}
 }
 \value{
 Scatter3DConfig: Validated settings.

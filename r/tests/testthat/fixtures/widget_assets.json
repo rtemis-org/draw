@@ -44,7 +44,7 @@
       "rtemis-draw.js"
     ],
     "md5": [
-      "01cfb7977f12f898a98be6016a486ca2"
+      "2d7693d03b63568d2db6f4df3651199c"
     ]
   },
   "rtemis-panel-layout-1.0.3": {
@@ -313,6 +313,16 @@
     "md5": [
       "9955d0292fe4fe29972cf0ce37d77a97",
       "e9c11316de720e46668ffc86ae66adb8"
+    ]
+  },
+  "rtemis-draw-renderers-1.4.1": {
+    "scripts": [
+      "renderers.js",
+      "scatter3d.js"
+    ],
+    "md5": [
+      "9955d0292fe4fe29972cf0ce37d77a97",
+      "63cb6341255715ba101b1b78d613c839"
     ]
   }
 }

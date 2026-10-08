@@ -1,4 +1,4 @@
-// Orthographic projection matching ECharts-GL 2.1 Cartesian3D/OrbitControl.
+// Camera projections matching ECharts-GL 2.1 Cartesian3D/OrbitControl.
 // The browser uses GL; Node writes vector marks without a browser or raster.
 (function(root, factory) {
   if (typeof module === 'object' && module.exports) module.exports = factory();
@@ -8,6 +8,9 @@
     ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&apos;'}[c]));
   const fallback = ['#6ca3a0','#ef8a00','#bf1f59','#4078a6','#80558c'];
   let svgSequence = 0;
+  const pointerThemeColors = new WeakMap();
+  const dottedGeometries = new WeakSet();
+  const perspectiveFocalLength = 1 / Math.tan(25 * Math.PI / 180);
   const extent = (grid,width) => grid.rtemisViewSize * (width < 500 ? 2.2 : 1);
   function prepare(option, theme, width, height) {
     if (!option.grid3D) return;
@@ -18,7 +21,24 @@
     const w = Math.max(1, width - left - 12), h = Math.max(1, height - 80);
     grid.left = left; grid.width = w; grid.height = h;
     grid.viewControl.orthographicSize = extent(grid,width) * Math.max(1, h / w) - 1;
+    grid.viewControl.distance = grid.rtemisDistance * (width < 500 ? 2.2 : 1) * Math.max(1, h / w);
+    grid.viewControl.maxDistance = Math.max(1000, grid.viewControl.distance);
     const color = theme?.textStyle?.color || '#333333';
+    // Hover guides use the active foreground; authored colors retain precedence.
+    // Remember injected values so the same option follows live theme changes.
+    const pointer = grid.axisPointer = grid.axisPointer || {};
+    const line = pointer.lineStyle = pointer.lineStyle || {};
+    const label = pointer.label = pointer.label || {};
+    const injected = pointerThemeColors.get(pointer) || {};
+    if (line.color == null || line.color === injected.line) {
+      line.color = color;
+      injected.line = color;
+    }
+    if (label.color == null || label.color === injected.label) {
+      label.color = color;
+      injected.label = color;
+    }
+    pointerThemeColors.set(pointer, injected);
     const captions=[];
     for (const [i,key] of ['xAxis3D','yAxis3D','zAxis3D'].entries()) {
       const axis=option[key], dimension=['x','y','z'][i];
@@ -49,11 +69,51 @@
       s[key].color=s[key].color || colors[names.indexOf(s.name) % colors.length];
     });
   }
+  // ECharts-GL 2.1 builds hover guides as solid segments. Subdivide only
+  // their geometry, using projected pixel lengths for consistent dot spacing.
+  function dottedGuides(chart) {
+    chart.getModel().eachComponent('grid3D', model => {
+      const view = chart.getViewOfComponentModel(model);
+      const mesh = view._axisPointerLineMesh;
+      const lines = mesh.geometry;
+      if (dottedGeometries.has(lines)) return;
+      dottedGeometries.add(lines);
+      const addLine = lines.addLine;
+      lines.addLine = function(p0, p1, color, width) {
+        const gl = model.coordinateSystem.viewGL;
+        const project = p => {
+          let v = [...p, 1];
+          for (const matrix of [mesh.worldTransform, gl.camera.viewMatrix,
+                                gl.camera.projectionMatrix]) {
+            const m = matrix.array;
+            v = [0, 1, 2, 3].map(i =>
+              m[i]*v[0] + m[i+4]*v[1] + m[i+8]*v[2] + m[i+12]*v[3]);
+          }
+          return [v[0]/v[3]*gl.viewport.width/2,
+                  v[1]/v[3]*gl.viewport.height/2, v[3]];
+        };
+        const a = project(p0), b = project(p1);
+        const length = Math.hypot(b[0]-a[0], b[1]-a[1]);
+        if (!Number.isFinite(length) || length < 0.01) return;
+        const dot = Math.max(1.5, width / gl.viewport.devicePixelRatio);
+        const at = distance => {
+          const f = distance/length;
+          // Inverse perspective interpolation gives equal screen-space dots.
+          const t = f*a[2] / ((1-f)*b[2] + f*a[2]);
+          return p0.map((v, i) => v + (p1[i]-v)*t);
+        };
+        for (let start = 0; start < length; start += dot*3) {
+          addLine.call(this, at(start), at(Math.min(start+dot, length)), color, width);
+        }
+      };
+    });
+  }
   function geometry(option, width, height) {
     const grid = option.grid3D, vc = grid.viewControl;
     if(option.series.some(s=>!['scatter3D','line3D','surface'].includes(s.type)))
       throw new Error('3D SVG supports scatter3D, line3D and materialized surface grids.');
-    if (vc.projection !== 'orthographic') throw new Error('3D SVG requires the supported orthographic camera.');
+    if (!['perspective','orthographic'].includes(vc.projection))
+      throw new Error('Set the 3D camera projection to perspective or orthographic.');
     const left = 12;
     const w = Math.max(1, width - left - 12), h = Math.max(1, height - 80);
     const scale = Math.min(w,h) / extent(grid,width);
@@ -63,9 +123,17 @@
     // Cartesian3D maps data y to reversed world z, and data z to world y.
     const projectWorld = p => {
       const X = p[0], Y = p[1], Z = p[2];
-      return [left+w/2 + scale*(cb*X-sb*Z),
-        60+h/2 - scale*(-sa*sb*X+ca*Y-sa*cb*Z),
-        ca*sb*X+sa*Y+ca*cb*Z];
+      const x = cb*X-sb*Z, y = -sa*sb*X+ca*Y-sa*cb*Z;
+      const z = ca*sb*X+sa*Y+ca*cb*Z;
+      if (vc.projection === 'perspective') {
+        const distance = grid.rtemisDistance * (width < 500 ? 2.2 : 1) * Math.max(1, h / w);
+        const depth = distance-z;
+        // ClayGL uses a 50-degree vertical field of view. Reciprocal camera
+        // depth is affine across projected planes and increases toward the eye.
+        const magnification = h/2 * perspectiveFocalLength / depth;
+        return [left+w/2 + magnification*x, 60+h/2 - magnification*y, 10000/depth];
+      }
+      return [left+w/2 + scale*x, 60+h/2 - scale*y, z];
     };
     const project = values => {
       const scaled = values.map((v,i) => 100*((v-axes[i].min)/(axes[i].max-axes[i].min)-.5));
@@ -121,7 +189,7 @@
     return {project,projectWorld,points,lines,triangles,primitives,axes};
   }
 
-  // Port of the orthographic screen-space expansion in lines3D.glsl. The
+  // Port of the screen-space expansion in lines3D.glsl. The
   // y-down SVG normal reverses the shader's y-up normal, and its miter limit is 2.
   function pathGeometry(points,width) {
     const unit=(a,b)=>{const dx=b[0]-a[0],dy=b[1]-a[1],n=Math.hypot(dx,dy);return n>1e-10?[dx/n,dy/n]:null;};
@@ -206,7 +274,7 @@
         if(parts.same)same.push(parts.same);
       }
       same.sort((a,b)=>({surface:0,line:1,point:2}[a.kind]-{surface:0,line:1,point:2}[b.kind]));
-      // Orthographic eye is at positive camera depth. Stack is last-in first-out.
+      // Projected depth increases toward the eye. Stack is last-in first-out.
       const near=p.normal[2]>=0?front:back,far=p.normal[2]>=0?back:front;
       if(near.length)stack.push({items:near});
       stack.push({emit:same});
@@ -296,5 +364,5 @@
     }
     return out+'</g></svg>';
   }
-  return {prepare,geometry,pathGeometry,orderPrimitives,svg};
+  return {prepare,dottedGuides,geometry,pathGeometry,orderPrimitives,svg};
 });

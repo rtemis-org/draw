@@ -10,7 +10,7 @@ test_that("3D coordinates, bounds, groups and camera have a portable contract", 
     opt[["series"]][[1]][["data"]][[1]],
     as.list(unname(as.numeric(iris[1, 1:3])))
   )
-  expect_equal(opt[["grid3D"]][["viewControl"]][["projection"]], "orthographic")
+  expect_equal(opt[["grid3D"]][["viewControl"]][["projection"]], "perspective")
   expect_equal(opt[["xAxis3D"]][["min"]], min(iris[[1]]))
   expect_equal(opt[["xAxis3D"]][["max"]], max(iris[[1]]))
   expect_null(to_list(EChartsOption())[["grid3D"]])
@@ -91,4 +91,107 @@ test_that("3D opacity defaults to the point count and paths alone to opaque", {
   w <- draw_scatter3d(1:4, 1:4, 1:4, opacity = 0.3)
   expect_equal(w$x$option$series[[1]]$itemStyle$opacity, 0.3)
   expect_error(setup_Scatter3DConfig(opacity = 2))
+})
+
+
+test_that("3D hover guides follow themes and preserve authored colors", {
+  skip_if_no_node()
+  plot <- draw_scatter3d(iris[1:3], group = iris[["Species"]])
+  input <- tempfile(fileext = ".json")
+  on.exit(unlink(input))
+  jsonlite::write_json(
+    list(
+      option = strip_js(plot[["x"]][["option"]]),
+      module = system.file(
+        "htmlwidgets/lib/draw/scatter3d.js",
+        package = "rtemis.draw"
+      )
+    ),
+    input,
+    auto_unbox = TRUE,
+    digits = NA
+  )
+  output <- system2(
+    Sys.which("node"),
+    c(shQuote(test_path("fixtures", "scatter3d_theme.js")), shQuote(input)),
+    stdout = TRUE,
+    stderr = TRUE
+  )
+  expect_null(attr(output, "status"), info = paste(output, collapse = "\n"))
+  expect_match(
+    paste(output, collapse = "\n"),
+    "3D hover guides follow the active theme"
+  )
+})
+
+
+test_that("3D camera settings validate and survive configuration round trips", {
+  path <- tempfile(fileext = ".json")
+  on.exit(unlink(path))
+  for (projection in c("perspective", "orthographic")) {
+    cfg <- setup_Scatter3DConfig(
+      x = "Sepal.Length",
+      y = "Sepal.Width",
+      z = "Petal.Length",
+      projection = projection,
+      distance = 250,
+      view_size = 220
+    )
+    write_chart_config(cfg, path)
+    restored <- read_chart_config(path)
+    expect_equal(restored@projection, projection)
+    expect_equal(restored@distance, 250)
+    opt <- to_list(compile(restored, iris))
+    expect_equal(opt[["grid3D"]][["viewControl"]][["projection"]], projection)
+    expect_equal(opt[["grid3D"]][["rtemisDistance"]], 250)
+    expect_equal(opt[["grid3D"]][["viewControl"]][["orthographicSize"]], 219)
+    expect_equal(opt, to_list(compile(cfg, iris)))
+  }
+  expect_equal(setup_Scatter3DConfig()@distance, 250)
+  expect_equal(Scatter3DConfig()@distance, 250)
+  schema <- chart_schema(
+    Scatter3DConfig,
+    id = "https://schema.rtemis.org/chart/scatter3d/v1/schema.json",
+    title = "rtemis Scatter3DConfig",
+    description = "Three-dimensional scatter chart."
+  )
+  expect_setequal(
+    unlist(schema[["properties"]][["projection"]][["enum"]]),
+    c("perspective", "orthographic")
+  )
+  expect_equal(schema[["properties"]][["distance"]][["minimum"]], 100)
+  expect_equal(schema[["properties"]][["distance"]][["maximum"]], 400)
+  expect_error(setup_Scatter3DConfig(projection = "oblique"))
+  expect_error(setup_Scatter3DConfig(distance = 99))
+  expect_error(setup_Scatter3DConfig(distance = 401))
+  expect_error(setup_Scatter3DConfig(distance = Inf))
+})
+
+test_that("3D projection matches camera matrices for both camera modes", {
+  skip_if_no_node()
+  plot <- draw_scatter3d(iris[1:3], group = iris[["Species"]])
+  input <- tempfile(fileext = ".json")
+  on.exit(unlink(input))
+  jsonlite::write_json(
+    list(
+      option = strip_js(plot[["x"]][["option"]]),
+      module = system.file(
+        "htmlwidgets/lib/draw/scatter3d.js",
+        package = "rtemis.draw"
+      )
+    ),
+    input,
+    auto_unbox = TRUE,
+    digits = NA
+  )
+  output <- system2(
+    Sys.which("node"),
+    c(
+      shQuote(test_path("fixtures", "scatter3d_projection.js")),
+      shQuote(input)
+    ),
+    stdout = TRUE,
+    stderr = TRUE
+  )
+  expect_null(attr(output, "status"), info = paste(output, collapse = "\n"))
 })

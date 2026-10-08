@@ -15,6 +15,8 @@ Scatter3DConfig(
   group = NULL,
   alpha = 20,
   beta = 40,
+  projection = "perspective",
+  distance = 250,
   view_size = 190,
   point_size = 8,
   opacity = NULL,
@@ -54,6 +56,12 @@ authored config; written by the interface that resolved it.}
 
 \item{beta}{Numeric \verb{[-180, 180]}: Camera azimuth in degrees.}
 
+\item{projection}{Character \{"perspective", "orthographic"\}: Camera projection.}
+
+\item{distance}{Numeric \verb{[100, 400]}: Perspective camera distance from the center
+of the 100-unit cube. Narrow and portrait layouts increase the distance
+to preserve space for axes.}
+
 \item{view_size}{Numeric \verb{[175, 400]}: Orthographic viewing extent for a 100-unit cube.}
 
 \item{point_size}{Numeric \verb{(0, 100]}: Marker diameter in pixels.}
@@ -90,9 +98,10 @@ Scatter3DConfig: Validated portable settings.
 }
 \description{
 Uses ECharts-GL Scatter3DSeries, Grid3DModel, Cartesian3D, and OrbitControl.
-Coordinates are independently scaled to equal box dimensions. The camera is
-orthographic: parallel lines remain parallel and exported point positions
-match the configured browser view. Browser rotation/zoom is interactive;
+Coordinates are independently scaled to equal box dimensions. Perspective
+projection scales coordinates by camera depth; orthographic projection keeps
+parallel lines parallel. Exported point positions match the configured browser
+view. Browser rotation/zoom is interactive;
 saving the R widget exports its configured initial camera.
 }
 \examples{

@@ -4,14 +4,19 @@
 #' Three-Dimensional Scatter Configuration
 #'
 #' Uses ECharts-GL Scatter3DSeries, Grid3DModel, Cartesian3D, and OrbitControl.
-#' Coordinates are independently scaled to equal box dimensions. The camera is
-#' orthographic: parallel lines remain parallel and exported point positions
-#' match the configured browser view. Browser rotation/zoom is interactive;
+#' Coordinates are independently scaled to equal box dimensions. Perspective
+#' projection scales coordinates by camera depth; orthographic projection keeps
+#' parallel lines parallel. Exported point positions match the configured browser
+#' view. Browser rotation/zoom is interactive;
 #' saving the R widget exports its configured initial camera.
 #' @param x,y,z Optional Character: Numeric coordinate column bindings.
 #' @param group Optional Character: Group column binding.
 #' @param alpha Numeric `[-80, 80]`: Camera elevation in degrees.
 #' @param beta Numeric `[-180, 180]`: Camera azimuth in degrees.
+#' @param projection Character \{"perspective", "orthographic"\}: Camera projection.
+#' @param distance Numeric `[100, 400]`: Perspective camera distance from the center
+#'   of the 100-unit cube. Narrow and portrait layouts increase the distance
+#'   to preserve space for axes.
 #' @param view_size Numeric `[175, 400]`: Orthographic viewing extent for a 100-unit cube.
 #' @param point_size Numeric `(0, 100]`: Marker diameter in pixels.
 #' @param opacity Optional Numeric `[0, 1]`: Point and line opacity. `NULL`
@@ -48,6 +53,17 @@ Scatter3DConfig <- new_class(
     group = prop_string(NULL, nullable = TRUE),
     alpha = prop_float(20, min = -80, max = 80),
     beta = prop_float(40, min = -180, max = 180),
+    projection = prop_string(
+      "perspective",
+      enum = c("perspective", "orthographic"),
+      description = "Camera projection: perspective scales by camera depth; orthographic keeps parallel lines parallel."
+    ),
+    distance = prop_float(
+      250,
+      min = 100,
+      max = 400,
+      description = "Perspective camera distance from the center of the 100-unit cube, increased for narrow and portrait layouts."
+    ),
     view_size = prop_float(190, min = 175, max = 400),
     point_size = prop_float(8, exclusive_min = 0, max = 100),
     opacity = prop_float(
@@ -142,7 +158,9 @@ setup_Scatter3DConfig <- function(
   fit = NULL,
   fit_params = NULL,
   n_fit = 25L,
-  fit_alpha = .35
+  fit_alpha = .35,
+  projection = "perspective",
+  distance = 250
 ) {
   origin <- origin %||%
     chart_origin(
@@ -156,6 +174,8 @@ setup_Scatter3DConfig <- function(
     group = group,
     alpha = alpha,
     beta = beta,
+    projection = projection,
+    distance = distance,
     view_size = view_size,
     point_size = point_size,
     opacity = opacity,
@@ -386,7 +406,10 @@ method(scatter3d_option, class_any) <- function(x, y, z, group, config) {
       left = 12,
       right = 12,
       viewControl = list(
-        projection = "orthographic",
+        projection = config@projection,
+        distance = config@distance,
+        minDistance = 100,
+        maxDistance = 1000,
         alpha = config@alpha,
         beta = config@beta,
         orthographicSize = config@view_size - 1,
@@ -396,7 +419,8 @@ method(scatter3d_option, class_any) <- function(x, y, z, group, config) {
         autoRotate = FALSE,
         panMouseButton = "right"
       ),
-      rtemisViewSize = config@view_size
+      rtemisViewSize = config@view_size,
+      rtemisDistance = config@distance
     ),
     series = series,
     color = config@palette,

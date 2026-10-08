@@ -39,8 +39,9 @@ for(const palette of ['#4078A6',['#4078A6']]) {
  assert.equal(option.series[1].lineStyle.color,'#4078A6');
  assert.ok(renderer.svg({option},800,600).includes('fill="#4078A6"'));
 }
-for(const width of [390,800]) {
+for(const projection of ["perspective","orthographic"]) for(const width of [390,800]) {
  const option=structuredClone(input.option);
+ option.grid3D.viewControl.projection=projection;
  renderer.prepare(option,{color:['#123456','#abcdef']},width,600);
  assert.equal(option.series[0].itemStyle.color,option.series[1].lineStyle.color);
  const g=renderer.geometry(option,width,600);
