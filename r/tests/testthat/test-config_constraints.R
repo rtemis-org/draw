@@ -235,3 +235,34 @@ test_that("partial provenance and writer validation agree with their schemas", {
     '{"type":"scatter","writer":{"name":"R","version":"1"}}'
   ))
 })
+test_that("config validators retain rules and report every failed constraint", {
+  rules <- list(
+    list(
+      schema = list(properties = list(value = list(const = 1))),
+      message = "Use one."
+    ),
+    list(
+      schema = list(properties = list(value = list(enum = list(1, 2)))),
+      message = "Use one or two."
+    )
+  )
+  validator <- config_validator(rules)
+  Fixture <- S7::new_class(
+    "ConstraintFixture",
+    properties = list(value = S7::class_double)
+  )
+  expect_null(validator(Fixture(value = 1)))
+  expect_identical(validator(Fixture(value = 2)), "Use one.")
+  expect_identical(
+    validator(Fixture(value = 3)),
+    c("Use one.", "Use one or two.")
+  )
+  expect_identical(
+    attr(validator, "schema_rules"),
+    lapply(rules, `[[`, "schema")
+  )
+  expect_false(config_matches(1, list(allOf = list(list(const = 2)))))
+  # The existing axis-limit validator supplies the additional relational check.
+  with_limits <- config_validator(list(), extra = config_ordered_limits)
+  expect_null(with_limits(setup_ScatterConfig(xlim = c(0, 1))))
+})

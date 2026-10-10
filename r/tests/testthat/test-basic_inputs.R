@@ -40,3 +40,21 @@ test_that("pie tables and label choices preserve actual slice values", {
   expect_error(draw_pie(1:3, c("A", "B")))
   expect_error(setup_PieConfig(label_format = "bad"))
 })
+test_that("bar data frames preserve numeric columns and reject ambiguous series", {
+  values <- data.frame(A = c(1, 2), B = c(3, 4))
+  expect_equal(
+    draw_bar(values)[["x"]][["option"]],
+    draw_bar(as.matrix(values))[["x"]][["option"]]
+  )
+  expect_error(draw_bar(data.frame(A = c("a", "b"))), "numeric columns")
+  expect_error(draw_bar(matrix(c("a", "b"), 2L)), "numeric bar matrix")
+  expect_error(draw_bar(c("a", "b"), list(A = 1:2, A = 3:4)), "distinctly")
+  expect_error(
+    draw_pie(data.frame(label = "A", value = 1, extra = 2)),
+    "two-column"
+  )
+  expect_error(
+    draw_pie(data.frame(label = "A", value = 1), labels = "A"),
+    "table alone"
+  )
+})

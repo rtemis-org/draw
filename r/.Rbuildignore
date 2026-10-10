@@ -32,3 +32,4 @@ node_modules
 ^tools/cran-scan[.]R$
 ^tools/cran-scan-ignore$
 ^tools/document[.]R$
+^tools/coverage-local[.]R$

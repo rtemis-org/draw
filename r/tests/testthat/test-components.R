@@ -1,6 +1,40 @@
 # test-components.R
 # Tests for Grid, Title, Legend, Tooltip S7 classes
 
+test_that("zoom property factories accept axis selections and mouse modifiers", {
+  ZoomProperties <- S7::new_class(
+    "ZoomProperties",
+    properties = list(
+      axis = axis_index_property(),
+      modifier = mouse_modifier_property()
+    )
+  )
+  expect_null(ZoomProperties()@axis)
+  expect_null(ZoomProperties()@modifier)
+  for (axis in list(0, c(0, 2), "all")) {
+    expect_identical(ZoomProperties(axis = axis)@axis, axis)
+  }
+  for (modifier in list(TRUE, FALSE, "shift", "ctrl", "alt")) {
+    expect_identical(ZoomProperties(modifier = modifier)@modifier, modifier)
+  }
+  for (bad in list(TRUE, "first", c("all", "all"))) {
+    expect_error(ZoomProperties(axis = bad), "numeric vector")
+  }
+  for (bad in list(1, "meta", c(TRUE, FALSE))) {
+    expect_error(ZoomProperties(modifier = bad), "shift")
+  }
+})
+
+test_that("title and legend validate padding and corner counts", {
+  expect_error(Title(border_radius = c(1, 2)), "length-4")
+  expect_error(Legend(border_radius = c(1, 2)), "length-4")
+  expect_error(Legend(padding = c(1, 2, 3)), "length-2/4", fixed = TRUE)
+  expect_identical(
+    to_list(Legend(padding = c(1, 2, 3, 4)))[["padding"]],
+    c(1, 2, 3, 4)
+  )
+})
+
 # -- Grid -----------------------------------------------------------------------
 
 test_that("Grid creates with defaults (all NULL)", {

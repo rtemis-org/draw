@@ -567,3 +567,35 @@ test_that("static export retains visible per-point overrides on transparent line
   expect_match(point, 'fill="#123456"', fixed = TRUE)
   expect_false(grepl('fill-opacity="0"', point, fixed = TRUE))
 })
+test_that("scene and panel exports pass portable payloads to the SVG renderer", {
+  calls <- list()
+  # Record the renderer boundary while retaining widget construction and validation.
+  local_mocked_bindings(save_svg_ssr = function(...) {
+    calls[[length(calls) + 1L]] <<- list(...)
+    invisible(TRUE)
+  })
+  graph <- draw_network(data.frame(source = "A", target = "B"))
+  map <- draw_choropleth(
+    data.frame(region = "USA", value = 1),
+    "region",
+    "value"
+  )
+  panels <- draw_panels(list(draw_bar("A", 1), draw_bar("B", 2)), ncol = 2L)
+  path <- tempfile(fileext = ".svg")
+  for (widget in list(graph, map, panels)) {
+    expect_identical(
+      withVisible(save_drawing(widget, path, width = 640, height = 480)),
+      list(value = path, visible = FALSE)
+    )
+  }
+  expect_identical(calls[[1L]][["backend"]], "graph")
+  expect_identical(
+    calls[[1L]][["scene"]],
+    strip_js(graph[["x"]], path = "scene")
+  )
+  expect_identical(calls[[2L]][["backend"]], "map")
+  expect_identical(calls[[2L]][["scene"]], strip_js(map[["x"]], path = "scene"))
+  expect_length(calls[[3L]][["panels"]], 2L)
+  expect_identical(calls[[3L]][["layout"]], panels[["x"]][["layout"]])
+  expect_false(file.exists(path))
+})

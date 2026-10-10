@@ -195,3 +195,20 @@ test_that("3D projection matches camera matrices for both camera modes", {
   )
   expect_null(attr(output, "status"), info = paste(output, collapse = "\n"))
 })
+test_that("3D inputs require complete coordinates and finite axis spans", {
+  expect_error(
+    draw_scatter3d(NA_real_, NA_real_, NA_real_),
+    "complete 3D observation",
+    class = "rtemis_null_input"
+  )
+  expect_error(
+    draw_scatter3d(c(-1e308, 1e308), 1:2, 1:2),
+    "finite nonzero range"
+  )
+  expect_error(draw_scatter3d(matrix(1:4, 2L)), "three coordinate columns")
+  expect_error(draw_scatter3d(matrix(1:6, 2L), y = 1:2), "columns alone")
+  expect_identical(
+    render_meta(setup_Scatter3DConfig(), NULL),
+    legend_meta("top", "outside")
+  )
+})

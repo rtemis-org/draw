@@ -273,3 +273,16 @@ test_that("native SVG distribution layers retain geometry through orientation, l
   expect_null(attr(output, "status"), info = paste(output, collapse = "\n"))
   expect_match(paste(output, collapse = "\n"), "passed")
 })
+test_that("boxplot inputs reject empty groups and overflowing transformations", {
+  expect_error(draw_boxplot(1:3, verbosity = -1L), "nonnegative")
+  expect_error(
+    draw_boxplot(list()),
+    "at least one numeric vector",
+    class = "rtemis_null_input"
+  )
+  expect_error(
+    draw_boxplot(1:3, group = rep(NA_character_, 3L)),
+    "nonmissing boxplot group"
+  )
+  expect_error(boxplot_transform(c(-1e308, 1e308), "minmax"), "Rescale values")
+})

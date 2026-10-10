@@ -31,3 +31,12 @@ test_that("annotations validate and materialize native geometry", {
   expect_error(draw_annotate(w, x_axis = 3L))
   expect_error(draw_annotate(draw_pie(c(1, 2)), hline = 1))
 })
+test_that("annotations require axes from the same grid", {
+  plot <- draw_scatter(1:3, 2:4)
+  plot[["x"]][["option"]][["xAxis"]][["gridIndex"]] <- 1L
+  expect_error(
+    draw_annotate(plot, hline = 3),
+    "same grid",
+    class = "rtemis_value_error"
+  )
+})

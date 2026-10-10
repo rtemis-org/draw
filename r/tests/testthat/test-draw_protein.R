@@ -83,3 +83,92 @@ test_that("typed protein annotations also respect sequence bounds", {
     variant = list(rtemis.a3::annotation_variant(9L))
   ))
 })
+test_that("protein annotation groups require distinct nonempty names", {
+  skip_if_not_installed("rtemis.a3")
+  for (annotations in list(
+    list(2L),
+    list(a = 2L, a = 3L),
+    setNames(list(2L), ""),
+    setNames(list(2L), NA_character_)
+  )) {
+    expect_error(
+      protein_data("MAEPR", site = annotations),
+      "Name every protein annotation",
+      class = "rtemis_value_error"
+    )
+    expect_error(
+      protein_data("MAEPR", region = annotations),
+      "Name every protein region",
+      class = "rtemis_value_error"
+    )
+  }
+})
+
+test_that("protein records retain nested metadata and isolated region residues", {
+  skip_if_not_installed("rtemis.a3")
+  value <- protein_data(list(
+    sequence = "maeprqefev",
+    uniprot_id = "outer",
+    metadata = list(uniprot_id = "nested", description = "Example protein"),
+    annotations = list(region = list(Domain = c(1L, 3L, 4L, 8L)))
+  ))
+  expect_identical(value[["sequence"]], "MAEPRQEFEV")
+  expect_identical(value[["metadata"]][["uniprot_id"]], "nested")
+  expect_identical(value[["metadata"]][["description"]], "Example protein")
+  expect_equal(
+    value[["annotations"]][["site"]][["Domain (isolated)"]][["index"]],
+    c(1L, 8L)
+  )
+  expect_equal(
+    as.vector(value[["annotations"]][["region"]][["Domain"]][["index"]]),
+    c(3L, 4L)
+  )
+})
+
+test_that("protein inputs accept typed annotations and variant tables", {
+  skip_if_not_installed("rtemis.a3")
+  position <- rtemis.a3::annotation_position(2L)
+  variant <- rtemis.a3::annotation_variant(3L)
+  value <- protein_data(
+    "MAEPR",
+    site = list(Active = position),
+    variant = list(variant)
+  )
+  expect_equal(value[["annotations"]][["site"]][["Active"]][["index"]], 2L)
+  expect_equal(value[["annotations"]][["variant"]][[1L]][["position"]], 3L)
+  expect_identical(protein_data(value), value)
+  tabular <- protein_data(
+    "MAEPR",
+    variant = data.frame(position = c(2L, 3L), alt = c("V", "A"))
+  )
+  expect_equal(
+    vapply(tabular[["annotations"]][["variant"]], `[[`, integer(1), "position"),
+    c(2L, 3L)
+  )
+})
+
+test_that("protein inputs reject conflicting sources and malformed variants", {
+  skip_if_not_installed("rtemis.a3")
+  expect_error(
+    protein_data(list(sequence = "MAEPR"), site = list(Active = 2L)),
+    "record alone"
+  )
+  expect_error(
+    protein_data("protein.json", site = list(Active = 2L)),
+    "file alone"
+  )
+  for (bad in list(1:3, character(), NA_character_, c("MA", "E"))) {
+    expect_error(
+      protein_data(bad),
+      "single-letter residues",
+      class = "rtemis_type_error"
+    )
+  }
+  for (bad in list(2L, list(alt = "V"))) {
+    expect_error(protein_data("MAEPR", variant = list(bad)), "variant records")
+  }
+  expect_error(
+    protein_data("MAEPR", variant = list(list(position = 6L))),
+    "within the sequence"
+  )
+})

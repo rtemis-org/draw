@@ -622,3 +622,28 @@ test_that("a writer with a key beyond name and version is rejected", {
   )
   expect_no_error(ScatterConfig(writer = c(name = "a", version = "1")))
 })
+test_that("chart provenance restricts origin and writer keys", {
+  expect_error(
+    ScatterConfig(origin = c(unknown = "user")),
+    "origin names properties"
+  )
+  expect_error(
+    ScatterConfig(writer = c(name = "example")),
+    "both name and version"
+  )
+  expect_error(
+    ScatterConfig(writer = c(name = "example", version = "1", extra = "value")),
+    "writer takes"
+  )
+  config <- ScatterConfig(writer = c(name = "example", version = "1"))
+  expect_identical(config@writer, c(name = "example", version = "1"))
+})
+test_that("chart compilation reports missing required data bindings", {
+  for (config in list(BoxplotConfig(), LineConfig(), PieConfig())) {
+    expect_error(
+      compile(config, data = data.frame(value = 1)),
+      "needs",
+      class = "rtemis_null_input"
+    )
+  }
+})

@@ -1,6 +1,22 @@
 # test-axis.R
 # Tests for axis-related S7 classes
 
+test_that("axis symbol and interval properties validate their supported types", {
+  expect_error(AxisLine(symbol = 1), "character vector")
+  expect_error(AxisLine(symbol_size = "10"), "numeric vector")
+  expect_error(AxisLine(symbol_offset = TRUE), "number, string")
+  expect_error(AxisTick(show = "yes"), "TRUE, FALSE")
+  expect_identical(
+    to_list(AxisLine(symbol_offset = "50%")),
+    list(symbolOffset = "50%")
+  )
+  expect_identical(
+    to_list(SplitArea(interval = "auto")),
+    list(interval = "auto")
+  )
+  expect_error(SplitArea(interval = TRUE), "number, 'auto'")
+})
+
 # -- AxisLine -------------------------------------------------------------------
 
 test_that("AxisLine creates with defaults (all NULL)", {

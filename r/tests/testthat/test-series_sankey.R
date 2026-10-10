@@ -2,6 +2,32 @@
 # Tests for SankeyNodeItem, SankeyEdgeItem, SankeyLevelOption,
 # SankeySeries, and draw_sankey()
 
+test_that("Sankey edges serialize adjacency focus and series line styles", {
+  for (focus in list(TRUE, FALSE, "inEdges", "outEdges", "allEdges")) {
+    expect_identical(
+      to_list(SankeyEdgeItem(focus_node_adjacency = focus)),
+      list(focusNodeAdjacency = focus)
+    )
+  }
+  expect_error(SankeyEdgeItem(focus_node_adjacency = "bad"), "inEdges")
+  expect_null(serialize_sankey_items(NULL))
+  expect_identical(
+    to_list(SankeySeries(line_style = LineStyle(opacity = .4)))[["lineStyle"]],
+    list(opacity = .4)
+  )
+})
+
+test_that("Sankey margins preserve unspecified sides and validate names", {
+  links <- data.frame(source = "A", target = "B", value = 1)
+  expected <- .sankey_margins(links)
+  expected[["left"]] <- 30
+  expect_identical(.sankey_margins(links, margins = c(left = 30)), expected)
+  expect_error(
+    .sankey_margins(links, margins = list(other = 20)),
+    "names must be among"
+  )
+})
+
 # -- SankeyNodeItem -------------------------------------------------------------
 
 test_that("SankeyNodeItem creates with defaults", {

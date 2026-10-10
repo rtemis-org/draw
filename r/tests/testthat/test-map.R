@@ -261,3 +261,33 @@ test_that("draw_choropleth rejects an invalid resolution / scheme", {
   expect_error(draw_choropleth(df, "iso", "gdp", resolution = "planet"))
   expect_error(draw_choropleth(df, "iso", "gdp", colormap = "rainbow"))
 })
+test_that("map builders validate column arguments and preserve factor tooltips", {
+  data <- data.frame(place = "USA", value = 2, group = factor("A"))
+  expect_error(
+    map_from_data_frame(list(), "place", "value", "country"),
+    "data frame",
+    class = "rtemis_type_error"
+  )
+  expect_error(map_from_data_frame(data, 1, "value", "country"), "location")
+  expect_error(
+    map_from_data_frame(data, "place", c("value", "group"), "country"),
+    "value"
+  )
+  model <- map_from_data_frame(
+    data,
+    "place",
+    "value",
+    "country",
+    tooltip = "group"
+  )
+  expect_identical(to_list(model)[["rows"]][[1L]][["extras"]][["group"]], "A")
+  expect_identical(
+    to_list(MapLibreOption(model = model, title = "Map"))[["title"]],
+    "Map"
+  )
+  expect_error(
+    load_map_geometry("district"),
+    "Unknown map resolution",
+    class = "rtemis_value_error"
+  )
+})

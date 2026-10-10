@@ -158,3 +158,18 @@ test_that("3D vector visibility splits crossing geometry and preserves topology"
   expect_null(attr(result, "status"), info = paste(result, collapse = "\n"))
   expect_match(paste(result, collapse = "\n"), "3D surface visibility passed")
 })
+test_that("surface overlays reject malformed axes and overflowing spans", {
+  layer <- SurfaceLayer(z = matrix(0, 2L, 2L))
+  plot <- draw_scatter3d(0:1, 0:1, 0:1)
+  plot[["x"]][["option"]][["xAxis3D"]][["type"]] <- "category"
+  expect_error(
+    draw_add_surface(plot, layer = layer),
+    "numeric Cartesian 3D axis"
+  )
+  plot[["x"]][["option"]][["xAxis3D"]] <- list(
+    type = "value",
+    min = -1e308,
+    max = 1e308
+  )
+  expect_error(draw_add_surface(plot, layer = layer), "finite nonzero range")
+})

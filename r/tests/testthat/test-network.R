@@ -320,3 +320,48 @@ test_that("SigmaOption strips names from color scalars when serializing", {
   expect_null(names(lst$style$nodeColor))
   expect_identical(lst$style$nodeColor, "#6CA3A0")
 })
+test_that("graph builders reject malformed matrices and edge tables", {
+  expect_error(
+    graph_from_matrix(matrix("a", 2L, 2L)),
+    "numeric",
+    class = "rtemis_type_error"
+  )
+  expect_error(
+    graph_from_edge_list(list()),
+    "data frame",
+    class = "rtemis_type_error"
+  )
+  expect_error(
+    graph_from_edge_list(data.frame(source = "A")),
+    "at least 2",
+    class = "rtemis_dim_error"
+  )
+  expect_error(
+    graph_from_edge_list(
+      data.frame(source = "A", target = "B"),
+      nodes = list()
+    ),
+    "nodes.*data frame"
+  )
+})
+
+test_that("graph node tables preserve labels, values and isolated nodes", {
+  edges <- data.frame(source = "A", target = "B")
+  nodes <- data.frame(
+    name = c("A", "isolated"),
+    label = c("Alpha", "Alone"),
+    value = c(5, 0)
+  )
+  graph <- to_list(graph_from_edge_list(edges, nodes))
+  expect_equal(graph[["nodes"]][[1L]][["id"]], "A")
+  expect_equal(graph[["nodes"]][[1L]][["label"]], "Alpha")
+  expect_equal(graph[["nodes"]][[1L]][["value"]], 5)
+  expect_equal(graph[["nodes"]][[2L]][["value"]], 0)
+  expect_equal(graph[["nodes"]][[3L]][["id"]], "B")
+  fallback <- to_list(graph_from_edge_list(
+    edges,
+    data.frame(key = c("A", "isolated"))
+  ))
+  expect_equal(fallback[["nodes"]][[2L]][["label"]], "isolated")
+  expect_equal(fallback[["nodes"]][[2L]][["value"]], 0)
+})

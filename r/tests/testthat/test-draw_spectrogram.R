@@ -326,3 +326,99 @@ test_that("draw_spectrogram accepts a complex matrix (raw STFT)", {
   w <- draw_spectrogram(sg[["S"]], time = sg[["t"]], frequency = sg[["f"]])
   expect_s3_class(w, "htmlwidget")
 })
+test_that("custom and diverging palettes reverse both theme variants", {
+  custom <- c("#000000", "#ffffff")
+  expect_identical(
+    .spectrogram_palette(custom, 3L, TRUE, c(0, 1)),
+    c("#FFFFFF", "#7F7F7F", "#000000")
+  )
+  for (limits in list(NULL, c(0, 2))) {
+    forward <- .spectrogram_palette("diverging", 5L, FALSE, limits)
+    backward <- .spectrogram_palette("diverging", 5L, TRUE, limits)
+    expect_identical(as.vector(backward), rev(as.vector(forward)))
+    expect_identical(
+      attr(backward, "dark_variant"),
+      rev(attr(forward, "dark_variant"))
+    )
+  }
+  expect_error(
+    .spectrogram_palette(1:3, 3L, FALSE, c(0, 1)),
+    "colormap",
+    class = "rtemis_type_error"
+  )
+})
+
+test_that("spectrogram option validates scalar controls and matrix dimensions", {
+  values <- matrix(1:6, 2L)
+  for (name in c("power", "db", "colormap_reverse", "show_colorbar")) {
+    for (bad in list(1, c(TRUE, FALSE))) {
+      expect_error(
+        do.call(
+          spectrogram_option,
+          c(list(x = values), setNames(list(bad), name))
+        ),
+        name,
+        class = "rtemis_type_error"
+      )
+    }
+  }
+  expect_error(spectrogram_option(values, n_colors = 1), "n_colors")
+  expect_error(spectrogram_option(values, time = c(1, NA, 3)), "time")
+  expect_error(
+    spectrogram_option(array(1:8, c(2L, 2L, 2L))),
+    "matrix",
+    class = "rtemis_type_error"
+  )
+  expect_error(
+    spectrogram_option(values, freq_scale = "log", frequency = c(-1, 0)),
+    "positive-frequency"
+  )
+  expect_error(
+    spectrogram_option(values, time_range = c(10, 20)),
+    "No time frames"
+  )
+  expect_error(
+    spectrogram_option(matrix(NA_real_, 2L, 3L), db = FALSE),
+    "no finite values"
+  )
+})
+
+test_that("spectrogram option validates raw-signal sampling and window controls", {
+  signal <- sin(seq(0, 4 * pi, length.out = 32L))
+  expect_error(spectrogram_option(signal, sample_rate = 0), "sample_rate")
+  for (bad in list("eight", NA_real_, c(4, 8))) {
+    expect_error(
+      spectrogram_option(signal, sample_rate = 32, n_fft = bad),
+      "n_fft"
+    )
+  }
+  expect_error(
+    spectrogram_option(signal, sample_rate = 32, n_fft = 1),
+    "n_fft",
+    class = "rtemis_range_error"
+  )
+  for (bad in list("half", NA_real_, c(1, 2))) {
+    expect_error(
+      spectrogram_option(signal, sample_rate = 32, n_fft = 8, overlap = bad),
+      "overlap"
+    )
+  }
+})
+
+test_that("spectrogram titles reserve top space and time filtering preserves cells", {
+  result <- spectrogram_option(
+    matrix(1:6, 2L),
+    db = FALSE,
+    title = "Spectrum",
+    time = c(0, 1, 2),
+    time_range = c(.5, 2)
+  )
+  option <- to_list(result[["option"]])
+  expect_identical(option[["grid"]][["top"]], "50")
+  expect_identical(option[["title"]][["text"]], "Spectrum")
+  expect_length(option[["xAxis"]][["data"]], 2L)
+  expect_equal(
+    vapply(option[["series"]][[1L]][["data"]], `[[`, numeric(1), 3L),
+    c(3, 4, 5, 6)
+  )
+})

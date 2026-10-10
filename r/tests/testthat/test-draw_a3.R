@@ -438,3 +438,19 @@ test_that("A3 residue tooltips include annotations without overlay hit targets",
     )
   }
 })
+test_that("A3 options validate geometry and preserve custom grid settings", {
+  skip_if_not_installed("rtemis.a3")
+  value <- rtemis.a3::create_A3("MAEPR")
+  expect_error(
+    a3_option(x = LineStyle()),
+    "must be an A3",
+    class = "rtemis_type_error"
+  )
+  expect_error(a3_option(x = value, residue_spacing = 0), "residue_spacing")
+  expect_error(a3_option(x = value, position_every = 0L), "position_every")
+  expect_error(a3_option(x = value, grid = list(left = 20)), "Grid object")
+  built <- a3_option(x = value, grid = Grid(left = 20, bottom = 30))
+  option <- built[["option"]]
+  expect_equal(option[["grid"]][["left"]], 20)
+  expect_equal(option[["grid"]][["bottom"]], 30)
+})

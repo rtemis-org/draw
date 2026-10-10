@@ -561,3 +561,21 @@ test_that("histogram statistics retain counts and explicit normalization semanti
     opt
   )
 })
+test_that("histogram statistics retain empty bins and boundary observations", {
+  expect_identical(histogram_stat(numeric(), 0:3, "sum"), c(0, 0, 0))
+  expect_equal(histogram_stat(c(.5, 1, 1.5, 3), 0:3, "sum"), c(1.5, 1.5, 3))
+  expect_equal(
+    histogram_stat(c(.5, 1, 1.5, 5), 0:5, "mean"),
+    c(.75, 1.5, 0, 0, 5)
+  )
+  expect_error(
+    histogram_stat(rep(1e308, 2), c(0, 1.5e308), "sum"),
+    "bin statistics finite"
+  )
+  samples <- distribution_samples(
+    list(empty = c(NA, NA), observed = 1:2),
+    verbosity = 0L
+  )
+  expect_identical(samples[["empty"]], numeric())
+  expect_equal(samples[["observed"]], 1:2)
+})

@@ -1445,3 +1445,43 @@ test_that("equal_axes needs a numeric x", {
     class = "rtemis_value_error"
   )
 })
+test_that("Shiny output wrappers retain identifiers and dimensions", {
+  skip_if_not_installed("shiny")
+  output <- htmltools::renderTags(drawOutput(
+    "chart",
+    width = "90%",
+    height = "500px"
+  ))[["html"]]
+  expect_match(output, 'id="chart"', fixed = TRUE)
+  expect_match(output, "width:90%;", fixed = TRUE)
+  expect_match(output, "height:500px;", fixed = TRUE)
+  expect_match(output, "rtemis-draw", fixed = TRUE)
+  expect_s3_class(renderDraw(draw_bar("A", 1)), "shiny.render.function")
+  expect_s3_class(
+    renderDraw(quote(draw_bar("A", 1)), quoted = TRUE),
+    "shiny.render.function"
+  )
+})
+
+test_that("axis spans require known numeric limits", {
+  expect_error(
+    axis_span(Axis(type = "category"), "x", square = TRUE, equal_axes = FALSE),
+    "square.*categorical"
+  )
+  expect_error(
+    axis_span(Axis(type = "value"), "y", square = FALSE, equal_axes = TRUE),
+    "equal_axes.*unbounded"
+  )
+})
+test_that("zoom presets target the requested axis and retain explicit lists", {
+  zoom <- resolve_zoom(TRUE, axis = "y")
+  expect_equal(zoom[[1L]]@y_axis_index, 0)
+  expect_equal(zoom[[2L]]@y_axis_index, 0)
+  expect_null(zoom[[1L]]@x_axis_index)
+  explicit <- list(DataZoom(type = "inside", start = 20))
+  expect_identical(resolve_zoom(explicit), explicit)
+  expect_identical(
+    equal_axis_limits(NULL, NULL, NULL, NULL, .04, TRUE, TRUE),
+    list(xlim = NULL, ylim = NULL)
+  )
+})

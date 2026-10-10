@@ -1,3 +1,20 @@
+test_that("fit coordinates add a named curve and extend explicit legend entries", {
+  plot <- draw_scatter(1:3, 2:4)
+  plot[["x"]][["option"]][["legend"]] <- list(data = list("Observed"))
+  out <- draw_add_fit(plot, x = c(3, 1, 2), y = c(4, 2, 3), name = "Predicted")
+  option <- out[["x"]][["option"]]
+  expect_identical(option[["legend"]][["data"]], list("Observed", "Predicted"))
+  expect_equal(
+    tail(option[["series"]], 1L)[[1L]][["data"]],
+    list(c(1, 2), c(2, 3), c(3, 4))
+  )
+  again <- draw_add_fit(out, x = 1:3, y = 2:4, name = "Predicted")
+  expect_identical(
+    again[["x"]][["option"]][["legend"]][["data"]],
+    list("Observed", "Predicted")
+  )
+})
+
 test_that("supplied fits preserve paired coordinates and interval bounds", {
   layer <- FitLayer(
     x = c(3, 1, 2),

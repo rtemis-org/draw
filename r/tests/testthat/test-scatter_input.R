@@ -45,3 +45,10 @@ test_that("scatter inputs align lists and retain per-point metadata", {
     opt
   )
 })
+test_that("scatter inputs require a complete observation after filtering", {
+  expect_error(
+    draw_scatter(c(1, NA), c(NA, 2)),
+    "complete scatter observation",
+    class = "rtemis_null_input"
+  )
+})

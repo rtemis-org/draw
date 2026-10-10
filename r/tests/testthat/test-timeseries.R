@@ -167,3 +167,66 @@ test_that("time annotations use the same data-binding and functional path", {
   )
   expect_false(compiled[["xAxis"]][["axisLabel"]][["show"]])
 })
+test_that("time series validate names, time-vector counts and secondary inputs", {
+  expect_error(
+    timeseries_samples(1:2, list()),
+    "one time vector",
+    class = "rtemis_length_error"
+  )
+  expect_error(
+    timeseries_samples(list(1:2), list(A = 1:2, B = 3:4)),
+    "one time vector"
+  )
+  expect_error(
+    timeseries_samples(1:2, list(A = 1:2, A = 3:4)),
+    "distinct nonempty"
+  )
+  expect_error(draw_xt(1:2, 1:2, x2 = 1:2), "Supply y2")
+  expect_error(draw_xt(list(1:2), list(A = 1:2), zt = 1:2), "shared x vector")
+  expect_error(
+    compile(setup_TimeSeriesConfig(x = "Time"), BOD),
+    "Bind at least one"
+  )
+  expect_identical(
+    rolling_values(1:3, setup_TimeSeriesConfig(roll_fn = "none")),
+    rep(NA_real_, 3L)
+  )
+  expect_error(
+    draw_ts(rep(1e308, 3), time = 1:3, roll_fn = "sum", window = 2L),
+    "rolling summaries finite"
+  )
+})
+
+test_that("time-series bindings preserve secondary axes and explicit intervals", {
+  data <- data.frame(
+    time = 1:3,
+    value = 2:4,
+    secondary = 20:22,
+    phase = c(0, 6, 12)
+  )
+  config <- setup_TimeSeriesConfig(
+    x = "time",
+    y = "value",
+    y2 = "secondary",
+    roll_fn = "none"
+  )
+  option <- to_list(compile(config, data))
+  expect_identical(option[["series"]][[2L]][["name"]], "secondary")
+  expect_equal(option[["series"]][[2L]][["yAxisIndex"]], 1L)
+  invalid <- setup_TimeSeriesConfig(
+    x = "time",
+    y = "value",
+    x2 = "time",
+    y2 = "secondary",
+    zt = "phase"
+  )
+  expect_error(compile(invalid, data), "shared x binding")
+  shaded <- draw_xt(1:3, 2:4, shade_interval = list(c(1, 2)))[["x"]][["option"]]
+  expect_true(length(shaded[["series"]]) > 1L)
+  expect_equal(
+    tail(shaded[["series"]], 1L)[[1L]][["markArea"]][["data"]][[1L]][[1L]][[
+      "xAxis"
+    ]],
+    1
+  )
+})

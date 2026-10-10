@@ -44,6 +44,10 @@ test:
     cd {{r_dir}} && {{rscript}} -e "testthat::test_local(stop_on_failure = TRUE)"
     @just _msg "Done"
 
+# Measure local test coverage, including tests skipped on CRAN
+coverage-local output="coverage/local":
+    {{rscript}} r/tools/coverage-local.R "{{output}}"
+
 # Build the source tarball
 build: clean
     @just _msg "─── Building {{pkg}} package... ───"

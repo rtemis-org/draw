@@ -428,3 +428,45 @@ test_that("static ROC export omits invisible hover symbols and retains its color
   expect_match(svg, 'stroke="#123456"', fixed = TRUE)
   expect_match(svg, "AUC 0.875", fixed = TRUE)
 })
+test_that("ROC input rejects empty labels and mismatched probability sets", {
+  for (bad in list(
+    character(),
+    list("no", "yes"),
+    matrix(c("no", "yes"), 2L)
+  )) {
+    expect_error(
+      roc_probabilities(bad, c(.2, .8)),
+      "reference-label",
+      class = "rtemis_type_error"
+    )
+  }
+  expect_error(roc_probabilities(c("yes", "yes"), c(.2, .8)), "at least two")
+  expect_error(
+    roc_probabilities(
+      roc_test_labels(),
+      matrix(.5, 4L, 1L, dimnames = list(NULL, "unknown"))
+    ),
+    "class label"
+  )
+  expect_error(
+    roc_input(list(), list()),
+    "nonzero number",
+    class = "rtemis_length_error"
+  )
+  expect_error(
+    roc_input(list(roc_test_labels()), list(rep(.5, 4L), rep(.5, 4L))),
+    "nonzero number"
+  )
+})
+
+test_that("ROC tables accept factor labels and validate supplied AUC bounds", {
+  records <- roc_test_records()
+  records[["class"]] <- factor(records[["class"]])
+  expect_no_error(compile(roc_test_config(), records))
+  records[["auc"]] <- 1.1
+  expect_error(
+    compile(roc_test_config(), records),
+    "AUC values",
+    class = "rtemis_value_error"
+  )
+})

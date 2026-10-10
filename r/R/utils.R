@@ -1,4 +1,17 @@
 # utils.R
+
+rtemis_welcome <- function(pkgname, pkgversion) {
+  paste0(
+    ".:",
+    pkgname,
+    " ",
+    pkgversion,
+    " \U1F58C",
+    " ",
+    utils::sessionInfo()[["platform"]]
+  )
+}
+
 # Foundational utilities for the draw package:
 # - snake_case to camelCase conversion for JSON serialization
 # - NULL-dropping for clean list output

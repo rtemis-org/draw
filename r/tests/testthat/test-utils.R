@@ -1,6 +1,26 @@
 # test-utils.R
 # Tests for internal utility helpers
 
+test_that("rtemis_welcome returns the formatted welcome string silently", {
+  expect_silent(
+    welcome <- rtemis.draw:::rtemis_welcome("example.pkg", "1.2.3")
+  )
+  expect_identical(
+    welcome,
+    paste(".:example.pkg 1.2.3 \U0001F58C", utils::sessionInfo()[["platform"]])
+  )
+})
+
+test_that("rtemis_welcome accepts package_version objects", {
+  expect_identical(
+    rtemis.draw:::rtemis_welcome("rtemis.draw", package_version("0.5.3.9000")),
+    paste(
+      ".:rtemis.draw 0.5.3.9000 \U0001F58C",
+      utils::sessionInfo()[["platform"]]
+    )
+  )
+})
+
 test_that("snake_to_camel converts snake_case names to camelCase", {
   expect_equal(rtemis.draw:::snake_to_camel("border_width"), "borderWidth")
   expect_equal(rtemis.draw:::snake_to_camel("font_size"), "fontSize")
@@ -149,4 +169,122 @@ test_that("auto_alpha falls with the log of the point count", {
   expect_equal(auto_alpha(1), 0.9)
   expect_equal(auto_alpha(1e7), 0.15)
   expect_true(auto_alpha(150) > auto_alpha(151))
+})
+
+test_that("numeric and logical property factories enforce scalar bounds", {
+  ScalarProperties <- S7::new_class(
+    "ScalarProperties",
+    properties = list(
+      size = nonneg_numeric_default(2),
+      opacity = prob_default(.5),
+      visible = logical_default(TRUE),
+      mode = map_enum_default(c("first", "second"), "first")
+    )
+  )
+  value <- ScalarProperties()
+  expect_identical(value@size, 2)
+  expect_identical(value@opacity, .5)
+  expect_true(value@visible)
+  expect_identical(value@mode, "first")
+  expect_equal(ScalarProperties(size = 0)@size, 0)
+  for (opacity in c(0, 1)) {
+    expect_equal(ScalarProperties(opacity = opacity)@opacity, opacity)
+  }
+  expect_false(ScalarProperties(visible = FALSE)@visible)
+  expect_identical(ScalarProperties(mode = "second")@mode, "second")
+  for (bad in list(-1, NA_real_, numeric(), c(1, 2))) {
+    expect_error(ScalarProperties(size = bad), "non-negative")
+  }
+  for (bad in list(-.1, 1.1, NA_real_, numeric(), c(0, 1))) {
+    expect_error(ScalarProperties(opacity = bad), "single number")
+  }
+  for (bad in list(NA, logical(), c(TRUE, FALSE))) {
+    expect_error(ScalarProperties(visible = bad), "single logical")
+  }
+  for (bad in list("other", NA_character_, character(), c("first", "second"))) {
+    expect_error(ScalarProperties(mode = bad), "must be one of")
+  }
+})
+
+test_that("nullable property factories validate values and omit unset fields", {
+  NullableProperties <- S7::new_class(
+    "NullableProperties",
+    properties = list(
+      size = numeric_or_null_property(),
+      position = numeric_or_string_property(),
+      color = color_palette_property(),
+      offset = symbol_offset_property(),
+      style = class_or_null_property(LineStyle)
+    )
+  )
+  expect_identical(props_to_list(NullableProperties()), list())
+  value <- NullableProperties(
+    size = 2,
+    position = "10%",
+    color = c("red", "blue"),
+    offset = c("-50%", "50%"),
+    style = LineStyle(width = 3)
+  )
+  expect_identical(
+    props_to_list(value),
+    list(
+      size = 2,
+      position = "10%",
+      color = c("red", "blue"),
+      offset = c("-50%", "50%"),
+      style = list(width = 3)
+    )
+  )
+  expect_equal(NullableProperties(position = 10, offset = 2)@position, 10)
+  expect_equal(NullableProperties(offset = c(1, 2))@offset, c(1, 2))
+  for (bad in list("2", c(1, 2))) {
+    expect_error(NullableProperties(size = bad), "single number")
+  }
+  expect_error(NullableProperties(position = TRUE), "number, string")
+  expect_error(NullableProperties(position = c(1, 2)), "single value")
+  expect_error(NullableProperties(color = 1:2), "character vector")
+  expect_error(NullableProperties(offset = TRUE), "percentage string")
+  for (bad in list(numeric(), 1:3)) {
+    expect_error(NullableProperties(offset = bad), "length-2")
+  }
+  expect_error(NullableProperties(style = TextStyle()), "LineStyle")
+})
+
+test_that("property serialization applies renames and preserves nested list values", {
+  NestedProperties <- S7::new_class(
+    "NestedProperties",
+    properties = list(
+      line_style = S7::class_any,
+      entries = S7::class_list
+    )
+  )
+  value <- NestedProperties(
+    line_style = list(primary = LineStyle(width = 2), label = "primary"),
+    entries = list(LineStyle(color = "red"), "plain")
+  )
+  expect_identical(
+    props_to_list(value, rename = c(line_style = "stroke_style")),
+    list(
+      strokeStyle = list(primary = list(width = 2), label = "primary"),
+      entries = list(list(color = "red"), "plain")
+    )
+  )
+})
+
+test_that("margins reject non-vector inputs and draw rejects unnamed arguments", {
+  expect_error(
+    parse_margins(environment()),
+    "named numeric vector",
+    class = "rtemis_type_error"
+  )
+  expect_error(
+    check_dots_empty(1),
+    "1 unnamed argument",
+    class = "rtemis_value_error"
+  )
+  expect_error(
+    check_dots_empty(1, 2),
+    "2 unnamed arguments",
+    class = "rtemis_value_error"
+  )
 })

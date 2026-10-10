@@ -382,3 +382,36 @@ test_that("square heatmaps keep their geometry in bounded panels and after resiz
   expect_null(attr(output, "status"), info = paste(output, collapse = "\n"))
   expect_match(paste(output, collapse = "\n"), "passed")
 })
+test_that("heatmap trees retain supplied column order and alternate dendrogram sides", {
+  values <- matrix(
+    c(1, 4, 2, 5, 9, 6, 3, 8, 7),
+    3L,
+    dimnames = list(LETTERS[1:3], letters[1:3])
+  )
+  tree <- stats::hclust(stats::dist(t(values)))
+  palette <- c("#000000", "#ffffff")
+  built <- heatmap_option(
+    x = values,
+    col_tree = tree,
+    cluster_rows = TRUE,
+    dendro_row_side = "left",
+    dendro_col_side = "bottom",
+    colormap = palette,
+    margins = c(left = 30, right = 40, top = 50, bottom = 60)
+  )
+  option <- to_list(built[["option"]])
+  # Dendrogram grids precede the heatmap grid.
+  expect_equal(option[["grid"]][[1L]][["left"]], 0)
+  expect_equal(option[["grid"]][[2L]][["bottom"]], 0)
+  expect_equal(option[["grid"]][[3L]][["right"]], 40)
+  expect_equal(
+    option[["xAxis"]][[3L]][["data"]],
+    as.list(colnames(values)[tree[["order"]]])
+  )
+  expect_identical(option[["xAxis"]][[3L]][["position"]], "top")
+  expect_equal(option[["visualMap"]][["inRange"]][["color"]], as.list(palette))
+  expect_error(
+    heatmap_option(x = matrix(c(1, NA, NA, 1), 2L), triangle = "lower"),
+    "off-diagonal"
+  )
+})

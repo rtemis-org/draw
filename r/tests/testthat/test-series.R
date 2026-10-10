@@ -464,3 +464,14 @@ test_that("LineSeries mark_area serializes to markArea", {
   expect_equal(out$markArea$data[[1]][[1]]$xAxis, 1)
   expect_equal(out$markArea$data[[1]][[2]]$xAxis, 2)
 })
+test_that("series symbol sizes and mark-area values enforce supported shapes", {
+  expect_error(LineSeries(symbol_size = 1:3), "length-2")
+  expect_error(ScatterSeries(symbol_size = "large"), "length-2")
+  expect_error(PieSeries(radius = TRUE), "number/string")
+  expect_error(MarkAreaDataPoint(value = TRUE), "single number")
+  corners <- list(list(xAxis = 1), list(xAxis = 2))
+  expect_identical(
+    to_list(MarkArea(data = list(corners)))[["data"]],
+    list(corners)
+  )
+})
