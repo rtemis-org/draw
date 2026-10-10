@@ -46,7 +46,7 @@ Suggests:
     pROC,
     rmarkdown,
     rtemis,
-    rtemis.a3,
+    rtemis.a3 (>= 0.6.0),
     shiny,
     survival,
     testthat (>= 3.0.0)

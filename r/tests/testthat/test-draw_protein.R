@@ -78,10 +78,14 @@ test_that("typed protein annotations also respect sequence bounds", {
     "MAEPR",
     region = list(Domain = rtemis.a3::annotation_range(c(1L, 9L)))
   ))
-  expect_error(protein_data(
-    "MAEPR",
-    variant = list(rtemis.a3::annotation_variant(9L))
-  ))
+  expect_error(
+    protein_data(
+      "MAEPR",
+      variant = list(rtemis.a3::annotation_variant(9L))
+    ),
+    "Keep variants within the sequence",
+    class = "rtemis_value_error"
+  )
 })
 test_that("protein annotation groups require distinct nonempty names", {
   skip_if_not_installed("rtemis.a3")
