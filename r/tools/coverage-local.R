@@ -65,4 +65,29 @@ local({
       "Resolve the skipped tests reported in testthat.Rout and rerun local coverage."
     )
   }
+
+  # Update the README badge after the complete test run succeeds.
+  readme <- paste(readLines("README.md", warn = FALSE), collapse = "\n")
+  badge_pattern <- paste0(
+    "\\[!\\[Local test coverage: [^]]+\\]\\([^)]*\\)\\]",
+    "\\(r/tools/coverage-local[.]R \"[^\"]*\"\\)"
+  )
+  matches <- gregexpr(badge_pattern, readme)[[1L]]
+  if (length(matches) != 1L || matches[[1L]] < 0L) {
+    rtemis.core::abort("Add exactly one local coverage badge to README.md.")
+  }
+  percent <- sprintf("%.2f", covr::percent_coverage(coverage))
+  badge <- paste0(
+    "[![Local test coverage: ",
+    percent,
+    "%]",
+    "(https://img.shields.io/badge/local%20coverage-",
+    percent,
+    "%25-brightgreen)]",
+    "(r/tools/coverage-local.R \"Measured with just coverage-local on ",
+    Sys.Date(),
+    "\")"
+  )
+  writeLines(sub(badge_pattern, badge, readme), "README.md")
+  cat("README coverage badge: ", percent, "%\n", sep = "")
 })
