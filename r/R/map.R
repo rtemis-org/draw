@@ -131,7 +131,7 @@ S7::method(to_list, MapRow) <- function(x, ...) {
 MapModel <- S7::new_class(
   "MapModel",
   properties = list(
-    rows = S7::new_property(class = S7::class_list, default = list()),
+    rows = S7::new_property(class = S7::class_list, default = quote(list())),
     resolution = S7::new_property(
       S7::class_character,
       default = "country",
@@ -148,7 +148,7 @@ MapModel <- S7::new_class(
     value_label = S7::new_property(S7::class_character, default = "value"),
     tooltip_fields = S7::new_property(
       S7::class_character,
-      default = character(0)
+      default = quote(character(0))
     )
   ),
   validator = function(self) {
