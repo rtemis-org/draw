@@ -29,7 +29,7 @@ AnnotationLayer <- new_class(
     x = new_property(class_any, default = quote(numeric())),
     y = new_property(class_any, default = quote(numeric())),
     text = prop_string(NULL, nullable = TRUE, vector = TRUE),
-    bands = new_property(class_list, default = quote(list())),
+    bands = new_property(class_list, default = list()),
     color = prop_string("#888888"),
     line_type = prop_string("dashed", enum = c("solid", "dashed", "dotted")),
     opacity = prop_float(.15, min = 0, max = 1),

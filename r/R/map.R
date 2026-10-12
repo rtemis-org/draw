@@ -131,7 +131,7 @@ S7::method(to_list, MapRow) <- function(x, ...) {
 MapModel <- S7::new_class(
   "MapModel",
   properties = list(
-    rows = S7::new_property(class = S7::class_list, default = quote(list())),
+    rows = S7::new_property(class = S7::class_list, default = list()),
     resolution = S7::new_property(
       S7::class_character,
       default = "country",

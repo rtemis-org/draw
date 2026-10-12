@@ -123,8 +123,8 @@ S7::method(to_list, GraphEdge) <- function(x, ...) {
 GraphModel <- S7::new_class(
   "GraphModel",
   properties = list(
-    nodes = S7::new_property(class = S7::class_list, default = quote(list())),
-    edges = S7::new_property(class = S7::class_list, default = quote(list())),
+    nodes = S7::new_property(class = S7::class_list, default = list()),
+    edges = S7::new_property(class = S7::class_list, default = list()),
     directed = prop_boolean(default = NULL)
   ),
   validator = function(self) {
