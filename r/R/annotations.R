@@ -26,8 +26,8 @@ AnnotationLayer <- new_class(
   properties = list(
     hline = prop_float(NULL, nullable = TRUE, vector = TRUE),
     vline = prop_float(NULL, nullable = TRUE, vector = TRUE),
-    x = new_property(class_any, default = quote(numeric())),
-    y = new_property(class_any, default = quote(numeric())),
+    x = new_property(class_any, default = numeric()),
+    y = new_property(class_any, default = numeric()),
     text = prop_string(NULL, nullable = TRUE, vector = TRUE),
     bands = new_property(class_list, default = list()),
     color = prop_string("#888888"),

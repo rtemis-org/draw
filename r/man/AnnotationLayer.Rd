@@ -7,8 +7,8 @@
 AnnotationLayer(
   hline = NULL,
   vline = NULL,
-  x = numeric(),
-  y = numeric(),
+  x = numeric(0),
+  y = numeric(0),
   text = NULL,
   bands = list(),
   color = "#888888",

@@ -148,7 +148,7 @@ MapModel <- S7::new_class(
     value_label = S7::new_property(S7::class_character, default = "value"),
     tooltip_fields = S7::new_property(
       S7::class_character,
-      default = quote(character(0))
+      default = character(0)
     )
   ),
   validator = function(self) {
