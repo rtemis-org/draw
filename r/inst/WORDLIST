@@ -14,10 +14,12 @@ FPR
 FitLayer
 ForceAtlas
 Formatter
+Fronkonstin
 GL
 GL's
 Gantt
 GraphModel
+Harmonograph
 JS
 LabelOption
 LineSeriesOption
@@ -81,6 +83,7 @@ formatter
 gam
 glm
 hanning
+harmonograph
 hclust
 htmlwidget
 htmlwidgets
