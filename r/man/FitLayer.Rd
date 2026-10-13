@@ -5,8 +5,8 @@
 \title{Supplied Fit Layer}
 \usage{
 FitLayer(
-  x = identity(c(0, 1)),
-  y = identity(c(0, 1)),
+  x = c(0, 1),
+  y = c(0, 1),
   lower = NULL,
   upper = NULL,
   name = "Fit",

@@ -1,3 +1,11 @@
+test_that("fit defaults retain their coordinate expressions", {
+  expect_identical(formals(FitLayer)[["x"]], quote(c(0, 1)))
+  expect_identical(formals(FitLayer)[["y"]], quote(c(0, 1)))
+  layer <- FitLayer()
+  expect_identical(layer@x, c(0, 1))
+  expect_identical(layer@y, c(0, 1))
+})
+
 test_that("fit coordinates add a named curve and extend explicit legend entries", {
   plot <- draw_scatter(1:3, 2:4)
   plot[["x"]][["option"]][["legend"]] <- list(data = list("Observed"))

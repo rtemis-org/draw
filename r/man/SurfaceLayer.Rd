@@ -5,8 +5,8 @@
 \title{Supplied Three-Dimensional Surface}
 \usage{
 SurfaceLayer(
-  x = identity(c(0, 1)),
-  y = identity(c(0, 1)),
+  x = c(0, 1),
+  y = c(0, 1),
   z = NULL,
   name = "Surface",
   color = "#6ca3a0",
