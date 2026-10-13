@@ -1,4 +1,4 @@
-[![R CI](https://github.com/rtemis-org/draw/actions/workflows/r-ci.yml/badge.svg)](https://github.com/rtemis-org/draw/actions/workflows/r-ci.yml) [![rtemis.draw status badge](https://rtemis-org.r-universe.dev/rtemis.draw/badges/version)](https://rtemis-org.r-universe.dev/rtemis.draw) [![Local test coverage: 98.67%](https://img.shields.io/badge/local%20coverage-98.67%25-brightgreen)](r/tools/coverage-local.R "Measured with just coverage-local on 2026-10-10")
+[![CRAN status](https://www.r-pkg.org/badges/version/rtemis.draw)](https://CRAN.R-project.org/package=rtemis.draw) [![rtemis.draw status badge](https://rtemis-org.r-universe.dev/rtemis.draw/badges/version)](https://rtemis-org.r-universe.dev/rtemis.draw) [![R CI](https://github.com/rtemis-org/draw/actions/workflows/r-ci.yml/badge.svg)](https://github.com/rtemis-org/draw/actions/workflows/r-ci.yml) [![Local test coverage: 98.67%](https://img.shields.io/badge/local%20coverage-98.67%25-brightgreen)](r/tools/coverage-local.R "Measured with just coverage-local on 2026-10-10")
 
 # rtemis.draw
 
