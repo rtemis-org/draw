@@ -6,7 +6,7 @@ Authors@R:
     person(given = "E.D.", family = "Gennatas", role = c("aut", "cre", "cph"),
            email = "gennatas@gmail.com",
            comment = c(ORCID = "0000-0001-9280-3609"))
-Description: Create interactive statistical charts, network graphs and
+Description: Create interactive statistical charts, network graphs, and
     choropleth maps. Charts are rendered with the 'ECharts' 'JavaScript'
     library, networks with 'Sigma.js' and maps with 'MapLibre GL JS'.
     A high-level interface of plotting functions builds a complete
@@ -117,6 +117,7 @@ Collate:
     'draw_boxplot.R'
     'draw_metric.R'
     'draw_panels.R'
+    'draw_harmonograph.R'
     'export.R'
     'zzz.R'
 Config/roxygen2/version: 8.1.1

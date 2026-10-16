@@ -4,6 +4,8 @@
 
 * Updates for compatibility with S7 > 0.2.2.
 
+* `draw_harmonograph()` draws harmonograph curves from random or supplied pendulum frequencies, damping rates and phases.
+
 * `draw_scatter3d()` uses perspective projection by default, with configurable camera distance and an orthographic option; SVG export follows the configured camera.
 
 * 3D hover guides use dotted lines and follow the active theme with their value labels, preserving explicit color settings.
