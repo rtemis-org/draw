@@ -4,7 +4,11 @@
 pkgversion <- utils::packageVersion("rtemis.draw")
 
 .onLoad <- function(libname, pkgname) {
-  S7::methods_register()
+  if ("S7_on_load" %in% getNamespaceExports("S7")) {
+    S7::S7_on_load()
+  } else {
+    S7::methods_register()
+  }
 }
 
 .onAttach <- function(libname, pkgname) {
@@ -16,4 +20,14 @@ pkgversion <- utils::packageVersion("rtemis.draw")
       )
     )
   }
+}
+
+.onUnload <- function(libpath) {
+  if ("S7_on_unload" %in% getNamespaceExports("S7")) {
+    S7::S7_on_unload()
+  }
+}
+
+if ("S7_on_build" %in% getNamespaceExports("S7")) {
+  S7::S7_on_build()
 }

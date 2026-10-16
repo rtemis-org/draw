@@ -2,6 +2,8 @@
 
 ## rtemis.draw 0.5.4
 
+* Updates for compatibility with S7 > 0.2.2.
+
 * `draw_harmonograph()` draws harmonograph curves from random or supplied pendulum frequencies, damping rates and phases.
 
 * `draw_scatter3d()` uses perspective projection by default, with configurable camera distance and an orthographic option; SVG export follows the configured camera.
