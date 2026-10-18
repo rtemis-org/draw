@@ -17,7 +17,8 @@ draw(
 }
 \arguments{
 \item{option}{\link{ChartConfig} subclass, \link{EChartsOption}, \link{SigmaOption},
-\link{MapLibreOption}, or named list: Chart configuration or render spec to draw.
+\link{MapLibreOption}, \link{PeleOption}, or named list: Chart configuration or
+render spec to draw.
 All concrete chart configuration classes listed below are supported.}
 
 \item{theme}{Optional \link{Theme}, list, or \code{NA}: Theme override. \code{NULL} enables
@@ -30,14 +31,14 @@ light/dark auto-detection; \code{NA} disables theming. Applied to every backend.
 \item{element_id}{Optional Character: Explicit element ID.}
 
 \item{filename}{Optional Character: If provided, the widget is also written to
-this file via \code{\link[=save_drawing]{save_drawing()}} (ECharts only; other backends reject static
-export requests). Extension determines the format (currently only \code{.svg}).}
+this file via \code{\link[=save_drawing]{save_drawing()}}. Extension determines the format (currently
+only \code{.svg}).}
 
 \item{animation}{Optional Logical: Whether ECharts animates the chart.
 \code{NULL} (default) leaves ECharts' own default in place. \code{FALSE} disables
 animation, which matters for charts with many points, where animating
-every interactive update is expensive. Ignored by the Sigma and MapLibre
-backends, which have no ECharts animation to disable.}
+every interactive update is expensive. Ignored by the Sigma, MapLibre, and
+Pele backends, which have no ECharts animation to disable.}
 
 \item{...}{Named arguments for the selected method. For \link{ChartConfig}
 subclasses, \code{data} supplies the data to plot; its required structure depends
@@ -82,6 +83,7 @@ render using the corresponding backend.
 \item \link{EChartsOption} -> 'ECharts' (\code{rtemis-draw} widget).
 \item \link{SigmaOption} -> 'Sigma.js' (\code{rtemis-graph} widget).
 \item \link{MapLibreOption} -> 'MapLibre' (\code{rtemis-map} widget).
+\item \link{PeleOption} -> 'Pele' (\code{rtemis-diagram} widget).
 }
 
 A plain named list is treated as a raw 'ECharts' option.
@@ -96,7 +98,8 @@ Code, RStudio, or the browser's \code{prefers-color-scheme}), \code{NA} for no t
 Supported \link{ChartConfig} subclasses are \link{A3Config}, \link{BarConfig},
 \link{BoxplotConfig}, \link{CalibrationConfig}, \link{ChoroplethConfig}, \link{ConfusionConfig},
 \link{DensityConfig}, \link{GanttConfig}, \link{HeatmapConfig}, \link{HistogramConfig},
-\link{LineConfig}, \link{NetworkConfig}, \link{PieConfig}, \link{ROCConfig}, \link{SankeyConfig},
+\link{LineConfig}, \link{MermaidConfig}, \link{NetworkConfig}, \link{PieConfig}, \link{ROCConfig},
+\link{SankeyConfig},
 \link{ScatterConfig}, \link{Scatter3DConfig}, \link{SignificanceConfig}, \link{SpectrogramConfig},
 \link{SurvivalConfig}, and \link{TimeSeriesConfig}. Use their \verb{setup_*()} functions to
 create configurations, then pass the data to \code{draw()} with \verb{data =} or set

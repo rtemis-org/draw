@@ -2,6 +2,8 @@
 
 ## rtemis.draw 0.5.4
 
+* `draw_mermaid()` renders Mermaid diagram text with 'Pele' as a scrolling SVG widget that follows the light or dark theme and the palette, highlights selected nodes with `node_color` and `fill_alpha`, and exports it to SVG; `MermaidConfig` and `setup_MermaidConfig()` describe a diagram for `draw()` and the chart schemas, reading `.mmd` files through `dat_path`.
+
 * `draw_harmonograph()` draws harmonograph curves from random or supplied pendulum frequencies, damping rates and phases.
 
 * `draw_scatter3d()` uses perspective projection by default, with configurable camera distance and an orthographic option; SVG export follows the configured camera.
