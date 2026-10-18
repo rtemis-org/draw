@@ -4,13 +4,14 @@
 \name{rtemis.draw-package}
 \alias{rtemis.draw}
 \alias{rtemis.draw-package}
-\title{rtemis.draw: Schema-Driven Interactive Charts, Network Graphs, and Maps}
+\title{rtemis.draw: Schema-Driven Interactive Charts, Networks, Maps, and Diagrams}
 \description{
-Create interactive statistical charts, network graphs and choropleth maps.
-Charts are rendered with 'ECharts', networks with 'Sigma.js' and maps with
-'MapLibre GL JS'. Every visualization is an 'htmlwidgets' widget that
-automatically follows the light or dark theme of wherever it is shown, and
-can be exported to a Scalable Vector Graphics (SVG) file.
+Create interactive statistical charts, network graphs, choropleth maps, and
+diagrams. Charts are rendered with 'ECharts', networks with 'Sigma.js', maps
+with 'MapLibre GL JS', and diagrams written in 'Mermaid' syntax with 'Pele'.
+Every visualization is an 'htmlwidgets' widget that automatically follows the
+light or dark theme of wherever it is shown, and can be exported to a
+Scalable Vector Graphics (SVG) file.
 }
 \section{Statistical charts}{
 
@@ -28,7 +29,7 @@ can be exported to a Scalable Vector Graphics (SVG) file.
 \item Sequences: \code{\link[=draw_protein]{draw_protein()}}, \code{\link[=draw_a3]{draw_a3()}}.
 }
 
-Add fitted lines, reference lines, bands and labels with \code{\link[=draw_add_fit]{draw_add_fit()}}
+Add fitted lines, reference lines, bands, and labels with \code{\link[=draw_add_fit]{draw_add_fit()}}
 and \code{\link[=draw_annotate]{draw_annotate()}}, and arrange several charts into one figure with
 \code{\link[=draw_panels]{draw_panels()}}.
 }
@@ -41,17 +42,26 @@ from an edge list, with 'Sigma.js'.
 
 \section{Choropleth maps}{
 
-\code{\link[=draw_choropleth]{draw_choropleth()}} colors countries, U.S. states or U.S. counties by a
+\code{\link[=draw_choropleth]{draw_choropleth()}} colors countries, U.S. states, or U.S. counties by a
 value, with 'MapLibre GL JS'. Boundaries are bundled with the package, so
 maps need no network access.
+}
+
+\section{Diagrams}{
+
+\code{\link[=draw_mermaid]{draw_mermaid()}} draws a diagram from 'Mermaid' text with 'Pele', including
+flowcharts, sequence, class, state, and entity relationship diagrams, Gantt
+charts, mindmaps, and every other diagram type built into 'Mermaid'
+12.1.0. \code{\link[=setup_MermaidConfig]{setup_MermaidConfig()}} also reads the diagram text from a \code{.mmd}
+file.
 }
 
 \section{Configuration}{
 
 Each \verb{draw_*()} function builds a validated 'S7' configuration object,
 e.g. from \code{\link[=setup_ScatterConfig]{setup_ScatterConfig()}}, and renders it. Configurations can be
-written to and read from 'JSON' files with \code{\link[=write_chart_config]{write_chart_config()}} and
-\code{\link[=read_chart_config]{read_chart_config()}}, and \code{\link[=chart_schema]{chart_schema()}} returns the 'JSON' Schema that
+written to and read from JSON files with \code{\link[=write_chart_config]{write_chart_config()}} and
+\code{\link[=read_chart_config]{read_chart_config()}}, and \code{\link[=chart_schema]{chart_schema()}} returns the JSON Schema that
 such files validate against. \code{\link[=draw]{draw()}} renders a complete low-level option
 object directly.
 }
@@ -59,7 +69,7 @@ object directly.
 \section{Themes}{
 
 By default, visualizations detect whether they are shown on a light or dark
-background in 'RStudio', 'VS Code', 'Quarto' and the browser, style
+background in 'RStudio', 'VS Code', 'Quarto', and the browser, style
 themselves to match, and switch when the viewer changes theme, e.g. with the
 'Quarto' light/dark toggle or the operating system setting. Networks and
 maps keep their current pan and zoom when they switch. Pass \code{\link[=theme_light]{theme_light()}}
@@ -68,7 +78,7 @@ or \code{\link[=theme_dark]{theme_dark()}} as \code{theme} to fix a theme.
 
 \section{Output}{
 
-Visualizations display in the 'RStudio' and 'VS Code' viewers, 'R Markdown'
+Visualizations display in the 'RStudio' and 'VS Code' viewers, R Markdown
 and 'Quarto' documents, and 'shiny' apps (see \code{\link[=drawOutput]{drawOutput()}} and
 \code{\link[=renderDraw]{renderDraw()}}). All 'JavaScript' is bundled with the package, so HTML
 output works offline. \code{\link[=save_drawing]{save_drawing()}} exports a visualization to an SVG

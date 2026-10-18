@@ -64,9 +64,12 @@ test_that("versioned widget scripts match their recorded contents", {
     simplifyVector = TRUE
   )
   dependencies <- unlist(
-    lapply(c("rtemis-draw", "rtemis-graph", "rtemis-map"), function(name) {
-      htmlwidgets::getDependency(name, "rtemis.draw")
-    }),
+    lapply(
+      c("rtemis-draw", "rtemis-graph", "rtemis-map", "rtemis-diagram"),
+      function(name) {
+        htmlwidgets::getDependency(name, "rtemis.draw")
+      }
+    ),
     recursive = FALSE
   )
   for (dependency in dependencies) {

@@ -63,6 +63,7 @@ chart_registry <- function() {
     gantt = list(cls = GanttConfig, setup = "setup_GanttConfig"),
     network = list(cls = NetworkConfig, setup = "setup_NetworkConfig"),
     choropleth = list(cls = ChoroplethConfig, setup = "setup_ChoroplethConfig"),
+    mermaid = list(cls = MermaidConfig, setup = "setup_MermaidConfig"),
     heatmap = list(cls = HeatmapConfig, setup = "setup_HeatmapConfig"),
     spectrogram = list(
       cls = SpectrogramConfig,

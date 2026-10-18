@@ -16,8 +16,9 @@ NODE_MIN_VERSION <- "18"
 #' Save a Draw Widget to a File
 #'
 #' Exports a widget created by [draw()] (or any of the `draw_*`
-#' functions) to a static file. Supports `.svg` for ECharts, Sigma networks, and MapLibre maps via Node.js
-#' server-side rendering, including complete [draw_panels()] figures. Requires
+#' functions) to a static file. Supports `.svg` for ECharts, Sigma networks,
+#' MapLibre maps, and Pele diagrams via Node.js server-side rendering, including
+#' complete [draw_panels()] figures. Requires
 #' a Node.js (>= 18) `node` binary on `PATH`.
 #'
 #' Callbacks under tooltips, axis pointers, and interactive toolbox controls
@@ -28,7 +29,9 @@ NODE_MIN_VERSION <- "18"
 #' geometry, location joins, and color scales and use a Mercator projection.
 #' Exports show the initial configured view; browser camera changes and hover
 #' states are not stored in the R widget. SVG text remains editable. Network
-#' labels are fitted to the page and suppressed when they overlap.
+#' labels are fitted to the page and suppressed when they overlap. Diagrams
+#' export at their natural size, so `width` and `height` do not apply to them;
+#' their colors are written as literal values.
 #'
 #' @param widget htmlwidget: A widget returned by [draw()] or a `draw_*` function.
 #' @param filename Character scalar: Nonempty output path with an extension.
@@ -110,23 +113,37 @@ save_drawing <- function(widget, filename, width = NULL, height = NULL) {
   if (
     !inherits(
       widget,
-      c("rtemis-draw", "rtemis-panels", "rtemis-graph", "rtemis-map")
+      c(
+        "rtemis-draw",
+        "rtemis-panels",
+        "rtemis-graph",
+        "rtemis-map",
+        "rtemis-diagram"
+      )
     )
   ) {
     abort(
-      "SVG export supports rtemis.draw ECharts, network, and map widgets only.",
+      "SVG export supports rtemis.draw ECharts, network, map, and diagram ",
+      "widgets only.",
       class = c("rtemis_export_error", "rtemis_input_error")
     )
   }
   payload <- widget[["x"]]
-  if (inherits(widget, c("rtemis-graph", "rtemis-map"))) {
+  if (inherits(widget, c("rtemis-graph", "rtemis-map", "rtemis-diagram"))) {
+    backend <- if (inherits(widget, "rtemis-graph")) {
+      "graph"
+    } else if (inherits(widget, "rtemis-map")) {
+      "map"
+    } else {
+      "diagram"
+    }
     save_svg_ssr(
       NULL,
       strip_js(payload[["theme"]], path = "theme"),
       filename,
       width,
       height,
-      backend = if (inherits(widget, "rtemis-graph")) "graph" else "map",
+      backend = backend,
       scene = strip_js(payload, path = "scene")
     )
     return(invisible(filename))

@@ -1,22 +1,23 @@
 Package: rtemis.draw
-Title: Schema-Driven Interactive Charts, Network Graphs, and Maps
+Title: Schema-Driven Interactive Charts, Networks, Maps, and Diagrams
 Version: 0.5.4
 Date: 2026-10-02
 Authors@R:
     person(given = "E.D.", family = "Gennatas", role = c("aut", "cre", "cph"),
            email = "gennatas@gmail.com",
            comment = c(ORCID = "0000-0001-9280-3609"))
-Description: Create interactive statistical charts, network graphs, and
-    choropleth maps. Charts are rendered with the 'ECharts' 'JavaScript'
-    library, networks with 'Sigma.js' and maps with 'MapLibre GL JS'.
+Description: Create interactive statistical charts, network graphs,
+    choropleth maps, and diagrams. Charts are rendered with the 'ECharts'
+    'JavaScript' library, networks with 'Sigma.js', maps with
+    'MapLibre GL JS', and diagrams written in 'Mermaid' syntax with 'Pele'.
     A high-level interface of plotting functions builds a complete
     visualization from data in a single call, while a low-level interface
     gives full control over every option. Both are based on the same
     type-checked and validated 'S7' configuration objects. Configurations
-    can be saved to and restored from 'JSON' files, and each chart type has
-    a published 'JSON Schema' that other interfaces can implement.
+    can be saved to and restored from JSON files, and each chart type has
+    a published JSON Schema that other interfaces can implement.
     Visualizations display as 'htmlwidgets' that automatically adapt to
-    light and dark themes, work in 'R Markdown', 'Quarto' and 'shiny', and
+    light and dark themes, work in R Markdown, 'Quarto', and 'shiny', and
     can be exported to Scalable Vector Graphics (SVG) files using
     'Node.js'.
 URL: https://www.rtemis.org, https://docs.rtemis.org/r/draw, https://docs.rtemis.org/r/draw-api
@@ -91,6 +92,8 @@ Collate:
     'map.R'
     'config_network.R'
     'config_choropleth.R'
+    'mermaid.R'
+    'config_mermaid.R'
     'heatmap_input.R'
     'config_heatmap.R'
     'draw_a3.R'
