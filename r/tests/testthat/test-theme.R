@@ -66,6 +66,8 @@ test_that("Theme color validates", {
 # -- Built-in themes -----------------------------------------------------------
 
 test_that("theme_light returns valid Theme", {
+  old <- options(rtemis.font_family = NULL)
+  on.exit(options(old), add = TRUE)
   th <- theme_light()
   expect_true(S7::S7_inherits(th, Theme))
   out <- to_list(th)
@@ -86,6 +88,56 @@ test_that("theme_dark returns valid Theme", {
   expect_equal(out$backgroundColor, "#181818")
   expect_equal(out$textStyle$color, "rgba(255, 255, 255, 0.7)")
   expect_equal(out$categoryAxis$splitLine$show, FALSE)
+})
+
+# -- Font family -------------------------------------------------------------------
+
+test_that("font_stack appends the system UI fallback to a font family", {
+  expect_identical(font_stack(NULL), DEFAULT_FONT_FAMILY)
+  expect_identical(font_stack("Geist"), paste0("Geist, ", DEFAULT_FONT_FAMILY))
+  expect_identical(font_stack("Geist, sans-serif"), "Geist, sans-serif")
+  expect_identical(font_stack("Geist, system-ui"), "Geist, system-ui")
+  expect_identical(
+    font_stack("Source Sans 3"),
+    paste0("'Source Sans 3', ", DEFAULT_FONT_FAMILY)
+  )
+  expect_identical(
+    font_stack("\"Helvetica Neue\", Arial"),
+    paste0("\"Helvetica Neue\", Arial, ", DEFAULT_FONT_FAMILY)
+  )
+})
+
+test_that("font_stack rejects anything but a nonempty string", {
+  for (bad in list(1, NA_character_, "", " , ", c("Geist", "Arial"))) {
+    expect_error(font_stack(bad), class = "rtemis_type_error")
+  }
+})
+
+test_that("font_stack_entries returns unquoted family names", {
+  expect_identical(
+    font_stack_entries("'Source Sans 3', \"Geist\", sans-serif"),
+    c("Source Sans 3", "Geist", "sans-serif")
+  )
+})
+
+test_that("the rtemis.font_family option sets the theme font", {
+  old <- options(rtemis.font_family = "Geist")
+  on.exit(options(old), add = TRUE)
+  for (th in list(theme_light(), theme_dark())) {
+    expect_identical(
+      to_list(th)$textStyle$fontFamily,
+      paste0("Geist, ", DEFAULT_FONT_FAMILY)
+    )
+  }
+  # An explicit argument takes precedence over the option.
+  expect_identical(
+    to_list(theme_light(
+      font_family = "Arial, sans-serif"
+    ))$textStyle$fontFamily,
+    "Arial, sans-serif"
+  )
+  options(rtemis.font_family = 12)
+  expect_error(theme_light(), class = "rtemis_type_error")
 })
 
 # -- textStyle propagation --------------------------------------------------------
