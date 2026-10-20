@@ -10,6 +10,8 @@
 
 * 3D hover guides use dotted lines and follow the active theme with their value labels, preserving explicit color settings.
 
+* The `rtemis.font_family` option sets the font of every visualization, e.g. `options(rtemis.font_family = "Geist")`; `theme_light()` and `theme_dark()` follow a font family with the system UI font as the fallback. SVG export of diagrams measures labels in the theme font when it is installed and 'systemfonts' is available.
+
 * `Theme`, `theme_light()` and `theme_dark()` gain `negative_color`, `neutral_color` and `positive_color`, used by every chart that colors by sign unless the chart sets its own colors.
 * `compile()` gains `theme`, so colors computed before drawing follow the theme the chart will be drawn with; `draw()` passes its theme.
 * Significance plots, network edges, and heatmap and spectrogram scales share one colorblind-safe sign pair by default: blue for negative, orange for positive, gray for neither.

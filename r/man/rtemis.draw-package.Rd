@@ -76,6 +76,18 @@ maps keep their current pan and zoom when they switch. Pass \code{\link[=theme_l
 or \code{\link[=theme_dark]{theme_dark()}} as \code{theme} to fix a theme.
 }
 
+\section{Options}{
+
+\itemize{
+\item \code{rtemis.font_family}: Font family of every visualization, e.g.
+\code{options(rtemis.font_family = "Geist")}, followed by the system UI font as
+the fallback. It is the default \code{font_family} of \code{\link[=theme_light]{theme_light()}} and
+\code{\link[=theme_dark]{theme_dark()}}, so it applies to the plots of every rtemis package drawn
+with 'rtemis.draw'. SVG export of diagrams measures labels in this font
+when it is installed and the 'systemfonts' package is available.
+}
+}
+
 \section{Output}{
 
 Visualizations display in the 'RStudio' and 'VS Code' viewers, R Markdown

@@ -277,6 +277,127 @@ test_that("SVG export writes literal theme colors at the natural size", {
   expect_false(grepl("width=\"800\"", width, fixed = TRUE))
 })
 
+test_that("SVG export names the fonts of Pele's width table", {
+  skip_if_no_node()
+  old <- options(rtemis.font_family = NULL)
+  on.exit(options(old), add = TRUE)
+  path <- tempfile(fileext = ".svg")
+  on.exit(unlink(path), add = TRUE)
+  draw_mermaid(flow, theme = theme_dark(), filename = path)
+  svg <- paste(readLines(path, warn = FALSE), collapse = "\n")
+  root <- regmatches(svg, regexpr("<svg\\b[^>]*", svg))
+  expect_match(
+    root,
+    "font-family:Helvetica, Arial, 'Liberation Sans', Arimo, sans-serif",
+    fixed = TRUE
+  )
+  expect_false(grepl("system-ui", svg, fixed = TRUE))
+})
+
+# One row per face of a family whose faces share the file `path`.
+font_table <- function(family, path) {
+  data.frame(
+    path = path,
+    index = 0L,
+    family = family,
+    weight = c("normal", "bold"),
+    italic = FALSE,
+    variable = FALSE
+  )
+}
+
+test_that("font_metrics measures the first installed family of the stack", {
+  skip_if_not_installed("systemfonts")
+  installed <- systemfonts::system_fonts()
+  skip_if(nrow(installed) == 0L, "no installed fonts")
+  fonts <- font_table("Body Font", installed[["path"]][[1L]])
+  m <- font_metrics(
+    "Missing Font, 'Body Font', sans-serif",
+    "A \u2192 B",
+    fonts
+  )
+  expect_identical(m[["family"]], "Body Font")
+  chars <- strsplit(m[["chars"]], "")[[1L]]
+  expect_true(all(c("A", " ", "~", "\u2026", "\u2192") %in% chars))
+  expect_length(m[["widths"]], 4L)
+  for (w in m[["widths"]]) {
+    expect_length(w, length(chars))
+    expect_true(all(is.finite(w) & w >= 0))
+  }
+  # The family has no italic faces, so italic takes the regular widths.
+  expect_identical(m[["widths"]][[3L]], m[["widths"]][[1L]])
+})
+
+test_that("font_metrics stops at a generic family or an uninstalled stack", {
+  fonts <- font_table("Body Font", "unused.ttf")
+  expect_null(font_metrics("system-ui, 'Body Font'", "A", fonts))
+  expect_null(font_metrics("Missing Font", "A", fonts))
+  expect_null(font_metrics(NULL, "A", fonts))
+})
+
+test_that("SVG export measures labels with the supplied font metrics", {
+  skip_if_no_node()
+  # A diagram widget with wide and narrow synthetic metrics for one family.
+  export <- function(em) {
+    widget <- draw_mermaid(flow, theme = theme_light())
+    scene <- widget[["x"]]
+    chars <- intToUtf8(32:126, multiple = TRUE)
+    scene[["fontMetrics"]] <- list(
+      family = "Test Sans",
+      chars = paste(chars, collapse = ""),
+      widths = rep(list(rep(em, length(chars))), 4L)
+    )
+    path <- tempfile(fileext = ".svg")
+    on.exit(unlink(path), add = TRUE)
+    save_svg_ssr(
+      NULL,
+      widget[["x"]][["theme"]],
+      path,
+      NULL,
+      NULL,
+      backend = "diagram",
+      scene = scene
+    )
+    paste(readLines(path, warn = FALSE), collapse = "\n")
+  }
+  svg_width <- function(svg) {
+    root <- regmatches(svg, regexpr("<svg\\b[^>]*", svg))
+    as.numeric(sub(".*\\bwidth=\"([0-9.]+)\".*", "\\1", root))
+  }
+  narrow <- export(400)
+  wide <- export(1000)
+  expect_gt(svg_width(wide), svg_width(narrow))
+  expect_match(
+    wide,
+    "font-family:'Test Sans', Helvetica, Arial, 'Liberation Sans', Arimo, sans-serif",
+    fixed = TRUE
+  )
+})
+
+test_that("SVG export names the theme font when it is installed", {
+  skip_if_no_node()
+  skip_if_not_installed("systemfonts")
+  installed <- setdiff(
+    unique(systemfonts::system_fonts()[["family"]]),
+    c("Helvetica", "Arial")
+  )
+  skip_if(length(installed) == 0L, "no installed fonts")
+  family <- installed[[1L]]
+  path <- tempfile(fileext = ".svg")
+  on.exit(unlink(path), add = TRUE)
+  draw_mermaid(
+    flow,
+    theme = theme_light(font_family = paste0("'", family, "'")),
+    filename = path
+  )
+  svg <- paste(readLines(path, warn = FALSE), collapse = "\n")
+  expect_match(
+    svg,
+    paste0("font-family:'", family, "', Helvetica"),
+    fixed = TRUE
+  )
+})
+
 test_that("SVG export follows an explicit dark theme and the palette", {
   skip_if_no_node()
   path <- tempfile(fileext = ".svg")

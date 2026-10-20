@@ -38,7 +38,12 @@ Exports show the initial configured view; browser camera changes and hover
 states are not stored in the R widget. SVG text remains editable. Network
 labels are fitted to the page and suppressed when they overlap. Diagrams
 export at their natural size, so \code{width} and \code{height} do not apply to them;
-their colors are written as literal values.
+their colors are written as literal values. Diagram labels are measured in
+the first installed font of the theme's font stack, read with the
+'systemfonts' package, and the file names that font followed by Helvetica.
+When the stack reaches a generic family such as \code{system-ui} first, or
+'systemfonts' is not installed, labels are measured and written in Helvetica
+or a font with the same metrics.
 }
 \examples{
 chart <- draw_bar(x = c("A", "B", "C"), y = c(3, 7, 2))

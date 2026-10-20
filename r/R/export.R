@@ -31,7 +31,12 @@ NODE_MIN_VERSION <- "18"
 #' states are not stored in the R widget. SVG text remains editable. Network
 #' labels are fitted to the page and suppressed when they overlap. Diagrams
 #' export at their natural size, so `width` and `height` do not apply to them;
-#' their colors are written as literal values.
+#' their colors are written as literal values. Diagram labels are measured in
+#' the first installed font of the theme's font stack, read with the
+#' 'systemfonts' package, and the file names that font followed by Helvetica.
+#' When the stack reaches a generic family such as `system-ui` first, or
+#' 'systemfonts' is not installed, labels are measured and written in Helvetica
+#' or a font with the same metrics.
 #'
 #' @param widget htmlwidget: A widget returned by [draw()] or a `draw_*` function.
 #' @param filename Character scalar: Nonempty output path with an extension.
@@ -137,14 +142,22 @@ save_drawing <- function(widget, filename, width = NULL, height = NULL) {
     } else {
       "diagram"
     }
+    theme <- strip_js(payload[["theme"]], path = "theme")
+    scene <- strip_js(payload, path = "scene")
+    if (backend == "diagram") {
+      scene[["fontMetrics"]] <- font_metrics(
+        theme[["textStyle"]][["fontFamily"]],
+        scene[["source"]]
+      )
+    }
     save_svg_ssr(
       NULL,
-      strip_js(payload[["theme"]], path = "theme"),
+      theme,
       filename,
       width,
       height,
       backend = backend,
-      scene = strip_js(payload, path = "scene")
+      scene = scene
     )
     return(invisible(filename))
   }
@@ -198,6 +211,104 @@ save_drawing <- function(widget, filename, width = NULL, height = NULL) {
   )
 
   invisible(filename)
+}
+
+#' Character widths of a theme font for server-side text measurement
+#'
+#' Pele measures text with a canvas in the browser. In Node.js it has no canvas
+#' and uses a table of Helvetica widths, so SVG export supplies the widths of
+#' the theme font instead. The measured font is the first family of the stack
+#' that is installed, found with `systemfonts::system_fonts()`. The table holds
+#' printable ASCII, the ellipsis, and every character of `text`, in four faces:
+#' regular, bold, italic, and bold italic. A face the family lacks takes the
+#' widths of its regular face.
+#'
+#' @param font_family Optional Character scalar: CSS font stack of the theme.
+#' @param text Optional Character: Text whose characters the table covers.
+#' @param fonts Optional data frame: Installed fonts, with the columns of
+#'   `systemfonts::system_fonts()`. `NULL` reads them with 'systemfonts'.
+#' @return List with `family` (Character scalar: the measured family), `chars`
+#'   (Character scalar: the covered characters), and `widths` (list of four
+#'   numeric vectors in em/1000, one per face, aligned with `chars`), or `NULL`
+#'   when the stack reaches a generic family before an installed one, or when
+#'   'systemfonts' is not installed.
+#' @keywords internal
+#' @noRd
+font_metrics <- function(font_family, text = NULL, fonts = NULL) {
+  if (is.null(font_family)) {
+    return(NULL)
+  }
+  if (is.null(fonts)) {
+    if (!requireNamespace("systemfonts", quietly = TRUE)) {
+      return(NULL)
+    }
+    fonts <- systemfonts::system_fonts()
+  }
+  for (family in font_stack_entries(font_family)) {
+    if (tolower(family) %in% GENERIC_FONT_FAMILIES) {
+      return(NULL)
+    }
+    faces <- fonts[
+      tolower(fonts[["family"]]) == tolower(family),
+      ,
+      drop = FALSE
+    ]
+    if (nrow(faces) > 0L) {
+      break
+    }
+  }
+  if (nrow(faces) == 0L) {
+    return(NULL)
+  }
+  chars <- c(
+    intToUtf8(32:126, multiple = TRUE),
+    "\u2026",
+    unlist(strsplit(paste(text, collapse = "\n"), "", fixed = TRUE))
+  )
+  chars <- unique(chars[first_code_point(chars) >= 32L])
+  face <- function(weight, italic) {
+    hit <- faces[
+      faces[["weight"]] == weight & faces[["italic"]] == italic,
+      ,
+      drop = FALSE
+    ]
+    # Static faces first: the widths of a variable font are those of its
+    # default instance, whatever weight its row names.
+    hit <- hit[order(hit[["variable"]] %||% logical(nrow(hit))), , drop = FALSE]
+    if (nrow(hit) == 0L) {
+      return(if (weight == "normal" && !italic) faces[1L, ] else NULL)
+    }
+    hit[1L, ]
+  }
+  regular <- face("normal", FALSE)
+  widths <- lapply(
+    list(
+      c("normal", FALSE),
+      c("bold", FALSE),
+      c("normal", TRUE),
+      c("bold", TRUE)
+    ),
+    function(spec) {
+      row <- face(spec[[1L]], as.logical(spec[[2L]])) %||% regular
+      as.numeric(systemfonts::string_width(
+        chars,
+        path = row[["path"]],
+        index = row[["index"]],
+        size = 1000
+      ))
+    }
+  )
+  list(family = family, chars = paste(chars, collapse = ""), widths = widths)
+}
+
+#' First code point of each string
+#'
+#' @param x Character: Strings of one character each.
+#' @return Integer: The code point of each string's first character.
+#' @keywords internal
+#' @noRd
+first_code_point <- function(x) {
+  vapply(x, function(ch) utf8ToInt(ch)[[1L]], integer(1), USE.NAMES = FALSE)
 }
 
 #' Fit a fixed-aspect plotting grid into a static image

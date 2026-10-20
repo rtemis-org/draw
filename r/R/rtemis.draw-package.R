@@ -59,6 +59,14 @@
 #' maps keep their current pan and zoom when they switch. Pass [theme_light()]
 #' or [theme_dark()] as `theme` to fix a theme.
 #'
+#' @section Options:
+#' - `rtemis.font_family`: Font family of every visualization, e.g.
+#'   `options(rtemis.font_family = "Geist")`, followed by the system UI font as
+#'   the fallback. It is the default `font_family` of [theme_light()] and
+#'   [theme_dark()], so it applies to the plots of every rtemis package drawn
+#'   with 'rtemis.draw'. SVG export of diagrams measures labels in this font
+#'   when it is installed and the 'systemfonts' package is available.
+#'
 #' @section Output:
 #' Visualizations display in the 'RStudio' and 'VS Code' viewers, R Markdown
 #' and 'Quarto' documents, and 'shiny' apps (see [drawOutput()] and
