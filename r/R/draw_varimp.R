@@ -121,19 +121,15 @@ method(varimp_measure, class_data.frame) <- function(data, measure = NULL) {
 }
 
 
-#' Resolve the fold universe and reporting folds for one importance measure
+# %% varimp_folds ----
+#' Resolve the fold universe of importance records
 #' @param data Data frame: Normalized importance records.
-#' @param measure Character: Selected numeric measure column.
 #' @param folds Optional Character: Complete fold IDs, including unavailable folds.
-#' @return List: Full fold IDs and IDs reporting at least one score.
+#' @return Character: Full fold IDs, or NULL for records without folds.
 #' @keywords internal
 #' @noRd
-varimp_fold_info <- new_generic("varimp_fold_info", "data")
-method(varimp_fold_info, class_data.frame) <- function(
-  data,
-  measure,
-  folds = NULL
-) {
+varimp_folds <- new_generic("varimp_folds", "data")
+method(varimp_folds, class_data.frame) <- function(data, folds = NULL) {
   observed_folds <- unique(data[["fold"]])
   if (!is.null(folds)) {
     if (
@@ -153,21 +149,18 @@ method(varimp_fold_info, class_data.frame) <- function(
       )
     }
   }
-  list(
-    ids = folds %||% observed_folds,
-    scored = unique(data[["fold"]][!is.na(data[[measure]])])
-  )
+  folds %||% observed_folds
 }
 
+
+# %% varimp_distribution ----
 #' Materialize selected variable-by-fold scores for portable boxplots
 #'
-#' Allocate only selected variables, after ranking. Missing rows become zero
-#' only under the same reporting-fold contract used by the summary renderer.
-#' Explicit missing values and entirely unavailable folds remain missing.
+#' Allocate only selected variables, after ranking. Explicit missing values,
+#' omitted rows, and entirely unavailable folds are missing.
 #' @param data Data frame: Normalized importance records with a fold column.
 #' @param selected Data frame: Selected summary rows in display order.
 #' @param measure Character: Selected numeric measure column.
-#' @param absent Character: Validated omitted-row policy.
 #' @param folds Optional Character: Complete fold IDs.
 #' @return List: Wide data, variable column names, and observation column name.
 #' @keywords internal
@@ -177,11 +170,10 @@ method(varimp_distribution, class_data.frame) <- function(
   data,
   selected,
   measure,
-  absent,
   folds = NULL
 ) {
-  info <- varimp_fold_info(data, measure, folds)
-  if (is.null(info[["ids"]])) {
+  ids <- varimp_folds(data, folds)
+  if (is.null(ids)) {
     abort(
       "Supply fold-level importance records with a `fold` column for type = 'boxplot'.",
       class = c("rtemis_value_error", "rtemis_input_error")
@@ -192,55 +184,65 @@ method(varimp_distribution, class_data.frame) <- function(
   while (observation %in% variables) {
     observation <- paste0(observation, "_")
   }
-  wide <- setNames(data.frame(info[["ids"]]), observation)
+  wide <- setNames(data.frame(ids), observation)
   # Index once instead of rescanning all input rows for each selected variable.
   at <- which(data[["variable"]] %in% variables)
   rows <- split(at, factor(data[["variable"]][at], levels = variables))
   for (variable in variables) {
     at <- rows[[variable]]
-    matched <- match(info[["ids"]], data[["fold"]][at])
-    values <- data[[measure]][at][matched]
-    if (absent == "zero") {
-      values[is.na(matched) & info[["ids"]] %in% info[["scored"]]] <- 0
-    }
-    wide[[variable]] <- values
+    wide[[variable]] <- data[[measure]][at][match(ids, data[["fold"]][at])]
   }
   list(data = wide, columns = variables, observation = observation)
 }
 
 
 # %% summarize_varimp ----
-#' Summarize and select importance records for either view
+#' Summarize and Rank Variable Importance
 #'
-#' Missing scores are handled before ranking. Ties retain first appearance.
-#' Zero padding uses counts rather than a dense variable-by-fold matrix.
+#' Summarize each variable's scores across folds and rank the variables, as
+#' [draw_varimp()] selects and orders them.
 #'
-#' @param data Data frame: Normalized importance records.
+#' @details
+#' Each variable's summary is the mean or median of its available scores.
+#' Explicit NA scores, omitted rows, and wholly unavailable folds are excluded
+#' from the summary, and variables with no available score are omitted.
+#' Records without a `fold` column have one score per variable, which is its
+#' summary. Magnitude ranking uses the absolute summary, not the mean absolute
+#' fold score; signed ranking uses the summary itself. Ties retain first
+#' appearance in the input.
+#'
+#' A producer whose importance omits variables with a zero score supplies
+#' those zeros explicitly; an omitted row is an unavailable score.
+#'
 #' @inheritParams draw_varimp
-#' @return Data frame: `variable`, `importance`, `n_available`, `n_folds`, and
-#'   `n_zero`, in the requested rank order.
-#' @keywords internal
-#' @noRd
-summarize_varimp <- new_generic("summarize_varimp", "data")
-
-method(summarize_varimp, class_data.frame) <- function(
-  data,
+#' @return Data frame with one row per selected variable, in rank order:
+#'   `variable`, `importance` (the summary), `n_available` (folds with a
+#'   score), and `n_folds` (all folds).
+#' @export
+#' @examples
+#' scores <- data.frame(
+#'   variable = c("age", "weight", "age", "weight"),
+#'   fold = c("A", "A", "B", "B"),
+#'   coefficient = c(0.8, -1.2, 0.6, -0.9)
+#' )
+#' summarize_varimp(scores)
+#' summarize_varimp(scores, rank_by = "signed")
+summarize_varimp <- function(
+  x,
   measure = NULL,
-  top_n = 20L,
+  top_n = NULL,
   rank_by = "magnitude",
   summary = "mean",
-  absent = "missing",
   folds = NULL,
   decreasing = TRUE
 ) {
+  data <- varimp_data(x)
   measure <- varimp_measure(data, measure)
   check_character_scalar(rank_by)
   check_enum(rank_by, c("magnitude", "signed"))
   check_logical_scalar(decreasing)
   check_character_scalar(summary)
   check_enum(summary, c("mean", "median"))
-  check_character_scalar(absent)
-  check_enum(absent, c("missing", "zero"))
   if (!is.null(top_n)) {
     top_n <- clean_int(top_n)
     check_integer_scalar(top_n)
@@ -251,76 +253,27 @@ method(summarize_varimp, class_data.frame) <- function(
       )
     }
   }
-  info <- varimp_fold_info(data, measure, folds)
-  observed_folds <- info[["ids"]]
-  n_folds <- if (is.null(observed_folds)) 1L else length(observed_folds)
+  ids <- varimp_folds(data, folds)
+  n_folds <- if (is.null(ids)) 1L else length(ids)
+  values <- data[[measure]]
+  available <- !is.na(values)
   variables <- unique(data[["variable"]])
-  rows <- split(seq_len(nrow(data)), match(data[["variable"]], variables))
-  rows <- rows[as.character(seq_along(variables))]
-  # A wholly unavailable fold/measure has no known sparse result. Only folds
-  # reporting at least one score can contribute structural zeros. An explicit
-  # missing row is still unknown, even when absent rows mean zero.
-  scored_folds <- info[["scored"]]
-  in_scored_fold <- data[["fold"]] %in% scored_folds
-  n_zero <- vapply(
-    rows,
-    function(at) {
-      if (absent != "zero" || is.null(observed_folds)) {
-        return(0L)
-      }
-      length(scored_folds) - sum(in_scored_fold[at])
-    },
-    integer(1L),
-    USE.NAMES = FALSE
-  )
-  n_available <- vapply(
-    rows,
-    function(at) {
-      sum(!is.na(data[[measure]][at]))
-    },
-    integer(1L),
-    USE.NAMES = FALSE
-  ) +
-    n_zero
+  index <- match(data[["variable"]][available], variables)
   scores <- vapply(
-    seq_along(rows),
-    function(index) {
-      at <- rows[[index]]
-      values <- data[[measure]][at]
-      values <- values[!is.na(values)]
-      n <- n_available[[index]]
-      if (n == 0L) {
-        return(NA_real_)
+    split(values[available], factor(index, levels = seq_along(variables))),
+    function(v) {
+      if (!length(v)) {
+        NA_real_
+      } else if (summary == "mean") {
+        mean(v)
+      } else {
+        stats::median(v)
       }
-      if (!length(values)) {
-        return(0)
-      }
-      if (summary == "mean") {
-        return(mean(values) * (length(values) / n))
-      }
-      # Find the middle order statistics with implicit zeros. This also handles
-      # negative scores and even fold counts without allocating the missing rows.
-      negative <- sort(values[values < 0])
-      positive <- sort(values[values > 0])
-      last_zero <- n - length(positive)
-      middle <- c(floor((n + 1) / 2), ceiling((n + 1) / 2))
-      mean(vapply(
-        middle,
-        function(i) {
-          if (i <= length(negative)) {
-            negative[[i]]
-          } else if (i <= last_zero) {
-            0
-          } else {
-            positive[[i - last_zero]]
-          }
-        },
-        numeric(1L)
-      ))
     },
     numeric(1L),
     USE.NAMES = FALSE
   )
+  n_available <- tabulate(index, nbins = length(variables))
   keep <- which(!is.na(scores))
   if (!length(keep)) {
     abort(
@@ -338,10 +291,9 @@ method(summarize_varimp, class_data.frame) <- function(
     variable = variables[keep],
     importance = scores[keep],
     n_available = n_available[keep],
-    n_folds = n_folds,
-    n_zero = n_zero[keep]
+    n_folds = n_folds
   )
-}
+} # /rtemis.draw::summarize_varimp
 
 
 # %% draw_varimp ----
@@ -369,12 +321,11 @@ method(summarize_varimp, class_data.frame) <- function(
 #' This uses native bars and covers the legacy importance `type = "line"`
 #' geometry without connecting different variables or adding a new chart type.
 #'
-#' Explicit NA scores and wholly unavailable folds are excluded from each
-#' variable's summary. Variables with no available score are omitted.
-#' `absent = "zero"` declares that omitted variable rows mean known zero scores
-#' within folds reporting that measure. It never replaces an explicit NA or a
-#' wholly unavailable fold/measure with zero. Use it only for sparse importance
-#' tables whose producer omits zero entries. Infinite scores are rejected.
+#' Explicit NA scores, omitted rows, and wholly unavailable folds are excluded
+#' from each variable's summary. Variables with no available score are omitted.
+#' A producer whose importance omits variables with a zero score supplies those
+#' zeros explicitly. Infinite scores are rejected. [summarize_varimp()] returns
+#' the summary and ranking this function draws.
 #'
 #' Means and medians give each contributing fold equal weight. An incomplete
 #' summary describes the available folds, not an estimate guaranteed to be
@@ -382,8 +333,8 @@ method(summarize_varimp, class_data.frame) <- function(
 #' chart labels retain only the variable and measure names. The input is never
 #' modified.
 #'
-#' Boxplots require fold-level records. Every available score (including known
-#' structural zeros) is overlaid by default, with its fold ID in the tooltip.
+#' Boxplots require fold-level records. Every available score is overlaid by
+#' default, with its fold ID in the tooltip.
 #' Missing values remain missing in the materialized table and are reported in
 #' the console. Boxes describe resample variability, not a confidence interval.
 #' See [draw_boxplot()] for quartiles, whiskers, and point placement. Use
@@ -413,8 +364,6 @@ method(summarize_varimp, class_data.frame) <- function(
 #' @param decreasing Logical: Select and display ranks from largest to smallest.
 #'   FALSE selects and displays the smallest ranks first.
 #' @param summary Character \{"mean", "median"\}: Summary across folds.
-#' @param absent Character \{"missing", "zero"\}: Meaning of omitted variable
-#'   rows within a fold reporting the selected measure.
 #' @param folds Optional Character: Full set of fold IDs, including folds with
 #'   no rows. NULL uses the IDs observed in the `fold` column.
 #' @param horizontal Logical: Draw horizontal bars or boxes.
@@ -440,8 +389,8 @@ method(summarize_varimp, class_data.frame) <- function(
 #'   fold = c("A", "A", "B"),
 #'   gain = c(0.8, 0.4, 0.6)
 #' )
-#' draw_varimp(scores, measure = "gain", absent = "zero")
-#' draw_varimp(scores, measure = "gain", type = "boxplot", absent = "zero")
+#' draw_varimp(scores, measure = "gain")
+#' draw_varimp(scores, measure = "gain", type = "boxplot")
 #' @inheritParams draw_line legend_position legend_placement
 draw_varimp <- function(
   x,
@@ -449,7 +398,6 @@ draw_varimp <- function(
   top_n = 20L,
   rank_by = "magnitude",
   summary = "mean",
-  absent = "missing",
   folds = NULL,
   horizontal = TRUE,
   xlab = NULL,
@@ -477,7 +425,6 @@ draw_varimp <- function(
     rank_by = rank_by,
     decreasing = decreasing,
     summary = summary,
-    absent = absent,
     folds = folds
   )
   check_logical_scalar(horizontal)
@@ -508,7 +455,7 @@ draw_varimp <- function(
     values <- values[rev(seq_len(nrow(values))), , drop = FALSE]
   }
   if (type == "boxplot") {
-    records <- varimp_distribution(data, values, measure, absent, folds)
+    records <- varimp_distribution(data, values, measure, folds)
     settings <- list(...)
     reserved <- intersect(names(settings), c("group", "observation", "labels"))
     if (length(reserved)) {

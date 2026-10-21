@@ -1,5 +1,5 @@
-# Fixtures distinguish observed zero, sparse zero, unknown value, missing
-# measure, and absent fold; none of these are interchangeable.
+# Fixtures distinguish observed scores, unknown values, omitted rows, a fold
+# missing the measure, and an absent fold.
 distribution_fixture <- function() {
   varimp_data(data.frame(
     variable = c("a", "b", "a", "b", "c", "c", "a"),
@@ -8,39 +8,32 @@ distribution_fixture <- function() {
   ))
 }
 
-test_that("fold distribution materialization agrees with the summary contract", {
+test_that("fold distribution materialization agrees with the summary", {
   data <- distribution_fixture()
   before <- data
   folds <- LETTERS[1:5]
-  info <- varimp_fold_info(data, "gain", folds)
-  expect_identical(info, list(ids = folds, scored = c("A", "B", "C")))
-  expect_null(varimp_fold_info(varimp_data(c(a = 1)), "importance")[["ids"]])
-  for (policy in c("missing", "zero")) {
-    selected <- summarize_varimp(data, absent = policy, folds = folds)
-    records <- varimp_distribution(data, selected, "gain", policy, folds)
-    wide <- records[["data"]]
-    expect_identical(wide[[records[["observation"]]]], folds)
-    expect_equal(wide[["a"]], c(8, NA, if (policy == "zero") 0 else NA, NA, NA))
-    expect_equal(wide[["b"]], c(2, 4, if (policy == "zero") 0 else NA, NA, NA))
-    expect_equal(
-      wide[["c"]],
-      c(if (policy == "zero") 0 else NA, -6, -3, NA, NA)
-    )
-    expect_identical(records[["columns"]], c("a", "c", "b"))
-    for (i in seq_len(nrow(selected))) {
-      values <- wide[[selected[["variable"]][[i]]]]
-      expect_equal(mean(values, na.rm = TRUE), selected[["importance"]][[i]])
-      expect_equal(sum(!is.na(values)), selected[["n_available"]][[i]])
-    }
+  expect_identical(varimp_folds(data, folds), folds)
+  expect_identical(varimp_folds(data), c("A", "B", "C", "D"))
+  expect_null(varimp_folds(varimp_data(c(a = 1))))
+  selected <- summarize_varimp(data, folds = folds)
+  records <- varimp_distribution(data, selected, "gain", folds)
+  wide <- records[["data"]]
+  expect_identical(wide[[records[["observation"]]]], folds)
+  expect_equal(wide[["a"]], c(8, NA, NA, NA, NA))
+  expect_equal(wide[["b"]], c(2, 4, NA, NA, NA))
+  expect_equal(wide[["c"]], c(NA, -6, -3, NA, NA))
+  expect_identical(records[["columns"]], c("a", "c", "b"))
+  for (i in seq_len(nrow(selected))) {
+    values <- wide[[selected[["variable"]][[i]]]]
+    expect_equal(mean(values, na.rm = TRUE), selected[["importance"]][[i]])
+    expect_equal(sum(!is.na(values)), selected[["n_available"]][[i]])
   }
   expect_identical(data, before)
-  # C reports only an unselected variable. It still establishes a sparse zero.
-  selected <- summarize_varimp(data, top_n = 1, absent = "zero", folds = folds)
-  out <- varimp_distribution(data, selected, "gain", "zero", folds)
-  expect_equal(out[["data"]][["a"]], c(8, NA, 0, NA, NA))
+  selected <- summarize_varimp(data, top_n = 1, folds = folds)
+  out <- varimp_distribution(data, selected, "gain", folds)
   expect_equal(ncol(out[["data"]]), 2)
   expect_equal(nrow(out[["data"]]), 5)
-  reverse <- varimp_distribution(data, selected, "gain", "zero", rev(folds))
+  reverse <- varimp_distribution(data, selected, "gain", rev(folds))
   expect_identical(reverse[["data"]][[".fold"]], rev(folds))
   expect_equal(reverse[["data"]][["a"]], rev(out[["data"]][["a"]]))
 })
@@ -51,7 +44,6 @@ test_that("importance boxes retain ranking, fold IDs, missing observations and s
     w <- suppressMessages(draw_varimp(
       data,
       type = "boxplot",
-      absent = "zero",
       folds = LETTERS[1:5],
       horizontal = horizontal
     ))
@@ -69,9 +61,9 @@ test_that("importance boxes retain ranking, fold IDs, missing observations and s
     expect_null(opt[["title"]][["subtext"]])
     expect_identical(opt[["series"]][[1]][["type"]], "boxplot")
     points <- opt[["series"]][[2]][["data"]]
-    expect_length(points, 8)
+    expect_length(points, 5)
     values <- vapply(points, function(p) p[["value"]][[2]], numeric(1))
-    expect_equal(sort(values), c(-6, -3, 0, 0, 0, 2, 4, 8))
+    expect_equal(sort(values), c(-6, -3, 2, 4, 8))
     ids <- vapply(points, function(p) p[["value"]][[3]], "")
     expect_setequal(ids, c("A", "B", "C"))
     expect_lt(opt[[value_axis]][["min"]], -6)
@@ -146,7 +138,7 @@ test_that("portable distribution data and config round trips reproduce the view"
   folds <- c("first", "second", "empty")
   selected <- summarize_varimp(data, folds = folds)
   selected <- selected[rev(seq_len(nrow(selected))), ]
-  records <- varimp_distribution(data, selected, "score", "missing", folds)
+  records <- varimp_distribution(data, selected, "score", folds)
   expect_identical(records[["observation"]], ".fold_")
   config <- setup_BoxplotConfig(
     x = records[["columns"]],
@@ -182,7 +174,7 @@ test_that("portable distribution data and config round trips reproduce the view"
   }
 })
 
-test_that("importance distribution SVG retains known zeros and all available scores", {
+test_that("importance distribution SVG retains all available scores", {
   skip_if_no_node()
   path <- tempfile(fileext = ".svg")
   on.exit(unlink(path), add = TRUE)
@@ -190,7 +182,6 @@ test_that("importance distribution SVG retains known zeros and all available sco
     suppressMessages(draw_varimp(
       distribution_fixture(),
       type = "boxplot",
-      absent = "zero",
       folds = LETTERS[1:5],
       horizontal = horizontal,
       palette = "#123456",
@@ -205,7 +196,7 @@ test_that("importance distribution SVG retains known zeros and all available sco
     expect_false(grepl("<image", svg, fixed = TRUE))
     expect_equal(
       lengths(regmatches(svg, gregexpr('<circle ', svg, fixed = TRUE))),
-      8
+      5
     )
   }
 })

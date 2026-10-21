@@ -10,7 +10,6 @@ draw_varimp(
   top_n = 20L,
   rank_by = "magnitude",
   summary = "mean",
-  absent = "missing",
   folds = NULL,
   horizontal = TRUE,
   xlab = NULL,
@@ -43,9 +42,6 @@ NULL includes all variables with a summary; fractions are not accepted.}
 summary, respectively.}
 
 \item{summary}{Character \{"mean", "median"\}: Summary across folds.}
-
-\item{absent}{Character \{"missing", "zero"\}: Meaning of omitted variable
-rows within a fold reporting the selected measure.}
 
 \item{folds}{Optional Character: Full set of fold IDs, including folds with
 no rows. NULL uses the IDs observed in the \code{fold} column.}
@@ -116,12 +112,11 @@ Set \code{bar_width} to a pixel thickness for separate zero-to-score segments.
 This uses native bars and covers the legacy importance \code{type = "line"}
 geometry without connecting different variables or adding a new chart type.
 
-Explicit NA scores and wholly unavailable folds are excluded from each
-variable's summary. Variables with no available score are omitted.
-\code{absent = "zero"} declares that omitted variable rows mean known zero scores
-within folds reporting that measure. It never replaces an explicit NA or a
-wholly unavailable fold/measure with zero. Use it only for sparse importance
-tables whose producer omits zero entries. Infinite scores are rejected.
+Explicit NA scores, omitted rows, and wholly unavailable folds are excluded
+from each variable's summary. Variables with no available score are omitted.
+A producer whose importance omits variables with a zero score supplies those
+zeros explicitly. Infinite scores are rejected. \code{\link[=summarize_varimp]{summarize_varimp()}} returns
+the summary and ranking this function draws.
 
 Means and medians give each contributing fold equal weight. An incomplete
 summary describes the available folds, not an estimate guaranteed to be
@@ -129,8 +124,8 @@ unbiased for all folds. Incomplete fold coverage is reported in the console;
 chart labels retain only the variable and measure names. The input is never
 modified.
 
-Boxplots require fold-level records. Every available score (including known
-structural zeros) is overlaid by default, with its fold ID in the tooltip.
+Boxplots require fold-level records. Every available score is overlaid by
+default, with its fold ID in the tooltip.
 Missing values remain missing in the materialized table and are reported in
 the console. Boxes describe resample variability, not a confidence interval.
 See \code{\link[=draw_boxplot]{draw_boxplot()}} for quartiles, whiskers, and point placement. Use
@@ -155,6 +150,6 @@ scores <- data.frame(
   fold = c("A", "A", "B"),
   gain = c(0.8, 0.4, 0.6)
 )
-draw_varimp(scores, measure = "gain", absent = "zero")
-draw_varimp(scores, measure = "gain", type = "boxplot", absent = "zero")
+draw_varimp(scores, measure = "gain")
+draw_varimp(scores, measure = "gain", type = "boxplot")
 }

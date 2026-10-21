@@ -18,6 +18,8 @@
 * Heatmap and spectrogram color scales fade to the theme's background, including a custom theme's.
 * Histograms gain `border_alpha` for a solid bar outline (default 1); unset `fill_alpha` is 0.5 where overlaid groups overlap and 0.75 otherwise.
 * Volcano plot annotations are placed clear of each other and of annotated points, in the browser and in SVG export; the significance threshold label sits outside the plotting area.
+* `summarize_varimp()` returns the per-variable summary across folds and the ranking that `draw_varimp()` draws.
+* `draw_varimp()` treats an omitted variable row as an unavailable score; the `absent` argument is removed, and a producer supplies zero scores explicitly.
 
 ## rtemis.draw 0.5.3
 
