@@ -35,10 +35,12 @@ draw_scatter(
   diagonal_color = NULL,
   legend_position = "top",
   legend_placement = "outside",
+  legend_title = NULL,
   fit_name = NULL,
   rug = FALSE,
   hover = NULL,
-  point_alpha = NULL
+  point_alpha = NULL,
+  zoom = FALSE
 )
 }
 \arguments{
@@ -142,6 +144,11 @@ column. Corner anchors align within the top or bottom row.}
 plotting area. Outside placement reserves space for the complete legend;
 inside placement overlays the data. Neither setting adds a missing legend.}
 
+\item{legend_title}{Optional Character: Title drawn with the legend or
+colorbar: above left/right legends and vertical colorbars, before the
+first row of top/bottom legends and horizontal colorbars. \code{NULL} draws no
+title. A title does not add a missing legend.}
+
 \item{fit_name}{Optional Character: Label for fitted layers.}
 
 \item{rug}{Logical: Draw marginal marks on both axes.}
@@ -152,6 +159,12 @@ inside placement overlays the data. Neither setting adds a missing legend.}
 from the number of points drawn, as a rough guard against overplotting:
 0.75 at 10 points, 0.57 at 150, 0.45 at 1,000 and 0.3 at 10,000, clamped
 to \verb{[0.15, 0.9]}. Set a value to override.}
+
+\item{zoom}{Logical, \link{DataZoom}, or list of \link{DataZoom}: Enable zoom on both
+axes. \code{TRUE} adds Shift+wheel zoom and drag panning on both axes and a
+top-right toolbox with box-zoom, undo, and reset controls; double-click
+resets the view. \code{FALSE} disables zoom. Pass \link{DataZoom} objects (or a
+list of them) for full control.}
 }
 \value{
 htmlwidget: Widget object.

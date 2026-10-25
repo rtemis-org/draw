@@ -11,11 +11,13 @@ BarConfig(
   writer = NULL,
   legend_position = "top",
   legend_placement = "outside",
+  legend_title = NULL,
   x = NULL,
   y = NULL,
   order = "input",
   stack = FALSE,
   horizontal = FALSE,
+  zoom = FALSE,
   bar_width = NULL,
   palette = NULL,
   xlab = NULL,
@@ -50,6 +52,11 @@ column. Corner anchors align within the top or bottom row.}
 plotting area. Outside placement reserves space for the complete legend;
 inside placement overlays the data. Neither setting adds a missing legend.}
 
+\item{legend_title}{Optional Character: Title drawn with the legend or
+colorbar: above left/right legends and vertical colorbars, before the
+first row of top/bottom legends and horizontal colorbars. \code{NULL} draws no
+title. A title does not add a missing legend.}
+
 \item{x}{Optional Character: Column holding the categories.}
 
 \item{y}{Optional Character: Columns holding the values, one series each.}
@@ -60,6 +67,9 @@ by their total across series, retaining ties and placing missing totals last.}
 \item{stack}{Logical: If TRUE, stack the series instead of grouping them.}
 
 \item{horizontal}{Logical: If TRUE, draw the bars horizontally.}
+
+\item{zoom}{Logical: Enable a slider, Shift+wheel zoom, and drag panning on
+the category axis.}
 
 \item{bar_width}{Optional Numeric \verb{(0, Inf)}: Bar thickness in pixels.
 NULL lets ECharts size bars from the category spacing.}

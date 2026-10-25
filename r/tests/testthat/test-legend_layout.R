@@ -1,5 +1,8 @@
 test_that("legend properties share validation, schema, and provenance", {
-  expect_named(legend_properties(), c("legend_position", "legend_placement"))
+  expect_named(
+    legend_properties(),
+    c("legend_position", "legend_placement", "legend_title")
+  )
   expect_identical(
     to_list(LegendLayout()),
     list(legend_position = "top", legend_placement = "outside")
@@ -187,4 +190,116 @@ test_that("native legends reserve space across families, anchors, and resizes", 
   )
   expect_null(attr(result, "status"), info = paste(result, collapse = "\n"))
   expect_match(paste(result, collapse = "\n"), "Shared legend layout passed")
+})
+
+
+# %% legend_title ----
+test_that("legend_title is a nullable shared property and an optional render hint", {
+  expect_null(LegendLayout()@legend_title)
+  expect_identical(
+    to_list(LegendLayout(legend_title = "Species")),
+    list(
+      legend_position = "top",
+      legend_placement = "outside",
+      legend_title = "Species"
+    )
+  )
+  expect_false("legendTitle" %in% names(legend_meta()))
+  expect_identical(
+    legend_meta(legend_title = "Species")[["legendTitle"]],
+    "Species"
+  )
+  expect_error(legend_meta(legend_title = c("a", "b")))
+  expect_error(legend_meta(legend_title = 1))
+})
+
+test_that("draw functions and configs forward legend_title to the widget", {
+  w <- draw_scatter(
+    iris[[1]],
+    iris[[2]],
+    group = iris[["Species"]],
+    legend_title = "Species"
+  )
+  expect_identical(w[["x"]][["legendTitle"]], "Species")
+  expect_null(draw_scatter(1:3, 1:3)[["x"]][["legendTitle"]])
+  w <- draw_heatmap(cor(mtcars[1:4]), legend_title = "Correlation")
+  expect_identical(w[["x"]][["legendTitle"]], "Correlation")
+  w <- draw_roc(
+    data.frame(fpr = c(0, .2, 1), tpr = c(0, .8, 1)),
+    legend_title = "Model"
+  )
+  expect_identical(w[["x"]][["legendTitle"]], "Model")
+  cfg <- setup_BarConfig(x = "g", y = "v", legend_title = "Value")
+  expect_identical(cfg@legend_title, "Value")
+  w <- draw(cfg, data = data.frame(g = c("a", "b"), v = c(1, 2)))
+  expect_identical(w[["x"]][["legendTitle"]], "Value")
+  for (cls in list(ScatterConfig, HeatmapConfig, TimeSeriesConfig)) {
+    s <- chart_schema(
+      cls,
+      id = "https://example.org/s.json",
+      title = "t",
+      description = "d"
+    )
+    expect_identical(
+      s[["properties"]][["legend_title"]][["type"]],
+      c("string", "null")
+    )
+  }
+})
+
+test_that("legend titles clear legends and plots across anchors and resizes", {
+  skip_if_no_node()
+  charts <- list(
+    scatter = draw_scatter(
+      iris[[1]],
+      iris[[2]],
+      group = iris[["Species"]],
+      title = "Iris",
+      legend_title = "Species"
+    ),
+    long = draw_scatter(
+      iris[[1]],
+      iris[[2]],
+      group = iris[["Species"]],
+      legend_title = "Iris species from the Anderson collection, Gaspe Peninsula"
+    ),
+    pie = draw_pie(
+      c(10, 20, 30),
+      labels = c("A", "B", "C"),
+      legend_title = "Group"
+    ),
+    heatmap = draw_heatmap(cor(mtcars[1:4]), legend_title = "Correlation")
+  )
+  untitled <- list(
+    scatter = draw_scatter(iris[[1]], iris[[2]], group = iris[["Species"]]),
+    heatmap = draw_heatmap(cor(mtcars[1:4]))
+  )
+  path <- tempfile(fileext = ".json")
+  on.exit(unlink(path), add = TRUE)
+  jsonlite::write_json(
+    list(
+      charts = lapply(charts, function(x) strip_js(x[["x"]])),
+      untitled = lapply(untitled, function(x) strip_js(x[["x"]])),
+      echarts = system.file(
+        "htmlwidgets/lib/echarts/echarts.min.js",
+        package = "rtemis.draw"
+      ),
+      layout = system.file(
+        "htmlwidgets/lib/draw/panels.js",
+        package = "rtemis.draw"
+      ),
+      positions = as.list(LEGEND_POSITIONS)
+    ),
+    path,
+    auto_unbox = TRUE,
+    null = "null"
+  )
+  result <- system2(
+    Sys.which("node"),
+    c(shQuote(test_path("fixtures", "legend_title.js")), shQuote(path)),
+    stdout = TRUE,
+    stderr = TRUE
+  )
+  expect_null(attr(result, "status"), info = paste(result, collapse = "\n"))
+  expect_match(paste(result, collapse = "\n"), "Legend titles passed")
 })

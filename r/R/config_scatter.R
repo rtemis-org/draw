@@ -40,6 +40,8 @@
 #' @param diagonal_color Optional Character: Identity-line color.
 #' @param n_fit Integer `[2, Inf)`: Points used to draw the fit line.
 #' @param fit_alpha Numeric `[0, 1]`: Opacity of the standard-error band.
+#' @param zoom Logical: Enable Shift+wheel zoom, drag panning, and box-zoom
+#'   controls on both axes.
 #' @param point_alpha Optional Numeric `[0, 1]`: Point opacity. `NULL` sets it
 #'   from the number of points drawn, falling from 0.9 for a handful of points
 #'   to 0.15 for 100,000 or more, so that overlapping points stay visible.
@@ -62,7 +64,7 @@
 #'   `[0, Inf)`: Plot margins in pixels.
 #' @param dat_path Optional Character: Path to the data, read at draw time. The
 #'   serializable alternative to passing `data` to [draw()].
-#' @inheritParams draw_line legend_position legend_placement
+#' @inheritParams draw_line legend_position legend_placement legend_title
 #' @inheritParams ChartConfig
 #'
 #' @return `ScatterConfig` object.
@@ -159,6 +161,13 @@ ScatterConfig <- new_class(
         200L,
         min = 2L,
         description = "Points used to draw the fit line."
+      ),
+      zoom = prop_boolean(
+        FALSE,
+        description = paste(
+          "Enable Shift+wheel zoom, drag panning, and box-zoom controls on",
+          "both axes."
+        )
       ),
       # -- appearance --------------------------------------------------------
       fit_alpha = prop_float(
@@ -330,10 +339,12 @@ setup_ScatterConfig <- function(
   diagonal_color = NULL,
   legend_position = "top",
   legend_placement = "outside",
+  legend_title = NULL,
   fit_name = NULL,
   rug = FALSE,
   hover = NULL,
-  point_alpha = NULL
+  point_alpha = NULL,
+  zoom = FALSE
 ) {
   # Which values the caller chose, versus which this function filled in. An
   # explicit `origin` (from read_chart_config()) wins: provenance is carried
@@ -358,6 +369,7 @@ setup_ScatterConfig <- function(
     n_fit = clean_int(n_fit),
     fit_alpha = fit_alpha,
     point_alpha = point_alpha,
+    zoom = zoom,
     palette = palette,
     pad = pad,
     square = square,
@@ -374,6 +386,7 @@ setup_ScatterConfig <- function(
     dat_path = dat_path,
     legend_position = legend_position,
     legend_placement = legend_placement,
+    legend_title = legend_title,
     origin = origin,
     writer = writer
   )
@@ -470,7 +483,8 @@ method(compile, ScatterConfig) <- function(
     xlab = config@xlab,
     ylab = config@ylab,
     title = config@title,
-    margins = config_margins(config) %||% DEFAULT_MARGINS
+    margins = config_margins(config) %||% DEFAULT_MARGINS,
+    zoom = config@zoom
   )
 }
 

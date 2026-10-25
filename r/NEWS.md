@@ -20,6 +20,9 @@
 * Volcano plot annotations are placed clear of each other and of annotated points, in the browser and in SVG export; the significance threshold label sits outside the plotting area.
 * `summarize_varimp()` returns the per-variable summary across folds and the ranking that `draw_varimp()` draws.
 * `draw_varimp()` treats an omitted variable row as an unavailable score; the `absent` argument is removed, and a producer supplies zero scores explicitly.
+* `draw_scatter()`, `draw_bar()`, `draw_histogram()`, and `draw_density()` gain `zoom`, as do their chart configurations: a slider with drag panning on the x-axis (the category axis for bars), or box-zoom, undo, and reset controls with drag panning on both axes for scatter plots.
+* Mouse-wheel zoom requires the Shift key in every chart, including `draw_line()`, `draw_ts()`, and `draw_gantt()`; the plain wheel scrolls the page.
+* Charts with a legend or color scale gain `legend_title`, as do their chart configurations: a bold title above left/right legends and vertical color bars, and before the first row of top/bottom legends and horizontal color bars. The default `NULL` draws no title.
 
 ## rtemis.draw 0.5.3
 

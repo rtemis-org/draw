@@ -718,49 +718,6 @@ is_time_axis <- function(x) {
 } # /rtemis.draw::is_time_axis
 
 
-#' Make room under the plot for the zoom slider
-#'
-#' ECharts lays its slider a fixed distance above the container's bottom edge,
-#' where the x-axis title and the legend already sit, and reserves no grid
-#' space for it. This moves the slider up to the top of the bottom margin --
-#' above the legend, which lives in that margin -- and grows the margin so the
-#' axis labels and title clear the slider.
-#'
-#' Only the preset built by `zoom = TRUE` is placed: a caller who passes
-#' [DataZoom] objects has taken over the layout. A percentage bottom margin is
-#' left alone too, since the slider's height is in pixels.
-#'
-#' @param data_zoom List of [DataZoom]: The resolved zoom specs.
-#' @param grid Optional [Grid]: The resolved margins.
-#'
-#' @return Named list: `data_zoom` and `grid`, placed.
-#'
-#' @author EDG
-#' @keywords internal
-#' @noRd
-reserve_slider_room <- function(data_zoom, grid) {
-  # ECharts' own numbers: the slider's filler height, the brush handle it
-  # draws below the filler, and its default grid margin when none is given.
-  slider_height <- 30
-  handle_height <- 7
-  gap <- 8
-  bottom <- if (is.null(grid) || is.null(grid@bottom)) 80 else grid@bottom
-  if (!is.numeric(bottom)) {
-    return(list(data_zoom = data_zoom, grid = grid))
-  }
-  data_zoom <- lapply(data_zoom, function(dz) {
-    if (S7::S7_inherits(dz, DataZoom) && identical(dz@type, "slider")) {
-      dz@bottom <- bottom + handle_height
-      dz@height <- slider_height
-    }
-    dz
-  })
-  grid <- grid %||% Grid()
-  grid@bottom <- bottom + handle_height + slider_height + gap
-  list(data_zoom = data_zoom, grid = grid)
-} # /rtemis.draw::reserve_slider_room
-
-
 #' Tooltip value formatter for plain numbers
 #'
 #' Formats the value part of a tooltip row while leaving ECharts' own layout
@@ -1011,15 +968,8 @@ line_option <- function(
     }
   }
 
-  # Resolve `zoom` argument into an (optional) list of DataZoom specs. The
-  # `TRUE` preset's slider is given its own band under the plot.
-  data_zoom <- resolve_zoom(zoom, axis = "x")
-  grid <- resolve_margins(margins)
-  if (isTRUE(zoom)) {
-    placed <- reserve_slider_room(data_zoom, grid)
-    data_zoom <- placed[["data_zoom"]]
-    grid <- placed[["grid"]]
-  }
+  # The `TRUE` preset's slider is given its own band under the plot.
+  zoomed <- zoom_layout(zoom, axis = "x", grid = resolve_margins(margins))
 
   opt <- EChartsOption(
     title = if (!is.null(title)) Title(text = title) else NULL,
@@ -1054,8 +1004,8 @@ line_option <- function(
       axis_line = axis_line_for_orthogonal(x_lim)
     ),
     color = palette,
-    data_zoom = data_zoom,
-    grid = grid,
+    data_zoom = zoomed[["data_zoom"]],
+    grid = zoomed[["grid"]],
     # Time positions carry the wall-clock reading as UTC; see time_axis_ms().
     use_utc = if (x_type == "time") TRUE else NULL,
     series = series
@@ -1076,6 +1026,10 @@ line_option <- function(
 #' @param legend_placement Character \{"outside", "inside"\}: Relation to the
 #'   plotting area. Outside placement reserves space for the complete legend;
 #'   inside placement overlays the data. Neither setting adds a missing legend.
+#' @param legend_title Optional Character: Title drawn with the legend or
+#'   colorbar: above left/right legends and vertical colorbars, before the
+#'   first row of top/bottom legends and horizontal colorbars. `NULL` draws no
+#'   title. A title does not add a missing legend.
 #'
 #' @details
 #' Axis baselines emphasize zero only when it is in the visible orthogonal
@@ -1156,10 +1110,10 @@ line_option <- function(
 #' @param theme Optional [Theme]: Theme override. The palette inside the theme can be
 #'   overridden per-chart with the `color` argument.
 #' @param zoom Logical, [DataZoom], or list of [DataZoom]: Enable x-axis zoom.
-#'   `TRUE` adds a slider plus mouse-wheel/drag zoom on the x-axis, with the
-#'   slider given its own band below the axis title; `FALSE` (default)
-#'   disables zoom. Pass [DataZoom] objects (or a list of them) for full
-#'   control over zoom behavior, styling, and placement.
+#'   `TRUE` adds a slider below the axis title, Shift+wheel zoom, and drag
+#'   panning on the x-axis; double-click resets the view. `FALSE` disables
+#'   zoom. Pass [DataZoom] objects (or a list of them) for full control over
+#'   zoom behavior, styling, and placement.
 #' @param margins Optional Named numeric vector or named list: Plot margins in
 #'   pixels (or percentage strings) for any of `"top"`, `"right"`,
 #'   `"bottom"`, `"left"` — e.g. `c(left = 80, right = 20)` or
@@ -1215,7 +1169,8 @@ draw_line <- function(
   element_id = NULL,
   filename = NULL,
   legend_position = "top",
-  legend_placement = "outside"
+  legend_placement = "outside",
+  legend_title = NULL
 ) {
   opt <- line_option(
     x = x,
@@ -1250,7 +1205,7 @@ draw_line <- function(
     element_id = element_id,
     filename = filename,
     meta = c(
-      legend_meta(legend_position, legend_placement),
+      legend_meta(legend_position, legend_placement, legend_title),
       aspect_meta(opt, square = square, equal_axes = equal_axes)
     )
   )
@@ -1452,61 +1407,6 @@ build_block_mark_area <- function(x, blocks, block_color, block_opacity) {
   MarkArea(data = pairs, silent = TRUE)
 }
 
-#' Resolve the `zoom` argument of `draw_*` functions
-#'
-#' Translates the ergonomic `zoom` argument into a list of [DataZoom] specs (or
-#' `NULL`). Accepts `FALSE`/`NULL` (no zoom), `TRUE` (default slider + inside
-#' pair on the given axis), a single [DataZoom], or a list of [DataZoom] /
-#' plain named lists (passed through untouched).
-#'
-#' @param zoom Logical, [DataZoom], or list: User-facing `zoom` argument.
-#' @param axis Character \{"x", "y"\}: Which axis the default `TRUE` preset
-#'   should target.
-#' @return Optional list of [DataZoom] specs (or plain lists): Value suitable
-#'   for `EChartsOption(data_zoom = ...)`.
-#' @keywords internal
-#' @noRd
-resolve_zoom <- function(zoom, axis = "x") {
-  if (is.null(zoom) || isFALSE(zoom)) {
-    return(NULL)
-  }
-  if (isTRUE(zoom)) {
-    axis_args <- if (identical(axis, "y")) {
-      list(y_axis_index = 0)
-    } else {
-      list(x_axis_index = 0)
-    }
-    return(list(
-      do.call(
-        DataZoom,
-        c(list(type = "slider", start = 0, end = 100), axis_args)
-      ),
-      do.call(
-        DataZoom,
-        c(
-          list(
-            type = "inside",
-            zoom_on_mouse_wheel = TRUE,
-            move_on_mouse_move = TRUE
-          ),
-          axis_args
-        )
-      )
-    ))
-  }
-  if (S7::S7_inherits(zoom, DataZoom)) {
-    return(list(zoom))
-  }
-  if (is.list(zoom)) {
-    return(zoom)
-  }
-  abort(
-    "`zoom` must be TRUE, FALSE, a DataZoom object, or a list; got ",
-    class(zoom)[1],
-    ".",
-    class = c("rtemis_type_error", "rtemis_input_error")
-  )
-}
 
 #' Build the ECharts option for a bar chart
 #'
@@ -1533,7 +1433,8 @@ bar_option <- function(
   title = NULL,
   margins = DEFAULT_MARGINS,
   bar_width = NULL,
-  order = "input"
+  order = "input",
+  zoom = FALSE
 ) {
   input <- bar_input(x, y, order)
   x <- input[["x"]]
@@ -1610,13 +1511,20 @@ bar_option <- function(
     y_ax@name_location <- "middle"
   }
 
+  # The preset zooms the category axis.
+  zoomed <- zoom_layout(
+    zoom,
+    axis = if (horizontal) "y" else "x",
+    grid = resolve_margins(margins)
+  )
   opt <- EChartsOption(
     title = if (!is.null(title)) Title(text = title) else NULL,
     tooltip = Tooltip(trigger = "axis"),
     legend = if (length(series) > 1L) Legend() else NULL,
     x_axis = x_ax,
     y_axis = y_ax,
-    grid = resolve_margins(margins),
+    grid = zoomed[["grid"]],
+    data_zoom = zoomed[["data_zoom"]],
     series = series
   )
 
@@ -1655,12 +1563,17 @@ bar_option <- function(
 #'   container. `NULL` lets htmlwidgets generate one.
 #' @param filename Optional Character: If provided, save the widget to this file via
 #'   [save_drawing()].
+#' @param zoom Logical, [DataZoom], or list of [DataZoom]: Enable zoom on the
+#'   category axis (the y-axis when `horizontal = TRUE`). `TRUE` adds a slider,
+#'   Shift+wheel zoom, and drag panning; double-click resets the view. `FALSE`
+#'   disables zoom. Pass [DataZoom] objects (or a list of them) for full
+#'   control.
 #' @return htmlwidget: Widget object.
 #' @export
 #'
 #' @examples
 #' draw_bar(x = c("A", "B", "C"), y = c(3, 7, 2), title = "Counts")
-#' @inheritParams draw_line legend_position legend_placement
+#' @inheritParams draw_line legend_position legend_placement legend_title
 draw_bar <- function(
   x,
   y = NULL,
@@ -1679,7 +1592,9 @@ draw_bar <- function(
   bar_width = NULL,
   order = "input",
   legend_position = "top",
-  legend_placement = "outside"
+  legend_placement = "outside",
+  legend_title = NULL,
+  zoom = FALSE
 ) {
   opt <- bar_option(
     x = x,
@@ -1692,7 +1607,8 @@ draw_bar <- function(
     xlab = xlab,
     ylab = ylab,
     title = title,
-    margins = margins
+    margins = margins,
+    zoom = zoom
   )
 
   draw(
@@ -1702,7 +1618,7 @@ draw_bar <- function(
     height = height,
     element_id = element_id,
     filename = filename,
-    meta = legend_meta(legend_position, legend_placement)
+    meta = legend_meta(legend_position, legend_placement, legend_title)
   )
 }
 
@@ -1770,7 +1686,8 @@ scatter_option <- function(
   fit_name = NULL,
   rug = FALSE,
   hover = NULL,
-  point_alpha = NULL
+  point_alpha = NULL,
+  zoom = FALSE
 ) {
   input <- scatter_input(x, y, group, size, hover)
   x <- input[["x"]]
@@ -2034,6 +1951,14 @@ scatter_option <- function(
     if (show_name) "true" else "false"
   ))
 
+  # filterMode = "none" keeps fit lines and bands continuous to the window
+  # edge; the grid clips them.
+  zoomed <- zoom_layout(
+    zoom,
+    axis = "xy",
+    grid = resolve_margins(margins),
+    filter_mode = "none"
+  )
   opt <- EChartsOption(
     title = if (!is.null(title)) Title(text = title) else NULL,
     tooltip = Tooltip(trigger = "item", formatter = scatter_formatter),
@@ -2068,7 +1993,9 @@ scatter_option <- function(
       axis_line = axis_line_for_orthogonal(x_lim)
     ),
     color = if (is.null(group)) palette else NULL,
-    grid = resolve_margins(margins),
+    grid = zoomed[["grid"]],
+    data_zoom = zoomed[["data_zoom"]],
+    toolbox = zoomed[["toolbox"]],
     series = series
   )
 
@@ -2140,6 +2067,11 @@ scatter_option <- function(
 #'   0.75 at 10 points, 0.57 at 150, 0.45 at 1,000 and 0.3 at 10,000, clamped
 #'   to `[0.15, 0.9]`. Set a value to override.
 #' @param n_fit Integer `[2, Inf)`: Number of evaluation points for the fit.
+#' @param zoom Logical, [DataZoom], or list of [DataZoom]: Enable zoom on both
+#'   axes. `TRUE` adds Shift+wheel zoom and drag panning on both axes and a
+#'   top-right toolbox with box-zoom, undo, and reset controls; double-click
+#'   resets the view. `FALSE` disables zoom. Pass [DataZoom] objects (or a
+#'   list of them) for full control.
 #' @param palette Optional Character: Series color palette — a single color string or
 #'   character vector that overrides the theme palette for this chart.
 #'   When `group` is set, colors are assigned per group in order. `color` takes
@@ -2188,7 +2120,7 @@ scatter_option <- function(
 #' )
 #'
 #' @export
-#' @inheritParams draw_line legend_position legend_placement
+#' @inheritParams draw_line legend_position legend_placement legend_title
 draw_scatter <- function(
   x,
   y,
@@ -2220,10 +2152,12 @@ draw_scatter <- function(
   diagonal_color = NULL,
   legend_position = "top",
   legend_placement = "outside",
+  legend_title = NULL,
   fit_name = NULL,
   rug = FALSE,
   hover = NULL,
-  point_alpha = NULL
+  point_alpha = NULL,
+  zoom = FALSE
 ) {
   opt <- scatter_option(
     x = x,
@@ -2252,7 +2186,8 @@ draw_scatter <- function(
     xlab = xlab,
     ylab = ylab,
     title = title,
-    margins = margins
+    margins = margins,
+    zoom = zoom
   )
 
   draw(
@@ -2263,7 +2198,7 @@ draw_scatter <- function(
     element_id = element_id,
     filename = filename,
     meta = c(
-      legend_meta(legend_position, legend_placement),
+      legend_meta(legend_position, legend_placement, legend_title),
       aspect_meta(opt, square = square, equal_axes = equal_axes)
     )
   )
@@ -2373,7 +2308,7 @@ pie_option <- function(
 #'   values = c(1048, 735, 580),
 #'   labels = c("Chrome", "Firefox", "Safari")
 #' )
-#' @inheritParams draw_line legend_position legend_placement
+#' @inheritParams draw_line legend_position legend_placement legend_title
 draw_pie <- function(
   values,
   labels = NULL,
@@ -2388,6 +2323,7 @@ draw_pie <- function(
   filename = NULL,
   legend_position = "top",
   legend_placement = "outside",
+  legend_title = NULL,
   label_format = "name",
   percent_digits = 1L
 ) {
@@ -2409,7 +2345,7 @@ draw_pie <- function(
     height = height,
     element_id = element_id,
     filename = filename,
-    meta = legend_meta(legend_position, legend_placement)
+    meta = legend_meta(legend_position, legend_placement, legend_title)
   )
 }
 
@@ -2463,12 +2399,17 @@ draw_pie <- function(
 #'   container. `NULL` lets htmlwidgets generate one.
 #' @param filename Optional Character: If provided, save the widget to this file via
 #'   [save_drawing()].
+#' @param zoom Logical, [DataZoom], or list of [DataZoom]: Enable x-axis zoom.
+#'   `TRUE` adds a slider below the axis title, Shift+wheel zoom, and drag
+#'   panning; in ridge mode, every row zooms together and no slider is drawn.
+#'   Double-click resets the view. `FALSE` disables zoom. Pass [DataZoom]
+#'   objects (or a list of them) for full control.
 #' @return htmlwidget: Widget object.
 #' @export
 #'
 #' @examples
 #' draw_density(iris[["Sepal.Length"]], xlab = "Sepal length")
-#' @inheritParams draw_line legend_position legend_placement
+#' @inheritParams draw_line legend_position legend_placement legend_title
 draw_density <- function(
   x,
   group = NULL,
@@ -2488,12 +2429,14 @@ draw_density <- function(
   filename = NULL,
   legend_position = "top",
   legend_placement = "outside",
+  legend_title = NULL,
   bandwidth = NULL,
   kernel = "gaussian",
   adjust = 1,
   fill_alpha = .25,
   mode = "overlap",
-  order = "input"
+  order = "input",
+  zoom = FALSE
 ) {
   opt <- density_option(
     x = x,
@@ -2512,7 +2455,8 @@ draw_density <- function(
     adjust = adjust,
     fill_alpha = fill_alpha,
     mode = mode,
-    order = order
+    order = order,
+    zoom = zoom
   )
 
   draw(
@@ -2522,7 +2466,7 @@ draw_density <- function(
     height = height,
     element_id = element_id,
     filename = filename,
-    meta = legend_meta(legend_position, legend_placement)
+    meta = legend_meta(legend_position, legend_placement, legend_title)
   )
 }
 
@@ -2572,7 +2516,7 @@ draw_density <- function(
 #'   one nonempty group outside ridge mode) and 0.75 otherwise.
 #' @param border_alpha Numeric `[0, 1]`: Opacity of the bar borders, drawn in
 #'   the series color. 0 draws no border.
-#' @inheritParams draw_density n bw bandwidth kernel adjust na_rm verbosity
+#' @inheritParams draw_density n bw bandwidth kernel adjust na_rm verbosity zoom
 #' @param palette Optional Character: Series colors, overriding the theme
 #'   palette for this chart. `NULL` uses the theme's.
 #' @param xlab Optional Character: X-axis title.
@@ -2594,7 +2538,7 @@ draw_density <- function(
 #'
 #' @examples
 #' draw_histogram(iris[["Sepal.Length"]], xlab = "Sepal length")
-#' @inheritParams draw_line legend_position legend_placement
+#' @inheritParams draw_line legend_position legend_placement legend_title
 draw_histogram <- function(
   x,
   group = NULL,
@@ -2611,6 +2555,7 @@ draw_histogram <- function(
   filename = NULL,
   legend_position = "top",
   legend_placement = "outside",
+  legend_title = NULL,
   bins = NULL,
   bin_edges = NULL,
   normalization = "count",
@@ -2627,7 +2572,8 @@ draw_histogram <- function(
   mode = "overlap",
   order = "input",
   bin_stat = "count",
-  bar_mode = "overlay"
+  bar_mode = "overlay",
+  zoom = FALSE
 ) {
   opt <- histogram_option(
     x = x,
@@ -2654,7 +2600,8 @@ draw_histogram <- function(
     mode = mode,
     order = order,
     bin_stat = bin_stat,
-    bar_mode = bar_mode
+    bar_mode = bar_mode,
+    zoom = zoom
   )
 
   draw(
@@ -2664,7 +2611,7 @@ draw_histogram <- function(
     height = height,
     element_id = element_id,
     filename = filename,
-    meta = legend_meta(legend_position, legend_placement)
+    meta = legend_meta(legend_position, legend_placement, legend_title)
   )
 }
 
@@ -3730,7 +3677,7 @@ heatmap_option <- function(
 #'
 #' @examples
 #' draw_heatmap(cor(mtcars[, 1:5]), title = "Correlation")
-#' @inheritParams draw_line legend_position legend_placement
+#' @inheritParams draw_line legend_position legend_placement legend_title
 draw_heatmap <- function(
   x,
   row_names = NULL,
@@ -3764,6 +3711,7 @@ draw_heatmap <- function(
   filename = NULL,
   legend_position = if (colorbar_orient == "horizontal") "bottom" else "right",
   legend_placement = "outside",
+  legend_title = NULL,
   row_tree = NULL,
   col_tree = NULL,
   cell_notes = NULL,
@@ -3820,7 +3768,7 @@ draw_heatmap <- function(
     element_id = element_id,
     filename = filename,
     meta = c(
-      legend_meta(legend_position, legend_placement),
+      legend_meta(legend_position, legend_placement, legend_title),
       built[["render"]][["meta"]],
       list(legendTarget = "visualMap")
     )

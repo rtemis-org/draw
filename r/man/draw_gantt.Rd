@@ -25,7 +25,8 @@ draw_gantt(
   element_id = NULL,
   filename = NULL,
   legend_position = "top",
-  legend_placement = "outside"
+  legend_placement = "outside",
+  legend_title = NULL
 )
 }
 \arguments{
@@ -49,9 +50,9 @@ category band.}
 \item{guides}{Logical: If \code{TRUE}, show an interactive axis pointer -- a guide
 line that follows the mouse and labels the time value on the x-axis.}
 
-\item{zoom}{Logical: If \code{TRUE}, enable interactive zoom -- mouse-wheel to zoom
-and drag to pan on both the time and row axes (\code{inside} dataZoom), plus a
-top-right toolbox with box-zoom, undo, and reset controls.}
+\item{zoom}{Logical: If \code{TRUE}, enable interactive zoom -- Shift+wheel to
+zoom and drag to pan on both the time and row axes (\code{inside} dataZoom),
+plus a top-right toolbox with box-zoom, undo, and reset controls.}
 
 \item{tooltip}{Optional Character: Name of a column in \code{tasks} to show as the
 tooltip text for each bar. When \code{NULL}, a default \code{label: start - end}
@@ -92,6 +93,11 @@ column. Corner anchors align within the top or bottom row.}
 \item{legend_placement}{Character \{"outside", "inside"\}: Relation to the
 plotting area. Outside placement reserves space for the complete legend;
 inside placement overlays the data. Neither setting adds a missing legend.}
+
+\item{legend_title}{Optional Character: Title drawn with the legend or
+colorbar: above left/right legends and vertical colorbars, before the
+first row of top/bottom legends and horizontal colorbars. \code{NULL} draws no
+title. A title does not add a missing legend.}
 }
 \value{
 htmlwidget: Widget object.

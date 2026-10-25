@@ -611,7 +611,7 @@ method(boxplot_option, class_any) <- function(
 #' draw_boxplot(list(Training = c(.8, .9, .85), Test = c(.7, .8, .75)),
 #'   boxpoints = "all", observation = c("Fold1", "Fold2", "Fold3"))
 #' draw_boxplot(iris["Sepal.Length"], group = iris["Species"])
-#' @inheritParams draw_line legend_position legend_placement
+#' @inheritParams draw_line legend_position legend_placement legend_title
 draw_boxplot <- function(
   x,
   labels = NULL,
@@ -639,6 +639,7 @@ draw_boxplot <- function(
   point_spread = .5,
   legend_position = "top",
   legend_placement = "outside",
+  legend_title = NULL,
   geometry = "box",
   bandwidth = NULL,
   adjust = 1,
@@ -688,7 +689,7 @@ draw_boxplot <- function(
     height = height,
     element_id = element_id,
     filename = filename,
-    meta = legend_meta(legend_position, legend_placement)
+    meta = legend_meta(legend_position, legend_placement, legend_title)
   )
 }
 

@@ -36,10 +36,12 @@ setup_ScatterConfig(
   diagonal_color = NULL,
   legend_position = "top",
   legend_placement = "outside",
+  legend_title = NULL,
   fit_name = NULL,
   rug = FALSE,
   hover = NULL,
-  point_alpha = NULL
+  point_alpha = NULL,
+  zoom = FALSE
 )
 }
 \arguments{
@@ -117,6 +119,11 @@ column. Corner anchors align within the top or bottom row.}
 plotting area. Outside placement reserves space for the complete legend;
 inside placement overlays the data. Neither setting adds a missing legend.}
 
+\item{legend_title}{Optional Character: Title drawn with the legend or
+colorbar: above left/right legends and vertical colorbars, before the
+first row of top/bottom legends and horizontal colorbars. \code{NULL} draws no
+title. A title does not add a missing legend.}
+
 \item{fit_name}{Optional Character: Label for fitted layers.}
 
 \item{rug}{Logical: Show marginal marks along the x and y axes.}
@@ -126,6 +133,9 @@ inside placement overlays the data. Neither setting adds a missing legend.}
 \item{point_alpha}{Optional Numeric \verb{[0, 1]}: Point opacity. \code{NULL} sets it
 from the number of points drawn, falling from 0.9 for a handful of points
 to 0.15 for 100,000 or more, so that overlapping points stay visible.}
+
+\item{zoom}{Logical: Enable Shift+wheel zoom, drag panning, and box-zoom
+controls on both axes.}
 }
 \value{
 \link{ScatterConfig} object.

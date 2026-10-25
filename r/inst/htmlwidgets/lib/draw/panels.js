@@ -185,6 +185,47 @@
       map.inRange = {...map.inRange, color: colors};
     });
   }
+  // ECharts legends and visualMaps have no title field. The shared layout
+  // measures a title with the legend font in bold and draws it as one silent
+  // graphic text element, so browser resize and SVG export agree.
+  // spec: draw/legend-title
+  const LEGEND_TITLE_ID = 'rtemis-legend-title';
+  // Words wrap greedily at `maxWidth`; a single word wider than it keeps its
+  // own line.
+  function measureLegendTitle(echarts, chart, model, text, maxWidth = Infinity) {
+    if (!text || !echarts) return null;
+    const own = model.getModel('textStyle'), global = chart.getModel().getModel('textStyle');
+    const fontSize = own.get('fontSize') || global.getShallow('fontSize') || 12;
+    const fontFamily = own.get('fontFamily') || global.getShallow('fontFamily') || 'sans-serif';
+    const fill = own.get('color') || global.getShallow('color') || '#333';
+    const font = `bold ${fontSize}px ${fontFamily}`, regularFont = `${fontSize}px ${fontFamily}`;
+    // Without a canvas (Node SVG export), zrender estimates widths from a
+    // regular-weight Helvetica table and ignores the weight; bold Helvetica is
+    // about 10% wider.
+    const measure = t => {
+      const width = echarts.format.getTextRect(t, font).width;
+      return width === echarts.format.getTextRect(t, regularFont).width ? width * 1.1 : width;
+    };
+    const lines = [];
+    let current = '';
+    String(text).split(/\s+/).forEach(word => {
+      const next = current ? `${current} ${word}` : word;
+      if (current && measure(next) > maxWidth) {lines.push(current); current = word;} else current = next;
+    });
+    lines.push(current);
+    const lineHeight = Math.ceil(echarts.format.getTextRect('Mg', font).height);
+    const line = Math.max(model.get('itemHeight') || 14,
+      echarts.format.getTextRect('Mg', regularFont).height);
+    const padding = [].concat(model.get('padding') ?? 5);
+    return {text: lines.join('\n'), fontSize, fontFamily, fill, line, lineHeight,
+      width: Math.ceil(Math.max(...lines.map(measure))), height: lines.length * lineHeight,
+      padTop: padding[0], padLeft: padding.length === 4 ? padding[3] : padding[padding.length > 1 ? 1 : 0]};
+  }
+  function drawLegendTitle(chart, title, left, top) {
+    chart.setOption({graphic: {elements: [{id: LEGEND_TITLE_ID, type: 'text', left, top, silent: true,
+      z: 100, style: {text: title.text, fontSize: title.fontSize, fontFamily: title.fontFamily,
+        fontWeight: 'bold', fill: title.fill, lineHeight: title.lineHeight}}]}});
+  }
   // Layout the complete categorical legend against measured native geometry.
   // Position and placement are semantic hints, never extra ECharts options.
   // Native LegendView handles row wrapping; measured space is shared by SVG.
@@ -234,14 +275,26 @@
     };
     const initial = area();
     const availableWidth = vertical ? Math.max(60, Math.min(initial.width * .4, 240)) : Math.max(1, initial.width - (inside ? 2 * gap : 0));
-    const availableHeight = Math.max(1, initial.height - (inside ? 2 * gap : 0));
+    // A title sits before the first row of a horizontal legend, with the rows
+    // indented after it, unless it takes more than half the width; otherwise
+    // it sits above the items.
+    let title = measureLegendTitle(echarts, chart, models[0], payload.legendTitle);
+    const inline = !!title && !vertical && title.width + 10 <= availableWidth / 2;
+    if (title && !inline) {
+      title = measureLegendTitle(echarts, chart, models[0], payload.legendTitle,
+        availableWidth - 2 * title.padLeft);
+    }
+    const indent = inline ? title.width + 10 : 0;
+    const lead = title && !inline ? title.height + 2 : 0;
+    const itemsWidth = availableWidth - indent;
+    const availableHeight = Math.max(1, initial.height - (inside ? 2 * gap : 0) - lead);
     const legends = models.map(model => {
       const font = model.getModel('textStyle').getFont();
       const natural = Math.max(0, ...model.getData().map(item =>
         echarts.format.getTextRect(item.get('name'), font).width));
-      const textWidth = Math.max(1, availableWidth - model.get('itemWidth') - 15);
+      const textWidth = Math.max(1, itemsWidth - model.get('itemWidth') - 15);
       return {id: model.id, orient: vertical ? 'vertical' : 'horizontal',
-        left: 0, right: null, top: 0, bottom: null, width: availableWidth,
+        left: 0, right: null, top: 0, bottom: null, width: itemsWidth,
         height: vertical ? availableHeight : 1000000,
         textStyle: {width: natural > textWidth ? textWidth : null, overflow: 'break'}};
     });
@@ -253,15 +306,17 @@
     const rows = [];
     boxes.forEach((box, index) => {
       let row = rows[rows.length - 1];
-      if (!row || vertical || row.width + 16 + box.width > availableWidth) {
+      if (!row || vertical || row.width + 16 + box.width > itemsWidth) {
         row = {items: [], width: 0, height: 0}; rows.push(row);
       }
       row.items.push({index, offset: row.width + (row.items.length ? 16 : 0)});
       row.width += box.width + (row.items.length > 1 ? 16 : 0);
       row.height = Math.max(row.height, box.height);
     });
-    const legendHeight = rows.reduce((sum, row) => sum + row.height, 0) + (rows.length - 1) * 6;
-    const legendWidth = Math.max(...rows.map(row => row.width));
+    const itemsHeight = rows.reduce((sum, row) => sum + row.height, 0) + (rows.length - 1) * 6;
+    const legendHeight = itemsHeight + lead;
+    const legendWidth = Math.max(indent + Math.max(...rows.map(row => row.width)),
+      title && !inline ? title.width + 2 * title.padLeft : 0);
     const extra = vertical ? legendWidth + gap : legendHeight + gap;
     if (!inside) {
       grids = grids.map(g => {
@@ -299,12 +354,20 @@
     let top = inside ? (lower ? grid.y + grid.height - legendHeight - gap :
       vertical ? grid.y + (grid.height - legendHeight) / 2 : grid.y + gap) :
       vertical ? grid.y + (grid.height - legendHeight) / 2 : lower ? height - gap - legendHeight : header;
+    const rowX = w => vertical ? (inside ? (right ? grid.x + grid.width - w - gap : grid.x + gap) :
+      right ? width - gap - w : gap) :
+      right ? grid.x + grid.width - w - (inside ? gap : 0) :
+      left ? grid.x + (inside ? gap : 0) : grid.x + (grid.width - w) / 2;
+    // With a title, rows align to the left edge of the whole legend block.
+    const blockX = rowX(legendWidth);
+    if (title) {
+      drawLegendTitle(chart, title, blockX + title.padLeft,
+        top + title.padTop + (inline ? (title.line - title.height) / 2 : 0));
+    }
+    top += lead;
     const updates = [];
     rows.forEach(row => {
-      const x = vertical ? (inside ? (right ? grid.x + grid.width - row.width - gap : grid.x + gap) :
-        right ? width - gap - row.width : gap) :
-        right ? grid.x + grid.width - row.width - (inside ? gap : 0) :
-        left ? grid.x + (inside ? gap : 0) : grid.x + (grid.width - row.width) / 2;
+      const x = title ? blockX + indent : rowX(row.width);
       row.items.forEach(item => updates.push({id: models[item.index].id,
         left: x + item.offset, right: null, top, bottom: null}));
       top += row.height + 6;
@@ -314,7 +377,7 @@
 
   // Continuous legends share anchors/placement but retain a vertical right
   // default. Their native view includes endpoint text and draggable handles.
-  function positionVisualMaps(chart, payload) {
+  function positionVisualMaps(chart, payload, echarts) {
     const position = payload.legendPosition;
     const model = chart.getModel().getComponent('visualMap');
     if (!position || !model?.get('show')) return;
@@ -335,7 +398,21 @@
     chart.setOption({grid: grids, visualMap: {orient: vertical ? 'vertical' : 'horizontal',
       left: 0, top: 0, right: null, bottom: null,
       itemHeight: Math.min(140, Math.max(30, (vertical ? height : width) - 160))}});
-    const box = bounds(model);
+    // Title above a vertical colorbar; before a horizontal one when both fit
+    // on one line, otherwise above it. A title above wraps at the wider of the
+    // colorbar and a quarter of the chart (at most 160 px) when vertical, and
+    // at the chart width when horizontal.
+    const native = bounds(model);
+    let title = measureLegendTitle(echarts, chart, model, payload.legendTitle);
+    const inline = !!title && !vertical && title.width + 10 + native.width <= width - 2 * gap;
+    if (title && !inline) {
+      title = measureLegendTitle(echarts, chart, model, payload.legendTitle,
+        vertical ? Math.max(native.width, Math.min(160, width / 4)) - 2 * title.padLeft : width - 2 * gap);
+    }
+    const indent = inline ? title.width + 10 : 0;
+    const lead = title && !inline ? title.height + 2 : 0;
+    const box = {width: Math.max(native.width + indent, lead ? title.width + 2 * title.padLeft : 0),
+      height: Math.max(native.height + lead, title ? title.height : 0)};
     const side = vertical ? (right ? 'right' : 'left') : lower ? 'bottom' : 'top';
     let header = gap;
     chart.getModel().eachComponent('title', title => {
@@ -364,7 +441,14 @@
     let y = vertical ? grid.y + (grid.height - box.height) / 2 :
       inside ? lower ? grid.y + grid.height - box.height - gap : grid.y + gap :
       lower ? height - gap - box.height : header;
-    chart.setOption({visualMap: {left: x, right: null, top: y, bottom: null}});
+    if (title) {
+      drawLegendTitle(chart, title, x + title.padLeft,
+        y + (inline ? (native.height - title.height) / 2 : title.padTop));
+    }
+    // Handles and endpoint text extend beyond the layout box. With a title,
+    // the measured box starts exactly at the reserved position below or after it.
+    const shiftX = title ? indent - native.x : 0, shiftY = title ? lead - native.y : 0;
+    chart.setOption({visualMap: {left: x + shiftX, right: null, top: y + shiftY, bottom: null}});
   }
   // Edge-aligned pie labels need a real text band. ECharts truncates them to
   // zero width when radius + guide lines consume that band. Fit from authored
@@ -401,8 +485,8 @@
   // offset by titles, rotated labels, or dendrograms. Measure the native view
   // after layout so its handles and endpoint text are included. Keep this in
   // the shared renderer so browser resize and vector export agree.
-  function centerVisualMaps(chart, payload) {
-    if (payload.legendTarget === 'visualMap') return positionVisualMaps(chart, payload);
+  function centerVisualMaps(chart, payload, echarts) {
+    if (payload.legendTarget === 'visualMap') return positionVisualMaps(chart, payload, echarts);
     const definitions = payload.option?.visualMap;
     if (!definitions) return;
     const maps = Array.isArray(definitions) ? definitions : [definitions];

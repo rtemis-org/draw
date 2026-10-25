@@ -515,7 +515,7 @@ method(significance_input, class_any) <- function(
 #' @examples
 #' draw_volcano(c(-2, 0.1, 3), c(0.001, 0.6, 0.002),
 #'   xnames = c("A", "B", "C"), p_adjust_method = "holm")
-#' @inheritParams draw_line legend_position legend_placement
+#' @inheritParams draw_line legend_position legend_placement legend_title
 draw_volcano <- function(
   x,
   pvals,
@@ -528,6 +528,7 @@ draw_volcano <- function(
   ...,
   legend_position = "top",
   legend_placement = "outside",
+  legend_title = NULL,
   theme = NULL,
   width = NULL,
   height = NULL,
@@ -547,6 +548,7 @@ draw_volcano <- function(
     annotate_n = annotate_n,
     legend_position = legend_position,
     legend_placement = legend_placement,
+    legend_title = legend_title,
     ...
   )
   draw(
@@ -584,7 +586,7 @@ draw_volcano <- function(
 #' @examples
 #' draw_manhattan(c(-2, 0.1, 3), c(0.001, 0.6, 0.002),
 #'   xnames = c("A", "B", "C"), p_adjust_method = "holm")
-#' @inheritParams draw_line legend_position legend_placement
+#' @inheritParams draw_line legend_position legend_placement legend_title
 draw_manhattan <- function(
   x,
   pvals,
@@ -597,6 +599,7 @@ draw_manhattan <- function(
   ...,
   legend_position = "top",
   legend_placement = "outside",
+  legend_title = NULL,
   theme = NULL,
   width = NULL,
   height = NULL,
@@ -616,6 +619,7 @@ draw_manhattan <- function(
     annotate_n = annotate_n,
     legend_position = legend_position,
     legend_placement = legend_placement,
+    legend_title = legend_title,
     ...
   )
   draw(

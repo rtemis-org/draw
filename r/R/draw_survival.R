@@ -487,6 +487,7 @@ draw_survival <- function(
   n_risk = NULL,
   legend_position = "top",
   legend_placement = "outside",
+  legend_title = NULL,
   theme = NULL,
   width = NULL,
   height = NULL,
@@ -523,6 +524,7 @@ draw_survival <- function(
     n_risk = n_risk,
     legend_position = legend_position,
     legend_placement = legend_placement,
+    legend_title = legend_title,
     ...
   )
   draw(

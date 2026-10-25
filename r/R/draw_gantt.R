@@ -202,6 +202,7 @@ gantt_option <- function(
   # `outerBoundsMode = "same"`, so these margins are outer bounds and the long
   # category labels still fit inside them.
   has_legend <- !is.null(group)
+  zoomed <- zoom_layout(zoom, axis = "xy", filter_mode = "none")
   opt <- EChartsOption(
     title = if (!is.null(title)) Title(text = title, left = "center") else NULL,
     tooltip = Tooltip(trigger = "item", formatter = gantt_formatter),
@@ -210,35 +211,9 @@ gantt_option <- function(
     } else {
       NULL
     },
-    # Discoverable zoom controls (top-right): box-zoom (drag a rectangle), undo,
-    # and reset. Complements the wheel/drag `inside` zoom below. Theme-neutral
-    # gray icons + a subtle selection brush read on both light and dark.
-    toolbox = if (isTRUE(zoom)) {
-      list(
-        show = TRUE,
-        right = 12L,
-        top = 8L,
-        itemSize = 14L,
-        itemGap = 8L,
-        showTitle = FALSE,
-        iconStyle = list(borderColor = "#808080"),
-        emphasis = list(iconStyle = list(borderColor = "#3F6FB5")),
-        feature = list(
-          dataZoom = list(
-            filterMode = "none",
-            brushStyle = list(
-              color = "rgba(128,128,128,0.2)",
-              borderColor = "rgba(128,128,128,0.6)",
-              borderWidth = 1L
-            ),
-            title = list(zoom = "Box zoom", back = "Undo zoom")
-          ),
-          restore = list(title = "Reset")
-        )
-      )
-    } else {
-      NULL
-    },
+    # Box-zoom, undo, and reset controls in the top-right corner, plus
+    # Shift+wheel zoom and drag panning on both axes.
+    toolbox = zoomed[["toolbox"]],
     color = palette,
     grid = Grid(
       left = 8L,
@@ -272,32 +247,9 @@ gantt_option <- function(
       inverse = TRUE,
       boundary_gap = TRUE
     ),
-    # Zoom: one `inside` dataZoom per axis -> wheel-zoom + drag-pan on both time
-    # and rows. filterMode = "none" is essential for the gantt: zooming the
-    # category (row) axis must only reframe the view, never drop bars. Wheel-out
-    # returns to the full view, without adding visible slider tracks.
-    data_zoom = if (isTRUE(zoom)) {
-      list(
-        list(
-          type = "inside",
-          xAxisIndex = 0L,
-          filterMode = "none",
-          zoomOnMouseWheel = TRUE,
-          moveOnMouseMove = TRUE,
-          moveOnMouseWheel = FALSE
-        ),
-        list(
-          type = "inside",
-          yAxisIndex = 0L,
-          filterMode = "none",
-          zoomOnMouseWheel = TRUE,
-          moveOnMouseMove = TRUE,
-          moveOnMouseWheel = FALSE
-        )
-      )
-    } else {
-      NULL
-    },
+    # filterMode = "none": zooming the category (row) axis reframes the view
+    # and keeps every bar.
+    data_zoom = zoomed[["data_zoom"]],
     series = series
   )
 
@@ -333,9 +285,9 @@ gantt_option <- function(
 #' @param bar_radius Numeric `[0, Inf)`: Bar corner radius in pixels.
 #' @param guides Logical: If `TRUE`, show an interactive axis pointer -- a guide
 #'   line that follows the mouse and labels the time value on the x-axis.
-#' @param zoom Logical: If `TRUE`, enable interactive zoom -- mouse-wheel to zoom
-#'   and drag to pan on both the time and row axes (`inside` dataZoom), plus a
-#'   top-right toolbox with box-zoom, undo, and reset controls.
+#' @param zoom Logical: If `TRUE`, enable interactive zoom -- Shift+wheel to
+#'   zoom and drag to pan on both the time and row axes (`inside` dataZoom),
+#'   plus a top-right toolbox with box-zoom, undo, and reset controls.
 #' @param tooltip Optional Character: Name of a column in `tasks` to show as the
 #'   tooltip text for each bar. When `NULL`, a default `label: start - end`
 #'   tooltip is shown.
@@ -369,7 +321,7 @@ gantt_option <- function(
 #'   status = c("ok", "ok", "ok", "error")
 #' )
 #' draw_gantt(tasks, group = "status")
-#' @inheritParams draw_line legend_position legend_placement
+#' @inheritParams draw_line legend_position legend_placement legend_title
 draw_gantt <- function(
   tasks,
   group = NULL,
@@ -391,7 +343,8 @@ draw_gantt <- function(
   element_id = NULL,
   filename = NULL,
   legend_position = "top",
-  legend_placement = "outside"
+  legend_placement = "outside",
+  legend_title = NULL
 ) {
   opt <- gantt_option(
     tasks = tasks,
@@ -417,6 +370,6 @@ draw_gantt <- function(
     height = height,
     element_id = element_id,
     filename = filename,
-    meta = legend_meta(legend_position, legend_placement)
+    meta = legend_meta(legend_position, legend_placement, legend_title)
   )
 }

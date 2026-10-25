@@ -29,6 +29,11 @@ legend_properties <- function(position = "top", placement = "outside") {
       placement,
       enum = c("outside", "inside"),
       description = "Place the legend outside or inside the plotting area."
+    ),
+    legend_title = prop_string(
+      NULL,
+      nullable = TRUE,
+      description = "Legend title. Unset draws no title."
     )
   )
 }
@@ -46,28 +51,40 @@ LegendLayout <- new_class(
 #' Build renderer hints from shared legend settings
 #' @param legend_position Character: Edge or corner anchor.
 #' @param legend_placement Character: Outside or inside the plotting area.
-#' @return Named list for the browser and SVG renderers.
+#' @param legend_title Optional Character: Legend title; `NULL` draws none.
+#' @return Named list for the browser and SVG renderers. `legendTitle` is
+#'   present only when `legend_title` is set.
 #' @keywords internal
 #' @noRd
-legend_meta <- function(legend_position = "top", legend_placement = "outside") {
+legend_meta <- function(
+  legend_position = "top",
+  legend_placement = "outside",
+  legend_title = NULL
+) {
   layout <- LegendLayout(
     legend_position = legend_position,
-    legend_placement = legend_placement
+    legend_placement = legend_placement,
+    legend_title = legend_title
   )
-  list(
+  meta <- list(
     legendPosition = layout@legend_position,
     legendPlacement = layout@legend_placement
   )
+  meta[["legendTitle"]] <- layout@legend_title
+  meta
 }
 
 #' Serialize a semantic legend layout
 #' @param x LegendLayout: Validated layout.
-#' @return Plain named list with portable configuration fields.
+#' @return Plain named list with portable configuration fields; `legend_title`
+#'   is present only when set.
 #' @keywords internal
 #' @noRd
 method(to_list, LegendLayout) <- function(x) {
-  list(
+  out <- list(
     legend_position = x@legend_position,
     legend_placement = x@legend_placement
   )
+  out[["legend_title"]] <- x@legend_title
+  out
 }

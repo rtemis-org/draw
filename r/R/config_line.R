@@ -30,7 +30,8 @@
 #' @param smooth Logical: Draw smoothed lines.
 #' @param area Logical: Fill the area under each line.
 #' @param points Logical: Show a marker at each data value.
-#' @param zoom Logical: Enable the zoom control.
+#' @param zoom Logical: Enable an x-axis slider, Shift+wheel zoom, and drag
+#'   panning.
 #' @param palette Optional Character: Series colors, overriding the theme
 #'   palette for this chart. `NULL` uses the theme's.
 #' @param block_color Optional Character: Band colors.
@@ -50,7 +51,7 @@
 #'   the data.
 #' @param margin_top,margin_right,margin_bottom,margin_left Optional Integer
 #'   `[0, Inf)`: Plot margins in pixels.
-#' @inheritParams draw_line legend_position legend_placement
+#' @inheritParams draw_line legend_position legend_placement legend_title
 #' @inheritParams ChartConfig
 #'
 #' @return `LineConfig` object.
@@ -106,7 +107,10 @@ LineConfig <- new_class(
         TRUE,
         description = "Show a marker at each data value."
       ),
-      zoom = prop_boolean(FALSE, description = "Enable the zoom control."),
+      zoom = prop_boolean(
+        FALSE,
+        description = "Enable an x-axis slider, Shift+wheel zoom, and drag panning."
+      ),
       # -- appearance --------------------------------------------------------
       palette = prop_string(
         NULL,
@@ -282,7 +286,8 @@ setup_LineConfig <- function(
   origin = NULL,
   writer = NULL,
   legend_position = "top",
-  legend_placement = "outside"
+  legend_placement = "outside",
+  legend_title = NULL
 ) {
   origin <- origin %||% chart_origin(match.call(), LINE_ORIGIN_NAMES)
   LineConfig(
@@ -312,6 +317,7 @@ setup_LineConfig <- function(
     dat_path = dat_path,
     legend_position = legend_position,
     legend_placement = legend_placement,
+    legend_title = legend_title,
     origin = origin,
     writer = writer
   )

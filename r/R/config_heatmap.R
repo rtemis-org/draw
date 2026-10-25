@@ -52,7 +52,7 @@
 #'   orientation.
 #' @param margin_top,margin_right,margin_bottom,margin_left Optional Integer
 #'   `[0, Inf)`: Override the auto-computed margins, per side.
-#' @inheritParams draw_line legend_position legend_placement
+#' @inheritParams draw_line legend_position legend_placement legend_title
 #' @inheritParams ChartConfig
 #'
 #' @return `HeatmapConfig` object.
@@ -287,7 +287,8 @@ setup_HeatmapConfig <- function(
   origin = NULL,
   writer = NULL,
   legend_position = if (colorbar_orient == "horizontal") "bottom" else "right",
-  legend_placement = "outside"
+  legend_placement = "outside",
+  legend_title = NULL
 ) {
   origin <- origin %||% chart_origin(match.call(), HEATMAP_ORIGIN_NAMES)
   HeatmapConfig(
@@ -324,6 +325,7 @@ setup_HeatmapConfig <- function(
     dat_path = dat_path,
     legend_position = legend_position,
     legend_placement = legend_placement,
+    legend_title = legend_title,
     origin = origin,
     writer = writer
   )

@@ -11,6 +11,7 @@ ScatterConfig(
   writer = NULL,
   legend_position = "top",
   legend_placement = "outside",
+  legend_title = NULL,
   x = NULL,
   y = NULL,
   size = NULL,
@@ -26,6 +27,7 @@ ScatterConfig(
   diagonal = FALSE,
   diagonal_color = NULL,
   n_fit = 200L,
+  zoom = FALSE,
   fit_alpha = 0.25,
   point_alpha = NULL,
   palette = NULL,
@@ -66,6 +68,11 @@ column. Corner anchors align within the top or bottom row.}
 plotting area. Outside placement reserves space for the complete legend;
 inside placement overlays the data. Neither setting adds a missing legend.}
 
+\item{legend_title}{Optional Character: Title drawn with the legend or
+colorbar: above left/right legends and vertical colorbars, before the
+first row of top/bottom legends and horizontal colorbars. \code{NULL} draws no
+title. A title does not add a missing legend.}
+
 \item{x, y}{Optional Character: Columns drawn on each axis.}
 
 \item{size}{Optional Character: Column giving per-point size.}
@@ -96,6 +103,9 @@ in \code{fit}, e.g. \code{list(max_leaves = 8)} for \code{"LINAD"}. See \code{\l
 \item{diagonal_color}{Optional Character: Identity-line color.}
 
 \item{n_fit}{Integer \verb{[2, Inf)}: Points used to draw the fit line.}
+
+\item{zoom}{Logical: Enable Shift+wheel zoom, drag panning, and box-zoom
+controls on both axes.}
 
 \item{fit_alpha}{Numeric \verb{[0, 1]}: Opacity of the standard-error band.}
 

@@ -295,7 +295,7 @@ test_that("draw_line zoom = TRUE emits slider + inside x-axis zooms", {
   expect_equal(dz[[1]]$end, 100)
   expect_equal(dz[[2]]$type, "inside")
   expect_equal(dz[[2]]$xAxisIndex, 0)
-  expect_equal(dz[[2]]$zoomOnMouseWheel, TRUE)
+  expect_equal(dz[[2]]$zoomOnMouseWheel, "shift")
   expect_equal(dz[[2]]$moveOnMouseMove, TRUE)
 })
 

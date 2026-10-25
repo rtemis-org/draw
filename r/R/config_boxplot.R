@@ -36,7 +36,7 @@
 #' @param xlab,ylab Optional Character: Axis labels.
 #' @param margin_top,margin_right,margin_bottom,margin_left Optional Integer
 #'   `[0, Inf)`: Plot margins in pixels.
-#' @inheritParams draw_line legend_position legend_placement
+#' @inheritParams draw_line legend_position legend_placement legend_title
 #' @inheritParams ChartConfig
 #'
 #' @return `BoxplotConfig` object.
@@ -268,6 +268,7 @@ setup_BoxplotConfig <- function(
   writer = NULL,
   legend_position = "top",
   legend_placement = "outside",
+  legend_title = NULL,
   geometry = "box",
   bandwidth = NULL,
   adjust = 1,
@@ -315,6 +316,7 @@ setup_BoxplotConfig <- function(
     dat_path = dat_path,
     legend_position = legend_position,
     legend_placement = legend_placement,
+    legend_title = legend_title,
     origin = origin,
     writer = writer
   )

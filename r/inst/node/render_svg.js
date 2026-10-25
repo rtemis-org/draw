@@ -88,7 +88,7 @@ process.stdin.on("end", () => {
 			layout.fitAxes(chart, panel);
 			layout.fitHeatmap(chart, panel);
 			layout.positionLegend(echarts, chart, panel);
-			layout.centerVisualMaps(chart, panel);
+			layout.centerVisualMaps(chart, panel, echarts);
 			return chart.renderToSVGString();
 		} finally {
 			if (chart) chart.dispose();

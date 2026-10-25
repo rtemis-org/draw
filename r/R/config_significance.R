@@ -58,7 +58,7 @@
 #' @param margin_right Optional Integer [0, Inf): Right plot margin in pixels.
 #' @param margin_bottom Optional Integer [0, Inf): Bottom plot margin in pixels.
 #' @param margin_left Optional Integer [0, Inf): Left plot margin in pixels.
-#' @inheritParams draw_line legend_position legend_placement
+#' @inheritParams draw_line legend_position legend_placement legend_title
 #' @inheritParams ChartConfig
 #' @return A `SignificanceConfig` object.
 #' @export
@@ -307,6 +307,7 @@ setup_SignificanceConfig <- function(
   writer = NULL,
   legend_position = "top",
   legend_placement = "outside",
+  legend_title = NULL,
   group = NULL,
   palette = NULL
 ) {
@@ -348,6 +349,7 @@ setup_SignificanceConfig <- function(
     dat_path = dat_path,
     legend_position = legend_position,
     legend_placement = legend_placement,
+    legend_title = legend_title,
     origin = origin,
     writer = writer
   )

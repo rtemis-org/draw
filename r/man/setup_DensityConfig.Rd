@@ -23,12 +23,14 @@ setup_DensityConfig(
   writer = NULL,
   legend_position = "top",
   legend_placement = "outside",
+  legend_title = NULL,
   bandwidth = NULL,
   kernel = "gaussian",
   adjust = 1,
   fill_alpha = 0.25,
   mode = "overlap",
-  order = "input"
+  order = "input",
+  zoom = FALSE
 )
 }
 \arguments{
@@ -75,6 +77,11 @@ column. Corner anchors align within the top or bottom row.}
 plotting area. Outside placement reserves space for the complete legend;
 inside placement overlays the data. Neither setting adds a missing legend.}
 
+\item{legend_title}{Optional Character: Title drawn with the legend or
+colorbar: above left/right legends and vertical colorbars, before the
+first row of top/bottom legends and horizontal colorbars. \code{NULL} draws no
+title. A title does not add a missing legend.}
+
 \item{bandwidth}{Optional Numeric \verb{(0, Inf)}: Explicit finite smoothing
 bandwidth in measurement units, overriding the selector.}
 
@@ -91,6 +98,9 @@ Increase figure height for many rows.}
 
 \item{order}{Character \verb{\{"input", "mean", "median"\}}: Sample order. Summary
 orders are decreasing, retain ties in input order, and place empty samples last.}
+
+\item{zoom}{Logical: Enable a slider, Shift+wheel zoom, and drag panning on
+the x-axis. Ridge rows zoom together, without a slider.}
 }
 \value{
 \link{DensityConfig} object.

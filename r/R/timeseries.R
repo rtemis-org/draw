@@ -68,7 +68,7 @@ TimeSeriesConfig <- new_class(
 #' Set Up a Time Series Configuration
 #' @inheritParams TimeSeriesConfig
 #' @inheritParams ChartConfig
-#' @inheritParams draw_line legend_position legend_placement
+#' @inheritParams draw_line legend_position legend_placement legend_title
 #' @return TimeSeriesConfig: Validated settings.
 #' @export
 #' @examples
@@ -97,6 +97,7 @@ setup_TimeSeriesConfig <- function(
   writer = NULL,
   legend_position = "top",
   legend_placement = "outside",
+  legend_title = NULL,
   zt = NULL,
   shade_bin = NULL,
   show_zt_every = 1L
@@ -134,7 +135,8 @@ setup_TimeSeriesConfig <- function(
     origin = origin,
     writer = writer,
     legend_position = legend_position,
-    legend_placement = legend_placement
+    legend_placement = legend_placement,
+    legend_title = legend_title
   )
 }
 
@@ -354,13 +356,11 @@ method(timeseries_option, class_any) <- function(
       series[[length(series) + 1L]] <- curve
     }
   }
-  grid <- resolve_margins(DEFAULT_MARGINS)
-  zoom <- resolve_zoom(config@zoom, axis = "x")
-  if (config@zoom) {
-    placed <- reserve_slider_room(zoom, grid)
-    zoom <- placed[["data_zoom"]]
-    grid <- placed[["grid"]]
-  }
+  zoomed <- zoom_layout(
+    config@zoom,
+    axis = "x",
+    grid = resolve_margins(DEFAULT_MARGINS)
+  )
   axes <- list(Axis(
     type = "value",
     scale = TRUE,
@@ -395,8 +395,8 @@ method(timeseries_option, class_any) <- function(
       trigger = "axis",
       value_formatter = number_value_formatter()
     ),
-    grid = grid,
-    data_zoom = zoom,
+    grid = zoomed[["grid"]],
+    data_zoom = zoomed[["data_zoom"]],
     color = config@palette,
     title = if (!is.null(config@title)) Title(text = config@title) else NULL
   )
@@ -498,7 +498,11 @@ draw_ts <- function(
     height = height,
     element_id = element_id,
     filename = filename,
-    meta = legend_meta(config@legend_position, config@legend_placement)
+    meta = legend_meta(
+      config@legend_position,
+      config@legend_placement,
+      config@legend_title
+    )
   )
 }
 
@@ -561,7 +565,11 @@ draw_xt <- function(
     width = width,
     height = height,
     element_id = element_id,
-    meta = legend_meta(config@legend_position, config@legend_placement)
+    meta = legend_meta(
+      config@legend_position,
+      config@legend_placement,
+      config@legend_title
+    )
   )
   if (!is.null(filename)) {
     save_drawing(plot, filename)

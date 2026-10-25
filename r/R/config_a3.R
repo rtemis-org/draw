@@ -22,7 +22,8 @@
 #' @param position_every Integer `[1, Inf)`: Label every nth position.
 #' @param ptm_placement Character: How post-translational modifications are
 #'   placed relative to the backbone.
-#' @param zoom Logical: Enable the zoom control.
+#' @param zoom Logical: Enable Shift+wheel zoom and drag panning along the
+#'   sequence.
 #' @param residue_spacing Numeric `[0, Inf)`: Gap between residues.
 #' @param marker_size Numeric `[0, Inf)`: Preferred residue marker size;
 #'   reduced with related marks when needed to fit the surface.
@@ -60,7 +61,10 @@ A3Config <- new_class(
       "radial",
       description = "How modifications are placed relative to the backbone."
     ),
-    zoom = prop_boolean(TRUE, description = "Enable the zoom control."),
+    zoom = prop_boolean(
+      TRUE,
+      description = "Enable Shift+wheel zoom and drag panning along the sequence."
+    ),
     # -- appearance --------------------------------------------------------
     residue_spacing = prop_float(
       0.3,

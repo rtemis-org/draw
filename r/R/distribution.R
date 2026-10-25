@@ -175,7 +175,8 @@ method(density_option, class_any) <- function(
   adjust = 1,
   fill_alpha = .25,
   mode = "overlap",
-  order = "input"
+  order = "input",
+  zoom = FALSE
 ) {
   config <- setup_DensityConfig(
     mode = mode,
@@ -228,7 +229,7 @@ method(density_option, class_any) <- function(
     series = series,
     color = palette
   )
-  distribution_layout(option, names(samples), mode)
+  distribution_zoom(distribution_layout(option, names(samples), mode), zoom)
 }
 
 #' Compute histogram heights on an explicit normalization scale
@@ -313,7 +314,8 @@ method(histogram_option, class_any) <- function(
   mode = "overlap",
   order = "input",
   bin_stat = "count",
-  bar_mode = "overlay"
+  bar_mode = "overlay",
+  zoom = FALSE
 ) {
   config <- setup_HistogramConfig(
     bin_stat = bin_stat,
@@ -522,7 +524,7 @@ method(histogram_option, class_any) <- function(
     series = series,
     color = palette
   )
-  distribution_layout(option, names(samples), mode)
+  distribution_zoom(distribution_layout(option, names(samples), mode), zoom)
 }
 
 
@@ -621,6 +623,41 @@ method(distribution_layout, EChartsOption) <- function(x, labels, mode) {
       axis_label = AxisLabel(show_max_label = FALSE, show_min_label = FALSE)
     )
   })
+  x
+}
+
+#' Add zoom to a distribution option
+#'
+#' A single grid takes the `"x"` preset of `zoom_layout()`: a slider below the
+#' axis title, Shift+wheel zoom, and drag panning. Ridge rows, which share
+#' one x range, take inside zooms on every x-axis and no slider. Both use
+#' `filterMode = "none"`, so bins and curves crossing the window edge are
+#' clipped by the grid and stay whole inside it.
+#'
+#' @param x EChartsOption: Distribution option after `distribution_layout()`.
+#' @param zoom Logical, [DataZoom], or list: User-facing `zoom` argument.
+#' @return EChartsOption: The option with `dataZoom` and margins set.
+#' @keywords internal
+#' @noRd
+distribution_zoom <- new_generic("distribution_zoom", "x")
+method(distribution_zoom, EChartsOption) <- function(x, zoom) {
+  if (is.list(x@x_axis) && !S7::S7_inherits(x@x_axis)) {
+    x@data_zoom <- if (isTRUE(zoom)) {
+      list(DataZoom(
+        type = "inside",
+        x_axis_index = "all",
+        filter_mode = "none",
+        zoom_on_mouse_wheel = "shift",
+        move_on_mouse_move = TRUE
+      ))
+    } else {
+      resolve_zoom(zoom)
+    }
+    return(x)
+  }
+  zoomed <- zoom_layout(zoom, axis = "x", grid = x@grid, filter_mode = "none")
+  x@grid <- zoomed[["grid"]]
+  x@data_zoom <- zoomed[["data_zoom"]]
   x
 }
 

@@ -20,13 +20,15 @@
 #' @param n Integer `[2, Inf)`: Points at which the density is estimated.
 #' @inheritParams draw_density bw bandwidth kernel adjust fill_alpha mode order
 #' @param na_rm Logical: If TRUE, drop `NA` values before estimating.
+#' @param zoom Logical: Enable a slider, Shift+wheel zoom, and drag panning on
+#'   the x-axis. Ridge rows zoom together, without a slider.
 #' @param palette Optional Character: Series colors, overriding the theme
 #'   palette for this chart. `NULL` uses the theme's.
 #' @param xlab,ylab Optional Character: Axis labels. `NULL` derives them from
 #'   the data.
 #' @param margin_top,margin_right,margin_bottom,margin_left Optional Integer
 #'   `[0, Inf)`: Plot margins in pixels.
-#' @inheritParams draw_line legend_position legend_placement
+#' @inheritParams draw_line legend_position legend_placement legend_title
 #' @inheritParams ChartConfig
 #'
 #' @return `DensityConfig` object.
@@ -65,6 +67,13 @@ DensityConfig <- new_class(
         "input",
         enum = c("input", "mean", "median"),
         description = "Sample order; mean and median sort decreasingly, empty samples last."
+      ),
+      zoom = prop_boolean(
+        FALSE,
+        description = paste(
+          "Enable a slider, Shift+wheel zoom, and drag panning on the x-axis.",
+          "Ridge rows zoom together, without a slider."
+        )
       ),
       # -- semantics ---------------------------------------------------------
       n = prop_integer(
@@ -203,12 +212,14 @@ setup_DensityConfig <- function(
   writer = NULL,
   legend_position = "top",
   legend_placement = "outside",
+  legend_title = NULL,
   bandwidth = NULL,
   kernel = "gaussian",
   adjust = 1,
   fill_alpha = 0.25,
   mode = "overlap",
-  order = "input"
+  order = "input",
+  zoom = FALSE
 ) {
   origin <- origin %||% chart_origin(match.call(), DENSITY_ORIGIN_NAMES)
   check_integer_scalar(n)
@@ -228,6 +239,7 @@ setup_DensityConfig <- function(
   DensityConfig(
     mode = mode,
     order = order,
+    zoom = zoom,
     x = x,
     group = group,
     n = as.integer(n),
@@ -248,6 +260,7 @@ setup_DensityConfig <- function(
     dat_path = dat_path,
     legend_position = legend_position,
     legend_placement = legend_placement,
+    legend_title = legend_title,
     origin = origin,
     writer = writer
   )
@@ -310,6 +323,7 @@ method(compile, DensityConfig) <- function(
     xlab = config@xlab,
     ylab = config@ylab,
     title = config@title,
-    margins = config_margins(config) %||% DEFAULT_MARGINS
+    margins = config_margins(config) %||% DEFAULT_MARGINS,
+    zoom = config@zoom
   )
 }

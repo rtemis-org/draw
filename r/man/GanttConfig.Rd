@@ -11,6 +11,7 @@ GanttConfig(
   writer = NULL,
   legend_position = "top",
   legend_placement = "outside",
+  legend_title = NULL,
   label = "label",
   start = "start",
   end = "end",
@@ -52,6 +53,11 @@ column. Corner anchors align within the top or bottom row.}
 plotting area. Outside placement reserves space for the complete legend;
 inside placement overlays the data. Neither setting adds a missing legend.}
 
+\item{legend_title}{Optional Character: Title drawn with the legend or
+colorbar: above left/right legends and vertical colorbars, before the
+first row of top/bottom legends and horizontal colorbars. \code{NULL} draws no
+title. A title does not add a missing legend.}
+
 \item{label}{Character: Column naming each task.}
 
 \item{start}{Character: Column holding each task's start.}
@@ -66,7 +72,8 @@ inside placement overlays the data. Neither setting adds a missing legend.}
 
 \item{axis_type}{Character \{"value", "time"\}: How the time axis is scaled.}
 
-\item{zoom}{Logical: Enable the zoom control.}
+\item{zoom}{Logical: Enable Shift+wheel zoom, drag panning, and box-zoom
+controls on both axes.}
 
 \item{guides}{Logical: Show guide lines.}
 

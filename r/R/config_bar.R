@@ -27,6 +27,8 @@
 #'   by their total across series, retaining ties and placing missing totals last.
 #' @param stack Logical: If TRUE, stack the series instead of grouping them.
 #' @param horizontal Logical: If TRUE, draw the bars horizontally.
+#' @param zoom Logical: Enable a slider, Shift+wheel zoom, and drag panning on
+#'   the category axis.
 #' @param bar_width Optional Numeric `(0, Inf)`: Bar thickness in pixels.
 #'   NULL lets ECharts size bars from the category spacing.
 #' @param palette Optional Character: Series colors, overriding the theme
@@ -35,7 +37,7 @@
 #'   the data.
 #' @param margin_top,margin_right,margin_bottom,margin_left Optional Integer
 #'   `[0, Inf)`: Plot margins in pixels.
-#' @inheritParams draw_line legend_position legend_placement
+#' @inheritParams draw_line legend_position legend_placement legend_title
 #' @inheritParams ChartConfig
 #'
 #' @return `BarConfig` object.
@@ -78,6 +80,13 @@ BarConfig <- new_class(
       horizontal = prop_boolean(
         FALSE,
         description = "Draw the bars horizontally."
+      ),
+      zoom = prop_boolean(
+        FALSE,
+        description = paste(
+          "Enable a slider, Shift+wheel zoom, and drag panning on the",
+          "category axis."
+        )
       ),
       # -- appearance --------------------------------------------------------
       bar_width = prop_float(
@@ -178,7 +187,9 @@ setup_BarConfig <- function(
   bar_width = NULL,
   order = "input",
   legend_position = "top",
-  legend_placement = "outside"
+  legend_placement = "outside",
+  legend_title = NULL,
+  zoom = FALSE
 ) {
   origin <- origin %||% chart_origin(match.call(), BAR_ORIGIN_NAMES)
   BarConfig(
@@ -186,6 +197,7 @@ setup_BarConfig <- function(
     y = y,
     stack = stack,
     horizontal = horizontal,
+    zoom = zoom,
     bar_width = bar_width,
     order = order,
     palette = palette,
@@ -199,6 +211,7 @@ setup_BarConfig <- function(
     dat_path = dat_path,
     legend_position = legend_position,
     legend_placement = legend_placement,
+    legend_title = legend_title,
     origin = origin,
     writer = writer
   )
@@ -265,6 +278,7 @@ method(compile, BarConfig) <- function(config, data = NULL, theme = NULL, ...) {
     xlab = config@xlab,
     ylab = config@ylab,
     title = config@title,
-    margins = config_margins(config) %||% DEFAULT_MARGINS
+    margins = config_margins(config) %||% DEFAULT_MARGINS,
+    zoom = config@zoom
   )
 }

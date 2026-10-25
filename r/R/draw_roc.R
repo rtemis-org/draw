@@ -298,7 +298,7 @@ method(roc_input, class_any) <- function(
 #' @examples
 #' draw_roc(factor(c("no", "yes", "no", "yes")), c(.1, .8, .5, .5))
 #' draw_roc(data.frame(fpr = c(0, 0, 1), tpr = c(0, 1, 1)))
-#' @inheritParams draw_line legend_position legend_placement
+#' @inheritParams draw_line legend_position legend_placement legend_title
 draw_roc <- function(
   true_labels,
   predicted_prob = NULL,
@@ -306,6 +306,7 @@ draw_roc <- function(
   ...,
   legend_position = "top",
   legend_placement = "outside",
+  legend_title = NULL,
   theme = NULL,
   width = NULL,
   height = NULL,
@@ -322,6 +323,7 @@ draw_roc <- function(
     omitted = binding("omitted"),
     legend_position = legend_position,
     legend_placement = legend_placement,
+    legend_title = legend_title,
     ...
   )
   draw(

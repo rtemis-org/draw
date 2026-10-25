@@ -32,7 +32,8 @@ setup_LineConfig(
   origin = NULL,
   writer = NULL,
   legend_position = "top",
-  legend_placement = "outside"
+  legend_placement = "outside",
+  legend_title = NULL
 )
 }
 \arguments{
@@ -55,7 +56,8 @@ background bands.}
 
 \item{points}{Logical: Show a marker at each data value.}
 
-\item{zoom}{Logical: Enable the zoom control.}
+\item{zoom}{Logical: Enable an x-axis slider, Shift+wheel zoom, and drag
+panning.}
 
 \item{palette}{Optional Character: Series colors, overriding the theme
 palette for this chart. \code{NULL} uses the theme's.}
@@ -106,6 +108,11 @@ column. Corner anchors align within the top or bottom row.}
 \item{legend_placement}{Character \{"outside", "inside"\}: Relation to the
 plotting area. Outside placement reserves space for the complete legend;
 inside placement overlays the data. Neither setting adds a missing legend.}
+
+\item{legend_title}{Optional Character: Title drawn with the legend or
+colorbar: above left/right legends and vertical colorbars, before the
+first row of top/bottom legends and horizontal colorbars. \code{NULL} draws no
+title. A title does not add a missing legend.}
 }
 \value{
 \link{LineConfig} object.

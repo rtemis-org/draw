@@ -786,7 +786,7 @@ spectrogram_option <- function(
 #'   draw_spectrogram(sig, sample_rate = 8000)
 #' }
 #' @export
-#' @inheritParams draw_line legend_position legend_placement
+#' @inheritParams draw_line legend_position legend_placement legend_title
 draw_spectrogram <- function(
   x,
   sample_rate = NULL,
@@ -820,7 +820,8 @@ draw_spectrogram <- function(
   filename = NULL,
   verbosity = 1L,
   legend_position = "right",
-  legend_placement = "outside"
+  legend_placement = "outside",
+  legend_title = NULL
 ) {
   built <- spectrogram_option(
     x = x,
@@ -860,7 +861,7 @@ draw_spectrogram <- function(
     element_id = element_id,
     filename = filename,
     meta = c(
-      legend_meta(legend_position, legend_placement),
+      legend_meta(legend_position, legend_placement, legend_title),
       built[["render"]][["meta"]],
       list(legendTarget = "visualMap")
     )
