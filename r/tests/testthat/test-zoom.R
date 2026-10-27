@@ -216,7 +216,14 @@ test_that("line, time series, and Gantt presets zoom on Shift+wheel", {
 
 # %% schemas ----
 test_that("chart schemas publish zoom as a boolean", {
-  for (cls in list(ScatterConfig, BarConfig, DensityConfig, HistogramConfig)) {
+  for (cls in list(
+    ScatterConfig,
+    BarConfig,
+    DensityConfig,
+    HistogramConfig,
+    BoxplotConfig,
+    SignificanceConfig
+  )) {
     s <- chart_schema(
       cls,
       id = "https://example.org/s.json",
@@ -225,4 +232,144 @@ test_that("chart schemas publish zoom as a boolean", {
     )
     expect_identical(s[["properties"]][["zoom"]][["type"]], "boolean")
   }
+})
+
+
+# %% equal scaling ----
+test_that("zoom_toolbox(box_zoom = FALSE) keeps reset alone", {
+  tb <- zoom_toolbox(box_zoom = FALSE)
+  expect_named(tb[["feature"]], "restore")
+})
+
+test_that("equally scaled scatter plots omit box zoom", {
+  for (args in list(list(square = TRUE), list(equal_axes = TRUE))) {
+    opt <- do.call(
+      draw_scatter,
+      c(list(mtcars$wt, mtcars$mpg, zoom = TRUE), args)
+    )$x$option
+    expect_identical(zoom_types(opt), c("inside", "inside"))
+    expect_named(opt[["toolbox"]][["feature"]], "restore")
+  }
+})
+
+
+# %% draw_boxplot ----
+test_that("draw_boxplot zoom targets the category axis in either orientation", {
+  opt <- draw_boxplot(iris[1:4], zoom = TRUE)$x$option
+  expect_identical(zoom_types(opt), c("slider", "inside"))
+  expect_equal(opt[["dataZoom"]][[1L]][["xAxisIndex"]], 0)
+  opt <- draw_boxplot(iris[1:4], horizontal = TRUE, zoom = TRUE)$x$option
+  expect_equal(opt[["dataZoom"]][[1L]][["yAxisIndex"]], 0)
+  expect_null(draw_boxplot(iris[1:4])$x$option[["dataZoom"]])
+  cfg <- setup_BoxplotConfig(x = c("Sepal.Length", "Sepal.Width"), zoom = TRUE)
+  opt <- draw(cfg, data = iris)$x$option
+  expect_identical(zoom_types(opt), c("slider", "inside"))
+})
+
+
+# %% draw_volcano, draw_manhattan ----
+test_that("volcano plots zoom both axes and Manhattan plots the outcome axis", {
+  set.seed(2026)
+  estimates <- rnorm(40)
+  pvals <- runif(40)
+  opt <- draw_volcano(estimates, pvals, zoom = TRUE)$x$option
+  expect_identical(zoom_types(opt), c("inside", "inside"))
+  for (z in opt[["dataZoom"]]) {
+    expect_identical(z[["filterMode"]], "none")
+  }
+  expect_false(is.null(opt[["toolbox"]][["feature"]][["dataZoom"]]))
+  opt <- draw_manhattan(estimates, pvals, zoom = TRUE)$x$option
+  expect_identical(zoom_types(opt), c("slider", "inside"))
+  expect_equal(opt[["dataZoom"]][[1L]][["xAxisIndex"]], 0)
+  expect_gt(opt[["grid"]][["bottom"]], 68)
+  expect_null(draw_volcano(estimates, pvals)$x$option[["dataZoom"]])
+  expect_true(setup_SignificanceConfig(zoom = TRUE)@zoom)
+})
+
+
+# %% static export ----
+test_that("static_controls drops zoom controls and returns the slider band", {
+  opt <- strip_js(draw_line(1:5, 1:5, zoom = TRUE)$x$option, path = "option")
+  expect_identical(opt[["dataZoom"]][[1L]][["id"]], ZOOM_SLIDER_ID)
+  out <- static_controls(opt)
+  expect_null(out[["dataZoom"]])
+  expect_equal(out[["grid"]][["bottom"]], DEFAULT_MARGINS[["bottom"]])
+  opt <- strip_js(
+    draw_bar(c("a", "b"), 1:2, horizontal = TRUE, zoom = TRUE)$x$option,
+    path = "option"
+  )
+  expect_equal(
+    static_controls(opt)[["grid"]][["right"]],
+    DEFAULT_MARGINS[["right"]]
+  )
+  opt <- strip_js(
+    draw_gantt(data.frame(label = "a", start = 0, end = 1))$x$option,
+    path = "option"
+  )
+  out <- static_controls(opt)
+  expect_null(out[["toolbox"]])
+  expect_identical(out[["grid"]], opt[["grid"]])
+  explicit <- strip_js(
+    draw_line(
+      1:5,
+      1:5,
+      zoom = DataZoom(type = "slider"),
+      margins = c(bottom = 50)
+    )$x$option,
+    path = "option"
+  )
+  expect_equal(static_controls(explicit)[["grid"]][["bottom"]], 50)
+})
+
+test_that("SVG export contains no zoom slider or toolbox", {
+  skip_if_no_node()
+  path <- tempfile(fileext = ".svg")
+  on.exit(unlink(path), add = TRUE)
+  save_drawing(
+    draw_scatter(mtcars$wt, mtcars$mpg, zoom = TRUE),
+    path,
+    width = 600,
+    height = 400
+  )
+  svg <- paste(readLines(path, warn = FALSE), collapse = "\n")
+  base <- tempfile(fileext = ".svg")
+  on.exit(unlink(base), add = TRUE)
+  save_drawing(
+    draw_scatter(mtcars$wt, mtcars$mpg),
+    base,
+    width = 600,
+    height = 400
+  )
+  # Same chart without zoom: identical marks once the controls are removed.
+  expect_identical(svg, paste(readLines(base, warn = FALSE), collapse = "\n"))
+})
+
+
+# %% endpoint labels ----
+test_that("value-axis endpoint labels appear only at tick multiples", {
+  skip_if_no_node()
+  path <- tempfile(fileext = ".json")
+  on.exit(unlink(path), add = TRUE)
+  jsonlite::write_json(
+    list(
+      echarts = system.file(
+        "htmlwidgets/lib/echarts/echarts.min.js",
+        package = "rtemis.draw"
+      ),
+      layout = system.file(
+        "htmlwidgets/lib/draw/panels.js",
+        package = "rtemis.draw"
+      )
+    ),
+    path,
+    auto_unbox = TRUE
+  )
+  result <- system2(
+    Sys.which("node"),
+    c(shQuote(test_path("fixtures", "endpoint_labels.js")), shQuote(path)),
+    stdout = TRUE,
+    stderr = TRUE
+  )
+  expect_null(attr(result, "status"), info = paste(result, collapse = "\n"))
+  expect_match(paste(result, collapse = "\n"), "Endpoint labels passed")
 })

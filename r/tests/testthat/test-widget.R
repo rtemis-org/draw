@@ -384,18 +384,19 @@ test_that("draw_line omits split_line on category x-axis", {
   expect_equal(w$x$option$yAxis$splitLine$showMinLine, FALSE)
 })
 
-test_that("draw_line suppresses min/max endpoint axis labels on value axes", {
+test_that("draw_line leaves value-axis endpoint labels to the layout", {
   w <- draw_line(x = 1:4, y = c(10, 20, 15, 25))
+  expect_null(w$x$option$xAxis$axisLabel)
+  expect_null(w$x$option$yAxis$axisLabel)
+  w <- draw_line(x = as.Date("2026-01-01") + 0:3, y = c(10, 20, 15, 25))
   expect_equal(w$x$option$xAxis$axisLabel$showMinLabel, FALSE)
   expect_equal(w$x$option$xAxis$axisLabel$showMaxLabel, FALSE)
-  expect_equal(w$x$option$yAxis$axisLabel$showMinLabel, FALSE)
-  expect_equal(w$x$option$yAxis$axisLabel$showMaxLabel, FALSE)
 })
 
 test_that("draw_line omits axis_label on category x-axis (uses echarts default)", {
   w <- draw_line(x = c("A", "B", "C"), y = c(1, 2, 3))
   expect_null(w$x$option$xAxis$axisLabel)
-  expect_equal(w$x$option$yAxis$axisLabel$showMinLabel, FALSE)
+  expect_null(w$x$option$yAxis$axisLabel)
 })
 
 test_that("draw_line axisLine: on_zero always TRUE; show gated on 0 in orthogonal range", {
@@ -635,12 +636,10 @@ test_that("draw_scatter suppresses corner split lines on both axes", {
   expect_equal(w$x$option$yAxis$splitLine$showMaxLine, FALSE)
 })
 
-test_that("draw_scatter suppresses min/max endpoint axis labels on both axes", {
+test_that("draw_scatter leaves endpoint labels to the layout", {
   w <- draw_scatter(x = 1:5, y = 1:5)
-  expect_equal(w$x$option$xAxis$axisLabel$showMinLabel, FALSE)
-  expect_equal(w$x$option$xAxis$axisLabel$showMaxLabel, FALSE)
-  expect_equal(w$x$option$yAxis$axisLabel$showMinLabel, FALSE)
-  expect_equal(w$x$option$yAxis$axisLabel$showMaxLabel, FALSE)
+  expect_null(w$x$option$xAxis$axisLabel)
+  expect_null(w$x$option$yAxis$axisLabel)
 })
 
 test_that("draw_scatter axisLine: on_zero always TRUE; show gated on 0 in orthogonal range", {

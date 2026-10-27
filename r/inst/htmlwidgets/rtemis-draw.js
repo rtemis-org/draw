@@ -50,12 +50,17 @@ function rtemisDrawFactory(el, width, height, bounded = false, onBackground = ()
     const surface = rtemisDrawSurface(el, bounded);
 
     // ECharts consumes every wheel event over a chart with an inside dataZoom,
-    // including events without the modifier key it zooms on. When every inside
-    // dataZoom zooms on Shift+wheel only, a wheel event without Shift stops at
-    // this element in the capture phase, before it reaches ECharts, and its
-    // default action scrolls the page.
-    // spec: draw/zoom-controls#design
-    let plainWheelScrolls = false;
+    // including events without the modifier key it zooms on, and pans on a
+    // one-finger touch drag. When every inside dataZoom zooms on Shift+wheel
+    // only, page gestures stop at this element in the capture phase, before
+    // they reach ECharts, and their default action scrolls the page:
+    // - a wheel event without Shift;
+    // - a one-finger touch drag, unless it starts on a slider or box zoom is
+    //   active. Taps still show tooltips and two-finger pinches still zoom.
+    // spec: draw/zoom-controls#widget
+    let pageGestures = false;
+    let boxZoomActive = false;
+    let touchScrolls = false;
     const shiftWheelOnly = (option) => {
       const zooms = [].concat(option?.dataZoom || []).filter((z) => z?.type === "inside");
       const roams = option?.geo || [].concat(option?.series || []).some((s) => s?.roam);
@@ -63,13 +68,33 @@ function rtemisDrawFactory(el, width, height, bounded = false, onBackground = ()
         zooms.every((z) => (z.zoomOnMouseWheel === "shift" || z.zoomOnMouseWheel === false) &&
           !z.moveOnMouseWheel);
     };
-    // Optional call: the Node geometry fixtures pass element stubs without
+    const onSlider = (touch) => {
+      if (!chart) return false;
+      const rect = el.getBoundingClientRect();
+      const x = touch.clientX - rect.left, y = touch.clientY - rect.top;
+      let hit = false;
+      chart.getModel().eachComponent({ mainType: "dataZoom", subType: "slider" }, (model) => {
+        const group = chart.getViewOfComponentModel(model)?.group;
+        if (!group) return;
+        const box = group.getBoundingRect().clone();
+        box.applyTransform(group.getComputedTransform());
+        if (box.contain(x, y)) hit = true;
+      });
+      return hit;
+    };
+    // Optional calls: the Node geometry fixtures pass element stubs without
     // addEventListener.
     ["wheel", "mousewheel", "DOMMouseScroll"].forEach((type) => {
       el.addEventListener?.(type, (e) => {
-        if (plainWheelScrolls && !e.shiftKey) e.stopPropagation();
+        if (pageGestures && !e.shiftKey) e.stopPropagation();
       }, { capture: true });
     });
+    el.addEventListener?.("touchstart", (e) => {
+      touchScrolls = pageGestures && !boxZoomActive && e.touches.length === 1 && !onSlider(e.touches[0]);
+    }, { capture: true, passive: true });
+    el.addEventListener?.("touchmove", (e) => {
+      if (touchScrolls && e.touches.length === 1) e.stopPropagation();
+    }, { capture: true, passive: true });
     // For square-cell heatmaps: compute the required height given a container
     // width, so that grid cells are perfectly square.
     const squareCellHeight = (x, containerWidth) => {
@@ -182,6 +207,13 @@ function rtemisDrawFactory(el, width, height, bounded = false, onBackground = ()
       rtemisPanels.fitHeatmap(chart, x);
       rtemisPanels.positionLegend(echarts, chart, x);
       rtemisPanels.centerVisualMaps(chart, x, echarts);
+      // Zoom and reset change axis extents; endpoint labels follow them.
+      // Optional calls: the Node widget fixtures stub rtemisPanels.
+      rtemisPanels.fitEndpointLabels?.(chart, x);
+      if (x.option?.dataZoom || x.option?.toolbox) {
+        chart.on("datazoom", () => rtemisPanels.fitEndpointLabels(chart, x));
+        chart.on("restore", () => rtemisPanels.fitEndpointLabels(chart, x));
+      }
 
       // Double-click resets any dataZoom (e.g. the gantt's inside zoom) back to
       // the full view -- a familiar gesture, in addition to the toolbox reset.
@@ -190,7 +222,13 @@ function rtemisDrawFactory(el, width, height, bounded = false, onBackground = ()
       // setOption merges by index onto exactly those components, resetting every
       // axis (the toolbox's internal dataZoom shift dispatchAction indices, so
       // index-based dispatch would miss an axis). Legend selection is untouched.
-      plainWheelScrolls = shiftWheelOnly(x.option);
+      pageGestures = shiftWheelOnly(x.option);
+      boxZoomActive = false;
+      if (pageGestures) {
+        chart.on("globalcursortaken", (p) => {
+          boxZoomActive = p?.key === "dataZoomSelect" && !!p.dataZoomSelectActive;
+        });
+      }
       const zoomDefs = x.option?.dataZoom;
       if (zoomDefs?.length) {
         chart.getZr().on("dblclick", () => {
@@ -300,6 +338,7 @@ function rtemisDrawFactory(el, width, height, bounded = false, onBackground = ()
             chart.resize({ width, height: newHeight });
             rtemisPanels.fitHeatmap(chart, currentPayload);
             rtemisPanels.centerVisualMaps(chart, currentPayload, echarts);
+            rtemisPanels.fitEndpointLabels?.(chart, currentPayload);
           }
           return;
         }
@@ -318,12 +357,14 @@ function rtemisDrawFactory(el, width, height, bounded = false, onBackground = ()
             rtemisPanels.fitAxes(chart, currentPayload);
             rtemisPanels.positionLegend(echarts, chart, currentPayload);
             rtemisPanels.centerVisualMaps(chart, currentPayload, echarts);
+            rtemisPanels.fitEndpointLabels?.(chart, currentPayload);
           }
         } else if (chart) {
           chart.resize({ width, height });
           rtemisPanels.fitGantt(echarts, chart, currentPayload);
           rtemisPanels.positionLegend(echarts, chart, currentPayload);
           rtemisPanels.centerVisualMaps(chart, currentPayload, echarts);
+          rtemisPanels.fitEndpointLabels?.(chart, currentPayload);
         }
       },
 

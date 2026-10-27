@@ -42,6 +42,9 @@
 #' @param annotate_n Integer [0, Inf): Maximum significant feature labels per side in the volcano view, ranked by raw p-value with input-order ties.
 #' @param reference Logical: Show the transformed significance threshold and, for volcanoes, the effect threshold.
 #' @param legend Logical: Show the nonempty significance groups.
+#' @param zoom Logical: Enable Shift+wheel zoom and drag panning: on both axes
+#'   with box-zoom, undo, and reset controls for volcano plots, and with a
+#'   slider on the outcome axis for Manhattan plots.
 #' @param negative_color Optional Character: Color for significant effects
 #'   below x_thresh. `NULL` uses the theme's negative color.
 #' @param neutral_color Optional Character: Color for other results, including
@@ -147,6 +150,14 @@ SignificanceConfig <- new_class(
       legend = prop_boolean(
         TRUE,
         description = "Show the nonempty significance groups."
+      ),
+      zoom = prop_boolean(
+        FALSE,
+        description = paste(
+          "Enable Shift+wheel zoom and drag panning: on both axes with box-zoom",
+          "controls for volcano plots, with a slider on the outcome axis for",
+          "Manhattan plots."
+        )
       ),
       negative_color = prop_string(
         NULL,
@@ -309,7 +320,8 @@ setup_SignificanceConfig <- function(
   legend_placement = "outside",
   legend_title = NULL,
   group = NULL,
-  palette = NULL
+  palette = NULL,
+  zoom = FALSE
 ) {
   origin <- origin %||% chart_origin(match.call(), SIGNIFICANCE_ORIGIN_NAMES)
   SignificanceConfig(
@@ -328,6 +340,7 @@ setup_SignificanceConfig <- function(
     annotate_n = clean_int(annotate_n),
     reference = reference,
     legend = legend,
+    zoom = zoom,
     negative_color = negative_color,
     neutral_color = neutral_color,
     positive_color = positive_color,

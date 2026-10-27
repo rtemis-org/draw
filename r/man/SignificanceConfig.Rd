@@ -27,6 +27,7 @@ SignificanceConfig(
   annotate_n = 7L,
   reference = TRUE,
   legend = TRUE,
+  zoom = FALSE,
   negative_color = NULL,
   neutral_color = NULL,
   positive_color = NULL,
@@ -103,6 +104,10 @@ order; unset uses the theme. Requires a group binding.}
 \item{reference}{Logical: Show the transformed significance threshold and, for volcanoes, the effect threshold.}
 
 \item{legend}{Logical: Show the nonempty significance groups.}
+
+\item{zoom}{Logical: Enable Shift+wheel zoom and drag panning: on both axes
+with box-zoom, undo, and reset controls for volcano plots, and with a
+slider on the outcome axis for Manhattan plots.}
 
 \item{negative_color}{Optional Character: Color for significant effects
 below x_thresh. \code{NULL} uses the theme's negative color.}

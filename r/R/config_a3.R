@@ -22,8 +22,8 @@
 #' @param position_every Integer `[1, Inf)`: Label every nth position.
 #' @param ptm_placement Character: How post-translational modifications are
 #'   placed relative to the backbone.
-#' @param zoom Logical: Enable Shift+wheel zoom and drag panning along the
-#'   sequence.
+#' @param zoom Logical: Enable Shift+wheel zoom, and wheel and drag panning,
+#'   along the sequence.
 #' @param residue_spacing Numeric `[0, Inf)`: Gap between residues.
 #' @param marker_size Numeric `[0, Inf)`: Preferred residue marker size;
 #'   reduced with related marks when needed to fit the surface.
@@ -63,7 +63,7 @@ A3Config <- new_class(
     ),
     zoom = prop_boolean(
       TRUE,
-      description = "Enable Shift+wheel zoom and drag panning along the sequence."
+      description = "Enable Shift+wheel zoom, and wheel and drag panning, along the sequence."
     ),
     # -- appearance --------------------------------------------------------
     residue_spacing = prop_float(
@@ -244,7 +244,7 @@ a3_built <- function(config, data = NULL, width = NULL) {
     pos_label_color = config@pos_label_color,
     variant_color = config@variant_color,
     disease_variant_color = config@disease_variant_color,
-    enable_zoom = config@zoom,
+    zoom = config@zoom,
     title = config@title,
     grid = NULL,
     height = NULL

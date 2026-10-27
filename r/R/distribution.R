@@ -509,6 +509,10 @@ method(histogram_option, class_any) <- function(
       name = xlab,
       name_location = if (!is.null(xlab)) "middle" else NULL
     ),
+    # Updates apply without transition. In ECharts 6.1.0, hovering a bar of
+    # this custom series during an update transition (legend toggle or zoom)
+    # leaves the y-axis drawn at an intermediate scale.
+    animation_duration_update = 0,
     y_axis = Axis(
       type = "value",
       min = if (limits[[1]] < 0) limits[[1]] * 1.05 else 0,

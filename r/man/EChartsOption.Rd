@@ -28,6 +28,7 @@ EChartsOption(
   animation_duration = NULL,
   animation_easing = NULL,
   animation_delay = NULL,
+  animation_duration_update = NULL,
   dark_mode = NULL,
   use_utc = NULL
 )
@@ -79,6 +80,9 @@ an \code{"inside"} zoom.}
 \item{animation_easing}{Optional Character: Animation easing function name.}
 
 \item{animation_delay}{Optional Numeric \verb{[0, Inf)}: Initial animation delay in milliseconds.}
+
+\item{animation_duration_update}{Optional Numeric \verb{[0, Inf)}: Duration in
+milliseconds of the transition on data or zoom updates.}
 
 \item{dark_mode}{Optional Logical or Character \{"auto"\}: Dark-mode setting.}
 

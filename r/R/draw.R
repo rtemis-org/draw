@@ -987,7 +987,10 @@ line_option <- function(
       min = if (!is.null(x_lim)) x_lim[[1L]] else NULL,
       max = if (!is.null(x_lim)) x_lim[[2L]] else NULL,
       split_line = if (x_type != "category") no_corner_split_line() else NULL,
-      axis_label = if (x_type != "category") no_corner_axis_label() else NULL,
+      # Time axes pin their ends to the data range; their end labels would be
+      # observation times rather than ticks. Value-axis ends are labeled in
+      # the browser when they fall on a tick (fitEndpointLabels() in panels.js).
+      axis_label = if (x_type == "time") no_corner_axis_label() else NULL,
       # Category axes also fall back to a nonzero range edge when zero is
       # absent. Apply the same zero-only emphasis as continuous axes.
       axis_line = axis_line_for_orthogonal(y_lim)
@@ -1000,7 +1003,6 @@ line_option <- function(
       min = y_lim[[1L]],
       max = y_lim[[2L]],
       split_line = no_corner_split_line(),
-      axis_label = no_corner_axis_label(),
       axis_line = axis_line_for_orthogonal(x_lim)
     ),
     color = palette,
@@ -1224,12 +1226,13 @@ no_corner_split_line <- function() {
   SplitLine(show_min_line = FALSE, show_max_line = FALSE)
 }
 
-#' Default axis-label configuration suppressing min/max endpoint labels
+#' Axis-label configuration suppressing min/max endpoint labels
 #'
 #' Returns an [AxisLabel] with `show_min_label = FALSE` and `show_max_label = FALSE`
-#' so echarts does not render unrounded endpoint labels (e.g. `0.64`, `30.36`)
-#' that arise when `min`/`max` are pinned to padded data ranges. Used as the
-#' default for value axes in `draw_line` and `draw_scatter`.
+#' for time axes whose `min`/`max` are pinned to the data range, where an end
+#' label would print an observation time rather than a tick. Value axes leave
+#' both unset; the shared layout labels a value-axis end when it falls on a
+#' tick.
 #'
 #' @return [AxisLabel]: Axis-label configuration.
 #' @keywords internal
@@ -1953,11 +1956,14 @@ scatter_option <- function(
 
   # filterMode = "none" keeps fit lines and bands continuous to the window
   # edge; the grid clips them.
+  # Equally scaled axes keep wheel zoom and panning, which scale both axes by
+  # one factor, and omit box zoom, which sets each axis independently.
   zoomed <- zoom_layout(
     zoom,
     axis = "xy",
     grid = resolve_margins(margins),
-    filter_mode = "none"
+    filter_mode = "none",
+    box_zoom = !(square || equal_axes)
   )
   opt <- EChartsOption(
     title = if (!is.null(title)) Title(text = title) else NULL,
@@ -1978,7 +1984,6 @@ scatter_option <- function(
       min = x_lim[[1L]],
       max = x_lim[[2L]],
       split_line = no_corner_split_line(),
-      axis_label = no_corner_axis_label(),
       axis_line = axis_line_for_orthogonal(y_lim)
     ),
     y_axis = Axis(
@@ -1989,7 +1994,6 @@ scatter_option <- function(
       min = y_lim[[1L]],
       max = y_lim[[2L]],
       split_line = no_corner_split_line(),
-      axis_label = no_corner_axis_label(),
       axis_line = axis_line_for_orthogonal(x_lim)
     ),
     color = if (is.null(group)) palette else NULL,
@@ -2070,8 +2074,10 @@ scatter_option <- function(
 #' @param zoom Logical, [DataZoom], or list of [DataZoom]: Enable zoom on both
 #'   axes. `TRUE` adds Shift+wheel zoom and drag panning on both axes and a
 #'   top-right toolbox with box-zoom, undo, and reset controls; double-click
-#'   resets the view. `FALSE` disables zoom. Pass [DataZoom] objects (or a
-#'   list of them) for full control.
+#'   resets the view. Wheel zoom and panning scale both axes by the same
+#'   factor; with `square` or `equal_axes`, the toolbox omits box zoom, which
+#'   sets each axis independently. `FALSE` disables zoom. Pass [DataZoom]
+#'   objects (or a list of them) for full control.
 #' @param palette Optional Character: Series color palette — a single color string or
 #'   character vector that overrides the theme palette for this chart.
 #'   When `group` is set, colors are assigned per group in order. `color` takes

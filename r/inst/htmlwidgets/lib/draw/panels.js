@@ -612,5 +612,42 @@
     });
     if (updates.some(update => update.data)) chart.setOption({series:updates});
   }
-  return {background, cells, fit, fitAxes, fitHeatmap, prepareLabels, prepareColors, positionLegend, centerVisualMaps, fitGantt, fitSankey};
+  // A value axis labels its extent ends even when they are not multiples of
+  // the tick interval: a zoomed window, or limits pinned to padded data values,
+  // print as 4.553 or 8.521968997863846. Label an end only when it falls on a
+  // tick, unless the option sets showMinLabel/showMaxLabel itself.
+  // Run after every layout change and zoom; the tick interval depends on the
+  // axis length in pixels.
+  // spec: draw/zoom-controls#endpoint-labels
+  function fitEndpointLabels(chart, payload) {
+    const source = payload?.option;
+    // The Node widget fixtures pass chart stubs without getModel().
+    if (typeof chart?.getModel !== 'function' || !source) return;
+    const update = {};
+    ['xAxis', 'yAxis'].forEach(type => {
+      const defined = [].concat(source[type] ?? []);
+      const axes = [];
+      let changed = false;
+      chart.getModel().eachComponent(type, model => {
+        const label = defined[model.componentIndex]?.axisLabel || {};
+        const scale = model.axis?.scale;
+        const next = {};
+        // ECharts 6.1 exposes the tick interval through getConfig().
+        const interval = scale?.getConfig?.()?.interval ?? scale?.getInterval?.();
+        if (model.axis?.type === 'value' && Number.isFinite(interval)) {
+          const extent = scale.getExtent();
+          const onTick = v => interval > 0 &&
+            Math.abs(v / interval - Math.round(v / interval)) < 1e-6;
+          if (label.showMinLabel === undefined) next.showMinLabel = onTick(extent[0]);
+          if (label.showMaxLabel === undefined) next.showMaxLabel = onTick(extent[1]);
+          const current = model.get('axisLabel');
+          if (Object.keys(next).some(k => current?.[k] !== next[k])) changed = true;
+        }
+        axes[model.componentIndex] = Object.keys(next).length ? {axisLabel: next} : {};
+      });
+      if (changed) update[type] = axes;
+    });
+    if (Object.keys(update).length) chart.setOption(update);
+  }
+  return {background, cells, fit, fitAxes, fitHeatmap, prepareLabels, prepareColors, positionLegend, centerVisualMaps, fitGantt, fitSankey, fitEndpointLabels};
 });

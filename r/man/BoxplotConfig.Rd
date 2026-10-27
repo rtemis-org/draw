@@ -32,6 +32,7 @@ BoxplotConfig(
   point_alpha = 0.6,
   point_spread = 0.5,
   horizontal = FALSE,
+  zoom = FALSE,
   na_rm = TRUE,
   labels = NULL,
   palette = NULL,
@@ -116,6 +117,9 @@ zero uses full-range whiskers.}
 \item{point_spread}{Numeric \verb{[0, 1]}: Fraction of box width occupied by offsets.}
 
 \item{horizontal}{Logical: Draw the boxes horizontally.}
+
+\item{zoom}{Logical: Enable a slider, Shift+wheel zoom, and drag panning on
+the category axis.}
 
 \item{na_rm}{Logical: Remove missing values. FALSE rejects missing input.}
 

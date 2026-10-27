@@ -39,7 +39,8 @@ setup_SignificanceConfig(
   legend_placement = "outside",
   legend_title = NULL,
   group = NULL,
-  palette = NULL
+  palette = NULL,
+  zoom = FALSE
 )
 }
 \arguments{
@@ -129,6 +130,10 @@ Groups never change significance thresholds or annotation ranking.}
 
 \item{palette}{Optional Character vector: Display-group colors in first-appearance
 order; unset uses the theme. Requires a group binding.}
+
+\item{zoom}{Logical: Enable Shift+wheel zoom and drag panning: on both axes
+with box-zoom, undo, and reset controls for volcano plots, and with a
+slider on the outcome axis for Manhattan plots.}
 }
 \value{
 A \link{SignificanceConfig} object.

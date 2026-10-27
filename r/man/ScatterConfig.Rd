@@ -105,7 +105,8 @@ in \code{fit}, e.g. \code{list(max_leaves = 8)} for \code{"LINAD"}. See \code{\l
 \item{n_fit}{Integer \verb{[2, Inf)}: Points used to draw the fit line.}
 
 \item{zoom}{Logical: Enable Shift+wheel zoom, drag panning, and box-zoom
-controls on both axes.}
+controls on both axes. With \code{square} or \code{equal_axes}, the controls omit
+box zoom, which sets each axis independently.}
 
 \item{fit_alpha}{Numeric \verb{[0, 1]}: Opacity of the standard-error band.}
 

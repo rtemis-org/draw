@@ -393,6 +393,20 @@ method(significance_option, SignificanceConfig) <- function(
       class = c("rtemis_value_error", "rtemis_input_error")
     )
   }
+  # Volcano plots zoom both value axes; Manhattan plots zoom the outcome axis.
+  # filterMode = "none" keeps threshold lines whole; the grid clips them.
+  zoomed <- zoom_layout(
+    config@zoom,
+    axis = if (volcano) "xy" else "x",
+    grid = Grid(
+      left = config@margin_left %||% 60L,
+      right = config@margin_right %||%
+        if (config@reference) reference_label_margin(threshold_label) else 36L,
+      top = config@margin_top %||% if (length(notes)) 70L else 42L,
+      bottom = config@margin_bottom %||% if (config@legend) 68L else 40L
+    ),
+    filter_mode = if (volcano) "none" else NULL
+  )
   EChartsOption(
     color = config@palette,
     title = if (!is.null(config@title) || length(notes)) {
@@ -416,7 +430,6 @@ method(significance_option, SignificanceConfig) <- function(
       name_location = "middle",
       scale = volcano,
       data = if (!volcano) as.list(d[["label"]]) else NULL,
-      axis_label = if (volcano) no_corner_axis_label() else NULL,
       split_line = if (volcano) no_corner_split_line() else NULL,
       min = if (volcano) x_range[[1L]] else NULL,
       max = if (volcano) x_range[[2L]] else NULL
@@ -425,18 +438,13 @@ method(significance_option, SignificanceConfig) <- function(
       type = "value",
       name = config@ylab,
       name_location = "middle",
-      axis_label = no_corner_axis_label(),
       split_line = no_corner_split_line(),
       min = y_range[[1L]],
       max = y_range[[2L]]
     ),
-    grid = Grid(
-      left = config@margin_left %||% 60L,
-      right = config@margin_right %||%
-        if (config@reference) reference_label_margin(threshold_label) else 36L,
-      top = config@margin_top %||% if (length(notes)) 70L else 42L,
-      bottom = config@margin_bottom %||% if (config@legend) 68L else 40L
-    ),
+    grid = zoomed[["grid"]],
+    data_zoom = zoomed[["data_zoom"]],
+    toolbox = zoomed[["toolbox"]],
     series = series
   )
 }
@@ -506,6 +514,8 @@ method(significance_input, class_any) <- function(
 #' @inheritParams SignificanceConfig
 #' @param ... Additional named settings for [setup_SignificanceConfig()], such as
 #'   `reference`, `zero_cap`, `n_tests`, colors, axis limits, or margins.
+#' @param zoom Logical: Enable Shift+wheel zoom and drag panning; see
+#'   [setup_SignificanceConfig()].
 #' @param theme Optional [Theme]: Widget/export theme.
 #' @param width,height Optional Numeric or Character: Widget dimensions.
 #' @param element_id Optional Character: HTML element identifier.
@@ -534,7 +544,8 @@ draw_volcano <- function(
   height = NULL,
   element_id = NULL,
   filename = NULL,
-  group = NULL
+  group = NULL,
+  zoom = FALSE
 ) {
   data <- significance_input(x, pvals, xnames, group)
   config <- setup_SignificanceConfig(
@@ -549,6 +560,7 @@ draw_volcano <- function(
     legend_position = legend_position,
     legend_placement = legend_placement,
     legend_title = legend_title,
+    zoom = zoom,
     ...
   )
   draw(
@@ -577,6 +589,8 @@ draw_volcano <- function(
 #' @inheritParams SignificanceConfig
 #' @param ... Additional named settings for [setup_SignificanceConfig()], such as
 #'   `reference`, `zero_cap`, `n_tests`, colors, axis limits, or margins.
+#' @param zoom Logical: Enable Shift+wheel zoom and drag panning; see
+#'   [setup_SignificanceConfig()].
 #' @param theme Optional [Theme]: Widget/export theme.
 #' @param width,height Optional Numeric or Character: Widget dimensions.
 #' @param element_id Optional Character: HTML element identifier.
@@ -605,7 +619,8 @@ draw_manhattan <- function(
   height = NULL,
   element_id = NULL,
   filename = NULL,
-  group = NULL
+  group = NULL,
+  zoom = FALSE
 ) {
   data <- significance_input(x, pvals, xnames, group)
   config <- setup_SignificanceConfig(
@@ -620,6 +635,7 @@ draw_manhattan <- function(
     legend_position = legend_position,
     legend_placement = legend_placement,
     legend_title = legend_title,
+    zoom = zoom,
     ...
   )
   draw(

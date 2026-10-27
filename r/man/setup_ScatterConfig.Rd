@@ -135,7 +135,8 @@ from the number of points drawn, falling from 0.9 for a handful of points
 to 0.15 for 100,000 or more, so that overlapping points stay visible.}
 
 \item{zoom}{Logical: Enable Shift+wheel zoom, drag panning, and box-zoom
-controls on both axes.}
+controls on both axes. With \code{square} or \code{equal_axes}, the controls omit
+box zoom, which sets each axis independently.}
 }
 \value{
 \link{ScatterConfig} object.

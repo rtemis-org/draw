@@ -41,7 +41,8 @@ draw_boxplot(
   pair_width = 1,
   comparisons = NULL,
   order = "input",
-  transform = "none"
+  transform = "none",
+  zoom = FALSE
 )
 }
 \arguments{
@@ -143,6 +144,12 @@ categories by decreasing mean/median after transformation; empty boxes last.}
 column before grouping. Scale subtracts the mean and divides by the sample
 standard deviation; minmax maps the available range to zero through one.
 Constant columns become zero and missing values remain missing.}
+
+\item{zoom}{Logical, \link{DataZoom}, or list of \link{DataZoom}: Enable zoom on the
+category axis (the y-axis when \code{horizontal = TRUE}). \code{TRUE} adds a slider,
+Shift+wheel zoom, and drag panning; double-click resets the view. \code{FALSE}
+disables zoom. Pass \link{DataZoom} objects (or a list of them) for full
+control.}
 }
 \value{
 htmlwidget: ECharts boxes with optional vector point overlays.

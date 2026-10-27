@@ -36,8 +36,8 @@ setup_A3Config(
 \item{ptm_placement}{Character: How post-translational modifications are
 placed relative to the backbone.}
 
-\item{zoom}{Logical: Enable Shift+wheel zoom and drag panning along the
-sequence.}
+\item{zoom}{Logical: Enable Shift+wheel zoom, and wheel and drag panning,
+along the sequence.}
 
 \item{residue_spacing}{Numeric \verb{[0, Inf)}: Gap between residues.}
 

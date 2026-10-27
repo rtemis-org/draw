@@ -163,8 +163,10 @@ to \verb{[0.15, 0.9]}. Set a value to override.}
 \item{zoom}{Logical, \link{DataZoom}, or list of \link{DataZoom}: Enable zoom on both
 axes. \code{TRUE} adds Shift+wheel zoom and drag panning on both axes and a
 top-right toolbox with box-zoom, undo, and reset controls; double-click
-resets the view. \code{FALSE} disables zoom. Pass \link{DataZoom} objects (or a
-list of them) for full control.}
+resets the view. Wheel zoom and panning scale both axes by the same
+factor; with \code{square} or \code{equal_axes}, the toolbox omits box zoom, which
+sets each axis independently. \code{FALSE} disables zoom. Pass \link{DataZoom}
+objects (or a list of them) for full control.}
 }
 \value{
 htmlwidget: Widget object.

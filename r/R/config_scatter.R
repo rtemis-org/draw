@@ -41,7 +41,8 @@
 #' @param n_fit Integer `[2, Inf)`: Points used to draw the fit line.
 #' @param fit_alpha Numeric `[0, 1]`: Opacity of the standard-error band.
 #' @param zoom Logical: Enable Shift+wheel zoom, drag panning, and box-zoom
-#'   controls on both axes.
+#'   controls on both axes. With `square` or `equal_axes`, the controls omit
+#'   box zoom, which sets each axis independently.
 #' @param point_alpha Optional Numeric `[0, 1]`: Point opacity. `NULL` sets it
 #'   from the number of points drawn, falling from 0.9 for a handful of points
 #'   to 0.15 for 100,000 or more, so that overlapping points stay visible.
@@ -166,7 +167,7 @@ ScatterConfig <- new_class(
         FALSE,
         description = paste(
           "Enable Shift+wheel zoom, drag panning, and box-zoom controls on",
-          "both axes."
+          "both axes. Square or equally scaled plots omit box zoom."
         )
       ),
       # -- appearance --------------------------------------------------------

@@ -129,7 +129,8 @@ method(boxplot_option, class_any) <- function(
   pair_width = 1,
   comparisons = NULL,
   order = "input",
-  transform = "none"
+  transform = "none",
+  zoom = FALSE
 ) {
   # Validate the vector entry point through the same property declarations
   # used by JSON configs; no second set of statistical or style defaults.
@@ -484,17 +485,9 @@ method(boxplot_option, class_any) <- function(
     if (horizontal) {
       x_axis@min <- limits[[1L]]
       x_axis@max <- limits[[2L]]
-      x_axis@axis_label <- AxisLabel(
-        show_min_label = FALSE,
-        show_max_label = FALSE
-      )
     } else {
       y_axis@min <- limits[[1L]]
       y_axis@max <- limits[[2L]]
-      y_axis@axis_label <- AxisLabel(
-        show_min_label = FALSE,
-        show_max_label = FALSE
-      )
     }
   }
   # ECharts otherwise places the category-axis baseline at the range edge
@@ -504,6 +497,12 @@ method(boxplot_option, class_any) <- function(
   } else {
     x_axis@axis_line <- axis_line_for_orthogonal(limits)
   }
+  # The preset zooms the category axis.
+  zoomed <- zoom_layout(
+    zoom,
+    axis = if (horizontal) "y" else "x",
+    grid = resolve_margins(margins)
+  )
   EChartsOption(
     title = if (!is.null(title)) Title(text = title) else NULL,
     tooltip = Tooltip(trigger = "item"),
@@ -517,7 +516,8 @@ method(boxplot_option, class_any) <- function(
     },
     x_axis = x_axis,
     y_axis = y_axis,
-    grid = resolve_margins(margins),
+    grid = zoomed[["grid"]],
+    data_zoom = zoomed[["data_zoom"]],
     series = c(boxes, Filter(Negate(is.null), overlays), layers[["series"]])
   )
 }
@@ -604,6 +604,11 @@ method(boxplot_option, class_any) <- function(
 #'   column before grouping. Scale subtracts the mean and divides by the sample
 #'   standard deviation; minmax maps the available range to zero through one.
 #'   Constant columns become zero and missing values remain missing.
+#' @param zoom Logical, [DataZoom], or list of [DataZoom]: Enable zoom on the
+#'   category axis (the y-axis when `horizontal = TRUE`). `TRUE` adds a slider,
+#'   Shift+wheel zoom, and drag panning; double-click resets the view. `FALSE`
+#'   disables zoom. Pass [DataZoom] objects (or a list of them) for full
+#'   control.
 #' @inheritParams draw_line
 #' @return htmlwidget: ECharts boxes with optional vector point overlays.
 #' @export
@@ -649,7 +654,8 @@ draw_boxplot <- function(
   pair_width = 1,
   comparisons = NULL,
   order = "input",
-  transform = "none"
+  transform = "none",
+  zoom = FALSE
 ) {
   opt <- boxplot_option(
     x = x,
@@ -680,7 +686,8 @@ draw_boxplot <- function(
     point_size = point_size,
     point_alpha = point_alpha,
     point_spread = point_spread,
-    comparisons = comparisons
+    comparisons = comparisons,
+    zoom = zoom
   )
   draw(
     opt,

@@ -5,6 +5,16 @@
 # Zoom presets shared by the high-level ECharts draw_* functions.
 # spec: draw/zoom-controls#design
 
+# %% ZOOM_SLIDER_ID ----
+# Identifies the slider placed by `reserve_slider_room()`, so that static
+# export can return its band to the plot.
+ZOOM_SLIDER_ID <- "rtemis-zoom-slider"
+
+# %% ZOOM_SLIDER_HANDLE ----
+# ECharts' brush handle, drawn outside the slider filler (SliderZoomView.ts).
+ZOOM_SLIDER_HANDLE <- 7
+
+
 # %% ZOOM_AXES ----
 # Preset axes: "x" and "y" pair a slider with an inside zoom on that axis; "xy"
 # pairs two inside zooms with the box-zoom toolbox.
@@ -92,8 +102,8 @@ resolve_zoom <- function(zoom, axis = "x", filter_mode = NULL, axis_index = 0) {
 #' Box-zoom, undo, and reset controls
 #'
 #' A toolbox in the top-right corner with the native box-zoom (drag a
-#' rectangle), undo, and reset features. Gray icons and a translucent gray
-#' selection brush read on light and dark backgrounds.
+#' rectangle), undo, and reset features, or with reset alone. Gray icons and a
+#' translucent gray selection brush read on light and dark backgrounds.
 #'
 #' Corresponds to `ToolboxDataZoomFeatureOption` in
 #' `src/component/toolbox/feature/DataZoom.ts`.
@@ -101,13 +111,15 @@ resolve_zoom <- function(zoom, axis = "x", filter_mode = NULL, axis_index = 0) {
 #' @param filter_mode Optional Character \{"filter", "weakFilter", "empty",
 #'   "none"\}: Handling of data outside the box-zoom window. `NULL` uses the
 #'   ECharts default, `"filter"`.
+#' @param box_zoom Logical: Include the box-zoom and undo features. `FALSE`
+#'   leaves reset alone.
 #'
 #' @return Named list: Value for `EChartsOption(toolbox = ...)`.
 #'
 #' @author EDG
 #' @keywords internal
 #' @noRd
-zoom_toolbox <- function(filter_mode = NULL) {
+zoom_toolbox <- function(filter_mode = NULL, box_zoom = TRUE) {
   data_zoom <- list(
     filterMode = filter_mode,
     brushStyle = list(
@@ -126,9 +138,11 @@ zoom_toolbox <- function(filter_mode = NULL) {
     showTitle = FALSE,
     iconStyle = list(borderColor = "#808080"),
     emphasis = list(iconStyle = list(borderColor = "#3F6FB5")),
-    feature = list(
-      dataZoom = data_zoom[!vapply(data_zoom, is.null, logical(1))],
-      restore = list(title = "Reset")
+    feature = c(
+      if (box_zoom) {
+        list(dataZoom = data_zoom[!vapply(data_zoom, is.null, logical(1))])
+      },
+      list(restore = list(title = "Reset"))
     )
   )
 } # /rtemis.draw::zoom_toolbox
@@ -163,7 +177,7 @@ reserve_slider_room <- function(data_zoom, grid, axis = "x") {
   # ECharts' own numbers: the slider's filler size, the brush handle it draws
   # outside the filler, and its default grid margin when none is given.
   slider_size <- 30
-  handle_size <- 7
+  handle_size <- ZOOM_SLIDER_HANDLE
   gap <- 8
   side <- if (axis == "x") "bottom" else "right"
   margin <- if (is.null(grid) || is.null(S7::prop(grid, side))) {
@@ -176,6 +190,7 @@ reserve_slider_room <- function(data_zoom, grid, axis = "x") {
   }
   data_zoom <- lapply(data_zoom, function(dz) {
     if (S7::S7_inherits(dz, DataZoom) && identical(dz@type, "slider")) {
+      dz@id <- ZOOM_SLIDER_ID
       S7::prop(dz, side) <- margin + handle_size
       if (axis == "x") {
         dz@height <- slider_size
@@ -196,8 +211,13 @@ reserve_slider_room <- function(data_zoom, grid, axis = "x") {
 #'
 #' Combines `resolve_zoom()`, `reserve_slider_room()`, and `zoom_toolbox()`.
 #' For `zoom = TRUE`, the `"x"` and `"y"` presets place their slider, and the
-#' `"xy"` preset adds the box-zoom toolbox. Explicit [DataZoom] input leaves
-#' the margins unchanged and adds no toolbox.
+#' `"xy"` preset adds the toolbox. Explicit [DataZoom] input leaves the margins
+#' unchanged and adds no toolbox.
+#'
+#' The two inside zooms of the `"xy"` preset receive the same wheel and drag
+#' events and scale both axes by the same factor, so equal axis scaling
+#' survives wheel zoom and panning. A box-zoom rectangle sets each axis
+#' independently; `box_zoom = FALSE` omits it for equally scaled charts.
 #'
 #' @param zoom Logical, [DataZoom], or list: User-facing `zoom` argument.
 #' @param axis Character \{"x", "y", "xy"\}: Axis the `TRUE` preset targets.
@@ -206,6 +226,7 @@ reserve_slider_room <- function(data_zoom, grid, axis = "x") {
 #'   "none"\}: Handling of data outside the window.
 #' @param axis_index Numeric or Character \{"all"\}: Index of the targeted
 #'   axis.
+#' @param box_zoom Logical: Include box-zoom and undo in the `"xy"` toolbox.
 #'
 #' @return Named list: `data_zoom` (optional list), `grid` (optional [Grid]),
 #'   and `toolbox` (optional named list).
@@ -218,14 +239,15 @@ zoom_layout <- function(
   axis = "x",
   grid = NULL,
   filter_mode = NULL,
-  axis_index = 0
+  axis_index = 0,
+  box_zoom = TRUE
 ) {
   axis <- match.arg(axis, ZOOM_AXES)
   data_zoom <- resolve_zoom(zoom, axis, filter_mode, axis_index)
   toolbox <- NULL
   if (isTRUE(zoom)) {
     if (axis == "xy") {
-      toolbox <- zoom_toolbox(filter_mode)
+      toolbox <- zoom_toolbox(filter_mode, box_zoom)
     } else {
       placed <- reserve_slider_room(data_zoom, grid, axis)
       data_zoom <- placed[["data_zoom"]]
@@ -234,3 +256,46 @@ zoom_layout <- function(
   }
   list(data_zoom = data_zoom, grid = grid, toolbox = toolbox)
 } # /rtemis.draw::zoom_layout
+
+
+# %% static_controls ----
+#' Remove interactive zoom controls from an option for static export
+#'
+#' Drops every `dataZoom` component and the `toolbox`. A slider placed by
+#' `reserve_slider_room()` (id `ZOOM_SLIDER_ID`) returns its band to the plot:
+#' the grid margin on the slider's side is restored to the slider's offset
+#' minus its handle. The data window is the full range, as on first render.
+#'
+#' @param x List: Compiled ECharts option.
+#'
+#' @return List: The option without zoom controls.
+#'
+#' @author EDG
+#' @keywords internal
+#' @noRd
+static_controls <- function(x) {
+  if (!is.list(x)) {
+    return(x)
+  }
+  zooms <- x[["dataZoom"]]
+  if (!is.null(names(zooms))) {
+    zooms <- list(zooms)
+  }
+  grid <- x[["grid"]]
+  if (is.list(grid) && !is.null(names(grid))) {
+    for (zoom in zooms) {
+      if (!identical(zoom[["id"]], ZOOM_SLIDER_ID)) {
+        next
+      }
+      for (side in c("bottom", "right")) {
+        if (is.numeric(zoom[[side]]) && is.numeric(grid[[side]])) {
+          grid[[side]] <- zoom[[side]] - ZOOM_SLIDER_HANDLE
+        }
+      }
+    }
+    x[["grid"]] <- grid
+  }
+  x[["dataZoom"]] <- NULL
+  x[["toolbox"]] <- NULL
+  x
+} # /rtemis.draw::static_controls

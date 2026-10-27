@@ -21,8 +21,10 @@ NODE_MIN_VERSION <- "18"
 #' complete [draw_panels()] figures. Requires
 #' a Node.js (>= 18) `node` binary on `PATH`.
 #'
-#' Callbacks under tooltips, axis pointers, and interactive toolbox controls
-#' are omitted. Other JavaScript callbacks are rejected because discarding them
+#' Zoom controls (sliders and inside zoom) and toolbox buttons are omitted, and
+#' the band reserved for a zoom slider returns to the plot; the export shows the
+#' full data range. Callbacks under tooltips and axis pointers are omitted.
+#' Other JavaScript callbacks are rejected because discarding them
 #' could change visible content. Built-in Gantt, dendrogram, and boxplot point renderers are
 #' shared with the browser widget and use JSON parameters. Networks share their
 #' deterministic layout and styles with the interactive widget. Maps share
@@ -163,7 +165,12 @@ save_drawing <- function(widget, filename, width = NULL, height = NULL) {
   }
   if (inherits(widget, "rtemis-panels")) {
     panels <- lapply(seq_along(payload[["panels"]]), function(i) {
-      strip_js(payload[["panels"]][[i]], path = paste0("panels[", i, "]"))
+      panel <- strip_js(
+        payload[["panels"]][[i]],
+        path = paste0("panels[", i, "]")
+      )
+      panel[["option"]] <- static_controls(panel[["option"]])
+      panel
     })
     save_svg_ssr(
       NULL,
@@ -176,7 +183,7 @@ save_drawing <- function(widget, filename, width = NULL, height = NULL) {
     )
     return(invisible(filename))
   }
-  option <- strip_js(payload[["option"]], path = "option")
+  option <- static_controls(strip_js(payload[["option"]], path = "option"))
   option <- static_aspect(option, payload[["aspect"]], width, height)
   # Automatic themes resolve to light for offline export. An explicit theme
   # remains the export theme; static output does not query OS preferences.

@@ -277,3 +277,13 @@ test_that("EChartsOption carries native graphic annotations and omits NULL", {
   expect_null(to_list(EChartsOption())[["graphic"]])
   expect_error(EChartsOption(graphic = "annotation"))
 })
+
+test_that("EChartsOption serializes animation_duration_update", {
+  out <- to_list(EChartsOption(animation_duration_update = 0))
+  expect_identical(out[["animationDurationUpdate"]], 0)
+  expect_null(to_list(EChartsOption())[["animationDurationUpdate"]])
+  expect_identical(
+    draw_histogram(iris$Sepal.Length)$x$option$animationDurationUpdate,
+    0
+  )
+})

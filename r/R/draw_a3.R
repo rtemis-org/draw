@@ -267,7 +267,7 @@ a3_option <- function(
   pos_label_color = NULL,
   variant_color = NULL,
   disease_variant_color = NULL,
-  enable_zoom = TRUE,
+  zoom = TRUE,
   title = NULL,
   grid = NULL,
   height = NULL
@@ -866,7 +866,7 @@ a3_option <- function(
     )
   }
 
-  if (enable_zoom) {
+  if (zoom) {
     option[["dataZoom"]] <- list(
       list(
         type = "inside",
@@ -983,7 +983,8 @@ a3_option <- function(
 #' @param disease_variant_color Optional Character: Label color for disease-associated
 #'   variant residues (takes precedence over `variant_color`).
 #'   `NULL` color arguments follow the light/dark A3 theme.
-#' @param enable_zoom Logical: Whether to enable Shift+scroll zoom.
+#' @param zoom Logical: Enable Shift+wheel zoom, and wheel and drag panning,
+#'   along the sequence.
 #' @param title Optional Character: Chart title.
 #' @param grid Optional [Grid]: Override any plot-area margin. The defaults
 #'   (margins matching rtemislive, with `right` driven by legend width)
@@ -999,6 +1000,8 @@ a3_option <- function(
 #'   container. `NULL` lets htmlwidgets generate one.
 #' @param filename Optional Character: If provided, save the widget to this
 #'   file via [save_drawing()].
+#' @param enable_zoom Deprecated Logical: Former name of `zoom`; a value sets
+#'   `zoom` with a warning.
 #' @return htmlwidget: Widget object.
 #' @export
 #'
@@ -1035,15 +1038,23 @@ draw_a3 <- function(
   pos_label_color = NULL,
   variant_color = NULL,
   disease_variant_color = NULL,
-  enable_zoom = TRUE,
+  zoom = TRUE,
   title = NULL,
   grid = NULL,
   theme = NULL,
   width = NULL,
   height = NULL,
   element_id = NULL,
-  filename = NULL
+  filename = NULL,
+  enable_zoom = NULL
 ) {
+  if (!is.null(enable_zoom)) {
+    warn(
+      "`enable_zoom` is deprecated; use `zoom`.",
+      use_warning = TRUE
+    )
+    zoom <- enable_zoom
+  }
   built <- a3_option(
     width = width,
     x = x,
@@ -1063,7 +1074,7 @@ draw_a3 <- function(
     pos_label_color = pos_label_color,
     variant_color = variant_color,
     disease_variant_color = disease_variant_color,
-    enable_zoom = enable_zoom,
+    zoom = zoom,
     title = title,
     grid = grid,
     height = height

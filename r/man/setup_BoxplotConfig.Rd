@@ -41,7 +41,8 @@ setup_BoxplotConfig(
   pair_width = 1,
   comparisons = NULL,
   order = "input",
-  transform = "none"
+  transform = "none",
+  zoom = FALSE
 )
 }
 \arguments{
@@ -130,6 +131,9 @@ categories by decreasing mean/median after transformation; empty boxes last.}
 column before grouping. Scale subtracts the mean and divides by the sample
 standard deviation; minmax maps the available range to zero through one.
 Constant columns become zero and missing values remain missing.}
+
+\item{zoom}{Logical: Enable a slider, Shift+wheel zoom, and drag panning on
+the category axis.}
 }
 \value{
 \link{BoxplotConfig} object.

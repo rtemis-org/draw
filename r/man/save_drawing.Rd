@@ -28,8 +28,10 @@ complete \code{\link[=draw_panels]{draw_panels()}} figures. Requires
 a Node.js (>= 18) \code{node} binary on \code{PATH}.
 }
 \details{
-Callbacks under tooltips, axis pointers, and interactive toolbox controls
-are omitted. Other JavaScript callbacks are rejected because discarding them
+Zoom controls (sliders and inside zoom) and toolbox buttons are omitted, and
+the band reserved for a zoom slider returns to the plot; the export shows the
+full data range. Callbacks under tooltips and axis pointers are omitted.
+Other JavaScript callbacks are rejected because discarding them
 could change visible content. Built-in Gantt, dendrogram, and boxplot point renderers are
 shared with the browser widget and use JSON parameters. Networks share their
 deterministic layout and styles with the interactive widget. Maps share
