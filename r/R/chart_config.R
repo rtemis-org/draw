@@ -258,7 +258,9 @@ config_data <- function(config, data = NULL, required = TRUE) {
 #' Dispatches on the file extension, because a config's binding is not always a
 #' table: a heatmap binds a matrix, a network an adjacency matrix, an annotated
 #' protein diagram an `A3` object. CSV covers the tabular charts; RDS covers
-#' every one of them, since it round-trips any R object exactly.
+#' every one of them, since it round-trips any R object exactly. A `.mmd` or
+#' `.mermaid` file is Mermaid diagram text, read as a character vector with one
+#' element per line.
 #'
 #' CSV is read with `check.names = FALSE`. R's default would rewrite
 #' `"Bill Length"` to `"Bill.Length"`, and a config names its columns as they
@@ -289,11 +291,13 @@ read_dat <- function(path) {
       stringsAsFactors = FALSE
     ),
     rds = readRDS(path),
+    mmd = ,
+    mermaid = readLines(path, warn = FALSE, encoding = "UTF-8"),
     abort(
-      "`dat_path` must name a .csv or .rds file; got '",
+      "`dat_path` must name a .csv, .rds, .mmd, or .mermaid file; got '",
       basename(path),
       "'. Use .rds for data that is not a table, such as a heatmap matrix or ",
-      "a network adjacency matrix.",
+      "a network adjacency matrix, and .mmd for Mermaid diagram text.",
       class = c("rtemis_value_error", "rtemis_input_error")
     )
   )

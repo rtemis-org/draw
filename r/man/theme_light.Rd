@@ -11,7 +11,7 @@ theme_light(
   axis_label_font_size = NULL,
   legend_font_size = NULL,
   tooltip_font_size = NULL,
-  font_family = "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+  font_family = getOption("rtemis.font_family"),
   color = palette_colors(rtemis_colors),
   bg_color = "#ffffff",
   fg_color = "rgba(0, 0, 0, 0.7)",
@@ -41,7 +41,15 @@ theme_light(
 
 \item{tooltip_font_size}{Optional Numeric \verb{[0, Inf)}: Tooltip font size.}
 
-\item{font_family}{Character: Font family string.}
+\item{font_family}{Optional Character scalar: Font family name or CSS font
+stack, e.g. \code{"Geist"} or \code{"Geist, Helvetica, sans-serif"}. Unless the
+stack ends in a generic family such as \code{sans-serif}, the system UI font
+stack follows it as the fallback. A family name that is not a sequence of
+CSS identifiers, e.g. \verb{Source Sans 3}, is quoted. \code{NULL} uses the system
+UI font stack. The default is the \code{rtemis.font_family} option, which sets
+the font of every rtemis plot, e.g. \code{options(rtemis.font_family = "Geist")}.
+A widget uses the font when the viewer's system has it installed or the
+page loads it.}
 
 \item{color}{Character: Color palette.}
 

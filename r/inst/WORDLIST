@@ -1,7 +1,9 @@
 AnnotationLayer
 CartesianAxisOption
 Choropleth
+Cmd
 Colorbar
+Ctrl
 CustomSeriesOption
 DConfig
 DModel
@@ -50,7 +52,9 @@ SurfaceLayer
 TPR
 TimeSeriesConfig
 TypeScript
+XY
 Zeitgeber
+ZenUML
 allEdges
 apache
 backend's
@@ -80,6 +84,7 @@ droplines
 echarts
 fallbacks
 formatter
+frontmatter
 gam
 glm
 hanning
@@ -99,8 +104,10 @@ insideTopLeft
 insideTopRight
 jenks
 js
+kanban
 labelLine
 mel
+mindmap
 minmax
 mousemove
 multiclass
@@ -132,6 +139,7 @@ svg
 theming
 tibble
 translational
+treemap
 ungrouped
 unrotated
 unselected

@@ -290,6 +290,7 @@ render_widget <- function(
 #' - [EChartsOption] -> 'ECharts' (`rtemis-draw` widget).
 #' - [SigmaOption] -> 'Sigma.js' (`rtemis-graph` widget).
 #' - [MapLibreOption] -> 'MapLibre' (`rtemis-map` widget).
+#' - [PeleOption] -> 'Pele' (`rtemis-diagram` widget).
 #'
 #' A plain named list is treated as a raw 'ECharts' option.
 #'
@@ -299,7 +300,8 @@ render_widget <- function(
 #' (raw backend defaults), or a [Theme] / list to force one.
 #'
 #' @param option [ChartConfig] subclass, [EChartsOption], [SigmaOption],
-#'   [MapLibreOption], or named list: Chart configuration or render spec to draw.
+#'   [MapLibreOption], [PeleOption], or named list: Chart configuration or
+#'   render spec to draw.
 #'   All concrete chart configuration classes listed below are supported.
 #' @param theme Optional [Theme], list, or `NA`: Theme override. `NULL` enables
 #'   light/dark auto-detection; `NA` disables theming. Applied to every backend.
@@ -307,8 +309,8 @@ render_widget <- function(
 #' @param height Optional Character or Numeric: Widget height.
 #' @param element_id Optional Character: Explicit element ID.
 #' @param filename Optional Character: If provided, the widget is also written to
-#'   this file via [save_drawing()] (ECharts only; other backends reject static
-#'   export requests). Extension determines the format (currently only `.svg`).
+#'   this file via [save_drawing()]. Extension determines the format (currently
+#'   only `.svg`).
 #' @param ... Named arguments for the selected method. For [ChartConfig]
 #'   subclasses, `data` supplies the data to plot; its required structure depends
 #'   on the configuration class. If `data` is omitted or `NULL`, the config's
@@ -338,8 +340,8 @@ render_widget <- function(
 #' @param animation Optional Logical: Whether ECharts animates the chart.
 #'   `NULL` (default) leaves ECharts' own default in place. `FALSE` disables
 #'   animation, which matters for charts with many points, where animating
-#'   every interactive update is expensive. Ignored by the Sigma and MapLibre
-#'   backends, which have no ECharts animation to disable.
+#'   every interactive update is expensive. Ignored by the Sigma, MapLibre, and
+#'   Pele backends, which have no ECharts animation to disable.
 #' @return htmlwidget: Widget object.
 #' @export
 #'
@@ -347,7 +349,8 @@ render_widget <- function(
 #' Supported [ChartConfig] subclasses are [A3Config], [BarConfig],
 #' [BoxplotConfig], [CalibrationConfig], [ChoroplethConfig], [ConfusionConfig],
 #' [DensityConfig], [GanttConfig], [HeatmapConfig], [HistogramConfig],
-#' [LineConfig], [NetworkConfig], [PieConfig], [ROCConfig], [SankeyConfig],
+#' [LineConfig], [MermaidConfig], [NetworkConfig], [PieConfig], [ROCConfig],
+#' [SankeyConfig],
 #' [ScatterConfig], [Scatter3DConfig], [SignificanceConfig], [SpectrogramConfig],
 #' [SurvivalConfig], and [TimeSeriesConfig]. Use their `setup_*()` functions to
 #' create configurations, then pass the data to `draw()` with `data =` or set

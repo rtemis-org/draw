@@ -98,6 +98,10 @@ chart_descriptions <- c(
     "Choropleth map: regions shaded by a bound value column, keyed by a ",
     "location column. Rendered with MapLibre."
   ),
+  mermaid = paste0(
+    "Mermaid diagram: any diagram type built into Mermaid, bound to its ",
+    "Mermaid source text. Rendered with Pele."
+  ),
   sankey = paste0(
     "Sankey diagram: flows between nodes, bound to a table of links with a ",
     "source, a target and a magnitude."

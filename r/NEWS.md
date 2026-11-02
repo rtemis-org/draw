@@ -2,7 +2,9 @@
 
 ## rtemis.draw 0.5.4
 
-* Updates for compatibility with S7 > 0.2.2.
+* `draw_mermaid()` renders Mermaid diagram text with 'Pele' as a scrolling SVG widget that follows the light or dark theme and the palette, highlights selected nodes with `node_color` and `fill_alpha`, and exports it to SVG; `MermaidConfig` and `setup_MermaidConfig()` describe a diagram for `draw()` and the chart schemas, reading `.mmd` files through `dat_path`.
+
+* Compatible with S7 releases after 0.2.2. `FitLayer()` and `SurfaceLayer()` declare their coordinate defaults as quoted expressions, which requires rtemis.core 0.4.7 or later. Load, unload, and build hooks use `S7_on_load()`, `S7_on_unload()`, and `S7_on_build()` when S7 provides them, with `methods_register()` for earlier S7 releases. The minimum S7 version is unchanged.
 
 * `draw_harmonograph()` draws harmonograph curves from random or supplied pendulum frequencies, damping rates and phases.
 
@@ -10,12 +12,16 @@
 
 * 3D hover guides use dotted lines and follow the active theme with their value labels, preserving explicit color settings.
 
+* The `rtemis.font_family` option sets the font of every visualization, e.g. `options(rtemis.font_family = "Geist")`; `theme_light()` and `theme_dark()` follow a font family with the system UI font as the fallback. SVG export of diagrams measures labels in the theme font when it is installed and 'systemfonts' is available.
+
 * `Theme`, `theme_light()` and `theme_dark()` gain `negative_color`, `neutral_color` and `positive_color`, used by every chart that colors by sign unless the chart sets its own colors.
 * `compile()` gains `theme`, so colors computed before drawing follow the theme the chart will be drawn with; `draw()` passes its theme.
 * Significance plots, network edges, and heatmap and spectrogram scales share one colorblind-safe sign pair by default: blue for negative, orange for positive, gray for neither.
 * Heatmap and spectrogram color scales fade to the theme's background, including a custom theme's.
 * Histograms gain `border_alpha` for a solid bar outline (default 1); unset `fill_alpha` is 0.5 where overlaid groups overlap and 0.75 otherwise.
 * Volcano plot annotations are placed clear of each other and of annotated points, in the browser and in SVG export; the significance threshold label sits outside the plotting area.
+* `summarize_varimp()` returns the per-variable summary across folds and the ranking that `draw_varimp()` draws.
+* `draw_varimp()` treats an omitted variable row as an unavailable score; the `absent` argument is removed, and a producer supplies zero scores explicitly.
 
 ## rtemis.draw 0.5.3
 

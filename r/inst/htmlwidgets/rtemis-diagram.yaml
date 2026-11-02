@@ -1,0 +1,13 @@
+dependencies:
+  - name: pele
+    version: 1.6.0
+    src: htmlwidgets/lib/pele
+    script: pele.global.js
+  - name: rtemis-diagram-theme
+    version: 1.0.0
+    src: htmlwidgets/lib/draw
+    script: diagram_theme.js
+  - name: rtemis-theme-watch
+    version: 1.0.0
+    src: htmlwidgets/lib/draw
+    script: theme_watch.js

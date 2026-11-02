@@ -34,6 +34,12 @@ inst/node/map-deps.js
     with their dependencies, built with esbuild from tools/map-bundle.
     inst/node/map-deps.LICENSE.txt lists the components in the Node bundle.
 
+inst/htmlwidgets/lib/pele/pele.global.js
+    Pele 1.6.0, which includes the Lucide 1.14.0 "rotate-ccw" icon.
+    Unmodified upstream distribution file (dist/pele.global.js from the pele
+    npm package). Its TypeScript source is at
+    https://github.com/obsidianmd/pele/tree/1.6.0.
+
 inst/htmlwidgets/lib/geo/us-10m.topo.json
     counties-10m.json from us-atlas 3.0.1 (ISC, Copyright 2013-2019 Michael
     Bostock), unmodified; notice in inst/htmlwidgets/lib/geo/us-atlas-LICENSE.txt.
@@ -82,9 +88,11 @@ d3-scale-chromatic              3.1.0          ISC            Mike Bostock; Colo
                                                               Pennsylvania State University
 internmap                       2.0.3          ISC            Mike Bostock
 topojson-client                 3.1.0          ISC            Michael Bostock
+pele                            1.6.0          MIT            kepano; includes the Lucide rotate-ccw icon,
+                                                              ISC, Copyright Lucide Icons and Contributors
 us-atlas (data)                 3.0.1          ISC            Michael Bostock
 Natural Earth (data)            5.1.2          Public domain  -
 
 Sources: each component's versioned npm distribution,
 https://www.npmjs.com/package/<component>/v/<version>, which includes its
-unminified source. Natural Earth: https://www.naturalearthdata.com.
+unminified source. Pele: the tagged source repository above. Natural Earth: https://www.naturalearthdata.com.

@@ -24,7 +24,12 @@ test_that("theme detection and watching behave the same for every binding", {
 })
 
 test_that("every widget binding declares the shared theme watcher", {
-  for (name in c("rtemis-draw", "rtemis-graph", "rtemis-map")) {
+  for (name in c(
+    "rtemis-draw",
+    "rtemis-graph",
+    "rtemis-map",
+    "rtemis-diagram"
+  )) {
     dependencies <- htmlwidgets::getDependency(name, "rtemis.draw")
     names <- vapply(dependencies, `[[`, character(1), "name")
     watcher <- which(names == "rtemis-theme-watch")

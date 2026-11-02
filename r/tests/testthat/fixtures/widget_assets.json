@@ -324,5 +324,21 @@
       "9955d0292fe4fe29972cf0ce37d77a97",
       "63cb6341255715ba101b1b78d613c839"
     ]
+  },
+  "rtemis-diagram-theme-1.0.0": {
+    "scripts": [
+      "diagram_theme.js"
+    ],
+    "md5": [
+      "89e6bef58555150106883155e95e849b"
+    ]
+  },
+  "rtemis-diagram-binding-0.5.4": {
+    "scripts": [
+      "rtemis-diagram.js"
+    ],
+    "md5": [
+      "85009109cd16fea3ec1a071a8918d053"
+    ]
   }
 }

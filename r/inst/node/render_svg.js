@@ -100,6 +100,8 @@ process.stdin.on("end", () => {
       svg = require("./vector.js").graphSVG({...payload.scene, theme:payload.theme, width, height});
     } else if (payload.backend === "map") {
       svg = require("./vector.js").mapSVG({...payload.scene, theme:payload.theme, width, height});
+    } else if (payload.backend === "diagram") {
+      svg = require("./diagram.js").diagramSVG({...payload.scene, theme:payload.theme});
     } else if (payload.panels) {
 			const cells = layout.cells(payload.panels.length, payload.layout, width, height);
 			const parts = payload.panels.map((panel, i) => {

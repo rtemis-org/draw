@@ -4,8 +4,8 @@
 
 ![rtemis.draw cover](https://docs.rtemis.org/r/draw/assets/cover.avif)
 
-Create interactive charts, networks, and maps with ECharts, Sigma.js, and
-MapLibre. High-level plotting functions and low-level configuration use
+Create interactive charts, networks, maps, and diagrams with ECharts,
+Sigma.js, MapLibre, and Pele, which draws Mermaid diagrams. High-level plotting functions and low-level configuration use
 type-checked, validated S7 objects. Visualizations render as htmlwidgets with
 automatic light/dark themes, integrate with Quarto and Shiny, and support
 SVG output.

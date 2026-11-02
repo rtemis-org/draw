@@ -148,6 +148,90 @@ S7::method(to_list, Theme) <- function(x, ...) {
   out
 }
 
+# -- Font family ----------------------------------------------------------------
+
+# Font stack that follows a user's font family, and the whole font family of a
+# theme when neither `font_family` nor the `rtemis.font_family` option is set.
+DEFAULT_FONT_FAMILY <- "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
+
+# CSS generic family names and the vendor keywords for the system UI font.
+# These are keywords: quoting one turns it into a family name that no font has.
+GENERIC_FONT_FAMILIES <- c(
+  "serif",
+  "sans-serif",
+  "monospace",
+  "cursive",
+  "fantasy",
+  "math",
+  "emoji",
+  "fangsong",
+  "system-ui",
+  "ui-serif",
+  "ui-sans-serif",
+  "ui-monospace",
+  "ui-rounded",
+  "-apple-system",
+  "blinkmacsystemfont"
+)
+
+#' Split a CSS font stack into its family names
+#'
+#' @param x Character scalar: CSS `font-family` value.
+#' @return Character vector: Family names without surrounding quotes or
+#'   whitespace, in stack order.
+#' @keywords internal
+#' @noRd
+font_stack_entries <- function(x) {
+  entries <- trimws(strsplit(x, ",", fixed = TRUE)[[1L]])
+  entries <- entries[nzchar(entries)]
+  sub("^(['\"])(.*)\\1$", "\\2", entries)
+}
+
+#' Resolve a font family into a complete CSS font stack
+#'
+#' Quotes every family name that is not a sequence of CSS identifiers, e.g.
+#' `Source Sans 3`, and appends `DEFAULT_FONT_FAMILY` unless the stack ends in
+#' a generic family, so that text falls back to the system UI font when the
+#' named fonts are missing.
+#'
+#' @param font_family Optional Character scalar: Font family name or CSS font
+#'   stack. `NULL` returns `DEFAULT_FONT_FAMILY`.
+#' @return Character scalar: CSS `font-family` value.
+#' @keywords internal
+#' @noRd
+font_stack <- function(font_family) {
+  if (is.null(font_family)) {
+    return(DEFAULT_FONT_FAMILY)
+  }
+  entries <- if (
+    is.character(font_family) &&
+      length(font_family) == 1L &&
+      !is.na(font_family)
+  ) {
+    trimws(strsplit(font_family, ",", fixed = TRUE)[[1L]])
+  }
+  entries <- entries[nzchar(entries)]
+  if (length(entries) == 0L) {
+    abort(
+      "`font_family` and the `rtemis.font_family` option must be a nonempty ",
+      "character scalar, e.g. \"Geist\".",
+      class = c("rtemis_type_error", "rtemis_input_error")
+    )
+  }
+  quoted <- grepl("^(['\"]).*\\1$", entries)
+  generic <- tolower(entries) %in% GENERIC_FONT_FAMILIES
+  ident <- grepl(
+    "^-?[A-Za-z_][A-Za-z0-9_-]*( +-?[A-Za-z_][A-Za-z0-9_-]*)*$",
+    entries
+  )
+  bare <- !quoted & !generic & !ident
+  entries[bare] <- paste0("'", gsub("'", "\\\\'", entries[bare]), "'")
+  if (!generic[length(generic)]) {
+    entries <- c(entries, DEFAULT_FONT_FAMILY)
+  }
+  paste(entries, collapse = ", ")
+}
+
 # -- Built-in theme constructors ------------------------------------------------
 
 #' Build a Theme from high-level parameters
@@ -238,7 +322,7 @@ build_theme <- function(
     positive_color = positive_color,
     text_style = TextStyle(
       color = fg_color,
-      font_family = font_family,
+      font_family = font_stack(font_family),
       font_size = base_font_size
     ),
     title = list(
@@ -310,7 +394,15 @@ build_theme <- function(
 #' @param axis_label_font_size Optional Numeric `[0, Inf)`: Axis-label font size.
 #' @param legend_font_size Optional Numeric `[0, Inf)`: Legend font size.
 #' @param tooltip_font_size Optional Numeric `[0, Inf)`: Tooltip font size.
-#' @param font_family Character: Font family string.
+#' @param font_family Optional Character scalar: Font family name or CSS font
+#'   stack, e.g. `"Geist"` or `"Geist, Helvetica, sans-serif"`. Unless the
+#'   stack ends in a generic family such as `sans-serif`, the system UI font
+#'   stack follows it as the fallback. A family name that is not a sequence of
+#'   CSS identifiers, e.g. `Source Sans 3`, is quoted. `NULL` uses the system
+#'   UI font stack. The default is the `rtemis.font_family` option, which sets
+#'   the font of every rtemis plot, e.g. `options(rtemis.font_family = "Geist")`.
+#'   A widget uses the font when the viewer's system has it installed or the
+#'   page loads it.
 #' @param color Character: Color palette.
 #' @param bg_color Optional Character: Chart background color.
 #' @param fg_color Optional Character: Global text color.
@@ -339,7 +431,7 @@ theme_light <- function(
   axis_label_font_size = NULL,
   legend_font_size = NULL,
   tooltip_font_size = NULL,
-  font_family = "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+  font_family = getOption("rtemis.font_family"),
   color = palette_colors(rtemis_colors),
   bg_color = "#ffffff",
   fg_color = "rgba(0, 0, 0, 0.7)",
@@ -400,7 +492,7 @@ theme_dark <- function(
   axis_label_font_size = NULL,
   legend_font_size = NULL,
   tooltip_font_size = NULL,
-  font_family = "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+  font_family = getOption("rtemis.font_family"),
   color = palette_colors(rtemis_colors),
   bg_color = "#181818",
   fg_color = "rgba(255, 255, 255, 0.7)",

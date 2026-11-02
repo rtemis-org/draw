@@ -79,11 +79,11 @@ test_that("ranking selects absolute summaries or signed summaries with stable ti
   expect_equal(nrow(summarize_varimp(data, top_n = 1)), 1)
   expect_equal(nrow(summarize_varimp(data, top_n = 100)), 4)
   expect_equal(nrow(summarize_varimp(data, top_n = NULL)), 4)
-  expect_equal(nrow(summarize_varimp(varimp_data(seq_len(30)))), 20)
+  expect_equal(nrow(summarize_varimp(seq_len(30))), 30)
   for (n in list(0, -1, 0.5, 1.9, NA, Inf, "2", c(1, 2))) {
     expect_error(summarize_varimp(data, top_n = n))
   }
-  for (arg in c("rank_by", "summary", "absent")) {
+  for (arg in c("rank_by", "summary")) {
     expect_error(do.call(
       summarize_varimp,
       c(list(data), stats::setNames(list("invalid"), arg))
@@ -98,25 +98,32 @@ test_that("ranking selects absolute summaries or signed summaries with stable ti
   expect_equal(zeros[["importance"]], c(0, 0))
 })
 
-test_that("known zero omissions differ from explicit unknown scores and missing folds", {
+test_that("omitted rows, explicit unknown scores and missing folds are unavailable", {
   data <- varimp_data(data.frame(
     variable = c("a", "b", "a", "b", "c", "c", "a"),
     fold = c("A", "A", "B", "B", "B", "C", "D"),
     gain = c(8, 2, NA, 4, -6, -3, NA)
   ))
-  # Fold D reports no gain; E has no table. Both are unavailable. In fold C,
-  # absent a/b are known zeros only when the sparse convention is declared.
+  # Fold D reports no gain and E has no table; a and b have no row in C.
   folds <- LETTERS[1:5]
   available <- summarize_varimp(data, folds = folds)
   expect_identical(available[["variable"]], c("a", "c", "b"))
   expect_equal(available[["importance"]], c(8, -4.5, 3))
   expect_equal(available[["n_available"]], c(1, 2, 2))
-  sparse <- summarize_varimp(data, folds = folds, absent = "zero")
-  expect_identical(sparse[["variable"]], c("a", "c", "b"))
-  expect_equal(sparse[["importance"]], c(4, -3, 2))
-  expect_equal(sparse[["n_available"]], c(2, 3, 3))
-  expect_equal(sparse[["n_zero"]], c(1, 1, 1))
-  expect_equal(sparse[["n_folds"]], rep(5, 3))
+  expect_equal(available[["n_folds"]], rep(5, 3))
+  expect_identical(
+    names(available),
+    c("variable", "importance", "n_available", "n_folds")
+  )
+  # Explicit zeros are scores.
+  zeros <- rbind(
+    data,
+    data.frame(variable = c("a", "b"), fold = c("C", "C"), gain = c(0, 0))
+  )
+  completed <- summarize_varimp(zeros, folds = folds)
+  expect_identical(completed[["variable"]], c("c", "a", "b"))
+  expect_equal(completed[["importance"]], c(-4.5, 4, 2))
+  expect_equal(completed[["n_available"]], c(2, 2, 3))
   expect_identical(nrow(data), 7L)
   for (ids in list(character(), c("A", "A"), c("A", NA), "A", 1:5)) {
     expect_error(summarize_varimp(data, folds = ids), "unique nonempty names")
@@ -127,29 +134,22 @@ test_that("known zero omissions differ from explicit unknown scores and missing 
   )
 })
 
-test_that("median with implicit zeros agrees with independently completed samples", {
-  cases <- list(
-    c(-8, -2),
-    c(2, 8),
-    c(-2, 8),
-    c(-8, -2, 4),
-    c(-8, 0, 4),
-    c(0, 0)
+test_that("median summarizes available fold scores", {
+  data <- varimp_data(data.frame(
+    variable = c("a", "a", "a", "b", "b"),
+    fold = c("1", "2", "3", "1", "2"),
+    score = c(-8, 0, 4, 2, 6)
+  ))
+  out <- summarize_varimp(data, summary = "median")
+  expect_identical(out[["variable"]], c("b", "a"))
+  expect_equal(out[["importance"]], c(4, 0))
+  expect_equal(
+    summarize_varimp(data)[["importance"]],
+    c(4, -4 / 3)
   )
-  for (values in cases) {
-    for (n in seq.int(length(values), length(values) + 3L)) {
-      data <- varimp_data(data.frame(
-        variable = c(rep("a", length(values)), rep("anchor", n)),
-        fold = c(as.character(seq_along(values)), as.character(seq_len(n))),
-        importance = c(values, rep(1, n))
-      ))
-      out <- summarize_varimp(data, absent = "zero", summary = "median")
-      expect_equal(
-        out[["importance"]][out[["variable"]] == "a"],
-        stats::median(c(values, rep(0, n - length(values))))
-      )
-    }
-  }
+})
+
+test_that("ranking uses the absolute mean, not the mean absolute score", {
   data <- varimp_data(data.frame(
     variable = c("a", "a", "a", "b", "b", "b"),
     fold = rep(1:3, 2),

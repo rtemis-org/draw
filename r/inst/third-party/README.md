@@ -22,6 +22,12 @@ Obtain the complete source and build files with `npm pack echarts@6.1.0` and
 The extracted packages include source directories and their upstream build
 scripts. Run the package's `npm install` and `npm run build` to build from source.
 
+Pele 1.6.0 is an unmodified upstream distribution file. Obtain it with
+`npm pack pele@1.6.0` and copy `dist/pele.global.js` to
+`inst/htmlwidgets/lib/pele`. The npm package ships minified builds only; the
+TypeScript source and build scripts are at
+<https://github.com/obsidianmd/pele/tree/1.6.0>.
+
 All dependency sources are available as the versioned npm distributions linked
 below. The graph/map lockfiles fix the complete build dependency graph. Shared
 rtemis renderers and bindings are shipped as readable source in
@@ -51,6 +57,7 @@ rtemis renderers and bindings are shipped as readable source in
 | mnemonist | 0.39.8 | [npm](https://www.npmjs.com/package/mnemonist/v/0.39.8) | [mnemonist@0.39.8.txt](mnemonist@0.39.8.txt) |
 | obliterator | 2.0.5 | [npm](https://www.npmjs.com/package/obliterator/v/2.0.5) | [obliterator@2.0.5.txt](obliterator@2.0.5.txt) |
 | pandemonium | 2.4.1 | [npm](https://www.npmjs.com/package/pandemonium/v/2.4.1) | [pandemonium@2.4.1.txt](pandemonium@2.4.1.txt) |
+| pele | 1.6.0 | [npm](https://www.npmjs.com/package/pele/v/1.6.0) | [pele@1.6.0.txt](pele@1.6.0.txt) |
 | sigma | 4.0.0-alpha.6 | [npm](https://www.npmjs.com/package/sigma/v/4.0.0-alpha.6) | [sigma@4.0.0-alpha.6.txt](sigma@4.0.0-alpha.6.txt) |
 | topojson-client | 3.1.0 | [npm](https://www.npmjs.com/package/topojson-client/v/3.1.0) | [topojson-client@3.1.0.txt](topojson-client@3.1.0.txt) |
 | zrender | 6.1.0 | [npm](https://www.npmjs.com/package/zrender/v/6.1.0) | [zrender@6.1.0.txt](zrender@6.1.0.txt) |
