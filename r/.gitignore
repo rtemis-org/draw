@@ -17,6 +17,8 @@ plan/
 *.Rcheck/
 .lintr
 air.toml
+revdep/
+cran-comments.md
 
 # Agents
 AGENTS.md
