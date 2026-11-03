@@ -2,8 +2,8 @@
 # ::rtemis.draw::
 # 2026- EDG rtemis.org
 
-# Mermaid diagrams rendered with Pele (https://pele.run), the fourth rendering
-# backend after ECharts, Sigma.js and MapLibre.
+# Mermaid diagrams rendered with Pele (https://github.com/obsidianmd/pele), the
+# fourth rendering backend after ECharts, Sigma.js and MapLibre.
 # spec: draw/mermaid-diagrams
 #
 # Pipeline:
@@ -331,10 +331,11 @@ mermaid_option <- function(
 # %% draw_mermaid ----
 #' Draw a Mermaid Diagram
 #'
-#' Renders Mermaid diagram text with Pele (<https://pele.run>) as a static SVG
-#' in an htmlwidget, shown in the RStudio and VS Code Viewer panes, Quarto and
-#' R Markdown documents, and Shiny. With `filename`, it also writes the diagram
-#' to an SVG file.
+#' Renders Mermaid diagram text with Pele
+#' (<https://github.com/obsidianmd/pele>) as a static SVG in an htmlwidget,
+#' shown in the RStudio and VS Code Viewer panes, Quarto and R Markdown
+#' documents, and Shiny. With `filename`, it also writes the diagram to an SVG
+#' file.
 #'
 #' The diagram renders at its natural size, so labels keep `font_size` however
 #' long or wide the diagram is, and the widget scrolls. In the Viewer pane the
@@ -355,9 +356,11 @@ mermaid_option <- function(
 #' flowchart, sequence, class, state, entity relationship, Gantt, git graph,
 #' pie, mindmap, kanban, timeline, user journey, quadrant chart, XY chart,
 #' requirement, Sankey, architecture, C4, block, packet, radar, treemap, and
-#' Venn diagrams. The syntax and the per-type differences are listed at
-#' <https://pele.run/compatibility>; examples of every type are at
-#' <https://pele.run/examples>.
+#' Venn diagrams. The syntax and the per-type differences are listed in Pele's
+#' compatibility notes,
+#' <https://github.com/obsidianmd/pele/blob/1.6.0/website/src/content/docs/compatibility.md>;
+#' the Mermaid documentation examples of every type, as Mermaid source, are in
+#' <https://github.com/obsidianmd/pele/tree/1.6.0/tests/corpus>.
 #'
 #' Not supported: Mermaid themes and `themeVariables`, ZenUML and other
 #' external Mermaid plugins, HTML labels, and JavaScript callbacks in `click`

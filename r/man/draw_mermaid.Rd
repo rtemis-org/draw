@@ -66,10 +66,11 @@ Viewer pane and takes the diagram's height in documents.}
 htmlwidget.
 }
 \description{
-Renders Mermaid diagram text with Pele (\url{https://pele.run}) as a static SVG
-in an htmlwidget, shown in the RStudio and VS Code Viewer panes, Quarto and
-R Markdown documents, and Shiny. With \code{filename}, it also writes the diagram
-to an SVG file.
+Renders Mermaid diagram text with Pele
+(\url{https://github.com/obsidianmd/pele}) as a static SVG in an htmlwidget,
+shown in the RStudio and VS Code Viewer panes, Quarto and R Markdown
+documents, and Shiny. With \code{filename}, it also writes the diagram to an SVG
+file.
 }
 \details{
 The diagram renders at its natural size, so labels keep \code{font_size} however
@@ -92,9 +93,11 @@ Pele supports every diagram type built into Mermaid 12.1.0, including
 flowchart, sequence, class, state, entity relationship, Gantt, git graph,
 pie, mindmap, kanban, timeline, user journey, quadrant chart, XY chart,
 requirement, Sankey, architecture, C4, block, packet, radar, treemap, and
-Venn diagrams. The syntax and the per-type differences are listed at
-\url{https://pele.run/compatibility}; examples of every type are at
-\url{https://pele.run/examples}.
+Venn diagrams. The syntax and the per-type differences are listed in Pele's
+compatibility notes,
+\url{https://github.com/obsidianmd/pele/blob/1.6.0/website/src/content/docs/compatibility.md};
+the Mermaid documentation examples of every type, as Mermaid source, are in
+\url{https://github.com/obsidianmd/pele/tree/1.6.0/tests/corpus}.
 
 Not supported: Mermaid themes and \code{themeVariables}, ZenUML and other
 external Mermaid plugins, HTML labels, and JavaScript callbacks in \code{click}
