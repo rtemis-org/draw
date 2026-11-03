@@ -1,3 +1,11 @@
+test_that("surface defaults retain their coordinate expressions", {
+  expect_identical(formals(SurfaceLayer)[["x"]], quote(c(0, 1)))
+  expect_identical(formals(SurfaceLayer)[["y"]], quote(c(0, 1)))
+  layer <- SurfaceLayer(z = matrix(0, 2L, 2L))
+  expect_identical(layer@x, c(0, 1))
+  expect_identical(layer@y, c(0, 1))
+})
+
 test_that("surface grids sort both axes with predictions and serialize holes", {
   z <- outer(c(2, 0, 1), c(3, 1, 2), function(x, y) 10 * x + y)
   layer <- SurfaceLayer(x = c(2, 0, 1), y = c(3, 1, 2), z = z)

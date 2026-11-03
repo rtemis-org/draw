@@ -1,7 +1,7 @@
 Package: rtemis.draw
 Title: Schema-Driven Interactive Charts, Networks, Maps, and Diagrams
 Version: 0.5.4
-Date: 2026-10-24
+Date: 2026-11-02
 Authors@R:
     person(given = "E.D.", family = "Gennatas", role = c("aut", "cre", "cph"),
            email = "gennatas@gmail.com",
@@ -33,7 +33,7 @@ Imports:
     htmltools,
     htmlwidgets,
     jsonlite,
-    rtemis.core (>= 0.4.6),
+    rtemis.core (>= 0.4.7),
     S7,
     signal,
     stats,

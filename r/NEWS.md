@@ -4,6 +4,8 @@
 
 * `draw_mermaid()` renders Mermaid diagram text with 'Pele' as a scrolling SVG widget that follows the light or dark theme and the palette, highlights selected nodes with `node_color` and `fill_alpha`, and exports it to SVG; `MermaidConfig` and `setup_MermaidConfig()` describe a diagram for `draw()` and the chart schemas, reading `.mmd` files through `dat_path`.
 
+* Compatible with S7 releases after 0.2.2. `FitLayer()` and `SurfaceLayer()` declare their coordinate defaults as quoted expressions, which requires rtemis.core 0.4.7 or later. Load, unload, and build hooks use `S7_on_load()`, `S7_on_unload()`, and `S7_on_build()` when S7 provides them, with `methods_register()` for earlier S7 releases. The minimum S7 version is unchanged.
+
 * `draw_harmonograph()` draws harmonograph curves from random or supplied pendulum frequencies, damping rates and phases.
 
 * `draw_scatter3d()` uses perspective projection by default, with configurable camera distance and an orthographic option; SVG export follows the configured camera.
