@@ -33,3 +33,4 @@ node_modules
 ^tools/cran-scan-ignore$
 ^tools/document[.]R$
 ^tools/coverage-local[.]R$
+^revdep$
