@@ -52,6 +52,7 @@ SurfaceLayer
 TPR
 TimeSeriesConfig
 TypeScript
+UI
 XY
 Zeitgeber
 ZenUML
@@ -136,6 +137,7 @@ spectrogram
 spectrograms
 survfit
 svg
+systemfonts
 theming
 tibble
 translational
