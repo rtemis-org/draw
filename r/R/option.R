@@ -41,6 +41,8 @@
 #' @param animation_duration Optional Numeric `[0, Inf)`: Initial animation duration in milliseconds.
 #' @param animation_easing Optional Character: Animation easing function name.
 #' @param animation_delay Optional Numeric `[0, Inf)`: Initial animation delay in milliseconds.
+#' @param animation_duration_update Optional Numeric `[0, Inf)`: Duration in
+#'   milliseconds of the transition on data or zoom updates.
 #' @param dark_mode Optional Logical or Character \{"auto"\}: Dark-mode setting.
 #' @param use_utc Optional Logical: Whether to use UTC for time axes.
 #'
@@ -88,6 +90,7 @@ EChartsOption <- S7::new_class(
     animation_duration = numeric_or_null_property(),
     animation_easing = prop_string(nullable = TRUE),
     animation_delay = numeric_or_null_property(),
+    animation_duration_update = numeric_or_null_property(),
     # Other
     dark_mode = S7::new_property(
       class = S7::class_any,
@@ -197,6 +200,7 @@ S7::method(to_list, EChartsOption) <- function(x, ...) {
     "animation_duration",
     "animation_easing",
     "animation_delay",
+    "animation_duration_update",
     "dark_mode",
     "use_utc"
   )

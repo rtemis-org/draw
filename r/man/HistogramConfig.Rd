@@ -11,6 +11,7 @@ HistogramConfig(
   writer = NULL,
   legend_position = "top",
   legend_placement = "outside",
+  legend_title = NULL,
   mode = "overlap",
   order = "input",
   n = 512L,
@@ -27,6 +28,7 @@ HistogramConfig(
   normalization = "count",
   bin_stat = "count",
   bar_mode = "overlay",
+  zoom = FALSE,
   density = FALSE,
   fill_alpha = NULL,
   border_alpha = 1,
@@ -62,6 +64,11 @@ column. Corner anchors align within the top or bottom row.}
 \item{legend_placement}{Character \{"outside", "inside"\}: Relation to the
 plotting area. Outside placement reserves space for the complete legend;
 inside placement overlays the data. Neither setting adds a missing legend.}
+
+\item{legend_title}{Optional Character: Title drawn with the legend or
+colorbar: above left/right legends and vertical colorbars, before the
+first row of top/bottom legends and horizontal colorbars. \code{NULL} draws no
+title. A title does not add a missing legend.}
 
 \item{mode}{Character \verb{\{"overlap", "ridge"\}}: Overlay samples or align rows
 on common x and y scales. Ridge rows use sample names in place of a legend.
@@ -111,6 +118,9 @@ statistics require normalization = "count" and density = FALSE.}
 \item{bar_mode}{Character \verb{\{"overlay", "group", "stack"\}}: Histogram group layout.
 Stacks accumulate positive and negative values separately. Group/stack
 layouts require mode = "overlap" and density = FALSE.}
+
+\item{zoom}{Logical: Enable a slider, Shift+wheel zoom, and drag panning on
+the x-axis. Ridge rows zoom together, without a slider.}
 
 \item{density}{Logical: Overlay a kernel density in histogram units.}
 

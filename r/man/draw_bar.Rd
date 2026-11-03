@@ -22,7 +22,9 @@ draw_bar(
   bar_width = NULL,
   order = "input",
   legend_position = "top",
-  legend_placement = "outside"
+  legend_placement = "outside",
+  legend_title = NULL,
+  zoom = FALSE
 )
 }
 \arguments{
@@ -79,6 +81,17 @@ column. Corner anchors align within the top or bottom row.}
 \item{legend_placement}{Character \{"outside", "inside"\}: Relation to the
 plotting area. Outside placement reserves space for the complete legend;
 inside placement overlays the data. Neither setting adds a missing legend.}
+
+\item{legend_title}{Optional Character: Title drawn with the legend or
+colorbar: above left/right legends and vertical colorbars, before the
+first row of top/bottom legends and horizontal colorbars. \code{NULL} draws no
+title. A title does not add a missing legend.}
+
+\item{zoom}{Logical, \link{DataZoom}, or list of \link{DataZoom}: Enable zoom on the
+category axis (the y-axis when \code{horizontal = TRUE}). \code{TRUE} adds a slider,
+Shift+wheel zoom, and drag panning; double-click resets the view. \code{FALSE}
+disables zoom. Pass \link{DataZoom} objects (or a list of them) for full
+control.}
 }
 \value{
 htmlwidget: Widget object.

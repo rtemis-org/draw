@@ -23,8 +23,8 @@ FitLayer <- new_class(
   "FitLayer",
   package = "rtemis.draw",
   properties = list(
-    x = prop_float(c(0, 1), vector = TRUE, min_items = 2L),
-    y = prop_float(c(0, 1), vector = TRUE, min_items = 2L),
+    x = prop_float(quote(c(0, 1)), vector = TRUE, min_items = 2L),
+    y = prop_float(quote(c(0, 1)), vector = TRUE, min_items = 2L),
     lower = prop_float(NULL, nullable = TRUE, vector = TRUE, min_items = 2L),
     upper = prop_float(NULL, nullable = TRUE, vector = TRUE, min_items = 2L),
     name = prop_string("Fit"),

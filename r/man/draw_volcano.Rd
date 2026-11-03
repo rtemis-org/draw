@@ -16,12 +16,14 @@ draw_volcano(
   ...,
   legend_position = "top",
   legend_placement = "outside",
+  legend_title = NULL,
   theme = NULL,
   width = NULL,
   height = NULL,
   element_id = NULL,
   filename = NULL,
-  group = NULL
+  group = NULL,
+  zoom = FALSE
 )
 }
 \arguments{
@@ -53,6 +55,11 @@ column. Corner anchors align within the top or bottom row.}
 plotting area. Outside placement reserves space for the complete legend;
 inside placement overlays the data. Neither setting adds a missing legend.}
 
+\item{legend_title}{Optional Character: Title drawn with the legend or
+colorbar: above left/right legends and vertical colorbars, before the
+first row of top/bottom legends and horizontal colorbars. \code{NULL} draws no
+title. A title does not add a missing legend.}
+
 \item{theme}{Optional \link{Theme}: Widget/export theme.}
 
 \item{width, height}{Optional Numeric or Character: Widget dimensions.}
@@ -63,6 +70,9 @@ inside placement overlays the data. Neither setting adds a missing legend.}
 
 \item{group}{Optional vector: One display-group label per outcome; unset uses
 significance and direction. Missing groups omit marks but retain the testing family.}
+
+\item{zoom}{Logical: Enable Shift+wheel zoom and drag panning; see
+\code{\link[=setup_SignificanceConfig]{setup_SignificanceConfig()}}.}
 }
 \value{
 An ECharts htmlwidget.

@@ -26,6 +26,8 @@
 #' @param labels Optional Character: Box labels. `NULL` uses the bound column
 #'   names.
 #' @param horizontal Logical: Draw the boxes horizontally.
+#' @param zoom Logical: Enable a slider, Shift+wheel zoom, and drag panning on
+#'   the category axis.
 #' @inheritParams draw_boxplot
 #' @param observation Optional Character: Column identifying observations for tooltips and pairing.
 #' @param comparisons Optional Character: Name of a comparison data frame in the
@@ -36,7 +38,7 @@
 #' @param xlab,ylab Optional Character: Axis labels.
 #' @param margin_top,margin_right,margin_bottom,margin_left Optional Integer
 #'   `[0, Inf)`: Plot margins in pixels.
-#' @inheritParams draw_line legend_position legend_placement
+#' @inheritParams draw_line legend_position legend_placement legend_title
 #' @inheritParams ChartConfig
 #'
 #' @return `BoxplotConfig` object.
@@ -160,6 +162,13 @@ BoxplotConfig <- new_class(
         FALSE,
         description = "Draw the boxes horizontally."
       ),
+      zoom = prop_boolean(
+        FALSE,
+        description = paste(
+          "Enable a slider, Shift+wheel zoom, and drag panning on the",
+          "category axis."
+        )
+      ),
       na_rm = prop_boolean(
         TRUE,
         description = "Drop missing values before summarizing; false rejects missing input."
@@ -268,6 +277,7 @@ setup_BoxplotConfig <- function(
   writer = NULL,
   legend_position = "top",
   legend_placement = "outside",
+  legend_title = NULL,
   geometry = "box",
   bandwidth = NULL,
   adjust = 1,
@@ -277,7 +287,8 @@ setup_BoxplotConfig <- function(
   pair_width = 1,
   comparisons = NULL,
   order = "input",
-  transform = "none"
+  transform = "none",
+  zoom = FALSE
 ) {
   origin <- origin %||% chart_origin(match.call(), BOXPLOT_ORIGIN_NAMES)
   BoxplotConfig(
@@ -289,6 +300,7 @@ setup_BoxplotConfig <- function(
     observation = observation,
     order = order,
     transform = transform,
+    zoom = zoom,
     geometry = geometry,
     bandwidth = bandwidth,
     adjust = adjust,
@@ -315,6 +327,7 @@ setup_BoxplotConfig <- function(
     dat_path = dat_path,
     legend_position = legend_position,
     legend_placement = legend_placement,
+    legend_title = legend_title,
     origin = origin,
     writer = writer
   )
@@ -376,7 +389,8 @@ method(compile, BoxplotConfig) <- function(
     xlab = config@xlab,
     ylab = config@ylab,
     title = config@title,
-    margins = config_margins(config) %||% DEFAULT_MARGINS
+    margins = config_margins(config) %||% DEFAULT_MARGINS,
+    zoom = config@zoom
   )
 }
 

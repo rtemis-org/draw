@@ -56,8 +56,8 @@ test_that("importance boxes retain ranking, fold IDs, missing observations and s
     expect_identical(opt[[value_axis]][["nameLocation"]], "middle")
     expect_identical(opt[[axis]][["nameLocation"]], "middle")
     expect_equal(opt[["grid"]][["top"]], 36)
-    expect_false(opt[[value_axis]][["axisLabel"]][["showMinLabel"]])
-    expect_false(opt[[value_axis]][["axisLabel"]][["showMaxLabel"]])
+    expect_null(opt[[value_axis]][["axisLabel"]][["showMinLabel"]])
+    expect_null(opt[[value_axis]][["axisLabel"]][["showMaxLabel"]])
     expect_null(opt[["title"]][["subtext"]])
     expect_identical(opt[["series"]][[1]][["type"]], "boxplot")
     points <- opt[["series"]][[2]][["data"]]

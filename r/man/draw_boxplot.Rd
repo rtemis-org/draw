@@ -31,6 +31,7 @@ draw_boxplot(
   point_spread = 0.5,
   legend_position = "top",
   legend_placement = "outside",
+  legend_title = NULL,
   geometry = "box",
   bandwidth = NULL,
   adjust = 1,
@@ -40,7 +41,8 @@ draw_boxplot(
   pair_width = 1,
   comparisons = NULL,
   order = "input",
-  transform = "none"
+  transform = "none",
+  zoom = FALSE
 )
 }
 \arguments{
@@ -114,6 +116,11 @@ column. Corner anchors align within the top or bottom row.}
 plotting area. Outside placement reserves space for the complete legend;
 inside placement overlays the data. Neither setting adds a missing legend.}
 
+\item{legend_title}{Optional Character: Title drawn with the legend or
+colorbar: above left/right legends and vertical colorbars, before the
+first row of top/bottom legends and horizontal colorbars. \code{NULL} draws no
+title. A title does not add a missing legend.}
+
 \item{geometry}{Character \{"box", "violin", "both"\}: Distribution geometry.}
 
 \item{bandwidth}{Optional Numeric \verb{(0, Inf)}: Finite Gaussian kernel bandwidth.}
@@ -137,6 +144,12 @@ categories by decreasing mean/median after transformation; empty boxes last.}
 column before grouping. Scale subtracts the mean and divides by the sample
 standard deviation; minmax maps the available range to zero through one.
 Constant columns become zero and missing values remain missing.}
+
+\item{zoom}{Logical, \link{DataZoom}, or list of \link{DataZoom}: Enable zoom on the
+category axis (the y-axis when \code{horizontal = TRUE}). \code{TRUE} adds a slider,
+Shift+wheel zoom, and drag panning; double-click resets the view. \code{FALSE}
+disables zoom. Pass \link{DataZoom} objects (or a list of them) for full
+control.}
 }
 \value{
 htmlwidget: ECharts boxes with optional vector point overlays.

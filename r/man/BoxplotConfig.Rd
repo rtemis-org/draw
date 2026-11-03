@@ -11,6 +11,7 @@ BoxplotConfig(
   writer = NULL,
   legend_position = "top",
   legend_placement = "outside",
+  legend_title = NULL,
   x = NULL,
   group = NULL,
   observation = NULL,
@@ -31,6 +32,7 @@ BoxplotConfig(
   point_alpha = 0.6,
   point_spread = 0.5,
   horizontal = FALSE,
+  zoom = FALSE,
   na_rm = TRUE,
   labels = NULL,
   palette = NULL,
@@ -64,6 +66,11 @@ column. Corner anchors align within the top or bottom row.}
 \item{legend_placement}{Character \{"outside", "inside"\}: Relation to the
 plotting area. Outside placement reserves space for the complete legend;
 inside placement overlays the data. Neither setting adds a missing legend.}
+
+\item{legend_title}{Optional Character: Title drawn with the legend or
+colorbar: above left/right legends and vertical colorbars, before the
+first row of top/bottom legends and horizontal colorbars. \code{NULL} draws no
+title. A title does not add a missing legend.}
 
 \item{x}{Optional Character: Columns to summarize, one box each.}
 
@@ -110,6 +117,9 @@ zero uses full-range whiskers.}
 \item{point_spread}{Numeric \verb{[0, 1]}: Fraction of box width occupied by offsets.}
 
 \item{horizontal}{Logical: Draw the boxes horizontally.}
+
+\item{zoom}{Logical: Enable a slider, Shift+wheel zoom, and drag panning on
+the category axis.}
 
 \item{na_rm}{Logical: Remove missing values. FALSE rejects missing input.}
 

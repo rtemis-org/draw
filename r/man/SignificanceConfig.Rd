@@ -11,6 +11,7 @@ SignificanceConfig(
   writer = NULL,
   legend_position = "top",
   legend_placement = "outside",
+  legend_title = NULL,
   view = "volcano",
   estimate = "estimate",
   p_value = "p_value",
@@ -26,6 +27,7 @@ SignificanceConfig(
   annotate_n = 7L,
   reference = TRUE,
   legend = TRUE,
+  zoom = FALSE,
   negative_color = NULL,
   neutral_color = NULL,
   positive_color = NULL,
@@ -65,6 +67,11 @@ column. Corner anchors align within the top or bottom row.}
 plotting area. Outside placement reserves space for the complete legend;
 inside placement overlays the data. Neither setting adds a missing legend.}
 
+\item{legend_title}{Optional Character: Title drawn with the legend or
+colorbar: above left/right legends and vertical colorbars, before the
+first row of top/bottom legends and horizontal colorbars. \code{NULL} draws no
+title. A title does not add a missing legend.}
+
 \item{view}{Character \{"volcano", "manhattan"\}: Scatter or categorical bar view.}
 
 \item{estimate}{Character: Column containing coefficients or other signed effects.}
@@ -97,6 +104,10 @@ order; unset uses the theme. Requires a group binding.}
 \item{reference}{Logical: Show the transformed significance threshold and, for volcanoes, the effect threshold.}
 
 \item{legend}{Logical: Show the nonempty significance groups.}
+
+\item{zoom}{Logical: Enable Shift+wheel zoom and drag panning: on both axes
+with box-zoom, undo, and reset controls for volcano plots, and with a
+slider on the outcome axis for Manhattan plots.}
 
 \item{negative_color}{Optional Character: Color for significant effects
 below x_thresh. \code{NULL} uses the theme's negative color.}

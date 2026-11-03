@@ -37,8 +37,10 @@ setup_SignificanceConfig(
   writer = NULL,
   legend_position = "top",
   legend_placement = "outside",
+  legend_title = NULL,
   group = NULL,
-  palette = NULL
+  palette = NULL,
+  zoom = FALSE
 )
 }
 \arguments{
@@ -117,12 +119,21 @@ column. Corner anchors align within the top or bottom row.}
 plotting area. Outside placement reserves space for the complete legend;
 inside placement overlays the data. Neither setting adds a missing legend.}
 
+\item{legend_title}{Optional Character: Title drawn with the legend or
+colorbar: above left/right legends and vertical colorbars, before the
+first row of top/bottom legends and horizontal colorbars. \code{NULL} draws no
+title. A title does not add a missing legend.}
+
 \item{group}{Optional Character: Display-group column. Unset colors by significance
 and effect direction. Missing groups omit marks after full-family adjustment.
 Groups never change significance thresholds or annotation ranking.}
 
 \item{palette}{Optional Character vector: Display-group colors in first-appearance
 order; unset uses the theme. Requires a group binding.}
+
+\item{zoom}{Logical: Enable Shift+wheel zoom and drag panning: on both axes
+with box-zoom, undo, and reset controls for volcano plots, and with a
+slider on the outcome axis for Manhattan plots.}
 }
 \value{
 A \link{SignificanceConfig} object.

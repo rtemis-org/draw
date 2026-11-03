@@ -28,6 +28,7 @@ setup_TimeSeriesConfig(
   writer = NULL,
   legend_position = "top",
   legend_placement = "outside",
+  legend_title = NULL,
   zt = NULL,
   shade_bin = NULL,
   show_zt_every = 1L
@@ -63,7 +64,8 @@ the data.}
 \item{palette}{Optional Character: Series colors, overriding the theme
 palette for this chart. \code{NULL} uses the theme's.}
 
-\item{zoom}{Logical: Enable the zoom control.}
+\item{zoom}{Logical: Enable an x-axis slider, Shift+wheel zoom, and drag
+panning.}
 
 \item{title}{Optional Character: Chart title. Declared here because it is the
 one property every chart type has; \code{palette} is not (four take a \code{colormap}
@@ -87,6 +89,11 @@ column. Corner anchors align within the top or bottom row.}
 \item{legend_placement}{Character \{"outside", "inside"\}: Relation to the
 plotting area. Outside placement reserves space for the complete legend;
 inside placement overlays the data. Neither setting adds a missing legend.}
+
+\item{legend_title}{Optional Character: Title drawn with the legend or
+colorbar: above left/right legends and vertical colorbars, before the
+first row of top/bottom legends and horizontal colorbars. \code{NULL} draws no
+title. A title does not add a missing legend.}
 
 \item{zt, shade_bin}{Optional Character: Columns of zeitgeber labels and zero/one shading flags.}
 

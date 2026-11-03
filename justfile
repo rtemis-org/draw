@@ -55,7 +55,11 @@ build: clean
     @just _msg "Done"
 
 # Run R CMD check on the built tarball (pass extra flags, e.g. `just check --as-cran`)
-check *flags: build
+# Each recipe that consumes the tarball builds it with `just build` and removes it
+# afterwards: a recipe dependency runs once per invocation, so in `cran-prep` a
+# dependency on `build` would hand later recipes a tarball an earlier one removed.
+check *flags:
+    @just build
     @just _msg "─── Running R CMD check {{flags}} on {{pkg}}... ───"
     cd {{r_dir}} && {{r}} CMD check {{tarball_glob}} {{flags}}
     rm -f {{r_dir}}/{{tarball_glob}}
@@ -178,7 +182,8 @@ cran-scan *flags:
     @just _msg "Done"
 
 # cran-scan plus the built tarball: size, largest files, stray and binary files
-cran-scan-tarball: build
+cran-scan-tarball:
+    @just build
     @just _msg "─── Scanning {{pkg}} tarball for CRAN review issues... ───"
     cd {{r_dir}} && status=0; {{rscript}} tools/cran-scan.R . --tarball="$(ls {{tarball_glob}})" --ignore=tools/cran-scan-ignore --fail || status=$?; rm -f {{tarball_glob}}; exit $status
     @just _msg "Done"
@@ -202,7 +207,8 @@ docs-current:
 # Mirrors CRAN's noSuggests check. Output goes to a temp dir so the main
 # .Rcheck survives.
 # R CMD check --as-cran with Depends/Imports only: finds unconditional Suggests use
-check-cran-depends-only: build
+check-cran-depends-only:
+    @just build
     @just _msg "─── R CMD check --as-cran with Depends/Imports only on {{pkg}}... ───"
     cd {{r_dir}} && out="$(mktemp -d)"; status=0; _R_CHECK_DEPENDS_ONLY_=true {{r}} CMD check {{tarball_glob}} --as-cran --no-manual --output="$out" || status=$?; rm -f {{tarball_glob}}; exit $status
     @just _msg "Done"

@@ -221,11 +221,19 @@ test_that("draw_a3 height is auto-computed when NULL", {
   expect_equal(w2$height, 500)
 })
 
-test_that("draw_a3 dataZoom absent when enable_zoom = FALSE", {
+test_that("draw_a3 dataZoom absent when zoom = FALSE", {
   skip_if_not_installed("rtemis.a3")
   a <- rtemis.a3::create_A3("MAEPRQEFEVMEDHAGTYGLGDRK")
-  w <- draw_a3(a, enable_zoom = FALSE)
+  w <- draw_a3(a, zoom = FALSE)
   expect_null(w$x$option$dataZoom)
+})
+
+test_that("draw_a3 enable_zoom is a deprecated alias of zoom", {
+  skip_if_not_installed("rtemis.a3")
+  a <- rtemis.a3::create_A3("MAEPRQEFEVMEDHAGTYGLGDRK")
+  expect_warning(w <- draw_a3(a, enable_zoom = FALSE), "deprecated")
+  expect_null(w$x$option$dataZoom)
+  expect_false(is.null(draw_a3(a)$x$option$dataZoom))
 })
 
 test_that("draw_a3 n_per_row validation works", {

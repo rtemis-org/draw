@@ -28,8 +28,8 @@ SurfaceLayer <- new_class(
   "SurfaceLayer",
   package = "rtemis.draw",
   properties = list(
-    x = prop_float(c(0, 1), vector = TRUE, min_items = 2L),
-    y = prop_float(c(0, 1), vector = TRUE, min_items = 2L),
+    x = prop_float(quote(c(0, 1)), vector = TRUE, min_items = 2L),
+    y = prop_float(quote(c(0, 1)), vector = TRUE, min_items = 2L),
     z = new_property(class_any, default = NULL),
     name = prop_string("Surface"),
     color = prop_string("#6ca3a0"),

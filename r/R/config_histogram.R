@@ -20,13 +20,15 @@
 #' @param group Optional Character: Column to split the bins by.
 #' @inheritParams draw_histogram breaks bins bin_edges normalization density na_rm bin_stat bar_mode fill_alpha border_alpha
 #' @inheritParams draw_density n bw bandwidth kernel adjust mode order
+#' @param zoom Logical: Enable a slider, Shift+wheel zoom, and drag panning on
+#'   the x-axis. Ridge rows zoom together, without a slider.
 #' @param palette Optional Character: Series colors, overriding the theme
 #'   palette for this chart. `NULL` uses the theme's.
 #' @param xlab,ylab Optional Character: Axis labels. `NULL` derives them from
 #'   the data.
 #' @param margin_top,margin_right,margin_bottom,margin_left Optional Integer
 #'   `[0, Inf)`: Plot margins in pixels.
-#' @inheritParams draw_line legend_position legend_placement
+#' @inheritParams draw_line legend_position legend_placement legend_title
 #' @inheritParams ChartConfig
 #'
 #' @return `HistogramConfig` object.
@@ -101,6 +103,13 @@ HistogramConfig <- new_class(
         "overlay",
         enum = c("overlay", "group", "stack"),
         description = "Overlay, dodge, or stack histogram groups; stacks separate positive and negative values."
+      ),
+      zoom = prop_boolean(
+        FALSE,
+        description = paste(
+          "Enable a slider, Shift+wheel zoom, and drag panning on the x-axis.",
+          "Ridge rows zoom together, without a slider."
+        )
       ),
       density = prop_boolean(
         FALSE,
@@ -272,6 +281,7 @@ setup_HistogramConfig <- function(
   writer = NULL,
   legend_position = "top",
   legend_placement = "outside",
+  legend_title = NULL,
   bins = NULL,
   bin_edges = NULL,
   normalization = "count",
@@ -287,7 +297,8 @@ setup_HistogramConfig <- function(
   mode = "overlap",
   order = "input",
   bin_stat = "count",
-  bar_mode = "overlay"
+  bar_mode = "overlay",
+  zoom = FALSE
 ) {
   origin <- origin %||% chart_origin(match.call(), HISTOGRAM_ORIGIN_NAMES)
   if (is.numeric(breaks)) {
@@ -326,6 +337,7 @@ setup_HistogramConfig <- function(
   HistogramConfig(
     bin_stat = bin_stat,
     bar_mode = bar_mode,
+    zoom = zoom,
     mode = mode,
     order = order,
     bins = bins,
@@ -354,6 +366,7 @@ setup_HistogramConfig <- function(
     dat_path = dat_path,
     legend_position = legend_position,
     legend_placement = legend_placement,
+    legend_title = legend_title,
     origin = origin,
     writer = writer
   )
@@ -452,6 +465,7 @@ method(compile, HistogramConfig) <- function(
     xlab = config@xlab,
     ylab = config@ylab,
     title = config@title,
-    margins = config_margins(config) %||% DEFAULT_MARGINS
+    margins = config_margins(config) %||% DEFAULT_MARGINS,
+    zoom = config@zoom
   )
 }

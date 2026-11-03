@@ -21,7 +21,7 @@
 #'   plain pie.
 #' @param palette Optional Character: Slice colors, overriding the theme
 #'   palette for this chart. `NULL` uses the theme's.
-#' @inheritParams draw_line legend_position legend_placement
+#' @inheritParams draw_line legend_position legend_placement legend_title
 #' @inheritParams ChartConfig
 #'
 #' @return `PieConfig` object.
@@ -119,7 +119,8 @@ setup_PieConfig <- function(
   origin = NULL,
   writer = NULL,
   legend_position = "top",
-  legend_placement = "outside"
+  legend_placement = "outside",
+  legend_title = NULL
 ) {
   origin <- origin %||% chart_origin(match.call(), PIE_ORIGIN_NAMES)
   PieConfig(
@@ -134,6 +135,7 @@ setup_PieConfig <- function(
     dat_path = dat_path,
     legend_position = legend_position,
     legend_placement = legend_placement,
+    legend_title = legend_title,
     origin = origin,
     writer = writer
   )

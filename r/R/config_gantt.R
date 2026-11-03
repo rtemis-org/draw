@@ -26,7 +26,8 @@
 #' @param tooltip Optional Character: Column holding per-bar tooltip text.
 #' @param border Optional Character: Logical column; `TRUE` outlines the bar.
 #' @param axis_type Character \{"value", "time"\}: How the time axis is scaled.
-#' @param zoom Logical: Enable the zoom control.
+#' @param zoom Logical: Enable Shift+wheel zoom, drag panning, and box-zoom
+#'   controls on both axes.
 #' @param guides Logical: Show guide lines.
 #' @param bar_height Numeric `[0, 1]`: Bar height as a fraction of the row.
 #' @param bar_radius Numeric `[0, Inf)`: Bar corner radius in pixels.
@@ -35,7 +36,7 @@
 #' @param palette Optional Character: Bar colors, overriding the theme palette
 #'   for this chart. `NULL` uses the theme's.
 #' @param xlab Optional Character: Time axis label.
-#' @inheritParams draw_line legend_position legend_placement
+#' @inheritParams draw_line legend_position legend_placement legend_title
 #' @inheritParams ChartConfig
 #'
 #' @return `GanttConfig` object.
@@ -81,7 +82,13 @@ GanttConfig <- new_class(
         enum = c("value", "time"),
         description = "How the time axis is scaled."
       ),
-      zoom = prop_boolean(TRUE, description = "Enable the zoom control."),
+      zoom = prop_boolean(
+        TRUE,
+        description = paste(
+          "Enable Shift+wheel zoom, drag panning, and box-zoom controls on",
+          "both axes."
+        )
+      ),
       guides = prop_boolean(TRUE, description = "Show guide lines."),
       # -- appearance --------------------------------------------------------
       bar_height = prop_float(
@@ -174,7 +181,8 @@ setup_GanttConfig <- function(
   origin = NULL,
   writer = NULL,
   legend_position = "top",
-  legend_placement = "outside"
+  legend_placement = "outside",
+  legend_title = NULL
 ) {
   origin <- origin %||% chart_origin(match.call(), GANTT_ORIGIN_NAMES)
   GanttConfig(
@@ -197,6 +205,7 @@ setup_GanttConfig <- function(
     dat_path = dat_path,
     legend_position = legend_position,
     legend_placement = legend_placement,
+    legend_title = legend_title,
     origin = origin,
     writer = writer
   )

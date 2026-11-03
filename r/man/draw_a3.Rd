@@ -22,14 +22,15 @@ draw_a3(
   pos_label_color = NULL,
   variant_color = NULL,
   disease_variant_color = NULL,
-  enable_zoom = TRUE,
+  zoom = TRUE,
   title = NULL,
   grid = NULL,
   theme = NULL,
   width = NULL,
   height = NULL,
   element_id = NULL,
-  filename = NULL
+  filename = NULL,
+  enable_zoom = NULL
 )
 }
 \arguments{
@@ -79,7 +80,8 @@ Placement of PTM symbols relative to the residue circle.
 variant residues (takes precedence over \code{variant_color}).
 \code{NULL} color arguments follow the light/dark A3 theme.}
 
-\item{enable_zoom}{Logical: Whether to enable Shift+scroll zoom.}
+\item{zoom}{Logical: Enable Shift+wheel zoom, and wheel and drag panning,
+along the sequence.}
 
 \item{title}{Optional Character: Chart title.}
 
@@ -102,6 +104,9 @@ container. \code{NULL} lets htmlwidgets generate one.}
 
 \item{filename}{Optional Character: If provided, save the widget to this
 file via \code{\link[=save_drawing]{save_drawing()}}.}
+
+\item{enable_zoom}{Deprecated Logical: Former name of \code{zoom}; a value sets
+\code{zoom} with a warning.}
 }
 \value{
 htmlwidget: Widget object.

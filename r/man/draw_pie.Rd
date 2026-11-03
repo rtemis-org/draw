@@ -18,6 +18,7 @@ draw_pie(
   filename = NULL,
   legend_position = "top",
   legend_placement = "outside",
+  legend_title = NULL,
   label_format = "name",
   percent_digits = 1L
 )
@@ -60,6 +61,11 @@ column. Corner anchors align within the top or bottom row.}
 \item{legend_placement}{Character \{"outside", "inside"\}: Relation to the
 plotting area. Outside placement reserves space for the complete legend;
 inside placement overlays the data. Neither setting adds a missing legend.}
+
+\item{legend_title}{Optional Character: Title drawn with the legend or
+colorbar: above left/right legends and vertical colorbars, before the
+first row of top/bottom legends and horizontal colorbars. \code{NULL} draws no
+title. A title does not add a missing legend.}
 
 \item{label_format}{Character \verb{\{"name", "value", "percent", "name_value", "name_percent"\}}: Slice label content.}
 

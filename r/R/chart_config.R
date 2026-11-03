@@ -498,7 +498,11 @@ render_meta <- new_generic(
     # MapLibre and Sigma do not accept ECharts rendering hints.
     if ("legend_placement" %in% names(S7_class(config)@properties)) {
       meta <- c(
-        legend_meta(config@legend_position, config@legend_placement),
+        legend_meta(
+          config@legend_position,
+          config@legend_placement,
+          config@legend_title
+        ),
         meta
       )
     }

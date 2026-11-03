@@ -5,3 +5,7 @@
 
 CODE-SYSTEM R/export.R:*  # save_svg_ssr() finds node with Sys.which() and aborts with install instructions; Node.js is in SystemRequirements
 THIRD-PARTY inst/htmlwidgets/lib/draw  # the package's own renderer code, not bundled third-party code
+NAME Package  # 0.5.4 is an update of the package published on CRAN as 0.5.3
+CODE-HOME tests/testthat/test-mermaid.R:*  # "~" is a glyph in the measured character set, not a path
+DESC-QUOTES Description  # CRAN (0.5.3 review) quotes only package, software, and API names; JSON and R Markdown are formats
+DESC-ACRONYMS Description  # JSON names a standard data format, unquoted as CRAN requested in the 0.5.3 review
