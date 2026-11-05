@@ -4,6 +4,8 @@
 
 * `draw_pr()` draws precision-recall curves from labels and probabilities or from curve records, pooled or per resample, as step functions whose area is the average precision, with a prevalence baseline per curve group; `PRConfig`, `setup_PRConfig()`, and the `pr` chart schema describe the chart, and `pr_vertices()` computes its records.
 
+* `draw_roc()` curves start at the first color of the theme palette, as `draw_pr()` curves do, so the two charts color the same groups alike; the chance line keeps `diagonal_color`.
+
 * Grouped charts order a factor `group` by its levels, in series, colors, and legends, and drop levels without drawn rows; other vectors keep first-appearance order. `true_pred_data()` returns a factor `group` as a factor `sample`.
 
 ## rtemis.draw 0.5.4

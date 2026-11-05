@@ -304,6 +304,8 @@ method(roc_option, ROCConfig) <- function(config, data) {
       show_symbol = FALSE,
       silent = TRUE,
       legend_hover_link = FALSE,
+      # Background references must not consume a group palette color.
+      item_style = ItemStyle(color = config@diagonal_color),
       line_style = LineStyle(
         color = config@diagonal_color,
         type = "dashed",
