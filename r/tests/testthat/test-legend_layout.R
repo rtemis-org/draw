@@ -21,6 +21,7 @@ test_that("legend properties share validation, schema, and provenance", {
     PieConfig,
     GanttConfig,
     ROCConfig,
+    PRConfig,
     CalibrationConfig,
     SurvivalConfig,
     SignificanceConfig,

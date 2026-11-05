@@ -16,8 +16,8 @@
 #'   [draw_density()], [draw_pie()], [draw_heatmap()], [draw_sankey()].
 #' - Time: [draw_ts()], [draw_xt()], [draw_gantt()], [draw_spectrogram()].
 #' - Three dimensions: [draw_scatter3d()], with [draw_add_surface()].
-#' - Model evaluation: [draw_roc()], [draw_calibration()], [draw_confusion()],
-#'   [draw_fit()], [draw_varimp()], [draw_metric()], [draw_learning_curve()].
+#' - Model evaluation: [draw_roc()], [draw_pr()], [draw_calibration()],
+#'   [draw_confusion()], [draw_fit()], [draw_varimp()], [draw_metric()], [draw_learning_curve()].
 #' - Time-to-event: [draw_survival()], [draw_survfit()].
 #' - Significance testing: [draw_volcano()], [draw_manhattan()],
 #'   [draw_pvals()].

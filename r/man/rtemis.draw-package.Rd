@@ -21,8 +21,8 @@ Scalable Vector Graphics (SVG) file.
 \code{\link[=draw_density]{draw_density()}}, \code{\link[=draw_pie]{draw_pie()}}, \code{\link[=draw_heatmap]{draw_heatmap()}}, \code{\link[=draw_sankey]{draw_sankey()}}.
 \item Time: \code{\link[=draw_ts]{draw_ts()}}, \code{\link[=draw_xt]{draw_xt()}}, \code{\link[=draw_gantt]{draw_gantt()}}, \code{\link[=draw_spectrogram]{draw_spectrogram()}}.
 \item Three dimensions: \code{\link[=draw_scatter3d]{draw_scatter3d()}}, with \code{\link[=draw_add_surface]{draw_add_surface()}}.
-\item Model evaluation: \code{\link[=draw_roc]{draw_roc()}}, \code{\link[=draw_calibration]{draw_calibration()}}, \code{\link[=draw_confusion]{draw_confusion()}},
-\code{\link[=draw_fit]{draw_fit()}}, \code{\link[=draw_varimp]{draw_varimp()}}, \code{\link[=draw_metric]{draw_metric()}}, \code{\link[=draw_learning_curve]{draw_learning_curve()}}.
+\item Model evaluation: \code{\link[=draw_roc]{draw_roc()}}, \code{\link[=draw_pr]{draw_pr()}}, \code{\link[=draw_calibration]{draw_calibration()}},
+\code{\link[=draw_confusion]{draw_confusion()}}, \code{\link[=draw_fit]{draw_fit()}}, \code{\link[=draw_varimp]{draw_varimp()}}, \code{\link[=draw_metric]{draw_metric()}}, \code{\link[=draw_learning_curve]{draw_learning_curve()}}.
 \item Time-to-event: \code{\link[=draw_survival]{draw_survival()}}, \code{\link[=draw_survfit]{draw_survfit()}}.
 \item Significance testing: \code{\link[=draw_volcano]{draw_volcano()}}, \code{\link[=draw_manhattan]{draw_manhattan()}},
 \code{\link[=draw_pvals]{draw_pvals()}}.

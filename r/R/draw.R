@@ -349,8 +349,8 @@ render_widget <- function(
 #' Supported [ChartConfig] subclasses are [A3Config], [BarConfig],
 #' [BoxplotConfig], [CalibrationConfig], [ChoroplethConfig], [ConfusionConfig],
 #' [DensityConfig], [GanttConfig], [HeatmapConfig], [HistogramConfig],
-#' [LineConfig], [MermaidConfig], [NetworkConfig], [PieConfig], [ROCConfig],
-#' [SankeyConfig],
+#' [LineConfig], [MermaidConfig], [NetworkConfig], [PieConfig], [PRConfig],
+#' [ROCConfig], [SankeyConfig],
 #' [ScatterConfig], [Scatter3DConfig], [SignificanceConfig], [SpectrogramConfig],
 #' [SurvivalConfig], and [TimeSeriesConfig]. Use their `setup_*()` functions to
 #' create configurations, then pass the data to `draw()` with `data =` or set
