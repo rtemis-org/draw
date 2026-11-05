@@ -128,39 +128,7 @@ method(roc_probabilities, class_any) <- function(
 #' roc_vertices(roc_probabilities(factor(c("no", "yes")), c(0.1, 0.9)))
 roc_vertices <- new_generic("roc_vertices", "x", function(x) S7_dispatch())
 method(roc_vertices, class_list) <- function(x) {
-  # A model adapter may pool normalized folds or retain an empty fold. Check
-  # that its assembled records still preserve row and class identities.
-  labels <- x[["y"]]
-  levels <- x[["levels"]]
-  classes <- x[["classes"]]
-  probabilities <- x[["prob"]]
-  if (
-    !is.character(labels) ||
-      !is.null(dim(labels)) ||
-      !is.character(levels) ||
-      length(levels) < 2L ||
-      anyNA(levels) ||
-      any(!nzchar(levels)) ||
-      anyDuplicated(levels) ||
-      !is.character(classes) ||
-      !length(classes) ||
-      anyNA(classes) ||
-      anyDuplicated(classes) ||
-      any(!classes %in% levels) ||
-      any(!labels[!is.na(labels)] %in% levels) ||
-      !is.matrix(probabilities) ||
-      !is.numeric(probabilities) ||
-      is.complex(probabilities) ||
-      nrow(probabilities) != length(labels) ||
-      !identical(colnames(probabilities), levels) ||
-      any(!is.finite(probabilities[!is.na(probabilities)])) ||
-      any(probabilities < 0 | probabilities > 1, na.rm = TRUE)
-  ) {
-    abort(
-      "Supply normalized ROC records from roc_probabilities(), preserving row and class identities.",
-      class = c("rtemis_value_error", "rtemis_input_error")
-    )
-  }
+  check_curve_scores(x)
   pieces <- lapply(x[["classes"]], function(cl) {
     score <- x[["prob"]][, cl]
     keep <- !is.na(x[["y"]]) & !is.na(score)
@@ -208,63 +176,7 @@ method(roc_input, class_any) <- function(
   predicted_prob = NULL,
   positive = NULL
 ) {
-  if (is.null(predicted_prob) && is.data.frame(x)) {
-    if (!is.null(positive)) {
-      abort(
-        "Omit `positive` for already computed curve records.",
-        class = c("rtemis_value_error", "rtemis_input_error")
-      )
-    }
-    return(x)
-  }
-  if (is.null(predicted_prob)) {
-    abort(
-      "Supply probabilities with labels, or a table containing fpr and tpr.",
-      class = c("rtemis_null_input", "rtemis_input_error")
-    )
-  }
-  sets <- is.list(x) && !is.data.frame(x)
-  if (sets != (is.list(predicted_prob) && !is.data.frame(predicted_prob))) {
-    abort(
-      "Supply matching lists of labels and probabilities, or one pair of vectors/matrices.",
-      class = c("rtemis_type_error", "rtemis_input_error")
-    )
-  }
-  labels <- if (sets) x else list(x)
-  probs <- if (sets) predicted_prob else list(predicted_prob)
-  if (!length(labels) || length(labels) != length(probs)) {
-    abort(
-      "Supply the same nonzero number of label and probability sets.",
-      class = c("rtemis_length_error", "rtemis_input_error")
-    )
-  }
-  for (nm in list(names(labels), names(probs))) {
-    if (!is.null(nm) && (anyNA(nm) || any(!nzchar(nm)) || anyDuplicated(nm))) {
-      abort(
-        "Use unique nonempty names for ROC input sets.",
-        class = c("rtemis_value_error", "rtemis_input_error")
-      )
-    }
-  }
-  if (!is.null(names(labels)) && !is.null(names(probs))) {
-    if (!setequal(names(labels), names(probs))) {
-      abort(
-        "Label and probability set names must match.",
-        class = c("rtemis_value_error", "rtemis_input_error")
-      )
-    }
-    probs <- probs[names(labels)]
-  }
-  names_out <- names(labels) %||%
-    names(probs) %||%
-    if (length(labels) == 1L) "Sample" else paste("Sample", seq_along(labels))
-  pieces <- lapply(seq_along(labels), function(i) {
-    out <- roc_vertices(roc_probabilities(labels[[i]], probs[[i]], positive))
-    out[["split"]] <- names_out[[i]]
-    out[["fold"]] <- "aggregate"
-    out
-  })
-  do.call(rbind, pieces)
+  curve_input(x, predicted_prob, positive, roc_vertices, "fpr and tpr")
 }
 
 #' Draw Receiver Operating Characteristic Curves
@@ -337,6 +249,31 @@ draw_roc <- function(
   )
 }
 
+method(curve_spec, ROCConfig) <- function(config) {
+  list(
+    name = "ROC",
+    summary = "AUC",
+    x = "FPR",
+    y = "TPR",
+    step = FALSE,
+    # Sorting both coordinates preserves vertical tie runs, including input
+    # from libraries that enumerate thresholds in the reverse direction.
+    order = function(x, y) order(x, y),
+    valid = function(x, y) {
+      length(x) >= 2L &&
+        x[[1L]] == 0 &&
+        y[[1L]] == 0 &&
+        tail(x, 1L) == 1 &&
+        tail(y, 1L) == 1 &&
+        !any(diff(y) < 0)
+    },
+    area = function(x, y) sum(diff(x) * (head(y, -1L) + tail(y, -1L)) / 2),
+    coordinates = "Supply aligned numeric FPR and TPR values in [0, 1].",
+    invalid = "Supply monotone complete ROC curves from (0, 0) to (1, 1).",
+    undefined = "No defined ROC curve: each curve needs both positive and negative observations."
+  )
+}
+
 #' Validate and partition portable ROC records
 #' @param config [ROCConfig]: Bound configuration.
 #' @param data Data frame or named list: Long curve records.
@@ -345,175 +282,12 @@ draw_roc <- function(
 #' @noRd
 roc_data <- new_generic("roc_data", "config")
 method(roc_data, ROCConfig) <- function(config, data) {
-  fpr <- config_column(data, config@fpr, "fpr")
-  tpr <- config_column(data, config@tpr, "tpr")
-  n <- length(fpr)
-  for (v in list(fpr, tpr)) {
-    if (
-      !is.numeric(v) ||
-        is.complex(v) ||
-        !is.null(dim(v)) ||
-        !n ||
-        length(v) != n ||
-        any(!is.finite(v[!is.na(v)])) ||
-        any(v < 0 | v > 1, na.rm = TRUE)
-    ) {
-      abort(
-        "Supply aligned numeric FPR and TPR values in [0, 1].",
-        class = c("rtemis_value_error", "rtemis_input_error")
-      )
-    }
-  }
-  labels <- function(binding, default, argument) {
-    v <- config_column(data, binding, argument) %||% rep(default, n)
-    if (is.factor(v)) {
-      v <- as.character(v)
-    }
-    if (
-      !is.character(v) ||
-        !is.null(dim(v)) ||
-        length(v) != n ||
-        anyNA(v) ||
-        any(!nzchar(v))
-    ) {
-      abort(
-        "Use one nonempty ",
-        argument,
-        " label per ROC record.",
-        class = c("rtemis_value_error", "rtemis_input_error")
-      )
-    }
-    v
-  }
-  split <- labels(config@split, "Sample", "split")
-  cls <- labels(config@class_label, "ROC", "class")
-  fold <- labels(config@fold, "aggregate", "fold")
-  auc <- config_column(data, config@auc, "auc")
-  omitted <- config_column(data, config@omitted, "omitted") %||% rep(0, n)
-  if (
-    !is.null(auc) &&
-      (!is.numeric(auc) ||
-        is.complex(auc) ||
-        !is.null(dim(auc)) ||
-        length(auc) != n ||
-        any(!is.finite(auc[!is.na(auc)])) ||
-        any(auc < 0 | auc > 1, na.rm = TRUE))
-  ) {
-    abort(
-      "Supply aligned AUC values in [0, 1], or NA for unknown AUC.",
-      class = c("rtemis_value_error", "rtemis_input_error")
-    )
-  }
-  if (
-    !is.numeric(omitted) ||
-      is.complex(omitted) ||
-      !is.null(dim(omitted)) ||
-      length(omitted) != n ||
-      any(!is.finite(omitted)) ||
-      any(omitted < 0 | omitted != floor(omitted))
-  ) {
-    abort(
-      "Supply nonnegative integer omitted-pair counts.",
-      class = c("rtemis_value_error", "rtemis_input_error")
-    )
-  }
-  selected <- if (config@variant == "aggregate") {
-    fold == "aggregate"
-  } else {
-    fold != "aggregate"
-  }
-  if (!any(selected)) {
-    abort(
-      "No curves match `variant`; supply aggregate rows or per-resample fold labels.",
-      class = c("rtemis_value_error", "rtemis_input_error")
-    )
-  }
-  keys <- unique(data.frame(
-    split = split[selected],
-    class = cls[selected],
-    stringsAsFactors = FALSE
-  ))
-  curves <- groups <- list()
-  undefined <- max_omitted <- 0L
-  for (g in seq_len(nrow(keys))) {
-    rows <- which(
-      selected & split == keys[["split"]][[g]] & cls == keys[["class"]][[g]]
-    )
-    folds <- unique(fold[rows])
-    scores <- numeric()
-    for (id in folds) {
-      at <- rows[fold[rows] == id]
-      area <- if (is.null(auc)) NA_real_ else unique(auc[at])
-      missing_n <- unique(omitted[at])
-      if (length(area) != 1L || length(missing_n) != 1L) {
-        abort(
-          "Keep AUC and omitted counts constant within each split/class/fold curve.",
-          class = c("rtemis_value_error", "rtemis_input_error")
-        )
-      }
-      max_omitted <- max(max_omitted, missing_n)
-      if (all(is.na(fpr[at])) && all(is.na(tpr[at])) && is.na(area)) {
-        undefined <- undefined + 1L
-        next
-      }
-      if (anyNA(fpr[at]) || anyNA(tpr[at])) {
-        abort(
-          "Represent an undefined curve with all-missing coordinates; complete curves cannot contain gaps.",
-          class = c("rtemis_value_error", "rtemis_input_error")
-        )
-      }
-      # Sorting both coordinates preserves vertical tie runs, including input
-      # from libraries that enumerate thresholds in the reverse direction.
-      at <- at[order(fpr[at], tpr[at])]
-      xx <- fpr[at]
-      yy <- tpr[at]
-      if (
-        length(at) < 2L ||
-          xx[[1L]] != 0 ||
-          yy[[1L]] != 0 ||
-          tail(xx, 1L) != 1 ||
-          tail(yy, 1L) != 1 ||
-          any(diff(yy) < 0)
-      ) {
-        abort(
-          "Supply monotone complete ROC curves from (0, 0) to (1, 1).",
-          class = c("rtemis_value_error", "rtemis_input_error")
-        )
-      }
-      if (is.null(auc)) {
-        area <- sum(diff(xx) * (head(yy, -1L) + tail(yy, -1L)) / 2)
-      }
-      scores <- c(scores, area)
-      curves[[length(curves) + 1L]] <- list(
-        group = g,
-        fold = id,
-        fpr = xx,
-        tpr = yy,
-        auc = area,
-        omitted = missing_n
-      )
-    }
-    values <- scores[!is.na(scores)]
-    groups[[g]] <- list(
-      split = keys[["split"]][[g]],
-      class = keys[["class"]][[g]],
-      mean = if (length(values)) mean(values) else NA_real_,
-      sd = if (length(values) > 1L) stats::sd(values) else NA_real_,
-      available = length(values),
-      total = length(folds)
-    )
-  }
-  if (!length(curves)) {
-    abort(
-      "No defined ROC curve: each curve needs both positive and negative observations.",
-      class = c("rtemis_value_error", "rtemis_input_error")
-    )
-  }
-  list(
-    curves = curves,
-    groups = groups,
-    undefined = undefined,
-    max_omitted = max_omitted
+  curve_data(
+    config,
+    data,
+    x = config_column(data, config@fpr, "fpr"),
+    y = config_column(data, config@tpr, "tpr"),
+    summary = config_column(data, config@auc, "auc")
   )
 }
 
@@ -524,69 +298,8 @@ method(roc_data, ROCConfig) <- function(config, data) {
 #' @noRd
 roc_option <- new_generic("roc_option", "config")
 method(roc_option, ROCConfig) <- function(config, data) {
-  prepared <- roc_data(config, data)
-  curves <- prepared[["curves"]]
-  groups <- prepared[["groups"]]
-  per_fold <- config@variant == "per_resample"
-  fmt <- function(x) {
-    if (is.na(x)) {
-      "NA"
-    } else {
-      formatC(x, format = "f", digits = config@digits, decimal.mark = ".")
-    }
-  }
-  classes <- unique(vapply(groups, `[[`, character(1), "class"))
-  splits <- unique(vapply(groups, `[[`, character(1), "split"))
-  # Omit the generic single-sample prefix, keeping explicit sample/model names
-  # and class identity. Shared native names toggle all folds in a group.
-  labels <- vapply(
-    groups,
-    function(g) {
-      paste0(
-        if (!identical(splits, "Sample")) paste0(g[["split"]], ": "),
-        g[["class"]],
-        if (per_fold) {
-          paste0(
-            " (AUC mean ",
-            fmt(g[["mean"]]),
-            "; SD ",
-            fmt(g[["sd"]]),
-            ")"
-          )
-        } else {
-          paste0(" (AUC ", fmt(g[["mean"]]), ")")
-        }
-      )
-    },
-    character(1)
-  )
-  labels <- make.unique(labels)
-  active <- unique(vapply(curves, `[[`, integer(1), "group"))
-  legend_names <- labels[active]
-  # The shared renderer measures legend space independently of curve geometry.
-  bottom <- 65
-  if (prepared[["undefined"]]) {
-    msg(prepared[["undefined"]], "undefined curve(s) omitted")
-  }
-  if (prepared[["max_omitted"]]) {
-    msg(
-      "Missing pairs excluded: at most",
-      prepared[["max_omitted"]],
-      "per curve"
-    )
-  }
-  top <- 25 + if (!is.null(config@title)) 25 else 0
-  grid <- to_list(Grid(
-    left = 70,
-    right = 24,
-    top = top,
-    bottom = bottom,
-    contain_label = FALSE
-  ))
-  grid[["outerBoundsMode"]] <- "none"
-  series <- list()
-  if (config@diagonal) {
-    series[[1L]] <- LineSeries(
+  diagonal <- if (config@diagonal) {
+    list(LineSeries(
       data = list(c(0, 0), c(1, 1)),
       show_symbol = FALSE,
       silent = TRUE,
@@ -597,124 +310,7 @@ method(roc_option, ROCConfig) <- function(config, data) {
         width = 1
       ),
       z = 1
-    )
-  }
-  for (curve in curves) {
-    id <- curve[["group"]]
-    g <- groups[[id]]
-    color_id <- if (length(classes) > 1L) {
-      match(g[["class"]], classes)
-    } else {
-      match(g[["split"]], splits)
-    }
-    color <- if (!is.null(config@palette)) {
-      config@palette[[(color_id - 1L) %% length(config@palette) + 1L]]
-    } else {
-      NULL
-    }
-    points <- lapply(seq_along(curve[["fpr"]]), function(j) {
-      list(
-        unname(curve[["fpr"]][[j]]),
-        unname(curve[["tpr"]][[j]]),
-        if (is.na(curve[["auc"]])) NULL else curve[["auc"]],
-        curve[["fold"]],
-        curve[["omitted"]],
-        fmt(curve[["fpr"]][[j]]),
-        fmt(curve[["tpr"]][[j]]),
-        fmt(curve[["auc"]])
-      )
-    })
-    s <- to_list(LineSeries(
-      name = labels[[id]],
-      data = points,
-      smooth = FALSE,
-      step = FALSE,
-      show_symbol = TRUE,
-      symbol = "circle",
-      symbol_size = 8,
-      connect_nulls = FALSE,
-      clip = TRUE,
-      line_style = LineStyle(
-        color = color,
-        width = config@line_width,
-        opacity = if (per_fold) config@fold_opacity else 1,
-        type = c("solid", "dashed", "dotted")[[
-          (match(g[["split"]], splits) - 1L) %% 3L + 1L
-        ]]
-      ),
-      item_style = ItemStyle(color = color, opacity = 0),
-      z = 3
     ))
-    # Native transparent symbols provide point hit targets for item tooltips.
-    # Only the hovered point becomes visible; unhovered charts and SVG retain
-    # the line-only appearance. LineSeriesOption inherits emphasis from
-    # SeriesOption (ECharts util/types.ts); no browser-only handler is required.
-    s[["emphasis"]] <- list(itemStyle = list(opacity = 1))
-    s[["dimensions"]] <- as.list(c(
-      "FPR",
-      "TPR",
-      "AUC",
-      "Resample",
-      "Missing pairs"
-    ))
-    # DimensionDefinition (ECharts util/types.ts) separates display text from
-    # full-precision values. Ordinal labels survive JSON without callbacks.
-    # spec: draw/first-cran-release#roc-views
-    s[["dimensions"]] <- c(
-      s[["dimensions"]],
-      lapply(c("FPR", "TPR", "AUC"), function(label) {
-        list(
-          name = paste(label, "label"),
-          displayName = label,
-          type = "ordinal"
-        )
-      })
-    )
-    s[["encode"]] <- list(
-      x = 0L,
-      y = 1L,
-      tooltip = as.list(c(5L, 6L, 7L, 3L))
-    )
-    series[[length(series) + 1L]] <- s
   }
-  EChartsOption(
-    title = Title(
-      text = config@title,
-      left = "center",
-      text_align = "center"
-    ),
-    grid = grid,
-    x_axis = Axis(
-      type = "value",
-      min = 0,
-      max = 1,
-      name = config@xlab,
-      name_location = "middle",
-      name_gap = 30
-    ),
-    y_axis = Axis(
-      type = "value",
-      min = 0,
-      max = 1,
-      name = config@ylab,
-      name_location = "middle",
-      name_gap = 45
-    ),
-    legend = Legend(
-      show = config@legend,
-      orient = "horizontal",
-      # Shared render hints position this native legend after grid measurement.
-      padding = 0,
-      item_gap = 6,
-      icon = "roundRect",
-      item_width = 20,
-      item_height = 3,
-      # Legend keys stay visible independently of transparent hover targets.
-      item_style = ItemStyle(opacity = 1),
-      data = as.list(legend_names),
-      text_style = TextStyle(font_size = 12, line_height = 14)
-    ),
-    tooltip = Tooltip(trigger = "item", confine = TRUE),
-    series = series
-  )
+  curve_option(config, roc_data(config, data), before = diagonal)
 }

@@ -16,6 +16,8 @@ vector inputs.}
 }
 \value{
 Data frame with \code{true}, \code{predicted}, and optional \code{sample} columns.
+A factor \code{group} remains a factor in \code{sample}, so its levels set the group
+order.
 }
 \description{
 Named lists are matched by name; unnamed lists are matched by position.

@@ -68,7 +68,8 @@ title. A title does not add a missing legend.}
 
 \item{filename}{Optional Character: Static output path, currently SVG.}
 
-\item{group}{Optional vector: One display-group label per outcome; unset uses
+\item{group}{Optional vector: One display-group label per outcome, ordered by
+factor level, or by first appearance for other vectors; unset uses
 significance and direction. Missing groups omit marks but retain the testing family.}
 
 \item{zoom}{Logical: Enable Shift+wheel zoom and drag panning; see

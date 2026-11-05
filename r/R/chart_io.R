@@ -47,6 +47,7 @@ chart_registry <- function() {
       setup = "setup_CalibrationConfig"
     ),
     roc = list(cls = ROCConfig, setup = "setup_ROCConfig"),
+    pr = list(cls = PRConfig, setup = "setup_PRConfig"),
     scatter = list(cls = ScatterConfig, setup = "setup_ScatterConfig"),
     confusion = list(cls = ConfusionConfig, setup = "setup_ConfusionConfig"),
     significance = list(

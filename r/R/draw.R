@@ -349,8 +349,8 @@ render_widget <- function(
 #' Supported [ChartConfig] subclasses are [A3Config], [BarConfig],
 #' [BoxplotConfig], [CalibrationConfig], [ChoroplethConfig], [ConfusionConfig],
 #' [DensityConfig], [GanttConfig], [HeatmapConfig], [HistogramConfig],
-#' [LineConfig], [MermaidConfig], [NetworkConfig], [PieConfig], [ROCConfig],
-#' [SankeyConfig],
+#' [LineConfig], [MermaidConfig], [NetworkConfig], [PieConfig], [PRConfig],
+#' [ROCConfig], [SankeyConfig],
 #' [ScatterConfig], [Scatter3DConfig], [SignificanceConfig], [SpectrogramConfig],
 #' [SurvivalConfig], and [TimeSeriesConfig]. Use their `setup_*()` functions to
 #' create configurations, then pass the data to `draw()` with `data =` or set
@@ -905,11 +905,12 @@ line_option <- function(
       )
     }
     # Points with a missing group belong to no line.
-    groups <- unique(group[!is.na(group)])
+    groups <- group_levels(group)
+    group <- as.character(group)
     series <- lapply(seq_along(groups), function(i) {
       idx <- which(!is.na(group) & group == groups[[i]])
       LineSeries(
-        name = as.character(groups[[i]]),
+        name = groups[[i]],
         data = pair_xy(
           y[idx],
           x_vals = if (x_type == "category") x[idx] else x_num[idx],
@@ -1069,7 +1070,8 @@ line_option <- function(
 #' @param group Optional Atomic vector or single-column data frame: Grouping
 #'   variable, one value per point. Splits a single `y` vector into one line per level, named by the level, as
 #'   [draw_scatter()] does for points. Cannot be combined with a list `y` or
-#'   with `blocks`. Points whose group is `NA` are dropped.
+#'   with `blocks`. Points whose group is `NA` are dropped. Lines and legend
+#'   entries follow factor level order, or first appearance for other vectors.
 #' @param smooth Logical: Whether to smooth lines.
 #' @param area Logical: Whether to show area fill.
 #' @param points Logical: Whether to show point markers on each data value.
@@ -1826,7 +1828,8 @@ scatter_option <- function(
   }
 
   if (!is.null(group)) {
-    groups <- unique(group)
+    groups <- group_levels(group)
+    group <- as.character(group)
     # Assign explicit colors so scatter and fit/CI match.
     # Use the caller-supplied palette when provided, else fall back to rtemis_colors.
     palette <- palette_colors(palette %||% rtemis_colors)
@@ -1841,7 +1844,7 @@ scatter_option <- function(
         if (!is.null(hover)) hover[idx]
       )
       ScatterSeries(
-        name = as.character(g),
+        name = g,
         data = dat,
         item_style = ItemStyle(color = group_colors[i], opacity = point_alpha)
       )
@@ -1868,7 +1871,7 @@ scatter_option <- function(
           y[idx],
           fit,
           n_fit,
-          as.character(g),
+          g,
           group_colors[i]
         )
         if (rsq || !is.null(fit_name)) {
@@ -2038,7 +2041,8 @@ scatter_option <- function(
 #' @param y Numeric: Y values.
 #' @param size Optional Numeric: Symbol sizes.
 #' @param group Optional Atomic vector or single-column data frame: Grouping
-#'   variable for multiple series.
+#'   variable for multiple series. Series, colors, and legend entries follow
+#'   factor level order, or first appearance for other vectors.
 #' @param fit Optional Character: Model fitted to `y` on `x` and drawn as a line.
 #'   `"glm"` uses [stats::glm()] and `"gam"` uses [mgcv::gam()]. Any other name,
 #'   matched case-insensitively, is an rtemis supervised learning algorithm,
@@ -2375,7 +2379,8 @@ draw_pie <- function(
 #'   list creates one density trace per element; with `group`, each list
 #'   element is split by group into separate traces.
 #' @param group Optional Atomic vector or single-column data frame: Grouping
-#'   variable for multiple density traces.
+#'   variable for multiple density traces. Traces, colors, and legend entries
+#'   follow factor level order, or first appearance for other vectors.
 #' @param n Integer `[2, Inf)`: Number of density evaluation points.
 #' @param bw Character or Numeric: Bandwidth selector (`"nrd0"`, `"nrd"`,
 #'   `"ucv"`, `"bcv"`, `"SJ"`, `"SJ-ste"`, `"SJ-dpi"`). Numeric input is
@@ -2500,7 +2505,8 @@ draw_density <- function(
 #' @param x Numeric or List: Values or named numeric vectors to bin.
 #' @inheritParams draw_density mode order
 #' @param group Optional Atomic vector or single-column data frame: Grouping
-#'   variable for multiple series.
+#'   variable for multiple series. Series, colors, and legend entries follow
+#'   factor level order, or first appearance for other vectors.
 #' @param breaks Numeric, Character, or Numeric vector: Binning method. A single number (number of bins), a character
 #'   string naming an algorithm (e.g. `"Sturges"`, `"Scott"`, `"FD"`), or a
 #'   numeric vector of break points. Numeric forms are normalized to `bins` or

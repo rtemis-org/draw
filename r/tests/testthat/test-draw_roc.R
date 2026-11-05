@@ -100,15 +100,17 @@ test_that("ROC normalizes class columns and pairs input sets by name", {
 test_that("ROC table validation preserves vertical vertices and supplied full-resolution AUC", {
   d <- roc_test_records()
   out <- roc_data(roc_test_config(), d[nrow(d):1, ])
-  expect_equal(out[["curves"]][[1]][["fpr"]], d[["fpr"]])
-  expect_equal(out[["curves"]][[1]][["tpr"]], d[["tpr"]])
+  expect_equal(out[["curves"]][[1]][["x"]], d[["fpr"]])
+  expect_equal(out[["curves"]][[1]][["y"]], d[["tpr"]])
   coarse <- data.frame(fpr = c(0, 1), tpr = c(0, 1), auc = c(.875, .875))
   expect_equal(
-    roc_data(setup_ROCConfig(auc = "auc"), coarse)[["curves"]][[1]][["auc"]],
+    roc_data(setup_ROCConfig(auc = "auc"), coarse)[["curves"]][[1]][[
+      "summary"
+    ]],
     .875
   )
   expect_equal(
-    roc_data(setup_ROCConfig(), coarse)[["curves"]][[1]][["auc"]],
+    roc_data(setup_ROCConfig(), coarse)[["curves"]][[1]][["summary"]],
     .5
   )
   for (edit in list(

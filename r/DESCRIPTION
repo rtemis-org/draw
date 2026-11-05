@@ -1,7 +1,7 @@
 Package: rtemis.draw
 Title: Schema-Driven Interactive Charts, Networks, Maps, and Diagrams
-Version: 0.5.4
-Date: 2026-11-02
+Version: 0.5.5
+Date: 2026-11-03
 Authors@R:
     person(given = "E.D.", family = "Gennatas", role = c("aut", "cre", "cph"),
            email = "gennatas@gmail.com",
@@ -111,8 +111,11 @@ Collate:
     'draw_significance.R'
     'config_confusion.R'
     'draw_confusion.R'
+    'curve_chart.R'
     'config_roc.R'
     'draw_roc.R'
+    'config_pr.R'
+    'draw_pr.R'
     'config_survival.R'
     'draw_survival.R'
     'draw_survfit.R'

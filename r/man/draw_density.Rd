@@ -39,7 +39,8 @@ list creates one density trace per element; with \code{group}, each list
 element is split by group into separate traces.}
 
 \item{group}{Optional Atomic vector or single-column data frame: Grouping
-variable for multiple density traces.}
+variable for multiple density traces. Traces, colors, and legend entries
+follow factor level order, or first appearance for other vectors.}
 
 \item{n}{Integer \verb{[2, Inf)}: Number of density evaluation points.}
 

@@ -37,6 +37,7 @@ chart_descriptions <- c(
   survival = "Precomputed survival curves with confidence bands, censor ticks, annotations, and explicit risk records.",
   calibration = "Binary probability calibration with explicit binning, Brier scores, and probability rugs.",
   roc = "Receiver operating characteristic curves with pooled or per-resample AUC summaries.",
+  pr = "Precision-recall curves with pooled or per-resample average precision summaries and prevalence baselines.",
   confusion = "Confusion counts and per-class summaries in one or more panels.",
   significance = "Volcano or categorical significance plots of estimates and adjusted p-values.",
   scatter = paste0(

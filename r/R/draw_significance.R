@@ -71,14 +71,14 @@ method(significance_data, SignificanceConfig) <- function(config, data) {
     config_column(data, config@group, "group"),
     length(p)
   )
-  if (!is.null(display_group)) {
-    display_group <- as.character(display_group)
-    if (any(!is.na(display_group) & !nzchar(display_group))) {
-      abort(
-        "Supply nonempty display-group labels or NA.",
-        class = c("rtemis_value_error", "rtemis_input_error")
-      )
-    }
+  if (
+    !is.null(display_group) &&
+      any(!is.na(display_group) & !nzchar(as.character(display_group)))
+  ) {
+    abort(
+      "Supply nonempty display-group labels or NA.",
+      class = c("rtemis_value_error", "rtemis_input_error")
+    )
   }
   n_tests <- config@n_tests %||% length(p)
   if (n_tests < length(p)) {
@@ -209,8 +209,8 @@ method(significance_option, SignificanceConfig) <- function(
   }
   group_index <- d[["group"]]
   if (!is.null(config@group)) {
-    groups <- unique(d[["display_group"]][keep])
-    group_index <- match(d[["display_group"]], groups)
+    groups <- group_levels(d[["display_group"]][keep])
+    group_index <- match(as.character(d[["display_group"]]), groups)
     # NULL leaves palette ownership with the active browser/export theme.
     colors <- if (is.null(config@palette)) {
       rep(list(NULL), length(groups))
@@ -509,7 +509,8 @@ method(significance_input, class_any) <- function(
 #' @param x Numeric vector: Signed estimates; NA values have no plotted mark.
 #' @param pvals Numeric vector: Raw p-values in `[0, 1]`, or NA.
 #' @param xnames Optional Character vector: One outcome label per estimate.
-#' @param group Optional vector: One display-group label per outcome; unset uses
+#' @param group Optional vector: One display-group label per outcome, ordered by
+#'   factor level, or by first appearance for other vectors; unset uses
 #'   significance and direction. Missing groups omit marks but retain the testing family.
 #' @inheritParams SignificanceConfig
 #' @param ... Additional named settings for [setup_SignificanceConfig()], such as
@@ -584,7 +585,8 @@ draw_volcano <- function(
 #' @param x Numeric vector: Signed estimates; NA values have no plotted mark.
 #' @param pvals Numeric vector: Raw p-values in `[0, 1]`, or NA.
 #' @param xnames Optional Character vector: One outcome label per estimate.
-#' @param group Optional vector: One display-group label per outcome; unset uses
+#' @param group Optional vector: One display-group label per outcome, ordered by
+#'   factor level, or by first appearance for other vectors; unset uses
 #'   significance and direction. Missing groups omit marks but retain the testing family.
 #' @inheritParams SignificanceConfig
 #' @param ... Additional named settings for [setup_SignificanceConfig()], such as

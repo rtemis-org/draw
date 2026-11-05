@@ -30,7 +30,8 @@ draw_calibration(
 \item{...}{Additional named settings for \code{\link[=setup_CalibrationConfig]{setup_CalibrationConfig()}}.}
 
 \item{group}{Optional Character: Group column for observation records. When
-omitted, a column named \code{group} is used if present; explicit NULL pools rows.}
+omitted, a column named \code{group} is used if present; explicit NULL pools rows.
+Curves follow factor level order, or first appearance for other columns.}
 
 \item{legend_position}{Character \{"top", "bottom", "left", "right",
 "top-left", "top-right", "bottom-left", "bottom-right"\}: Legend anchor.

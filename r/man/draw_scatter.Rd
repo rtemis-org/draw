@@ -51,7 +51,8 @@ draw_scatter(
 \item{size}{Optional Numeric: Symbol sizes.}
 
 \item{group}{Optional Atomic vector or single-column data frame: Grouping
-variable for multiple series.}
+variable for multiple series. Series, colors, and legend entries follow
+factor level order, or first appearance for other vectors.}
 
 \item{fit}{Optional Character: Model fitted to \code{y} on \code{x} and drawn as a line.
 \code{"glm"} uses \code{\link[stats:glm]{stats::glm()}} and \code{"gam"} uses \code{\link[mgcv:gam]{mgcv::gam()}}. Any other name,

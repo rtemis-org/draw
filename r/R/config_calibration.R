@@ -252,18 +252,4 @@ method(compile, CalibrationConfig) <- function(
   check_dots_empty(...)
   calibration_option(config, data)
 }
-method(render_meta, CalibrationConfig) <- function(config, option) {
-  if (!config@square) {
-    return(list())
-  }
-  grid <- option@grid
-  list(
-    aspect = list(
-      ratio = 1,
-      leftPx = grid[["left"]],
-      rightPx = grid[["right"]],
-      topPx = grid[["top"]],
-      botPx = grid[["bottom"]]
-    )
-  )
-}
+method(render_meta, CalibrationConfig) <- square_render_meta

@@ -137,7 +137,7 @@ gantt_option <- function(
   palette <- palette_colors(palette %||% rtemis_colors)
   if (!is.null(group)) {
     group_vals <- as.character(tasks[[group]])
-    levels_g <- unique(group_vals)
+    levels_g <- group_levels(tasks[[group]])
     group_colors <- unname(rep_len(palette, length(levels_g)))
   } else {
     group_vals <- rep_len("", length(labels))
@@ -275,7 +275,8 @@ gantt_option <- function(
 #'   task bar. Must contain columns `label` (row / category), `start`, and
 #'   `end`. Repeated `label` values place multiple bars on the same row.
 #' @param group Optional Character: Name of a column in `tasks` whose values
-#'   color the bars and produce a legend. When `NULL`, all bars share one color.
+#'   color the bars and produce a legend, ordered by factor level, or by first
+#'   appearance for other columns. When `NULL`, all bars share one color.
 #' @param axis_type Character \{"value", "time"\}: Type of the x-axis. Use
 #'   `"value"` for numeric offsets (e.g. milliseconds from start) and `"time"`
 #'   for absolute timestamps; `POSIXct`/`Date` `start`/`end` columns are

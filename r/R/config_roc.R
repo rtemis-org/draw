@@ -228,52 +228,5 @@ method(compile, ROCConfig) <- function(config, data = NULL, theme = NULL, ...) {
   roc_option(config, data)
 }
 
-method(render_meta, ROCConfig) <- function(config, option) {
-  meta <- list()
-  if (!config@square) {
-    return(meta)
-  }
-  grid <- option@grid
-  meta[["aspect"]] <- list(
-    ratio = 1,
-    leftPx = grid[["left"]],
-    rightPx = grid[["right"]],
-    topPx = grid[["top"]],
-    botPx = grid[["bottom"]]
-  )
-  meta
-}
-
-#' Render a ROC config with shared legend layout
-#' @inheritParams draw
-#' @param data Optional Data frame: Long ROC records.
-#' @return An ECharts htmlwidget.
-#' @keywords internal
-#' @noRd
-method(draw, ROCConfig) <- function(
-  option,
-  theme = NULL,
-  width = NULL,
-  height = NULL,
-  element_id = NULL,
-  filename = NULL,
-  animation = NULL,
-  ...,
-  data = NULL
-) {
-  built <- compile(option, data = data, theme = theme)
-  grid <- built@grid
-  width <- width %||% (480 + grid[["left"]] + grid[["right"]])
-  height <- height %||% (480 + grid[["top"]] + grid[["bottom"]])
-  draw(
-    built,
-    theme = theme,
-    width = width,
-    height = height,
-    element_id = element_id,
-    filename = filename,
-    animation = animation,
-    meta = render_meta(option, built),
-    ...
-  )
-}
+method(render_meta, ROCConfig) <- square_render_meta
+method(draw, ROCConfig) <- draw_curve_config

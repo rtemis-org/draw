@@ -245,7 +245,7 @@ method(timeseries_samples, class_any) <- function(x, y, group = NULL) {
     groups <- if (is.null(group)) {
       labels[[i]]
     } else {
-      unique(as.character(group[!is.na(group)]))
+      group_levels(group)
     }
     for (label in groups) {
       keep <- which(
@@ -463,7 +463,8 @@ method(compile, TimeSeriesConfig) <- function(
 #' Draw Time Series with Rolling Summaries
 #' @param x Numeric or named list: Observations.
 #' @param time Numeric, Date, POSIXct, or list: Shared or per-series times.
-#' @param group Optional vector: Group identities for one series.
+#' @param group Optional vector: Group identities for one series, ordered by
+#'   factor level, or by first appearance for other vectors.
 #' @inheritParams TimeSeriesConfig
 #' @param ... Additional settings passed to [setup_TimeSeriesConfig()].
 #' @inheritParams draw_line theme width height element_id filename
