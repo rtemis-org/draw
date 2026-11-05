@@ -22,7 +22,8 @@ draw_scatter3d(
 
 \item{y, z}{Optional Numeric: Y and Z values for vector x.}
 
-\item{group}{Optional vector: Group identities.}
+\item{group}{Optional vector: Group identities, ordered by factor level, or
+by first appearance for other vectors.}
 
 \item{...}{Additional settings passed to \code{\link[=setup_Scatter3DConfig]{setup_Scatter3DConfig()}}.}
 

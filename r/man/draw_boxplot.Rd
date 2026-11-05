@@ -53,8 +53,9 @@ category labels. With \code{group}, every vector must match its length.}
 grouped vector uses group labels instead.}
 
 \item{group}{Optional Atomic vector or single-column data frame: Group
-identities in first-appearance order. The column name does not add a legend
-or heading; both input forms produce the same plot.}
+identities, ordered by factor level, or by first appearance for other
+vectors. The column name does not add a legend or heading; both input forms
+produce the same plot.}
 
 \item{horizontal}{Logical: Draw horizontal boxes.}
 

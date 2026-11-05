@@ -152,8 +152,9 @@ method(calibration_data, CalibrationConfig) <- function(config, data) {
       class = c("rtemis_value_error", "rtemis_input_error")
     )
   }
+  labels <- group_levels(group)
   group <- as.character(group)
-  lapply(unique(group), function(label) {
+  lapply(labels, function(label) {
     index <- which(group == label)
     keep <- !is.na(observed[index]) & !is.na(probability[index])
     if ((!config@na_rm && any(!keep)) || !any(keep)) {
@@ -387,6 +388,7 @@ method(calibration_option, CalibrationConfig) <- function(config, data) {
 #' @param ... Additional named settings for [setup_CalibrationConfig()].
 #' @param group Optional Character: Group column for observation records. When
 #'   omitted, a column named `group` is used if present; explicit NULL pools rows.
+#'   Curves follow factor level order, or first appearance for other columns.
 #' @inheritParams draw_roc
 #' @return An ECharts htmlwidget with vector SVG export.
 #' @export

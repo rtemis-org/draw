@@ -298,7 +298,7 @@ method(scatter3d_option, class_any) <- function(x, y, z, group, config) {
       class = c("rtemis_null_input", "rtemis_input_error")
     )
   }
-  groups <- unique(as.character(group[keep]))
+  groups <- group_levels(group[keep])
   opacity <- config@opacity %||% scatter3d_opacity(config@mode, sum(keep))
   series <- list()
   for (g in groups) {
@@ -342,7 +342,6 @@ method(scatter3d_option, class_any) <- function(x, y, z, group, config) {
   }
   values <- lapply(values, `[`, keep)
   group <- as.character(group[keep])
-  groups <- unique(group)
   # One surface per group, named after it: legend selection and the palette
   # color follow the group. The z axis extends to include the predictions.
   surfaces <- list()
@@ -484,7 +483,8 @@ fit_surface <- function(x, y, z, name, config) {
 #' can supply the coordinates in its first three columns, which must be numeric.
 #' @param x Numeric, matrix, or data frame: X values, or three coordinate columns.
 #' @param y,z Optional Numeric: Y and Z values for vector x.
-#' @param group Optional vector: Group identities.
+#' @param group Optional vector: Group identities, ordered by factor level, or
+#'   by first appearance for other vectors.
 #' @param ... Additional settings passed to [setup_Scatter3DConfig()].
 #' @inheritParams draw_line theme width height element_id filename
 #' @return htmlwidget: Interactive, exportable 3D drawing.

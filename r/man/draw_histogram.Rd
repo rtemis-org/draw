@@ -45,7 +45,8 @@ draw_histogram(
 \item{x}{Numeric or List: Values or named numeric vectors to bin.}
 
 \item{group}{Optional Atomic vector or single-column data frame: Grouping
-variable for multiple series.}
+variable for multiple series. Series, colors, and legend entries follow
+factor level order, or first appearance for other vectors.}
 
 \item{breaks}{Numeric, Character, or Numeric vector: Binning method. A single number (number of bins), a character
 string naming an algorithm (e.g. \code{"Sturges"}, \code{"Scott"}, \code{"FD"}), or a

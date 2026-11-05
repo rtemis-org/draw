@@ -48,6 +48,7 @@ method(survival_data, SurvivalConfig) <- function(config, data) {
       class = c("rtemis_value_error", "rtemis_input_error")
     )
   }
+  labels <- group_levels(d[["group"]])
   d[["group"]] <- as.character(d[["group"]])
   for (nm in setdiff(fields, "group")) {
     v <- d[[nm]]
@@ -92,7 +93,6 @@ method(survival_data, SurvivalConfig) <- function(config, data) {
     )
   }
   d <- as.data.frame(d[!vapply(d, is.null, logical(1))])
-  labels <- unique(d[["group"]])
   groups <- lapply(labels, function(label) {
     g <- d[d[["group"]] == label, , drop = FALSE]
     g <- g[order(g[["time"]]), , drop = FALSE]

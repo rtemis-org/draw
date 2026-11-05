@@ -35,7 +35,8 @@ task bar. Must contain columns \code{label} (row / category), \code{start}, and
 \code{end}. Repeated \code{label} values place multiple bars on the same row.}
 
 \item{group}{Optional Character: Name of a column in \code{tasks} whose values
-color the bars and produce a legend. When \code{NULL}, all bars share one color.}
+color the bars and produce a legend, ordered by factor level, or by first
+appearance for other columns. When \code{NULL}, all bars share one color.}
 
 \item{axis_type}{Character \{"value", "time"\}: Type of the x-axis. Use
 \code{"value"} for numeric offsets (e.g. milliseconds from start) and \code{"time"}

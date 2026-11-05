@@ -80,6 +80,25 @@ method(group_values, class_any) <- function(group, sizes = NULL) {
   group
 }
 
+#' Order group identities for series and legends
+#'
+#' A factor yields the levels present in `group`, in level order. Any other
+#' vector yields its distinct values in order of first appearance. Missing
+#' values are excluded. Filter `group` to the drawn rows before the call, so that
+#' a level without drawn rows produces no series.
+#'
+#' @param group Atomic vector: Group identities.
+#' @return Character: Ordered group labels.
+#' @keywords internal
+#' @noRd
+group_levels <- new_generic("group_levels", "group")
+method(group_levels, class_factor) <- function(group) {
+  levels(droplevels(group[!is.na(group)]))
+}
+method(group_levels, class_any) <- function(group) {
+  unique(as.character(group[!is.na(group)]))
+}
+
 # -- List utilities --------------------------------------------------------------
 
 #' Drop NULL values from a list

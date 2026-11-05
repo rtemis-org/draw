@@ -26,7 +26,8 @@ draw_ts(
 
 \item{window}{Integer \verb{[1, Inf)}: Number of observations per rolling window.}
 
-\item{group}{Optional vector: Group identities for one series.}
+\item{group}{Optional vector: Group identities for one series, ordered by
+factor level, or by first appearance for other vectors.}
 
 \item{roll_fn}{Character \verb{\{"none", "mean", "median", "min", "max", "sum"\}}: Summary.}
 

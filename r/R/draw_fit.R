@@ -15,6 +15,8 @@
 #'   vector inputs.
 #'
 #' @return Data frame with `true`, `predicted`, and optional `sample` columns.
+#'   A factor `group` remains a factor in `sample`, so its levels set the group
+#'   order.
 #' @export
 #' @examples
 #' true_pred_data(1:3, c(1.1, 1.9, 3.2))
@@ -124,7 +126,11 @@ method(true_pred_data, list(class_any, class_any)) <- function(
     }
     out <- data.frame(true = a[keep], predicted = b[keep])
     if (!is.null(sample)) {
-      out[["sample"]] <- as.character(sample[keep])
+      out[["sample"]] <- if (is.factor(sample)) {
+        sample[keep]
+      } else {
+        as.character(sample[keep])
+      }
     }
     out
   })

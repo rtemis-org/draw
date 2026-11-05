@@ -176,7 +176,7 @@ method(boxplot_option, class_any) <- function(
     )
   }
   # Reject invalid values before filtering missing groups, including Inf in
-  # otherwise excluded rows. Group order follows first appearance.
+  # otherwise excluded rows. Group order follows `group_levels()`.
   x <- lapply(x, boxplot_values, na_rm = na_rm)
   x <- lapply(x, boxplot_transform, transform = transform)
   sizes <- lengths(x)
@@ -209,7 +209,7 @@ method(boxplot_option, class_any) <- function(
   }
   grouped <- !is.null(group)
   multi <- grouped && length(x) > 1L
-  levels <- if (grouped) unique(as.character(group[!is.na(group)])) else NULL
+  levels <- if (grouped) group_levels(group) else NULL
   categories <- if (grouped && !multi) levels else labels %||% variable_names
   if (
     length(categories) != if (grouped && !multi) length(levels) else length(x)
@@ -571,8 +571,9 @@ method(boxplot_option, class_any) <- function(
 #' @param labels Optional Character: One category label per vector. A single
 #'   grouped vector uses group labels instead.
 #' @param group Optional Atomic vector or single-column data frame: Group
-#'   identities in first-appearance order. The column name does not add a legend
-#'   or heading; both input forms produce the same plot.
+#'   identities, ordered by factor level, or by first appearance for other
+#'   vectors. The column name does not add a legend or heading; both input forms
+#'   produce the same plot.
 #' @param observation Optional Atomic vector: Observation identifiers in tooltips,
 #'   aligned to every input vector. Required for pairing; otherwise unset uses
 #'   original row numbers.

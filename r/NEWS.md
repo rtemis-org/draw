@@ -1,5 +1,9 @@
 # rtemis.draw news
 
+## rtemis.draw 0.5.5
+
+* Grouped charts order a factor `group` by its levels, in series, colors, and legends, and drop levels without drawn rows; other vectors keep first-appearance order. `true_pred_data()` returns a factor `group` as a factor `sample`.
+
 ## rtemis.draw 0.5.4
 
 * `draw_mermaid()` renders Mermaid diagram text with 'Pele' as a scrolling SVG widget that follows the light or dark theme and the palette, highlights selected nodes with `node_color` and `fill_alpha`, and exports it to SVG; `MermaidConfig` and `setup_MermaidConfig()` describe a diagram for `draw()` and the chart schemas, reading `.mmd` files through `dat_path`.

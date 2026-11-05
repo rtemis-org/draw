@@ -61,7 +61,7 @@ method(distribution_samples, class_any) <- function(
   levels <- if (is.null(group)) {
     NULL
   } else {
-    unique(as.character(group[!is.na(group)]))
+    group_levels(group)
   }
   result <- list()
   for (i in seq_along(x)) {
