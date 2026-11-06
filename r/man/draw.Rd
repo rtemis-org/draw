@@ -24,9 +24,11 @@ All concrete chart configuration classes listed below are supported.}
 \item{theme}{Optional \link{Theme}, list, or \code{NA}: Theme override. \code{NULL} enables
 light/dark auto-detection; \code{NA} disables theming. Applied to every backend.}
 
-\item{width}{Optional Character or Numeric: Widget width.}
+\item{width}{Optional Character or Numeric: Widget width. Unset follows the
+width of the viewer, browser, or document column.}
 
-\item{height}{Optional Character or Numeric: Widget height.}
+\item{height}{Optional Character or Numeric: Widget height. With \code{width}
+also unset, the widget fills the viewer or browser window.}
 
 \item{element_id}{Optional Character: Explicit element ID.}
 
@@ -65,8 +67,13 @@ Use it for charts whose \emph{pixel} geometry carries meaning -- most often
 equal axis scaling, where one data unit must be the same number of
 pixels on both axes and \code{ratio} is therefore the y range over the
 x range. ECharts has no equal-aspect option, and R cannot know the
-container width, so neither side can enforce this alone.
-}}
+container width, so neither side can enforce this alone. A widget that
+fills its host fits the box within both host dimensions.
+}
+
+One \code{meta} field is read by \code{\link[=save_drawing]{save_drawing()}}: \code{exportSize}, a named list
+with \code{width} and \code{height}, is the SVG size in pixels of a widget that
+follows its container.}
 }
 \value{
 htmlwidget: Widget object.

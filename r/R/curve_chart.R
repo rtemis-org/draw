@@ -583,8 +583,16 @@ draw_curve_config <- function(
 ) {
   built <- compile(option, data = data, theme = theme)
   grid <- built@grid
-  width <- width %||% (480 + grid[["left"]] + grid[["right"]])
-  height <- height %||% (480 + grid[["top"]] + grid[["bottom"]])
+  export_size <- list(
+    width = 480 + grid[["left"]] + grid[["right"]],
+    height = 480 + grid[["top"]] + grid[["bottom"]]
+  )
+  # Aspect charts derive their height from the width, so a stated dimension
+  # takes the natural size of the other. Fully unset, the chart fills the host.
+  if (!is.null(width) || !is.null(height)) {
+    width <- width %||% export_size[["width"]]
+    height <- height %||% export_size[["height"]]
+  }
   draw(
     built,
     theme = theme,
@@ -593,7 +601,7 @@ draw_curve_config <- function(
     element_id = element_id,
     filename = filename,
     animation = animation,
-    meta = render_meta(option, built),
+    meta = c(render_meta(option, built), list(exportSize = export_size)),
     ...
   )
 }

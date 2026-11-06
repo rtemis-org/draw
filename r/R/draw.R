@@ -255,6 +255,13 @@ render_widget <- function(
     )
   )
 
+  # htmlwidgets stops filling the host once either dimension is set and sizes an
+  # unset width at 960 pixels, so an unset width beside a set height follows the
+  # container.
+  if (is.null(width) && !is.null(height)) {
+    width <- "100%"
+  }
+
   # Respect explicit pixel dimensions: when a numeric width/height is given,
   # disable browser.fill/viewer.fill so the widget keeps the computed size
   # instead of expanding to fill the container.
@@ -305,8 +312,10 @@ render_widget <- function(
 #'   All concrete chart configuration classes listed below are supported.
 #' @param theme Optional [Theme], list, or `NA`: Theme override. `NULL` enables
 #'   light/dark auto-detection; `NA` disables theming. Applied to every backend.
-#' @param width Optional Character or Numeric: Widget width.
-#' @param height Optional Character or Numeric: Widget height.
+#' @param width Optional Character or Numeric: Widget width. Unset follows the
+#'   width of the viewer, browser, or document column.
+#' @param height Optional Character or Numeric: Widget height. With `width`
+#'   also unset, the widget fills the viewer or browser window.
 #' @param element_id Optional Character: Explicit element ID.
 #' @param filename Optional Character: If provided, the widget is also written to
 #'   this file via [save_drawing()]. Extension determines the format (currently
@@ -336,7 +345,12 @@ render_widget <- function(
 #'     equal axis scaling, where one data unit must be the same number of
 #'     pixels on both axes and `ratio` is therefore the y range over the
 #'     x range. ECharts has no equal-aspect option, and R cannot know the
-#'     container width, so neither side can enforce this alone.
+#'     container width, so neither side can enforce this alone. A widget that
+#'     fills its host fits the box within both host dimensions.
+#'
+#'   One `meta` field is read by [save_drawing()]: `exportSize`, a named list
+#'   with `width` and `height`, is the SVG size in pixels of a widget that
+#'   follows its container.
 #' @param animation Optional Logical: Whether ECharts animates the chart.
 #'   `NULL` (default) leaves ECharts' own default in place. `FALSE` disables
 #'   animation, which matters for charts with many points, where animating

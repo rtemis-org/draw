@@ -102,6 +102,10 @@ method(panel_payload, class_any) <- function(x) {
 #' legend selection is implied. SVG export includes all panels in one vector
 #' file and uses the same layout calculation as the browser.
 #'
+#' With `width` and `height` unset, the figure fills the viewer or browser
+#' window as a single chart does, and its rows share the window height. In a
+#' knitr document it spans the column at 360 pixels per row.
+#'
 #' Child widget widths and heights are replaced by equally sized layout cells.
 #' Fixed-aspect and square-cell heatmap grids fit within both cell dimensions.
 #' Dendrograms remain aligned with their heatmap. Give panels
@@ -116,8 +120,10 @@ method(panel_payload, class_any) <- function(x) {
 #' @param ncol,gap,padding See [PanelLayout].
 #' @param layout Optional PanelLayout: Complete layout overriding the three
 #'   convenience settings; do not supply both forms.
-#' @param width Optional Character or Numeric: Total figure width.
-#' @param height Optional Numeric: Total figure height. Unset allocates 360
+#' @param width Optional Character or Numeric: Total figure width. Unset follows
+#'   the host width. SVG export of an unset or relative width uses 900 pixels.
+#' @param height Optional Numeric: Total figure height. Unset with `width` also
+#'   unset fills the host. Otherwise, and for SVG export, unset allocates 360
 #'   pixels per row plus padding and gaps.
 #' @param element_id Optional Character: Figure DOM identifier.
 #' @param filename Optional Character: Export the complete figure with [save_drawing()].
@@ -132,7 +138,7 @@ draw_panels <- function(
   gap = 12,
   padding = 0,
   layout = NULL,
-  width = 900,
+  width = NULL,
   height = NULL,
   element_id = NULL,
   filename = NULL
@@ -173,8 +179,9 @@ draw_panels <- function(
       class = c("rtemis_type_error", "rtemis_input_error")
     )
   }
-  height <- height %||%
-    (rows * 360 + (rows - 1) * layout@gap + 2 * layout@padding)
+  natural_height <- rows * 360 + (rows - 1) * layout@gap + 2 * layout@padding
+  fills_host <- is.null(width) && is.null(height)
+  height <- height %||% natural_height
   if (
     !is.numeric(height) ||
       is.complex(height) ||
@@ -193,12 +200,27 @@ draw_panels <- function(
   }
   widget <- render_widget(
     "rtemis-draw",
-    list(panels = panels, layout = to_list(layout)),
+    list(
+      panels = panels,
+      layout = to_list(layout),
+      exportSize = list(
+        width = if (is.numeric(width)) width else 900,
+        height = height
+      )
+    ),
     theme = NA,
     width = width,
-    height = height,
+    height = if (!fills_host) height,
     element_id = element_id
   )
+  if (fills_host) {
+    # Document columns have no window height for the rows to share.
+    widget[["sizingPolicy"]][["knitr"]] <- list(
+      defaultWidth = "100%",
+      defaultHeight = natural_height,
+      figure = FALSE
+    )
+  }
   # Preserve optional backend dependencies (for example ECharts-GL) from children.
   widget[["dependencies"]] <- htmltools::resolveDependencies(c(
     widget[["dependencies"]],

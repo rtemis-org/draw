@@ -57,7 +57,8 @@ triangle, for a symmetric matrix.}
 \item{hclust_method}{Character: Linkage method for clustering.}
 
 \item{square_cells}{Optional Logical: Force square cells, sizing the
-container to match.}
+container to match. A filled viewer or browser window keeps its height and
+the grid fits within it.}
 
 \item{show_row_dendro, show_col_dendro}{Logical: Draw each dendrogram.}
 

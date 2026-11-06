@@ -430,6 +430,31 @@ test_that("static ROC export omits invisible hover symbols and retains its color
   expect_match(svg, 'stroke="#123456"', fixed = TRUE)
   expect_match(svg, "AUC 0.875", fixed = TRUE)
 })
+test_that("ROC and precision-recall curves take the same theme colors", {
+  skip_if_no_node()
+  labels <- list(
+    A = c("no", "yes", "no", "yes"),
+    B = c("yes", "no", "no", "yes")
+  )
+  scores <- list(A = c(.1, .8, .5, .6), B = c(.7, .2, .4, .3))
+  colors <- palette_colors(rtemis_colors)[1:2]
+  for (chart in list(draw_roc, draw_pr)) {
+    path <- tempfile(fileext = ".svg")
+    on.exit(unlink(path), add = TRUE)
+    save_drawing(chart(labels, scores, theme = theme_light()), path)
+    svg <- paste(readLines(path, warn = FALSE), collapse = "\n")
+    for (color in colors) {
+      expect_match(svg, paste0('stroke="', color, '"'), fixed = TRUE)
+    }
+    expect_no_match(
+      svg,
+      paste0('stroke="', palette_colors(rtemis_colors)[[3L]], '"'),
+      fixed = TRUE
+    )
+  }
+})
+
+
 test_that("ROC input rejects empty labels and mismatched probability sets", {
   for (bad in list(
     character(),

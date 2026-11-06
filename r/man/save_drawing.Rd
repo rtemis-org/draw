@@ -12,10 +12,12 @@ save_drawing(widget, filename, width = NULL, height = NULL)
 \item{filename}{Character scalar: Nonempty output path with an extension.}
 
 \item{width}{Optional Numeric scalar \verb{(0, Inf)}: Finite image width in pixels.
-Unset uses the widget's numeric width, or 800 for a relative/unspecified width.}
+Unset uses the widget's numeric width, then the export size declared by
+charts that follow their container, then 800.}
 
 \item{height}{Optional Numeric scalar \verb{(0, Inf)}: Finite image height in pixels.
-Unset uses the widget's numeric height, or 600 for a relative/unspecified height.}
+Unset uses the widget's numeric height, then the export size declared by
+charts that follow their container, then 600.}
 }
 \value{
 The \code{filename}, invisibly.
