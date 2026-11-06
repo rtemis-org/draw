@@ -10,7 +10,7 @@ draw_panels(
   gap = 12,
   padding = 0,
   layout = NULL,
-  width = 900,
+  width = NULL,
   height = NULL,
   element_id = NULL,
   filename = NULL
@@ -24,9 +24,11 @@ draw_panels(
 \item{layout}{Optional PanelLayout: Complete layout overriding the three
 convenience settings; do not supply both forms.}
 
-\item{width}{Optional Character or Numeric: Total figure width.}
+\item{width}{Optional Character or Numeric: Total figure width. Unset follows
+the host width. SVG export of an unset or relative width uses 900 pixels.}
 
-\item{height}{Optional Numeric: Total figure height. Unset allocates 360
+\item{height}{Optional Numeric: Total figure height. Unset with \code{width} also
+unset fills the host. Otherwise, and for SVG export, unset allocates 360
 pixels per row plus padding and gaps.}
 
 \item{element_id}{Optional Character: Figure DOM identifier.}
@@ -43,6 +45,10 @@ legend selection is implied. SVG export includes all panels in one vector
 file and uses the same layout calculation as the browser.
 }
 \details{
+With \code{width} and \code{height} unset, the figure fills the viewer or browser
+window as a single chart does, and its rows share the window height. In a
+knitr document it spans the column at 360 pixels per row.
+
 Child widget widths and heights are replaced by equally sized layout cells.
 Fixed-aspect and square-cell heatmap grids fit within both cell dimensions.
 Dendrograms remain aligned with their heatmap. Give panels

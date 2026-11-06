@@ -38,7 +38,8 @@
 #' @param dendro_row_side Character \{"left", "right"\}: Row dendrogram side.
 #' @param dendro_col_side Character \{"top", "bottom"\}: Column dendrogram side.
 #' @param square_cells Optional Logical: Force square cells, sizing the
-#'   container to match.
+#'   container to match. A filled viewer or browser window keeps its height and
+#'   the grid fits within it.
 #' @param colormap Optional Character: Colors defining the continuous scale.
 #'   `NULL` derives a theme-aware diverging or sequential scale.
 #' @param zlim Optional Numeric: Color-scale limits, length 2.

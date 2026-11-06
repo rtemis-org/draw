@@ -2,6 +2,10 @@
 
 ## rtemis.draw 0.5.5
 
+* `draw_panels()`, `draw_confusion()`, `draw_roc()`, and `draw_pr()` follow the width of the viewer or browser window with `width` unset, as other charts do; `draw_panels()`, `draw_roc()`, and `draw_pr()` also fill its height. `save_drawing()` keeps their default pixel sizes.
+
+* A chart with `height` set and `width` unset spans its container. Square and equal-axis charts and square-cell heatmaps fit within a filled window, and a numeric `width` sizes the canvas to that width.
+
 * `draw_pr()` draws precision-recall curves from labels and probabilities or from curve records, pooled or per resample, as step functions whose area is the average precision, with a prevalence baseline per curve group; `PRConfig`, `setup_PRConfig()`, and the `pr` chart schema describe the chart, and `pr_vertices()` computes its records.
 
 * `draw_roc()` curves start at the first color of the theme palette, as `draw_pr()` curves do, so the two charts color the same groups alike; the chance line keeps `diagonal_color`.

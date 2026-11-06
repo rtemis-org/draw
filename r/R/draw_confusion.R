@@ -582,7 +582,11 @@ method(confusion_option, ConfusionConfig) <- function(config, data) {
   )
 }
 
-#' Render confusion panels with enough default room for their labels
+#' Render confusion panels at the container width
+#'
+#' The browser derives the height from the width and wraps panels on narrow
+#' hosts. SVG export has no container and uses 560 pixels per column.
+#'
 #' @inheritParams draw
 #' @param data Optional Data frame: Frequency records, or read from dat_path.
 #' @return An ECharts htmlwidget.
@@ -603,15 +607,19 @@ method(draw, ConfusionConfig) <- function(
   panels <- length(built@grid) / if (option@show_metrics) 4L else 1L
   cols <- min(option@ncol, panels)
   rows <- ceiling(panels / cols)
+  height <- height %||% (rows * 500 + if (is.null(option@title)) 0 else 40)
   draw(
     built,
     theme = theme,
-    width = width %||% (cols * 560),
-    height = height %||% (rows * 500 + if (is.null(option@title)) 0 else 40),
+    width = width %||% "100%",
+    height = height,
     element_id = element_id,
     filename = filename,
     animation = animation,
-    meta = render_meta(option, built),
+    meta = c(
+      render_meta(option, built),
+      list(exportSize = list(width = cols * 560, height = height))
+    ),
     ...
   )
 }

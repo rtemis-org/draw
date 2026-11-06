@@ -41,7 +41,7 @@ test_that("composition preserves independent payloads and uses the existing widg
   expect_s3_class(w, "rtemis-panels")
   expect_identical(class(w)[[1]], "rtemis-draw")
   expect_identical(w[["x"]][["panels"]], list(a[["x"]], b[["x"]]))
-  expect_equal(w[["height"]], 376)
+  expect_equal(w[["x"]][["exportSize"]], list(width = 900, height = 376))
   expect_identical(w[["x"]][["layout"]], list(ncol = 2L, gap = 20, padding = 8))
   expect_identical(
     draw_panels(list(a, b), layout = setup_PanelLayout(2, 20, 8))[["x"]],

@@ -238,8 +238,9 @@ test_that("functional and config rendering agree and every panel has independent
     wire[["series"]][[1L]][["data"]][[1L]][["value"]][1:2],
     list(0L, 0L)
   )
-  expect_equal(w[["width"]], 1120)
+  expect_identical(w[["width"]], "100%")
   expect_equal(w[["height"]], 500)
+  expect_equal(w[["x"]][["exportSize"]], list(width = 1120, height = 500))
   simple <- draw_confusion(x, show_metrics = FALSE)[["x"]][["option"]]
   expect_length(simple[["grid"]], 2L)
   expect_length(simple[["series"]], 4L)

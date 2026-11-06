@@ -134,7 +134,9 @@
         option.xAxis[index].nameGap = d.columnLabelHeight + 18;
         if (j === 0) {
           Object.assign(option.xAxis[index].axisLabel, {width: d.columnLabelWidth, rotate: d.columnRotation, overflow: 'break'});
-          Object.assign(option.yAxis[index].axisLabel, {width: d.labelWidth, overflow: 'break'});
+          // ECharts wraps on summed character widths, which exceed the width of
+          // the measured string by up to a pixel.
+          Object.assign(option.yAxis[index].axisLabel, {width: d.labelWidth + 2, overflow: 'break'});
         }
         option.yAxis[index].nameGap = d.labelWidth + 20;
       });

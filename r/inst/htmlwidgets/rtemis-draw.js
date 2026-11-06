@@ -48,6 +48,9 @@ function rtemisDrawFactory(el, width, height, bounded = false, onBackground = ()
     let currentTheme = null;
     let injectedVisualMapColor = false;
     const surface = rtemisDrawSurface(el, bounded);
+    // A host that owns the height clips or crops anything taller than itself:
+    // panel cells, and the percentage height of a filled viewer or browser.
+    const hostOwnsHeight = bounded || el.style.height === '100%';
 
     // ECharts consumes every wheel event over a chart with an inside dataZoom,
     // including events without the modifier key it zooms on, and pans on a
@@ -265,7 +268,7 @@ function rtemisDrawFactory(el, width, height, bounded = false, onBackground = ()
       if (!x?.aspect || !x.option?.grid) return null;
       // A multi-grid option is out of scope: aspect describes one plotting box.
       if (Array.isArray(x.option.grid)) return null;
-      if (bounded) {
+      if (hostOwnsHeight) {
         rtemisPanels.fit(x, containerWidth, currentHeight);
         return currentHeight;
       }
@@ -284,7 +287,7 @@ function rtemisDrawFactory(el, width, height, bounded = false, onBackground = ()
         // from the actual container width and the layout margins passed from R.
         // This overrides whatever height htmlwidgets allocated for the container,
         // ensuring cells are always square regardless of viewer window dimensions.
-        if (x.squareCells && !bounded) {
+        if (x.squareCells && !hostOwnsHeight) {
           const newHeight = squareCellHeight(x, currentWidth);
           el.style.height = `${newHeight}px`;
           currentHeight = newHeight;
@@ -331,7 +334,7 @@ function rtemisDrawFactory(el, width, height, bounded = false, onBackground = ()
 
         if (currentPayload?.squareCells) {
           // Recompute height to keep cells square at the new width
-          const newHeight = bounded ? height : squareCellHeight(currentPayload, width);
+          const newHeight = hostOwnsHeight ? height : squareCellHeight(currentPayload, width);
           el.style.height = `${newHeight}px`;
           currentHeight = newHeight;
           if (chart) {
@@ -389,13 +392,16 @@ HTMLWidgets.widget({
       renderValue: function(x) {
         if (instance) instance.dispose();
         el.replaceChildren();
+        width = el.clientWidth || width;
         instance = x.panels ? rtemisPanelFactory(el, width, height) :
           rtemisDrawFactory(el, width, height);
         instance.renderValue(x);
       },
       resize: function(w, h) {
-        width = w; height = h;
-        if (instance) instance.resize(w, h);
+        // Standalone hosts report the width of their full-width container. The
+        // element's content box owns the width, including a fixed pixel width.
+        width = el.clientWidth || w; height = h;
+        if (instance) instance.resize(width, h);
       },
       getChart: () => instance?.getChart?.() || null,
       getCharts: () => instance?.getCharts?.() || (instance?.getChart?.() ? [instance.getChart()] : []),
