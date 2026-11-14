@@ -87,8 +87,8 @@ along the sequence.}
 
 \item{grid}{Optional \link{Grid}: Override any plot-area margin. The defaults
 (margins matching rtemislive, with \code{right} driven by legend width)
-are merged with the properties of the supplied \code{Grid} object, so only
-the fields you set are changed — e.g. \code{Grid(left = 8, top = 8)}.
+are merged with the properties of the supplied \code{Grid} object, so
+only the fields given change, e.g. \code{Grid(left = 8, top = 8)}.
 \code{legend_top} is re-derived from the final grid top automatically.}
 
 \item{theme}{Optional \link{Theme}: Theme override. \code{NULL} auto-detects

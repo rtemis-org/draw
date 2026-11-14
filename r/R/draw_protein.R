@@ -1,8 +1,8 @@
 # draw_protein.R
 # Normalize sequence annotations into the shared rtemis.a3 producer contract.
 
-#' Normalize legacy position annotations
-#' @param x List: Named position vectors or modern annotation specifications.
+#' Normalize position annotations
+#' @param x List: Named position vectors or rtemis.a3 annotation entries.
 #' @param size Integer: Sequence length.
 #' @return List: Named rtemis.a3 position specifications.
 #' @keywords internal
@@ -24,16 +24,6 @@ method(protein_positions, class_list) <- function(x, size) {
   lapply(x, function(entry) {
     type <- NULL
     if (is.list(entry) && !is.null(entry[["index"]])) {
-      if (S7_inherits(entry[["index"]])) {
-        positions <- entry[["index"]]@data
-        if (any(positions < 1 | positions > size)) {
-          abort(
-            "Keep annotations within the sequence.",
-            class = c("rtemis_value_error", "rtemis_input_error")
-          )
-        }
-        return(entry)
-      }
       type <- entry[["type"]]
       entry <- entry[["index"]]
     }
@@ -159,13 +149,11 @@ method(protein_data, class_any) <- function(
   for (name in names(region)) {
     entry <- region[[name]]
     if (is.list(entry) && !is.null(entry[["index"]])) {
-      if (!S7_inherits(entry[["index"]])) {
-        entry <- rtemis.a3::annotation_range(
-          entry[["index"]],
-          type = entry[["type"]]
-        )
-      }
-      if (any(entry[["index"]]@data < 1 | entry[["index"]]@data > size)) {
+      entry <- rtemis.a3::annotation_range(
+        entry[["index"]],
+        type = entry[["type"]]
+      )
+      if (any(entry[["index"]] < 1 | entry[["index"]] > size)) {
         abort(
           "Keep regions within the sequence.",
           class = c("rtemis_value_error", "rtemis_input_error")
@@ -174,10 +162,10 @@ method(protein_data, class_any) <- function(
       regions[[name]] <- entry
       next
     }
-    # Legacy regions enumerate residues. Preserve gaps instead of spanning them.
+    # A region vector enumerates residues. Preserve gaps instead of spanning them.
     positions <- protein_positions(setNames(list(entry), name), size)[[1]][[
       "index"
-    ]]@data
+    ]]
     positions <- sort(positions)
     runs <- split(positions, cumsum(c(TRUE, diff(positions) != 1L)))
     isolated <- unlist(runs[lengths(runs) == 1L], use.names = FALSE)
@@ -200,15 +188,6 @@ method(protein_data, class_any) <- function(
     })
   }
   variants <- lapply(variant, function(v) {
-    if (S7_inherits(v)) {
-      if (v@position < 1L || v@position > size) {
-        abort(
-          "Keep variants within the sequence.",
-          class = c("rtemis_value_error", "rtemis_input_error")
-        )
-      }
-      return(v)
-    }
     if (!is.list(v) || is.null(v[["position"]])) {
       abort(
         "Supply variant records with a residue position and optional metadata.",
@@ -246,15 +225,15 @@ method(protein_data, class_any) <- function(
 #' Draw an Annotated Protein from Sequence and Annotation Inputs
 #'
 #' Adapts sequence strings, residue vectors, protein records, and local JSON to
-#' the shared A3 representation used by [draw_a3()]. Named legacy annotation
-#' vectors enumerate one-based residues. Region vectors preserve contiguous
-#' runs; isolated region residues are drawn as sites. Modern specifications from
+#' the shared A3 representation used by [draw_a3()]. Named annotation vectors
+#' enumerate one-based residues. Region vectors preserve contiguous runs;
+#' isolated region residues are drawn as sites. Annotation entries from
 #' rtemis.a3 annotation_position/annotation_range/annotation_variant are accepted.
 #' The common meander layout, theme, legends, and SVG path match rtemislive.
 #' Fetch accession records explicitly with rtemis.a3 before plotting; a sequence
 #' string never initiates a network request.
 #' @param x Character, list, or A3: Sequence, protein record, local JSON path, or A3.
-#' @param site,region,ptm,cleavage_site List: Named annotation vectors or modern specifications.
+#' @param site,region,ptm,cleavage_site List: Named annotation vectors or rtemis.a3 annotation entries.
 #' @param variant List: Records with position plus optional variant metadata.
 #' @param disease_variants Optional Numeric: Disease-associated residue positions.
 #' @param ... Additional display settings passed to [draw_a3()].

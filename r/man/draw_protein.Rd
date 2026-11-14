@@ -18,7 +18,7 @@ draw_protein(
 \arguments{
 \item{x}{Character, list, or A3: Sequence, protein record, local JSON path, or A3.}
 
-\item{site, region, ptm, cleavage_site}{List: Named annotation vectors or modern specifications.}
+\item{site, region, ptm, cleavage_site}{List: Named annotation vectors or rtemis.a3 annotation entries.}
 
 \item{variant}{List: Records with position plus optional variant metadata.}
 
@@ -31,9 +31,9 @@ htmlwidget: Annotated protein diagram.
 }
 \description{
 Adapts sequence strings, residue vectors, protein records, and local JSON to
-the shared A3 representation used by \code{\link[=draw_a3]{draw_a3()}}. Named legacy annotation
-vectors enumerate one-based residues. Region vectors preserve contiguous
-runs; isolated region residues are drawn as sites. Modern specifications from
+the shared A3 representation used by \code{\link[=draw_a3]{draw_a3()}}. Named annotation vectors
+enumerate one-based residues. Region vectors preserve contiguous runs;
+isolated region residues are drawn as sites. Annotation entries from
 rtemis.a3 annotation_position/annotation_range/annotation_variant are accepted.
 The common meander layout, theme, legends, and SVG path match rtemislive.
 Fetch accession records explicitly with rtemis.a3 before plotting; a sequence
