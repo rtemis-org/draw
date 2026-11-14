@@ -1,6 +1,6 @@
-# rtemis.draw news
+# rtemis.draw 0.5.5
 
-## rtemis.draw 0.5.5
+* `draw_a3()` and `draw_protein()` require rtemis.a3 0.7.0, whose position and range indices are integer vectors and matrices and whose variants are named lists.
 
 * `draw_panels()`, `draw_confusion()`, `draw_roc()`, and `draw_pr()` follow the width of the viewer or browser window with `width` unset, as other charts do; `draw_panels()`, `draw_roc()`, and `draw_pr()` also fill its height. `save_drawing()` keeps their default pixel sizes.
 
@@ -12,7 +12,7 @@
 
 * Grouped charts order a factor `group` by its levels, in series, colors, and legends, and drop levels without drawn rows; other vectors keep first-appearance order. `true_pred_data()` returns a factor `group` as a factor `sample`.
 
-## rtemis.draw 0.5.4
+# rtemis.draw 0.5.4
 
 * `draw_mermaid()` renders Mermaid diagram text with 'Pele' as a scrolling SVG widget that follows the light or dark theme and the palette, highlights selected nodes with `node_color` and `fill_alpha`, and exports it to SVG; `MermaidConfig` and `setup_MermaidConfig()` describe a diagram for `draw()` and the chart schemas, reading `.mmd` files through `dat_path`.
 
@@ -42,6 +42,6 @@
 * SVG export omits zoom sliders and toolbox buttons and returns the slider's space to the plot.
 * Charts with a legend or color scale gain `legend_title`, as do their chart configurations: a bold title above left/right legends and vertical color bars, and before the first row of top/bottom legends and horizontal color bars. The default `NULL` draws no title.
 
-## rtemis.draw 0.5.3
+# rtemis.draw 0.5.3
 
 * Initial CRAN submission.

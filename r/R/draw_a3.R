@@ -209,8 +209,8 @@ a3_ptm_offset <- function(
 
 #' Expand a flex-entry index to a flat integer vector of positions
 #'
-#' An `A3Position` index (via `[[`) is an integer vector; an `A3Range` index
-#' is a 2-column integer matrix.  Both cases are handled here.
+#' A position index (via `[[`) is an integer vector; a range index is a
+#' 2-column integer matrix.
 #'
 #' @param index Integer vector or 2-column integer matrix.
 #' @return Integer vector of individual positions.
@@ -218,7 +218,7 @@ a3_ptm_offset <- function(
 #' @noRd
 a3_flex_positions <- function(index) {
   if (is.matrix(index)) {
-    # A3Range: rows are [start, end] pairs
+    # Range index: rows are [start, end] pairs
     unlist(lapply(
       seq_len(nrow(index)),
       function(i) seq.int(index[i, 1L], index[i, 2L])
@@ -648,7 +648,7 @@ a3_option <- function(
   }
 
   # 6. Legend heading placeholder series (invisible; exist only for legend grouping)
-  # Use character(0) for `data` so it serialises as JSON [] rather than {}.
+  # Use character(0) for `data` so it serializes as JSON [] rather than {}.
   if (length(region_legend) > 0L) {
     series <- c(
       series,
@@ -988,8 +988,8 @@ a3_option <- function(
 #' @param title Optional Character: Chart title.
 #' @param grid Optional [Grid]: Override any plot-area margin. The defaults
 #'   (margins matching rtemislive, with `right` driven by legend width)
-#'   are merged with the properties of the supplied `Grid` object, so only
-#'   the fields you set are changed — e.g. `Grid(left = 8, top = 8)`.
+#'   are merged with the properties of the supplied `Grid` object, so
+#'   only the fields given change, e.g. `Grid(left = 8, top = 8)`.
 #'   `legend_top` is re-derived from the final grid top automatically.
 #' @param theme Optional [Theme]: Theme override. `NULL` auto-detects
 #'   light/dark mode; `NA` uses raw ECharts defaults.

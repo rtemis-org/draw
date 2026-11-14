@@ -83,7 +83,7 @@ test_that("typed protein annotations also respect sequence bounds", {
       "MAEPR",
       variant = list(rtemis.a3::annotation_variant(9L))
     ),
-    "Keep variants within the sequence",
+    "Keep variant positions within the sequence",
     class = "rtemis_value_error"
   )
 })
