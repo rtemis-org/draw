@@ -14,3 +14,7 @@ AGENTS.md
 
 # Zed
 .zed/
+
+# TypeScript package
+typescript/node_modules/
+typescript/dist/

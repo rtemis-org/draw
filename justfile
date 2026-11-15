@@ -8,6 +8,8 @@ r := env("R", "R")
 schema_repo := env("SCHEMA_REPO", "")
 rscript := env("RSCRIPT", "Rscript")
 tarball_glob := pkg + "_*.tar.gz"
+ts_dir := "typescript"
+ts_bundle := "r/inst/htmlwidgets/lib/draw/rtemis-draw-builders.js"
 
 # List available recipes
 default:
@@ -181,7 +183,7 @@ cran-scan *flags:
     cd {{r_dir}} && {{rscript}} tools/cran-scan.R . --ignore=tools/cran-scan-ignore --fail {{flags}}
     @just _msg "Done"
 
-# cran-scan plus the built tarball: size, largest files, stray and binary files
+# cran-scan plus the built tarball: size, largest files, and stray and binary files
 cran-scan-tarball:
     @just build
     @just _msg "─── Scanning {{pkg}} tarball for CRAN review issues... ───"
@@ -261,6 +263,37 @@ clean:
     rm -f {{r_dir}}/{{tarball_glob}}
     @just _msg "Done"
 
+# Test the @rtemis/draw TypeScript package: type check, Biome, and Vitest
+ts-test:
+    @just _msg "─── Testing @rtemis/draw... ───"
+    cd {{ts_dir}} && pnpm install --frozen-lockfile && pnpm test
+    @just _msg "Done"
+
+# Build @rtemis/draw and copy its widget bundle into the R package
+ts-bundle:
+    @just _msg "─── Building @rtemis/draw and copying its bundle into {{pkg}}... ───"
+    cd {{ts_dir}} && pnpm install --frozen-lockfile && pnpm build
+    cp {{ts_dir}}/dist/rtemis-draw-builders.cjs {{ts_bundle}}
+    @just _msg "Done"
+
+# Check the builders' config types against chart schemas generated from the R classes
+ts-schema-check:
+    @just _msg "─── Checking @rtemis/draw config types against the chart schemas... ───"
+    @dir=$(mktemp -d); trap 'rm -rf "$dir"' EXIT; \
+        (cd {{r_dir}} && {{rscript}} data-raw/generate_schemas.R "$dir" >/dev/null) && \
+        cd {{ts_dir}} && RTEMIS_DRAW_SCHEMA_DIR="$dir" pnpm vitest run tests/schema.test.ts
+    @just _msg "Done"
+
+# Fail when the R package's copy of the bundle differs from a fresh build
+ts-bundle-check:
+    @just _msg "─── Checking the bundle in {{pkg}} matches a fresh build... ───"
+    cd {{ts_dir}} && pnpm install --frozen-lockfile && pnpm build
+    @cmp -s {{ts_dir}}/dist/rtemis-draw-builders.cjs {{ts_bundle}} || { \
+        echo "   Error: {{ts_bundle}} differs from a fresh build. Run 'just ts-bundle'."; \
+        exit 1; \
+    }
+    @just _msg "Done"
+
 # Inspect installed-package heatmap/A3 browser and vector output (developer QA).
 qa-export output:
     {{rscript}} r/tools/visual-qa/export.R "{{output}}"
@@ -273,7 +306,7 @@ qa-foundation output:
 qa-backends output:
     {{rscript}} r/tools/visual-qa/backends.R "{{output}}"
 
-# Inspect native 3D camera projection, rotation and genuine SVG marks.
+# Inspect native 3D camera projection, rotation, and genuine SVG marks.
 qa-scatter3d output:
     {{rscript}} r/tools/visual-qa/scatter3d.R "{{output}}"
 
