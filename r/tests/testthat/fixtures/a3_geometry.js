@@ -1,5 +1,7 @@
 // Native geometry checks run through the real browser binding, including
 // standalone height and fixed panel/SVG bounds, repeat resize, and toggles.
+// The binding builds the option from the payload's build request with the
+// bundled @rtemis/draw.
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const vm = require('node:vm');
@@ -14,21 +16,22 @@ const context = {document:{body}, window:{}, HTMLWidgets:{widget() {}},
 vm.createContext(context);
 // The binding's shared theme detection must see this context's stub DOM.
 vm.runInContext(fs.readFileSync(path.join(directory,'theme_watch.js'),'utf8'),context);
+vm.runInContext(fs.readFileSync(input.builders,'utf8'),context);
 vm.runInContext(fs.readFileSync(input.binding,'utf8'),context);
 for (const dark of [false,true]) for (const longNames of [false,true]) for (const bounded of [false,true]) {
   const payload = structuredClone(input.payload);
-  payload.option.animation=false;
-  payload.option.backgroundColor=dark?'#181818':'#ffffff';
+  payload.build.appearance.animation=false;
+  context.RtemisThemeWatch.isDark = () => dark;
   if (longNames) {
-    const name = 'Microtubule Binding Domain (R1, R3, R4)';
-    payload.option.series.find(s => s.name === 'Site').name = name;
-    payload.option.legend.data.find(d => d.name === 'Site').name = name;
+    const document = JSON.parse(payload.build.data);
+    document.annotations.site = {'Microtubule Binding Domain (R1, R3, R4)': document.annotations.site.Site};
+    payload.build.data = JSON.stringify(document);
   }
-  const original=JSON.stringify(payload);
   const element={style:{},parentElement:body};
   const widget=context.rtemisDrawFactory(element,1100,550,bounded);
   try {
     widget.renderValue(payload);
+    const original=JSON.stringify(payload);
     for (const width of (longNames ? [1100,700,1100] : [1100,560,390,1100])) {
       widget.resize(width,550);
       const c=widget.getChart(), model=c.getModel();

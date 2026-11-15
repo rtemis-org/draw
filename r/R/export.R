@@ -61,6 +61,7 @@ NODE_MIN_VERSION <- "18"
 #' )
 #' unlink(path)
 save_drawing <- function(widget, filename, width = NULL, height = NULL) {
+  height_given <- !is.null(height)
   if (!inherits(widget, "htmlwidget")) {
     abort(
       "`widget` must be an htmlwidget returned by draw().",
@@ -195,8 +196,18 @@ save_drawing <- function(widget, filename, width = NULL, height = NULL) {
     )
     return(invisible(filename))
   }
-  option <- static_controls(strip_js(payload[["option"]], path = "option"))
-  option <- static_aspect(option, payload[["aspect"]], width, height)
+  # A build request reaches Node unbuilt; render_svg.js builds it with the
+  # bundled @rtemis/draw. An A3 height the caller left unset is the builder's.
+  if (!is.null(payload[["build"]])) {
+    option <- NULL
+    if (!is.null(payload[["a3"]])) {
+      payload[["a3"]][["exportAutoHeight"]] <- !height_given &&
+        isTRUE(payload[["a3"]][["autoHeight"]])
+    }
+  } else {
+    option <- static_controls(strip_js(payload[["option"]], path = "option"))
+    option <- static_aspect(option, payload[["aspect"]], width, height)
+  }
   # Automatic themes resolve to light for offline export. An explicit theme
   # remains the export theme; static output does not query OS preferences.
   theme <- strip_js(payload[["theme"]], path = "theme")
@@ -214,6 +225,7 @@ save_drawing <- function(widget, filename, width = NULL, height = NULL) {
       names(payload),
       c(
         "a3",
+        "build",
         "squareCells",
         "nRows",
         "nCols",
@@ -396,7 +408,7 @@ method(static_aspect, class_list) <- function(x, aspect, width, height) {
     (width - aspect[["leftPx"]] - aspect[["rightPx"]] - grid[["width"]]) / 2
   grid[["top"]] <- aspect[["topPx"]] +
     (height - aspect[["topPx"]] - aspect[["botPx"]] - grid[["height"]]) / 2
-  # Preserve native label containment until it has actually been measured.
+  # Preserve native label containment until it has been measured.
   # Disabling it here clips axis names and lets tick labels overlap the legend.
   x[["grid"]] <- grid
   x

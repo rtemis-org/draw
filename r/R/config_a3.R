@@ -18,17 +18,22 @@
 #'
 #' The bound data is an `A3` object, created with `rtemis.a3::create_A3()`.
 #'
-#' @param n_per_row Integer `[1, Inf)`: Residues per row.
-#' @param position_every Integer `[1, Inf)`: Label every nth position.
-#' @param ptm_placement Character: How post-translational modifications are
-#'   placed relative to the backbone.
+#' @param n_per_row Integer `[2, Inf)`: Residues per row.
+#' @param position_every Optional Integer `[1, Inf)`: Label every nth position.
+#'   `NULL` draws no position labels.
+#' @param ptm_placement Character \{"radial", "innerRadial", "outerRadial"\}:
+#'   How post-translational modifications are placed relative to the backbone.
 #' @param zoom Logical: Enable Shift+wheel zoom, and wheel and drag panning,
 #'   along the sequence.
-#' @param residue_spacing Numeric `[0, Inf)`: Gap between residues.
+#' @param residue_spacing Numeric `(0, Inf)`: Gap between residues.
 #' @param marker_size Numeric `[0, Inf)`: Preferred residue marker size;
 #'   reduced with related marks when needed to fit the surface.
 #' @param font_size Numeric `[0, Inf)`: Residue label font size.
 #' @param line_width Numeric `[0, Inf)`: Backbone line width.
+#' @param annotation_gap Numeric `[0, Inf)`: Gap in pixels between residue
+#'   anchors and processing overlays.
+#' @param position_label_gap Numeric `[0, Inf)`: Gap in pixels between residue
+#'   anchors and position labels.
 #' @param show_markers,show_labels Logical: Whether to draw each.
 #' @param region_opacity Numeric `[0, 1]`: Region band opacity.
 #' @param residue_fill,residue_stroke Optional Character: Residue marker colors.
@@ -51,14 +56,20 @@ A3Config <- new_class(
   properties = list(
     type = prop_chart_type("a3"),
     # -- semantics: how the sequence is laid out ----------------------------
-    n_per_row = prop_integer(21L, min = 1L, description = "Residues per row."),
+    n_per_row = prop_integer(
+      21L,
+      min = 2L,
+      description = "Residues per row."
+    ),
     position_every = prop_integer(
       10L,
       min = 1L,
-      description = "Label every nth position."
+      nullable = TRUE,
+      description = "Label every nth position; null draws no position labels."
     ),
     ptm_placement = prop_string(
       "radial",
+      enum = c("radial", "innerRadial", "outerRadial"),
       description = "How modifications are placed relative to the backbone."
     ),
     zoom = prop_boolean(
@@ -68,7 +79,7 @@ A3Config <- new_class(
     # -- appearance --------------------------------------------------------
     residue_spacing = prop_float(
       0.3,
-      min = 0,
+      exclusive_min = 0,
       description = "Gap between residues."
     ),
     marker_size = prop_float(28, min = 0, description = "Residue marker size."),
@@ -78,6 +89,16 @@ A3Config <- new_class(
       description = "Residue label font size."
     ),
     line_width = prop_float(2, min = 0, description = "Backbone line width."),
+    annotation_gap = prop_float(
+      16,
+      min = 0,
+      description = "Gap in pixels between residue anchors and processing overlays."
+    ),
+    position_label_gap = prop_float(
+      16,
+      min = 0,
+      description = "Gap in pixels between residue anchors and position labels."
+    ),
     show_markers = prop_boolean(TRUE, description = "Draw residue markers."),
     show_labels = prop_boolean(TRUE, description = "Draw residue labels."),
     region_opacity = prop_float(
@@ -156,6 +177,8 @@ setup_A3Config <- function(
   marker_size = 28,
   font_size = 18,
   line_width = 2,
+  annotation_gap = 16,
+  position_label_gap = 16,
   show_markers = TRUE,
   show_labels = TRUE,
   region_opacity = 0.3,
@@ -173,13 +196,19 @@ setup_A3Config <- function(
   origin <- origin %||% chart_origin(match.call(), A3_ORIGIN_NAMES)
   A3Config(
     n_per_row = as.integer(n_per_row),
-    position_every = as.integer(position_every),
+    position_every = if (is.null(position_every)) {
+      NULL
+    } else {
+      as.integer(position_every)
+    },
     ptm_placement = ptm_placement,
     zoom = zoom,
     residue_spacing = residue_spacing,
     marker_size = marker_size,
     font_size = font_size,
     line_width = line_width,
+    annotation_gap = annotation_gap,
+    position_label_gap = position_label_gap,
     show_markers = show_markers,
     show_labels = show_labels,
     region_opacity = region_opacity,
@@ -204,64 +233,40 @@ method(resolve, A3Config) <- function(config, data = NULL, ...) {
 }
 
 
-# %% a3_built ----
-#' Build an A3 diagram's option and render hints together
-#'
-#' Reached two ways: through `compile()`, which has already materialized the
-#' data and resolved the config, and directly from the `draw()` method, which
-#' has not. So it does both itself. Neither is wasted work the first way round:
-#' `config_data()` returns data it is handed, and `resolve()` is idempotent.
-#'
-#' @param config [A3Config]: The chart configuration.
-#' @param data Optional `A3` object: The protein to draw.
-#' @param width Optional Numeric or Character: Requested widget width, which the
-#'   row layout is solved against.
-#'
-#' @return Named list: `option` and `render`.
-#'
-#' @author EDG
-#' @keywords internal
-#' @noRd
-a3_built <- function(config, data = NULL, width = NULL) {
-  bound <- config_data(config, data)
-  config <- resolve(config, data = bound)
-  a3_option(
-    width = width,
-    x = bound,
-    n_per_row = config@n_per_row,
-    residue_spacing = config@residue_spacing,
-    marker_size = config@marker_size,
-    font_size = config@font_size,
-    line_width = config@line_width,
-    show_markers = config@show_markers,
-    show_labels = config@show_labels,
-    position_every = config@position_every,
-    region_opacity = config@region_opacity,
-    ptm_placement = config@ptm_placement,
-    residue_fill = config@residue_fill,
-    residue_stroke = config@residue_stroke,
-    label_color = config@label_color,
-    pos_label_color = config@pos_label_color,
-    variant_color = config@variant_color,
-    disease_variant_color = config@disease_variant_color,
-    zoom = config@zoom,
-    title = config@title,
-    grid = NULL,
-    height = NULL
-  )
-} # /rtemis.draw::a3_built
+# %% A3_APPEARANCE ----
+# The builder's appearance input from R: the legend gap rtemis.draw's A3
+# diagrams have used. The theme is chosen in the widget, which knows whether
+# it renders light or dark.
+A3_APPEARANCE <- list(legendGap = 40)
 
 
 # %% compile.A3Config ----
-method(compile, A3Config) <- function(config, data = NULL, theme = NULL, ...) {
-  a3_built(config, data)[["option"]]
+# The option is built in JavaScript by @rtemis/draw, so compiling an A3 config
+# gives the request the widget and SVG export pass to `RtemisDraw.builders.a3`.
+# spec: draw/shared-builders#r-widget
+method(compile, A3Config) <- function(
+  config,
+  data = NULL,
+  theme = NULL,
+  ...,
+  grid = NULL
+) {
+  appearance <- A3_APPEARANCE
+  if (!is.null(grid)) {
+    appearance[["grid"]] <- to_list(grid)
+  }
+  BuildRequest(
+    type = "a3",
+    data = a3_document_json(data),
+    config = a3_config_list(config),
+    appearance = appearance
+  )
 }
 
 
 # %% draw.A3Config ----
-# Overrides the generic method so the derived height reaches the widget. An
-# explicit `height` wins: the caller's surface beats the diagram's estimate of
-# what it needs.
+# Overrides the generic method to pass the surface flags the A3 fit in the
+# widget reads: an explicit `height` or `grid` wins over the fitted one.
 method(draw, A3Config) <- function(
   option,
   theme = NULL,
@@ -271,19 +276,99 @@ method(draw, A3Config) <- function(
   filename = NULL,
   animation = NULL,
   ...,
-  data = NULL
+  data = NULL,
+  grid = NULL
 ) {
-  built <- a3_built(option, data, width = width)
-  built[["render"]][["a3"]][["autoHeight"]] <- is.null(height)
+  data <- config_data(option, data)
+  if (!is.null(grid) && !S7::S7_inherits(grid, Grid)) {
+    abort(
+      "`grid` must be a Grid object or NULL.",
+      class = c("rtemis_type_error", "rtemis_input_error")
+    )
+  }
   draw(
-    built[["option"]],
+    compile(option, data = data, theme = theme, grid = grid),
     theme = theme,
     width = width,
-    height = height %||% built[["render"]][["height"]],
+    height = height %||% a3_initial_height(data, option),
     element_id = element_id,
     filename = filename,
     animation = animation,
-    meta = list(a3 = built[["render"]][["a3"]]),
+    meta = list(
+      a3 = list(autoHeight = is.null(height), autoGrid = is.null(grid))
+    ),
     ...
+  )
+}
+
+
+# %% a3_initial_height ----
+#' Initial widget height of an A3 diagram
+#'
+#' The container size before the widget renders: the plot body of the wrapped
+#' rows plus fixed margins. With `height` unset the widget then sets the exact
+#' height that `RtemisDraw.a3SurfaceHints()` gives, and SVG export uses that
+#' height too.
+#'
+#' @param x `A3` object.
+#' @param config [A3Config].
+#'
+#' @return Numeric: Height in pixels.
+#'
+#' @author EDG
+#' @keywords internal
+#' @noRd
+a3_initial_height <- function(x, config) {
+  n <- nchar(x[["sequence"]])
+  rows <- max(1, ceiling((n - 1) / (config@n_per_row - 1)))
+  72 + config@marker_size * (2 * rows + 1)
+}
+
+
+# %% a3_document_json ----
+#' Serialize an A3 object as its A3 JSON document
+#'
+#' @param x `A3` object from rtemis.a3.
+#'
+#' @return Character: The A3 JSON document, as `rtemis.a3::write_A3json()`
+#'   writes it.
+#'
+#' @author EDG
+#' @keywords internal
+#' @noRd
+a3_document_json <- function(x) {
+  if (!S7::S7_inherits(x) || !grepl("::A3$|^A3$", S7::S7_class(x)@name)) {
+    abort(
+      "`data` must be an A3 object. ",
+      "Create one with `rtemis.a3::create_A3()`.",
+      class = c("rtemis_type_error", "rtemis_input_error")
+    )
+  }
+  file <- tempfile(fileext = ".a3.json")
+  on.exit(unlink(file), add = TRUE)
+  rtemis.a3::write_A3json(x, file)
+  paste(readLines(file, warn = FALSE), collapse = "\n")
+}
+
+
+# %% a3_config_list ----
+#' The chart/a3/v1 members of an A3 config, for the builder
+#'
+#' Every member is present. A `NULL` member is written as `NA`, which the
+#' widget and SVG serializers both write as JSON `null`, so the builder reads
+#' `position_every = NULL` as no position labels rather than as unset.
+#'
+#' @param config [A3Config].
+#'
+#' @return Named list.
+#'
+#' @author EDG
+#' @keywords internal
+#' @noRd
+a3_config_list <- function(config) {
+  names <- c("type", setdiff(A3_ORIGIN_NAMES, "dat_path"))
+  stats::setNames(
+    lapply(names, function(name) S7::prop(config, name) %||% NA),
+    names
   )
 }

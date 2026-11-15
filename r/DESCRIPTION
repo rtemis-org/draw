@@ -70,6 +70,7 @@ Collate:
     'zoom.R'
     'draw.R'
     'chart_config.R'
+    'build_request.R'
     'config_constraints.R'
     'config_scatter.R'
     'config_bar.R'

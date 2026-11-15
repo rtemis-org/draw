@@ -17,6 +17,8 @@ A3Config(
   marker_size = 28,
   font_size = 18,
   line_width = 2,
+  annotation_gap = 16,
+  position_label_gap = 16,
   show_markers = TRUE,
   show_labels = TRUE,
   region_opacity = 0.3,
@@ -43,17 +45,18 @@ authored config; written by the interface that resolved it.}
 \item{writer}{Optional Named character: Which interface wrote the config, as
 \code{name} and \code{version}. Absent on an authored config.}
 
-\item{n_per_row}{Integer \verb{[1, Inf)}: Residues per row.}
+\item{n_per_row}{Integer \verb{[2, Inf)}: Residues per row.}
 
-\item{position_every}{Integer \verb{[1, Inf)}: Label every nth position.}
+\item{position_every}{Optional Integer \verb{[1, Inf)}: Label every nth position.
+\code{NULL} draws no position labels.}
 
-\item{ptm_placement}{Character: How post-translational modifications are
-placed relative to the backbone.}
+\item{ptm_placement}{Character \{"radial", "innerRadial", "outerRadial"\}:
+How post-translational modifications are placed relative to the backbone.}
 
 \item{zoom}{Logical: Enable Shift+wheel zoom, and wheel and drag panning,
 along the sequence.}
 
-\item{residue_spacing}{Numeric \verb{[0, Inf)}: Gap between residues.}
+\item{residue_spacing}{Numeric \verb{(0, Inf)}: Gap between residues.}
 
 \item{marker_size}{Numeric \verb{[0, Inf)}: Preferred residue marker size;
 reduced with related marks when needed to fit the surface.}
@@ -61,6 +64,12 @@ reduced with related marks when needed to fit the surface.}
 \item{font_size}{Numeric \verb{[0, Inf)}: Residue label font size.}
 
 \item{line_width}{Numeric \verb{[0, Inf)}: Backbone line width.}
+
+\item{annotation_gap}{Numeric \verb{[0, Inf)}: Gap in pixels between residue
+anchors and processing overlays.}
+
+\item{position_label_gap}{Numeric \verb{[0, Inf)}: Gap in pixels between residue
+anchors and position labels.}
 
 \item{show_markers, show_labels}{Logical: Whether to draw each.}
 

@@ -79,7 +79,8 @@ panel_layout_schema <- function(complete = FALSE) {
 #' @noRd
 panel_payload <- new_generic("panel_payload", "x")
 method(panel_payload, class_any) <- function(x) {
-  if (!inherits(x, "rtemis-draw") || !is.list(x[["x"]][["option"]])) {
+  payload <- if (inherits(x, "rtemis-draw")) x[["x"]]
+  if (!(is.list(payload[["option"]]) || is.list(payload[["build"]]))) {
     abort(
       "Supply ECharts drawings from draw_*() to `draw_panels()`; nested layouts and other backends are not yet supported.",
       class = c("rtemis_type_error", "rtemis_input_error")
@@ -91,7 +92,6 @@ method(panel_payload, class_any) <- function(x) {
       class = c("rtemis_unsupported_error", "rtemis_input_error")
     )
   }
-  payload <- x[["x"]]
   payload
 }
 

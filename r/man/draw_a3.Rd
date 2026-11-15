@@ -11,6 +11,8 @@ draw_a3(
   marker_size = 28,
   font_size = 18,
   line_width = 2,
+  annotation_gap = 16,
+  position_label_gap = 16,
   show_markers = TRUE,
   show_labels = TRUE,
   position_every = 10L,
@@ -51,6 +53,12 @@ and position labels.}
 
 \item{line_width}{Numeric \verb{(0, Inf)}: Backbone line width in pixels.}
 
+\item{annotation_gap}{Numeric \verb{[0, Inf)}: Gap in pixels between residue
+anchors and processing overlays.}
+
+\item{position_label_gap}{Numeric \verb{[0, Inf)}: Gap in pixels between residue
+anchors and position labels.}
+
 \item{show_markers}{Logical: Whether to render the backbone line and
 residue circles.}
 
@@ -85,19 +93,17 @@ along the sequence.}
 
 \item{title}{Optional Character: Chart title.}
 
-\item{grid}{Optional \link{Grid}: Override any plot-area margin. The defaults
-(margins matching rtemislive, with \code{right} driven by legend width)
-are merged with the properties of the supplied \code{Grid} object, so
-only the fields given change, e.g. \code{Grid(left = 8, top = 8)}.
-\code{legend_top} is re-derived from the final grid top automatically.}
+\item{grid}{Optional \link{Grid}: Plot-area margins. The fields given replace the
+built ones, e.g. \code{Grid(left = 8, top = 8)}, and the right margin stays as
+given instead of following the measured legend width.}
 
 \item{theme}{Optional \link{Theme}: Theme override. \code{NULL} auto-detects
 light/dark mode; \code{NA} uses raw ECharts defaults.}
 
 \item{width}{Optional Numeric or Character: Widget width.}
 
-\item{height}{Optional Numeric or Character: Widget height. Auto-computed
-from layout bounds and \code{marker_size} when \code{NULL}.}
+\item{height}{Optional Numeric or Character: Widget height. \code{NULL} takes
+the height of the layout from the builder.}
 
 \item{element_id}{Optional Character: Explicit DOM element ID for the widget
 container. \code{NULL} lets htmlwidgets generate one.}
@@ -116,18 +122,17 @@ Renders an \code{A3} object (from \code{rtemis.a3}) as an interactive ECharts
 amino-acid sequence diagram. The sequence is wrapped into rows in a
 meander/serpentine path, with optional site, region, PTM, processing, and
 variant annotations overlaid as distinct series and collected in an
-upper-right annotation column, matching rtemislive. Legend headings use
-native rich text and remain available
-in vector SVG exports through \code{\link[=save_drawing]{save_drawing()}}.
+upper-right annotation column. The ECharts option is built in the widget by
+the \verb{@rtemis/draw} A3 builder, the one rtemislive uses, from the A3 document
+and an \link{A3Config}. Legend headings use native rich text and remain
+available in vector SVG exports through \code{\link[=save_drawing]{save_drawing()}}, which builds the
+option the same way in Node.js.
 }
 \details{
 The annotation column stays at the upper right on every surface. Residue
 markers, labels, and annotations shrink together to avoid overlap. Row
 wrapping remains fixed. Browser height follows the layout unless supplied;
 SVG and panel dimensions remain bounded. A custom \code{grid} retains its layout.
-
-Corresponds to \code{createA3EChartsOption()} in
-\code{src/lib/a3/visualization/echarts.ts}.
 }
 \examples{
 if (requireNamespace("rtemis.a3", quietly = TRUE)) {

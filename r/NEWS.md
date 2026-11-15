@@ -1,12 +1,24 @@
 # rtemis.draw 0.5.5
 
+* `draw_a3()` and `draw()` on an `A3Config` build the diagram with the `@rtemis/draw` A3 builder, the one rtemislive uses, in the widget and in `save_drawing()`; the widget rebuilds it when the viewer switches between light and dark. Its tooltip groups annotations under family headings, as in rtemislive.
+
+* `compile()` on an `A3Config` returns a `BuildRequest` (chart type, the A3 document as JSON, the config, and the appearance) in place of an `EChartsOption`.
+
+* `A3Config` requires `n_per_row` of at least 2 and a positive `residue_spacing`, the values the layout accepts.
+
+* `draw_panels()` accepts A3 drawings.
+
+* `A3Config` and `draw_a3()` take `annotation_gap` and `position_label_gap`, the pixel gaps to processing overlays and position labels; `A3Config` accepts `position_every = NULL` for no position labels, and the `chart/a3/v1` schema lists the three `ptm_placement` values.
+
+* `draw_a3()` labels each variant in the residue tooltip as `<from><position><to>`, or `<from><position>del` for a deletion, once per distinct change, with the sources of every record that carries it (`P301L (ClinVar, UniProtKB)`).
+
 * `draw_a3()` and `draw_protein()` require rtemis.a3 0.7.0, whose position and range indices are integer vectors and matrices and whose variants are named lists.
 
 * `draw_panels()`, `draw_confusion()`, `draw_roc()`, and `draw_pr()` follow the width of the viewer or browser window with `width` unset, as other charts do; `draw_panels()`, `draw_roc()`, and `draw_pr()` also fill its height. `save_drawing()` keeps their default pixel sizes.
 
 * A chart with `height` set and `width` unset spans its container. Square and equal-axis charts and square-cell heatmaps fit within a filled window, and a numeric `width` sizes the canvas to that width.
 
-* `draw_pr()` draws precision-recall curves from labels and probabilities or from curve records, pooled or per resample, as step functions whose area is the average precision, with a prevalence baseline per curve group; `PRConfig`, `setup_PRConfig()`, and the `pr` chart schema describe the chart, and `pr_vertices()` computes its records.
+* `draw_pr()` draws precision-recall curves from labels and probabilities or from curve records (pooled, or one curve per resample) as step functions whose area is the average precision, with a prevalence baseline per curve group; `PRConfig`, `setup_PRConfig()`, and the `pr` chart schema describe the chart, and `pr_vertices()` computes its records.
 
 * `draw_roc()` curves start at the first color of the theme palette, as `draw_pr()` curves do, so the two charts color the same groups alike; the chance line keeps `diagonal_color`.
 

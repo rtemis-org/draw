@@ -5,7 +5,7 @@ function rtemisDrawIsDarkMode() {
 }
 
 // Own only a standalone widget document; embedded reports retain page CSS.
-// Record every style we change so replacing/detaching a widget restores its host.
+// Record every changed style so replacing/detaching a widget restores its host.
 function rtemisDrawSurface(el, bounded = false) {
   const saved = new Map();
   const paintElement = (element, color) => {
@@ -37,6 +37,27 @@ function rtemisDrawSurface(el, bounded = false) {
       saved.clear();
     }
   };
+}
+
+// Build the ECharts option of a payload that carries a build request, with the
+// @rtemis/draw builders (rtemis-draw-builders.js), for the current color
+// scheme. The A3 surface hints come from the same package; flags set in R
+// (autoHeight, autoGrid) take precedence. A grid set in R replaces the built
+// margins. spec: draw/shared-builders#r-widget
+function rtemisDrawBuild(x, dark) {
+  const request = x.build;
+  const builder = RtemisDraw.builders[request.type];
+  if (!builder) throw new Error(`No @rtemis/draw builder for chart type '${request.type}'.`);
+  const data = typeof request.data === 'string' ? JSON.parse(request.data) : request.data;
+  const appearance = {...request.appearance, dark};
+  const option = {...builder(data, request.config, appearance)};
+  // The builders leave the background to the host; the widget paints the theme's.
+  delete option.backgroundColor;
+  if (request.appearance?.grid) option.grid = {...option.grid, ...request.appearance.grid};
+  x.option = option;
+  if (request.type === 'a3') {
+    x.a3 = {...RtemisDraw.a3SurfaceHints(data, request.config, appearance), ...x.a3};
+  }
 }
 
 function rtemisDrawFactory(el, width, height, bounded = false, onBackground = () => {}) {
@@ -109,7 +130,7 @@ function rtemisDrawFactory(el, width, height, bounded = false, onBackground = ()
     // For `aspect` charts: size the plotting grid from the measured container
     // width so that the grid keeps a fixed height:width ratio.
     //
-    // This is the one thing R cannot do. Equal axis scaling (one data unit =
+    // R cannot compute this. Equal axis scaling (one data unit =
     // the same number of pixels on both axes) is a constraint on the *pixel*
     // geometry of the grid, ECharts has no option for it, and R does not know
     // how wide the container will be. So R sends the ratio it needs and the
@@ -148,6 +169,7 @@ function rtemisDrawFactory(el, width, height, bounded = false, onBackground = ()
       let themeName = null;
       let themeObj = null;
       const dark = rtemisDrawIsDarkMode();
+      if (x.build) rtemisDrawBuild(x, dark);
 
       if (x.autoTheme) {
         // Auto-detect: pick light or dark theme
@@ -166,8 +188,8 @@ function rtemisDrawFactory(el, width, height, bounded = false, onBackground = ()
       if (themeObj) {
         // Propagate the global theme text color to visualMap labels.
         // ECharts does not automatically inherit global textStyle into
-        // visualMap.textStyle, so we inject it here before registering.
-        // `injectedVisualMapColor` distinguishes a color we wrote on an earlier
+        // visualMap.textStyle, so it is injected here before registering.
+        // `injectedVisualMapColor` distinguishes a color written on an earlier
         // render (which must be replaced when the theme flips) from one the
         // caller set in R (which must not be touched).
         const fgColor = themeObj.textStyle?.color;
@@ -245,7 +267,7 @@ function rtemisDrawFactory(el, width, height, bounded = false, onBackground = ()
     };
 
     // Re-render when the effective color scheme changes. The guard compares
-    // against the scheme actually rendered, so unrelated body-class churn --
+    // against the scheme last rendered, so unrelated body-class churn --
     // which the watcher reports a lot of -- does not cost a re-render.
     const stopWatchingTheme = RtemisThemeWatch.watch(
       el,

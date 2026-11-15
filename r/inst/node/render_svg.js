@@ -28,6 +28,45 @@ const rendererNames = registerRenderers(echarts);
 const layout = require("../htmlwidgets/lib/draw/panels.js");
 const confusion = require("../htmlwidgets/lib/draw/confusion.js");
 const a3 = require("../htmlwidgets/lib/draw/a3.js");
+const builders = require("../htmlwidgets/lib/draw/rtemis-draw-builders.js");
+
+// Build the option of a payload that carries a build request with the bundled
+// @rtemis/draw, in the light scheme offline export uses, without interactive
+// controls. spec: draw/shared-builders#r-widget
+function build(panel) {
+  const request = panel.build;
+  const builder = builders.builders[request.type];
+  if (!builder) throw new Error(`No @rtemis/draw builder for chart type '${request.type}'.`);
+  const data = typeof request.data === "string" ? JSON.parse(request.data) : request.data;
+  const appearance = {...request.appearance, dark: false};
+  const option = {...builder(data, request.config, appearance)};
+  // The builders leave the background to the host; export paints the theme's.
+  delete option.backgroundColor;
+  if (request.appearance?.grid) option.grid = {...option.grid, ...request.appearance.grid};
+  delete option.dataZoom;
+  delete option.toolbox;
+  panel.option = option;
+  if (request.type === "a3") {
+    panel.a3 = {...builders.a3SurfaceHints(data, request.config, appearance), ...panel.a3};
+  }
+  delete panel.build;
+}
+
+// The height an unset A3 export takes: the widget's unbounded fit, which holds
+// the plot body and the legend rail, measured at the export width. A body of
+// at least one pixel keeps the fit defined when glyph sizes are zero.
+function a3ExportHeight(panel, width) {
+  const hint = {...panel.a3, bodyHeight: Math.max(panel.a3.bodyHeight, 1)};
+  const chart = echarts.init(null, panel.theme || null,
+    {renderer: "svg", ssr: true, width, height: Math.max(Math.ceil(panel.a3.height), 1)});
+  try {
+    chart.setOption(panel.option);
+    a3.fit(chart, {...panel, a3: hint}, false);
+    return Math.ceil(chart.getHeight());
+  } finally {
+    chart.dispose();
+  }
+}
 
 // Escape the CSS color as XML attribute text, including caller-supplied values.
 function backgroundRect(payload, width, height) {
@@ -54,7 +93,7 @@ process.stdin.on("end", () => {
 	}
 
 	const width = payload.width || 800;
-	const height = payload.height || 600;
+	let height = payload.height || 600;
 	const creator = payload.creator || "rtemis.draw";
 	function renderPanel(panel, w, h) {
     if (panel.option?.grid3D) return require("../htmlwidgets/lib/draw/scatter3d.js").svg(panel,w,h);
@@ -107,6 +146,7 @@ process.stdin.on("end", () => {
 			const cells = layout.cells(payload.panels.length, payload.layout, width, height);
 			const parts = payload.panels.map((panel, i) => {
 				const cell = cells[i];
+				if (panel.build) build(panel);
 				layout.fit(panel, cell.width, cell.height);
 				// Nested SVG viewports clip each independent scene to its cell.
 				// One ECharts module supplies unique clip/style IDs across panels.
@@ -115,6 +155,10 @@ process.stdin.on("end", () => {
 			});
 			svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">${backgroundRect(payload, width, height)}${parts.join("")}</svg>`;
 		} else {
+			if (payload.build) {
+				build(payload);
+				if (payload.a3?.exportAutoHeight) height = a3ExportHeight(payload, width);
+			}
 			svg = renderPanel(payload, width, height);
 		}
 		process.stdout.write(svg.replace(/(<svg[^>]*>)/, `$1<!-- Created by ${creator} -->`));
