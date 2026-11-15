@@ -1,22 +1,21 @@
 test_that("bar matrices, tables and sorting preserve category-series identity", {
+  skip_if_no_node()
   mat <- matrix(
     c(2, 1, 4, 3),
     2,
     dimnames = list(c("A", "B"), c("First", "Second"))
   )
-  actual <- draw_bar(mat, order = "increasing")[["x"]][["option"]]
+  actual <- built_option(draw_bar(mat, order = "increasing"))
   expect_equal(actual[["xAxis"]][["data"]], c("B", "A"))
   expect_equal(actual[["series"]][[1]][["data"]], c(1, 2))
   expect_equal(actual[["series"]][[2]][["data"]], c(3, 4))
   counts <- table(c("A", "B", "B"))
   expect_equal(
-    draw_bar(names(counts), counts)[["x"]][["option"]][["series"]][[1]][[
-      "data"
-    ]],
+    built_option(draw_bar(names(counts), counts))[["series"]][[1]][["data"]],
     c(1L, 2L)
   )
   expect_equal(
-    draw_bar(counts)[["x"]][["option"]][["series"]][[1]][["data"]],
+    built_option(draw_bar(counts))[["series"]][[1]][["data"]],
     c(1L, 2L)
   )
   expect_equal(bar_input(c("A", "B"), c(2, 2), "decreasing")[["index"]], 1:2)

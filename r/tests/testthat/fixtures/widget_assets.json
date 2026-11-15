@@ -386,5 +386,13 @@
     "md5": [
       "36c7359c9ed6c9eda1f8baeb1f3b0f04"
     ]
+  },
+  "rtemis-draw-builders-0.2.0": {
+    "scripts": [
+      "rtemis-draw-builders.js"
+    ],
+    "md5": [
+      "3a2eae9e7ee6144e11dede4a4384f67b"
+    ]
   }
 }

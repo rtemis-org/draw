@@ -125,28 +125,34 @@ test_that("ScatterConfig carries zoom to the option", {
 
 # %% draw_bar ----
 test_that("draw_bar zoom targets the category axis in either orientation", {
-  opt <- draw_bar(c("A", "B", "C"), c(3, 7, 2), zoom = TRUE)$x$option
+  skip_if_no_node()
+  opt <- built_option(draw_bar(c("A", "B", "C"), c(3, 7, 2), zoom = TRUE))
   expect_identical(zoom_types(opt), c("slider", "inside"))
   expect_equal(opt[["dataZoom"]][[1L]][["xAxisIndex"]], 0)
   expect_identical(opt[["dataZoom"]][[2L]][["zoomOnMouseWheel"]], "shift")
-  opt <- draw_bar(
+  opt <- built_option(draw_bar(
     c("A", "B", "C"),
     c(3, 7, 2),
     horizontal = TRUE,
     zoom = TRUE
-  )$x$option
+  ))
   slider <- opt[["dataZoom"]][[1L]]
   expect_equal(slider[["yAxisIndex"]], 0)
   expect_null(slider[["xAxisIndex"]])
   expect_equal(slider[["right"]], DEFAULT_MARGINS[["right"]] + 7)
   expect_equal(opt[["grid"]][["right"]], DEFAULT_MARGINS[["right"]] + 45)
-  expect_null(draw_bar(c("A", "B"), c(1, 2))$x$option[["dataZoom"]])
+  expect_null(built_option(draw_bar(c("A", "B"), c(1, 2)))[["dataZoom"]])
+  expect_error(
+    draw_bar(c("A", "B"), c(1, 2), zoom = DataZoom()),
+    "TRUE or FALSE"
+  )
 })
 
 test_that("BarConfig carries zoom to the option", {
+  skip_if_no_node()
   data <- data.frame(g = c("a", "b"), v = c(1, 2))
   cfg <- setup_BarConfig(x = "g", y = "v", zoom = TRUE)
-  opt <- draw(cfg, data = data)$x$option
+  opt <- built_option(draw(cfg, data = data))
   expect_identical(zoom_types(opt), c("slider", "inside"))
 })
 
@@ -295,14 +301,6 @@ test_that("static_controls drops zoom controls and returns the slider band", {
   expect_null(out[["dataZoom"]])
   expect_equal(out[["grid"]][["bottom"]], DEFAULT_MARGINS[["bottom"]])
   opt <- strip_js(
-    draw_bar(c("a", "b"), 1:2, horizontal = TRUE, zoom = TRUE)$x$option,
-    path = "option"
-  )
-  expect_equal(
-    static_controls(opt)[["grid"]][["right"]],
-    DEFAULT_MARGINS[["right"]]
-  )
-  opt <- strip_js(
     draw_gantt(data.frame(label = "a", start = 0, end = 1))$x$option,
     path = "option"
   )
@@ -372,4 +370,21 @@ test_that("value-axis endpoint labels appear only at tick multiples", {
   )
   expect_null(attr(result, "status"), info = paste(result, collapse = "\n"))
   expect_match(paste(result, collapse = "\n"), "Endpoint labels passed")
+})
+
+
+test_that("SVG export of a built chart drops zoom and returns the slider band", {
+  skip_if_no_node()
+  path <- tempfile(fileext = ".svg")
+  on.exit(unlink(path), add = TRUE)
+  svg <- function(zoom) {
+    save_drawing(
+      draw_bar(c("a", "b"), 1:2, horizontal = TRUE, zoom = zoom),
+      path,
+      width = 500,
+      height = 300
+    )
+    paste(readLines(path, warn = FALSE), collapse = "\n")
+  }
+  expect_identical(svg(TRUE), svg(FALSE))
 })

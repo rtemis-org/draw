@@ -97,7 +97,7 @@ control.}
 htmlwidget: Widget object.
 }
 \description{
-Quick bar chart from x/y data.
+Bar chart from x/y data.
 }
 \examples{
 draw_bar(x = c("A", "B", "C"), y = c(3, 7, 2), title = "Counts")

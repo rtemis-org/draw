@@ -1,0 +1,109 @@
+{
+  "title": {
+    "text": "Cars"
+  },
+  "tooltip": {
+    "trigger": "axis"
+  },
+  "legend": {
+    "data": [
+      "mpg",
+      "hp"
+    ]
+  },
+  "xAxis": {
+    "type": "value",
+    "axisTick": {
+      "show": false
+    },
+    "min": 0,
+    "max": 300,
+    "name": "Value",
+    "nameLocation": "middle"
+  },
+  "yAxis": {
+    "type": "category",
+    "data": [
+      "Duster 360",
+      "Hornet Sportabout",
+      "Hornet 4 Drive",
+      "Mazda RX4",
+      "Mazda RX4 Wag",
+      "Valiant",
+      "Datsun 710",
+      "Merc 240D"
+    ],
+    "axisPointer": {
+      "type": "none"
+    },
+    "axisTick": {
+      "show": false
+    },
+    "name": "Model",
+    "nameLocation": "middle"
+  },
+  "grid": {
+    "left": 120,
+    "outerBoundsMode": "same",
+    "outerBoundsContain": "all",
+    "right": 60
+  },
+  "dataZoom": [
+    {
+      "type": "slider",
+      "id": "rtemis-zoom-slider",
+      "start": 0,
+      "end": 100,
+      "yAxisIndex": 0,
+      "right": 22,
+      "width": 30
+    },
+    {
+      "type": "inside",
+      "yAxisIndex": 0,
+      "zoomOnMouseWheel": "shift",
+      "moveOnMouseMove": true
+    }
+  ],
+  "series": [
+    {
+      "type": "bar",
+      "name": "mpg",
+      "data": [
+        14.3,
+        18.7,
+        21.4,
+        21,
+        21,
+        18.1,
+        22.8,
+        24.4
+      ],
+      "stack": "total",
+      "barWidth": 12,
+      "itemStyle": {
+        "color": "#6CA3A0"
+      }
+    },
+    {
+      "type": "bar",
+      "name": "hp",
+      "data": [
+        245,
+        175,
+        110,
+        110,
+        110,
+        105,
+        93,
+        62
+      ],
+      "stack": "total",
+      "barWidth": 12,
+      "itemStyle": {
+        "color": "#EF8A00"
+      }
+    }
+  ],
+  "animation": false
+}

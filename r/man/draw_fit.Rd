@@ -42,7 +42,7 @@ disables fitting. The fitted line and standard-error band are computed per
 group when \code{group} is provided.}
 
 \item{se}{Logical: Whether to show the standard-error band. Algorithms
-without standard errors (every rtemis algorithm except GLM, GAM and a few
+without standard errors (every rtemis algorithm except GLM, GAM, and a few
 others) draw the line alone.}
 
 \item{se_times}{Numeric \verb{[0, Inf)}: Standard-error multiplier for the band.}
@@ -60,7 +60,7 @@ and width in pixels, excluding axis labels and margins.}
 
 \item{equal_axes}{Logical: If TRUE, give one data unit the same size in
 pixels on both axes. Set both for a plot that is square \emph{and} to scale,
-such as a true-versus-predicted plot whose identity line should run at 45
+such as a true-versus-predicted plot whose identity line runs at 45
 degrees; the two axes are then made to span the same interval. See
 Details.}
 

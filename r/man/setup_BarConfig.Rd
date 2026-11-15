@@ -7,6 +7,9 @@
 setup_BarConfig(
   x = NULL,
   y = NULL,
+  group = NULL,
+  aggregate = "none",
+  ylim = NULL,
   stack = FALSE,
   horizontal = FALSE,
   palette = NULL,

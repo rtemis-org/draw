@@ -17,9 +17,11 @@ interface Case {
   appearance?: Record<string, unknown>;
 }
 
+// An A3 document is read through @rtemis/a3; any other fixture is the chart's
+// data as JSON (a columnar source for a tabular chart).
 function load(name: string): unknown {
   const text = readFileSync(new URL(`../fixtures/${name}`, dir), "utf8");
-  return new A3(JSON.parse(text)).toData();
+  return name.endsWith(".a3.json") ? new A3(JSON.parse(text)).toData() : JSON.parse(text);
 }
 
 describe("option corpus", () => {

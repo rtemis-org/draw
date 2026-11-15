@@ -75,7 +75,7 @@ title. A title does not add a missing legend.}
 htmlwidget: Widget object.
 }
 \description{
-Quick pie chart from values and labels.
+Pie chart from values and labels.
 }
 \examples{
 draw_pie(

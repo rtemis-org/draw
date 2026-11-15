@@ -27,10 +27,17 @@ const option = builders.a3(a3Document, config)
 | Type | Builder | Data | Config schema |
 |---|---|---|---|
 | `a3` | `buildA3Option(document, config, appearance)` | an A3 document (`@rtemis/a3` `A3Data`) | `https://schema.rtemis.org/chart/a3/v1/schema.json` |
+| `bar` | `buildBarOption(data, config, appearance)` | tabular data, `{columns, levels}` | `https://schema.rtemis.org/chart/bar/v1/schema.json` |
+
+Tabular data holds the columns the config binds, each an array or typed array, and optionally the level order of categorical columns. A bar chart draws one bar per row; with `group`, one bar per distinct category and group, in level order. When `group` or `aggregate` is set, the data must hold one row per category and group: the host combines rows as `aggregate` says (rtemislive in DuckDB, rtemis.draw in R) before building.
 
 `appearance` holds what every chart type shares and the config does not: the light or dark theme, the font family, the title inset, the legend gap, and animation. Every member of `config` and `appearance` is optional.
 
 `a3SurfaceHints(document, config, appearance)` returns the height that keeps the layout's row spacing, the plot body height, and the glyph sizes, for a renderer that sizes its surface before drawing.
+
+## Themes
+
+`themeOption(tokens)` projects a theme's tokens (fonts, text sizes, surface colors, the palette, sign colors, axis colors, and gridline colors) to the ECharts theme object a host registers with `echarts.registerTheme()` or `chart.setTheme()`. `lightThemeTokens()` and `darkThemeTokens()` give rtemis.draw's light and dark themes, whose projections equal the objects `theme_light()` and `theme_dark()` register. Builders write no path the theme owns.
 
 ## In rtemis.draw
 

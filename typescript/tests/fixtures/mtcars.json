@@ -1,0 +1,19 @@
+{
+  "columns": {
+    "model": [
+      "Mazda RX4",
+      "Mazda RX4 Wag",
+      "Datsun 710",
+      "Hornet 4 Drive",
+      "Hornet Sportabout",
+      "Valiant",
+      "Duster 360",
+      "Merc 240D"
+    ],
+    "cyl": ["6", "6", "4", "6", "8", "6", "8", "4"],
+    "am": ["manual", "manual", "manual", "auto", "auto", "auto", "auto", "auto"],
+    "mpg": [21, 21, 22.8, 21.4, 18.7, 18.1, 14.3, 24.4],
+    "hp": [110, 110, 93, 110, 175, 105, 245, 62]
+  },
+  "levels": { "cyl": ["4", "6", "8"] }
+}

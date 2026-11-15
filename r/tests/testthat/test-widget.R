@@ -71,7 +71,7 @@ test_that("draw_line handles named list for multiple series", {
   expect_equal(length(w$x$option$series), 2L)
   expect_equal(w$x$option$series[[1]]$name, "Series 1")
   expect_equal(w$x$option$series[[2]]$name, "Series 2")
-  # Legend should be present for multiple series
+  # Multiple series draw a legend
   expect_false(is.null(w$x$option$legend))
 })
 
@@ -141,7 +141,7 @@ test_that("draw_line block_opacity rejects out-of-range values", {
 
 test_that("draw_line drops unused factor levels in blocks", {
   # Factor has levels A, B, C but only A and B appear. block_color has only
-  # A and B — should succeed (unused C dropped).
+  # A and B — succeeds, with the unused C dropped.
   w <- draw_line(
     x = 1:4,
     y = c(1, 2, 3, 4),
@@ -189,7 +189,7 @@ test_that("draw_line blocks attaches markArea to the first series", {
 })
 
 test_that("draw_line blocks leaves gap when a skipped run sits between", {
-  # B is transparent, so runs either side should NOT extend across it.
+  # B is transparent, so runs either side do not extend across it.
   w <- draw_line(
     x = 1:6,
     y = 1:6,
@@ -320,7 +320,7 @@ test_that("draw_line rejects invalid zoom values", {
 test_that("draw_line defaults xlim/ylim to exact data range (no padding)", {
   w <- draw_line(x = c(1, 2, 3, 4), y = c(10, 20, 15, 25))
   # Limits extend the data range by `pad` (4% by default), as on every other
-  # value axis; `draw_line` used to sit hard against the data range.
+  # value axis.
   expect_equal(w$x$option$xAxis$min, 1 - 0.04 * 3)
   expect_equal(w$x$option$xAxis$max, 4 + 0.04 * 3)
   expect_equal(w$x$option$yAxis$min, 10 - 0.04 * 15)
@@ -429,63 +429,75 @@ test_that("draw_line emphasizes zero on category x-axis", {
 # -- draw_bar -------------------------------------------------------------------
 
 test_that("draw_bar creates widget", {
+  skip_if_no_node()
   w <- draw_bar(
     x = c("Q1", "Q2", "Q3"),
     y = c(100, 200, 150)
   )
   expect_s3_class(w, "htmlwidget")
-  expect_equal(w$x$option$series[[1]]$type, "bar")
+  o <- built_option(w)
+  expect_equal(o$series[[1]]$type, "bar")
 })
 
 test_that("draw_bar applies a single color to a single series", {
+  skip_if_no_node()
   w <- draw_bar(
     x = c("Q1", "Q2", "Q3"),
     y = c(100, 200, 150),
     palette = "#ff0000"
   )
-  expect_equal(w$x$option$series[[1]]$color, "#ff0000")
+  o <- built_option(w)
+  expect_equal(o$series[[1]]$itemStyle$color, "#ff0000")
 })
 
 test_that("draw_bar recycles colors across individual bars", {
+  skip_if_no_node()
   w <- draw_bar(
     x = c("Q1", "Q2", "Q3"),
     y = c(100, 200, 150),
     palette = c("#ff0000", "#00ff00")
   )
-  expect_equal(w$x$option$series[[1]]$data[[1]]$itemStyle$color, "#ff0000")
-  expect_equal(w$x$option$series[[1]]$data[[2]]$itemStyle$color, "#00ff00")
-  expect_equal(w$x$option$series[[1]]$data[[3]]$itemStyle$color, "#ff0000")
+  o <- built_option(w)
+  expect_equal(o$series[[1]]$data[[1]]$itemStyle$color, "#ff0000")
+  expect_equal(o$series[[1]]$data[[2]]$itemStyle$color, "#00ff00")
+  expect_equal(o$series[[1]]$data[[3]]$itemStyle$color, "#ff0000")
 })
 
 test_that("draw_bar stacked", {
+  skip_if_no_node()
   w <- draw_bar(
     x = c("A", "B"),
     y = list("X" = c(10, 20), "Y" = c(5, 15)),
     stack = TRUE
   )
-  expect_equal(w$x$option$series[[1]]$stack, "total")
-  expect_equal(w$x$option$series[[2]]$stack, "total")
+  o <- built_option(w)
+  expect_equal(o$series[[1]]$stack, "total")
+  expect_equal(o$series[[2]]$stack, "total")
 })
 
 test_that("draw_bar recycles colors across multiple series", {
+  skip_if_no_node()
   w <- draw_bar(
     x = c("A", "B"),
     y = list("X" = c(10, 20), "Y" = c(5, 15), "Z" = c(7, 9)),
     palette = c("#ff0000", "#00ff00")
   )
-  expect_equal(w$x$option$series[[1]]$color, "#ff0000")
-  expect_equal(w$x$option$series[[2]]$color, "#00ff00")
-  expect_equal(w$x$option$series[[3]]$color, "#ff0000")
+  o <- built_option(w)
+  expect_equal(o$series[[1]]$itemStyle$color, "#ff0000")
+  expect_equal(o$series[[2]]$itemStyle$color, "#00ff00")
+  expect_equal(o$series[[3]]$itemStyle$color, "#ff0000")
 })
 
 test_that("draw_bar horizontal", {
+  skip_if_no_node()
   w <- draw_bar(
     x = c("A", "B"),
     y = c(10, 20),
     horizontal = TRUE
   )
-  expect_equal(w$x$option$xAxis$type, "value")
-  expect_equal(w$x$option$yAxis$type, "category")
+  o <- built_option(w)
+  expect_equal(o$xAxis$type, "value")
+  expect_equal(o$yAxis$type, "category")
 })
 
 # -- draw_scatter ---------------------------------------------------------------
@@ -1089,8 +1101,10 @@ test_that("draw_line rejects unrecognised margin side", {
 })
 
 test_that("draw_bar applies margins", {
+  skip_if_no_node()
   w <- draw_bar(x = c("A", "B"), y = c(1, 2), margins = c(top = 50))
-  expect_equal(w$x$option$grid$top, 50)
+  o <- built_option(w)
+  expect_equal(o$grid$top, 50)
 })
 
 test_that("draw_scatter applies margins", {
@@ -1200,12 +1214,15 @@ test_that("draw_line omits axis name when xlab/ylab are NULL", {
 })
 
 test_that("draw_bar applies xlab/ylab in vertical orientation", {
+  skip_if_no_node()
   w <- draw_bar(x = c("A", "B"), y = c(1, 2), xlab = "Group", ylab = "Count")
-  expect_equal(w$x$option$xAxis[["name"]], "Group")
-  expect_equal(w$x$option$yAxis[["name"]], "Count")
+  o <- built_option(w)
+  expect_equal(o$xAxis[["name"]], "Group")
+  expect_equal(o$yAxis[["name"]], "Count")
 })
 
 test_that("draw_bar xlab stays on the bottom axis in horizontal orientation", {
+  skip_if_no_node()
   w <- draw_bar(
     x = c("A", "B"),
     y = c(1, 2),
@@ -1213,8 +1230,9 @@ test_that("draw_bar xlab stays on the bottom axis in horizontal orientation", {
     xlab = "Count",
     ylab = "Group"
   )
-  expect_equal(w$x$option$xAxis[["name"]], "Count")
-  expect_equal(w$x$option$yAxis[["name"]], "Group")
+  o <- built_option(w)
+  expect_equal(o$xAxis[["name"]], "Count")
+  expect_equal(o$yAxis[["name"]], "Group")
 })
 
 test_that("draw_scatter applies xlab and ylab", {
@@ -1293,7 +1311,7 @@ test_that("draw_boxplot xlab applies in grouped multi-variable branch", {
 # does not know about, and those are declared after `...` so they must be named.
 # That leaves `...` empty in any correct call -- and makes a name landing in it
 # a name the method does not have. Silently dropping it is the worst way for a
-# typo to behave: the chart still renders, just not as asked.
+# typo to behave: the chart still renders, but not as asked.
 
 test_that("draw() rejects an argument it does not recognize", {
   option <- scatter_option(x = 1:5, y = 1:5)

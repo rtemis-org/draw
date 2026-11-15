@@ -22,7 +22,7 @@ DEFAULT_MARGINS <- c(top = 36, right = 36, bottom = 36, left = 36)
 #' - One given: the other matches it. The caller stated the window; both axes
 #'   use it.
 #' - Both given, spanning different intervals: an error. The caller asked for
-#'   two things that cannot both hold, and silently overriding either would
+#'   two requests that cannot both hold, and overriding either without a message would
 #'   discard a choice they made explicitly.
 #'
 #' With only one of the two flags set there is nothing to reconcile and the
@@ -79,7 +79,7 @@ equal_axis_limits <- function(x, y, xlim, ylim, pad, square, equal_axes) {
 #' Derive the `aspect` render hint from a built option
 #'
 #' The pixel geometry a square or equally-scaled plot needs, read off the option
-#' that was just built rather than recomputed: the resolved axis limits and the
+#' that was built rather than recomputed: the resolved axis limits and the
 #' grid margins are both already on it, and reading them is what keeps the hint
 #' and the chart from disagreeing.
 #'
@@ -121,7 +121,7 @@ aspect_meta <- function(option, square = FALSE, equal_axes = FALSE) {
 #' @param axis [Axis]: The axis.
 #' @param which Character: `"x"` or `"y"`, for the error message.
 #' @param square,equal_axes Logical: Which request is being served, so the error
-#'   names the argument the caller actually passed.
+#'   names the argument the caller passed.
 #'
 #' @return Numeric: Length-2 `c(min, max)`.
 #'
@@ -280,8 +280,8 @@ render_widget <- function(
       fill = should_fill
     ),
     package = "rtemis.draw",
-    # `elementId` is htmlwidgets' own argument name and stays camelCase; ours is
-    # `element_id`. This is the only place the two meet.
+    # `elementId` is htmlwidgets' own argument name and stays camelCase; this
+    # package's is `element_id`. This is the only place the two meet.
     elementId = element_id
   )
 }
@@ -426,7 +426,7 @@ draw_echarts_option <- function(
   meta = list()
 ) {
   # Animation is a *render* concern, not a fact about the chart: the same chart
-  # animates in an IDE pane and should not in a web canvas redrawing 100k points
+  # animates in an IDE pane and does not in a web canvas redrawing 100k points
   # on every interaction. So it is set here, on the way out, rather than being a
   # config property. NULL leaves whatever the option already carries, which is
   # ECharts' own default.
@@ -493,8 +493,8 @@ draw_echarts_option <- function(
   # deprecated `containLabel = TRUE` and yields tighter margins with no dead
   # space on the sides.
   #
-  # When a user-supplied grid is already present (e.g. via `margins`), we still
-  # inject `outerBoundsMode = "same"` so that unspecified sides auto-fit — but
+  # When a user-supplied grid is already present (e.g. via `margins`), this still
+  # injects `outerBoundsMode = "same"` so that unspecified sides auto-fit — but
   # skip when `containLabel` is set explicitly (heatmap uses `containLabel =
   # FALSE` for exact pixel margins).
   if (!is.null(option$xAxis) || !is.null(option$yAxis)) {
@@ -737,7 +737,7 @@ is_time_axis <- function(x) {
 #' Formats the value part of a tooltip row while leaving ECharts' own layout
 #' -- axis label header, series marker and name, right-aligned value -- in
 #' place. Integers print as they are; other numbers to two decimals, or in
-#' exponent form when they are very large or very small; anything that is not
+#' exponent form at a magnitude of 1e6 or more, or below 0.01; anything that is not
 #' a finite number passes through.
 #'
 #' @return `JS` function: For `Tooltip(value_formatter = )`.
@@ -795,7 +795,7 @@ line_option <- function(
   zoom = FALSE,
   margins = DEFAULT_MARGINS
 ) {
-  # Determine axis type: numbers get a value axis, dates and date-times a
+  # Determine axis type: numbers get a value axis, and dates and date-times a
   # time axis, which ECharts spaces by elapsed time and labels adaptively
   # (years, then months, then days as the span narrows). Anything else is a
   # category axis with one slot per distinct value.
@@ -837,10 +837,8 @@ line_option <- function(
   xlim <- limits[["xlim"]]
   ylim <- limits[["ylim"]]
 
-  # Resolve axis limits, extended by `pad` as on every other value axis. This
-  # used to be the exact data range, which put the first and last points hard
-  # against the plot edges while a scatter of the same data got 4% of room --
-  # two charts disagreeing about the same question.
+  # Resolve axis limits, extended by `pad` as on every other value axis, so a
+  # line and a scatter of the same data leave the same room at the edges.
   y_all <- if (is.list(y)) unlist(y, use.names = FALSE) else y
   x_lim <- if (!is.null(x_num)) (xlim %||% calc_limits(x_num, pad)) else NULL
   y_lim <- ylim %||% calc_limits(y_all, pad)
@@ -1034,7 +1032,7 @@ line_option <- function(
 
 #' Draw a Line Chart
 #'
-#' Quick line chart from x/y data.
+#' Line chart from x/y data.
 #'
 #' @param legend_position Character \{"top", "bottom", "left", "right",
 #'   "top-left", "top-right", "bottom-left", "bottom-right"\}: Legend anchor.
@@ -1058,7 +1056,7 @@ line_option <- function(
 #' *shape* of the plotting box: equal height and width in pixels, measured on
 #' the box itself, not including axis labels or margins. `equal_axes` is about
 #' *scale*: one data unit occupies the same number of pixels on both axes, so a
-#' 45-degree line really is a slope of 1.
+#' 45-degree line is a slope of 1.
 #'
 #' Either works alone. `equal_axes` on a chart whose x spans ten units and whose
 #' y spans one gives a wide, short box, which is what equal scaling means there.
@@ -1066,7 +1064,7 @@ line_option <- function(
 #' Asking for both is a statement about the limits, since the only square box in
 #' which both axes are equally scaled is one whose axes span the same interval.
 #' So both axes are made to span one interval: over all the values when neither
-#' limit was given, or the one you gave when you gave exactly one. Giving both
+#' limit was given, or the given one when exactly one was given. Giving both
 #' `xlim` and `ylim` as different intervals is an error rather than a silent
 #' override.
 #'
@@ -1092,7 +1090,7 @@ line_option <- function(
 #'   Defaults to `TRUE`; set to `FALSE` on long time-series where the symbols
 #'   add visual noise.
 #' @param blocks Optional factor, integer, character, or logical of length
-#'   `length(x)`: Per-x-value group label used to shade vertical background
+#'   `length(x)`: Per-x-value group label for the shaded vertical background
 #'   bands. Contiguous runs of the same level become one band. `NA` entries
 #'   produce no band.
 #' @param block_color Optional Character vector or list of length k, where
@@ -1266,7 +1264,7 @@ no_corner_axis_label <- function() {
 #'     zero position, giving the "bold zero line" effect;
 #'   - `show = FALSE` otherwise — echarts would otherwise fall back to the
 #'     lowest orthogonal value and draw an unwanted emphasis line at the plot
-#'     edge, which we suppress entirely.
+#'     edge, which `show = FALSE` suppresses.
 #'
 #' Returns `NULL` when `ortho_lim` is `NULL` (e.g. category orthogonal axis) to
 #' leave echarts' default behavior in place.
@@ -1394,7 +1392,7 @@ build_block_mark_area <- function(x, blocks, block_color, block_opacity) {
   # an unshaded strip between adjacent runs (e.g. x=8 to x=9). Extend each
   # drawn run's end to the next drawn run's start so they meet exactly. On a
   # category axis, echarts shades full cells inclusive of both endpoints, so
-  # extending would overlap — keep the simple per-run endpoints there.
+  # extending would overlap — keep the per-run endpoints there.
   extend_to_next <- is.numeric(x)
 
   pairs <- list()
@@ -1427,133 +1425,9 @@ build_block_mark_area <- function(x, blocks, block_color, block_opacity) {
 }
 
 
-#' Build the ECharts option for a bar chart
-#'
-#' The single implementation shared by [draw_bar()], which resolves its arguments
-#' from vectors, and `compile()` on the corresponding [ChartConfig], which
-#' resolves them from a data frame. The render targets stay with the caller.
-#' Category tooltips retain all series values without drawing a hover guide.
-#'
-#' @inheritParams draw_bar
-#'
-#' @return [EChartsOption]: The option object.
-#'
-#' @author EDG
-#' @keywords internal
-#' @noRd
-bar_option <- function(
-  x,
-  y = NULL,
-  palette = NULL,
-  stack = FALSE,
-  horizontal = FALSE,
-  xlab = NULL,
-  ylab = NULL,
-  title = NULL,
-  margins = DEFAULT_MARGINS,
-  bar_width = NULL,
-  order = "input",
-  zoom = FALSE
-) {
-  input <- bar_input(x, y, order)
-  x <- input[["x"]]
-  y <- input[["y"]]
-  if (!is.list(y) && length(palette) > 1L) {
-    palette <- rep_len(palette, length(x))[input[["index"]]]
-  }
-  # Validate this shared setting through the portable config property on both
-  # the vector and config paths; the low-level ECharts class also allows strings.
-  bar_width <- BarConfig(bar_width = bar_width)@bar_width
-  stack_group <- if (stack) "total" else NULL
-
-  if (is.list(y) && !is.null(names(y))) {
-    series_names <- names(y)
-    colors <- palette_colors(palette %||% rtemis_colors)
-    colors <- rep_len(colors, length(y))
-    series <- lapply(seq_along(y), function(i) {
-      BarSeries(
-        name = series_names[i],
-        data = y[[i]],
-        bar_width = bar_width,
-        stack = stack_group,
-        color = colors[i]
-      )
-    })
-  } else {
-    if (is.null(palette) || length(palette) <= 1L) {
-      series <- list(BarSeries(
-        data = y,
-        stack = stack_group,
-        color = palette,
-        bar_width = bar_width
-      ))
-    } else {
-      colors <- rep_len(palette_colors(palette), length(y))
-      data_items <- lapply(seq_along(y), function(i) {
-        list(
-          value = y[[i]],
-          itemStyle = list(color = colors[[i]])
-        )
-      })
-      series <- list(BarSeries(
-        data = data_items,
-        stack = stack_group,
-        bar_width = bar_width
-      ))
-    }
-  }
-
-  # Hide the redundant category guide while retaining axis tooltips and emphasis.
-  if (horizontal) {
-    x_ax <- Axis(type = "value", name = xlab)
-    y_ax <- Axis(
-      type = "category",
-      data = x,
-      name = ylab,
-      axis_pointer = list(type = "none")
-    )
-  } else {
-    x_ax <- Axis(
-      type = "category",
-      data = x,
-      name = xlab,
-      axis_pointer = list(type = "none")
-    )
-    y_ax <- Axis(type = "value", name = ylab)
-  }
-  # End-positioned names consume horizontal plot space for long measure
-  # labels. Match line/scatter charts and let ECharts resolve label clearance.
-  if (!is.null(xlab)) {
-    x_ax@name_location <- "middle"
-  }
-  if (!is.null(ylab)) {
-    y_ax@name_location <- "middle"
-  }
-
-  # The preset zooms the category axis.
-  zoomed <- zoom_layout(
-    zoom,
-    axis = if (horizontal) "y" else "x",
-    grid = resolve_margins(margins)
-  )
-  opt <- EChartsOption(
-    title = if (!is.null(title)) Title(text = title) else NULL,
-    tooltip = Tooltip(trigger = "axis"),
-    legend = if (length(series) > 1L) Legend() else NULL,
-    x_axis = x_ax,
-    y_axis = y_ax,
-    grid = zoomed[["grid"]],
-    data_zoom = zoomed[["data_zoom"]],
-    series = series
-  )
-
-  opt
-} # /rtemis.draw::bar_option
-
-
 #' Draw a Bar Chart
 #'
-#' Quick bar chart from x/y data.
+#' Bar chart from x/y data.
 #'
 #' @param x Character or Numeric: Category labels, or values when y is omitted.
 #'   A matrix or two-dimensional table supplies categories in rows and series
@@ -1615,23 +1489,64 @@ draw_bar <- function(
   legend_title = NULL,
   zoom = FALSE
 ) {
-  opt <- bar_option(
-    x = x,
-    y = y,
-    palette = palette,
+  if (!isTRUE(zoom) && !isFALSE(zoom)) {
+    abort(
+      "`zoom` takes TRUE or FALSE.",
+      class = c("rtemis_type_error", "rtemis_input_error")
+    )
+  }
+  margin <- parse_margins(margins)
+  pixels <- function(v) if (is.null(v)) NULL else as.integer(round(v))
+  for (side in names(margin)) {
+    if (!is.null(margin[[side]]) && !is.numeric(margin[[side]])) {
+      abort(
+        "`margins` takes pixels; '",
+        side,
+        "' is not a number.",
+        class = c("rtemis_type_error", "rtemis_input_error")
+      )
+    }
+  }
+  # The categories and value series, in `order`, as columns: `.category` and
+  # one column per series. The request is built without `resolve()`, which
+  # would name the axes after these columns, so the axes are named only when
+  # `xlab` or `ylab` is given.
+  input <- bar_input(x, y, order)
+  values <- if (is.list(input[["y"]])) {
+    input[["y"]]
+  } else {
+    list(.value = input[["y"]])
+  }
+  data <- c(list(.category = input[["x"]]), values)
+  if (!is.list(input[["y"]]) && length(palette) > 1L) {
+    palette <- rep_len(palette, length(input[["x"]]))[input[["index"]]]
+  }
+  config <- setup_BarConfig(
+    x = ".category",
+    y = names(values),
     stack = stack,
     horizontal = horizontal,
-    bar_width = bar_width,
-    order = order,
+    palette = palette,
     xlab = xlab,
     ylab = ylab,
     title = title,
-    margins = margins,
+    margin_top = pixels(margin[["top"]]),
+    margin_right = pixels(margin[["right"]]),
+    margin_bottom = pixels(margin[["bottom"]]),
+    margin_left = pixels(margin[["left"]]),
+    bar_width = bar_width,
+    legend_position = legend_position,
+    legend_placement = legend_placement,
+    legend_title = legend_title,
     zoom = zoom
   )
-
   draw(
-    opt,
+    BuildRequest(
+      type = "bar",
+      data = tabular_json(data, names(data)),
+      config = config_members(config),
+      appearance = list()
+    ),
     theme = theme,
     width = width,
     height = height,
@@ -1661,7 +1576,7 @@ draw_bar <- function(
 #' @param fit_alpha Numeric `[0, 1]`: Opacity of the standard-error band.
 #' @param point_alpha Optional Numeric `[0, 1]`: Point opacity. `NULL` sets it
 #'   from the number of points drawn.
-#' @param n_fit Integer `[2, Inf)`: Points used to draw the fit.
+#' @param n_fit Integer `[2, Inf)`: Points that draw the fit.
 #' @param palette Optional Character: Series colors.
 #' @param xlim,ylim Optional Numeric: Axis limits, length 2.
 #' @param pad Numeric `[0, Inf)`: Fraction of the data range to extend each
@@ -2026,7 +1941,7 @@ scatter_option <- function(
 
 #' Draw a Scatter Plot
 #'
-#' Quick scatter plot from x/y data with optional fitted line and
+#' Scatter plot from x/y data with optional fitted line and
 #' confidence band.
 #'
 #' @details
@@ -2036,7 +1951,7 @@ scatter_option <- function(
 #' *shape* of the plotting box: equal height and width in pixels, measured on
 #' the box itself, not including axis labels or margins. `equal_axes` is about
 #' *scale*: one data unit occupies the same number of pixels on both axes, so a
-#' 45-degree line really is a slope of 1.
+#' 45-degree line is a slope of 1.
 #'
 #' Either works alone. `equal_axes` on a chart whose x spans ten units and whose
 #' y spans one gives a wide, short box, which is what equal scaling means there.
@@ -2044,7 +1959,7 @@ scatter_option <- function(
 #' Asking for both is a statement about the limits, since the only square box in
 #' which both axes are equally scaled is one whose axes span the same interval.
 #' So both axes are made to span one interval: over all the values when neither
-#' limit was given, or the one you gave when you gave exactly one. Giving both
+#' limit was given, or the given one when exactly one was given. Giving both
 #' `xlim` and `ylim` as different intervals is an error rather than a silent
 #' override.
 #'
@@ -2072,7 +1987,7 @@ scatter_option <- function(
 #'   arguments are listed in `?rtemis::setup_LINAD`. `NULL` uses the learner's
 #'   defaults.
 #' @param se Logical: Whether to show the standard-error band. Algorithms
-#'   without standard errors (every rtemis algorithm except GLM, GAM and a few
+#'   without standard errors (every rtemis algorithm except GLM, GAM, and a few
 #'   others) draw the line alone.
 #' @param se_times Numeric `[0, Inf)`: Standard-error multiplier for the band.
 #' @param fit_name Optional Character: Label for fitted layers.
@@ -2111,7 +2026,7 @@ scatter_option <- function(
 #'   and width in pixels, excluding axis labels and margins.
 #' @param equal_axes Logical: If TRUE, give one data unit the same size in
 #'   pixels on both axes. Set both for a plot that is square *and* to scale,
-#'   such as a true-versus-predicted plot whose identity line should run at 45
+#'   such as a true-versus-predicted plot whose identity line runs at 45
 #'   degrees; the two axes are then made to span the same interval. See
 #'   Details.
 #' @param xlab Optional Character: X-axis title.
@@ -2302,7 +2217,7 @@ pie_option <- function(
 
 #' Draw a Pie Chart
 #'
-#' Quick pie chart from values and labels.
+#' Pie chart from values and labels.
 #'
 #' @param values Numeric or data frame: Slice values, or a two-column table
 #'   containing labels followed by values. Values must be finite and nonnegative
@@ -2681,8 +2596,8 @@ hclust_to_dendro_data <- function(h, uniform = FALSE, leaf_positions = NULL) {
   }
 
   # Heights used for rendering: actual merge distances or uniform levels 1..n-1.
-  # Uniform heights give each merge step equal visual height, making the
-  # dendrogram easier to read when merge distances span a wide range.
+  # Uniform heights give each merge step equal visual height, which separates
+  # merges when merge distances span a wide range.
   heights <- if (uniform) seq_len(n - 1L) else h[["height"]]
 
   # Build one 5-tuple per merge: [left_pos, right_pos, left_h, right_h, merge_h]
@@ -2737,7 +2652,7 @@ diverging_palette <- function(neg_color, mid_color, pos_color, zlim, n = 101L) {
 # @param min_h Numeric: height of the lowest merge.
 # @param max_h Numeric: height of the root merge.
 # @param stub_frac Numeric `(0, 1)`: fraction of visible range allocated to stubs.
-# @return Numeric: axis min value (may be negative for very compressed ranges).
+# @return Numeric: axis min value (negative for compressed ranges).
 # @keywords internal
 # @noRd
 dendro_axis_min <- function(min_h, max_h, stub_frac = 0.1) {
@@ -3597,7 +3512,7 @@ heatmap_option <- function(
 
 #' Draw a Heatmap
 #'
-#' Quick heatmap from a numeric matrix. Designed to handle all common use cases
+#' Heatmap from a numeric matrix. Designed to handle all common use cases
 #' including correlation matrices (square cells, diverging color scale),
 #' general rectangular heatmaps, and clustered heatmaps.
 #'
@@ -3663,14 +3578,14 @@ heatmap_option <- function(
 #' @param zlim Optional Numeric: Length-2 vector `c(min, max)` for the color scale.
 #'   Defaults to the observed data range. For correlation matrices, `c(-1, 1)` is
 #'   recommended.
-#' @param row_tree,col_tree Optional hclust, dendrogram or List: Supplied trees.
+#' @param row_tree,col_tree Optional hclust, dendrogram, or List: Supplied trees.
 #'   A plain tree record contains `merge`, `height`, `order` and optional `labels`.
 #'   Labeled leaves match original matrix dimnames; unlabeled trees are positional.
 #'   Supplied trees determine order and take precedence over computed clustering.
 #'   Triangle masking is unavailable with supplied trees.
 #' @param cell_notes Optional Character matrix: Literal cell notes for hover.
 #'   Named dimensions align to original matrix identities; otherwise positional.
-#' @param row_colors,col_colors Optional Character vector, matrix or Data frame:
+#' @param row_colors,col_colors Optional Character vector, matrix, or Data frame:
 #'   R colors, one row per matrix row/column and one column per annotation track.
 #'   Row names, when supplied, match the original matrix identities.
 #' @param show_notes Logical: Print cell notes instead of numeric value labels.

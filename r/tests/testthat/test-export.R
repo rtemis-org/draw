@@ -1,6 +1,6 @@
 # test-export.R
 # Tests for save_drawing(). The SVG path itself needs a `node` binary, so the
-# node-free tests here cover the guards and, importantly, that a rejected
+# node-free tests here cover the guards and that a rejected
 # export leaves nothing behind at the caller's path.
 
 test_that("save_drawing rejects a non-widget", {
@@ -131,7 +131,8 @@ test_that("static preparation preserves missing data dimensions and positions", 
 
 
 test_that("unsupported callbacks and backends leave existing output untouched", {
-  w <- draw_bar(x = c("A", "B"), y = c(1, 2))
+  # An option built in R, where a caller can attach a JavaScript callback.
+  w <- draw_line(x = c(1, 2), y = c(1, 2))
   path <- tempfile(fileext = ".svg")
   on.exit(unlink(path), add = TRUE)
   writeLines("existing output", path)

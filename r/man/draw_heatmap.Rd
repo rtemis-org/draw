@@ -169,7 +169,7 @@ colorbar: above left/right legends and vertical colorbars, before the
 first row of top/bottom legends and horizontal colorbars. \code{NULL} draws no
 title. A title does not add a missing legend.}
 
-\item{row_tree, col_tree}{Optional hclust, dendrogram or List: Supplied trees.
+\item{row_tree, col_tree}{Optional hclust, dendrogram, or List: Supplied trees.
 A plain tree record contains \code{merge}, \code{height}, \code{order} and optional \code{labels}.
 Labeled leaves match original matrix dimnames; unlabeled trees are positional.
 Supplied trees determine order and take precedence over computed clustering.
@@ -178,7 +178,7 @@ Triangle masking is unavailable with supplied trees.}
 \item{cell_notes}{Optional Character matrix: Literal cell notes for hover.
 Named dimensions align to original matrix identities; otherwise positional.}
 
-\item{row_colors, col_colors}{Optional Character vector, matrix or Data frame:
+\item{row_colors, col_colors}{Optional Character vector, matrix, or Data frame:
 R colors, one row per matrix row/column and one column per annotation track.
 Row names, when supplied, match the original matrix identities.}
 
@@ -193,7 +193,7 @@ A cut requires a supplied or computed tree. Cross-cluster branches stay gray
 htmlwidget: Widget object.
 }
 \description{
-Quick heatmap from a numeric matrix. Designed to handle all common use cases
+Heatmap from a numeric matrix. Designed to handle all common use cases
 including correlation matrices (square cells, diverging color scale),
 general rectangular heatmaps, and clustered heatmaps.
 }

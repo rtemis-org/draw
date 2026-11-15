@@ -71,7 +71,7 @@ arguments are listed in \code{?rtemis::setup_LINAD}. \code{NULL} uses the learne
 defaults.}
 
 \item{se}{Logical: Whether to show the standard-error band. Algorithms
-without standard errors (every rtemis algorithm except GLM, GAM and a few
+without standard errors (every rtemis algorithm except GLM, GAM, and a few
 others) draw the line alone.}
 
 \item{fit_alpha}{Numeric \verb{[0, 1]}: Opacity for the confidence-band fill.}
@@ -98,7 +98,7 @@ and width in pixels, excluding axis labels and margins.}
 
 \item{equal_axes}{Logical: If TRUE, give one data unit the same size in
 pixels on both axes. Set both for a plot that is square \emph{and} to scale,
-such as a true-versus-predicted plot whose identity line should run at 45
+such as a true-versus-predicted plot whose identity line runs at 45
 degrees; the two axes are then made to span the same interval. See
 Details.}
 
@@ -173,7 +173,7 @@ objects (or a list of them) for full control.}
 htmlwidget: Widget object.
 }
 \description{
-Quick scatter plot from x/y data with optional fitted line and
+Scatter plot from x/y data with optional fitted line and
 confidence band.
 }
 \section{Square and equally-scaled plots}{
@@ -181,7 +181,7 @@ confidence band.
 \emph{shape} of the plotting box: equal height and width in pixels, measured on
 the box itself, not including axis labels or margins. \code{equal_axes} is about
 \emph{scale}: one data unit occupies the same number of pixels on both axes, so a
-45-degree line really is a slope of 1.
+45-degree line is a slope of 1.
 
 Either works alone. \code{equal_axes} on a chart whose x spans ten units and whose
 y spans one gives a wide, short box, which is what equal scaling means there.
@@ -189,7 +189,7 @@ y spans one gives a wide, short box, which is what equal scaling means there.
 Asking for both is a statement about the limits, since the only square box in
 which both axes are equally scaled is one whose axes span the same interval.
 So both axes are made to span one interval: over all the values when neither
-limit was given, or the one you gave when you gave exactly one. Giving both
+limit was given, or the given one when exactly one was given. Giving both
 \code{xlim} and \code{ylim} as different intervals is an error rather than a silent
 override.
 

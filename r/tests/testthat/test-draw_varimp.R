@@ -160,8 +160,9 @@ test_that("ranking uses the absolute mean, not the mean absolute score", {
 })
 
 test_that("bars preserve signed values, physical axes, clean labels, and overrides", {
+  skip_if_no_node()
   data <- c(a = -8, b = 3, c = 1)
-  option <- draw_varimp(data, top_n = 2)[["x"]][["option"]]
+  option <- built_option(draw_varimp(data, top_n = 2))
   expect_identical(option[["yAxis"]][["data"]], c("b", "a"))
   expect_equal(unlist(option[["series"]][[1L]][["data"]]), c(3, -8))
   expect_identical(option[["xAxis"]][["name"]], "Importance")
@@ -175,7 +176,7 @@ test_that("bars preserve signed values, physical axes, clean labels, and overrid
     height = 500,
     palette = "#123456"
   )
-  opt <- vertical[["x"]][["option"]]
+  opt <- built_option(vertical)
   expect_identical(opt[["xAxis"]][["data"]], c("a", "b", "c"))
   expect_identical(opt[["xAxis"]][["name"]], "Predictor")
   expect_identical(opt[["yAxis"]][["name"]], "Score")
@@ -184,16 +185,17 @@ test_that("bars preserve signed values, physical axes, clean labels, and overrid
   expect_identical(opt[["title"]][["text"]], "VI")
   expect_equal(vertical[["width"]], 700)
   expect_equal(vertical[["height"]], 500)
-  expect_identical(opt[["series"]][[1L]][["color"]], "#123456")
+  expect_identical(opt[["series"]][[1L]][["itemStyle"]][["color"]], "#123456")
   sparse <- data.frame(
     variable = c("a", "b", "a"),
     fold = c("A", "A", "B"),
     score = c(2, 1, 4)
   )
   expect_message(
-    opt <- draw_varimp(sparse)[["x"]][["option"]],
+    widget <- draw_varimp(sparse),
     "b [(]1/2 folds[)]"
   )
+  opt <- built_option(widget)
   expect_identical(
     opt[["yAxis"]][["data"]],
     c("b", "a")
@@ -204,6 +206,7 @@ test_that("bars preserve signed values, physical axes, clean labels, and overrid
 })
 
 test_that("materialized importance bars survive config and data JSON round trips", {
+  skip_if_no_node()
   values <- data.frame(label = "one", importance = -3.125)
   config <- setup_BarConfig(
     x = "label",
@@ -228,18 +231,22 @@ test_that("materialized importance bars survive config and data JSON round trips
     draw_varimp(c(one = -3.125))[["x"]],
     draw(restored, data = rows)[["x"]]
   )
-  option <- draw(restored, data = rows)[["x"]][["option"]]
-  expect_null(option[["title"]])
-  parsed <- jsonlite::fromJSON(
-    jsonlite::toJSON(option, auto_unbox = TRUE),
-    simplifyVector = FALSE
+  widget <- draw(restored, data = rows)
+  # One-row columns stay JSON arrays.
+  expect_match(
+    widget[["x"]][["build"]][["data"]],
+    '"label":["one"]',
+    fixed = TRUE
   )
-  expect_length(parsed[["series"]][[1L]][["data"]], 1L)
-  expect_true(is.list(parsed[["yAxis"]][["data"]]))
+  option <- built_option(widget)
+  expect_null(option[["title"]])
+  expect_length(option[["series"]][[1L]][["data"]], 1L)
+  expect_identical(option[["yAxis"]][["data"]], "one")
 })
 
 
 test_that("ascending importance selection preserves scores and stable ties", {
+  skip_if_no_node()
   data <- varimp_data(c(negative = -8, positive = 3, tied = -3, zero = 0))
   expect_identical(
     summarize_varimp(data, decreasing = FALSE)[["variable"]],
@@ -272,7 +279,12 @@ test_that("ascending importance selection preserves scores and stable ties", {
       if (type == "bar") {
         args[["bar_width"]] <- 3
       }
-      opt <- do.call(draw_varimp, args)[["x"]][["option"]]
+      widget <- do.call(draw_varimp, args)
+      opt <- if (type == "bar") {
+        built_option(widget)
+      } else {
+        widget[["x"]][["option"]]
+      }
       labels <- opt[[if (horizontal) "yAxis" else "xAxis"]][["data"]]
       expect_identical(labels, if (horizontal) c("c", "b") else c("b", "c"))
       if (type == "bar") {

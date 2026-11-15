@@ -67,6 +67,22 @@ BarConfig <- new_class(
         vector = TRUE,
         description = "Columns holding the values, one series each."
       ),
+      group = prop_string(
+        NULL,
+        nullable = TRUE,
+        description = paste(
+          "Column whose values split each value column into one series per",
+          "group, over the distinct categories."
+        )
+      ),
+      aggregate = prop_string(
+        "none",
+        enum = c("none", "sum", "mean", "median", "count"),
+        description = paste(
+          "How rows sharing a category and group combine into one bar:",
+          "none draws one bar per row; count counts non-missing values."
+        )
+      ),
       order = prop_string(
         "input",
         enum = c("input", "increasing", "decreasing"),
@@ -100,6 +116,13 @@ BarConfig <- new_class(
         nullable = TRUE,
         vector = TRUE,
         description = "Series colors, overriding the theme palette. Unset uses the theme's."
+      ),
+      ylim = prop_float(
+        NULL,
+        nullable = TRUE,
+        vector = TRUE,
+        min_items = 2L,
+        description = "Value axis limits, minimum and maximum. Unset fits the data."
       ),
       xlab = prop_string(
         NULL,
@@ -171,6 +194,9 @@ BAR_ORIGIN_NAMES <- setdiff(
 setup_BarConfig <- function(
   x = NULL,
   y = NULL,
+  group = NULL,
+  aggregate = "none",
+  ylim = NULL,
   stack = FALSE,
   horizontal = FALSE,
   palette = NULL,
@@ -195,6 +221,9 @@ setup_BarConfig <- function(
   BarConfig(
     x = x,
     y = y,
+    group = group,
+    aggregate = aggregate,
+    ylim = if (is.null(ylim)) NULL else as.numeric(ylim),
     stack = stack,
     horizontal = horizontal,
     zoom = zoom,
@@ -253,32 +282,86 @@ bar_value_label <- function(config) {
 
 
 # %% compile.BarConfig ----
-# One bound column becomes a single series; several become a named list, one per
-# column, which is the shape `bar_option()` already takes from `draw_bar()`.
+# The option is built in JavaScript by @rtemis/draw, so compiling a bar config
+# gives the request the widget and SVG export pass to `RtemisDraw.builders.bar`:
+# the bound columns with any factor levels, and the config.
+# spec: draw/shared-builders#bar
 method(compile, BarConfig) <- function(config, data = NULL, theme = NULL, ...) {
-  x <- config_column(data, config@x, "x")
-  if (is.null(x) || is.null(config@y)) {
+  if (is.null(config@x) || is.null(config@y)) {
     abort(
       "A BarConfig needs both `x` and `y` set to draw.",
       class = c("rtemis_null_input", "rtemis_input_error")
     )
   }
-  values <- lapply(config@y, function(column) {
-    config_column(data, column, "y")
-  })
-  names(values) <- config@y
-  bar_option(
-    x = x,
-    y = if (length(values) == 1L) values[[1L]] else values,
-    palette = config@palette,
-    stack = config@stack,
-    horizontal = config@horizontal,
-    bar_width = config@bar_width,
-    order = config@order,
-    xlab = config@xlab,
-    ylab = config@ylab,
-    title = config@title,
-    margins = config_margins(config) %||% DEFAULT_MARGINS,
-    zoom = config@zoom
+  if (length(config@ylim) > 0L && length(config@ylim) != 2L) {
+    abort(
+      "`ylim` takes two values, the minimum and the maximum.",
+      class = c("rtemis_value_error", "rtemis_input_error")
+    )
+  }
+  columns <- unique(c(config@x, config@y, config@group))
+  for (name in columns) {
+    config_column(data, name, if (name %in% config@y) "y" else "x")
+  }
+  if (config@aggregate != "none") {
+    data <- bar_aggregate(
+      data,
+      c(config@x, config@group),
+      config@y,
+      config@aggregate
+    )
+  }
+  BuildRequest(
+    type = "bar",
+    data = tabular_json(data, columns),
+    config = config_members(config),
+    appearance = list()
   )
 }
+
+
+# %% bar_aggregate ----
+#' Combine the rows that share a category and group
+#'
+#' One row per distinct combination of the key columns, in order of first
+#' appearance, with each value column summarized by `fn`. Missing values are
+#' left out of each summary; `count` counts the non-missing values. Factor key
+#' columns keep their levels.
+#'
+#' @param data Data frame: The chart data.
+#' @param keys Character: Key columns, the category and the group.
+#' @param values Character: Value columns.
+#' @param fn Character \{"sum", "mean", "median", "count"\}: Summary.
+#'
+#' @return Data frame: The key and value columns, one row per combination.
+#'
+#' @author EDG
+#' @keywords internal
+#' @noRd
+bar_aggregate <- function(data, keys, values, fn) {
+  summary <- switch(
+    fn,
+    sum = function(v) sum(v, na.rm = TRUE),
+    mean = function(v) if (all(is.na(v))) NA_real_ else mean(v, na.rm = TRUE),
+    median = function(v) {
+      if (all(is.na(v))) NA_real_ else stats::median(v, na.rm = TRUE)
+    },
+    count = function(v) sum(!is.na(v))
+  )
+  key <- do.call(
+    paste,
+    c(lapply(keys, function(k) as.character(data[[k]])), sep = "\r")
+  )
+  first <- !duplicated(key)
+  out <- lapply(keys, function(k) data[[k]][first])
+  names(out) <- keys
+  index <- match(key, key[first])
+  for (v in values) {
+    out[[v]] <- vapply(
+      split(data[[v]], factor(index, levels = seq_len(sum(first)))),
+      summary,
+      numeric(1)
+    )
+  }
+  as.data.frame(out, stringsAsFactors = FALSE, optional = TRUE)
+} # /rtemis.draw::bar_aggregate

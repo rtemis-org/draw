@@ -258,7 +258,7 @@ method(compile, A3Config) <- function(
   BuildRequest(
     type = "a3",
     data = a3_document_json(data),
-    config = a3_config_list(config),
+    config = config_members(config),
     appearance = appearance
   )
 }
@@ -348,27 +348,4 @@ a3_document_json <- function(x) {
   on.exit(unlink(file), add = TRUE)
   rtemis.a3::write_A3json(x, file)
   paste(readLines(file, warn = FALSE), collapse = "\n")
-}
-
-
-# %% a3_config_list ----
-#' The chart/a3/v1 members of an A3 config, for the builder
-#'
-#' Every member is present. A `NULL` member is written as `NA`, which the
-#' widget and SVG serializers both write as JSON `null`, so the builder reads
-#' `position_every = NULL` as no position labels rather than as unset.
-#'
-#' @param config [A3Config].
-#'
-#' @return Named list.
-#'
-#' @author EDG
-#' @keywords internal
-#' @noRd
-a3_config_list <- function(config) {
-  names <- c("type", setdiff(A3_ORIGIN_NAMES, "dat_path"))
-  stats::setNames(
-    lapply(names, function(name) S7::prop(config, name) %||% NA),
-    names
-  )
 }

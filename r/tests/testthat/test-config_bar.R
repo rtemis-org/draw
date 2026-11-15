@@ -42,27 +42,37 @@ test_that("title is inherited from ChartConfig, not redeclared", {
 # %% compile ----
 
 test_that("one bound column draws one series and matches the vector path", {
+  skip_if_no_node()
   d <- bar_data()
   from_config <- compile(setup_BarConfig(x = "g", y = "u"), data = d)
-  from_vectors <- bar_option(x = d[["g"]], y = d[["u"]], xlab = "g", ylab = "u")
-  expect_identical(from_config, from_vectors)
+  expect_true(S7::S7_inherits(from_config, BuildRequest))
+  expect_identical(from_config@type, "bar")
+  expect_identical(
+    built_option(from_config),
+    built_option(draw_bar(d[["g"]], d[["u"]], xlab = "g", ylab = "u"))
+  )
 })
 
 test_that("several bound columns draw one series each, named by column", {
+  skip_if_no_node()
   d <- bar_data()
-  opt <- compile(
+  opt <- built_option(compile(
     setup_BarConfig(x = "g", y = c("u", "v"), stack = TRUE),
     data = d
+  ))
+  expect_length(opt[["series"]], 2L)
+  expect_identical(
+    vapply(opt[["series"]], function(s) s[["name"]], character(1)),
+    c("u", "v")
   )
-  expect_length(opt@series, 2L)
   expect_identical(
     opt,
-    bar_option(
-      x = d[["g"]],
-      y = list(u = d[["u"]], v = d[["v"]]),
+    built_option(draw_bar(
+      d[["g"]],
+      list(u = d[["u"]], v = d[["v"]]),
       stack = TRUE,
       xlab = "g"
-    )
+    ))
   )
 })
 
@@ -78,27 +88,26 @@ test_that("compile errors when x or y is unset", {
 })
 
 test_that("bar entry points retain category tooltips without hover guides", {
+  skip_if_no_node()
   d <- bar_data()
   for (horizontal in c(FALSE, TRUE)) {
     category_axis <- if (horizontal) "yAxis" else "xAxis"
     options <- list(
-      draw_bar(d[["g"]], d[["u"]], horizontal = horizontal)[["x"]][["option"]],
-      draw_varimp(c(a = 3, b = 1, c = 4), horizontal = horizontal)[["x"]][[
-        "option"
-      ]]
+      built_option(draw_bar(d[["g"]], d[["u"]], horizontal = horizontal)),
+      built_option(draw_varimp(c(a = 3, b = 1, c = 4), horizontal = horizontal))
     )
     # Grouped and stacked charts must keep the shared, multi-series tooltip.
     for (stack in c(FALSE, TRUE)) {
       options <- c(
         options,
         list(
-          draw_bar(
+          built_option(draw_bar(
             d[["g"]],
             list(u = d[["u"]], v = d[["v"]]),
             horizontal = horizontal,
             stack = stack
-          )[["x"]][["option"]],
-          to_list(compile(
+          )),
+          built_option(compile(
             setup_BarConfig(
               x = "g",
               y = c("u", "v"),
@@ -212,6 +221,7 @@ test_that("the bar schema declares y as an array of strings", {
 
 
 test_that("fixed bar thickness validates and round-trips through the schema", {
+  skip_if_no_node()
   cfg <- setup_BarConfig(x = "g", y = c("u", "v"), bar_width = 3)
   expect_identical(cfg@origin[["bar_width"]], "user")
   expect_null(BarConfig()@bar_width)
@@ -227,7 +237,7 @@ test_that("fixed bar thickness validates and round-trips through the schema", {
   expect_identical(read_chart_config(path), cfg)
   for (horizontal in c(TRUE, FALSE)) {
     cfg@horizontal <- horizontal
-    opt <- to_list(compile(cfg, data = bar_data()))
+    opt <- built_option(compile(cfg, data = bar_data()))
     expect_equal(
       vapply(opt[["series"]], function(s) s[["barWidth"]], numeric(1)),
       c(3, 3)
@@ -237,27 +247,97 @@ test_that("fixed bar thickness validates and round-trips through the schema", {
     expect_error(setup_BarConfig(bar_width = width))
     expect_error(draw_bar("a", 1, bar_width = width))
   }
-  expect_null(to_list(compile(
+  expect_null(built_option(compile(
     setup_BarConfig(x = "g", y = "u"),
     data = bar_data()
   ))[["series"]][[1]][["barWidth"]])
 })
 
 test_that("fixed thickness reaches every vector bar styling path", {
+  skip_if_no_node()
   for (palette in list(NULL, "#123456", c("#123456", "#654321"))) {
-    opt <- draw_bar(c("a", "b"), c(-3, 2), palette = palette, bar_width = 4)[[
-      "x"
-    ]][["option"]]
+    opt <- built_option(
+      draw_bar(c("a", "b"), c(-3, 2), palette = palette, bar_width = 4)
+    )
     expect_equal(opt[["series"]][[1]][["barWidth"]], 4)
   }
-  opt <- draw_bar(
+  opt <- built_option(draw_bar(
     c("a", "b"),
     list(u = c(-3, 2), v = c(1, 2)),
     stack = TRUE,
     bar_width = 5
-  )[["x"]][["option"]]
+  ))
   expect_equal(
     vapply(opt[["series"]], function(s) s[["barWidth"]], numeric(1)),
     c(5, 5)
   )
+})
+
+
+test_that("a grouped bar orders groups and categories by factor levels", {
+  skip_if_no_node()
+  d <- data.frame(
+    g = factor(c("a", "b", "a"), levels = c("b", "a")),
+    sex = factor(c("F", "F", "M"), levels = c("M", "F")),
+    v = c(1, 2, 3)
+  )
+  request <- compile(setup_BarConfig(x = "g", y = "v", group = "sex"), data = d)
+  data <- jsonlite::fromJSON(request@data)
+  expect_identical(data[["levels"]][["sex"]], c("M", "F"))
+  expect_identical(data[["columns"]][["sex"]], c("F", "F", "M"))
+  opt <- built_option(request)
+  expect_identical(opt[["xAxis"]][["data"]], c("b", "a"))
+  expect_identical(
+    vapply(opt[["series"]], function(s) s[["name"]], character(1)),
+    c("M", "F")
+  )
+  expect_equal(opt[["series"]][[1]][["data"]], c(NA, 3))
+})
+
+test_that("ylim reaches the value axis and takes two values", {
+  skip_if_no_node()
+  opt <- built_option(compile(
+    setup_BarConfig(x = "g", y = "u", ylim = c(0, 10), horizontal = TRUE),
+    data = bar_data()
+  ))
+  expect_identical(opt[["xAxis"]][c("min", "max")], list(min = 0L, max = 10L))
+  expect_error(setup_BarConfig(ylim = 1), "at least 2")
+})
+
+
+test_that("aggregate combines rows that share a category and group", {
+  skip_if_no_node()
+  d <- data.frame(
+    g = c("a", "a", "b", "a"),
+    sex = factor(c("F", "F", "F", "M"), levels = c("M", "F")),
+    v = c(1, 3, NA, 5)
+  )
+  for (fn in c("sum", "mean", "median", "count")) {
+    request <- compile(
+      setup_BarConfig(x = "g", y = "v", group = "sex", aggregate = fn),
+      data = d
+    )
+    columns <- jsonlite::fromJSON(request@data)[["columns"]]
+    expect_identical(columns[["g"]], c("a", "b", "a"))
+    expect_identical(columns[["sex"]], c("F", "F", "M"))
+    expect_equal(
+      columns[["v"]],
+      switch(
+        fn,
+        sum = c(4, 0, 5),
+        mean = c(2, NA, 5),
+        median = c(2, NA, 5),
+        count = c(2, 0, 1)
+      ),
+      info = fn
+    )
+  }
+  expect_error(
+    built_option(compile(
+      setup_BarConfig(x = "g", y = "v", group = "sex"),
+      data = d
+    )),
+    "aggregate"
+  )
+  expect_error(setup_BarConfig(aggregate = "max"))
 })

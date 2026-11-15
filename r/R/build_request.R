@@ -10,7 +10,7 @@
 
 # %% BUILDER_TYPES ----
 # Chart types with a builder in the bundled @rtemis/draw.
-BUILDER_TYPES <- c("a3")
+BUILDER_TYPES <- c("a3", "bar")
 
 
 # %% BuildRequest ----
@@ -21,7 +21,7 @@ BUILDER_TYPES <- c("a3")
 #' [draw()] sends it to the widget, and [save_drawing()] sends it to Node.js;
 #' each calls the builder for `type` with `data`, `config`, and `appearance`.
 #'
-#' @param type Character \{"a3"\}: Chart type.
+#' @param type Character \{"a3", "bar"\}: Chart type.
 #' @param data Character: The chart data as JSON text.
 #' @param config Named list: The chart config, an instance of the
 #'   `chart/<type>/v1` schema.
@@ -106,4 +106,90 @@ build_payload <- function(request, animation = NULL) {
     config = as_object(request@config),
     appearance = as_object(appearance)
   )
+}
+
+
+# %% config_members ----
+#' The schema members of a chart config, for a builder
+#'
+#' Every member except the provenance members (`origin`, `writer`) and
+#' `dat_path`, which describe where a config and its data came from. A `NULL`
+#' member is written as `NA`, which the widget and SVG serializers both write
+#' as JSON `null`, so a builder reads it as set to nothing rather than unset.
+#'
+#' @param config [ChartConfig].
+#'
+#' @return Named list.
+#'
+#' @author EDG
+#' @keywords internal
+#' @noRd
+config_members <- function(config) {
+  names <- setdiff(
+    names(S7::S7_class(config)@properties),
+    c(PROVENANCE_PROPS, "dat_path")
+  )
+  stats::setNames(
+    lapply(names, function(name) S7::prop(config, name) %||% NA),
+    names
+  )
+}
+
+
+# %% tabular_json ----
+#' A tabular chart's data, as @rtemis/draw's tabular builders take it
+#'
+#' The JSON text of `{columns, levels}`: `columns` maps each named column to an
+#' array of values, and `levels` maps each factor column to its level order.
+#' Numbers are written as numbers and missing values as `null`. A factor is
+#' written as its labels. A date or date-time is written as ISO 8601 text, and
+#' any other value as text.
+#'
+#' @param data Data frame or list: The chart data.
+#' @param columns Character: Columns to include.
+#'
+#' @return Character: JSON text.
+#'
+#' @author EDG
+#' @keywords internal
+#' @noRd
+tabular_json <- function(data, columns) {
+  as_values <- function(x) {
+    if (is.factor(x)) {
+      return(as.character(x))
+    }
+    if (inherits(x, "Date")) {
+      return(format(x, "%Y-%m-%d"))
+    }
+    if (inherits(x, "POSIXt")) {
+      return(format(x, "%Y-%m-%dT%H:%M:%S%z"))
+    }
+    if (is.numeric(x) || is.logical(x) || is.character(x)) {
+      return(unclass(x))
+    }
+    as.character(x)
+  }
+  values <- stats::setNames(
+    lapply(columns, function(name) as_values(data[[name]])),
+    columns
+  )
+  factors <- Filter(function(name) is.factor(data[[name]]), columns)
+  levels <- stats::setNames(
+    lapply(factors, function(name) levels(data[[name]])),
+    factors
+  )
+  as.character(jsonlite::toJSON(
+    list(
+      columns = values,
+      levels = if (length(levels)) {
+        levels
+      } else {
+        stats::setNames(list(), character(0))
+      }
+    ),
+    auto_unbox = FALSE,
+    na = "null",
+    null = "null",
+    digits = NA
+  ))
 }

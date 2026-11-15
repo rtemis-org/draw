@@ -29,6 +29,9 @@ const layout = require("../htmlwidgets/lib/draw/panels.js");
 const confusion = require("../htmlwidgets/lib/draw/confusion.js");
 const a3 = require("../htmlwidgets/lib/draw/a3.js");
 const builders = require("../htmlwidgets/lib/draw/rtemis-draw-builders.js");
+// The id and handle size of a zoom preset's slider (zoom.R, @rtemis/draw).
+const ZOOM_SLIDER_ID = builders.ZOOM_SLIDER_ID;
+const ZOOM_SLIDER_HANDLE = 7;
 
 // Build the option of a payload that carries a build request with the bundled
 // @rtemis/draw, in the light scheme offline export uses, without interactive
@@ -43,6 +46,16 @@ function build(panel) {
   // The builders leave the background to the host; export paints the theme's.
   delete option.backgroundColor;
   if (request.appearance?.grid) option.grid = {...option.grid, ...request.appearance.grid};
+  // A zoom preset's slider band returns to the plot, as static_controls()
+  // does in R for options built there.
+  for (const zoom of [].concat(option.dataZoom || [])) {
+    if (zoom.id !== ZOOM_SLIDER_ID) continue;
+    for (const side of ["bottom", "right"]) {
+      if (typeof zoom[side] === "number" && typeof option.grid?.[side] === "number") {
+        option.grid = {...option.grid, [side]: zoom[side] - ZOOM_SLIDER_HANDLE};
+      }
+    }
+  }
   delete option.dataZoom;
   delete option.toolbox;
   panel.option = option;

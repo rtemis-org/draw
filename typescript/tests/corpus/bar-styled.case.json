@@ -1,0 +1,21 @@
+{
+  "type": "bar",
+  "data": "mtcars.json",
+  "config": {
+    "x": "model",
+    "y": ["mpg", "hp"],
+    "order": "decreasing",
+    "stack": true,
+    "horizontal": true,
+    "zoom": true,
+    "bar_width": 12,
+    "palette": ["#6CA3A0", "#EF8A00"],
+    "ylim": [0, 300],
+    "xlab": "Value",
+    "ylab": "Model",
+    "title": "Cars",
+    "margin_left": 120,
+    "legend_position": "bottom"
+  },
+  "appearance": { "animation": false }
+}

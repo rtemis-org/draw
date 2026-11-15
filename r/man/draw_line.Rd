@@ -64,7 +64,7 @@ Defaults to \code{TRUE}; set to \code{FALSE} on long time-series where the symbo
 add visual noise.}
 
 \item{blocks}{Optional factor, integer, character, or logical of length
-\code{length(x)}: Per-x-value group label used to shade vertical background
+\code{length(x)}: Per-x-value group label for the shaded vertical background
 bands. Contiguous runs of the same level become one band. \code{NA} entries
 produce no band.}
 
@@ -154,7 +154,7 @@ title. A title does not add a missing legend.}
 htmlwidget: Widget object.
 }
 \description{
-Quick line chart from x/y data.
+Line chart from x/y data.
 }
 \details{
 Axis baselines emphasize zero only when it is in the visible orthogonal
@@ -165,7 +165,7 @@ range. Categorical x axes follow the same rule as numeric and time axes.
 \emph{shape} of the plotting box: equal height and width in pixels, measured on
 the box itself, not including axis labels or margins. \code{equal_axes} is about
 \emph{scale}: one data unit occupies the same number of pixels on both axes, so a
-45-degree line really is a slope of 1.
+45-degree line is a slope of 1.
 
 Either works alone. \code{equal_axes} on a chart whose x spans ten units and whose
 y spans one gives a wide, short box, which is what equal scaling means there.
@@ -173,7 +173,7 @@ y spans one gives a wide, short box, which is what equal scaling means there.
 Asking for both is a statement about the limits, since the only square box in
 which both axes are equally scaled is one whose axes span the same interval.
 So both axes are made to span one interval: over all the values when neither
-limit was given, or the one you gave when you gave exactly one. Giving both
+limit was given, or the given one when exactly one was given. Giving both
 \code{xlim} and \code{ylim} as different intervals is an error rather than a silent
 override.
 
