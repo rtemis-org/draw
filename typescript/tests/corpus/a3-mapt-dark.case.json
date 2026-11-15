@@ -1,0 +1,16 @@
+{
+  "type": "a3",
+  "data": "mapt.a3.json",
+  "config": {
+    "n_per_row": 30,
+    "position_every": 20,
+    "ptm_placement": "outerRadial",
+    "zoom": false,
+    "marker_size": 24,
+    "font_size": 16,
+    "region_opacity": 0.5,
+    "variant_color": "#ff0000",
+    "title": "MAPT isoform 2N4R"
+  },
+  "appearance": { "dark": true, "fontFamily": "Inter", "titleTop": 8, "legendGap": 40, "animation": false }
+}

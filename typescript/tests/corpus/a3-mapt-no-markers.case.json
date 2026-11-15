@@ -1,0 +1,6 @@
+{
+  "type": "a3",
+  "data": "mapt.a3.json",
+  "config": { "show_markers": false, "position_every": null, "ptm_placement": "innerRadial" },
+  "appearance": {}
+}
