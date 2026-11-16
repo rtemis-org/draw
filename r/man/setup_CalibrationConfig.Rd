@@ -36,7 +36,7 @@ setup_CalibrationConfig(
 )
 }
 \arguments{
-\item{observed}{Character: Column containing binary outcomes, zero or one.}
+\item{observed}{Character: Column containing binary outcomes, each 0 or 1.}
 
 \item{probability}{Character: Column containing predicted probabilities.}
 

@@ -115,10 +115,9 @@ S7::method(to_list, Theme) <- function(x, ...) {
   }
 
   # Propagate global textStyle to component defaults.
-  # ECharts component built-in defaults (e.g. title fontSize: 18) override the
-  # theme's global textStyle, so we merge the global textStyle into each
-  # component's textStyle as a fallback to ensure properties like fontSize
-  # actually take effect.
+  # ECharts component defaults (e.g. title fontSize: 18) take precedence over
+  # the theme's global textStyle, so the global textStyle is merged into each
+  # component's textStyle as a fallback, and properties such as fontSize apply.
   if (!is.null(out$textStyle)) {
     ts <- out$textStyle
     for (comp in c("title", "legend", "tooltip", "visualMap")) {
@@ -301,6 +300,7 @@ build_theme <- function(
     axisLine = if (!is.null(axis_color)) {
       list(lineStyle = list(color = axis_color))
     },
+    axisTick = list(show = FALSE),
     splitLine = if (!is.null(grid_color)) {
       list(lineStyle = list(color = grid_color))
     }
@@ -311,6 +311,7 @@ build_theme <- function(
     axisLine = if (!is.null(axis_color)) {
       list(lineStyle = list(color = axis_color))
     },
+    axisTick = list(show = FALSE),
     splitLine = list(show = FALSE)
   ))
 
@@ -416,7 +417,7 @@ build_theme <- function(
 #' @param tooltip_color Optional Character: Tooltip text color.
 #' @param negative_color,neutral_color,positive_color Character: Colors for
 #'   negative values, values of neither sign, and positive values, in every
-#'   chart that colors by sign. The defaults, blue, gray and orange, have equal
+#'   chart that colors by sign. The defaults, blue, gray, and orange, have equal
 #'   perceived lightness, keep at least 3.9:1 contrast on light and dark
 #'   backgrounds, and stay distinguishable under deuteranopia and protanopia.
 #' @return [Theme]: Theme object.

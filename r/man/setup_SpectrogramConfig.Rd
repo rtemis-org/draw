@@ -113,8 +113,10 @@ argument is optional}, which is what lets the published schema require
 nothing.
 }
 \examples{
-m <- matrix(abs(rnorm(64 * 20)) + 1, nrow = 64)
-draw(setup_SpectrogramConfig(), data = m)
+# Synthetic power of a tone rising in frequency: 64 frequency bins (rows)
+# by 20 time frames (columns).
+power <- outer(1:64, 1:20, function(f, t) exp(-(f - (8 + 2.5 * t))^2 / 18))
+draw(setup_SpectrogramConfig(), data = power + 0.01)
 }
 \author{
 EDG

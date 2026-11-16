@@ -1,4 +1,5 @@
-test_that("rolling windows preserve alignment, missing slots and full windows", {
+test_that("rolling windows summarize the values present when a majority is there", {
+  # Window 4 needs 3 values; positions beyond the ends count as missing.
   for (align in c("left", "right", "center")) {
     config <- setup_TimeSeriesConfig(
       window = 4L,
@@ -8,19 +9,41 @@ test_that("rolling windows preserve alignment, missing slots and full windows", 
     got <- rolling_values(1:8, config)
     expected <- switch(
       align,
-      left = c(2.5, 3.5, 4.5, 5.5, 6.5, NA, NA, NA),
-      right = c(NA, NA, NA, 2.5, 3.5, 4.5, 5.5, 6.5),
-      center = c(NA, 2.5, 3.5, 4.5, 5.5, 6.5, NA, NA)
+      left = c(2.5, 3.5, 4.5, 5.5, 6.5, 7, NA, NA),
+      right = c(NA, NA, 2, 2.5, 3.5, 4.5, 5.5, 6.5),
+      center = c(2, 2.5, 3.5, 4.5, 5.5, 6.5, 7, NA)
     )
-    expect_equal(got, expected)
+    expect_equal(got, expected, info = align)
   }
+  # Window 3 needs 2 values, and a sum the complete window.
   for (fn in c("mean", "median", "min", "max", "sum")) {
     config <- setup_TimeSeriesConfig(window = 3L, roll_fn = fn, align = "right")
-    expected <- switch(fn, mean = 3, median = 2, min = 1, max = 6, sum = 9)
-    expect_equal(rolling_values(c(1, 2, 6), config), c(NA, NA, expected))
-    expect_true(all(is.na(rolling_values(c(1, NA, 6), config))))
-    expect_true(all(is.na(rolling_values(c(1, 2), config))))
+    f <- switch(fn, mean = mean, median = stats::median, min = min, max = max)
+    if (fn == "sum") {
+      expect_equal(rolling_values(c(1, 2, 6), config), c(NA, NA, 9))
+      expect_true(all(is.na(rolling_values(c(1, NA, 6), config))))
+    } else {
+      expect_equal(
+        rolling_values(c(1, 2, 6), config),
+        c(NA, f(c(1, 2)), f(c(1, 2, 6)))
+      )
+      expect_equal(rolling_values(c(1, NA, 6), config), c(NA, NA, f(c(1, 6))))
+    }
   }
+  # min_obs sets the requirement, up to the window.
+  strict <- setup_TimeSeriesConfig(window = 3L, roll_fn = "mean", min_obs = 3L)
+  expect_true(all(is.na(rolling_values(c(1, NA, 6, 7), strict)[1:3])))
+  lenient <- setup_TimeSeriesConfig(
+    window = 3L,
+    roll_fn = "mean",
+    min_obs = 1L,
+    align = "right"
+  )
+  expect_equal(rolling_values(c(1, NA, NA), lenient), c(1, 1, 1))
+  expect_error(
+    setup_TimeSeriesConfig(window = 3L, min_obs = 4L),
+    "cannot exceed"
+  )
   expect_error(setup_TimeSeriesConfig(window = 2.5))
   expect_error(setup_TimeSeriesConfig(window = 0L))
   expect_error(setup_TimeSeriesConfig(roll_fn = "invalid"))

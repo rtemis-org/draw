@@ -46,10 +46,10 @@ test_that("draw_line creates widget from category vectors", {
     y = c(10, 20, 15)
   )
   expect_s3_class(w, "htmlwidget")
-  expect_equal(w$x$option$xAxis$type, "category")
-  expect_equal(w$x$option$series[[1]]$type, "line")
+  expect_equal(node_option(w)$xAxis$type, "category")
+  expect_equal(node_option(w)$series[[1]]$type, "line")
   # Category axis: data is y values only
-  expect_equal(w$x$option$series[[1]]$data, c(10, 20, 15))
+  expect_equal(node_option(w)$series[[1]]$data, c(10, 20, 15))
 })
 
 test_that("draw_line works with numeric x", {
@@ -57,10 +57,10 @@ test_that("draw_line works with numeric x", {
     x = c(1, 2, 3, 4),
     y = c(10, 20, 15, 25)
   )
-  expect_equal(w$x$option$xAxis$type, "value")
+  expect_equal(node_option(w)$xAxis$type, "value")
   # Value axis: data is [x, y] pairs
-  expect_equal(w$x$option$series[[1]]$data[[1]], c(1, 10))
-  expect_equal(w$x$option$series[[1]]$data[[4]], c(4, 25))
+  expect_equal(node_option(w)$series[[1]]$data[[1]], c(1, 10))
+  expect_equal(node_option(w)$series[[1]]$data[[4]], c(4, 25))
 })
 
 test_that("draw_line handles named list for multiple series", {
@@ -68,11 +68,11 @@ test_that("draw_line handles named list for multiple series", {
     x = c("A", "B", "C"),
     y = list("Series 1" = c(1, 2, 3), "Series 2" = c(3, 2, 1))
   )
-  expect_equal(length(w$x$option$series), 2L)
-  expect_equal(w$x$option$series[[1]]$name, "Series 1")
-  expect_equal(w$x$option$series[[2]]$name, "Series 2")
+  expect_equal(length(node_option(w)$series), 2L)
+  expect_equal(node_option(w)$series[[1]]$name, "Series 1")
+  expect_equal(node_option(w)$series[[2]]$name, "Series 2")
   # Multiple series draw a legend
-  expect_false(is.null(w$x$option$legend))
+  expect_false(is.null(node_option(w)$legend))
 })
 
 test_that("draw_line smooth and area options work", {
@@ -82,32 +82,36 @@ test_that("draw_line smooth and area options work", {
     smooth = TRUE,
     area = TRUE
   )
-  expect_equal(w$x$option$series[[1]]$smooth, TRUE)
-  expect_false(is.null(w$x$option$series[[1]]$areaStyle))
+  expect_equal(node_option(w)$series[[1]]$smooth, TRUE)
+  expect_false(is.null(node_option(w)$series[[1]]$areaStyle))
 })
 
 test_that("draw_line with title", {
   w <- draw_line(x = c("A", "B"), y = c(1, 2), title = "My Line")
-  expect_equal(w$x$option$title$text, "My Line")
+  expect_equal(node_option(w)$title$text, "My Line")
 })
 
-test_that("draw_line points = TRUE is the default and leaves symbols visible", {
-  w <- draw_line(x = 1:5, y = 1:5)
-  # Default: showSymbol is not set (echarts treats missing as TRUE)
-  expect_null(w$x$option$series[[1]]$showSymbol)
+test_that("draw_line draws lines without markers unless points = TRUE", {
+  expect_false(node_option(draw_line(x = 1:5, y = 1:5))$series[[1]]$showSymbol)
+  # Unset showSymbol, which ECharts treats as TRUE.
+  expect_null(
+    node_option(draw_line(x = 1:5, y = 1:5, points = TRUE))$series[[
+      1
+    ]]$showSymbol
+  )
 })
 
 test_that("draw_line points = FALSE hides symbols across all series", {
   w1 <- draw_line(x = 1:5, y = 1:5, points = FALSE)
-  expect_equal(w1$x$option$series[[1]]$showSymbol, FALSE)
+  expect_equal(node_option(w1)$series[[1]]$showSymbol, FALSE)
 
   w2 <- draw_line(
     x = c("A", "B", "C"),
     y = list("S1" = c(1, 2, 3), "S2" = c(3, 2, 1)),
     points = FALSE
   )
-  expect_equal(w2$x$option$series[[1]]$showSymbol, FALSE)
-  expect_equal(w2$x$option$series[[2]]$showSymbol, FALSE)
+  expect_equal(node_option(w2)$series[[1]]$showSymbol, FALSE)
+  expect_equal(node_option(w2)$series[[2]]$showSymbol, FALSE)
 })
 
 test_that("draw_line points errors on invalid values", {
@@ -148,7 +152,7 @@ test_that("draw_line drops unused factor levels in blocks", {
     blocks = factor(c("A", "A", "B", "B"), levels = c("A", "B", "C")),
     block_color = c(A = "red", B = "blue")
   )
-  s <- w$x$option$series[[1]]
+  s <- node_option(w)$series[[1]]
   expect_false(is.null(s$markArea))
   expect_equal(length(s$markArea$data), 2L)
 })
@@ -172,7 +176,7 @@ test_that("draw_line blocks attaches markArea to the first series", {
     block_color = c(A = "red", B = "blue"),
     block_opacity = 0.3
   )
-  s <- w$x$option$series[[1]]
+  s <- node_option(w)$series[[1]]
   expect_false(is.null(s$markArea))
   # Three runs: A(1-3), B(4-5), A(6-8). On a value axis, each run's end is
   # extended to the next drawn run's start so bands meet with no gap.
@@ -196,7 +200,7 @@ test_that("draw_line blocks leaves gap when a skipped run sits between", {
     blocks = c("A", "A", "B", "B", "C", "C"),
     block_color = c(A = "red", B = "transparent", C = "blue")
   )
-  data <- w$x$option$series[[1]]$markArea$data
+  data <- node_option(w)$series[[1]]$markArea$data
   expect_equal(length(data), 2L)
   expect_equal(data[[1]][[1]]$xAxis, 1)
   expect_equal(data[[1]][[2]]$xAxis, 2) # not extended, next drawn run is C
@@ -211,7 +215,7 @@ test_that("draw_line blocks does not extend on category x-axis", {
     blocks = c("A", "A", "A", "B", "B"),
     block_color = c(A = "red", B = "blue")
   )
-  data <- w$x$option$series[[1]]$markArea$data
+  data <- node_option(w)$series[[1]]$markArea$data
   expect_equal(length(data), 2L)
   expect_equal(data[[1]][[1]]$xAxis, "Mon")
   expect_equal(data[[1]][[2]]$xAxis, "Wed") # own last category, not Thu
@@ -226,7 +230,7 @@ test_that("draw_line blocks skips NA-level and transparent entries", {
     blocks = c("A", "A", NA, "B", "B", "C"),
     block_color = c(A = "red", B = "transparent", C = NA)
   )
-  data <- w$x$option$series[[1]]$markArea$data
+  data <- node_option(w)$series[[1]]$markArea$data
   # A run kept, NA-run skipped, B "transparent" skipped, C NA skipped.
   expect_equal(length(data), 1L)
   expect_equal(data[[1]][[1]]$xAxis, 1)
@@ -241,7 +245,7 @@ test_that("draw_line blocks accepts positional block_color", {
     blocks = c(1L, 1L, 2L, 2L),
     block_color = c("#111", "#222")
   )
-  data <- w$x$option$series[[1]]$markArea$data
+  data <- node_option(w)$series[[1]]$markArea$data
   expect_equal(length(data), 2L)
   expect_equal(data[[1]][[1]]$xAxis, "Mon")
   expect_equal(data[[1]][[2]]$xAxis, "Tue")
@@ -275,18 +279,18 @@ test_that("draw_line blocks attaches only to first series for multi-series y", {
     blocks = c("A", "A", "B", "B"),
     block_color = c(A = "red", B = "blue")
   )
-  expect_false(is.null(w$x$option$series[[1]]$markArea))
-  expect_null(w$x$option$series[[2]]$markArea)
+  expect_false(is.null(node_option(w)$series[[1]]$markArea))
+  expect_null(node_option(w)$series[[2]]$markArea)
 })
 
 test_that("draw_line zoom = FALSE omits dataZoom", {
   w <- draw_line(x = c(1, 2, 3), y = c(1, 2, 3))
-  expect_null(w$x$option$dataZoom)
+  expect_null(node_option(w)$dataZoom)
 })
 
 test_that("draw_line zoom = TRUE emits slider + inside x-axis zooms", {
   w <- draw_line(x = 1:10, y = 1:10, zoom = TRUE)
-  dz <- w$x$option$dataZoom
+  dz <- node_option(w)$dataZoom
   expect_true(is.list(dz))
   expect_equal(length(dz), 2L)
   expect_equal(dz[[1]]$type, "slider")
@@ -299,17 +303,11 @@ test_that("draw_line zoom = TRUE emits slider + inside x-axis zooms", {
   expect_equal(dz[[2]]$moveOnMouseMove, TRUE)
 })
 
-test_that("draw_line accepts a single DataZoom for zoom", {
-  w <- draw_line(
-    x = 1:5,
-    y = 1:5,
-    zoom = DataZoom(type = "slider", x_axis_index = 0, start = 40, end = 60)
+test_that("draw_line takes zoom as TRUE or FALSE", {
+  expect_error(
+    draw_line(x = 1:5, y = 1:5, zoom = DataZoom(type = "slider")),
+    "TRUE or FALSE"
   )
-  dz <- w$x$option$dataZoom
-  expect_equal(length(dz), 1L)
-  expect_equal(dz[[1]]$type, "slider")
-  expect_equal(dz[[1]]$start, 40)
-  expect_equal(dz[[1]]$end, 60)
 })
 
 test_that("draw_line rejects invalid zoom values", {
@@ -321,10 +319,10 @@ test_that("draw_line defaults xlim/ylim to exact data range (no padding)", {
   w <- draw_line(x = c(1, 2, 3, 4), y = c(10, 20, 15, 25))
   # Limits extend the data range by `pad` (4% by default), as on every other
   # value axis.
-  expect_equal(w$x$option$xAxis$min, 1 - 0.04 * 3)
-  expect_equal(w$x$option$xAxis$max, 4 + 0.04 * 3)
-  expect_equal(w$x$option$yAxis$min, 10 - 0.04 * 15)
-  expect_equal(w$x$option$yAxis$max, 25 + 0.04 * 15)
+  expect_equal(node_option(w)$xAxis$min, 1 - 0.04 * 3)
+  expect_equal(node_option(w)$xAxis$max, 4 + 0.04 * 3)
+  expect_equal(node_option(w)$yAxis$min, 10 - 0.04 * 15)
+  expect_equal(node_option(w)$yAxis$max, 25 + 0.04 * 15)
 })
 
 test_that("draw_line honors explicit xlim and ylim", {
@@ -334,10 +332,10 @@ test_that("draw_line honors explicit xlim and ylim", {
     xlim = c(0, 5),
     ylim = c(-5, 30)
   )
-  expect_equal(w$x$option$xAxis$min, 0)
-  expect_equal(w$x$option$xAxis$max, 5)
-  expect_equal(w$x$option$yAxis$min, -5)
-  expect_equal(w$x$option$yAxis$max, 30)
+  expect_equal(node_option(w)$xAxis$min, 0)
+  expect_equal(node_option(w)$xAxis$max, 5)
+  expect_equal(node_option(w)$yAxis$min, -5)
+  expect_equal(node_option(w)$yAxis$max, 30)
 })
 
 test_that("draw_line ylim spans all series in a list", {
@@ -346,19 +344,19 @@ test_that("draw_line ylim spans all series in a list", {
     y = list(S1 = c(1, 2, 3), S2 = c(10, 20, 30))
   )
   # Padded across the union of both series: range 1-30, so 4% of 29 each side.
-  expect_equal(w$x$option$yAxis$min, 1 - 0.04 * 29)
-  expect_equal(w$x$option$yAxis$max, 30 + 0.04 * 29)
+  expect_equal(node_option(w)$yAxis$min, 1 - 0.04 * 29)
+  expect_equal(node_option(w)$yAxis$max, 30 + 0.04 * 29)
 })
 
 test_that("draw_line omits x-axis min/max when x is non-numeric", {
   w <- draw_line(x = c("A", "B", "C"), y = c(1, 2, 3))
-  expect_null(w$x$option$xAxis$min)
-  expect_null(w$x$option$xAxis$max)
+  expect_null(node_option(w)$xAxis$min)
+  expect_null(node_option(w)$xAxis$max)
 })
 
 test_that("draw_line rejects xlim on non-numeric x", {
   expect_error(
-    draw_line(x = c("A", "B"), y = c(1, 2), xlim = c(0, 3)),
+    node_option(draw_line(x = c("A", "B"), y = c(1, 2), xlim = c(0, 3))),
     "xlim"
   )
 })
@@ -371,32 +369,32 @@ test_that("draw_line rejects malformed xlim/ylim", {
 
 test_that("draw_line suppresses corner split lines on value axes", {
   w <- draw_line(x = 1:4, y = c(10, 20, 15, 25))
-  expect_equal(w$x$option$xAxis$splitLine$showMinLine, FALSE)
-  expect_equal(w$x$option$xAxis$splitLine$showMaxLine, FALSE)
-  expect_equal(w$x$option$yAxis$splitLine$showMinLine, FALSE)
-  expect_equal(w$x$option$yAxis$splitLine$showMaxLine, FALSE)
+  expect_equal(node_option(w)$xAxis$splitLine$showMinLine, FALSE)
+  expect_equal(node_option(w)$xAxis$splitLine$showMaxLine, FALSE)
+  expect_equal(node_option(w)$yAxis$splitLine$showMinLine, FALSE)
+  expect_equal(node_option(w)$yAxis$splitLine$showMaxLine, FALSE)
 })
 
 test_that("draw_line omits split_line on category x-axis", {
   # Category axes have splitLine.show = false by default, so no override needed.
   w <- draw_line(x = c("A", "B", "C"), y = c(1, 2, 3))
-  expect_null(w$x$option$xAxis$splitLine)
-  expect_equal(w$x$option$yAxis$splitLine$showMinLine, FALSE)
+  expect_null(node_option(w)$xAxis$splitLine)
+  expect_equal(node_option(w)$yAxis$splitLine$showMinLine, FALSE)
 })
 
 test_that("draw_line leaves value-axis endpoint labels to the layout", {
   w <- draw_line(x = 1:4, y = c(10, 20, 15, 25))
-  expect_null(w$x$option$xAxis$axisLabel)
-  expect_null(w$x$option$yAxis$axisLabel)
+  expect_null(node_option(w)$xAxis$axisLabel)
+  expect_null(node_option(w)$yAxis$axisLabel)
   w <- draw_line(x = as.Date("2026-01-01") + 0:3, y = c(10, 20, 15, 25))
-  expect_equal(w$x$option$xAxis$axisLabel$showMinLabel, FALSE)
-  expect_equal(w$x$option$xAxis$axisLabel$showMaxLabel, FALSE)
+  expect_equal(node_option(w)$xAxis$axisLabel$showMinLabel, FALSE)
+  expect_equal(node_option(w)$xAxis$axisLabel$showMaxLabel, FALSE)
 })
 
 test_that("draw_line omits axis_label on category x-axis (uses echarts default)", {
   w <- draw_line(x = c("A", "B", "C"), y = c(1, 2, 3))
-  expect_null(w$x$option$xAxis$axisLabel)
-  expect_null(w$x$option$yAxis$axisLabel)
+  expect_null(node_option(w)$xAxis$axisLabel)
+  expect_null(node_option(w)$yAxis$axisLabel)
 })
 
 test_that("draw_line axisLine: on_zero always TRUE; show gated on 0 in orthogonal range", {
@@ -404,26 +402,26 @@ test_that("draw_line axisLine: on_zero always TRUE; show gated on 0 in orthogona
   #   xAxis: orthogonal = y -> 0 in range -> show = TRUE.
   #   yAxis: orthogonal = x -> 0 NOT in range -> show = FALSE.
   w1 <- draw_line(x = 1:4, y = c(-5, 2, 0, 5))
-  expect_equal(w1$x$option$xAxis$axisLine$onZero, TRUE)
-  expect_equal(w1$x$option$xAxis$axisLine$show, TRUE)
-  expect_equal(w1$x$option$yAxis$axisLine$onZero, TRUE)
-  expect_equal(w1$x$option$yAxis$axisLine$show, FALSE)
+  expect_equal(node_option(w1)$xAxis$axisLine$onZero, TRUE)
+  expect_equal(node_option(w1)$xAxis$axisLine$show, TRUE)
+  expect_equal(node_option(w1)$yAxis$axisLine$onZero, TRUE)
+  expect_equal(node_option(w1)$yAxis$axisLine$show, FALSE)
 
   # 0 outside both ranges -> show = FALSE on both.
   w2 <- draw_line(x = 10:13, y = c(100, 200, 300, 400))
-  expect_equal(w2$x$option$xAxis$axisLine$show, FALSE)
-  expect_equal(w2$x$option$yAxis$axisLine$show, FALSE)
-  expect_equal(w2$x$option$xAxis$axisLine$onZero, TRUE)
-  expect_equal(w2$x$option$yAxis$axisLine$onZero, TRUE)
+  expect_equal(node_option(w2)$xAxis$axisLine$show, FALSE)
+  expect_equal(node_option(w2)$yAxis$axisLine$show, FALSE)
+  expect_equal(node_option(w2)$xAxis$axisLine$onZero, TRUE)
+  expect_equal(node_option(w2)$yAxis$axisLine$onZero, TRUE)
 })
 
 test_that("draw_line emphasizes zero on category x-axis", {
   w <- draw_line(x = c("A", "B", "C"), y = c(-1, 0, 1))
   # A category baseline follows the same zero-only rule as continuous axes.
-  expect_true(w[["x"]][["option"]][["xAxis"]][["axisLine"]][["show"]])
-  expect_true(w[["x"]][["option"]][["xAxis"]][["axisLine"]][["onZero"]])
+  expect_true(node_option(w)[["xAxis"]][["axisLine"]][["show"]])
+  expect_true(node_option(w)[["xAxis"]][["axisLine"]][["onZero"]])
   # yAxis.axis_line sentinel is x_lim, which is NULL for category x -> NULL.
-  expect_null(w$x$option$yAxis$axisLine)
+  expect_null(node_option(w)$yAxis$axisLine)
 })
 
 # -- draw_bar -------------------------------------------------------------------
@@ -1063,11 +1061,11 @@ test_that("draw_histogram respects breaks parameter", {
 
 test_that("draw_* default grid is outerBoundsMode = 'same' with no side bounds", {
   w <- draw_line(x = 1:3, y = 1:3)
-  expect_equal(w$x$option$grid$outerBoundsMode, "same")
-  # expect_null(w$x$option$grid$left)
-  # expect_null(w$x$option$grid$right)
-  # expect_null(w$x$option$grid$top)
-  # expect_null(w$x$option$grid$bottom)
+  expect_equal(node_option(w)$grid$outerBoundsMode, "same")
+  # expect_null(node_option(w)$grid$left)
+  # expect_null(node_option(w)$grid$right)
+  # expect_null(node_option(w)$grid$top)
+  # expect_null(node_option(w)$grid$bottom)
 })
 
 test_that("draw_line applies margins and keeps outerBoundsMode = 'same'", {
@@ -1076,21 +1074,18 @@ test_that("draw_line applies margins and keeps outerBoundsMode = 'same'", {
     y = 1:3,
     margins = c(left = 80, right = 20)
   )
-  expect_equal(w$x$option$grid$left, 80)
-  expect_equal(w$x$option$grid$right, 20)
-  expect_null(w$x$option$grid$top)
-  expect_null(w$x$option$grid$bottom)
-  expect_equal(w$x$option$grid$outerBoundsMode, "same")
+  expect_equal(node_option(w)$grid$left, 80)
+  expect_equal(node_option(w)$grid$right, 20)
+  expect_null(node_option(w)$grid$top)
+  expect_null(node_option(w)$grid$bottom)
+  expect_equal(node_option(w)$grid$outerBoundsMode, "same")
 })
 
-test_that("draw_line accepts percentage strings via list()", {
-  w <- draw_line(
-    x = 1:3,
-    y = 1:3,
-    margins = list(left = 80, right = "10%")
+test_that("draw_line takes margins in pixels", {
+  expect_error(
+    draw_line(x = 1:3, y = 1:3, margins = list(left = 80, right = "10%")),
+    "pixels"
   )
-  expect_equal(w$x$option$grid$left, 80)
-  expect_equal(w$x$option$grid$right, "10%")
 })
 
 test_that("draw_line rejects unrecognised margin side", {
@@ -1203,14 +1198,14 @@ test_that("meta reaches the widget payload verbatim", {
 
 test_that("draw_line applies xlab and ylab to x and y axes", {
   w <- draw_line(x = 1:3, y = 1:3, xlab = "Time", ylab = "Value")
-  expect_equal(w$x$option$xAxis[["name"]], "Time")
-  expect_equal(w$x$option$yAxis[["name"]], "Value")
+  expect_equal(node_option(w)$xAxis[["name"]], "Time")
+  expect_equal(node_option(w)$yAxis[["name"]], "Value")
 })
 
 test_that("draw_line omits axis name when xlab/ylab are NULL", {
   w <- draw_line(x = 1:3, y = 1:3)
-  expect_null(w$x$option$xAxis[["name"]])
-  expect_null(w$x$option$yAxis[["name"]])
+  expect_null(node_option(w)$xAxis[["name"]])
+  expect_null(node_option(w)$yAxis[["name"]])
 })
 
 test_that("draw_bar applies xlab/ylab in vertical orientation", {
@@ -1453,13 +1448,14 @@ test_that("draw_line takes the same two arguments", {
     square = TRUE,
     equal_axes = TRUE
   )
-  expect_equal(roc[["x"]][["aspect"]][["ratio"]], 1)
+  skip_if_no_node()
+  expect_equal(built_option(roc, what = "aspect")[["ratio"]], 1)
 })
 
 test_that("equal_axes needs a numeric x", {
   expect_error(
-    draw_line(x = c("a", "b"), y = c(1, 2), equal_axes = TRUE),
-    class = "rtemis_value_error"
+    node_option(draw_line(x = c("a", "b"), y = c(1, 2), equal_axes = TRUE)),
+    "numeric x"
   )
 })
 test_that("Shiny output wrappers retain identifiers and dimensions", {

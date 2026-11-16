@@ -82,12 +82,18 @@ complete observations, before binning. It is not an average of bin errors.
 Missing pairs are removed together when \code{na_rm} is true; invalid finite
 ranges and infinite values are always rejected. A group with no complete
 observations is rejected. The probability rug uses those same complete
-observations and sits just inside the lower plotting edge.
+observations and sits inside the lower plotting edge.
 Both axes span zero to one. Display precision does not round plotted values.
 A one-bin curve remains visible as a point even in lines-only mode.
 }
 
 \examples{
-labels <- factor(c("no", "yes", "no", "yes"), levels = c("no", "yes"))
-draw_calibration(labels, c(.1, .8, .4, .9), n_bins = 2L)
+# Synthetic predictions from a model that is overconfident at the extremes:
+# 20 cases at each of ten predicted probabilities, with observed rates pulled
+# toward one half.
+probability <- rep(seq(0.05, 0.95, by = 0.1), each = 20)
+rate <- 0.2 + 0.6 * probability
+observed <- as.integer(rep(seq_len(20), 10) <= round(20 * rate))
+labels <- factor(c("no", "yes")[observed + 1L], levels = c("no", "yes"))
+draw_calibration(labels, probability, n_bins = 10L)
 }

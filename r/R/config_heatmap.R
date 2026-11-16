@@ -252,7 +252,7 @@ HEATMAP_ORIGIN_NAMES <- setdiff(
 #' @export
 #'
 #' @examples
-#' draw(setup_HeatmapConfig(), data = matrix(1:20, nrow = 4))
+#' draw(setup_HeatmapConfig(), data = cor(mtcars[, c("mpg", "wt", "hp", "qsec")]))
 setup_HeatmapConfig <- function(
   row_names = NULL,
   col_names = NULL,

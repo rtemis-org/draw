@@ -53,9 +53,8 @@ across individual bars. \code{palette} takes precedence over the theme palette.}
 overridden per-chart with the \code{palette} argument.}
 
 \item{margins}{Optional Named numeric vector or named list: Plot margins in
-pixels (or percentage strings) for any of \code{"top"}, \code{"right"},
-\code{"bottom"}, \code{"left"}. Unspecified sides keep echarts' default auto-sizing.
-See \code{\link[=draw_line]{draw_line()}} for details.}
+pixels for any of \code{"top"}, \code{"right"}, \code{"bottom"}, \code{"left"}. See
+\code{\link[=draw_line]{draw_line()}}.}
 
 \item{width}{Optional Character or Numeric: Widget width.}
 
@@ -87,11 +86,9 @@ colorbar: above left/right legends and vertical colorbars, before the
 first row of top/bottom legends and horizontal colorbars. \code{NULL} draws no
 title. A title does not add a missing legend.}
 
-\item{zoom}{Logical, \link{DataZoom}, or list of \link{DataZoom}: Enable zoom on the
-category axis (the y-axis when \code{horizontal = TRUE}). \code{TRUE} adds a slider,
-Shift+wheel zoom, and drag panning; double-click resets the view. \code{FALSE}
-disables zoom. Pass \link{DataZoom} objects (or a list of them) for full
-control.}
+\item{zoom}{Logical: Enable zoom on the category axis (the y-axis when
+\code{horizontal = TRUE}). \code{TRUE} adds a slider, Shift+wheel zoom, and drag
+panning; double-click resets the view.}
 }
 \value{
 htmlwidget: Widget object.

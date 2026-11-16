@@ -17,24 +17,30 @@ test_that("learning losses retain gaps and sort steps without changing pairs", {
   expect_equal(learning_curve_data(data, selected = 2), expected)
   attr(data, "unit") <- "epochs"
   attr(data, "selected") <- 2L
-  option <- draw_learning_curve(data)[["x"]][["option"]]
+  option <- node_option(draw_learning_curve(data))
   expect_identical(option[["xAxis"]][["name"]], "Epochs")
   expect_identical(option[["yAxis"]][["name"]], "Loss")
   expect_identical(
     vapply(option[["series"]], `[[`, "", "name"),
     c("Training", "Validation", "Selected")
   )
+  # The selected step has no neighbor to join, so it keeps its marker.
   expect_equal(
     option[["series"]][[3L]][["data"]],
-    list(c(1, NA), c(2, 2), c(3, NA))
+    list(
+      list(value = c(1, NA), symbol = "none"),
+      c(2, 2),
+      list(value = c(3, NA), symbol = "none")
+    )
   )
+  expect_null(option[["series"]][[3L]][["showSymbol"]])
   expect_equal(
-    draw_learning_curve(data, selected = NULL)[["x"]][["option"]][["series"]] |>
+    node_option(draw_learning_curve(data, selected = NULL))[["series"]] |>
       length(),
     2L
   )
   expect_identical(
-    draw_learning_curve(data, unit = NULL)[["x"]][["option"]][["xAxis"]][[
+    node_option(draw_learning_curve(data, unit = NULL))[["xAxis"]][[
       "name"
     ]],
     "Iteration"
@@ -190,24 +196,19 @@ test_that("materialized learning data and line config reproduce the convenience 
     restored <- read_chart_config(path)
     expect_identical(draw(restored, data = data)[["x"]], direct[["x"]])
   }
-  # Check series arrays and gaps as they cross the JavaScript boundary.
-  json <- jsonlite::toJSON(
-    list(series = direct[["x"]][["option"]][["series"]]),
-    auto_unbox = TRUE,
-    na = "null"
-  )
-  wire <- jsonlite::fromJSON(json, simplifyVector = FALSE)
-  expect_null(wire[["series"]][[3L]][["data"]][[1L]][[2L]])
-  expect_equal(wire[["series"]][[3L]][["data"]][[2L]], list(2, 2))
+  # Series arrays and gaps as the builder writes them.
+  series <- node_option(direct)[["series"]]
+  expect_equal(series[[3L]][["data"]][[1L]][["value"]], c(1, NA))
+  expect_equal(series[[3L]][["data"]][[2L]], c(2, 2))
   expect_error(draw_learning_curve(raw, points = "yes"))
   expect_error(draw_learning_curve(raw, block_opacity = 2))
-  expect_false(
-    draw_learning_curve(raw, selected = 2, points = FALSE)[["x"]][["option"]][[
-      "series"
-    ]][[3L]][["showSymbol"]]
-  )
+  # Without markers the losses draw lines alone, and the selected step,
+  # which has no neighbor, keeps its marker.
+  unmarked <- node_option(draw_learning_curve(raw, selected = 2))[["series"]]
+  expect_false(unmarked[[1L]][["showSymbol"]])
+  expect_null(unmarked[[3L]][["showSymbol"]])
   expect_identical(
-    draw_learning_curve(raw, xlab = "Steps")[["x"]][["option"]][["xAxis"]][[
+    node_option(draw_learning_curve(raw, xlab = "Steps"))[["xAxis"]][[
       "name"
     ]],
     "Steps"

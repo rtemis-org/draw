@@ -25,18 +25,30 @@ var RtemisDraw = (() => {
     BAR_CHART_CONFIG_MEMBERS: () => BAR_CHART_CONFIG_MEMBERS,
     DEFAULT_FONT_FAMILY: () => DEFAULT_FONT_FAMILY,
     DEFAULT_MARGIN: () => DEFAULT_MARGIN,
+    DEFAULT_PAD: () => DEFAULT_PAD,
+    LINE_CHART_CONFIG_MEMBERS: () => LINE_CHART_CONFIG_MEMBERS,
     RTEMIS_PALETTE: () => RTEMIS_PALETTE,
+    SIGNIFICANT_DIGITS: () => SIGNIFICANT_DIGITS,
     SIGN_COLORS: () => SIGN_COLORS,
     ZOOM_SLIDER_ID: () => ZOOM_SLIDER_ID,
     a3SurfaceHints: () => a3SurfaceHints,
+    aspectHints: () => aspectHints,
     buildA3Option: () => buildA3Option,
     buildBarOption: () => buildBarOption,
+    buildLineOption: () => buildLineOption,
     builders: () => builders,
+    calcLimits: () => calcLimits,
+    calcLimitsFromZero: () => calcLimitsFromZero,
     darkThemeTokens: () => darkThemeTokens,
     fontStack: () => fontStack,
+    formatNumber: () => formatNumber,
     lightThemeTokens: () => lightThemeTokens,
+    lineAspect: () => lineAspect,
     themeFontSizes: () => themeFontSizes,
-    themeOption: () => themeOption
+    themeOption: () => themeOption,
+    timeLabel: () => timeLabel,
+    timeMs: () => timeMs,
+    valueLabel: () => valueLabel
   });
 
   // src/charts/a3/layout.ts
@@ -942,6 +954,19 @@ var RtemisDraw = (() => {
     return value ? { [key]: value } : {};
   }
 
+  // src/shared/format.ts
+  var SIGNIFICANT_DIGITS = 3;
+  function formatNumber(value, digits = SIGNIFICANT_DIGITS) {
+    if (typeof value !== "number" || !Number.isFinite(value)) return value;
+    if (Number.isInteger(value)) return String(value);
+    const magnitude = Math.abs(value);
+    if (magnitude < 1e-3 || magnitude >= 1e15) return value.toExponential(digits - 1);
+    if (Math.floor(Math.log10(magnitude)) + 1 >= digits) return value.toFixed(0);
+    const rounded = Number(value.toPrecision(digits));
+    const decimals = Math.max(0, digits - 1 - Math.floor(Math.log10(Math.abs(rounded))));
+    return rounded.toFixed(decimals);
+  }
+
   // src/shared/layout.ts
   var DEFAULT_MARGIN = 36;
   var SIDES = ["top", "right", "bottom", "left"];
@@ -982,6 +1007,40 @@ var RtemisDraw = (() => {
   }
 
   // src/shared/source.ts
+  function isTime(data, name) {
+    return data.types?.[name] === "time";
+  }
+  var ISO_TIME = /^(\d{4})-(\d{2})-(\d{2})(?:[T ](\d{2}):(\d{2})(?::(\d{2})(?:\.(\d+))?)?)?/;
+  function timeMs(value) {
+    if (typeof value === "number") return Number.isFinite(value) ? value : null;
+    if (typeof value !== "string") return null;
+    const m = ISO_TIME.exec(value);
+    if (!m) return null;
+    const [, y, mo, d, h, mi, s, frac] = m;
+    const ms = frac ? Math.round(Number(`0.${frac}`) * 1e3) : 0;
+    return Date.UTC(
+      Number(y),
+      Number(mo) - 1,
+      Number(d),
+      Number(h ?? 0),
+      Number(mi ?? 0),
+      Number(s ?? 0),
+      ms
+    );
+  }
+  function timeLabel(ms) {
+    const iso = new Date(ms).toISOString();
+    if (ms % 864e5 === 0) return iso.slice(0, 10);
+    return `${iso.slice(0, 10)} ${iso.slice(11, ms % 1e3 === 0 ? 19 : 23)}`;
+  }
+  function textColumn(data, name, member) {
+    const values = column(data.columns, name, member);
+    if (!isTime(data, name)) return values.map((v) => String(v));
+    return values.map((v) => {
+      const ms = timeMs(v);
+      return ms === null ? String(v) : timeLabel(ms);
+    });
+  }
   function distinct(values, levels) {
     const seen = new Set(values);
     const ordered = (levels ?? []).filter((level) => seen.has(level));
@@ -1031,35 +1090,45 @@ var RtemisDraw = (() => {
   function buildBarOption(data, config, appearance = {}) {
     const source = data.columns;
     const yColumns = asArray(config.y);
-    if (!config.x || yColumns.length === 0) {
-      throw new Error("A bar chart needs both `x` and `y` set to draw.");
+    if (!config.x) {
+      throw new Error("A bar chart needs `x` set to draw.");
     }
-    const xs = column(source, config.x, "x").map((v) => String(v));
+    const xs = textColumn(data, config.x, "x");
     const aggregate = config.aggregate ?? "none";
+    const counting = yColumns.length === 0;
+    if (counting && aggregate !== "none") {
+      throw new Error(
+        "`aggregate` combines the values of `y`, and `y` is unset: each bar counts the rows of its category."
+      );
+    }
+    const frequency = data.frequency ? column(source, data.frequency, "frequency") : null;
+    const valuesOf = (y) => y === null ? xs.map((_, row) => frequency ? numberOrNull(frequency[row]) : 1) : column(source, y, "y").map(numberOrNull);
+    const measures = counting ? [null] : [...yColumns];
+    const groupValues = config.group ? textColumn(data, config.group, "group") : null;
+    if (!counting) requireOneRowPer(xs, groupValues ?? void 0);
     let categories;
     let series;
-    if (config.group) {
-      const groupValues = column(source, config.group, "group").map((v) => String(v));
-      requireOneRowPer(xs, groupValues);
+    if (groupValues || counting) {
       categories = distinct(xs, data.levels?.[config.x]);
-      const groups = distinct(groupValues, data.levels?.[config.group]);
+      const groups = groupValues ? distinct(groupValues, data.levels?.[config.group]) : [null];
       const at = new Map(categories.map((c, i) => [c, i]));
       series = groups.flatMap(
-        (g) => yColumns.map((y) => {
-          const values = column(source, y, "y");
-          const data2 = categories.map(() => null);
+        (g) => measures.map((y) => {
+          const values = valuesOf(y);
+          const cells = categories.map(() => null);
           xs.forEach((x, row) => {
             const i = at.get(x);
-            if (groupValues[row] === g && i !== void 0) data2[i] = numberOrNull(values[row]);
+            if (i === void 0 || groupValues && groupValues[row] !== g) return;
+            const value2 = values[row] ?? null;
+            cells[i] = counting ? (cells[i] ?? 0) + (value2 ?? 0) : value2;
           });
-          const name = groups.length > 1 ? yColumns.length > 1 ? `${y} / ${g}` : g : y;
-          return { name, data: data2 };
+          const name = g !== null && groups.length > 1 ? measures.length > 1 ? `${y} / ${g}` : g : y ?? "Count";
+          return { name, data: cells };
         })
       );
     } else {
-      if (aggregate !== "none") requireOneRowPer(xs);
       categories = xs;
-      series = yColumns.map((y) => ({ name: y, data: column(source, y, "y").map(numberOrNull) }));
+      series = measures.map((y) => ({ name: y, data: valuesOf(y) }));
     }
     const permutation = order(categories, series, config.order ?? "input");
     categories = permutation.map((i) => categories[i]);
@@ -1088,11 +1157,10 @@ var RtemisDraw = (() => {
       type: "category",
       data: categories,
       axisPointer: { type: "none" },
-      axisTick: { show: false }
+      ...horizontal ? { inverse: true } : {}
     };
     const value = {
       type: "value",
-      axisTick: { show: false },
       ...config.ylim ? { min: config.ylim[0], max: config.ylim[1] } : {}
     };
     const xAxis = horizontal ? value : category;
@@ -1103,7 +1171,7 @@ var RtemisDraw = (() => {
     const dataZoom = config.zoom ? axisZoom(horizontal ? "y" : "x", grid) : void 0;
     return {
       ...config.title ? { title: { text: config.title } } : {},
-      tooltip: { trigger: "axis" },
+      tooltip: { trigger: "axis", valueFormatter: formatNumber },
       ...series.length > 1 ? { legend: { data: series.map((s) => s.name) } } : {},
       xAxis,
       yAxis,
@@ -1127,11 +1195,387 @@ var RtemisDraw = (() => {
       if (seen.has(key)) {
         const where = groups ? `category '${x}' in group '${groups[row]}'` : `category '${x}'`;
         throw new Error(
-          `Several rows hold ${where}. Combine them before building, as the \`aggregate\` member says (sum, mean, median, or count).`
+          `Several rows hold ${where}. Combine them before building, as the \`aggregate\` member says (sum, mean, or median).`
         );
       }
       seen.add(key);
     });
+  }
+
+  // src/shared/limits.ts
+  var DEFAULT_PAD = 0.04;
+  function calcLimits(values, pad = DEFAULT_PAD) {
+    let min = Number.POSITIVE_INFINITY;
+    let max = Number.NEGATIVE_INFINITY;
+    for (const v of values) {
+      if (typeof v !== "number" || !Number.isFinite(v)) continue;
+      if (v < min) min = v;
+      if (v > max) max = v;
+    }
+    if (min > max) return null;
+    const span = max - min === 0 ? Math.abs(min) * 0.1 : max - min;
+    return [min - pad * span, max + pad * span];
+  }
+  function calcLimitsFromZero(values, pad = DEFAULT_PAD) {
+    const range2 = calcLimits(values, 0);
+    if (!range2) return null;
+    const min = Math.min(range2[0], 0);
+    const max = Math.max(range2[1], 0);
+    const span = max - min;
+    return [min === 0 ? 0 : min - pad * span, max === 0 ? 0 : max + pad * span];
+  }
+  function equalAxisLimits(x, y, xlim, ylim, pad, square, equalAxes) {
+    if (!square || !equalAxes) return { xlim, ylim };
+    if (xlim && ylim) {
+      const same = xlim.every(
+        (v, i) => Math.abs(v - ylim[i]) <= 15e-9 * Math.max(1, Math.abs(v))
+      );
+      if (!same) {
+        throw new Error(
+          `\`square\` and \`equal_axes\` together require both axes to span the same interval, but \`xlim\` is [${xlim.join(", ")}] and \`ylim\` is [${ylim.join(", ")}]. Give them the same limits, or unset one of the two.`
+        );
+      }
+      return { xlim, ylim };
+    }
+    const common = xlim ?? ylim ?? calcLimits([...x ?? [], ...y], pad);
+    return common ? { xlim: common, ylim: common } : { xlim, ylim };
+  }
+
+  // src/charts/line/config.ts
+  var LINE_CHART_CONFIG_MEMBERS = Object.freeze([
+    "type",
+    "x",
+    "y",
+    "group",
+    "aggregate",
+    "blocks",
+    "smooth",
+    "area",
+    "points",
+    "stack",
+    "zoom",
+    "palette",
+    "line_style",
+    "block_color",
+    "block_opacity",
+    "square",
+    "equal_axes",
+    "pad",
+    "xlim",
+    "ylim",
+    "xlab",
+    "ylab",
+    "title",
+    "margin_top",
+    "margin_right",
+    "margin_bottom",
+    "margin_left",
+    "legend_position",
+    "legend_placement",
+    "legend_title"
+  ]);
+  function buildLineOption(data, config, appearance = {}) {
+    const yColumns = asArray(config.y);
+    if (!config.x || yColumns.length === 0) {
+      throw new Error("A line chart needs both `x` and `y` set to draw.");
+    }
+    const xType = xAxisType(data, config.x);
+    if (config.group && config.blocks) {
+      throw new Error(
+        "`blocks` shades runs along `x`, and with `group` each x repeats once per group: bind one of the two."
+      );
+    }
+    if (config.equal_axes && xType !== "value") {
+      throw new Error(
+        `\`equal_axes\` compares the two axes' scales, which needs a numeric x. This chart's x is ${xType === "time" ? "a date or time" : "categorical"}.`
+      );
+    }
+    if (config.xlim && xType === "category") {
+      throw new Error("`xlim` only applies when `x` is numeric or a date.");
+    }
+    if (config.stack && config.equal_axes) {
+      throw new Error(
+        "A stacked y axis shows sums, so `equal_axes` cannot apply: unset one of the two."
+      );
+    }
+    if (config.stack && !config.area) {
+      throw new Error(
+        "`stack` draws each line on the sum of those below it, which only filled bands show: set `area` too."
+      );
+    }
+    const rawX = column(data.columns, config.x, "x");
+    const xNum = xType === "category" ? null : rawX.map(xType === "time" ? timeMs : numberOrNull);
+    const xText = xType === "category" ? textColumn(data, config.x, "x") : null;
+    const categories = xText ? distinct(xText, data.levels?.[config.x]) : null;
+    const xKey = (row) => (xNum ? xNum[row] : xText?.[row]) ?? null;
+    const series = lineSeries(data, config, yColumns, xKey);
+    for (const s of series) requireOneRowPerX(s, xKey, xText !== null);
+    if (config.stack) stackOnKnownSums(series, xKey);
+    const pad = config.pad ?? DEFAULT_PAD;
+    const yValues = series.flatMap((s) => s.y);
+    const limits = equalAxisLimits(
+      xNum,
+      yValues,
+      config.xlim ?? null,
+      config.ylim ?? null,
+      pad,
+      config.square ?? false,
+      config.equal_axes ?? false
+    );
+    const xLim = xNum ? limits.xlim ?? calcLimits(xNum, pad) : null;
+    const yDerive = config.area ? calcLimitsFromZero : calcLimits;
+    const yLim = limits.ylim ?? yDerive(config.stack ? stackedValues(series, xKey) : yValues, pad);
+    const palette = asArray(config.palette);
+    const dashes = asArray(config.line_style);
+    const at = categories ? new Map(categories.map((c, i) => [c, i])) : null;
+    const inOrder = xText !== null && categories !== null && !config.group && xText.length === categories.length && xText.every((x, i) => x === categories[i]);
+    const builtSeries = series.map((s, i) => {
+      const points = s.rows.map((row, j) => {
+        const y = s.y[j] ?? null;
+        if (inOrder) return y;
+        if (at && xText) return [at.get(xText[row]) ?? null, y];
+        return [xNum?.[row] ?? null, y];
+      });
+      const isolated = config.points ? [] : isolatedPoints(s.y);
+      const marked = isolated.length > 0;
+      const values = marked ? points.map((value, j) => isolated.includes(j) ? value : { value, symbol: "none" }) : points;
+      const color = palette.length > 0 ? palette[i % palette.length] : void 0;
+      const dash = dashes.length > 0 ? dashes[i % dashes.length] : void 0;
+      return {
+        type: "line",
+        ...series.length === 1 ? {} : { name: s.name },
+        data: values,
+        ...config.smooth ? { smooth: true } : {},
+        ...config.points || marked ? {} : { showSymbol: false },
+        ...config.stack ? { stack: "total" } : {},
+        ...config.area ? { areaStyle: {} } : {},
+        ...color === void 0 ? {} : { itemStyle: { color } },
+        ...dash === void 0 ? {} : { lineStyle: { type: dash } }
+      };
+    });
+    if (config.blocks) {
+      const markArea = blockMarkArea(data, config, config.blocks, xNum, xText);
+      if (markArea && builtSeries[0]) builtSeries[0].markArea = markArea;
+    }
+    const xAxis = {
+      type: xType,
+      ...config.xlab ? { name: config.xlab, nameLocation: "middle" } : {},
+      ...categories ? { data: categories } : {},
+      ...xType === "value" ? { scale: true } : {},
+      ...xLim ? { min: xLim[0], max: xLim[1] } : {},
+      ...xType === "category" ? {} : { splitLine: NO_CORNER_LINES },
+      ...xType === "time" ? { axisLabel: { showMinLabel: false, showMaxLabel: false } } : {},
+      ...yLim ? { axisLine: zeroAxisLine(yLim) } : {}
+    };
+    const yAxis = {
+      type: "value",
+      ...config.ylab ? { name: config.ylab, nameLocation: "middle" } : {},
+      scale: true,
+      ...yLim ? { min: yLim[0], max: yLim[1] } : {},
+      splitLine: NO_CORNER_LINES,
+      ...xLim ? { axisLine: zeroAxisLine(xLim) } : {}
+    };
+    const grid = cartesianGrid(config, Boolean(config.xlab || config.ylab));
+    const dataZoom = config.zoom ? axisZoom("x", grid) : void 0;
+    return {
+      ...config.title ? { title: { text: config.title } } : {},
+      tooltip: { trigger: "axis", valueFormatter: formatNumber },
+      ...series.length > 1 ? { legend: { data: series.map((s) => s.name) } } : {},
+      xAxis,
+      yAxis,
+      grid,
+      ...dataZoom ? { dataZoom } : {},
+      ...xType === "time" ? { useUTC: true } : {},
+      series: builtSeries,
+      ...appearance.animation === void 0 ? {} : { animation: appearance.animation }
+    };
+  }
+  var NO_CORNER_LINES = Object.freeze({ showMinLine: false, showMaxLine: false });
+  function zeroAxisLine(otherLimits) {
+    return { show: otherLimits[0] <= 0 && otherLimits[1] >= 0, onZero: true };
+  }
+  function xAxisType(data, name) {
+    if (isTime(data, name)) return "time";
+    const values = column(data.columns, name, "x");
+    if (!Array.isArray(data.columns[name])) return "value";
+    const present2 = values.filter((v) => v !== null && v !== void 0);
+    return present2.length > 0 && present2.every((v) => typeof v === "number") ? "value" : "category";
+  }
+  function lineSeries(data, config, yColumns, xKey) {
+    const ys = new Map(yColumns.map((y) => [y, column(data.columns, y, "y").map(numberOrNull)]));
+    const allRows = (ys.get(yColumns[0]) ?? []).map((_, i) => i).filter((row) => xKey(row) !== null);
+    const select = (y, rows) => {
+      const values = ys.get(y) ?? [];
+      return rows.map((row) => values[row] ?? null);
+    };
+    if (!config.group) {
+      return yColumns.map((y) => ({ name: y, rows: allRows, y: select(y, allRows) }));
+    }
+    const raw = column(data.columns, config.group, "group");
+    const labels = textColumn(data, config.group, "group");
+    const missing = (v) => v === null || v === void 0 || Number.isNaN(v);
+    const present2 = labels.filter((_, row) => !missing(raw[row]));
+    const groups = distinct(present2, data.levels?.[config.group]);
+    const multiY = yColumns.length > 1;
+    return groups.flatMap((g) => {
+      const rows = allRows.filter((row) => !missing(raw[row]) && labels[row] === g);
+      return yColumns.map((y) => ({
+        name: groups.length > 1 ? multiY ? `${y} / ${g}` : g : y,
+        rows,
+        y: select(y, rows)
+      }));
+    });
+  }
+  function requireOneRowPerX(line, xKey, category) {
+    const seen = /* @__PURE__ */ new Set();
+    for (const row of line.rows) {
+      const key = xKey(row);
+      if (seen.has(key)) {
+        const shown = category ? `'${String(key)}'` : String(key);
+        throw new Error(
+          `Several rows hold x = ${shown} in line '${line.name}'. Combine them before building, as the \`aggregate\` member says (sum, mean, or median).`
+        );
+      }
+      seen.add(key);
+    }
+  }
+  function stackOnKnownSums(series, xKey) {
+    const known = [];
+    series.forEach((s, i) => {
+      const below = known.slice(0, i);
+      const y = s.y.map(
+        (value, j) => value !== null && below.every((keys) => keys.has(xKey(s.rows[j]))) ? value : null
+      );
+      series[i] = { ...s, y };
+      known.push(new Set(s.rows.filter((_, j) => y[j] !== null).map((row) => xKey(row))));
+    });
+  }
+  function stackedValues(series, xKey) {
+    const tops = { positive: /* @__PURE__ */ new Map(), negative: /* @__PURE__ */ new Map() };
+    const out = [];
+    for (const s of series) {
+      s.rows.forEach((row, j) => {
+        const y = s.y[j];
+        if (y === null || y === void 0) return;
+        const key = xKey(row);
+        const side = y >= 0 ? "positive" : "negative";
+        const value = (tops[side].get(key) ?? 0) + y;
+        tops[side].set(key, value);
+        out.push(value);
+      });
+    }
+    return out;
+  }
+  function isolatedPoints(y) {
+    const present2 = (j) => y[j] !== null && y[j] !== void 0;
+    return y.flatMap((_, j) => present2(j) && !present2(j - 1) && !present2(j + 1) ? [j] : []);
+  }
+  function blockMarkArea(data, config, blocks, xNum, xText) {
+    const colors = asArray(config.block_color);
+    if (colors.length === 0) {
+      throw new Error("`block_color` must be set when `blocks` is.");
+    }
+    const raw = column(data.columns, blocks, "blocks");
+    const missing = (v) => v === null || v === void 0 || Number.isNaN(v);
+    const keys = raw.map((v) => missing(v) ? null : String(v));
+    const present2 = new Set(keys.filter((k) => k !== null));
+    const declared = data.levels?.[blocks];
+    const levels = declared ? declared.filter((level) => present2.has(level)) : sortedLevels(raw.filter((v) => !missing(v)));
+    if (colors.length !== levels.length) {
+      throw new Error(
+        `\`block_color\` must have length ${levels.length} (one per level of \`blocks\`); it has ${colors.length}.`
+      );
+    }
+    const colorOf = new Map(levels.map((level, i) => [level, colors[i] ?? null]));
+    const drawn = (key) => {
+      if (key === null) return false;
+      const color = colorOf.get(key);
+      return typeof color === "string" && color !== "transparent";
+    };
+    const position = (row) => (xNum ? xNum[row] : xText?.[row]) ?? null;
+    const runs = [];
+    keys.forEach((key, row) => {
+      const last = runs[runs.length - 1];
+      if (last && last.key === key) last.end = row;
+      else runs.push({ key, start: row, end: row });
+    });
+    const pairs = runs.flatMap((run, i) => {
+      if (!drawn(run.key)) return [];
+      const next = runs[i + 1];
+      const end = xNum && next && drawn(next.key) ? next.start : run.end;
+      return [
+        [
+          {
+            xAxis: position(run.start),
+            name: run.key,
+            itemStyle: {
+              color: colorOf.get(run.key),
+              opacity: config.block_opacity ?? 0.2
+            }
+          },
+          { xAxis: position(end) }
+        ]
+      ];
+    });
+    return pairs.length > 0 ? { data: pairs, silent: true } : null;
+  }
+  function sortedLevels(values) {
+    const unique = [...new Set(values)];
+    if (unique.every((v) => typeof v === "number")) {
+      return unique.sort((a, b) => a - b).map(String);
+    }
+    return unique.map(String).sort((a, b) => a.localeCompare(b));
+  }
+  function lineAspect(option, config) {
+    const square = config.square ?? false;
+    const equal = config.equal_axes ?? false;
+    if (!square && !equal) return null;
+    const request = square ? "square" : "equal_axes";
+    const span = (axis, which) => {
+      const a = axis ?? {};
+      if (typeof a.min !== "number" || typeof a.max !== "number") {
+        throw new Error(
+          `\`${request}\` needs a numeric ${which} axis with known limits, and this chart's is ${a.type === "category" ? "categorical" : "unbounded"}. Plot numeric values, or set \`${which}lim\`.`
+        );
+      }
+      return [a.min, a.max];
+    };
+    const x = span(option.xAxis, "x");
+    const y = span(option.yAxis, "y");
+    const grid = option.grid ?? {};
+    const px = (side) => {
+      const value = grid[side];
+      if (typeof value !== "number" || !Number.isFinite(value)) {
+        throw new Error(
+          `\`square\` and \`equal_axes\` need all four margins as pixel numbers, and \`${side}\` is ${value === void 0 ? "unset" : `'${String(value)}'`}. Set the four \`margin_*\` members.`
+        );
+      }
+      return value;
+    };
+    return {
+      ratio: equal ? (y[1] - y[0]) / (x[1] - x[0]) : 1,
+      leftPx: px("left"),
+      rightPx: px("right"),
+      topPx: px("top"),
+      botPx: px("bottom")
+    };
+  }
+
+  // src/shared/labels.ts
+  function valueLabel(config, name = (column2) => column2) {
+    const ys = asArray(config.y);
+    if (ys.length === 0) return "Count";
+    const only = ys.length === 1 ? name(ys[0]) : null;
+    switch (config.aggregate ?? "none") {
+      case "mean":
+        return only === null ? "Mean" : `Mean ${only}`;
+      case "median":
+        return only === null ? "Median" : `Median ${only}`;
+      case "sum":
+        return only === null ? "Sum" : `Sum of ${only}`;
+      default:
+        return only;
+    }
   }
 
   // src/theme/tokens.ts
@@ -1252,9 +1696,11 @@ var RtemisDraw = (() => {
     const withText = (style) => ({ ...textStyle, ...style });
     const axisLabel = { fontSize: sizes.axisLabel, color: fg };
     const axisLine = tokens.axis_color ? { lineStyle: { color: tokens.axis_color } } : void 0;
+    const axisTick = { show: false };
     const valueAxis = present({
       axisLabel,
       axisLine,
+      axisTick,
       splitLine: tokens.grid_color ? { lineStyle: { color: tokens.grid_color } } : void 0
     });
     return {
@@ -1302,7 +1748,7 @@ var RtemisDraw = (() => {
         }
       },
       line: { symbol: "circle" },
-      categoryAxis: present({ axisLabel, axisLine, splitLine: { show: false } }),
+      categoryAxis: present({ axisLabel, axisLine, axisTick, splitLine: { show: false } }),
       valueAxis,
       logAxis: valueAxis,
       timeAxis: valueAxis
@@ -1312,7 +1758,11 @@ var RtemisDraw = (() => {
   // src/index.ts
   var builders = Object.freeze({
     a3: buildA3Option,
-    bar: buildBarOption
+    bar: buildBarOption,
+    line: buildLineOption
+  });
+  var aspectHints = Object.freeze({
+    line: lineAspect
   });
   return __toCommonJS(index_exports);
 })();

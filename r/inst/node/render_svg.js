@@ -62,6 +62,8 @@ function build(panel) {
   if (request.type === "a3") {
     panel.a3 = {...builders.a3SurfaceHints(data, request.config, appearance), ...panel.a3};
   }
+  const aspect = builders.aspectHints[request.type]?.(option, request.config);
+  if (aspect) panel.aspect = aspect;
   delete panel.build;
 }
 
@@ -171,6 +173,7 @@ process.stdin.on("end", () => {
 			if (payload.build) {
 				build(payload);
 				if (payload.a3?.exportAutoHeight) height = a3ExportHeight(payload, width);
+				if (payload.aspect) layout.fit(payload, width, height);
 			}
 			svg = renderPanel(payload, width, height);
 		}

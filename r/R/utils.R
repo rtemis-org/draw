@@ -374,6 +374,29 @@ calc_limits <- function(values, pad = DEFAULT_PAD) {
 }
 
 
+#' Calculate axis limits that hold zero
+#'
+#' For an axis read as magnitudes from zero, such as a filled area's: the range
+#' of `values` and zero, extended by `pad` times that range on each side away
+#' from zero. Zero is an end of the axis when the values do not cross it. The
+#' `@rtemis/draw` builders derive the same limits (`calcLimitsFromZero()`).
+#'
+#' @param values Numeric: Data values. `NA` values are ignored.
+#' @param pad Numeric `[0, Inf)`: Fraction of the range added on each side
+#'   away from zero.
+#' @return Numeric: Length-2 vector `c(min, max)`.
+#' @keywords internal
+#' @noRd
+calc_limits_from_zero <- function(values, pad = DEFAULT_PAD) {
+  rng <- range(c(values, 0), na.rm = TRUE)
+  span <- rng[2] - rng[1]
+  c(
+    if (rng[1] == 0) 0 else rng[1] - pad * span,
+    if (rng[2] == 0) 0 else rng[2] + pad * span
+  )
+}
+
+
 #' Parse a user-supplied `margins` argument into a named list of per-side values
 #'
 #' Validates a named `margins` argument supplied to `draw_*` functions and
@@ -461,7 +484,7 @@ parse_margins <- function(margins) {
 #' Resolve a user-supplied `margins` argument into a [Grid] (or `NULL`)
 #'
 #' Convenience wrapper around `parse_margins()` that builds a [Grid] with the
-#' specified sides set (other sides left `NULL` so echarts' default behaviour
+#' specified sides set (other sides left `NULL` so echarts' default behavior
 #' still applies to them). Returns `NULL` when `margins` is `NULL` so callers
 #' can pass the result straight to `EChartsOption(grid = ...)`.
 #'
@@ -670,8 +693,8 @@ palette_colors <- function(x) {
 #' `...` and so must be named, which leaves `...` empty in any correct call --
 #' and makes anything landing in it a name the method does not have.
 #'
-#' Without this an unknown name is silently dropped, which is the worst way for
-#' a typo to behave: the chart still renders, just not as asked.
+#' An unknown name is an error, so a misspelled argument cannot render a chart
+#' other than the one asked for.
 #'
 #' @param ... Arguments a `draw()` method did not match.
 #'

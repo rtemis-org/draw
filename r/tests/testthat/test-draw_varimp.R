@@ -163,8 +163,10 @@ test_that("bars preserve signed values, physical axes, clean labels, and overrid
   skip_if_no_node()
   data <- c(a = -8, b = 3, c = 1)
   option <- built_option(draw_varimp(data, top_n = 2))
-  expect_identical(option[["yAxis"]][["data"]], c("b", "a"))
-  expect_equal(unlist(option[["series"]][[1L]][["data"]]), c(3, -8))
+  # Categories in rank order, listed top to bottom.
+  expect_identical(option[["yAxis"]][["data"]], c("a", "b"))
+  expect_true(option[["yAxis"]][["inverse"]])
+  expect_equal(unlist(option[["series"]][[1L]][["data"]]), c(-8, 3))
   expect_identical(option[["xAxis"]][["name"]], "Importance")
   vertical <- draw_varimp(
     data,
@@ -198,7 +200,7 @@ test_that("bars preserve signed values, physical axes, clean labels, and overrid
   opt <- built_option(widget)
   expect_identical(
     opt[["yAxis"]][["data"]],
-    c("b", "a")
+    c("a", "b")
   )
   expect_identical(opt[["xAxis"]][["name"]], "Mean Score")
   expect_error(draw_varimp(data, horizontal = NA))
@@ -286,7 +288,11 @@ test_that("ascending importance selection preserves scores and stable ties", {
         widget[["x"]][["option"]]
       }
       labels <- opt[[if (horizontal) "yAxis" else "xAxis"]][["data"]]
-      expect_identical(labels, if (horizontal) c("c", "b") else c("b", "c"))
+      # The boxplot axis runs bottom to top; the bar axis lists top to bottom.
+      expect_identical(
+        labels,
+        if (horizontal && type == "boxplot") c("c", "b") else c("b", "c")
+      )
       if (type == "bar") {
         expect_equal(opt[["series"]][[1]][["barWidth"]], 3)
         expect_equal(unlist(opt[["series"]][[1]][["data"]]), c(2, 2))

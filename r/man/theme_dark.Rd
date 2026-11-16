@@ -75,7 +75,7 @@ page loads it.}
 
 \item{negative_color, neutral_color, positive_color}{Character: Colors for
 negative values, values of neither sign, and positive values, in every
-chart that colors by sign. The defaults, blue, gray and orange, have equal
+chart that colors by sign. The defaults, blue, gray, and orange, have equal
 perceived lightness, keep at least 3.9:1 contrast on light and dark
 backgrounds, and stay distinguishable under deuteranopia and protanopia.}
 }

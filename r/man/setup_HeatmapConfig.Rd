@@ -131,7 +131,7 @@ argument is optional}, which is what lets the published schema require
 nothing.
 }
 \examples{
-draw(setup_HeatmapConfig(), data = matrix(1:20, nrow = 4))
+draw(setup_HeatmapConfig(), data = cor(mtcars[, c("mpg", "wt", "hp", "qsec")]))
 }
 \author{
 EDG

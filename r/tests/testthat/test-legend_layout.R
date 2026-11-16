@@ -168,7 +168,7 @@ test_that("native legends reserve space across families, anchors, and resizes", 
   on.exit(unlink(path), add = TRUE)
   jsonlite::write_json(
     list(
-      charts = lapply(charts, function(x) strip_js(x[["x"]])),
+      charts = lapply(charts, function(x) strip_js(built_payload(x))),
       echarts = system.file(
         "htmlwidgets/lib/echarts/echarts.min.js",
         package = "rtemis.draw"
@@ -279,7 +279,7 @@ test_that("legend titles clear legends and plots across anchors and resizes", {
   on.exit(unlink(path), add = TRUE)
   jsonlite::write_json(
     list(
-      charts = lapply(charts, function(x) strip_js(x[["x"]])),
+      charts = lapply(charts, function(x) strip_js(built_payload(x))),
       untitled = lapply(untitled, function(x) strip_js(x[["x"]])),
       echarts = system.file(
         "htmlwidgets/lib/echarts/echarts.min.js",

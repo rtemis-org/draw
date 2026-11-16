@@ -13,6 +13,7 @@ setup_TimeSeriesConfig(
   window = 7L,
   roll_fn = "none",
   align = "center",
+  min_obs = NULL,
   roll_width = 2,
   roll_color = NULL,
   raw_opacity = 0.5,
@@ -47,6 +48,11 @@ columns share x; group splits a single y column.}
 \item{roll_fn}{Character \verb{\{"none", "mean", "median", "min", "max", "sum"\}}: Summary.}
 
 \item{align}{Character \verb{\{"center", "left", "right"\}}: Window alignment.}
+
+\item{min_obs}{Optional Integer \verb{[1, window]}: Fewest values present a window
+needs for a summary; with fewer it is missing. \code{NULL} requires a majority
+of the window (\code{window \%/\% 2 + 1}), and the complete window for \code{"sum"},
+since a sum over fewer values is smaller by construction.}
 
 \item{roll_width}{Numeric \verb{(0, Inf)}: Rolling line width in pixels.}
 

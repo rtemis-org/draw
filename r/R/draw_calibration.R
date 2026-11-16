@@ -393,8 +393,14 @@ method(calibration_option, CalibrationConfig) <- function(config, data) {
 #' @return An ECharts htmlwidget with vector SVG export.
 #' @export
 #' @examples
-#' labels <- factor(c("no", "yes", "no", "yes"), levels = c("no", "yes"))
-#' draw_calibration(labels, c(.1, .8, .4, .9), n_bins = 2L)
+#' # Synthetic predictions from a model that is overconfident at the extremes:
+#' # 20 cases at each of ten predicted probabilities, with observed rates pulled
+#' # toward one half.
+#' probability <- rep(seq(0.05, 0.95, by = 0.1), each = 20)
+#' rate <- 0.2 + 0.6 * probability
+#' observed <- as.integer(rep(seq_len(20), 10) <= round(20 * rate))
+#' labels <- factor(c("no", "yes")[observed + 1L], levels = c("no", "yes"))
+#' draw_calibration(labels, probability, n_bins = 10L)
 draw_calibration <- function(
   true_labels,
   predicted_prob = NULL,

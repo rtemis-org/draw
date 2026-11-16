@@ -132,7 +132,7 @@ test_that("static preparation preserves missing data dimensions and positions", 
 
 test_that("unsupported callbacks and backends leave existing output untouched", {
   # An option built in R, where a caller can attach a JavaScript callback.
-  w <- draw_line(x = c(1, 2), y = c(1, 2))
+  w <- draw_scatter(x = c(1, 2), y = c(1, 2))
   path <- tempfile(fileext = ".svg")
   on.exit(unlink(path), add = TRUE)
   writeLines("existing output", path)
@@ -467,7 +467,7 @@ test_that("native aspect layout reserves labels before fixing the data-area rati
         "htmlwidgets/lib/draw/panels.js",
         package = "rtemis.draw"
       ),
-      charts = lapply(charts, function(w) strip_js(w[["x"]]))
+      charts = lapply(charts, function(w) strip_js(built_payload(w)))
     ),
     path,
     auto_unbox = TRUE,

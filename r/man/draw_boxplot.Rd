@@ -73,11 +73,10 @@ produce the same plot.}
 overridden per-chart with the \code{color} argument.}
 
 \item{margins}{Optional Named numeric vector or named list: Plot margins in
-pixels (or percentage strings) for any of \code{"top"}, \code{"right"},
-\code{"bottom"}, \code{"left"} — e.g. \code{c(left = 80, right = 20)} or
-\code{list(left = 80, right = "10\%")}. Unspecified sides keep echarts' default
-auto-sizing (\code{outerBoundsMode = "same"}), which shrinks the grid to fit
-axis labels and names with no dead space.}
+pixels for any of \code{"top"}, \code{"right"}, \code{"bottom"}, \code{"left"}, e.g.
+\code{c(left = 80, right = 20)}. With none given, every side is 36 pixels;
+otherwise only the sides given are fixed. The grid's outer bounds hold the
+axis labels and names.}
 
 \item{width}{Optional Character or Numeric: Widget width.}
 

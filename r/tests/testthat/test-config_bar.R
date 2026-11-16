@@ -76,14 +76,50 @@ test_that("several bound columns draw one series each, named by column", {
   )
 })
 
-test_that("compile errors when x or y is unset", {
+test_that("x is required to compile, and aggregate requires y", {
   expect_error(
     compile(setup_BarConfig(y = "u"), data = bar_data()),
-    "needs both"
+    "`x` set"
   )
   expect_error(
-    compile(setup_BarConfig(x = "g"), data = bar_data()),
-    "needs both"
+    setup_BarConfig(x = "g", aggregate = "mean"),
+    "aggregate combines the values of y"
+  )
+})
+
+test_that("an unset y counts the rows of each category and group", {
+  skip_if_no_node()
+  d <- data.frame(
+    g = factor(c("b", "a", "b", "b"), levels = c("a", "b")),
+    sex = c("F", "F", "M", "F")
+  )
+  config <- setup_BarConfig(x = "g", group = "sex")
+  expect_identical(resolve(config, data = d)@ylab, "Count")
+  opt <- built_option(compile(config, data = d))
+  expect_identical(opt[["xAxis"]][["data"]], c("a", "b"))
+  expect_equal(
+    lapply(opt[["series"]], function(s) s[["data"]]),
+    list(c(1, 2), c(NA, 1))
+  )
+  expect_identical(opt[["yAxis"]][["name"]], "Count")
+})
+
+test_that("the value axis is named by the aggregate", {
+  d <- bar_data()
+  label <- function(...) resolve(setup_BarConfig(x = "g", ...), data = d)@ylab
+  expect_identical(label(y = "u"), "u")
+  expect_identical(label(y = "u", aggregate = "mean"), "Mean u")
+  expect_identical(label(y = "u", aggregate = "median"), "Median u")
+  expect_identical(label(y = "u", aggregate = "sum"), "Sum of u")
+  expect_identical(label(y = c("u", "v"), aggregate = "sum"), "Sum")
+  expect_null(label(y = c("u", "v")))
+  expect_identical(label(y = "u", aggregate = "mean", ylab = "Age"), "Age")
+  expect_identical(
+    resolve(
+      setup_BarConfig(x = "g", y = "u", aggregate = "mean", horizontal = TRUE),
+      data = d
+    )@xlab,
+    "Mean u"
   )
 })
 
@@ -312,7 +348,7 @@ test_that("aggregate combines rows that share a category and group", {
     sex = factor(c("F", "F", "F", "M"), levels = c("M", "F")),
     v = c(1, 3, NA, 5)
   )
-  for (fn in c("sum", "mean", "median", "count")) {
+  for (fn in c("sum", "mean", "median")) {
     request <- compile(
       setup_BarConfig(x = "g", y = "v", group = "sex", aggregate = fn),
       data = d
@@ -326,8 +362,7 @@ test_that("aggregate combines rows that share a category and group", {
         fn,
         sum = c(4, 0, 5),
         mean = c(2, NA, 5),
-        median = c(2, NA, 5),
-        count = c(2, 0, 1)
+        median = c(2, NA, 5)
       ),
       info = fn
     )

@@ -34,7 +34,8 @@ setup_BarConfig(
 \arguments{
 \item{x}{Optional Character: Column holding the categories.}
 
-\item{y}{Optional Character: Columns holding the values, one series each.}
+\item{y}{Optional Character: Columns holding the values, one series each.
+\code{NULL} draws the number of rows of each category and group.}
 
 \item{stack}{Logical: If TRUE, stack the series instead of grouping them.}
 
@@ -94,7 +95,24 @@ argument is optional}, which is what lets the published schema require
 nothing.
 }
 \examples{
-draw(setup_BarConfig(x = "cyl", y = "mpg"), data = aggregate(mpg ~ cyl, mtcars, mean))
+# Quarterly generation by source: `aggregate` sums the months of each
+# quarter.
+draw(
+  setup_BarConfig(
+    x = "quarter",
+    y = "gwh",
+    group = "source",
+    aggregate = "sum",
+    ylab = "Generation (GWh)"
+  ),
+  data = power_generation
+)
+
+# With `y` unset, each bar counts the rows of its category and group.
+draw(
+  setup_BarConfig(x = "site", group = "satisfaction", stack = TRUE),
+  data = satisfaction_survey
+)
 }
 \author{
 EDG

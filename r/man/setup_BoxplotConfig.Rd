@@ -144,7 +144,15 @@ argument is optional}, which is what lets the published schema require
 nothing.
 }
 \examples{
-draw(setup_BoxplotConfig(x = c("mpg", "hp")), data = mtcars)
+# Two lengths in centimeters, on one axis.
+draw(
+  setup_BoxplotConfig(
+    x = c("Sepal.Length", "Petal.Length"),
+    labels = c("Sepal length", "Petal length"),
+    ylab = "Length (cm)"
+  ),
+  data = iris
+)
 }
 \author{
 EDG

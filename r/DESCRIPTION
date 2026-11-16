@@ -24,6 +24,7 @@ URL: https://www.rtemis.org, https://docs.rtemis.org/r/draw, https://docs.rtemis
 BugReports: https://github.com/rtemis-org/draw/issues
 License: BSD_3_clause + file LICENSE
 Encoding: UTF-8
+LazyData: true
 Language: en-US
 SystemRequirements: Node.js (>= 18) for optional SVG export
 Roxygen: list(markdown = TRUE)
@@ -71,6 +72,7 @@ Collate:
     'draw.R'
     'chart_config.R'
     'build_request.R'
+    'measure.R'
     'config_constraints.R'
     'config_scatter.R'
     'config_bar.R'
@@ -129,4 +131,5 @@ Collate:
     'draw_harmonograph.R'
     'export.R'
     'zzz.R'
+    'data.R'
 Config/roxygen2/version: 8.1.1

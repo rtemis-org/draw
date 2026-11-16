@@ -55,9 +55,12 @@ function rtemisDrawBuild(x, dark) {
   delete option.backgroundColor;
   if (request.appearance?.grid) option.grid = {...option.grid, ...request.appearance.grid};
   x.option = option;
+  x.builtDark = dark;
   if (request.type === 'a3') {
     x.a3 = {...RtemisDraw.a3SurfaceHints(data, request.config, appearance), ...x.a3};
   }
+  const aspect = RtemisDraw.aspectHints[request.type]?.(option, request.config);
+  if (aspect) x.aspect = aspect;
 }
 
 function rtemisDrawFactory(el, width, height, bounded = false, onBackground = () => {}) {
@@ -169,7 +172,13 @@ function rtemisDrawFactory(el, width, height, bounded = false, onBackground = ()
       let themeName = null;
       let themeObj = null;
       const dark = rtemisDrawIsDarkMode();
-      if (x.build) rtemisDrawBuild(x, dark);
+      // renderValue builds first so the aspect box is sized from the built
+      // option; a change of scheme since then rebuilds and sizes it again.
+      if (x.build && x.builtDark !== dark) {
+        rtemisDrawBuild(x, dark);
+        const aspectHeight = applyAspect(x, currentWidth);
+        if (aspectHeight !== null) currentHeight = aspectHeight;
+      }
 
       if (x.autoTheme) {
         // Auto-detect: pick light or dark theme
@@ -315,6 +324,7 @@ function rtemisDrawFactory(el, width, height, bounded = false, onBackground = ()
           currentHeight = newHeight;
         }
 
+        if (x.build) rtemisDrawBuild(x, rtemisDrawIsDarkMode());
         const aspectHeight = applyAspect(x, currentWidth);
         if (aspectHeight !== null) currentHeight = aspectHeight;
 

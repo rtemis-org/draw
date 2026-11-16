@@ -114,9 +114,8 @@ scores, use \verb{rank_by = "signed", decreasing = FALSE}. Averaging fold p-valu
 does not produce a combined p-value; choose a suitable summary outside this
 function when the score's interpretation requires it.
 
-Set \code{bar_width} to a pixel thickness for separate zero-to-score segments.
-This uses native bars and covers the legacy importance \code{type = "line"}
-geometry without connecting different variables or adding a new chart type.
+Set \code{bar_width} to a pixel thickness for separate zero-to-score segments,
+drawn as native bars, so no line connects different variables.
 
 Explicit NA scores, omitted rows, and wholly unavailable folds are excluded
 from each variable's summary. Variables with no available score are omitted.

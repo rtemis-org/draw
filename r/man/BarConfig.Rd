@@ -62,7 +62,8 @@ title. A title does not add a missing legend.}
 
 \item{x}{Optional Character: Column holding the categories.}
 
-\item{y}{Optional Character: Columns holding the values, one series each.}
+\item{y}{Optional Character: Columns holding the values, one series each.
+\code{NULL} draws the number of rows of each category and group.}
 
 \item{order}{Character \verb{\{"input", "increasing", "decreasing"\}}: Order categories
 by their total across series, retaining ties and placing missing totals last.}
@@ -104,7 +105,7 @@ Fixed thickness maps to \code{barWidth} in ECharts' \code{BaseBarSeriesOption}
 (\code{src/chart/bar/BaseBarSeries.ts}). It applies to either orientation.
 }
 \examples{
-setup_BarConfig(x = "cyl", y = "mpg")@type
+setup_BarConfig(x = "quarter", y = "gwh", aggregate = "sum")@type
 }
 \author{
 EDG

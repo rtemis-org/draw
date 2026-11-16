@@ -15,12 +15,15 @@ LineConfig(
   x = NULL,
   y = NULL,
   group = NULL,
+  aggregate = "none",
   blocks = NULL,
   smooth = FALSE,
   area = FALSE,
-  points = TRUE,
+  points = FALSE,
+  stack = FALSE,
   zoom = FALSE,
   palette = NULL,
+  line_style = NULL,
   block_color = NULL,
   block_opacity = 0.2,
   square = FALSE,
@@ -72,17 +75,29 @@ adaptively chosen labels, and any other column a category axis.}
 \item{y}{Optional Character: Columns to plot, one line each.}
 
 \item{group}{Optional Character: Column to group and color lines by. Splits
-a single \code{y} column into one line per level; cannot be combined with
-several \code{y} columns or with \code{blocks}.}
+each \code{y} column into one line per level; cannot be combined with
+\code{blocks}.}
+
+\item{aggregate}{Character \{"none", "sum", "mean", "median"\}: How the \code{y}
+values of rows sharing an x and group combine into one point. A line
+joins one value per x, so with \code{"none"} two such rows are an error.
+Missing values are left out of each summary.}
 
 \item{blocks}{Optional Character: Column whose contiguous runs shade vertical
 background bands.}
 
 \item{smooth}{Logical: Draw smoothed lines.}
 
-\item{area}{Logical: Fill the area under each line.}
+\item{area}{Logical: Fill the area under each line. A filled area is read
+by its height from zero, so the derived y limits then hold zero.}
 
-\item{points}{Logical: Show a marker at each data value.}
+\item{points}{Logical: Show a marker at each data value. Without markers, a
+value with no neighbor to join keeps its marker.}
+
+\item{stack}{Logical: Stack the lines, each on the sum of those before it at
+the same x. Requires \code{area}, since the filled bands show each line's
+share. A line has no point where a line below it has no value, since the
+sum there is unknown.}
 
 \item{zoom}{Logical: Enable an x-axis slider, Shift+wheel zoom, and drag
 panning.}
@@ -90,7 +105,12 @@ panning.}
 \item{palette}{Optional Character: Series colors, overriding the theme
 palette for this chart. \code{NULL} uses the theme's.}
 
-\item{block_color}{Optional Character: Band colors.}
+\item{line_style}{Optional Character \{"solid", "dashed", "dotted"\}: Dash
+pattern of each line, recycled across lines. \code{NULL} draws solid lines.}
+
+\item{block_color}{Optional Character: Band colors, one per level of
+\code{blocks}: the factor levels that occur, or the sorted distinct values. \code{NA}
+or \code{"transparent"} draws no band for its level.}
 
 \item{block_opacity}{Numeric \verb{[0, 1]}: Band opacity.}
 
@@ -127,7 +147,7 @@ A serializable description of a line chart. Build one with
 columns, one line each, as \link{BarConfig} does.
 }
 \examples{
-setup_LineConfig(x = "wt", y = "mpg")@type
+setup_LineConfig(x = "month", y = "gwh", group = "source")@type
 }
 \author{
 EDG

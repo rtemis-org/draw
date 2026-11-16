@@ -2,7 +2,7 @@
 # ::rtemis.draw::
 # 2026- EDG rtemis.org
 
-# line, pie, boxplot, sankey and gantt. Between them they cover the two binding
+# line, pie, boxplot, sankey, and gantt. Between them they cover the two binding
 # shapes the first four charts did not: a chart with no axes at all (pie,
 # sankey), and a **table-bound** chart, where the properties name columns within
 # one bound table rather than one column per role (sankey, gantt).
@@ -65,33 +65,36 @@ test_that("every registered type resolves to a class that agrees with it", {
 # %% compile matches the vector path ----
 
 test_that("line compiles to the same option as the vector path", {
-  d <- mtcars[order(mtcars[["wt"]]), ]
+  skip_if_no_node()
+  wide <- reshape(
+    power_generation[c("month", "source", "gwh")],
+    idvar = "month",
+    timevar = "source",
+    direction = "wide"
+  )
+  names(wide) <- sub("^gwh[.]", "", names(wide))
   expect_identical(
-    compile(setup_LineConfig(x = "wt", y = "mpg"), data = d),
-    line_option(x = d[["wt"]], y = d[["mpg"]], xlab = "wt", ylab = "mpg")
+    built_option(compile(
+      setup_LineConfig(x = "month", y = "Solar"),
+      data = wide
+    )),
+    built_option(draw_line(
+      x = wide[["month"]],
+      y = wide[["Solar"]],
+      xlab = "month",
+      ylab = "Solar"
+    ))
   )
   expect_identical(
-    compile(setup_LineConfig(x = "wt", y = c("mpg", "hp")), data = d),
-    line_option(
-      x = d[["wt"]],
-      y = list(mpg = d[["mpg"]], hp = d[["hp"]]),
-      xlab = "wt"
-    )
-  )
-  dd <- data.frame(day = as.Date("2025-09-07") + 0:4, v = 1:5)
-  expect_identical(
-    compile(setup_LineConfig(x = "day", y = "v"), data = dd),
-    line_option(x = dd[["day"]], y = dd[["v"]], xlab = "day", ylab = "v")
-  )
-  expect_identical(
-    compile(setup_LineConfig(x = "wt", y = "mpg", group = "cyl"), data = d),
-    line_option(
-      x = d[["wt"]],
-      y = d[["mpg"]],
-      group = d[["cyl"]],
-      xlab = "wt",
-      ylab = "mpg"
-    )
+    built_option(compile(
+      setup_LineConfig(x = "month", y = c("Solar", "Wind")),
+      data = wide
+    )),
+    built_option(draw_line(
+      x = wide[["month"]],
+      y = list(Solar = wide[["Solar"]], Wind = wide[["Wind"]]),
+      xlab = "month"
+    ))
   )
 })
 
@@ -184,8 +187,9 @@ test_that("line derives time-axis limits in epoch milliseconds", {
   expect_identical(r@xlim, calc_limits(as.numeric(dd[["day"]]) * 86400000))
   expect_identical(r@origin[["xlim"]], "derived")
   # The recorded limits feed the builder unchanged.
+  skip_if_no_node()
   expect_identical(
-    compile(r, data = dd)@x_axis@min,
+    built_option(compile(r, data = dd))[["xAxis"]][["min"]],
     r@xlim[[1L]]
   )
 })

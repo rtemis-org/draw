@@ -6,8 +6,9 @@
 #' Numeric or date-time observations with optional rolling summaries and a
 #' secondary value axis. Uses LineSeriesOption and CartesianAxisOption from
 #' ECharts src/chart/line and src/coord/cartesian. Rolling windows count sorted
-#' observations, not elapsed time; incomplete windows and windows containing
-#' missing values remain missing. Even centered windows favor following values,
+#' observations, not elapsed time. A window summarizes the values present in
+#' it when they number at least `min_obs`; a position beyond either end of the
+#' series counts as missing. Even centered windows favor following values,
 #' matching data.table's centered alignment used by rtemis.
 #' @param x,y Optional Character: Time and value column bindings. Multiple y
 #'   columns share x; group splits a single y column.
@@ -16,6 +17,10 @@
 #' @param window Integer `[1, Inf)`: Number of observations per rolling window.
 #' @param roll_fn Character `{"none", "mean", "median", "min", "max", "sum"}`: Summary.
 #' @param align Character `{"center", "left", "right"}`: Window alignment.
+#' @param min_obs Optional Integer `[1, window]`: Fewest values present a window
+#'   needs for a summary; with fewer it is missing. `NULL` requires a majority
+#'   of the window (`window %/% 2 + 1`), and the complete window for `"sum"`,
+#'   since a sum over fewer values is smaller by construction.
 #' @param roll_width Numeric `(0, Inf)`: Rolling line width in pixels.
 #' @param roll_color Optional Character: Rolling line color; unset uses the group color.
 #' @param raw_opacity Numeric `[0, 1]`: Raw observation opacity.
@@ -57,6 +62,7 @@ TimeSeriesConfig <- new_class(
         enum = c("none", "mean", "median", "min", "max", "sum")
       ),
       align = prop_string("center", enum = c("center", "left", "right")),
+      min_obs = prop_integer(NULL, nullable = TRUE, min = 1L),
       roll_width = prop_float(2, exclusive_min = 0),
       roll_color = prop_string(NULL, nullable = TRUE),
       raw_opacity = prop_float(.5, min = 0, max = 1),
@@ -82,6 +88,7 @@ setup_TimeSeriesConfig <- function(
   window = 7L,
   roll_fn = "none",
   align = "center",
+  min_obs = NULL,
   roll_width = 2,
   roll_color = NULL,
   raw_opacity = .5,
@@ -104,6 +111,19 @@ setup_TimeSeriesConfig <- function(
 ) {
   check_integer_scalar(window)
   check_integer_scalar(show_zt_every)
+  if (!is.null(min_obs)) {
+    check_integer_scalar(min_obs)
+    if (min_obs > window) {
+      abort(
+        "`min_obs` (",
+        min_obs,
+        ") cannot exceed `window` (",
+        window,
+        "): a window holds at most `window` values.",
+        class = c("rtemis_value_error", "rtemis_input_error")
+      )
+    }
+  }
   origin <- origin %||%
     chart_origin(
       match.call(),
@@ -121,6 +141,7 @@ setup_TimeSeriesConfig <- function(
     window = as.integer(window),
     roll_fn = roll_fn,
     align = align,
+    min_obs = if (!is.null(min_obs)) as.integer(min_obs),
     roll_width = roll_width,
     roll_color = roll_color,
     raw_opacity = raw_opacity,
@@ -140,10 +161,12 @@ setup_TimeSeriesConfig <- function(
   )
 }
 
-#' Materialize a complete observation-window statistic
+#' Materialize an observation-window statistic
 #' @param x Numeric: Ordered values, with missing slots preserved.
 #' @param config TimeSeriesConfig: Window and alignment settings.
-#' @return Numeric: A summary or NA at each original observation position.
+#' @return Numeric: A summary of the values present in each window, or `NA`
+#'   where they number fewer than `min_obs` (by default a majority of the
+#'   window, and the complete window for a sum).
 #' @keywords internal
 #' @noRd
 rolling_values <- new_generic("rolling_values", "x")
@@ -152,6 +175,8 @@ method(rolling_values, class_numeric) <- function(x, config) {
     return(rep(NA_real_, length(x)))
   }
   width <- config@window
+  required <- config@min_obs %||%
+    if (config@roll_fn == "sum") width else width %/% 2L + 1L
   offset <- switch(
     config@align,
     right = width - 1L,
@@ -171,11 +196,9 @@ method(rolling_values, class_numeric) <- function(x, config) {
     function(i) {
       start <- i - offset
       end <- start + width - 1L
-      if (start < 1 || end > length(x)) {
-        return(NA_real_)
-      }
-      values <- x[seq.int(start, end)]
-      if (anyNA(values)) NA_real_ else summarize(values)
+      values <- x[seq.int(max(start, 1L), min(end, length(x)))]
+      values <- values[!is.na(values)]
+      if (length(values) < required) NA_real_ else summarize(values)
     },
     numeric(1)
   )

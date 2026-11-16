@@ -10,7 +10,7 @@
 
 # %% BUILDER_TYPES ----
 # Chart types with a builder in the bundled @rtemis/draw.
-BUILDER_TYPES <- c("a3", "bar")
+BUILDER_TYPES <- c("a3", "bar", "line")
 
 
 # %% BuildRequest ----
@@ -21,7 +21,7 @@ BUILDER_TYPES <- c("a3", "bar")
 #' [draw()] sends it to the widget, and [save_drawing()] sends it to Node.js;
 #' each calls the builder for `type` with `data`, `config`, and `appearance`.
 #'
-#' @param type Character \{"a3", "bar"\}: Chart type.
+#' @param type Character \{"a3", "bar", "line"\}: Chart type.
 #' @param data Character: The chart data as JSON text.
 #' @param config Named list: The chart config, an instance of the
 #'   `chart/<type>/v1` schema.
@@ -139,30 +139,33 @@ config_members <- function(config) {
 # %% tabular_json ----
 #' A tabular chart's data, as @rtemis/draw's tabular builders take it
 #'
-#' The JSON text of `{columns, levels}`: `columns` maps each named column to an
-#' array of values, and `levels` maps each factor column to its level order.
-#' Numbers are written as numbers and missing values as `null`. A factor is
-#' written as its labels. A date or date-time is written as ISO 8601 text, and
-#' any other value as text.
+#' The JSON text of `{columns, levels, types, frequency}`: `columns` maps each
+#' named column to an array of values, `levels` maps each factor column to its
+#' level order, `types` marks each date or date-time column `"time"`, and
+#' `frequency` names the column of row counts, or is `null`. Numbers are
+#' written as numbers and missing values as `null`. A factor is written as its
+#' labels. A date or date-time is written as epoch milliseconds of its
+#' wall-clock reading in UTC (`time_axis_ms()`), which the builders place and
+#' label in UTC. Any other value is written as text.
 #'
 #' @param data Data frame or list: The chart data.
 #' @param columns Character: Columns to include.
+#' @param frequency Optional Character: Column holding the number of rows each
+#'   row stands for, written with the columns and named as `frequency`.
 #'
 #' @return Character: JSON text.
 #'
 #' @author EDG
 #' @keywords internal
 #' @noRd
-tabular_json <- function(data, columns) {
+tabular_json <- function(data, columns, frequency = NULL) {
+  columns <- unique(c(columns, frequency))
   as_values <- function(x) {
     if (is.factor(x)) {
       return(as.character(x))
     }
-    if (inherits(x, "Date")) {
-      return(format(x, "%Y-%m-%d"))
-    }
-    if (inherits(x, "POSIXt")) {
-      return(format(x, "%Y-%m-%dT%H:%M:%S%z"))
+    if (is_time_axis(x)) {
+      return(time_axis_ms(x))
     }
     if (is.numeric(x) || is.logical(x) || is.character(x)) {
       return(unclass(x))
@@ -178,14 +181,19 @@ tabular_json <- function(data, columns) {
     lapply(factors, function(name) levels(data[[name]])),
     factors
   )
+  times <- Filter(function(name) is_time_axis(data[[name]]), columns)
+  as_object <- function(x) {
+    if (length(x)) x else stats::setNames(list(), character(0))
+  }
   as.character(jsonlite::toJSON(
     list(
       columns = values,
-      levels = if (length(levels)) {
-        levels
-      } else {
-        stats::setNames(list(), character(0))
-      }
+      levels = as_object(levels),
+      types = as_object(stats::setNames(
+        lapply(times, function(name) jsonlite::unbox("time")),
+        times
+      )),
+      frequency = if (!is.null(frequency)) jsonlite::unbox(frequency)
     ),
     auto_unbox = FALSE,
     na = "null",

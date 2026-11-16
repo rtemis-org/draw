@@ -5,13 +5,14 @@ test_that("structural constraints use the same declaration in R and JSON Schema"
       setup = setup_LineConfig,
       cls = LineConfig,
       good = list(
-        list(group = "g", y = "a"),
-        list(y = c("a", "b")),
+        list(group = "g", y = c("a", "b")),
+        list(stack = TRUE, area = TRUE),
         list(xlim = c(0, 1))
       ),
       bad = list(
-        list(group = "g", y = c("a", "b")),
         list(group = "g", blocks = "b"),
+        list(stack = TRUE, area = TRUE, equal_axes = TRUE),
+        list(stack = TRUE),
         list(xlim = 1:3)
       )
     ),

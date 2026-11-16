@@ -200,7 +200,7 @@ test_that("DensityConfig and HistogramConfig carry zoom to the option", {
 
 # %% Shift+wheel across existing presets ----
 test_that("line, time series, and Gantt presets zoom on Shift+wheel", {
-  opt <- draw_line(1:5, 1:5, zoom = TRUE)$x$option
+  opt <- node_option(draw_line(1:5, 1:5, zoom = TRUE))
   expect_identical(inside_zooms(opt)[[1L]][["zoomOnMouseWheel"]], "shift")
   tasks <- data.frame(
     label = c("a", "b"),
@@ -295,7 +295,8 @@ test_that("volcano plots zoom both axes and Manhattan plots the outcome axis", {
 
 # %% static export ----
 test_that("static_controls drops zoom controls and returns the slider band", {
-  opt <- strip_js(draw_line(1:5, 1:5, zoom = TRUE)$x$option, path = "option")
+  boxes <- list(a = 1:5, b = 2:6)
+  opt <- strip_js(draw_boxplot(boxes, zoom = TRUE)$x$option, path = "option")
   expect_identical(opt[["dataZoom"]][[1L]][["id"]], ZOOM_SLIDER_ID)
   out <- static_controls(opt)
   expect_null(out[["dataZoom"]])
@@ -308,9 +309,8 @@ test_that("static_controls drops zoom controls and returns the slider band", {
   expect_null(out[["toolbox"]])
   expect_identical(out[["grid"]], opt[["grid"]])
   explicit <- strip_js(
-    draw_line(
-      1:5,
-      1:5,
+    draw_boxplot(
+      boxes,
       zoom = DataZoom(type = "slider"),
       margins = c(bottom = 50)
     )$x$option,

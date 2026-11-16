@@ -3,11 +3,9 @@
 # 2026- EDG rtemis.org
 
 # The line chart's config. Multi-series like bar, plus a background-band binding
-# (`blocks`) and axis limits like scatter.
-#
-# `line_style` is deliberately **not** a property: it is a [LineStyle] object,
-# part of the rendering IR that mirrors ECharts, and giving it a wire form would
-# mean schematizing that IR. A caller wanting it builds the option directly.
+# (`blocks`) and axis limits like scatter. compile() returns a BuildRequest,
+# whose option @rtemis/draw's line builder builds in the widget and in Node.
+# spec: draw/shared-builders#line
 
 # %% LineConfig ----
 #' Line Chart Configuration
@@ -23,18 +21,32 @@
 #'   adaptively chosen labels, and any other column a category axis.
 #' @param y Optional Character: Columns to plot, one line each.
 #' @param group Optional Character: Column to group and color lines by. Splits
-#'   a single `y` column into one line per level; cannot be combined with
-#'   several `y` columns or with `blocks`.
+#'   each `y` column into one line per level; cannot be combined with
+#'   `blocks`.
+#' @param aggregate Character \{"none", "sum", "mean", "median"\}: How the `y`
+#'   values of rows sharing an x and group combine into one point. A line
+#'   joins one value per x, so with `"none"` two such rows are an error.
+#'   Missing values are left out of each summary.
 #' @param blocks Optional Character: Column whose contiguous runs shade vertical
 #'   background bands.
 #' @param smooth Logical: Draw smoothed lines.
-#' @param area Logical: Fill the area under each line.
-#' @param points Logical: Show a marker at each data value.
+#' @param area Logical: Fill the area under each line. A filled area is read
+#'   by its height from zero, so the derived y limits then hold zero.
+#' @param points Logical: Show a marker at each data value. Without markers, a
+#'   value with no neighbor to join keeps its marker.
+#' @param stack Logical: Stack the lines, each on the sum of those before it at
+#'   the same x. Requires `area`, since the filled bands show each line's
+#'   share. A line has no point where a line below it has no value, since the
+#'   sum there is unknown.
 #' @param zoom Logical: Enable an x-axis slider, Shift+wheel zoom, and drag
 #'   panning.
 #' @param palette Optional Character: Series colors, overriding the theme
 #'   palette for this chart. `NULL` uses the theme's.
-#' @param block_color Optional Character: Band colors.
+#' @param line_style Optional Character \{"solid", "dashed", "dotted"\}: Dash
+#'   pattern of each line, recycled across lines. `NULL` draws solid lines.
+#' @param block_color Optional Character: Band colors, one per level of
+#'   `blocks`: the factor levels that occur, or the sorted distinct values. `NA`
+#'   or `"transparent"` draws no band for its level.
 #' @param block_opacity Numeric `[0, 1]`: Band opacity.
 #' @param pad Numeric `[0, Inf)`: Fraction of the data range to extend each axis
 #'   by when the limits are not given.
@@ -60,7 +72,7 @@
 #' @export
 #'
 #' @examples
-#' setup_LineConfig(x = "wt", y = "mpg")@type
+#' setup_LineConfig(x = "month", y = "gwh", group = "source")@type
 LineConfig <- new_class(
   name = "LineConfig",
   parent = ChartConfig,
@@ -89,6 +101,14 @@ LineConfig <- new_class(
         nullable = TRUE,
         description = "Column to group and color lines by."
       ),
+      aggregate = prop_string(
+        "none",
+        enum = c("none", "sum", "mean", "median"),
+        description = paste(
+          "How the y values of rows sharing an x and group combine into one",
+          "point: none requires one row per x in each line."
+        )
+      ),
       blocks = prop_string(
         NULL,
         nullable = TRUE,
@@ -101,11 +121,20 @@ LineConfig <- new_class(
       smooth = prop_boolean(FALSE, description = "Draw smoothed lines."),
       area = prop_boolean(
         FALSE,
-        description = "Fill the area under each line."
+        description = "Fill the area under each line; derived y limits hold zero."
       ),
       points = prop_boolean(
-        TRUE,
-        description = "Show a marker at each data value."
+        FALSE,
+        description = paste(
+          "Show a marker at each data value. Without markers, a value with no",
+          "neighbor to join keeps its marker."
+        )
+      ),
+      stack = prop_boolean(
+        FALSE,
+        description = paste(
+          "Stack the lines, each on the sum of those before it. Requires area."
+        )
       ),
       zoom = prop_boolean(
         FALSE,
@@ -118,11 +147,18 @@ LineConfig <- new_class(
         vector = TRUE,
         description = "Series colors, overriding the theme palette. Unset uses the theme's."
       ),
+      line_style = prop_string(
+        NULL,
+        nullable = TRUE,
+        vector = TRUE,
+        enum = c("solid", "dashed", "dotted"),
+        description = "Dash pattern of each line, recycled. Unset draws solid lines."
+      ),
       block_color = prop_string(
         NULL,
         nullable = TRUE,
         vector = TRUE,
-        description = "Band colors."
+        description = "Band colors, one per level of `blocks`, in level order."
       ),
       block_opacity = prop_float(
         0.2,
@@ -216,13 +252,37 @@ LineConfig <- new_class(
               properties = list(group = list(not = list(type = "null")))
             ),
             then = list(
-              properties = list(
-                y = list(maxItems = 1L),
-                blocks = list(type = "null")
-              )
+              properties = list(blocks = list(type = "null"))
             )
           ),
-          message = "Bind group only with a single y column and without blocks."
+          message = "Bind group or blocks, not both."
+        ),
+        list(
+          schema = list(
+            `if` = list(
+              required = list("stack"),
+              properties = list(stack = list(const = TRUE))
+            ),
+            then = list(
+              properties = list(equal_axes = list(const = FALSE))
+            )
+          ),
+          message = "A stacked y axis shows sums: set stack or equal_axes, not both."
+        ),
+        list(
+          schema = list(
+            `if` = list(
+              required = list("stack"),
+              properties = list(stack = list(const = TRUE))
+            ),
+            then = list(
+              properties = list(area = list(const = TRUE))
+            )
+          ),
+          message = paste(
+            "stack draws each line on the sum of those below it, which only",
+            "filled bands show: set area too."
+          )
         )
       )
     ),
@@ -257,17 +317,54 @@ LINE_ORIGIN_NAMES <- setdiff(
 #' @export
 #'
 #' @examples
-#' draw(setup_LineConfig(x = "wt", y = "mpg"), data = mtcars[order(mtcars$wt), ])
+#' # Monthly generation by source, one line each.
+#' draw(
+#'   setup_LineConfig(
+#'     x = "month",
+#'     y = "gwh",
+#'     group = "source",
+#'     ylab = "Generation (GWh)"
+#'   ),
+#'   data = power_generation
+#' )
+#'
+#' # The sources add up to the total generated, so they stack.
+#' draw(
+#'   setup_LineConfig(
+#'     x = "month",
+#'     y = "gwh",
+#'     group = "source",
+#'     area = TRUE,
+#'     stack = TRUE,
+#'     ylab = "Generation (GWh)"
+#'   ),
+#'   data = power_generation
+#' )
+#'
+#' # Quarterly totals: `aggregate` combines the months of each quarter.
+#' draw(
+#'   setup_LineConfig(
+#'     x = "quarter",
+#'     y = "gwh",
+#'     group = "source",
+#'     aggregate = "sum",
+#'     points = TRUE
+#'   ),
+#'   data = power_generation
+#' )
 setup_LineConfig <- function(
   x = NULL,
   y = NULL,
   group = NULL,
+  aggregate = "none",
   blocks = NULL,
   smooth = FALSE,
   area = FALSE,
-  points = TRUE,
+  points = FALSE,
+  stack = FALSE,
   zoom = FALSE,
   palette = NULL,
+  line_style = NULL,
   block_color = NULL,
   block_opacity = 0.2,
   pad = DEFAULT_PAD,
@@ -294,12 +391,16 @@ setup_LineConfig <- function(
     x = x,
     y = y,
     group = group,
+    aggregate = aggregate,
     blocks = blocks,
     smooth = smooth,
     area = area,
     points = points,
+    stack = stack,
     zoom = zoom,
-    palette = palette,
+    # A named color vector, such as a subset of `rtemis_colors`, is a palette.
+    palette = if (!is.null(palette)) unname(palette),
+    line_style = line_style,
     block_color = block_color,
     block_opacity = block_opacity,
     pad = pad,
@@ -329,6 +430,8 @@ setup_LineConfig <- function(
 # several name none. Limits are derived only for a numeric x, since a
 # categorical axis has no range to pad.
 method(resolve, LineConfig) <- function(config, data = NULL, ...) {
+  # Limits are those of the points drawn: the combined rows.
+  data <- line_rows(config, data)
   x <- config_column(data, config@x, "x")
   y_all <- unlist(
     lapply(config@y, function(column) config_column(data, column, "y")),
@@ -354,13 +457,21 @@ method(resolve, LineConfig) <- function(config, data = NULL, ...) {
     config,
     list(
       xlab = config@x,
-      ylab = if (length(config@y) == 1L) config@y,
+      ylab = if (!is.null(config@y)) value_label(config),
       xlim = common[["xlim"]] %||%
         if (!is.null(numeric_x %||% time_x)) {
           calc_limits(numeric_x %||% time_x, config@pad)
         },
+      # A stacked axis spans the sums, which the builder derives. A filled
+      # area is read by its height from zero, so its axis holds zero.
       ylim = common[["ylim"]] %||%
-        if (!is.null(y_all)) calc_limits(y_all, config@pad)
+        if (!is.null(y_all) && !config@stack) {
+          if (config@area) {
+            calc_limits_from_zero(y_all, config@pad)
+          } else {
+            calc_limits(y_all, config@pad)
+          }
+        }
     )
   )
 }
@@ -373,48 +484,47 @@ method(compile, LineConfig) <- function(
   theme = NULL,
   ...
 ) {
-  x <- config_column(data, config@x, "x")
-  if (is.null(x) || is.null(config@y)) {
+  if (is.null(config@x) || is.null(config@y)) {
     abort(
       "A LineConfig needs both `x` and `y` set to draw.",
       class = c("rtemis_null_input", "rtemis_input_error")
     )
   }
-  values <- lapply(config@y, function(column) config_column(data, column, "y"))
-  names(values) <- config@y
-  line_option(
-    x = x,
-    y = if (length(values) == 1L) values[[1L]] else values,
-    group = config_column(data, config@group, "group"),
-    smooth = config@smooth,
-    area = config@area,
-    points = config@points,
-    blocks = config_column(data, config@blocks, "blocks"),
-    block_color = config@block_color,
-    block_opacity = config@block_opacity,
-    palette = config@palette,
-    pad = config@pad,
-    square = config@square,
-    equal_axes = config@equal_axes,
-    xlim = config@xlim,
-    ylim = config@ylim,
-    xlab = config@xlab,
-    ylab = config@ylab,
-    title = config@title,
-    zoom = config@zoom,
-    margins = config_margins(config) %||% DEFAULT_MARGINS
+  columns <- unique(c(config@x, config@y, config@group, config@blocks))
+  for (name in columns) {
+    config_column(data, name, if (name %in% config@y) "y" else "x")
+  }
+  BuildRequest(
+    type = "line",
+    data = tabular_json(line_rows(config, data), columns),
+    config = config_members(config),
+    appearance = list()
   )
 }
 
 
-# %% render_meta.LineConfig ----
-# A square or equally-scaled plot is solved in the browser, from the ratio and
-# padding derived here. The limits are already reconciled by resolve(), so this
-# only reads what compile() produced.
-method(render_meta, LineConfig) <- function(config, option) {
-  aspect_meta(
-    option,
-    square = config@square,
-    equal_axes = config@equal_axes
+# %% line_rows ----
+#' The rows a line chart draws
+#'
+#' With `aggregate` set, one row per x, group, and band level, the `y` columns
+#' summarized as `aggregate` says; otherwise the data as given.
+#'
+#' @param config [LineConfig].
+#' @param data Optional Data frame: The chart data.
+#'
+#' @return Data frame, or `data` unchanged.
+#'
+#' @author EDG
+#' @keywords internal
+#' @noRd
+line_rows <- function(config, data) {
+  if (is.null(data) || config@aggregate == "none" || is.null(config@x)) {
+    return(data)
+  }
+  aggregate_rows(
+    data,
+    c(config@x, config@group, config@blocks),
+    config@y,
+    config@aggregate
   )
-}
+} # /rtemis.draw::line_rows

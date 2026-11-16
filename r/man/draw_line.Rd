@@ -9,9 +9,11 @@ draw_line(
   y,
   names = NULL,
   group = NULL,
+  aggregate = "none",
   smooth = FALSE,
   area = FALSE,
-  points = TRUE,
+  points = FALSE,
+  stack = FALSE,
   blocks = NULL,
   block_color = NULL,
   block_opacity = 0.2,
@@ -43,25 +45,36 @@ and \code{POSIXct} values get a time axis: points are spaced by elapsed time
 and the labels are chosen adaptively for the span shown (years, then
 months, then days, down to seconds), and they read as the timestamps do
 in R whatever timezone the chart is viewed in. Anything else gets a
-category axis with one slot per distinct value, in order of appearance.}
+category axis with one slot per distinct value: a factor's levels that
+occur, in level order, or other values in order of appearance.}
 
 \item{y}{Numeric or named list: Y values.}
 
 \item{names}{Optional Character: Series names used when \code{y} is an unnamed list.}
 
 \item{group}{Optional Atomic vector or single-column data frame: Grouping
-variable, one value per point. Splits a single \code{y} vector into one line per level, named by the level, as
-\code{\link[=draw_scatter]{draw_scatter()}} does for points. Cannot be combined with a list \code{y} or
+variable, one value per point. Splits each \code{y} series into one line per
+level, as \code{\link[=draw_scatter]{draw_scatter()}} does for points: named by the level for a
+single \code{y}, and \code{"<series> / <level>"} for several. Cannot be combined
 with \code{blocks}. Points whose group is \code{NA} are dropped. Lines and legend
 entries follow factor level order, or first appearance for other vectors.}
 
+\item{aggregate}{Character \{"none", "sum", "mean", "median"\}: How the \code{y}
+values of rows sharing an x and group combine into one point. A line
+joins one value per x, so with \code{"none"} two such rows are an error.
+Missing values are left out of each summary.}
+
 \item{smooth}{Logical: Whether to smooth lines.}
 
-\item{area}{Logical: Whether to show area fill.}
+\item{area}{Logical: Fill the area under each line. The y limits, unless
+given, then hold zero, padded only away from it.}
 
-\item{points}{Logical: Whether to show point markers on each data value.
-Defaults to \code{TRUE}; set to \code{FALSE} on long time-series where the symbols
-add visual noise.}
+\item{points}{Logical: Show a marker at each data value. Without markers, a
+value with no neighbor to join keeps its marker.}
+
+\item{stack}{Logical: Stack the lines, each on the sum of those before it at
+the same x. Requires \code{area}. A line has no point where a line below it
+has no value, since the sum there is unknown.}
 
 \item{blocks}{Optional factor, integer, character, or logical of length
 \code{length(x)}: Per-x-value group label for the shaded vertical background
@@ -113,18 +126,15 @@ interval. Requires a numeric \code{x}. See Details.}
 \item{theme}{Optional \link{Theme}: Theme override. The palette inside the theme can be
 overridden per-chart with the \code{color} argument.}
 
-\item{zoom}{Logical, \link{DataZoom}, or list of \link{DataZoom}: Enable x-axis zoom.
-\code{TRUE} adds a slider below the axis title, Shift+wheel zoom, and drag
-panning on the x-axis; double-click resets the view. \code{FALSE} disables
-zoom. Pass \link{DataZoom} objects (or a list of them) for full control over
-zoom behavior, styling, and placement.}
+\item{zoom}{Logical: Enable x-axis zoom. \code{TRUE} adds a slider below the
+axis title, Shift+wheel zoom, and drag panning on the x-axis;
+double-click resets the view.}
 
 \item{margins}{Optional Named numeric vector or named list: Plot margins in
-pixels (or percentage strings) for any of \code{"top"}, \code{"right"},
-\code{"bottom"}, \code{"left"} — e.g. \code{c(left = 80, right = 20)} or
-\code{list(left = 80, right = "10\%")}. Unspecified sides keep echarts' default
-auto-sizing (\code{outerBoundsMode = "same"}), which shrinks the grid to fit
-axis labels and names with no dead space.}
+pixels for any of \code{"top"}, \code{"right"}, \code{"bottom"}, \code{"left"}, e.g.
+\code{c(left = 80, right = 20)}. With none given, every side is 36 pixels;
+otherwise only the sides given are fixed. The grid's outer bounds hold the
+axis labels and names.}
 
 \item{width}{Optional Character or Numeric: Widget width.}
 
@@ -182,10 +192,19 @@ how wide the container is, and re-solved whenever it resizes.
 }
 
 \examples{
+# Monthly generation by source (synthetic; see ?power_generation).
+draw_line(
+  power_generation$month,
+  power_generation$gwh,
+  group = power_generation$source,
+  ylab = "Generation (GWh)"
+)
+
 # An ROC curve is square by nature, on axes that share their [0, 1] range.
 draw_line(
   x = c(0, 0.2, 0.6, 1),
   y = c(0, 0.55, 0.85, 1),
+  points = TRUE,
   square = TRUE,
   equal_axes = TRUE,
   xlab = "False positive rate",

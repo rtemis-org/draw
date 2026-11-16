@@ -26,11 +26,11 @@
 #' Missing pairs are removed together when `na_rm` is true; invalid finite
 #' ranges and infinite values are always rejected. A group with no complete
 #' observations is rejected. The probability rug uses those same complete
-#' observations and sits just inside the lower plotting edge.
+#' observations and sits inside the lower plotting edge.
 #' Both axes span zero to one. Display precision does not round plotted values.
 #' A one-bin curve remains visible as a point even in lines-only mode.
 #'
-#' @param observed Character: Column containing binary outcomes, zero or one.
+#' @param observed Character: Column containing binary outcomes, each 0 or 1.
 #' @param probability Character: Column containing predicted probabilities.
 #' @param group Optional Character: Column identifying samples or models.
 #' @param n_bins Integer `[1, Inf)`: Requested number of bins per group.
@@ -47,8 +47,16 @@
 #' @return A `CalibrationConfig` object.
 #' @export
 #' @examples
-#' config <- setup_CalibrationConfig(n_bins = 2L, bin_method = "equidistant")
-#' draw(config, data = data.frame(observed = c(0, 1), probability = c(.2, .8)))
+#' # Synthetic predictions from a model that is overconfident at the extremes:
+#' # 20 cases at each of ten predicted probabilities, with observed rates pulled
+#' # toward one half.
+#' probability <- rep(seq(0.05, 0.95, by = 0.1), each = 20)
+#' rate <- 0.2 + 0.6 * probability
+#' observed <- as.integer(rep(seq_len(20), 10) <= round(20 * rate))
+#' draw(
+#'   setup_CalibrationConfig(n_bins = 10L),
+#'   data = data.frame(observed = observed, probability = probability)
+#' )
 CalibrationConfig <- new_class(
   name = "CalibrationConfig",
   parent = ChartConfig,

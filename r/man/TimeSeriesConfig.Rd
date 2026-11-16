@@ -28,6 +28,7 @@ TimeSeriesConfig(
   window = 7L,
   roll_fn = "none",
   align = "center",
+  min_obs = NULL,
   roll_width = 2,
   roll_color = NULL,
   raw_opacity = 0.5,
@@ -91,6 +92,11 @@ panning.}
 
 \item{align}{Character \verb{\{"center", "left", "right"\}}: Window alignment.}
 
+\item{min_obs}{Optional Integer \verb{[1, window]}: Fewest values present a window
+needs for a summary; with fewer it is missing. \code{NULL} requires a majority
+of the window (\code{window \%/\% 2 + 1}), and the complete window for \code{"sum"},
+since a sum over fewer values is smaller by construction.}
+
 \item{roll_width}{Numeric \verb{(0, Inf)}: Rolling line width in pixels.}
 
 \item{roll_color}{Optional Character: Rolling line color; unset uses the group color.}
@@ -106,8 +112,9 @@ TimeSeriesConfig: Validated portable settings.
 Numeric or date-time observations with optional rolling summaries and a
 secondary value axis. Uses LineSeriesOption and CartesianAxisOption from
 ECharts src/chart/line and src/coord/cartesian. Rolling windows count sorted
-observations, not elapsed time; incomplete windows and windows containing
-missing values remain missing. Even centered windows favor following values,
+observations, not elapsed time. A window summarizes the values present in
+it when they number at least \code{min_obs}; a position beyond either end of the
+series counts as missing. Even centered windows favor following values,
 matching data.table's centered alignment used by rtemis.
 }
 \examples{

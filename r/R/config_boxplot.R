@@ -47,7 +47,7 @@
 #' @export
 #'
 #' @examples
-#' setup_BoxplotConfig(x = c("mpg", "hp"))@type
+#' setup_BoxplotConfig(x = c("Sepal.Length", "Petal.Length"))@type
 BoxplotConfig <- new_class(
   name = "BoxplotConfig",
   parent = ChartConfig,
@@ -249,7 +249,15 @@ BOXPLOT_ORIGIN_NAMES <- setdiff(
 #' @export
 #'
 #' @examples
-#' draw(setup_BoxplotConfig(x = c("mpg", "hp")), data = mtcars)
+#' # Two lengths in centimeters, on one axis.
+#' draw(
+#'   setup_BoxplotConfig(
+#'     x = c("Sepal.Length", "Petal.Length"),
+#'     labels = c("Sepal length", "Petal length"),
+#'     ylab = "Length (cm)"
+#'   ),
+#'   data = iris
+#' )
 setup_BoxplotConfig <- function(
   x = NULL,
   group = NULL,

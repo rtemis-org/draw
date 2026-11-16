@@ -736,9 +736,11 @@ is_time_axis <- function(x) {
 #'
 #' Formats the value part of a tooltip row while leaving ECharts' own layout
 #' -- axis label header, series marker and name, right-aligned value -- in
-#' place. Integers print as they are; other numbers to two decimals, or in
-#' exponent form at a magnitude of 1e6 or more, or below 0.01; anything that is not
-#' a finite number passes through.
+#' place. Integers print as they are; other numbers with three significant
+#' digits, keeping every digit of the integer part, or in exponent form below
+#' 1e-3 or from 1e15; anything that is not a finite number passes through.
+#' The same rule as `@rtemis/draw`'s `formatNumber()`, which formats the
+#' tooltips of the charts it builds.
 #'
 #' @return `JS` function: For `Tooltip(value_formatter = )`.
 #'
@@ -751,283 +753,13 @@ number_value_formatter <- function() {
       if (typeof v !== 'number' || !isFinite(v)) return v;
       if (Number.isInteger(v)) return String(v);
       var a = Math.abs(v);
-      if (a >= 1e6 || a < 0.01) return v.toExponential(2);
-      return v.toFixed(2);
+      if (a < 1e-3 || a >= 1e15) return v.toExponential(2);
+      var r = Number(v.toPrecision(3));
+      var d = Math.max(0, 2 - Math.floor(Math.log10(Math.abs(r))));
+      return r.toFixed(d);
     }"
   )
 } # /rtemis.draw::number_value_formatter
-
-
-#' Build the ECharts option for a line chart
-#'
-#' The single implementation shared by [draw_line()], which resolves its arguments
-#' from vectors, and `compile()` on the corresponding [ChartConfig], which
-#' resolves them from a data frame. The render targets stay with the caller.
-#'
-#' @inheritParams draw_line
-#'
-#' @return [EChartsOption]: The option object.
-#'
-#' @author EDG
-#' @keywords internal
-#' @noRd
-line_option <- function(
-  x,
-  y,
-  names = NULL,
-  group = NULL,
-  smooth = FALSE,
-  area = FALSE,
-  points = TRUE,
-  blocks = NULL,
-  block_color = NULL,
-  block_opacity = 0.2,
-  palette = NULL,
-  line_style = NULL,
-  pad = DEFAULT_PAD,
-  xlim = NULL,
-  ylim = NULL,
-  square = FALSE,
-  equal_axes = FALSE,
-  xlab = NULL,
-  ylab = NULL,
-  title = NULL,
-  zoom = FALSE,
-  margins = DEFAULT_MARGINS
-) {
-  # Determine axis type: numbers get a value axis, and dates and date-times a
-  # time axis, which ECharts spaces by elapsed time and labels adaptively
-  # (years, then months, then days as the span narrows). Anything else is a
-  # category axis with one slot per distinct value.
-  x_type <- if (is.numeric(x)) {
-    "value"
-  } else if (is_time_axis(x)) {
-    "time"
-  } else {
-    "category"
-  }
-
-  # On a time axis, positions are epoch milliseconds (see time_axis_ms()),
-  # and `xlim` may be given as dates, date-times, or milliseconds.
-  x_num <- switch(x_type, value = x, time = time_axis_ms(x), category = NULL)
-  if (x_type == "time" && !is.null(xlim)) {
-    xlim <- time_axis_ms(xlim)
-  }
-  validate_axis_lim(xlim, "xlim")
-  validate_axis_lim(ylim, "ylim")
-
-  # `xlim` only makes sense on an axis with a numeric position.
-  if (!is.null(xlim) && x_type == "category") {
-    abort(
-      "`xlim` only applies when `x` is numeric or a date.",
-      class = c("rtemis_value_error", "rtemis_input_error")
-    )
-  }
-  if (equal_axes && x_type != "value") {
-    abort(
-      "`equal_axes` compares the two axes' scales, which needs a numeric x. ",
-      "This chart's x is ",
-      if (x_type == "time") "a date or time." else "categorical.",
-      class = c("rtemis_value_error", "rtemis_input_error")
-    )
-  }
-  # Asking for a square box *and* equal scaling is a statement about the limits;
-  # settle them before anything reads them.
-  limits <- equal_axis_limits(x_num, y, xlim, ylim, pad, square, equal_axes)
-  xlim <- limits[["xlim"]]
-  ylim <- limits[["ylim"]]
-
-  # Resolve axis limits, extended by `pad` as on every other value axis, so a
-  # line and a scatter of the same data leave the same room at the edges.
-  y_all <- if (is.list(y)) unlist(y, use.names = FALSE) else y
-  x_lim <- if (!is.null(x_num)) (xlim %||% calc_limits(x_num, pad)) else NULL
-  y_lim <- ylim %||% calc_limits(y_all, pad)
-
-  # The categories of a category axis, each listed once. Ungrouped data lists
-  # them once already; grouped data repeats them once per level.
-  x_categories <- if (x_type == "category") unique(x) else NULL
-
-  # Format series data: value and time axes need [x, y] pairs; category axes
-  # need y only when every series covers every category in order (the
-  # ungrouped case), and [index, y] pairs when a series covers a subset (the
-  # grouped case). The index is the category's 0-based position on the axis,
-  # which ECharts accepts in place of its name. Matching by name would need
-  # the name spelled the same way here and by the JSON serializer, and for a
-  # factor or other formatted value that is not guaranteed.
-  pair_xy <- function(y_vals, x_vals = x_num, pair_category = FALSE) {
-    if (x_type != "category") {
-      mapply(c, x_vals, y_vals, SIMPLIFY = FALSE, USE.NAMES = FALSE)
-    } else if (pair_category) {
-      mapply(
-        c,
-        match(x_vals, x_categories) - 1L,
-        y_vals,
-        SIMPLIFY = FALSE,
-        USE.NAMES = FALSE
-      )
-    } else {
-      y_vals
-    }
-  }
-
-  check_logical_scalar(points)
-  # ECharts treats missing `showSymbol` as TRUE; only pass FALSE when hiding.
-  show_symbol <- if (points) NULL else FALSE
-
-  valid_line_styles <- c("solid", "dashed", "dotted")
-  if (!is.null(line_style)) {
-    if (
-      !is.character(line_style) ||
-        any(!line_style %in% valid_line_styles)
-    ) {
-      abort(
-        "`line_style` must be NULL or a character vector of ",
-        "'solid', 'dashed', or 'dotted'.",
-        class = c("rtemis_value_error", "rtemis_input_error")
-      )
-    }
-  }
-  # Returns a LineStyle for series i, recycling line_style; NULL if unset.
-  resolve_line_style <- function(i) {
-    if (is.null(line_style)) {
-      return(NULL)
-    }
-    n <- length(line_style)
-    LineStyle(type = line_style[((i - 1L) %% n) + 1L])
-  }
-
-  # Build series. `group` splits a single `y` into one line per level, the way
-  # draw_scatter() splits points; a list `y` is already multi-series, so the
-  # two do not combine.
-  if (!is.null(group)) {
-    if (is.list(y)) {
-      abort(
-        "`group` splits a single `y` vector into one series per level; ",
-        "pass `y` as a list *or* set `group`, not both.",
-        class = c("rtemis_value_error", "rtemis_input_error")
-      )
-    }
-    group <- group_values(group, length(y))
-    # `blocks` is read along `x`, and with `group` each x repeats once per
-    # level, so the same run would be shaded once per group.
-    if (!is.null(blocks)) {
-      abort(
-        "`blocks` is not supported together with `group`.",
-        class = c("rtemis_value_error", "rtemis_input_error")
-      )
-    }
-    # Points with a missing group belong to no line.
-    groups <- group_levels(group)
-    group <- as.character(group)
-    series <- lapply(seq_along(groups), function(i) {
-      idx <- which(!is.na(group) & group == groups[[i]])
-      LineSeries(
-        name = groups[[i]],
-        data = pair_xy(
-          y[idx],
-          x_vals = if (x_type == "category") x[idx] else x_num[idx],
-          pair_category = TRUE
-        ),
-        smooth = smooth,
-        show_symbol = show_symbol,
-        line_style = resolve_line_style(i),
-        area_style = if (area) AreaStyle() else NULL
-      )
-    })
-  } else if (is.list(y) && !is.null(names(y))) {
-    series_names <- names(y)
-    series <- lapply(seq_along(y), function(i) {
-      LineSeries(
-        name = series_names[i],
-        data = pair_xy(y[[i]]),
-        smooth = smooth,
-        show_symbol = show_symbol,
-        line_style = resolve_line_style(i),
-        area_style = if (area) AreaStyle() else NULL
-      )
-    })
-  } else if (is.list(y)) {
-    series_names <- names %||% paste0("Series ", seq_along(y))
-    series <- lapply(seq_along(y), function(i) {
-      LineSeries(
-        name = series_names[i],
-        data = pair_xy(y[[i]]),
-        smooth = smooth,
-        show_symbol = show_symbol,
-        line_style = resolve_line_style(i),
-        area_style = if (area) AreaStyle() else NULL
-      )
-    })
-  } else {
-    series <- list(LineSeries(
-      data = pair_xy(y),
-      smooth = smooth,
-      show_symbol = show_symbol,
-      line_style = resolve_line_style(1L),
-      area_style = if (area) AreaStyle() else NULL
-    ))
-  }
-
-  # Optional vertical background bands from `blocks` + `block_color`.
-  if (!is.null(blocks)) {
-    mark_area <- build_block_mark_area(
-      x = x_num %||% x,
-      blocks = blocks,
-      block_color = block_color,
-      block_opacity = block_opacity
-    )
-    if (!is.null(mark_area)) {
-      series[[1]]@mark_area <- mark_area
-    }
-  }
-
-  # The `TRUE` preset's slider is given its own band under the plot.
-  zoomed <- zoom_layout(zoom, axis = "x", grid = resolve_margins(margins))
-
-  opt <- EChartsOption(
-    title = if (!is.null(title)) Title(text = title) else NULL,
-    tooltip = Tooltip(
-      trigger = "axis",
-      value_formatter = number_value_formatter()
-    ),
-    legend = if (length(series) > 1L || !is.null(group)) Legend() else NULL,
-    x_axis = Axis(
-      type = x_type,
-      name = xlab,
-      name_location = if (!is.null(xlab)) "middle" else NULL,
-      data = x_categories,
-      scale = if (x_type == "value") TRUE else NULL,
-      min = if (!is.null(x_lim)) x_lim[[1L]] else NULL,
-      max = if (!is.null(x_lim)) x_lim[[2L]] else NULL,
-      split_line = if (x_type != "category") no_corner_split_line() else NULL,
-      # Time axes pin their ends to the data range; their end labels would be
-      # observation times rather than ticks. Value-axis ends are labeled in
-      # the browser when they fall on a tick (fitEndpointLabels() in panels.js).
-      axis_label = if (x_type == "time") no_corner_axis_label() else NULL,
-      # Category axes also fall back to a nonzero range edge when zero is
-      # absent. Apply the same zero-only emphasis as continuous axes.
-      axis_line = axis_line_for_orthogonal(y_lim)
-    ),
-    y_axis = Axis(
-      type = "value",
-      name = ylab,
-      name_location = if (!is.null(ylab)) "middle" else NULL,
-      scale = TRUE,
-      min = y_lim[[1L]],
-      max = y_lim[[2L]],
-      split_line = no_corner_split_line(),
-      axis_line = axis_line_for_orthogonal(x_lim)
-    ),
-    color = palette,
-    data_zoom = zoomed[["data_zoom"]],
-    grid = zoomed[["grid"]],
-    # Time positions carry the wall-clock reading as UTC; see time_axis_ms().
-    use_utc = if (x_type == "time") TRUE else NULL,
-    series = series
-  )
-
-  opt
-} # /rtemis.draw::line_option
 
 
 #' Draw a Line Chart
@@ -1076,19 +808,25 @@ line_option <- function(
 #'   and the labels are chosen adaptively for the span shown (years, then
 #'   months, then days, down to seconds), and they read as the timestamps do
 #'   in R whatever timezone the chart is viewed in. Anything else gets a
-#'   category axis with one slot per distinct value, in order of appearance.
+#'   category axis with one slot per distinct value: a factor's levels that
+#'   occur, in level order, or other values in order of appearance.
 #' @param y Numeric or named list: Y values.
 #' @param names Optional Character: Series names used when `y` is an unnamed list.
 #' @param group Optional Atomic vector or single-column data frame: Grouping
-#'   variable, one value per point. Splits a single `y` vector into one line per level, named by the level, as
-#'   [draw_scatter()] does for points. Cannot be combined with a list `y` or
+#'   variable, one value per point. Splits each `y` series into one line per
+#'   level, as [draw_scatter()] does for points: named by the level for a
+#'   single `y`, and `"<series> / <level>"` for several. Cannot be combined
 #'   with `blocks`. Points whose group is `NA` are dropped. Lines and legend
 #'   entries follow factor level order, or first appearance for other vectors.
+#' @inheritParams LineConfig aggregate
 #' @param smooth Logical: Whether to smooth lines.
-#' @param area Logical: Whether to show area fill.
-#' @param points Logical: Whether to show point markers on each data value.
-#'   Defaults to `TRUE`; set to `FALSE` on long time-series where the symbols
-#'   add visual noise.
+#' @param area Logical: Fill the area under each line. The y limits, unless
+#'   given, then hold zero, padded only away from it.
+#' @param points Logical: Show a marker at each data value. Without markers, a
+#'   value with no neighbor to join keeps its marker.
+#' @param stack Logical: Stack the lines, each on the sum of those before it at
+#'   the same x. Requires `area`. A line has no point where a line below it
+#'   has no value, since the sum there is unknown.
 #' @param blocks Optional factor, integer, character, or logical of length
 #'   `length(x)`: Per-x-value group label for the shaded vertical background
 #'   bands. Contiguous runs of the same level become one band. `NA` entries
@@ -1125,17 +863,14 @@ line_option <- function(
 #' @param title Optional Character: Chart title.
 #' @param theme Optional [Theme]: Theme override. The palette inside the theme can be
 #'   overridden per-chart with the `color` argument.
-#' @param zoom Logical, [DataZoom], or list of [DataZoom]: Enable x-axis zoom.
-#'   `TRUE` adds a slider below the axis title, Shift+wheel zoom, and drag
-#'   panning on the x-axis; double-click resets the view. `FALSE` disables
-#'   zoom. Pass [DataZoom] objects (or a list of them) for full control over
-#'   zoom behavior, styling, and placement.
+#' @param zoom Logical: Enable x-axis zoom. `TRUE` adds a slider below the
+#'   axis title, Shift+wheel zoom, and drag panning on the x-axis;
+#'   double-click resets the view.
 #' @param margins Optional Named numeric vector or named list: Plot margins in
-#'   pixels (or percentage strings) for any of `"top"`, `"right"`,
-#'   `"bottom"`, `"left"` — e.g. `c(left = 80, right = 20)` or
-#'   `list(left = 80, right = "10%")`. Unspecified sides keep echarts' default
-#'   auto-sizing (`outerBoundsMode = "same"`), which shrinks the grid to fit
-#'   axis labels and names with no dead space.
+#'   pixels for any of `"top"`, `"right"`, `"bottom"`, `"left"`, e.g.
+#'   `c(left = 80, right = 20)`. With none given, every side is 36 pixels;
+#'   otherwise only the sides given are fixed. The grid's outer bounds hold the
+#'   axis labels and names.
 #' @param width Optional Character or Numeric: Widget width.
 #' @param height Optional Character or Numeric: Widget height.
 #' @param element_id Optional Character: Explicit DOM element ID for the widget
@@ -1145,10 +880,19 @@ line_option <- function(
 #' @return htmlwidget: Widget object.
 #'
 #' @examples
+#' # Monthly generation by source (synthetic; see ?power_generation).
+#' draw_line(
+#'   power_generation$month,
+#'   power_generation$gwh,
+#'   group = power_generation$source,
+#'   ylab = "Generation (GWh)"
+#' )
+#'
 #' # An ROC curve is square by nature, on axes that share their [0, 1] range.
 #' draw_line(
 #'   x = c(0, 0.2, 0.6, 1),
 #'   y = c(0, 0.55, 0.85, 1),
+#'   points = TRUE,
 #'   square = TRUE,
 #'   equal_axes = TRUE,
 #'   xlab = "False positive rate",
@@ -1161,9 +905,11 @@ draw_line <- function(
   y,
   names = NULL,
   group = NULL,
+  aggregate = "none",
   smooth = FALSE,
   area = FALSE,
-  points = TRUE,
+  points = FALSE,
+  stack = FALSE,
   blocks = NULL,
   block_color = NULL,
   block_opacity = 0.2,
@@ -1188,44 +934,209 @@ draw_line <- function(
   legend_placement = "outside",
   legend_title = NULL
 ) {
-  opt <- line_option(
-    x = x,
-    y = y,
-    names = names,
-    group = group,
+  check_logical_scalar(points)
+  check_zoom_flag(zoom)
+  check_prob_scalar(block_opacity)
+  margin <- pixel_margins(margins)
+  values <- if (is.list(y)) y else list(y = y)
+  if (is.null(names(values))) {
+    names(values) <- names %||% paste0("Series ", seq_along(values))
+  }
+  for (name in names(values)) {
+    if (length(values[[name]]) != length(x)) {
+      abort(
+        "`y` must have the same length as `x` (",
+        length(x),
+        "); '",
+        name,
+        "' has ",
+        length(values[[name]]),
+        ".",
+        class = c("rtemis_length_error", "rtemis_input_error")
+      )
+    }
+  }
+  if (is.list(block_color)) {
+    block_color <- vapply(
+      block_color,
+      function(v) if (is.null(v)) NA_character_ else as.character(v),
+      character(1)
+    )
+  }
+  # A config holds no missing values; "transparent" also draws no band.
+  if (!is.null(block_color)) {
+    block_color[is.na(block_color)] <- "transparent"
+  }
+  data <- c(list(.x = x), values)
+  if (!is.null(group)) {
+    data[[".group"]] <- group_values(group, length(x))
+  }
+  if (!is.null(blocks)) {
+    if (length(blocks) != length(x)) {
+      abort(
+        "`blocks` must have the same length as `x` (",
+        length(x),
+        "); got ",
+        length(blocks),
+        ".",
+        class = c("rtemis_dim_error", "rtemis_input_error")
+      )
+    }
+    if (is.null(block_color)) {
+      abort(
+        "`block_color` must be provided when `blocks` is set.",
+        class = c("rtemis_value_error", "rtemis_input_error")
+      )
+    }
+    data[[".blocks"]] <- blocks
+    if (!is.null(names(block_color))) {
+      block_color <- block_colors_by_level(blocks, block_color)
+    }
+  }
+  # On a time axis, positions are epoch milliseconds (see time_axis_ms()), and
+  # `xlim` may be given as dates, date-times, or milliseconds.
+  if (is_time_axis(x) && !is.null(xlim)) {
+    xlim <- time_axis_ms(xlim)
+  }
+  validate_axis_lim(xlim, "xlim")
+  validate_axis_lim(ylim, "ylim")
+  config <- setup_LineConfig(
+    x = ".x",
+    y = names(values),
+    group = if (!is.null(group)) ".group",
+    aggregate = aggregate,
+    blocks = if (!is.null(blocks)) ".blocks",
     smooth = smooth,
     area = area,
     points = points,
-    blocks = blocks,
-    block_color = block_color,
-    block_opacity = block_opacity,
+    stack = stack,
+    zoom = zoom,
     palette = palette,
     line_style = line_style,
+    block_color = block_color,
+    block_opacity = block_opacity,
     pad = pad,
-    xlim = xlim,
-    ylim = ylim,
     square = square,
     equal_axes = equal_axes,
+    xlim = xlim,
+    ylim = ylim,
     xlab = xlab,
     ylab = ylab,
     title = title,
-    zoom = zoom,
-    margins = margins
+    margin_top = margin[["top"]],
+    margin_right = margin[["right"]],
+    margin_bottom = margin[["bottom"]],
+    margin_left = margin[["left"]],
+    legend_position = legend_position,
+    legend_placement = legend_placement,
+    legend_title = legend_title
   )
-
+  # resolve() names the axes after the bound columns, which here are internal,
+  # so the request carries only the limits it derives; the axes are named only
+  # when `xlab` or `ylab` is given.
+  data <- line_rows(config, data)
+  resolved <- resolve(config, data = data)
+  config@xlim <- resolved@xlim
+  config@ylim <- resolved@ylim
   draw(
-    opt,
+    BuildRequest(
+      type = "line",
+      data = tabular_json(data, names(data)),
+      config = config_members(config),
+      appearance = list()
+    ),
     theme = theme,
     width = width,
     height = height,
     element_id = element_id,
     filename = filename,
-    meta = c(
-      legend_meta(legend_position, legend_placement, legend_title),
-      aspect_meta(opt, square = square, equal_axes = equal_axes)
-    )
+    meta = legend_meta(legend_position, legend_placement, legend_title)
   )
 }
+
+
+# %% check_zoom_flag ----
+#' Check a `zoom` argument of a chart built by @rtemis/draw
+#'
+#' @param zoom The argument.
+#'
+#' @return `NULL`, invisibly; an error unless `zoom` is TRUE or FALSE.
+#'
+#' @author EDG
+#' @keywords internal
+#' @noRd
+check_zoom_flag <- function(zoom) {
+  if (!isTRUE(zoom) && !isFALSE(zoom)) {
+    abort(
+      "`zoom` takes TRUE or FALSE.",
+      class = c("rtemis_type_error", "rtemis_input_error")
+    )
+  }
+  invisible(NULL)
+} # /rtemis.draw::check_zoom_flag
+
+
+# %% pixel_margins ----
+#' Parse a `margins` argument into whole pixels per side
+#'
+#' The `margin_*` members of a config built by @rtemis/draw hold whole pixels.
+#'
+#' @param margins The `margins` argument, as `parse_margins()` reads it.
+#'
+#' @return Named list: `top`, `right`, `bottom`, `left`, each an integer or
+#'   `NULL`.
+#'
+#' @author EDG
+#' @keywords internal
+#' @noRd
+pixel_margins <- function(margins) {
+  margin <- parse_margins(margins)
+  for (side in names(margin)) {
+    if (!is.null(margin[[side]]) && !is.numeric(margin[[side]])) {
+      abort(
+        "`margins` takes pixels; '",
+        side,
+        "' is not a number.",
+        class = c("rtemis_type_error", "rtemis_input_error")
+      )
+    }
+  }
+  lapply(margin, function(v) if (is.null(v)) NULL else as.integer(round(v)))
+} # /rtemis.draw::pixel_margins
+
+
+# %% block_colors_by_level ----
+#' Band colors named by level, in the level order the builder reads
+#'
+#' The line builder matches `block_color` to the levels of `blocks` by
+#' position: the factor levels that occur, or the sorted distinct values.
+#'
+#' @param blocks Atomic vector: The `blocks` column.
+#' @param block_color Named character: Colors named by level.
+#'
+#' @return Character: Colors in level order, `NA` for no band.
+#'
+#' @author EDG
+#' @keywords internal
+#' @noRd
+block_colors_by_level <- function(blocks, block_color) {
+  levels <- if (is.factor(blocks)) {
+    levels(droplevels(blocks))
+  } else {
+    as.character(sort(unique(blocks[!is.na(blocks)])))
+  }
+  missing <- setdiff(levels, names(block_color))
+  if (length(missing) > 0L) {
+    abort(
+      "`block_color` is missing entries for: ",
+      paste(missing, collapse = ", "),
+      ".",
+      class = c("rtemis_value_error", "rtemis_input_error")
+    )
+  }
+  unname(block_color[levels])
+} # /rtemis.draw::block_colors_by_level
+
 
 #' Default split-line configuration suppressing corner grid lines
 #'
@@ -1238,21 +1149,6 @@ draw_line <- function(
 #' @noRd
 no_corner_split_line <- function() {
   SplitLine(show_min_line = FALSE, show_max_line = FALSE)
-}
-
-#' Axis-label configuration suppressing min/max endpoint labels
-#'
-#' Returns an [AxisLabel] with `show_min_label = FALSE` and `show_max_label = FALSE`
-#' for time axes whose `min`/`max` are pinned to the data range, where an end
-#' label would print an observation time rather than a tick. Value axes leave
-#' both unset; the shared layout labels a value-axis end when it falls on a
-#' tick.
-#'
-#' @return [AxisLabel]: Axis-label configuration.
-#' @keywords internal
-#' @noRd
-no_corner_axis_label <- function() {
-  AxisLabel(show_min_label = FALSE, show_max_label = FALSE)
 }
 
 #' Axis line configuration emphasizing zero only when zero is visible
@@ -1447,20 +1343,17 @@ build_block_mark_area <- function(x, blocks, block_color, block_opacity) {
 #' @param theme Optional [Theme]: Theme override. The palette inside the theme can be
 #'   overridden per-chart with the `palette` argument.
 #' @param margins Optional Named numeric vector or named list: Plot margins in
-#'   pixels (or percentage strings) for any of `"top"`, `"right"`,
-#'   `"bottom"`, `"left"`. Unspecified sides keep echarts' default auto-sizing.
-#'   See [draw_line()] for details.
+#'   pixels for any of `"top"`, `"right"`, `"bottom"`, `"left"`. See
+#'   [draw_line()].
 #' @param width Optional Character or Numeric: Widget width.
 #' @param height Optional Character or Numeric: Widget height.
 #' @param element_id Optional Character: Explicit DOM element ID for the widget
 #'   container. `NULL` lets htmlwidgets generate one.
 #' @param filename Optional Character: If provided, save the widget to this file via
 #'   [save_drawing()].
-#' @param zoom Logical, [DataZoom], or list of [DataZoom]: Enable zoom on the
-#'   category axis (the y-axis when `horizontal = TRUE`). `TRUE` adds a slider,
-#'   Shift+wheel zoom, and drag panning; double-click resets the view. `FALSE`
-#'   disables zoom. Pass [DataZoom] objects (or a list of them) for full
-#'   control.
+#' @param zoom Logical: Enable zoom on the category axis (the y-axis when
+#'   `horizontal = TRUE`). `TRUE` adds a slider, Shift+wheel zoom, and drag
+#'   panning; double-click resets the view.
 #' @return htmlwidget: Widget object.
 #' @export
 #'
@@ -1489,24 +1382,8 @@ draw_bar <- function(
   legend_title = NULL,
   zoom = FALSE
 ) {
-  if (!isTRUE(zoom) && !isFALSE(zoom)) {
-    abort(
-      "`zoom` takes TRUE or FALSE.",
-      class = c("rtemis_type_error", "rtemis_input_error")
-    )
-  }
-  margin <- parse_margins(margins)
-  pixels <- function(v) if (is.null(v)) NULL else as.integer(round(v))
-  for (side in names(margin)) {
-    if (!is.null(margin[[side]]) && !is.numeric(margin[[side]])) {
-      abort(
-        "`margins` takes pixels; '",
-        side,
-        "' is not a number.",
-        class = c("rtemis_type_error", "rtemis_input_error")
-      )
-    }
-  }
+  check_zoom_flag(zoom)
+  margin <- pixel_margins(margins)
   # The categories and value series, in `order`, as columns: `.category` and
   # one column per series. The request is built without `resolve()`, which
   # would name the axes after these columns, so the axes are named only when
@@ -1530,10 +1407,10 @@ draw_bar <- function(
     xlab = xlab,
     ylab = ylab,
     title = title,
-    margin_top = pixels(margin[["top"]]),
-    margin_right = pixels(margin[["right"]]),
-    margin_bottom = pixels(margin[["bottom"]]),
-    margin_left = pixels(margin[["left"]]),
+    margin_top = margin[["top"]],
+    margin_right = margin[["right"]],
+    margin_bottom = margin[["bottom"]],
+    margin_left = margin[["left"]],
     bar_width = bar_width,
     legend_position = legend_position,
     legend_placement = legend_placement,

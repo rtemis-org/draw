@@ -133,7 +133,7 @@ test_that("group_levels orders factors by level and other vectors by appearance"
 # Names of the series in a widget's option, in drawing order.
 series_names <- function(widget) {
   vapply(
-    widget[["x"]][["option"]][["series"]],
+    node_option(widget)[["series"]],
     function(s) s[["name"]] %||% "",
     character(1L)
   )

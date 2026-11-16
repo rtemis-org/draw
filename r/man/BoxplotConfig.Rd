@@ -151,7 +151,7 @@ placement follow \code{\link[=draw_boxplot]{draw_boxplot()}}. Compiles to \code{
 \code{src/chart/custom/CustomSeries.ts}.
 }
 \examples{
-setup_BoxplotConfig(x = c("mpg", "hp"))@type
+setup_BoxplotConfig(x = c("Sepal.Length", "Petal.Length"))@type
 }
 \author{
 EDG
