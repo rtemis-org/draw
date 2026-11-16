@@ -205,3 +205,16 @@ test_that("boxplot transforms precede grouping and sorting keeps identities", {
   )
   expect_error(setup_BoxplotConfig(transform = "log"))
 })
+
+test_that("one grouped column names the value axis only when its levels are the categories", {
+  values <- list(score = c(1, 2, 3, 4))
+  group <- c("a", "a", "b", "b")
+  axis_name <- function(...) {
+    raw_option(boxplot_option(values, group = group, ...))[["yAxis"]][["name"]]
+  }
+  expect_identical(axis_name(), "score")
+  expect_identical(axis_name(group_layout = "x-axis"), "score")
+  # In the legend layout the column is the category, named on its axis.
+  expect_null(axis_name(group_layout = "legend"))
+  expect_identical(axis_name(group_layout = "legend", ylab = "Score"), "Score")
+})

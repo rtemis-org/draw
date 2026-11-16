@@ -303,8 +303,11 @@ method(boxplot_option, class_any) <- function(
       verbosity = verbosity
     )
   }
-  # One column split by group names the value axis after the column.
-  value_name <- if (grouped && length(x) == 1L) names(variables)[[1L]]
+  # One column whose group levels are the categories names the value axis
+  # after the column; in the legend layout the column is itself the category.
+  value_name <- if (layout == "x-axis" && length(x) == 1L) {
+    names(variables)[[1L]]
+  }
   config <- setup_BoxplotConfig(
     x = unname(variables),
     labels = if (!is.null(labels)) names(variables),
