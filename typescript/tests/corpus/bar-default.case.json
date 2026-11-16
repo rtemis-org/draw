@@ -1,1 +1,0 @@
-{ "type": "bar", "data": "mtcars.json", "config": { "x": "model", "y": "mpg" } }

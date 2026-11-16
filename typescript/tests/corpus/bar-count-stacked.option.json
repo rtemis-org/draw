@@ -1,0 +1,66 @@
+{
+  "tooltip": {
+    "trigger": "axis"
+  },
+  "legend": {
+    "data": [
+      "Low",
+      "Medium",
+      "High"
+    ]
+  },
+  "xAxis": {
+    "type": "category",
+    "data": [
+      "A",
+      "B",
+      "C"
+    ],
+    "axisPointer": {
+      "type": "none"
+    }
+  },
+  "yAxis": {
+    "type": "value"
+  },
+  "grid": {
+    "top": 36,
+    "right": 36,
+    "bottom": 36,
+    "left": 36,
+    "outerBoundsMode": "same",
+    "outerBoundsContain": "axisLabel"
+  },
+  "series": [
+    {
+      "type": "bar",
+      "name": "Low",
+      "data": [
+        4,
+        8,
+        2
+      ],
+      "stack": "total"
+    },
+    {
+      "type": "bar",
+      "name": "Medium",
+      "data": [
+        9,
+        8,
+        7
+      ],
+      "stack": "total"
+    },
+    {
+      "type": "bar",
+      "name": "High",
+      "data": [
+        7,
+        4,
+        11
+      ],
+      "stack": "total"
+    }
+  ]
+}

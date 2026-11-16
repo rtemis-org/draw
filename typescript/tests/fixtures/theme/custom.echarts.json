@@ -93,6 +93,9 @@
         "color": "#999999"
       }
     },
+    "axisTick": {
+      "show": false
+    },
     "splitLine": {
       "show": false
     }
@@ -106,6 +109,9 @@
       "lineStyle": {
         "color": "#999999"
       }
+    },
+    "axisTick": {
+      "show": false
     },
     "splitLine": {
       "lineStyle": {

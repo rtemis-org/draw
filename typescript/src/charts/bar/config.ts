@@ -1,3 +1,4 @@
+import { formatNumber } from "../../shared/format.ts";
 import { axisZoom, cartesianGrid, type MarginMembers } from "../../shared/layout.ts";
 import type { LegendMembers } from "../../shared/legend.ts";
 import {
@@ -7,6 +8,7 @@ import {
   distinct,
   numberOrNull,
   type TabularData,
+  textColumn,
 } from "../../shared/source.ts";
 
 /**
@@ -17,17 +19,20 @@ export interface BarChartConfig extends MarginMembers, LegendMembers {
   readonly type?: "bar";
   /** Column holding the categories. */
   readonly x?: string | null;
-  /** Columns holding the values, one series each. */
+  /**
+   * Columns holding the values, one series each. Unset, each bar is the
+   * number of rows of its category and group.
+   */
   readonly y?: ColumnNames | null;
   /** Column whose values split each value column into one series per group. */
   readonly group?: string | null;
   /**
-   * How rows sharing a category and group combine into one bar. The host
-   * applies it to the data before building (rtemislive in DuckDB, rtemis.draw
-   * in R); the builder requires one row per category and group when it is set.
-   * Default `"none"`: one bar per row.
+   * How the `y` values of rows sharing a category and group combine into one
+   * bar. The host applies it to the data before building (rtemislive in
+   * DuckDB, rtemis.draw in R); the builder requires one row per category and
+   * group when it is set, and a `y`. Default `"none"`: one bar per row.
    */
-  readonly aggregate?: "none" | "sum" | "mean" | "median" | "count";
+  readonly aggregate?: "none" | "sum" | "mean" | "median";
   /** Category order by total value across series. Default `"input"`. */
   readonly order?: "input" | "increasing" | "decreasing";
   /** Stack the series instead of grouping them. Default `false`. */
@@ -93,10 +98,12 @@ interface BarSeries {
 
 /**
  * Build the ECharts option of a bar chart from tabular data and its
- * `chart/bar/v1` config. One bar per row and series; with `group`, the
- * categories are the distinct `x` values and each group adds a series per
- * value column, empty where a category lacks the group. Distinct categories
- * and groups follow their column's levels, then order of appearance.
+ * `chart/bar/v1` config. One bar per row and series, each category once;
+ * with `group`, the categories are the distinct `x` values and each group adds a series per
+ * value column, empty where a category lacks the group. With `y` unset, each
+ * bar is the number of rows of its category and group: the sum of the data's
+ * `frequency` column, or one per row. Distinct categories and groups follow
+ * their column's levels, then order of appearance.
  */
 export function buildBarOption(
   data: TabularData,
@@ -105,35 +112,58 @@ export function buildBarOption(
 ): Record<string, unknown> {
   const source = data.columns;
   const yColumns = asArray(config.y);
-  if (!config.x || yColumns.length === 0) {
-    throw new Error("A bar chart needs both `x` and `y` set to draw.");
+  if (!config.x) {
+    throw new Error("A bar chart needs `x` set to draw.");
   }
-  const xs = column(source, config.x, "x").map((v) => String(v));
+  const xs = textColumn(data, config.x, "x");
   const aggregate = config.aggregate ?? "none";
+  const counting = yColumns.length === 0;
+  if (counting && aggregate !== "none") {
+    throw new Error(
+      "`aggregate` combines the values of `y`, and `y` is unset: each bar counts the rows of its category.",
+    );
+  }
+  const frequency = data.frequency ? column(source, data.frequency, "frequency") : null;
+  const valuesOf = (y: string | null): (number | null)[] =>
+    y === null
+      ? xs.map((_, row) => (frequency ? numberOrNull(frequency[row]) : 1))
+      : column(source, y, "y").map(numberOrNull);
+  const measures: (string | null)[] = counting ? [null] : [...yColumns];
+  const groupValues = config.group ? textColumn(data, config.group, "group") : null;
+  // A bar is one category and group: two rows for one bar would draw two
+  // bars under one label, or keep one of them.
+  if (!counting) requireOneRowPer(xs, groupValues ?? undefined);
+
   let categories: string[];
   let series: BarSeries[];
-  if (config.group) {
-    const groupValues = column(source, config.group, "group").map((v) => String(v));
-    requireOneRowPer(xs, groupValues);
+  if (groupValues || counting) {
     categories = distinct(xs, data.levels?.[config.x]);
-    const groups = distinct(groupValues, data.levels?.[config.group]);
+    const groups = groupValues
+      ? distinct(groupValues, data.levels?.[config.group as string])
+      : [null];
     const at = new Map(categories.map((c, i) => [c, i]));
     series = groups.flatMap((g) =>
-      yColumns.map((y) => {
-        const values = column(source, y, "y");
-        const data: (number | null)[] = categories.map(() => null);
+      measures.map((y) => {
+        const values = valuesOf(y);
+        const cells: (number | null)[] = categories.map(() => null);
         xs.forEach((x, row) => {
           const i = at.get(x);
-          if (groupValues[row] === g && i !== undefined) data[i] = numberOrNull(values[row]);
+          if (i === undefined || (groupValues && groupValues[row] !== g)) return;
+          const value = values[row] ?? null;
+          cells[i] = counting ? (cells[i] ?? 0) + (value ?? 0) : value;
         });
-        const name = groups.length > 1 ? (yColumns.length > 1 ? `${y} / ${g}` : g) : y;
-        return { name, data };
+        const name =
+          g !== null && groups.length > 1
+            ? measures.length > 1
+              ? `${y} / ${g}`
+              : g
+            : (y ?? "Count");
+        return { name, data: cells };
       }),
     );
   } else {
-    if (aggregate !== "none") requireOneRowPer(xs);
     categories = xs;
-    series = yColumns.map((y) => ({ name: y, data: column(source, y, "y").map(numberOrNull) }));
+    series = measures.map((y) => ({ name: y as string, data: valuesOf(y) }));
   }
 
   const permutation = order(categories, series, config.order ?? "input");
@@ -163,15 +193,15 @@ export function buildBarOption(
   });
 
   const horizontal = config.horizontal ?? false;
+  // A horizontal chart lists its categories top to bottom, in reading order.
   const category: Record<string, unknown> = {
     type: "category",
     data: categories,
     axisPointer: { type: "none" },
-    axisTick: { show: false },
+    ...(horizontal ? { inverse: true } : {}),
   };
   const value: Record<string, unknown> = {
     type: "value",
-    axisTick: { show: false },
     ...(config.ylim ? { min: config.ylim[0], max: config.ylim[1] } : {}),
   };
   const xAxis = horizontal ? value : category;
@@ -184,7 +214,7 @@ export function buildBarOption(
 
   return {
     ...(config.title ? { title: { text: config.title } } : {}),
-    tooltip: { trigger: "axis" },
+    tooltip: { trigger: "axis", valueFormatter: formatNumber },
     ...(series.length > 1 ? { legend: { data: series.map((s) => s.name) } } : {}),
     xAxis,
     yAxis,
@@ -219,7 +249,7 @@ function requireOneRowPer(xs: readonly string[], groups?: readonly string[]): vo
     if (seen.has(key)) {
       const where = groups ? `category '${x}' in group '${groups[row]}'` : `category '${x}'`;
       throw new Error(
-        `Several rows hold ${where}. Combine them before building, as the \`aggregate\` member says (sum, mean, median, or count).`,
+        `Several rows hold ${where}. Combine them before building, as the \`aggregate\` member says (sum, mean, or median).`,
       );
     }
     seen.add(key);

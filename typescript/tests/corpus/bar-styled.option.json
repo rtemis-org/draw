@@ -1,52 +1,42 @@
 {
   "title": {
-    "text": "Cars"
+    "text": "Quarterly generation"
   },
   "tooltip": {
     "trigger": "axis"
   },
   "legend": {
     "data": [
-      "mpg",
-      "hp"
+      "Solar",
+      "Wind",
+      "Hydro"
     ]
   },
   "xAxis": {
     "type": "value",
-    "axisTick": {
-      "show": false
-    },
-    "min": 0,
-    "max": 300,
-    "name": "Value",
+    "name": "Generation (GWh)",
     "nameLocation": "middle"
   },
   "yAxis": {
     "type": "category",
     "data": [
-      "Duster 360",
-      "Hornet Sportabout",
-      "Hornet 4 Drive",
-      "Mazda RX4",
-      "Mazda RX4 Wag",
-      "Valiant",
-      "Datsun 710",
-      "Merc 240D"
+      "Q1",
+      "Q2",
+      "Q3",
+      "Q4"
     ],
     "axisPointer": {
       "type": "none"
     },
-    "axisTick": {
-      "show": false
-    },
-    "name": "Model",
-    "nameLocation": "middle"
+    "inverse": true
   },
   "grid": {
-    "left": 120,
+    "top": 36,
+    "right": 81,
+    "bottom": 36,
+    "left": 36,
     "outerBoundsMode": "same",
-    "outerBoundsContain": "all",
-    "right": 60
+    "outerBoundsContain": "all"
   },
   "dataZoom": [
     {
@@ -55,7 +45,7 @@
       "start": 0,
       "end": 100,
       "yAxisIndex": 0,
-      "right": 22,
+      "right": 43,
       "width": 30
     },
     {
@@ -68,42 +58,45 @@
   "series": [
     {
       "type": "bar",
-      "name": "mpg",
+      "name": "Solar",
       "data": [
-        14.3,
-        18.7,
-        21.4,
-        21,
-        21,
-        18.1,
-        22.8,
-        24.4
+        79,
+        191,
+        161,
+        49
       ],
       "stack": "total",
-      "barWidth": 12,
       "itemStyle": {
-        "color": "#6CA3A0"
+        "color": "#F5B700"
       }
     },
     {
       "type": "bar",
-      "name": "hp",
+      "name": "Wind",
       "data": [
-        245,
-        175,
-        110,
-        110,
-        110,
-        105,
-        93,
-        62
+        227.3,
+        152.7,
+        132.7,
+        207.3
       ],
       "stack": "total",
-      "barWidth": 12,
       "itemStyle": {
-        "color": "#EF8A00"
+        "color": "#2D83D3"
+      }
+    },
+    {
+      "type": "bar",
+      "name": "Hydro",
+      "data": [
+        126.3,
+        163.7,
+        173.7,
+        136.3
+      ],
+      "stack": "total",
+      "itemStyle": {
+        "color": "#0F6A66"
       }
     }
-  ],
-  "animation": false
+  ]
 }

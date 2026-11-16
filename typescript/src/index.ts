@@ -10,6 +10,7 @@
 
 import { buildA3Option } from "./charts/a3/index.ts";
 import { buildBarOption } from "./charts/bar/index.ts";
+import { buildLineOption, lineAspect } from "./charts/line/index.ts";
 
 export type {
   A3Appearance,
@@ -21,10 +22,22 @@ export type {
 export { A3_CHART_CONFIG_MEMBERS, a3SurfaceHints, buildA3Option } from "./charts/a3/index.ts";
 export type { BarAppearance, BarChartConfig } from "./charts/bar/index.ts";
 export { BAR_CHART_CONFIG_MEMBERS, buildBarOption } from "./charts/bar/index.ts";
+export type { AspectHint, LineAppearance, LineChartConfig, LineDash } from "./charts/line/index.ts";
+export {
+  buildLineOption,
+  LINE_CHART_CONFIG_MEMBERS,
+  lineAspect,
+} from "./charts/line/index.ts";
+export { formatNumber, SIGNIFICANT_DIGITS } from "./shared/format.ts";
+export type { MeasureMembers } from "./shared/labels.ts";
+export { valueLabel } from "./shared/labels.ts";
 export type { MarginMembers } from "./shared/layout.ts";
 export { DEFAULT_MARGIN, ZOOM_SLIDER_ID } from "./shared/layout.ts";
 export type { LegendMembers } from "./shared/legend.ts";
-export type { ColumnarSource, ColumnNames, TabularData } from "./shared/source.ts";
+export type { AxisLimits } from "./shared/limits.ts";
+export { calcLimits, calcLimitsFromZero, DEFAULT_PAD } from "./shared/limits.ts";
+export type { ColumnarSource, ColumnNames, ColumnType, TabularData } from "./shared/source.ts";
+export { timeLabel, timeMs } from "./shared/source.ts";
 export type { ColorScheme, ThemeTokens } from "./theme/tokens.ts";
 export {
   DEFAULT_FONT_FAMILY,
@@ -41,6 +54,15 @@ export {
 export const builders = Object.freeze({
   a3: buildA3Option,
   bar: buildBarOption,
+  line: buildLineOption,
+});
+
+/**
+ * The fixed-aspect plotting box of a built option, by chart type, for a host
+ * that sizes its surface before drawing.
+ */
+export const aspectHints = Object.freeze({
+  line: lineAspect,
 });
 
 /** A chart type with a builder in this package. */

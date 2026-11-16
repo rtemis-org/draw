@@ -13,6 +13,67 @@ export interface TabularData {
   readonly columns: ColumnarSource;
   /** Level order of categorical columns, by column name. */
   readonly levels?: Readonly<Record<string, readonly string[]>>;
+  /** The type of a column whose values are not read as stored, by column name. */
+  readonly types?: Readonly<Record<string, ColumnType>>;
+  /**
+   * Column holding the number of rows each row stands for, when the host has
+   * combined rows. A chart that counts rows sums it; unset, each row is one.
+   */
+  readonly frequency?: string;
+}
+
+/**
+ * A column type the data declares. `"time"`: a date or date-time, held as
+ * epoch milliseconds of its wall-clock reading in UTC, or as ISO 8601 text
+ * whose wall-clock fields are read and whose offset is ignored.
+ */
+export type ColumnType = "time";
+
+/** Whether the data declares a column as a time. */
+export function isTime(data: TabularData, name: string): boolean {
+  return data.types?.[name] === "time";
+}
+
+const ISO_TIME = /^(\d{4})-(\d{2})-(\d{2})(?:[T ](\d{2}):(\d{2})(?::(\d{2})(?:\.(\d+))?)?)?/;
+
+/**
+ * A time cell as epoch milliseconds of its wall-clock reading in UTC, or
+ * `null` for a missing or unreadable one. Charts place and label times in UTC,
+ * so a time reads the same wherever it is viewed.
+ */
+export function timeMs(value: unknown): number | null {
+  if (typeof value === "number") return Number.isFinite(value) ? value : null;
+  if (typeof value !== "string") return null;
+  const m = ISO_TIME.exec(value);
+  if (!m) return null;
+  const [, y, mo, d, h, mi, s, frac] = m;
+  const ms = frac ? Math.round(Number(`0.${frac}`) * 1000) : 0;
+  return Date.UTC(
+    Number(y),
+    Number(mo) - 1,
+    Number(d),
+    Number(h ?? 0),
+    Number(mi ?? 0),
+    Number(s ?? 0),
+    ms,
+  );
+}
+
+/** A time as text in UTC: the date at midnight, otherwise the date and the time. */
+export function timeLabel(ms: number): string {
+  const iso = new Date(ms).toISOString();
+  if (ms % 86_400_000 === 0) return iso.slice(0, 10);
+  return `${iso.slice(0, 10)} ${iso.slice(11, ms % 1000 === 0 ? 19 : 23)}`;
+}
+
+/** The values of a column as text; a time column's as {@link timeLabel}. */
+export function textColumn(data: TabularData, name: string, member: string): string[] {
+  const values = column(data.columns, name, member);
+  if (!isTime(data, name)) return values.map((v) => String(v));
+  return values.map((v) => {
+    const ms = timeMs(v);
+    return ms === null ? String(v) : timeLabel(ms);
+  });
 }
 
 /**

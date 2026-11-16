@@ -1,0 +1,1 @@
+{ "type": "line", "data": "power-generation.json", "config": { "x": "month", "y": "gwh", "group": "source", "area": true, "stack": true, "ylab": "Generation (GWh)", "title": "Total generation by source" } }

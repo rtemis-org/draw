@@ -191,9 +191,11 @@ export function themeOption(tokens: ThemeTokens): Json {
   const withText = (style: Json): Json => ({ ...textStyle, ...style });
   const axisLabel = { fontSize: sizes.axisLabel, color: fg };
   const axisLine = tokens.axis_color ? { lineStyle: { color: tokens.axis_color } } : undefined;
+  const axisTick = { show: false };
   const valueAxis = present({
     axisLabel,
     axisLine,
+    axisTick,
     splitLine: tokens.grid_color ? { lineStyle: { color: tokens.grid_color } } : undefined,
   });
   return {
@@ -241,7 +243,7 @@ export function themeOption(tokens: ThemeTokens): Json {
       },
     },
     line: { symbol: "circle" },
-    categoryAxis: present({ axisLabel, axisLine, splitLine: { show: false } }),
+    categoryAxis: present({ axisLabel, axisLine, axisTick, splitLine: { show: false } }),
     valueAxis,
     logAxis: valueAxis,
     timeAxis: valueAxis,

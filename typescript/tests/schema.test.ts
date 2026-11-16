@@ -3,6 +3,7 @@ import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { A3_CHART_CONFIG_MEMBERS } from "../src/charts/a3/config.ts";
 import { BAR_CHART_CONFIG_MEMBERS } from "../src/charts/bar/config.ts";
+import { LINE_CHART_CONFIG_MEMBERS } from "../src/charts/line/config.ts";
 
 // `just ts-schema-check` generates the chart schemas from the R classes into a
 // temporary directory and sets RTEMIS_DRAW_SCHEMA_DIR; without it the check is
@@ -15,6 +16,7 @@ describe.skipIf(!schemaDir)("config types against the generated schemas", () => 
   const cases: [string, readonly string[]][] = [
     ["a3", A3_CHART_CONFIG_MEMBERS],
     ["bar", BAR_CHART_CONFIG_MEMBERS],
+    ["line", LINE_CHART_CONFIG_MEMBERS],
   ];
   for (const [type, members] of cases) {
     it(`the ${type} config type has every chart/${type}/v1 property and no other`, () => {

@@ -1,0 +1,230 @@
+{
+  "title": {
+    "text": "Total generation by source"
+  },
+  "tooltip": {
+    "trigger": "axis"
+  },
+  "legend": {
+    "data": [
+      "Solar",
+      "Wind",
+      "Hydro"
+    ]
+  },
+  "xAxis": {
+    "type": "time",
+    "min": 1702909440000,
+    "max": 1734168960000,
+    "splitLine": {
+      "showMinLine": false,
+      "showMaxLine": false
+    },
+    "axisLabel": {
+      "showMinLabel": false,
+      "showMaxLabel": false
+    },
+    "axisLine": {
+      "show": true,
+      "onZero": true
+    }
+  },
+  "yAxis": {
+    "type": "value",
+    "name": "Generation (GWh)",
+    "nameLocation": "middle",
+    "scale": true,
+    "min": 0,
+    "max": 178.256,
+    "splitLine": {
+      "showMinLine": false,
+      "showMaxLine": false
+    },
+    "axisLine": {
+      "show": false,
+      "onZero": true
+    }
+  },
+  "grid": {
+    "top": 36,
+    "right": 36,
+    "bottom": 36,
+    "left": 36,
+    "outerBoundsMode": "same",
+    "outerBoundsContain": "all"
+  },
+  "useUTC": true,
+  "series": [
+    {
+      "type": "line",
+      "name": "Solar",
+      "data": [
+        [
+          1704067200000,
+          14
+        ],
+        [
+          1706745600000,
+          25
+        ],
+        [
+          1709251200000,
+          40
+        ],
+        [
+          1711929600000,
+          55
+        ],
+        [
+          1714521600000,
+          66
+        ],
+        [
+          1717200000000,
+          70
+        ],
+        [
+          1719792000000,
+          66
+        ],
+        [
+          1722470400000,
+          55
+        ],
+        [
+          1725148800000,
+          40
+        ],
+        [
+          1727740800000,
+          25
+        ],
+        [
+          1730419200000,
+          14
+        ],
+        [
+          1733011200000,
+          10
+        ]
+      ],
+      "showSymbol": false,
+      "stack": "total",
+      "areaStyle": {}
+    },
+    {
+      "type": "line",
+      "name": "Wind",
+      "data": [
+        [
+          1704067200000,
+          80
+        ],
+        [
+          1706745600000,
+          77.3
+        ],
+        [
+          1709251200000,
+          70
+        ],
+        [
+          1711929600000,
+          60
+        ],
+        [
+          1714521600000,
+          50
+        ],
+        [
+          1717200000000,
+          42.7
+        ],
+        [
+          1719792000000,
+          40
+        ],
+        [
+          1722470400000,
+          42.7
+        ],
+        [
+          1725148800000,
+          50
+        ],
+        [
+          1727740800000,
+          60
+        ],
+        [
+          1730419200000,
+          70
+        ],
+        [
+          1733011200000,
+          77.3
+        ]
+      ],
+      "showSymbol": false,
+      "stack": "total",
+      "areaStyle": {}
+    },
+    {
+      "type": "line",
+      "name": "Hydro",
+      "data": [
+        [
+          1704067200000,
+          40
+        ],
+        [
+          1706745600000,
+          41.3
+        ],
+        [
+          1709251200000,
+          45
+        ],
+        [
+          1711929600000,
+          50
+        ],
+        [
+          1714521600000,
+          55
+        ],
+        [
+          1717200000000,
+          58.7
+        ],
+        [
+          1719792000000,
+          60
+        ],
+        [
+          1722470400000,
+          58.7
+        ],
+        [
+          1725148800000,
+          55
+        ],
+        [
+          1727740800000,
+          50
+        ],
+        [
+          1730419200000,
+          45
+        ],
+        [
+          1733011200000,
+          41.3
+        ]
+      ],
+      "showSymbol": false,
+      "stack": "total",
+      "areaStyle": {}
+    }
+  ]
+}

@@ -1,0 +1,1 @@
+{ "type": "line", "data": "power-generation.json", "config": { "x": "month", "y": "gwh", "group": "source", "xlab": "Month", "ylab": "Generation (GWh)" } }

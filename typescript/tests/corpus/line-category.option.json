@@ -1,0 +1,113 @@
+{
+  "tooltip": {
+    "trigger": "axis"
+  },
+  "legend": {
+    "data": [
+      "Solar",
+      "Wind",
+      "Hydro"
+    ]
+  },
+  "xAxis": {
+    "type": "category",
+    "data": [
+      "Q1",
+      "Q2",
+      "Q3",
+      "Q4"
+    ],
+    "axisLine": {
+      "show": false,
+      "onZero": true
+    }
+  },
+  "yAxis": {
+    "type": "value",
+    "name": "Generation (GWh)",
+    "nameLocation": "middle",
+    "scale": true,
+    "min": 41.868,
+    "max": 234.43200000000002,
+    "splitLine": {
+      "showMinLine": false,
+      "showMaxLine": false
+    }
+  },
+  "grid": {
+    "top": 36,
+    "right": 36,
+    "bottom": 36,
+    "left": 36,
+    "outerBoundsMode": "same",
+    "outerBoundsContain": "all"
+  },
+  "series": [
+    {
+      "type": "line",
+      "name": "Solar",
+      "data": [
+        [
+          0,
+          79
+        ],
+        [
+          1,
+          191
+        ],
+        [
+          2,
+          161
+        ],
+        [
+          3,
+          49
+        ]
+      ]
+    },
+    {
+      "type": "line",
+      "name": "Wind",
+      "data": [
+        [
+          0,
+          227.3
+        ],
+        [
+          1,
+          152.7
+        ],
+        [
+          2,
+          132.7
+        ],
+        [
+          3,
+          207.3
+        ]
+      ]
+    },
+    {
+      "type": "line",
+      "name": "Hydro",
+      "data": [
+        [
+          0,
+          126.3
+        ],
+        [
+          1,
+          163.7
+        ],
+        [
+          2,
+          173.7
+        ],
+        [
+          3,
+          136.3
+        ]
+      ]
+    }
+  ]
+}

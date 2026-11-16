@@ -1,6 +1,6 @@
 {
   "name": "@rtemis/draw",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "ECharts option builders shared by rtemis.draw and rtemislive",
   "homepage": "https://rtemis.org",
   "keywords": ["rtemis", "echarts", "visualization"],

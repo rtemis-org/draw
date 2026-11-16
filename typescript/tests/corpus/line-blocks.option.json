@@ -1,0 +1,144 @@
+{
+  "tooltip": {
+    "trigger": "axis"
+  },
+  "xAxis": {
+    "type": "value",
+    "name": "Week",
+    "nameLocation": "middle",
+    "scale": true,
+    "min": 0.56,
+    "max": 12.44,
+    "splitLine": {
+      "showMinLine": false,
+      "showMaxLine": false
+    },
+    "axisLine": {
+      "show": false,
+      "onZero": true
+    }
+  },
+  "yAxis": {
+    "type": "value",
+    "name": "Symptom score",
+    "nameLocation": "middle",
+    "scale": true,
+    "min": 3.34,
+    "max": 7.66,
+    "splitLine": {
+      "showMinLine": false,
+      "showMaxLine": false
+    },
+    "axisLine": {
+      "show": false,
+      "onZero": true
+    }
+  },
+  "grid": {
+    "top": 20,
+    "right": 20,
+    "bottom": 40,
+    "left": 50,
+    "outerBoundsMode": "same",
+    "outerBoundsContain": "all"
+  },
+  "series": [
+    {
+      "type": "line",
+      "data": [
+        [
+          1,
+          7.2
+        ],
+        [
+          2,
+          7.5
+        ],
+        [
+          3,
+          6.9
+        ],
+        [
+          4,
+          7.3
+        ],
+        [
+          5,
+          6.1
+        ],
+        [
+          6,
+          5.2
+        ],
+        [
+          7,
+          4.4
+        ],
+        [
+          8,
+          3.8
+        ],
+        [
+          9,
+          3.5
+        ],
+        [
+          10,
+          4.6
+        ],
+        [
+          11,
+          5.3
+        ],
+        [
+          12,
+          5.9
+        ]
+      ],
+      "markArea": {
+        "data": [
+          [
+            {
+              "xAxis": 1,
+              "name": "Baseline",
+              "itemStyle": {
+                "color": "#9E9E9E",
+                "opacity": 0.2
+              }
+            },
+            {
+              "xAxis": 5
+            }
+          ],
+          [
+            {
+              "xAxis": 5,
+              "name": "Treatment",
+              "itemStyle": {
+                "color": "#2D83D3",
+                "opacity": 0.2
+              }
+            },
+            {
+              "xAxis": 10
+            }
+          ],
+          [
+            {
+              "xAxis": 10,
+              "name": "Washout",
+              "itemStyle": {
+                "color": "#C55E28",
+                "opacity": 0.2
+              }
+            },
+            {
+              "xAxis": 12
+            }
+          ]
+        ],
+        "silent": true
+      }
+    }
+  ]
+}

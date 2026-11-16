@@ -1,0 +1,1 @@
+{ "type": "line", "data": "power-generation-quarterly.json", "config": { "x": "quarter", "y": "gwh", "group": "source", "aggregate": "sum", "points": true, "ylab": "Generation (GWh)" } }

@@ -1,0 +1,1 @@
+{ "type": "line", "data": "power-generation.json", "config": { "x": "month", "y": "gwh", "group": "source", "smooth": true, "points": true, "zoom": true, "line_style": ["solid", "dashed", "dotted"] } }

@@ -104,6 +104,9 @@
       "fontSize": 12,
       "color": "rgba(0, 0, 0, 0.7)"
     },
+    "axisTick": {
+      "show": false
+    },
     "splitLine": {
       "show": false
     }
@@ -112,6 +115,9 @@
     "axisLabel": {
       "fontSize": 12,
       "color": "rgba(0, 0, 0, 0.7)"
+    },
+    "axisTick": {
+      "show": false
     }
   },
   "visualMap": {

@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { buildBarOption } from "../src/charts/bar/config.ts";
+import { valueLabel } from "../src/shared/labels.ts";
 import { ZOOM_SLIDER_ID } from "../src/shared/layout.ts";
 
 const source = {
@@ -19,8 +20,11 @@ describe("buildBarOption", () => {
     expect(seriesOf(option)).toEqual([{ type: "bar", data: [3, 7, 2] }]);
     expect(option).not.toHaveProperty("legend");
     expect(option.xAxis).toMatchObject({ type: "category", data: ["A", "B", "C"] });
-    expect(option.yAxis).toMatchObject({ type: "value", axisTick: { show: false } });
-    expect(option.tooltip).toEqual({ trigger: "axis" });
+    expect(option.yAxis).toEqual({ type: "value" });
+    expect(option.tooltip).toMatchObject({ trigger: "axis" });
+    expect(
+      (option.tooltip as { valueFormatter: (v: number) => string }).valueFormatter(2.345),
+    ).toBe("2.35");
     expect(option.grid).toMatchObject({ top: 36, right: 36, bottom: 36, left: 36 });
   });
 
@@ -115,7 +119,7 @@ describe("buildBarOption", () => {
     expect(seriesOf(option)[0]?.data).toEqual([3, null]);
   });
 
-  it("requires one row per category and group when grouped or aggregated", () => {
+  it("requires one row per category and group", () => {
     const repeated = { columns: { g: ["A", "A"], sex: ["F", "F"], u: [1, 2] } };
     expect(() => buildBarOption(repeated, { x: "g", y: "u", group: "sex" })).toThrow(
       /category 'A' in group 'F'.*aggregate/,
@@ -123,11 +127,61 @@ describe("buildBarOption", () => {
     expect(() => buildBarOption(repeated, { x: "g", y: "u", aggregate: "mean" })).toThrow(
       /category 'A'/,
     );
-    expect(seriesOf(buildBarOption(repeated, { x: "g", y: "u" }))[0]?.data).toEqual([1, 2]);
+    expect(() => buildBarOption(repeated, { x: "g", y: "u" })).toThrow(/category 'A'/);
   });
 
   it("names a missing column and its member", () => {
     expect(() => buildBarOption(source, { x: "g", y: "w" })).toThrow(/'w'.*'y'/);
-    expect(() => buildBarOption(source, { x: "g" })).toThrow(/x.*y/);
+    expect(() => buildBarOption(source, { y: "u" })).toThrow("`x` set");
+  });
+});
+
+describe("bar counts", () => {
+  const columns = { g: ["A", "B", "A", "C", "A"], s: ["F", "M", "M", "F", "F"] };
+
+  it("counts the rows of each category with y unset", () => {
+    const option = buildBarOption({ columns, levels: { g: ["C", "B", "A"] } }, { x: "g" });
+    expect((option.xAxis as { data: string[] }).data).toEqual(["C", "B", "A"]);
+    expect(seriesOf(option)).toEqual([{ type: "bar", data: [1, 1, 3] }]);
+  });
+
+  it("counts per group, and sums a frequency column of combined rows", () => {
+    const grouped = buildBarOption({ columns }, { x: "g", group: "s" });
+    expect(seriesOf(grouped).map((s) => [s.name, s.data])).toEqual([
+      ["F", [2, null, 1]],
+      ["M", [1, 1, null]],
+    ]);
+    const combined = buildBarOption(
+      { columns: { g: ["A", "B", "A"], n: [4, 2, 3] }, frequency: "n" },
+      { x: "g" },
+    );
+    expect(seriesOf(combined)[0]?.data).toEqual([7, 2]);
+  });
+
+  it("rejects an aggregate without y", () => {
+    expect(() => buildBarOption({ columns }, { x: "g", aggregate: "mean" })).toThrow(
+      "`y` is unset",
+    );
+  });
+
+  it("names the value axis by its measure", () => {
+    expect(valueLabel({})).toBe("Count");
+    expect(valueLabel({ y: "age" })).toBe("age");
+    expect(valueLabel({ y: "age", aggregate: "mean" })).toBe("Mean age");
+    expect(valueLabel({ y: ["age"], aggregate: "median" })).toBe("Median age");
+    expect(valueLabel({ y: "age", aggregate: "sum" }, (c) => c.toUpperCase())).toBe("Sum of AGE");
+    expect(valueLabel({ y: ["a", "b"], aggregate: "mean" })).toBe("Mean");
+    expect(valueLabel({ y: ["a", "b"] })).toBeNull();
+  });
+});
+
+describe("horizontal bars", () => {
+  it("list categories top to bottom in their order", () => {
+    const option = buildBarOption(
+      { columns: { g: ["A", "B"], u: [1, 2] } },
+      { x: "g", y: "u", horizontal: true },
+    );
+    expect(option.yAxis).toMatchObject({ type: "category", data: ["A", "B"], inverse: true });
+    expect(option.xAxis).toEqual({ type: "value" });
   });
 });

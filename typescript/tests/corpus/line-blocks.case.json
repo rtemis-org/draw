@@ -1,0 +1,1 @@
+{ "type": "line", "data": "symptom-scores.json", "config": { "x": "week", "y": "score", "blocks": "phase", "block_color": ["#9E9E9E", "#2D83D3", "#C55E28"], "points": true, "xlab": "Week", "ylab": "Symptom score", "margin_top": 20, "margin_right": 20, "margin_bottom": 40, "margin_left": 50 } }

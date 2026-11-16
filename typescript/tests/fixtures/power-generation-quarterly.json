@@ -1,0 +1,26 @@
+{
+  "columns": {
+    "quarter": ["Q1", "Q2", "Q3", "Q4", "Q1", "Q2", "Q3", "Q4", "Q1", "Q2", "Q3", "Q4"],
+    "source": [
+      "Solar",
+      "Solar",
+      "Solar",
+      "Solar",
+      "Wind",
+      "Wind",
+      "Wind",
+      "Wind",
+      "Hydro",
+      "Hydro",
+      "Hydro",
+      "Hydro"
+    ],
+    "gwh": [79, 191, 161, 49, 227.3, 152.7, 132.7, 207.3, 126.3, 163.7, 173.7, 136.3]
+  },
+  "levels": {
+    "quarter": ["Q1", "Q2", "Q3", "Q4"],
+    "source": ["Solar", "Wind", "Hydro"]
+  },
+  "types": {},
+  "frequency": null
+}

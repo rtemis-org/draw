@@ -4,34 +4,27 @@
   },
   "legend": {
     "data": [
-      "manual",
-      "auto"
+      "Solar",
+      "Wind",
+      "Hydro"
     ]
   },
   "xAxis": {
     "type": "category",
     "data": [
-      "Mazda RX4",
-      "Mazda RX4 Wag",
-      "Datsun 710",
-      "Hornet 4 Drive",
-      "Hornet Sportabout",
-      "Valiant",
-      "Duster 360",
-      "Merc 240D"
+      "Q1",
+      "Q2",
+      "Q3",
+      "Q4"
     ],
     "axisPointer": {
       "type": "none"
-    },
-    "axisTick": {
-      "show": false
     }
   },
   "yAxis": {
     "type": "value",
-    "axisTick": {
-      "show": false
-    }
+    "name": "Generation (GWh)",
+    "nameLocation": "middle"
   },
   "grid": {
     "top": 36,
@@ -39,35 +32,37 @@
     "bottom": 36,
     "left": 36,
     "outerBoundsMode": "same",
-    "outerBoundsContain": "axisLabel"
+    "outerBoundsContain": "all"
   },
   "series": [
     {
       "type": "bar",
-      "name": "manual",
+      "name": "Solar",
       "data": [
-        21,
-        21,
-        22.8,
-        null,
-        null,
-        null,
-        null,
-        null
+        79,
+        191,
+        161,
+        49
       ]
     },
     {
       "type": "bar",
-      "name": "auto",
+      "name": "Wind",
       "data": [
-        null,
-        null,
-        null,
-        21.4,
-        18.7,
-        18.1,
-        14.3,
-        24.4
+        227.3,
+        152.7,
+        132.7,
+        207.3
+      ]
+    },
+    {
+      "type": "bar",
+      "name": "Hydro",
+      "data": [
+        126.3,
+        163.7,
+        173.7,
+        136.3
       ]
     }
   ]
