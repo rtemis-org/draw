@@ -93,3 +93,48 @@ write_fixture(
   "satisfaction-survey"
 )
 write_fixture(symptom_scores, c("week", "phase", "score"), "symptom-scores")
+
+# Boxplot summaries, as rtemis.draw computes them for the boxplot builder.
+write_summary <- function(request, name) {
+  writeLines(
+    jsonlite::prettify(request@data, indent = 2),
+    file.path(fixtures, paste0(name, ".json"))
+  )
+}
+write_summary(
+  boxplot_option(
+    iris["Sepal.Length"],
+    group = iris[["Species"]],
+    boxpoints = "outliers"
+  ),
+  "iris-sepal-length"
+)
+write_summary(
+  boxplot_option(
+    iris[c("Sepal.Length", "Petal.Length")],
+    group = iris[["Species"]],
+    geometry = "both",
+    density_points = 32L
+  ),
+  "iris-lengths-violin"
+)
+# Synthetic paired scores of 12 subjects before and after an intervention.
+subject <- sprintf("S%02d", 1:12)
+before <- 50 + (1:12 * 7) %% 13
+after <- before - 5 + (1:12) %% 4
+scores <- data.frame(Before = before, After = after)
+p <- stats::t.test(after, before, paired = TRUE)[["p.value"]]
+write_summary(
+  boxplot_option(
+    scores,
+    observation = subject,
+    paired = TRUE,
+    boxpoints = "all",
+    comparisons = data.frame(
+      from = "Before",
+      to = "After",
+      label = sprintf("paired t-test p = %s", format(signif(p, 2)))
+    )
+  ),
+  "paired-scores"
+)

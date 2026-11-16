@@ -451,12 +451,6 @@ draw_varimp <- function(
       )
     )
   }
-  # The boxplot builds its axis bottom to top, so a horizontal boxplot takes
-  # its variables in reverse to read in rank order from the top; the bar
-  # builder lists horizontal categories top to bottom.
-  if (horizontal && type == "boxplot") {
-    values <- values[rev(seq_len(nrow(values))), , drop = FALSE]
-  }
   if (type == "boxplot") {
     records <- varimp_distribution(data, values, measure, folds)
     settings <- list(...)

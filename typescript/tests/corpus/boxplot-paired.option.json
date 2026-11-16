@@ -1,0 +1,583 @@
+{
+  "tooltip": {
+    "trigger": "item"
+  },
+  "xAxis": {
+    "type": "value",
+    "scale": true,
+    "min": 46.07,
+    "max": 66.53,
+    "name": "Score",
+    "nameLocation": "middle"
+  },
+  "yAxis": {
+    "type": "category",
+    "data": [
+      "Before",
+      "After"
+    ],
+    "axisLabel": {
+      "interval": 0
+    },
+    "inverse": true,
+    "axisLine": {
+      "show": false,
+      "onZero": true
+    }
+  },
+  "grid": {
+    "top": 36,
+    "right": 81,
+    "bottom": 36,
+    "left": 36,
+    "outerBoundsMode": "same",
+    "outerBoundsContain": "all"
+  },
+  "dataZoom": [
+    {
+      "type": "slider",
+      "id": "rtemis-zoom-slider",
+      "start": 0,
+      "end": 100,
+      "yAxisIndex": 0,
+      "right": 43,
+      "width": 30
+    },
+    {
+      "type": "inside",
+      "yAxisIndex": 0,
+      "zoomOnMouseWheel": "shift",
+      "moveOnMouseMove": true
+    }
+  ],
+  "series": [
+    {
+      "type": "boxplot",
+      "data": [
+        [
+          51,
+          53.75,
+          56.5,
+          59.25,
+          62
+        ],
+        [
+          47,
+          49.75,
+          52.5,
+          56.25,
+          60
+        ]
+      ],
+      "itemStyle": {
+        "color": "rgba(108, 163, 160, 0.25)",
+        "borderColor": "#6CA3A0"
+      }
+    },
+    {
+      "type": "custom",
+      "renderItem": "rtemis.boxplot_points.v1",
+      "clip": true,
+      "z": 3,
+      "dimensions": [
+        "Category",
+        "Value",
+        "Observation",
+        "Offset"
+      ],
+      "encode": {
+        "x": 1,
+        "y": 0,
+        "tooltip": [
+          1,
+          2
+        ]
+      },
+      "itemPayload": {
+        "horizontal": true,
+        "boxSeries": [
+          0
+        ],
+        "boxIndex": 0,
+        "pointSize": 5,
+        "pointAlpha": 0.6
+      },
+      "data": [
+        {
+          "value": [
+            0,
+            57,
+            "S01",
+            0
+          ],
+          "itemStyle": {
+            "color": "#6CA3A0",
+            "opacity": 0.6
+          }
+        },
+        {
+          "value": [
+            0,
+            51,
+            "S02",
+            -0.125
+          ],
+          "itemStyle": {
+            "color": "#6CA3A0",
+            "opacity": 0.6
+          }
+        },
+        {
+          "value": [
+            0,
+            58,
+            "S03",
+            0.125
+          ],
+          "itemStyle": {
+            "color": "#6CA3A0",
+            "opacity": 0.6
+          }
+        },
+        {
+          "value": [
+            0,
+            52,
+            "S04",
+            -0.1875
+          ],
+          "itemStyle": {
+            "color": "#6CA3A0",
+            "opacity": 0.6
+          }
+        },
+        {
+          "value": [
+            0,
+            59,
+            "S05",
+            0.0625
+          ],
+          "itemStyle": {
+            "color": "#6CA3A0",
+            "opacity": 0.6
+          }
+        },
+        {
+          "value": [
+            0,
+            53,
+            "S06",
+            -0.0625
+          ],
+          "itemStyle": {
+            "color": "#6CA3A0",
+            "opacity": 0.6
+          }
+        },
+        {
+          "value": [
+            0,
+            60,
+            "S07",
+            0.1875
+          ],
+          "itemStyle": {
+            "color": "#6CA3A0",
+            "opacity": 0.6
+          }
+        },
+        {
+          "value": [
+            0,
+            54,
+            "S08",
+            -0.21875
+          ],
+          "itemStyle": {
+            "color": "#6CA3A0",
+            "opacity": 0.6
+          }
+        },
+        {
+          "value": [
+            0,
+            61,
+            "S09",
+            0.03125
+          ],
+          "itemStyle": {
+            "color": "#6CA3A0",
+            "opacity": 0.6
+          }
+        },
+        {
+          "value": [
+            0,
+            55,
+            "S10",
+            -0.09375
+          ],
+          "itemStyle": {
+            "color": "#6CA3A0",
+            "opacity": 0.6
+          }
+        },
+        {
+          "value": [
+            0,
+            62,
+            "S11",
+            0.15625
+          ],
+          "itemStyle": {
+            "color": "#6CA3A0",
+            "opacity": 0.6
+          }
+        },
+        {
+          "value": [
+            0,
+            56,
+            "S12",
+            -0.15625
+          ],
+          "itemStyle": {
+            "color": "#6CA3A0",
+            "opacity": 0.6
+          }
+        },
+        {
+          "value": [
+            1,
+            53,
+            "S01",
+            0
+          ],
+          "itemStyle": {
+            "color": "#6CA3A0",
+            "opacity": 0.6
+          }
+        },
+        {
+          "value": [
+            1,
+            48,
+            "S02",
+            -0.125
+          ],
+          "itemStyle": {
+            "color": "#6CA3A0",
+            "opacity": 0.6
+          }
+        },
+        {
+          "value": [
+            1,
+            56,
+            "S03",
+            0.125
+          ],
+          "itemStyle": {
+            "color": "#6CA3A0",
+            "opacity": 0.6
+          }
+        },
+        {
+          "value": [
+            1,
+            47,
+            "S04",
+            -0.1875
+          ],
+          "itemStyle": {
+            "color": "#6CA3A0",
+            "opacity": 0.6
+          }
+        },
+        {
+          "value": [
+            1,
+            55,
+            "S05",
+            0.0625
+          ],
+          "itemStyle": {
+            "color": "#6CA3A0",
+            "opacity": 0.6
+          }
+        },
+        {
+          "value": [
+            1,
+            50,
+            "S06",
+            -0.0625
+          ],
+          "itemStyle": {
+            "color": "#6CA3A0",
+            "opacity": 0.6
+          }
+        },
+        {
+          "value": [
+            1,
+            58,
+            "S07",
+            0.1875
+          ],
+          "itemStyle": {
+            "color": "#6CA3A0",
+            "opacity": 0.6
+          }
+        },
+        {
+          "value": [
+            1,
+            49,
+            "S08",
+            -0.21875
+          ],
+          "itemStyle": {
+            "color": "#6CA3A0",
+            "opacity": 0.6
+          }
+        },
+        {
+          "value": [
+            1,
+            57,
+            "S09",
+            0.03125
+          ],
+          "itemStyle": {
+            "color": "#6CA3A0",
+            "opacity": 0.6
+          }
+        },
+        {
+          "value": [
+            1,
+            52,
+            "S10",
+            -0.09375
+          ],
+          "itemStyle": {
+            "color": "#6CA3A0",
+            "opacity": 0.6
+          }
+        },
+        {
+          "value": [
+            1,
+            60,
+            "S11",
+            0.15625
+          ],
+          "itemStyle": {
+            "color": "#6CA3A0",
+            "opacity": 0.6
+          }
+        },
+        {
+          "value": [
+            1,
+            51,
+            "S12",
+            -0.15625
+          ],
+          "itemStyle": {
+            "color": "#6CA3A0",
+            "opacity": 0.6
+          }
+        }
+      ]
+    },
+    {
+      "type": "custom",
+      "renderItem": "rtemis.boxplot_pairs.v1",
+      "silent": true,
+      "clip": true,
+      "z": 2,
+      "dimensions": [
+        "From",
+        "From value",
+        "From offset",
+        "To",
+        "To value",
+        "To offset",
+        "Observation"
+      ],
+      "encode": {
+        "x": [
+          1,
+          4
+        ],
+        "y": [
+          0,
+          3
+        ]
+      },
+      "itemPayload": {
+        "horizontal": true,
+        "boxSeries": [
+          0
+        ],
+        "boxIndex": 0,
+        "alpha": 0.35,
+        "width": 1
+      },
+      "itemStyle": {
+        "color": "#888888"
+      },
+      "data": [
+        [
+          0,
+          57,
+          0,
+          1,
+          53,
+          0,
+          "S01"
+        ],
+        [
+          0,
+          51,
+          -0.125,
+          1,
+          48,
+          -0.125,
+          "S02"
+        ],
+        [
+          0,
+          58,
+          0.125,
+          1,
+          56,
+          0.125,
+          "S03"
+        ],
+        [
+          0,
+          52,
+          -0.1875,
+          1,
+          47,
+          -0.1875,
+          "S04"
+        ],
+        [
+          0,
+          59,
+          0.0625,
+          1,
+          55,
+          0.0625,
+          "S05"
+        ],
+        [
+          0,
+          53,
+          -0.0625,
+          1,
+          50,
+          -0.0625,
+          "S06"
+        ],
+        [
+          0,
+          60,
+          0.1875,
+          1,
+          58,
+          0.1875,
+          "S07"
+        ],
+        [
+          0,
+          54,
+          -0.21875,
+          1,
+          49,
+          -0.21875,
+          "S08"
+        ],
+        [
+          0,
+          61,
+          0.03125,
+          1,
+          57,
+          0.03125,
+          "S09"
+        ],
+        [
+          0,
+          55,
+          -0.09375,
+          1,
+          52,
+          -0.09375,
+          "S10"
+        ],
+        [
+          0,
+          62,
+          0.15625,
+          1,
+          60,
+          0.15625,
+          "S11"
+        ],
+        [
+          0,
+          56,
+          -0.15625,
+          1,
+          51,
+          -0.15625,
+          "S12"
+        ]
+      ]
+    },
+    {
+      "type": "custom",
+      "renderItem": "rtemis.boxplot_brackets.v1",
+      "silent": true,
+      "clip": true,
+      "z": 4,
+      "dimensions": [
+        "From",
+        "To",
+        "Position",
+        "From series",
+        "To series",
+        "Label"
+      ],
+      "encode": {
+        "x": 2,
+        "y": [
+          0,
+          1
+        ]
+      },
+      "itemPayload": {
+        "horizontal": true,
+        "boxSeries": [
+          0
+        ]
+      },
+      "data": [
+        [
+          0,
+          1,
+          63.8,
+          0,
+          0,
+          "paired t-test p = 5.1e-07"
+        ]
+      ]
+    }
+  ]
+}

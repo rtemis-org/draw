@@ -1,0 +1,1 @@
+{ "type": "boxplot", "data": "iris-lengths-violin.json", "config": { "geometry": "both", "ylab": "Length (cm)", "labels": ["Sepal length", "Petal length"] } }

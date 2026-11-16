@@ -1,0 +1,111 @@
+{
+  "tooltip": {
+    "trigger": "item"
+  },
+  "xAxis": {
+    "type": "category",
+    "data": [
+      "setosa",
+      "versicolor",
+      "virginica"
+    ],
+    "axisLabel": {
+      "interval": 0
+    },
+    "axisLine": {
+      "show": false,
+      "onZero": true
+    }
+  },
+  "yAxis": {
+    "type": "value",
+    "scale": true,
+    "min": 4.12,
+    "max": 8.08,
+    "name": "Sepal length (cm)",
+    "nameLocation": "middle"
+  },
+  "grid": {
+    "top": 36,
+    "right": 36,
+    "bottom": 36,
+    "left": 36,
+    "outerBoundsMode": "same",
+    "outerBoundsContain": "all"
+  },
+  "series": [
+    {
+      "type": "boxplot",
+      "data": [
+        [
+          4.3,
+          4.8,
+          5,
+          5.2,
+          5.8
+        ],
+        [
+          4.9,
+          5.6,
+          5.9,
+          6.3,
+          7
+        ],
+        [
+          5.6,
+          6.225,
+          6.5,
+          6.9,
+          7.9
+        ]
+      ],
+      "itemStyle": {
+        "color": "rgba(108, 163, 160, 0.25)",
+        "borderColor": "#6CA3A0"
+      }
+    },
+    {
+      "type": "custom",
+      "renderItem": "rtemis.boxplot_points.v1",
+      "clip": true,
+      "z": 3,
+      "dimensions": [
+        "Category",
+        "Value",
+        "Observation",
+        "Offset"
+      ],
+      "encode": {
+        "x": 0,
+        "y": 1,
+        "tooltip": [
+          1,
+          2
+        ]
+      },
+      "itemPayload": {
+        "horizontal": false,
+        "boxSeries": [
+          0
+        ],
+        "boxIndex": 0,
+        "pointSize": 5,
+        "pointAlpha": 0.6
+      },
+      "data": [
+        {
+          "value": [
+            2,
+            4.9,
+            "107",
+            0.16796875
+          ],
+          "itemStyle": {
+            "color": "#6CA3A0",
+            "opacity": 0.6
+          }
+        }
+      ]
+    }
+  ]
+}

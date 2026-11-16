@@ -282,17 +282,10 @@ test_that("ascending importance selection preserves scores and stable ties", {
         args[["bar_width"]] <- 3
       }
       widget <- do.call(draw_varimp, args)
-      opt <- if (type == "bar") {
-        built_option(widget)
-      } else {
-        widget[["x"]][["option"]]
-      }
-      labels <- opt[[if (horizontal) "yAxis" else "xAxis"]][["data"]]
-      # The boxplot axis runs bottom to top; the bar axis lists top to bottom.
-      expect_identical(
-        labels,
-        if (horizontal && type == "boxplot") c("c", "b") else c("b", "c")
-      )
+      opt <- if (type == "bar") built_option(widget) else raw_option(widget)
+      labels <- unlist(opt[[if (horizontal) "yAxis" else "xAxis"]][["data"]])
+      # Rank order, read from the top when horizontal.
+      expect_identical(labels, c("b", "c"))
       if (type == "bar") {
         expect_equal(opt[["series"]][[1]][["barWidth"]], 3)
         expect_equal(unlist(opt[["series"]][[1]][["data"]]), c(2, 2))

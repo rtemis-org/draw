@@ -111,7 +111,10 @@ test_that("complete SVG exports retain panel marks, labels and styles", {
   expect_false(grepl('<image', svg, fixed = TRUE))
   # Failed child rendering is transactional for the complete destination.
   original <- readBin(path, "raw", n = file.info(path)[["size"]])
-  w[["x"]][["panels"]][[2]][["option"]][["series"]][[1]][["type"]] <- "custom"
+  w[["x"]][["panels"]][[2]][["build"]] <- NULL
+  w[["x"]][["panels"]][[2]][["option"]] <- list(
+    series = list(list(type = "custom", data = list()))
+  )
   expect_error(save_drawing(w, path), "Unsupported custom")
   expect_identical(
     readBin(path, "raw", n = file.info(path)[["size"]]),

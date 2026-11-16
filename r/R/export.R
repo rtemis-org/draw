@@ -599,6 +599,7 @@ save_svg_ssr <- function(
 #'   was found.
 #' @param version Optional `numeric_version`: Version of `node`; `NA` when it
 #'   could not be read.
+#' @param purpose Character: What needs Node.js, for the error message.
 #' @return Character scalar: Path to a `node` binary of at least
 #'   `NODE_MIN_VERSION`.
 #'
@@ -607,11 +608,13 @@ save_svg_ssr <- function(
 #' @noRd
 find_node <- function(
   node = Sys.which("node"),
-  version = node_version(node)
+  version = node_version(node),
+  purpose = "SVG export"
 ) {
   if (!nzchar(node)) {
     abort(
-      "SVG export requires Node.js (>= ",
+      purpose,
+      " requires Node.js (>= ",
       NODE_MIN_VERSION,
       "). Install it from https://nodejs.org ",
       "or via your package manager (e.g. `brew install node`).",
@@ -620,7 +623,8 @@ find_node <- function(
   }
   if (is.na(version) || version < NODE_MIN_VERSION) {
     abort(
-      "SVG export requires Node.js (>= ",
+      purpose,
+      " requires Node.js (>= ",
       NODE_MIN_VERSION,
       "), but '",
       node,
@@ -656,3 +660,101 @@ node_version <- function(node) {
   # `node --version` prints e.g. "v24.1.0".
   numeric_version(sub("^v", "", trimws(out[1L])), strict = FALSE)
 } # /rtemis.draw::node_version
+
+
+# %% echarts_option ----
+#' ECharts Option of a Drawing
+#'
+#' The option a drawing renders. A chart whose option `@rtemis/draw` builds
+#' carries a build request, which this builds in Node.js with the bundled
+#' builders, as the widget does; any other drawing carries its option, which
+#' is returned as it is. Use it to inspect or test what a drawing draws.
+#'
+#' @param x htmlwidget, [BuildRequest], or list: A drawing, a build request,
+#'   or a widget payload (one entry of a panel drawing's `panels`).
+#' @param dark Logical: Build in the dark color scheme.
+#' @param simplify Logical: Read JSON arrays as vectors where their elements
+#'   share a type; `FALSE` keeps every array a list, as an option built in R
+#'   holds it.
+#'
+#' @return Named list: The ECharts option. Formatter functions, which JSON
+#'   cannot hold, are absent.
+#'
+#' @author EDG
+#' @export
+#'
+#' @examples
+#' \dontrun{
+#' option <- echarts_option(draw_bar(c("A", "B"), c(3, 7)))
+#' option$xAxis$data
+#' }
+echarts_option <- function(x, dark = FALSE, simplify = TRUE) {
+  check_logical_scalar(dark)
+  check_logical_scalar(simplify)
+  payload <- if (S7::S7_inherits(x, BuildRequest)) {
+    list(build = build_payload(x))
+  } else if (inherits(x, "htmlwidget")) {
+    x[["x"]]
+  } else if (is.list(x)) {
+    x
+  } else {
+    abort(
+      "Supply a drawing, a BuildRequest, or a widget payload.",
+      class = c("rtemis_type_error", "rtemis_input_error")
+    )
+  }
+  if (is.null(payload[["build"]])) {
+    return(payload[["option"]])
+  }
+  node_build(payload[["build"]], dark = dark, simplify = simplify)
+} # /rtemis.draw::echarts_option
+
+
+# %% node_build ----
+#' Build a request in Node.js
+#'
+#' @param build Named list: A build request payload (`build_payload()`).
+#' @param dark Logical: Build in the dark color scheme.
+#' @param simplify Logical: As in [echarts_option()].
+#' @param what Character \{"option", "aspect"\}: The option, or the
+#'   fixed-aspect box hint the widget derives from it.
+#'
+#' @return Named list, or `NULL` for an absent aspect hint.
+#'
+#' @author EDG
+#' @keywords internal
+#' @noRd
+node_build <- function(build, dark = FALSE, simplify = TRUE, what = "option") {
+  node <- find_node(purpose = "Building an ECharts option")
+  input <- tempfile(fileext = ".json")
+  on.exit(unlink(input), add = TRUE)
+  jsonlite::write_json(
+    list(build = build, dark = dark, what = what),
+    input,
+    auto_unbox = TRUE,
+    null = "null",
+    na = "null",
+    digits = NA
+  )
+  out <- suppressWarnings(system2(
+    node,
+    c(
+      shQuote(system.file("node", "build_option.js", package = "rtemis.draw")),
+      shQuote(input)
+    ),
+    stdout = TRUE,
+    stderr = TRUE
+  ))
+  if (!is.null(attr(out, "status"))) {
+    abort(
+      paste(out, collapse = "\n"),
+      class = c("rtemis_build_error", "rtemis_error")
+    )
+  }
+  jsonlite::fromJSON(
+    paste(out, collapse = ""),
+    simplifyVector = simplify,
+    simplifyDataFrame = FALSE,
+    simplifyMatrix = FALSE
+  )
+} # /rtemis.draw::node_build

@@ -702,13 +702,13 @@ test_that("draw_boxplot computes stats and creates widget", {
     labels = c("Group 1", "Group 2")
   )
   expect_s3_class(w, "htmlwidget")
-  expect_equal(w$x$option$series[[1]]$type, "boxplot")
-  expect_equal(w$x$option$xAxis$data, c("Group 1", "Group 2"))
+  expect_equal(node_option(w)$series[[1]]$type, "boxplot")
+  expect_equal(node_option(w)$xAxis$data, c("Group 1", "Group 2"))
   # Stats computed: each box is a 5-number summary
-  expect_equal(length(w$x$option$series[[1]]$data[[1]]), 5L)
-  expect_equal(length(w$x$option$series[[1]]$data[[2]]), 5L)
+  expect_equal(length(node_option(w)$series[[1]]$data[[1]]), 5L)
+  expect_equal(length(node_option(w)$series[[1]]$data[[2]]), 5L)
   # Default color: opaque border, semi-transparent fill (alpha 0.25)
-  is <- w$x$option$series[[1]]$itemStyle
+  is <- node_option(w)$series[[1]]$itemStyle
   expect_equal(is$borderColor, rtemis_colors[[1]])
   expect_match(is$color, "^rgba\\(")
 })
@@ -720,10 +720,10 @@ test_that("draw_boxplot uses names from an ungrouped named list as labels", {
       "Treatment" = c(3, 4, 5, 6, 7, 8, 9)
     )
   )
-  expect_equal(w$x$option$xAxis$data, c("Control", "Treatment"))
-  expect_null(names(w$x$option$series[[1]]$data))
-  expect_equal(length(w$x$option$series[[1]]$data[[1]]), 5L)
-  expect_equal(length(w$x$option$series[[1]]$data[[2]]), 5L)
+  expect_equal(node_option(w)$xAxis$data, c("Control", "Treatment"))
+  expect_null(names(node_option(w)$series[[1]]$data))
+  expect_equal(length(node_option(w)$series[[1]]$data[[1]]), 5L)
+  expect_equal(length(node_option(w)$series[[1]]$data[[2]]), 5L)
 })
 
 test_that("draw_boxplot respects explicit labels over named-list labels", {
@@ -734,7 +734,7 @@ test_that("draw_boxplot respects explicit labels over named-list labels", {
     ),
     labels = c("Group 1", "Group 2")
   )
-  expect_equal(w$x$option$xAxis$data, c("Group 1", "Group 2"))
+  expect_equal(node_option(w)$xAxis$data, c("Group 1", "Group 2"))
 })
 
 test_that("draw_boxplot fill_alpha controls fill opacity", {
@@ -744,7 +744,7 @@ test_that("draw_boxplot fill_alpha controls fill opacity", {
     palette = "#ff0000",
     fill_alpha = 0.5
   )
-  is <- w$x$option$series[[1]]$itemStyle
+  is <- node_option(w)$series[[1]]$itemStyle
   expect_equal(is$borderColor, "#ff0000")
   expect_equal(is$color, "rgba(255, 0, 0, 0.5)")
 })
@@ -755,9 +755,9 @@ test_that("draw_boxplot horizontal", {
     labels = c("G1"),
     horizontal = TRUE
   )
-  expect_equal(w$x$option$xAxis$type, "value")
-  expect_equal(w$x$option$yAxis$type, "category")
-  expect_null(w$x$option$series[[1]]$layout)
+  expect_equal(node_option(w)$xAxis$type, "value")
+  expect_equal(node_option(w)$yAxis$type, "category")
+  expect_null(node_option(w)$series[[1]]$layout)
 })
 
 test_that("draw_boxplot handles NAs in ungrouped data", {
@@ -770,28 +770,34 @@ test_that("draw_boxplot handles NAs in ungrouped data", {
     "Removed 2 NA values"
   )
   expect_s3_class(w, "htmlwidget")
-  expect_equal(length(w$x$option$series[[1]]$data[[1]]), 5L)
+  expect_equal(length(node_option(w)$series[[1]]$data[[1]]), 5L)
 })
 
 test_that("draw_boxplot with group computes stats in a single series", {
   set.seed(1)
   vals <- c(rnorm(50, 10, 2), rnorm(50, 15, 3))
   g <- rep(c("Control", "Treatment"), each = 50)
-  w <- draw_boxplot(x = vals, group = g)
+  # The axis names each box, so one series takes one color by default.
+  plain <- node_option(draw_boxplot(x = vals, group = g))
+  expect_equal(
+    plain$series[[1]]$itemStyle$borderColor,
+    unname(rtemis_colors[[1]])
+  )
+  w <- draw_boxplot(x = vals, group = g, color_by_group = TRUE)
   expect_s3_class(w, "htmlwidget")
   # Single BoxplotSeries with one data item per group
-  expect_equal(length(w$x$option$series), 1L)
-  expect_equal(w$x$option$series[[1]]$type, "boxplot")
+  expect_equal(length(node_option(w)$series), 1L)
+  expect_equal(node_option(w)$series[[1]]$type, "boxplot")
   # Category axis uses group labels
-  expect_equal(w$x$option$xAxis$data, c("Control", "Treatment"))
-  expect_null(w$x$option$legend)
+  expect_equal(node_option(w)$xAxis$data, c("Control", "Treatment"))
+  expect_null(node_option(w)$legend)
   expect_equal(
-    vapply(w$x$option$series[[1]]$data, `[[`, character(1), "name"),
+    vapply(node_option(w)$series[[1]]$data, `[[`, character(1), "name"),
     c("Control", "Treatment")
   )
   expect_equal(
     vapply(
-      w$x$option$series[[1]]$data,
+      node_option(w)$series[[1]]$data,
       function(item) length(item$value),
       integer(1)
     ),
@@ -799,7 +805,7 @@ test_that("draw_boxplot with group computes stats in a single series", {
   )
   expect_equal(
     vapply(
-      w$x$option$series[[1]]$data,
+      node_option(w)$series[[1]]$data,
       function(item) item$itemStyle$borderColor,
       character(1)
     ),
@@ -813,17 +819,17 @@ test_that("draw_boxplot with group drops missing group values", {
   vals <- c(10, 11, 12, 20, 21, 22, 30)
   g <- c("Control", "Control", NA, "Treatment", "Treatment", NA, "Control")
 
-  w <- draw_boxplot(x = vals, group = g)
+  w <- draw_boxplot(x = vals, group = g, color_by_group = TRUE)
 
-  expect_equal(w$x$option$xAxis$data, c("Control", "Treatment"))
-  expect_equal(length(w$x$option$series), 1L)
-  expect_equal(length(w$x$option$series[[1]]$data), 2L)
+  expect_equal(node_option(w)$xAxis$data, c("Control", "Treatment"))
+  expect_equal(length(node_option(w)$series), 1L)
+  expect_equal(length(node_option(w)$series[[1]]$data), 2L)
   expect_equal(
-    vapply(w$x$option$series[[1]]$data, `[[`, character(1), "name"),
+    vapply(node_option(w)$series[[1]]$data, `[[`, character(1), "name"),
     c("Control", "Treatment")
   )
   expect_false(any(is.na(vapply(
-    w$x$option$series[[1]]$data,
+    node_option(w)$series[[1]]$data,
     `[[`,
     character(1),
     "name"
@@ -839,20 +845,20 @@ test_that("draw_boxplot with grouped variables drops missing group values", {
 
   w <- draw_boxplot(x = data, group = g)
 
-  expect_equal(length(w$x$option$series), 2L)
+  expect_equal(length(node_option(w)$series), 2L)
   expect_equal(
-    vapply(w$x$option$series, `[[`, character(1), "name"),
+    vapply(node_option(w)$series, `[[`, character(1), "name"),
     c("male", "female")
   )
   expect_false(any(is.na(vapply(
-    w$x$option$series,
+    node_option(w)$series,
     `[[`,
     character(1),
     "name"
   ))))
-  expect_equal(w$x$option$xAxis$data, c("Bill Length", "Bill Depth"))
-  expect_equal(length(w$x$option$series[[1]]$data), 2L)
-  expect_equal(length(w$x$option$series[[2]]$data), 2L)
+  expect_equal(node_option(w)$xAxis$data, c("Bill Length", "Bill Depth"))
+  expect_equal(length(node_option(w)$series[[1]]$data), 2L)
+  expect_equal(length(node_option(w)$series[[2]]$data), 2L)
 })
 
 test_that("draw_boxplot with group horizontal", {
@@ -860,10 +866,10 @@ test_that("draw_boxplot with group horizontal", {
   vals <- c(rnorm(30, 5), rnorm(30, 8))
   g <- rep(c("A", "B"), each = 30)
   w <- draw_boxplot(x = vals, group = g, horizontal = TRUE)
-  expect_equal(w$x$option$xAxis$type, "value")
-  expect_equal(w$x$option$yAxis$type, "category")
-  expect_equal(w$x$option$yAxis$data, c("A", "B"))
-  expect_null(w$x$option$series[[1]]$layout)
+  expect_equal(node_option(w)$xAxis$type, "value")
+  expect_equal(node_option(w)$yAxis$type, "category")
+  expect_equal(node_option(w)$yAxis$data, c("A", "B"))
+  expect_null(node_option(w)$series[[1]]$layout)
 })
 
 # -- draw_density --------------------------------------------------------------
@@ -1126,7 +1132,7 @@ test_that("draw_boxplot applies margins across grouped/ungrouped branches", {
     labels = "A",
     margins = c(left = 70)
   )
-  expect_equal(w1$x$option$grid$left, 70)
+  expect_equal(node_option(w1)$grid$left, 70)
 
   # Grouped single vector
   w2 <- draw_boxplot(
@@ -1134,7 +1140,7 @@ test_that("draw_boxplot applies margins across grouped/ungrouped branches", {
     group = rep(c("A", "B"), each = 3),
     margins = c(left = 70)
   )
-  expect_equal(w2$x$option$grid$left, 70)
+  expect_equal(node_option(w2)$grid$left, 70)
 
   # Grouped named list
   w3 <- draw_boxplot(
@@ -1142,7 +1148,7 @@ test_that("draw_boxplot applies margins across grouped/ungrouped branches", {
     group = rep(c("A", "B"), each = 2),
     margins = c(left = 70)
   )
-  expect_equal(w3$x$option$grid$left, 70)
+  expect_equal(node_option(w3)$grid$left, 70)
 })
 
 test_that("draw_heatmap margins override auto-computed left gutter", {
@@ -1256,8 +1262,8 @@ test_that("draw_boxplot applies xlab and ylab (ungrouped)", {
     xlab = "Group",
     ylab = "Value"
   )
-  expect_equal(w$x$option$xAxis[["name"]], "Group")
-  expect_equal(w$x$option$yAxis[["name"]], "Value")
+  expect_equal(node_option(w)$xAxis[["name"]], "Group")
+  expect_equal(node_option(w)$yAxis[["name"]], "Value")
 })
 
 test_that("draw_boxplot inferred value_axis_name goes on y when vertical", {
@@ -1265,8 +1271,8 @@ test_that("draw_boxplot inferred value_axis_name goes on y when vertical", {
     x = list(`Body Mass` = c(1, 2, 3, 4, 5, 6)),
     group = rep(c("A", "B"), each = 3)
   )
-  expect_equal(w$x$option$yAxis[["name"]], "Body Mass")
-  expect_null(w$x$option$xAxis[["name"]])
+  expect_equal(node_option(w)$yAxis[["name"]], "Body Mass")
+  expect_null(node_option(w)$xAxis[["name"]])
 })
 
 test_that("draw_boxplot inferred value_axis_name goes on x when horizontal", {
@@ -1275,8 +1281,8 @@ test_that("draw_boxplot inferred value_axis_name goes on x when horizontal", {
     group = rep(c("A", "B"), each = 3),
     horizontal = TRUE
   )
-  expect_equal(w$x$option$xAxis[["name"]], "Body Mass")
-  expect_null(w$x$option$yAxis[["name"]])
+  expect_equal(node_option(w)$xAxis[["name"]], "Body Mass")
+  expect_null(node_option(w)$yAxis[["name"]])
 })
 
 test_that("draw_boxplot ylab overrides inferred value_axis_name", {
@@ -1285,7 +1291,7 @@ test_that("draw_boxplot ylab overrides inferred value_axis_name", {
     group = rep(c("A", "B"), each = 3),
     ylab = "Mass (g)"
   )
-  expect_equal(w$x$option$yAxis[["name"]], "Mass (g)")
+  expect_equal(node_option(w)$yAxis[["name"]], "Mass (g)")
 })
 
 test_that("draw_boxplot xlab applies in grouped multi-variable branch", {
@@ -1295,8 +1301,8 @@ test_that("draw_boxplot xlab applies in grouped multi-variable branch", {
     xlab = "Variable",
     ylab = "Value"
   )
-  expect_equal(w$x$option$xAxis[["name"]], "Variable")
-  expect_equal(w$x$option$yAxis[["name"]], "Value")
+  expect_equal(node_option(w)$xAxis[["name"]], "Variable")
+  expect_equal(node_option(w)$yAxis[["name"]], "Value")
 })
 
 

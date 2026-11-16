@@ -10,6 +10,7 @@
 
 import { buildA3Option } from "./charts/a3/index.ts";
 import { buildBarOption } from "./charts/bar/index.ts";
+import { buildBoxplotOption } from "./charts/boxplot/index.ts";
 import { buildLineOption, lineAspect } from "./charts/line/index.ts";
 
 export type {
@@ -22,6 +23,21 @@ export type {
 export { A3_CHART_CONFIG_MEMBERS, a3SurfaceHints, buildA3Option } from "./charts/a3/index.ts";
 export type { BarAppearance, BarChartConfig } from "./charts/bar/index.ts";
 export { BAR_CHART_CONFIG_MEMBERS, buildBarOption } from "./charts/bar/index.ts";
+export type {
+  BoxplotAppearance,
+  BoxplotCell,
+  BoxplotChartConfig,
+  BoxplotComparison,
+  BoxplotData,
+  BoxplotObservation,
+} from "./charts/boxplot/index.ts";
+export {
+  BOXPLOT_CHART_CONFIG_MEMBERS,
+  buildBoxplotOption,
+  RENDERER_NAMES,
+  radicalInverse,
+  registerRenderers,
+} from "./charts/boxplot/index.ts";
 export type { AspectHint, LineAppearance, LineChartConfig, LineDash } from "./charts/line/index.ts";
 export {
   buildLineOption,
@@ -54,6 +70,7 @@ export {
 export const builders = Object.freeze({
   a3: buildA3Option,
   bar: buildBarOption,
+  boxplot: buildBoxplotOption,
   line: buildLineOption,
 });
 

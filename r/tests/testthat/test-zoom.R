@@ -261,14 +261,14 @@ test_that("equally scaled scatter plots omit box zoom", {
 
 # %% draw_boxplot ----
 test_that("draw_boxplot zoom targets the category axis in either orientation", {
-  opt <- draw_boxplot(iris[1:4], zoom = TRUE)$x$option
+  opt <- raw_option(draw_boxplot(iris[1:4], zoom = TRUE))
   expect_identical(zoom_types(opt), c("slider", "inside"))
   expect_equal(opt[["dataZoom"]][[1L]][["xAxisIndex"]], 0)
-  opt <- draw_boxplot(iris[1:4], horizontal = TRUE, zoom = TRUE)$x$option
+  opt <- raw_option(draw_boxplot(iris[1:4], horizontal = TRUE, zoom = TRUE))
   expect_equal(opt[["dataZoom"]][[1L]][["yAxisIndex"]], 0)
-  expect_null(draw_boxplot(iris[1:4])$x$option[["dataZoom"]])
+  expect_null(raw_option(draw_boxplot(iris[1:4]))[["dataZoom"]])
   cfg <- setup_BoxplotConfig(x = c("Sepal.Length", "Sepal.Width"), zoom = TRUE)
-  opt <- draw(cfg, data = iris)$x$option
+  opt <- raw_option(draw(cfg, data = iris))
   expect_identical(zoom_types(opt), c("slider", "inside"))
 })
 
@@ -295,8 +295,9 @@ test_that("volcano plots zoom both axes and Manhattan plots the outcome axis", {
 
 # %% static export ----
 test_that("static_controls drops zoom controls and returns the slider band", {
-  boxes <- list(a = 1:5, b = 2:6)
-  opt <- strip_js(draw_boxplot(boxes, zoom = TRUE)$x$option, path = "option")
+  # A chart R builds; static export of a built chart returns the band in Node.
+  sample <- iris[["Sepal.Length"]]
+  opt <- strip_js(draw_histogram(sample, zoom = TRUE)$x$option, path = "option")
   expect_identical(opt[["dataZoom"]][[1L]][["id"]], ZOOM_SLIDER_ID)
   out <- static_controls(opt)
   expect_null(out[["dataZoom"]])
@@ -309,8 +310,8 @@ test_that("static_controls drops zoom controls and returns the slider band", {
   expect_null(out[["toolbox"]])
   expect_identical(out[["grid"]], opt[["grid"]])
   explicit <- strip_js(
-    draw_boxplot(
-      boxes,
+    draw_histogram(
+      sample,
       zoom = DataZoom(type = "slider"),
       margins = c(bottom = 50)
     )$x$option,

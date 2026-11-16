@@ -47,11 +47,12 @@ test_that("importance boxes retain ranking, fold IDs, missing observations and s
       folds = LETTERS[1:5],
       horizontal = horizontal
     ))
-    opt <- w[["x"]][["option"]]
+    opt <- raw_option(w)
     axis <- if (horizontal) "yAxis" else "xAxis"
     value_axis <- if (horizontal) "xAxis" else "yAxis"
-    labels <- c("a", "c", "b")
-    expect_equal(opt[[axis]][["data"]], if (horizontal) rev(labels) else labels)
+    # Rank order, read from the top when horizontal.
+    expect_equal(unlist(opt[[axis]][["data"]]), c("a", "c", "b"))
+    expect_identical(isTRUE(opt[[axis]][["inverse"]]), horizontal)
     expect_identical(opt[[value_axis]][["name"]], "Gain")
     expect_identical(opt[[value_axis]][["nameLocation"]], "middle")
     expect_identical(opt[[axis]][["nameLocation"]], "middle")
@@ -76,12 +77,12 @@ test_that("importance boxes retain ranking, fold IDs, missing observations and s
   expect_error(draw_varimp(data, type = "boxplot", boxpoints = "bad"))
   expect_error(draw_varimp(data, type = "boxplot", group = "fold"))
   for (margin in c(0L, 90L)) {
-    opt <- suppressMessages(draw_varimp(
+    opt <- raw_option(suppressMessages(draw_varimp(
       data,
       type = "boxplot",
       title = "VI",
       margin_top = margin
-    ))[["x"]][["option"]]
+    )))
     expect_equal(opt[["grid"]][["top"]], margin)
   }
 })
@@ -93,14 +94,14 @@ test_that("summary ranks distributions without replacing fold scores", {
     score = c(0, 0, 9, 2, 2, 2, 0, 0, 0)
   )
   for (summary in c("mean", "median")) {
-    opt <- draw_varimp(
+    opt <- raw_option(draw_varimp(
       data,
       type = "boxplot",
       top_n = 1,
       summary = summary,
       whisker = 0,
       point_spread = 0
-    )[["x"]][["option"]]
+    ))
     expect_equal(
       opt[["yAxis"]][["data"]],
       list(if (summary == "mean") "a" else "b")
@@ -111,20 +112,18 @@ test_that("summary ranks distributions without replacing fold scores", {
     )
     expect_length(opt[["series"]][[2]][["data"]], 3)
   }
-  all <- draw_varimp(data, type = "boxplot", top_n = NULL)[["x"]][["option"]]
-  expect_equal(all[["yAxis"]][["data"]], c("zero", "b", "a"))
-  none <- draw_varimp(data, type = "boxplot", boxpoints = "none")[["x"]][[
-    "option"
-  ]]
+  all <- raw_option(draw_varimp(data, type = "boxplot", top_n = NULL))
+  expect_equal(unlist(all[["yAxis"]][["data"]]), c("a", "b", "zero"))
+  none <- raw_option(draw_varimp(data, type = "boxplot", boxpoints = "none"))
   expect_length(none[["series"]], 1)
   outliers <- data.frame(
     variable = "x",
     fold = as.character(1:5),
     score = c(0, 0, 0, 0, 10)
   )
-  opt <- draw_varimp(outliers, type = "boxplot", boxpoints = "outliers")[[
-    "x"
-  ]][["option"]]
+  opt <- raw_option(
+    draw_varimp(outliers, type = "boxplot", boxpoints = "outliers")
+  )
   expect_length(opt[["series"]][[2]][["data"]], 1)
   expect_equal(opt[["series"]][[2]][["data"]][[1]][["value"]][[2]], 10)
 })
@@ -137,7 +136,6 @@ test_that("portable distribution data and config round trips reproduce the view"
   ))
   folds <- c("first", "second", "empty")
   selected <- summarize_varimp(data, folds = folds)
-  selected <- selected[rev(seq_len(nrow(selected))), ]
   records <- varimp_distribution(data, selected, "score", folds)
   expect_identical(records[["observation"]], ".fold_")
   config <- setup_BoxplotConfig(

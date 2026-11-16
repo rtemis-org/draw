@@ -1,0 +1,275 @@
+{
+  "variables": ["Before", "After"],
+  "levels": null,
+  "cells": [
+    {
+      "variable": "Before",
+      "level": null,
+      "stats": [51, 53.75, 56.5, 59.25, 62],
+      "n": 12,
+      "range": [51, 62],
+      "points": [
+        {
+          "value": 57,
+          "id": "S01",
+          "index": 1
+        },
+        {
+          "value": 51,
+          "id": "S02",
+          "index": 2
+        },
+        {
+          "value": 58,
+          "id": "S03",
+          "index": 3
+        },
+        {
+          "value": 52,
+          "id": "S04",
+          "index": 4
+        },
+        {
+          "value": 59,
+          "id": "S05",
+          "index": 5
+        },
+        {
+          "value": 53,
+          "id": "S06",
+          "index": 6
+        },
+        {
+          "value": 60,
+          "id": "S07",
+          "index": 7
+        },
+        {
+          "value": 54,
+          "id": "S08",
+          "index": 8
+        },
+        {
+          "value": 61,
+          "id": "S09",
+          "index": 9
+        },
+        {
+          "value": 55,
+          "id": "S10",
+          "index": 10
+        },
+        {
+          "value": 62,
+          "id": "S11",
+          "index": 11
+        },
+        {
+          "value": 56,
+          "id": "S12",
+          "index": 12
+        }
+      ],
+      "observations": [
+        {
+          "value": 57,
+          "id": "S01",
+          "index": 1
+        },
+        {
+          "value": 51,
+          "id": "S02",
+          "index": 2
+        },
+        {
+          "value": 58,
+          "id": "S03",
+          "index": 3
+        },
+        {
+          "value": 52,
+          "id": "S04",
+          "index": 4
+        },
+        {
+          "value": 59,
+          "id": "S05",
+          "index": 5
+        },
+        {
+          "value": 53,
+          "id": "S06",
+          "index": 6
+        },
+        {
+          "value": 60,
+          "id": "S07",
+          "index": 7
+        },
+        {
+          "value": 54,
+          "id": "S08",
+          "index": 8
+        },
+        {
+          "value": 61,
+          "id": "S09",
+          "index": 9
+        },
+        {
+          "value": 55,
+          "id": "S10",
+          "index": 10
+        },
+        {
+          "value": 62,
+          "id": "S11",
+          "index": 11
+        },
+        {
+          "value": 56,
+          "id": "S12",
+          "index": 12
+        }
+      ]
+    },
+    {
+      "variable": "After",
+      "level": null,
+      "stats": [47, 49.75, 52.5, 56.25, 60],
+      "n": 12,
+      "range": [47, 60],
+      "points": [
+        {
+          "value": 53,
+          "id": "S01",
+          "index": 1
+        },
+        {
+          "value": 48,
+          "id": "S02",
+          "index": 2
+        },
+        {
+          "value": 56,
+          "id": "S03",
+          "index": 3
+        },
+        {
+          "value": 47,
+          "id": "S04",
+          "index": 4
+        },
+        {
+          "value": 55,
+          "id": "S05",
+          "index": 5
+        },
+        {
+          "value": 50,
+          "id": "S06",
+          "index": 6
+        },
+        {
+          "value": 58,
+          "id": "S07",
+          "index": 7
+        },
+        {
+          "value": 49,
+          "id": "S08",
+          "index": 8
+        },
+        {
+          "value": 57,
+          "id": "S09",
+          "index": 9
+        },
+        {
+          "value": 52,
+          "id": "S10",
+          "index": 10
+        },
+        {
+          "value": 60,
+          "id": "S11",
+          "index": 11
+        },
+        {
+          "value": 51,
+          "id": "S12",
+          "index": 12
+        }
+      ],
+      "observations": [
+        {
+          "value": 53,
+          "id": "S01",
+          "index": 1
+        },
+        {
+          "value": 48,
+          "id": "S02",
+          "index": 2
+        },
+        {
+          "value": 56,
+          "id": "S03",
+          "index": 3
+        },
+        {
+          "value": 47,
+          "id": "S04",
+          "index": 4
+        },
+        {
+          "value": 55,
+          "id": "S05",
+          "index": 5
+        },
+        {
+          "value": 50,
+          "id": "S06",
+          "index": 6
+        },
+        {
+          "value": 58,
+          "id": "S07",
+          "index": 7
+        },
+        {
+          "value": 49,
+          "id": "S08",
+          "index": 8
+        },
+        {
+          "value": 57,
+          "id": "S09",
+          "index": 9
+        },
+        {
+          "value": 52,
+          "id": "S10",
+          "index": 10
+        },
+        {
+          "value": 60,
+          "id": "S11",
+          "index": 11
+        },
+        {
+          "value": 51,
+          "id": "S12",
+          "index": 12
+        }
+      ]
+    }
+  ],
+  "comparisons": [
+    {
+      "from": "Before",
+      "to": "After",
+      "label": "paired t-test p = 5.1e-07"
+    }
+  ]
+}

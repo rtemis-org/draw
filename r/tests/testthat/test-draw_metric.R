@@ -44,7 +44,7 @@ test_that("boxplot points preserve every selected row and stable identities with
     verbosity = 0L
   )
   expect_identical(.Random.seed, state)
-  points <- w[["x"]][["option"]][["series"]][[2]][["data"]]
+  points <- raw_option(w)[["series"]][[2]][["data"]]
   expect_length(points, 11)
   expect_equal(
     vapply(points[1:6], function(p) p[["value"]][[2]], 0),
@@ -54,7 +54,7 @@ test_that("boxplot points preserve every selected row and stable identities with
     vapply(points[7:11], function(p) p[["value"]][[3]], ""),
     letters[2:6]
   )
-  out <- draw_boxplot(c(0:4, 20), boxpoints = "outliers")[["x"]][["option"]][[
+  out <- raw_option(draw_boxplot(c(0:4, 20), boxpoints = "outliers"))[[
     "series"
   ]][[2]][["data"]]
   expect_length(out, 1)
@@ -63,10 +63,9 @@ test_that("boxplot points preserve every selected row and stable identities with
     out[[1]][["value"]][c(1, 2, 4)],
     points[[6]][["value"]][c(1, 2, 4)]
   )
-  expect_equal(boxplot_offsets(as.numeric(1:4)), c(0, -.25, .25, -.375))
   centered <- draw_boxplot(1:3, boxpoints = "all", point_spread = 0)
   expect_true(all(vapply(
-    centered[["x"]][["option"]][["series"]][[2]][["data"]],
+    raw_option(centered)[["series"]][[2]][["data"]],
     function(p) p[["value"]][[4]] == 0,
     logical(1)
   )))
@@ -90,7 +89,7 @@ test_that("grouped points share the box legend and retain horizontal mappings", 
     boxpoints = "all",
     horizontal = TRUE
   )
-  o <- w[["x"]][["option"]]
+  o <- raw_option(w)
   expect_length(o[["series"]], 4)
   expect_equal(vapply(o[["series"]], `[[`, "", "name"), c("x", "y", "x", "y"))
   expect_equal(lengths(lapply(o[["series"]][3:4], `[[`, "data")), c(4, 6))
@@ -105,23 +104,24 @@ test_that("metric records align folds and disclose missing values without zero f
   prepared <- metric_data(d)
   expect_equal(prepared[["data"]][["Test"]], c(.6, NA, -.5))
   expect_equal(metric_data(d[-5, ])[["data"]], prepared[["data"]])
-  w <- suppressMessages(draw_metric(d))[["x"]][["option"]]
+  w <- raw_option(suppressMessages(draw_metric(d)))
   expect_equal(w[["yAxis"]][["name"]], "Rsq")
   expect_lt(w[["yAxis"]][["min"]], -.5)
   expect_null(w[["title"]][["subtext"]])
   expect_length(w[["series"]][[2]][["data"]], 5)
-  h <- suppressMessages(draw_metric(d, horizontal = TRUE, boxpoints = "none"))[[
-    "x"
-  ]][["option"]]
+  h <- raw_option(suppressMessages(
+    draw_metric(d, horizontal = TRUE, boxpoints = "none")
+  ))
   expect_equal(h[["xAxis"]][["name"]], "Rsq")
   expect_length(h[["series"]], 1)
-  expect_null(suppressMessages(draw_metric(d, ylab = NULL))[["x"]][["option"]][[
+  expect_null(raw_option(suppressMessages(draw_metric(d, ylab = NULL)))[[
     "yAxis"
   ]][["name"]])
   d[["value"]][4:6] <- NA_real_
-  w <- suppressMessages(draw_metric(d))[["x"]][["option"]]
-  expect_equal(w[["xAxis"]][["data"]], c("Training", "Test"))
-  expect_true(all(is.na(w[["series"]][[1]][["data"]][[2]])))
+  w <- raw_option(suppressMessages(draw_metric(d)))
+  expect_equal(unlist(w[["xAxis"]][["data"]]), c("Training", "Test"))
+  # A box without values keeps its category and draws nothing.
+  expect_true(all(vapply(w[["series"]][[1]][["data"]][[2]], is.null, TRUE)))
   expect_error(draw_metric(transform(d, value = NA_real_)), "available")
   expect_error(draw_metric(rbind(d, d[1, ])), "exactly one")
   expect_error(draw_metric(transform(d, value = Inf)), "finite")
@@ -177,11 +177,11 @@ test_that("point layout matches native boxes after legend filtering and resize",
     on.exit(unlink(path), add = TRUE)
     jsonlite::write_json(
       list(
-        option = w[["x"]][["option"]],
-        phone_option = draw_boxplot(
+        option = raw_option(w),
+        phone_option = raw_option(draw_boxplot(
           list(Training = 1:4, Test = 2:5, Validation = 3:6),
           horizontal = horizontal
-        )[["x"]][["option"]],
+        )),
         horizontal = horizontal,
         echarts = system.file(
           "htmlwidgets/lib/echarts/echarts.min.js",

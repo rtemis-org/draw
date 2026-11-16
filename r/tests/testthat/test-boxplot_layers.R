@@ -58,15 +58,12 @@ test_that("violin settings validate and compile through portable config bindings
     density_points = 64L,
     bandwidth = .5
   )
-  expect_identical(to_list(compile(cfg, data)), to_list(expected))
+  expect_identical(compile(cfg, data), expected)
   for (complete in c(FALSE, TRUE)) {
     path <- tempfile(fileext = ".json")
     on.exit(unlink(path), add = TRUE)
     write_chart_config(cfg, path, complete = complete)
-    expect_identical(
-      to_list(compile(read_chart_config(path), data)),
-      to_list(expected)
-    )
+    expect_identical(compile(read_chart_config(path), data), expected)
   }
   schema <- chart_schema(
     BoxplotConfig,
@@ -111,7 +108,7 @@ test_that("paired lines match explicit IDs and preserve missing intermediate mea
     "unique"
   )
   # Shuffled long-format rows match by ID, not by position in each group.
-  opt <- to_list(boxplot_option(
+  opt <- raw_option(boxplot_option(
     c(1, 2, 12, 11),
     group = c("A", "A", "B", "B"),
     paired = TRUE,
@@ -125,7 +122,7 @@ test_that("paired lines match explicit IDs and preserve missing intermediate mea
     c("one", "two")
   )
   # Missing middle values cannot create a line from A directly to C.
-  opt <- to_list(boxplot_option(
+  opt <- raw_option(boxplot_option(
     list(A = c(1, 2), B = c(NA, 3), C = c(4, 5)),
     paired = TRUE,
     observation = c("one", "two"),
@@ -144,7 +141,7 @@ test_that("paired lines match explicit IDs and preserve missing intermediate mea
     logical(1)
   )))
   # Duplicate IDs across different groups are valid; groups stay separate.
-  opt <- to_list(boxplot_option(
+  opt <- raw_option(boxplot_option(
     list(A = c(1, 2), B = c(10, 20)),
     group = c("G1", "G2"),
     observation = c("same", "same"),
@@ -162,9 +159,9 @@ test_that("comparisons resolve names without running tests or inventing empty en
     label = "supplied label",
     position = 8
   )
-  opt <- to_list(boxplot_option(values, comparisons = comparisons))
+  opt <- raw_option(boxplot_option(values, comparisons = comparisons))
   record <- opt[["series"]][[2L]][["data"]][[1L]]
-  expect_identical(record, list(0L, 1L, 8, 0L, 0L, "supplied label"))
+  expect_identical(record, list(0L, 1L, 8L, 0L, 0L, "supplied label"))
   expect_gt(opt[["yAxis"]][["max"]], 8)
   for (bad in list(
     list(),
@@ -176,14 +173,21 @@ test_that("comparisons resolve names without running tests or inventing empty en
     transform(comparisons, position = "8"),
     transform(comparisons, from_group = "G")
   )) {
-    expect_error(boxplot_option(values, comparisons = bad))
+    expect_error(raw_option(boxplot_option(values, comparisons = bad)))
   }
   expect_error(
-    boxplot_option(list(A = 1:2, B = numeric()), comparisons = comparisons),
+    raw_option(boxplot_option(
+      list(A = 1:2, B = numeric()),
+      comparisons = comparisons
+    )),
     "available"
   )
   expect_error(
-    boxplot_option(values, labels = c("A", "A"), comparisons = comparisons),
+    raw_option(boxplot_option(
+      values,
+      labels = c("A", "A"),
+      comparisons = comparisons
+    )),
     "unique"
   )
   expect_error(
@@ -191,7 +195,7 @@ test_that("comparisons resolve names without running tests or inventing empty en
     "from_group"
   )
   grouped <- transform(comparisons, from_group = "G1", to_group = "G2")
-  opt <- to_list(boxplot_option(
+  opt <- raw_option(boxplot_option(
     values,
     group = c("G1", "G2"),
     comparisons = grouped
@@ -222,7 +226,7 @@ test_that("native SVG distribution layers retain geometry through orientation, l
           )
         )
         charts[[length(charts) + 1L]] <- list(
-          option = to_list(option),
+          option = raw_option(option),
           theme = to_list(theme),
           horizontal = horizontal,
           geometry = geometry
@@ -236,7 +240,7 @@ test_that("native SVG distribution layers retain geometry through orientation, l
       list(A = 1:4, B = numeric())
     )) {
       charts[[length(charts) + 1L]] <- list(
-        option = to_list(boxplot_option(
+        option = raw_option(boxplot_option(
           values,
           geometry = "violin",
           horizontal = horizontal

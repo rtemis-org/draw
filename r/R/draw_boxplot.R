@@ -60,7 +60,7 @@ method(boxplot_summary, class_any) <- function(
     as.numeric(stats::quantile(values, c(.25, .5, .75), type = 7))
   }
   # Whiskers end at observed values inside the fences. When a fence lies
-  # inside an interpolated quartile (e.g. a very small multiplier), include the
+  # inside an interpolated quartile (e.g. a multiplier near zero), include the
   # quartile itself so the five plotting statistics remain ordered.
   inside <- if (whisker == 0) {
     rep(TRUE, length(values))
@@ -77,26 +77,15 @@ method(boxplot_summary, class_any) <- function(
   )
 }
 
-#' Deterministic, bounded offsets without changing R's random state
-#' @param x Integer: Positive observation indices.
-#' @return Numeric: Base-two radical-inverse positions centered on zero.
-#' @keywords internal
-#' @noRd
-boxplot_offsets <- new_generic("boxplot_offsets", "x")
-method(boxplot_offsets, class_numeric) <- function(x) {
-  value <- numeric(length(x))
-  weight <- .5
-  while (any(x > 0)) {
-    value <- value + (x %% 2) * weight
-    x <- floor(x / 2)
-    weight <- weight / 2
-  }
-  value - .5
-}
-
-#' Build box summaries and observation overlays
+#' Summarize boxplot columns into an @rtemis/draw build request
+#'
+#' Computes what the boxplot builder draws, one cell per column, or per column
+#' and group level: the five plotting statistics, the count, the observed
+#' range, the drawn points, the violin profile, and, for `paired`, every value
+#' with its identifier. Orders the categories as `order` says.
+#' spec: draw/shared-builders#boxplot
 #' @inheritParams draw_boxplot
-#' @return EChartsOption: Native boxes and named vector point renderers.
+#' @return [BuildRequest] of type `"boxplot"`.
 #' @keywords internal
 #' @noRd
 boxplot_option <- new_generic("boxplot_option", "x")
@@ -130,35 +119,16 @@ method(boxplot_option, class_any) <- function(
   comparisons = NULL,
   order = "input",
   transform = "none",
-  zoom = FALSE
+  zoom = FALSE,
+  group_layout = "auto",
+  color_by_group = FALSE,
+  ylim = NULL,
+  legend_position = "top",
+  legend_placement = "outside",
+  legend_title = NULL
 ) {
-  # Validate the vector entry point through the same property declarations
-  # used by JSON configs; no second set of statistical or style defaults.
-  setup_BoxplotConfig(
-    horizontal = horizontal,
-    palette = palette,
-    fill_alpha = fill_alpha,
-    na_rm = na_rm,
-    order = order,
-    transform = transform,
-    geometry = geometry,
-    bandwidth = bandwidth,
-    adjust = adjust,
-    density_points = density_points,
-    paired = paired,
-    pair_alpha = pair_alpha,
-    pair_width = pair_width,
-    quartiles = quartiles,
-    whisker = whisker,
-    boxpoints = boxpoints,
-    point_size = point_size,
-    point_alpha = point_alpha,
-    point_spread = point_spread,
-    labels = labels,
-    xlab = xlab,
-    ylab = ylab,
-    title = title
-  )
+  check_zoom_flag(zoom)
+  margin <- pixel_margins(margins)
   check_integer_scalar(verbosity)
   if (verbosity < 0L) {
     abort(
@@ -199,207 +169,125 @@ method(boxplot_option, class_any) <- function(
       class = c("rtemis_null_input", "rtemis_input_error")
     )
   }
-  variable_names <- names(x)
-  if (
-    is.null(variable_names) ||
-      anyNA(variable_names) ||
-      any(!nzchar(variable_names))
-  ) {
-    variable_names <- paste("Variable", seq_along(x))
+  variables <- names(x)
+  if (is.null(variables) || anyNA(variables) || any(!nzchar(variables))) {
+    variables <- paste("Variable", seq_along(x))
   }
-  grouped <- !is.null(group)
-  multi <- grouped && length(x) > 1L
-  levels <- if (grouped) group_levels(group) else NULL
-  categories <- if (grouped && !multi) levels else labels %||% variable_names
-  if (
-    length(categories) != if (grouped && !multi) length(levels) else length(x)
-  ) {
+  names(x) <- variables
+  if (!is.null(labels) && length(labels) != length(x)) {
     abort(
       "Supply one label per boxplot column.",
       class = c("rtemis_length_error", "rtemis_input_error")
     )
   }
-  if (
-    anyNA(categories) || anyDuplicated(categories) || any(!nzchar(categories))
-  ) {
-    abort(
-      "Supply unique nonmissing category labels for a boxplot.",
-      class = c("rtemis_value_error", "rtemis_input_error")
-    )
-  }
-  if (!length(categories)) {
+  names(variables) <- labels %||% variables
+  grouped <- !is.null(group)
+  levels <- if (grouped) group_levels(group) else NULL
+  if (grouped && !length(levels)) {
     abort(
       "Supply at least one nonmissing boxplot group.",
       class = c("rtemis_null_input", "rtemis_input_error")
     )
   }
-  colors <- unname(palette_colors(
-    palette %||% if (grouped) rtemis_colors else rtemis_colors[[1L]]
-  ))
-  colors <- rep_len(colors, if (grouped) length(levels) else length(x))
-  if (order != "input") {
-    samples <- if (grouped && !multi) {
-      setNames(
-        lapply(levels, function(level) x[[1]][!is.na(group) & group == level]),
-        levels
-      )
+  layout <- if (!grouped) {
+    "none"
+  } else if (group_layout == "auto") {
+    if (length(x) == 1L) "x-axis" else "legend"
+  } else {
+    group_layout
+  }
+  rows_of <- function(variable, level) {
+    if (is.null(level)) {
+      seq_along(x[[variable]])
     } else {
-      setNames(x, categories)
-    }
-    ordered <- names(distribution_order(
-      lapply(samples, function(v) v[!is.na(v)]),
-      order
-    ))
-    index <- match(ordered, categories)
-    categories <- categories[index]
-    if (grouped && !multi) {
-      levels <- levels[index]
-      colors <- colors[index]
-    } else {
-      x <- x[index]
-      if (!multi) colors <- colors[index]
+      which(!is.na(group) & as.character(group) == level)
     }
   }
-  nseries <- if (multi) length(levels) else 1L
-  boxes <- vector("list", nseries)
-  overlays <- vector("list", nseries)
-  layered <- geometry != "box" || paired || !is.null(comparisons)
-  cells <- if (layered) vector("list", nseries) else NULL
-  missing <- 0L
-  available <- 0L
-  visible_limits <- c(Inf, -Inf)
-  for (s in seq_len(nseries)) {
-    box_data <- vector("list", length(categories))
-    point_data <- list()
-    if (layered) {
-      cells[[s]] <- vector("list", length(categories))
+  # `order` sorts the categories by their values pooled across series.
+  if (order != "input") {
+    if (layout == "x-axis") {
+      samples <- lapply(levels, function(level) {
+        unlist(lapply(variables, function(v) x[[v]][rows_of(v, level)]))
+      })
+      names(samples) <- levels
+      levels <- names(distribution_order(
+        lapply(samples, function(v) v[!is.na(v)]),
+        order
+      ))
+    } else {
+      samples <- lapply(variables, function(v) x[[v]])
+      names(samples) <- variables
+      kept <- names(distribution_order(
+        lapply(samples, function(v) v[!is.na(v)]),
+        order
+      ))
+      variables <- variables[match(kept, variables)]
     }
-    for (j in seq_along(categories)) {
-      column <- if (grouped && !multi) 1L else j
-      g <- if (multi) s else j
-      rows <- if (grouped) {
-        which(!is.na(group) & as.character(group) == levels[[g]])
-      } else {
-        seq_along(x[[column]])
-      }
-      values <- x[[column]][rows]
+  }
+  missing <- 0L
+  cells <- list()
+  for (variable in variables) {
+    for (level in if (grouped) levels else list(NULL)) {
+      rows <- rows_of(variable, level)
+      values <- x[[variable]][rows]
       summary <- boxplot_summary(values, quartiles, whisker, na_rm)
       missing <- missing + summary[["missing"]]
-      available <- available + length(summary[["at"]])
-      color <- colors[[if (grouped) g else j]]
-      style <- list(
-        color = color_with_alpha(color, fill_alpha),
-        borderColor = color
-      )
-      if (geometry == "violin") {
-        style[["opacity"]] <- 0
+      at <- summary[["at"]]
+      ids <- if (is.null(observation)) {
+        as.character(rows)
+      } else {
+        as.character(observation[rows])
       }
-      box_data[[j]] <- if (
-        grouped && !multi || !grouped && length(unique(colors)) > 1L
-      ) {
-        list(
-          name = categories[[j]],
-          value = summary[["stats"]],
-          itemStyle = style
+      if (paired && anyDuplicated(ids[at])) {
+        abort(
+          "Use unique observation identifiers within each boxplot category and group.",
+          class = c("rtemis_value_error", "rtemis_input_error")
         )
-      } else {
-        summary[["stats"]]
       }
-      take <- if (boxpoints == "all") {
-        seq_along(summary[["at"]])
-      } else if (boxpoints == "outliers") {
-        which(summary[["outlier"]])
-      } else {
+      take <- switch(
+        boxpoints,
+        all = seq_along(at),
+        outliers = which(summary[["outlier"]]),
         integer()
+      )
+      observations <- function(k) {
+        lapply(k, function(i) {
+          list(
+            value = jsonlite::unbox(values[[at[[i]]]]),
+            id = jsonlite::unbox(ids[[at[[i]]]]),
+            index = jsonlite::unbox(rows[[at[[i]]]])
+          )
+        })
       }
-      at <- summary[["at"]][take]
-      # Materialize IDs only for pairing: large box-only samples need neither
-      # character identifiers nor a second observation-level layer record.
-      if (layered) {
-        ids <- if (paired) as.character(observation[rows]) else NULL
-        if (paired && anyDuplicated(ids)) {
-          abort(
-            "Use unique observation identifiers within each boxplot category and group.",
-            class = c("rtemis_value_error", "rtemis_input_error")
+      cell <- list(
+        variable = jsonlite::unbox(variable),
+        level = if (!is.null(level)) jsonlite::unbox(level),
+        stats = if (length(at)) summary[["stats"]],
+        n = jsonlite::unbox(length(at)),
+        range = if (length(at)) range(values[at]),
+        points = observations(take)
+      )
+      if (paired) {
+        cell[["observations"]] <- observations(seq_along(at))
+      }
+      if (geometry != "box") {
+        profile <- boxplot_density(
+          values[at],
+          bandwidth,
+          adjust,
+          density_points
+        )
+        cell[["profile"]] <- if (length(profile)) {
+          list(
+            position = unlist(profile[["position"]]),
+            width = unlist(profile[["width"]])
           )
         }
-        cell_offsets <- if (paired) numeric(length(values)) else NULL
-        if (paired) {
-          cell_offsets[at] <- boxplot_offsets(as.numeric(rows[at])) *
-            point_spread
-        }
-        cells[[s]][[j]] <- list(
-          values = values,
-          ids = ids,
-          offsets = cell_offsets,
-          color = color
-        )
       }
-      visible <- c(
-        summary[["stats"]],
-        values[at],
-        if (geometry != "box" || paired) values
-      )
-      visible <- visible[is.finite(visible)]
-      if (length(visible)) {
-        visible_limits <- c(
-          min(visible_limits[[1]], visible),
-          max(visible_limits[[2]], visible)
-        )
-      }
-
-      # Offsets use original row indices, so missing values and changing point
-      # mode do not move the surviving observations. Never consume RNG state.
-      offsets <- boxplot_offsets(as.numeric(rows[at])) * point_spread
-      for (k in seq_along(at)) {
-        id <- if (is.null(observation)) {
-          as.character(rows[at[[k]]])
-        } else {
-          as.character(observation[rows[at[[k]]]])
-        }
-        point_data[[length(point_data) + 1L]] <- list(
-          value = list(j - 1L, values[[at[[k]]]], id, offsets[[k]]),
-          itemStyle = list(color = color, opacity = point_alpha)
-        )
-      }
-    }
-    color <- colors[[if (multi) s else 1L]]
-    boxes[[s]] <- BoxplotSeries(
-      name = if (multi) levels[[s]] else NULL,
-      data = box_data,
-      box_width = if (geometry == "both") c(7, 14) else NULL,
-      silent = if (geometry == "violin") TRUE else NULL,
-      item_style = ItemStyle(
-        color = color_with_alpha(color, fill_alpha),
-        border_color = color,
-        opacity = if (geometry == "violin") 0 else NULL
-      )
-    )
-    if (length(point_data)) {
-      overlays[[s]] <- list(
-        type = "custom",
-        name = if (multi) levels[[s]] else NULL,
-        renderItem = "rtemis.boxplot_points.v1",
-        clip = TRUE,
-        z = 3,
-        dimensions = list("Category", "Value", "Observation", "Offset"),
-        encode = if (horizontal) {
-          list(x = 1L, y = 0L, tooltip = list(1L, 2L))
-        } else {
-          list(x = 0L, y = 1L, tooltip = list(1L, 2L))
-        },
-        itemPayload = list(
-          horizontal = horizontal,
-          boxSeries = as.list(seq_len(nseries) - 1L),
-          boxIndex = s - 1L,
-          pointSize = point_size,
-          pointAlpha = point_alpha
-        ),
-        data = point_data
-      )
+      cells[[length(cells) + 1L]] <- cell
     }
   }
-  if (!available) {
+  if (!any(vapply(cells, function(cell) cell[["n"]] > 0L, logical(1)))) {
     abort(
       "Supply at least one available boxplot value; missing groups are not zeros.",
       class = c("rtemis_null_input", "rtemis_input_error")
@@ -415,110 +303,65 @@ method(boxplot_option, class_any) <- function(
       verbosity = verbosity
     )
   }
-  layers <- if (layered) {
-    boxplot_layers(
-      cells,
-      categories,
-      if (multi) levels else NULL,
-      horizontal,
-      geometry,
-      bandwidth,
-      adjust,
-      density_points,
-      paired,
-      pair_alpha,
-      pair_width,
-      fill_alpha,
-      comparisons,
-      visible_limits
-    )
-  } else {
-    list(series = list(), limits = visible_limits)
-  }
-  visible_limits <- layers[["limits"]]
-  value_name <- if (grouped && !multi && !is.null(names(x))) {
-    names(x)[[1L]]
-  } else {
-    NULL
-  }
-  categories <- if (length(categories) == 1L) {
-    as.list(categories)
-  } else {
-    categories
-  }
-  # Native automatic thinning can hide the identity of a whole box, even with
-  # only three short category names at phone widths. Keep those names visible.
-  x_axis <- if (horizontal) {
-    Axis(type = "value", scale = TRUE, name = xlab %||% value_name)
-  } else {
-    Axis(
-      type = "category",
-      data = categories,
-      name = xlab,
-      axis_label = AxisLabel(interval = 0)
-    )
-  }
-  y_axis <- if (horizontal) {
-    Axis(
-      type = "category",
-      data = categories,
-      name = ylab,
-      axis_label = AxisLabel(interval = 0)
-    )
-  } else {
-    Axis(type = "value", scale = TRUE, name = ylab %||% value_name)
-  }
-  # Center names as for bars and lines, keeping them outside the plot area.
-  if (!is.null(x_axis@name)) {
-    x_axis@name_location <- "middle"
-  }
-  if (!is.null(y_axis@name)) {
-    y_axis@name_location <- "middle"
-  }
-  # Give endpoint markers room without changing their data coordinates.
-  # Include only drawn values; hidden outliers do not shrink a box-only plot.
-  limits <- visible_limits
-  if (
-    boxpoints != "none" || geometry != "box" || paired || !is.null(comparisons)
-  ) {
-    limits <- calc_limits(visible_limits, pad = .05)
-    if (horizontal) {
-      x_axis@min <- limits[[1L]]
-      x_axis@max <- limits[[2L]]
-    } else {
-      y_axis@min <- limits[[1L]]
-      y_axis@max <- limits[[2L]]
-    }
-  }
-  # ECharts otherwise places the category-axis baseline at the range edge
-  # when zero is absent. Reuse the line/scatter rule: emphasize only zero.
-  if (horizontal) {
-    y_axis@axis_line <- axis_line_for_orthogonal(limits)
-  } else {
-    x_axis@axis_line <- axis_line_for_orthogonal(limits)
-  }
-  # The preset zooms the category axis.
-  zoomed <- zoom_layout(
-    zoom,
-    axis = if (horizontal) "y" else "x",
-    grid = resolve_margins(margins)
+  # One column split by group names the value axis after the column.
+  value_name <- if (grouped && length(x) == 1L) names(variables)[[1L]]
+  config <- setup_BoxplotConfig(
+    x = unname(variables),
+    labels = if (!is.null(labels)) names(variables),
+    horizontal = horizontal,
+    palette = palette,
+    fill_alpha = fill_alpha,
+    na_rm = na_rm,
+    order = order,
+    transform = transform,
+    geometry = geometry,
+    bandwidth = bandwidth,
+    adjust = adjust,
+    density_points = density_points,
+    paired = paired,
+    pair_alpha = pair_alpha,
+    pair_width = pair_width,
+    quartiles = quartiles,
+    whisker = whisker,
+    boxpoints = boxpoints,
+    point_size = point_size,
+    point_alpha = point_alpha,
+    point_spread = point_spread,
+    zoom = zoom,
+    group_layout = group_layout,
+    color_by_group = color_by_group,
+    ylim = ylim,
+    xlab = xlab %||% if (horizontal) value_name,
+    ylab = ylab %||% if (!horizontal) value_name,
+    title = title,
+    margin_top = margin[["top"]],
+    margin_right = margin[["right"]],
+    margin_bottom = margin[["bottom"]],
+    margin_left = margin[["left"]],
+    legend_position = legend_position,
+    legend_placement = legend_placement,
+    legend_title = legend_title
   )
-  EChartsOption(
-    title = if (!is.null(title)) Title(text = title) else NULL,
-    tooltip = Tooltip(trigger = "item"),
-    legend = if (multi) {
-      Legend(
-        data = as.list(levels),
-        item_style = if (geometry == "violin") ItemStyle(opacity = 1) else NULL
-      )
-    } else {
-      NULL
-    },
-    x_axis = x_axis,
-    y_axis = y_axis,
-    grid = zoomed[["grid"]],
-    data_zoom = zoomed[["data_zoom"]],
-    series = c(boxes, Filter(Negate(is.null), overlays), layers[["series"]])
+  data <- list(
+    variables = I(unname(variables)),
+    levels = if (grouped) I(levels),
+    cells = cells,
+    comparisons = boxplot_comparisons(
+      comparisons,
+      layout == "legend" || (layout == "x-axis" && length(x) > 1L)
+    )
+  )
+  BuildRequest(
+    type = "boxplot",
+    data = as.character(jsonlite::toJSON(
+      data,
+      auto_unbox = FALSE,
+      na = "null",
+      null = "null",
+      digits = NA
+    )),
+    config = config_members(config),
+    appearance = list()
   )
 }
 
@@ -605,11 +448,18 @@ method(boxplot_option, class_any) <- function(
 #'   column before grouping. Scale subtracts the mean and divides by the sample
 #'   standard deviation; minmax maps the available range to zero through one.
 #'   Constant columns become zero and missing values remain missing.
-#' @param zoom Logical, [DataZoom], or list of [DataZoom]: Enable zoom on the
-#'   category axis (the y-axis when `horizontal = TRUE`). `TRUE` adds a slider,
-#'   Shift+wheel zoom, and drag panning; double-click resets the view. `FALSE`
-#'   disables zoom. Pass [DataZoom] objects (or a list of them) for full
-#'   control.
+#' @param zoom Logical: Enable zoom on the category axis (the y-axis when
+#'   `horizontal = TRUE`). `TRUE` adds a slider, Shift+wheel zoom, and drag
+#'   panning; double-click resets the view.
+#' @param group_layout Character \{"auto", "x-axis", "legend"\}: Where group
+#'   levels go. `"x-axis"` makes them the categories, with one series per
+#'   column; `"legend"` makes the columns the categories, with one series per
+#'   level. `"auto"` uses `"x-axis"` for one column and `"legend"` for several.
+#' @param color_by_group Logical: Color each box of a one-series chart by its
+#'   category. A one-series chart otherwise takes one color, since the axis
+#'   already names each box.
+#' @param ylim Optional Numeric \[length 2\]: Value axis limits. `NULL` fits
+#'   the drawn marks.
 #' @inheritParams draw_line
 #' @return htmlwidget: ECharts boxes with optional vector point overlays.
 #' @export
@@ -656,9 +506,12 @@ draw_boxplot <- function(
   comparisons = NULL,
   order = "input",
   transform = "none",
-  zoom = FALSE
+  zoom = FALSE,
+  group_layout = "auto",
+  color_by_group = FALSE,
+  ylim = NULL
 ) {
-  opt <- boxplot_option(
+  request <- boxplot_option(
     x = x,
     labels = labels,
     group = group,
@@ -688,10 +541,16 @@ draw_boxplot <- function(
     point_alpha = point_alpha,
     point_spread = point_spread,
     comparisons = comparisons,
-    zoom = zoom
+    zoom = zoom,
+    group_layout = group_layout,
+    color_by_group = color_by_group,
+    ylim = ylim,
+    legend_position = legend_position,
+    legend_placement = legend_placement,
+    legend_title = legend_title
   )
   draw(
-    opt,
+    request,
     theme = theme,
     width = width,
     height = height,

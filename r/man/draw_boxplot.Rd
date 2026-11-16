@@ -42,7 +42,10 @@ draw_boxplot(
   comparisons = NULL,
   order = "input",
   transform = "none",
-  zoom = FALSE
+  zoom = FALSE,
+  group_layout = "auto",
+  color_by_group = FALSE,
+  ylim = NULL
 )
 }
 \arguments{
@@ -145,11 +148,21 @@ column before grouping. Scale subtracts the mean and divides by the sample
 standard deviation; minmax maps the available range to zero through one.
 Constant columns become zero and missing values remain missing.}
 
-\item{zoom}{Logical, \link{DataZoom}, or list of \link{DataZoom}: Enable zoom on the
-category axis (the y-axis when \code{horizontal = TRUE}). \code{TRUE} adds a slider,
-Shift+wheel zoom, and drag panning; double-click resets the view. \code{FALSE}
-disables zoom. Pass \link{DataZoom} objects (or a list of them) for full
-control.}
+\item{zoom}{Logical: Enable zoom on the category axis (the y-axis when
+\code{horizontal = TRUE}). \code{TRUE} adds a slider, Shift+wheel zoom, and drag
+panning; double-click resets the view.}
+
+\item{group_layout}{Character \{"auto", "x-axis", "legend"\}: Where group
+levels go. \code{"x-axis"} makes them the categories, with one series per
+column; \code{"legend"} makes the columns the categories, with one series per
+level. \code{"auto"} uses \code{"x-axis"} for one column and \code{"legend"} for several.}
+
+\item{color_by_group}{Logical: Color each box of a one-series chart by its
+category. A one-series chart otherwise takes one color, since the axis
+already names each box.}
+
+\item{ylim}{Optional Numeric [length 2]: Value axis limits. \code{NULL} fits
+the drawn marks.}
 }
 \value{
 htmlwidget: ECharts boxes with optional vector point overlays.

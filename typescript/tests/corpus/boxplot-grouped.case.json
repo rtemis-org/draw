@@ -1,0 +1,1 @@
+{ "type": "boxplot", "data": "iris-sepal-length.json", "config": { "boxpoints": "outliers", "ylab": "Sepal length (cm)" } }

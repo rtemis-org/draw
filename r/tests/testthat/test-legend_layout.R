@@ -83,11 +83,11 @@ test_that("high-level and config legend hints agree without adding legends", {
   for (field in c("legendPosition", "legendPlacement")) {
     expect_identical(direct[["x"]][[field]], configured[["x"]][[field]])
   }
-  expect_identical(direct[["x"]][["option"]], configured[["x"]][["option"]])
+  expect_identical(raw_option(direct), raw_option(configured))
   expect_null(draw_boxplot(iris[1], group = iris[["Species"]])[["x"]][[
     "option"
   ]][["legend"]])
-  expect_null(draw_line(1:3, 2:4)[["x"]][["option"]][["legend"]])
+  expect_null(raw_option(draw_line(1:3, 2:4))[["legend"]])
   expect_identical(
     draw_roc(data.frame(fpr = c(0, 1), tpr = c(0, 1)))[["x"]][[
       "legendPlacement"
@@ -153,17 +153,18 @@ test_that("native legends reserve space across families, anchors, and resizes", 
       title = "Correlation"
     )
   )
-  long <- charts[["boxplot"]]
-  for (i in seq_along(long[["x"]][["option"]][["series"]])) {
-    long[["x"]][["option"]][["series"]][[i]][["name"]] <- paste(
+  # The boxplot is built in Node; its payload carries the option to rename.
+  long <- built_payload(charts[["boxplot"]])
+  for (i in seq_along(long[["option"]][["series"]])) {
+    long[["option"]][["series"]][[i]][["name"]] <- paste(
       "A longer group label",
       i
     )
   }
-  long[["x"]][["option"]][["legend"]][["data"]] <- lapply(1:3, function(i) {
+  long[["option"]][["legend"]][["data"]] <- lapply(1:3, function(i) {
     paste("A longer group label", i)
   })
-  charts[["long"]] <- long
+  charts[["long"]] <- list(x = long)
   path <- tempfile(fileext = ".json")
   on.exit(unlink(path), add = TRUE)
   jsonlite::write_json(

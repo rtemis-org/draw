@@ -92,8 +92,8 @@ test_that("the penguins example gains neither a legend nor a heading", {
     group = data.frame(Group = groups),
     boxpoints = "all"
   )
-  expect_identical(to_list(a), to_list(b))
-  expect_identical(to_list(b)[["xAxis"]][["data"]], c("a", "b"))
+  expect_identical(a, b)
+  expect_identical(unlist(raw_option(b)[["xAxis"]][["data"]]), c("a", "b"))
 })
 
 test_that("data-frame grouping matches the portable column binding", {
@@ -213,8 +213,8 @@ test_that("portable column bindings keep factor-level order", {
 test_that("boxplots order groups by factor level", {
   values <- data.frame(score = c(1, 2, 3, 4, 5, 6))
   group <- factor(rep(c("b", "a", "c"), each = 2L))
-  single <- to_list(boxplot_option(values, group = group))
-  expect_identical(single[["xAxis"]][["data"]], c("a", "b", "c"))
+  single <- raw_option(boxplot_option(values, group = group))
+  expect_identical(unlist(single[["xAxis"]][["data"]]), c("a", "b", "c"))
   multi <- draw_boxplot(list(A = 1:6, B = 2:7), group = group)
   expect_identical(
     unique(setdiff(series_names(multi), "")),

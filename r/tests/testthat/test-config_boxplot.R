@@ -29,7 +29,7 @@ test_that("boxplot settings and bindings survive schema and config conversion", 
     write_chart_config(cfg, path, complete = complete)
     back <- read_chart_config(path)
     expect_equal(back@whisker, 0)
-    expect_identical(to_list(compile(back, data)), to_list(compile(cfg, data)))
+    expect_identical(compile(back, data), compile(cfg, data))
   }
   schema <- chart_schema(
     BoxplotConfig,
@@ -80,8 +80,8 @@ test_that("boxplot omission diagnostics do not affect labels or margins", {
           margins = margins
         )
         # The entire compiled option, including statistics and geometry, agrees.
-        expect_identical(to_list(missing), to_list(complete))
-        expect_null(to_list(missing)[["title"]][["subtext"]])
+        expect_identical(missing, complete)
+        expect_null(raw_option(missing)[["title"]][["subtext"]])
       }
     }
   }
@@ -93,7 +93,7 @@ test_that("boxplot baselines emphasize zero and never a nonzero range edge", {
     axis <- if (horizontal) "yAxis" else "xAxis"
     for (points in c("none", "all", "outliers")) {
       for (values in list(c(32, 39, 45, 49, 60), c(-60, -49, -45, -39, -32))) {
-        opt <- to_list(boxplot_option(
+        opt <- raw_option(boxplot_option(
           values,
           horizontal = horizontal,
           boxpoints = points
@@ -104,7 +104,7 @@ test_that("boxplot baselines emphasize zero and never a nonzero range edge", {
         )
       }
       for (values in list(c(-5, -2, 0, 2, 5), c(0, 1, 2, 3))) {
-        opt <- to_list(boxplot_option(
+        opt <- raw_option(boxplot_option(
           values,
           horizontal = horizontal,
           boxpoints = points
@@ -118,8 +118,8 @@ test_that("boxplot baselines emphasize zero and never a nonzero range edge", {
   }
   # A hidden extreme does not give the visible box a spurious zero baseline.
   values <- c(-100, 30:50)
-  hidden <- to_list(boxplot_option(values, boxpoints = "none"))
-  shown <- to_list(boxplot_option(values, boxpoints = "all"))
+  hidden <- raw_option(boxplot_option(values, boxpoints = "none"))
+  shown <- raw_option(boxplot_option(values, boxpoints = "all"))
   expect_false(hidden[["xAxis"]][["axisLine"]][["show"]])
   expect_true(shown[["xAxis"]][["axisLine"]][["show"]])
 })
@@ -135,7 +135,7 @@ test_that("native boxplot SVG emphasizes zero in both orientations and themes", 
         c(-5, 0, 5)
       )) {
         charts[[length(charts) + 1L]] <- list(
-          option = to_list(boxplot_option(
+          option = raw_option(boxplot_option(
             c(values, NA, NA),
             horizontal = horizontal,
             verbosity = 0
@@ -172,36 +172,36 @@ test_that("native boxplot SVG emphasizes zero in both orientations and themes", 
 })
 
 test_that("boxplot transforms precede grouping and sorting keeps identities", {
-  opt <- to_list(boxplot_option(
+  opt <- raw_option(boxplot_option(
     list(A = c(1, NA, 3), B = c(8, 9, 10)),
     order = "median"
   ))
-  expect_equal(opt[["xAxis"]][["data"]], c("B", "A"))
+  expect_equal(unlist(opt[["xAxis"]][["data"]]), c("B", "A"))
   expect_equal(boxplot_transform(c(2, NA, 4), "minmax"), c(0, NA, 1))
   expect_equal(
     boxplot_transform(c(2, NA, 4), "scale"),
     as.numeric(scale(c(2, NA, 4)))
   )
   expect_equal(boxplot_transform(c(2, NA, 2), "scale"), c(0, NA, 0))
-  opt <- to_list(boxplot_option(
+  opt <- raw_option(boxplot_option(
     c(1, 2, 3, 10),
     group = c("A", "A", "B", "B"),
     transform = "minmax",
     order = "mean"
   ))
-  expect_equal(opt[["xAxis"]][["data"]], c("B", "A"))
-  expect_equal(opt[["series"]][[1]][["data"]][[1]][["value"]][[3]], 11 / 18)
+  expect_equal(unlist(opt[["xAxis"]][["data"]]), c("B", "A"))
+  expect_equal(opt[["series"]][[1]][["data"]][[1]][[3]], 11 / 18)
   cfg <- setup_BoxplotConfig(
     x = c("Sepal.Length", "Petal.Length"),
     order = "mean",
     transform = "scale"
   )
   expect_equal(
-    to_list(compile(
+    compile(
       read_chart_config(write_chart_config(cfg, tempfile(fileext = ".json"))),
       iris
-    )),
-    to_list(compile(cfg, iris))
+    ),
+    compile(cfg, iris)
   )
   expect_error(setup_BoxplotConfig(transform = "log"))
 })

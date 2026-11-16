@@ -1,0 +1,1 @@
+{ "type": "boxplot", "data": "paired-scores.json", "config": { "paired": true, "boxpoints": "all", "xlab": "Score", "horizontal": true, "zoom": true } }

@@ -29,12 +29,15 @@ const option = builders.a3(a3Document, config)
 | `a3` | `buildA3Option(document, config, appearance)` | an A3 document (`@rtemis/a3` `A3Data`) | `https://schema.rtemis.org/chart/a3/v1/schema.json` |
 | `bar` | `buildBarOption(data, config, appearance)` | tabular data, `{columns, levels, types}` | `https://schema.rtemis.org/chart/bar/v1/schema.json` |
 | `line` | `buildLineOption(data, config, appearance)` | tabular data, `{columns, levels, types}` | `https://schema.rtemis.org/chart/line/v1/schema.json` |
+| `boxplot` | `buildBoxplotOption(data, config, appearance)` | box summaries, `{variables, levels, cells, comparisons}` | `https://schema.rtemis.org/chart/boxplot/v1/schema.json` |
 
 Tabular data holds the columns the config binds, each an array or typed array, optionally the level order of categorical columns, and optionally the type of a column whose values are not read as stored: `"time"` declares a date or date-time column, held as epoch milliseconds of its wall-clock reading in UTC or as ISO 8601 text, whose offset is ignored. A bar chart labels a time category by its date, or its date and time. `frequency` names a column holding the number of rows each row stands for, when the host has combined rows. A bar chart draws one bar per row; with `group`, one bar per distinct category and group, in level order. When `group` or `aggregate` is set, the data must hold one row per category and group: the host combines rows as `aggregate` says (rtemislive in DuckDB, rtemis.draw in R) before building. With `y` unset, each bar is the number of rows of its category and group: the sum of the `frequency` column, or one per row. `barValueLabel(config, name)` gives the value axis name a host derives when the author sets none: "Count" with `y` unset; for one `y` column its name, as "Mean X", "Median X", or "Sum of X" under an aggregate.
 
 `appearance` holds what every chart type shares and the config does not: the light or dark theme, the font family, the title inset, the legend gap, and animation. Every member of `config` and `appearance` is optional.
 
 A line chart draws one line per `y` column, or per `y` column and group, through the rows in data order: a numeric `x` gets a value axis, a time `x` a time axis in UTC, and any other `x` a category axis. Unset axis limits extend the data range by `pad` on each side, as rtemis.draw's `resolve()` derives them; a stacked chart's y range is that of the sums.
+
+A boxplot takes summaries the host computed: per value column, or per column and group level, the five plotting statistics (whisker ends, quartiles, and median), the count, the range, the points to draw, and, for violins, a density profile; rtemis.draw computes them in R and rtemislive in DuckDB. The builder draws points, violins, paired lines, and comparison brackets as custom series whose renderers `registerRenderers(echarts)` registers by name, once, before drawing.
 
 `lineAspect(option, config)` returns the ratio and pixel margins of the plotting box a host fits for a line chart with `square` or `equal_axes`; `aspectHints` maps each chart type that has such a box to its function.
 

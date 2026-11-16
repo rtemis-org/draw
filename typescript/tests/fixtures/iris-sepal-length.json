@@ -1,0 +1,37 @@
+{
+  "variables": ["Sepal.Length"],
+  "levels": ["setosa", "versicolor", "virginica"],
+  "cells": [
+    {
+      "variable": "Sepal.Length",
+      "level": "setosa",
+      "stats": [4.3, 4.8, 5, 5.2, 5.8],
+      "n": 50,
+      "range": [4.3, 5.8],
+      "points": []
+    },
+    {
+      "variable": "Sepal.Length",
+      "level": "versicolor",
+      "stats": [4.9, 5.6, 5.9, 6.3, 7],
+      "n": 50,
+      "range": [4.9, 7],
+      "points": []
+    },
+    {
+      "variable": "Sepal.Length",
+      "level": "virginica",
+      "stats": [5.6, 6.225, 6.5, 6.9, 7.9],
+      "n": 50,
+      "range": [4.9, 7.9],
+      "points": [
+        {
+          "value": 4.9,
+          "id": "107",
+          "index": 107
+        }
+      ]
+    }
+  ],
+  "comparisons": null
+}

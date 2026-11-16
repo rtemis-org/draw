@@ -23,10 +23,12 @@ var RtemisDraw = (() => {
   __export(index_exports, {
     A3_CHART_CONFIG_MEMBERS: () => A3_CHART_CONFIG_MEMBERS,
     BAR_CHART_CONFIG_MEMBERS: () => BAR_CHART_CONFIG_MEMBERS,
+    BOXPLOT_CHART_CONFIG_MEMBERS: () => BOXPLOT_CHART_CONFIG_MEMBERS,
     DEFAULT_FONT_FAMILY: () => DEFAULT_FONT_FAMILY,
     DEFAULT_MARGIN: () => DEFAULT_MARGIN,
     DEFAULT_PAD: () => DEFAULT_PAD,
     LINE_CHART_CONFIG_MEMBERS: () => LINE_CHART_CONFIG_MEMBERS,
+    RENDERER_NAMES: () => RENDERER_NAMES,
     RTEMIS_PALETTE: () => RTEMIS_PALETTE,
     SIGNIFICANT_DIGITS: () => SIGNIFICANT_DIGITS,
     SIGN_COLORS: () => SIGN_COLORS,
@@ -35,6 +37,7 @@ var RtemisDraw = (() => {
     aspectHints: () => aspectHints,
     buildA3Option: () => buildA3Option,
     buildBarOption: () => buildBarOption,
+    buildBoxplotOption: () => buildBoxplotOption,
     buildLineOption: () => buildLineOption,
     builders: () => builders,
     calcLimits: () => calcLimits,
@@ -44,6 +47,8 @@ var RtemisDraw = (() => {
     formatNumber: () => formatNumber,
     lightThemeTokens: () => lightThemeTokens,
     lineAspect: () => lineAspect,
+    radicalInverse: () => radicalInverse,
+    registerRenderers: () => registerRenderers,
     themeFontSizes: () => themeFontSizes,
     themeOption: () => themeOption,
     timeLabel: () => timeLabel,
@@ -1241,6 +1246,687 @@ var RtemisDraw = (() => {
     return common ? { xlim: common, ylim: common } : { xlim, ylim };
   }
 
+  // src/theme/tokens.ts
+  var RTEMIS_PALETTE = Object.freeze([
+    "#6CA3A0",
+    "#F08904",
+    "#BE2E5F",
+    "#B3CFE8",
+    "#0F6A66",
+    "#FDB808",
+    "#EA384A",
+    "#466D96",
+    "#526551",
+    "#F384FF",
+    "#7D0830",
+    "#375D86",
+    "#B1A7B3",
+    "#7364F2",
+    "#895140",
+    "#C5A267"
+  ]);
+  var SIGN_COLORS = Object.freeze({
+    negative: "#2D83D3",
+    neutral: "#808080",
+    positive: "#C55E28"
+  });
+  function lightThemeTokens(overrides = {}) {
+    return Object.freeze({
+      scheme: "light",
+      base_font_size: 12,
+      palette: RTEMIS_PALETTE,
+      bg_color: "#ffffff",
+      fg_color: "rgba(0, 0, 0, 0.7)",
+      negative_color: SIGN_COLORS.negative,
+      neutral_color: SIGN_COLORS.neutral,
+      positive_color: SIGN_COLORS.positive,
+      ...overrides
+    });
+  }
+  function darkThemeTokens(overrides = {}) {
+    return Object.freeze({
+      scheme: "dark",
+      base_font_size: 12,
+      palette: RTEMIS_PALETTE,
+      bg_color: "#181818",
+      fg_color: "rgba(255, 255, 255, 0.7)",
+      title_color: "rgba(255, 255, 255, 0.9)",
+      subtitle_color: "rgba(255, 255, 255, 0.5)",
+      axis_color: "rgba(255, 255, 255, 0.3)",
+      grid_color: "rgba(255, 255, 255, 0.1)",
+      tooltip_bg: "rgba(20, 20, 20, 0.9)",
+      tooltip_border_color: "rgba(255, 255, 255, 0.1)",
+      negative_color: SIGN_COLORS.negative,
+      neutral_color: SIGN_COLORS.neutral,
+      positive_color: SIGN_COLORS.positive,
+      ...overrides
+    });
+  }
+  var DEFAULT_FONT_FAMILY = "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif";
+  var GENERIC_FONT_FAMILIES = /* @__PURE__ */ new Set([
+    "serif",
+    "sans-serif",
+    "monospace",
+    "cursive",
+    "fantasy",
+    "math",
+    "emoji",
+    "fangsong",
+    "system-ui",
+    "ui-serif",
+    "ui-sans-serif",
+    "ui-monospace",
+    "ui-rounded",
+    "-apple-system",
+    "blinkmacsystemfont"
+  ]);
+  function fontStack(fontFamily) {
+    if (fontFamily === void 0 || fontFamily === null) return DEFAULT_FONT_FAMILY;
+    const entries = fontFamily.split(",").map((e) => e.trim()).filter((e) => e.length > 0);
+    if (entries.length === 0) throw new Error("`font_family` must be a nonempty font family.");
+    const ident = /^-?[A-Za-z_][A-Za-z0-9_-]*( +-?[A-Za-z_][A-Za-z0-9_-]*)*$/;
+    const quoted = /^(['"]).*\1$/;
+    const out = entries.map((e) => {
+      const generic = GENERIC_FONT_FAMILIES.has(e.toLowerCase());
+      return quoted.test(e) || generic || ident.test(e) ? e : `'${e.replaceAll("'", "\\'")}'`;
+    });
+    const last = entries[entries.length - 1] ?? "";
+    if (!GENERIC_FONT_FAMILIES.has(last.toLowerCase())) out.push(DEFAULT_FONT_FAMILY);
+    return out.join(", ");
+  }
+  function roundHalfEven(x) {
+    const floor = Math.floor(x);
+    const diff = x - floor;
+    if (Math.abs(diff - 0.5) > 1e-9) return Math.round(x);
+    return floor % 2 === 0 ? floor : floor + 1;
+  }
+  function themeFontSizes(tokens) {
+    const base = tokens.base_font_size;
+    return {
+      base,
+      title: tokens.title_font_size ?? roundHalfEven(base * 1.2),
+      subtitle: tokens.subtitle_font_size ?? base,
+      axisLabel: tokens.axis_label_font_size ?? base,
+      legend: tokens.legend_font_size ?? base,
+      tooltip: tokens.tooltip_font_size ?? base
+    };
+  }
+  function present(entries) {
+    return Object.fromEntries(
+      Object.entries(entries).filter(([, v]) => v !== void 0 && v !== null)
+    );
+  }
+  function themeOption(tokens) {
+    const sizes = themeFontSizes(tokens);
+    const dark = tokens.scheme === "dark";
+    const fg = tokens.fg_color;
+    const textStyle = { color: fg, fontFamily: fontStack(tokens.font_family), fontSize: sizes.base };
+    const withText = (style) => ({ ...textStyle, ...style });
+    const axisLabel = { fontSize: sizes.axisLabel, color: fg };
+    const axisLine = tokens.axis_color ? { lineStyle: { color: tokens.axis_color } } : void 0;
+    const axisTick = { show: false };
+    const valueAxis = present({
+      axisLabel,
+      axisLine,
+      axisTick,
+      splitLine: tokens.grid_color ? { lineStyle: { color: tokens.grid_color } } : void 0
+    });
+    return {
+      color: [...tokens.palette],
+      backgroundColor: tokens.bg_color,
+      textStyle,
+      title: {
+        textStyle: withText(present({ color: tokens.title_color, fontSize: sizes.title })),
+        subtextStyle: withText(present({ color: tokens.subtitle_color, fontSize: sizes.subtitle }))
+      },
+      legend: {
+        textStyle: withText({ color: tokens.legend_color ?? fg, fontSize: sizes.legend })
+      },
+      tooltip: present({
+        backgroundColor: tokens.tooltip_bg,
+        borderColor: tokens.tooltip_border_color,
+        textStyle: withText({ color: tokens.tooltip_color ?? fg, fontSize: sizes.tooltip })
+      }),
+      visualMap: { textStyle },
+      // Neutral controls leave the palette to encode data; every accent-bearing
+      // slider state is set so ECharts' blue defaults cannot show.
+      // spec: draw/visual-qa-docs#neutral-data-zoom-sliders
+      dataZoom: {
+        backgroundColor: "rgba(128,128,128,0.06)",
+        borderColor: dark ? "#606060" : "#b0b0b0",
+        fillerColor: "rgba(128,128,128,0.18)",
+        dataBackground: {
+          lineStyle: { color: "#808080" },
+          areaStyle: { color: "#808080", opacity: 0.12 }
+        },
+        selectedDataBackground: {
+          lineStyle: { color: dark ? "#b0b0b0" : "#707070" },
+          areaStyle: { color: "#808080", opacity: 0.25 }
+        },
+        handleStyle: {
+          color: dark ? "#303030" : "#ffffff",
+          borderColor: dark ? "#909090" : "#808080"
+        },
+        moveHandleStyle: { color: "#909090", opacity: 0.6 },
+        brushStyle: { color: "#808080", opacity: 0.3 },
+        textStyle: axisLabel,
+        emphasis: {
+          handleStyle: { borderColor: dark ? "#cccccc" : "#505050" },
+          moveHandleStyle: { color: dark ? "#b0b0b0" : "#707070" }
+        }
+      },
+      line: { symbol: "circle" },
+      categoryAxis: present({ axisLabel, axisLine, axisTick, splitLine: { show: false } }),
+      valueAxis,
+      logAxis: valueAxis,
+      timeAxis: valueAxis
+    };
+  }
+
+  // src/charts/boxplot/renderers.ts
+  var BOXPLOT_POINTS = "rtemis.boxplot_points.v1";
+  var BOXPLOT_VIOLIN = "rtemis.violin.v1";
+  var BOXPLOT_PAIRS = "rtemis.boxplot_pairs.v1";
+  var BOXPLOT_BRACKETS = "rtemis.boxplot_brackets.v1";
+  function boxPoint(settings, api, boxIndex, category, value, jitter) {
+    const active = api.currentSeriesIndices();
+    const boxes = settings.boxSeries.filter((i) => active.includes(i));
+    const index = boxes.indexOf(boxIndex);
+    if (index < 0) return null;
+    const horizontal = settings.horizontal;
+    const dim = horizontal ? 1 : 0;
+    const point = api.coord(horizontal ? [value, category] : [category, value]);
+    const band = Math.abs(api.size(horizontal ? [0, 1] : [1, 0])[dim]);
+    const available = band * 0.8 - 2;
+    const gap = available / boxes.length * 0.3;
+    const width = (available - gap * (boxes.length - 1)) / boxes.length;
+    const offset = width / 2 - available / 2 + index * (gap + width);
+    const visibleWidth = Math.min(Math.max(width, 7), 50);
+    point[dim] = point[dim] + offset + jitter * visibleWidth;
+    return { point, width: visibleWidth };
+  }
+  var renderers = {
+    // Data: [category, value, observation, offset].
+    [BOXPLOT_POINTS]: (params, api) => {
+      const settings = params.itemPayload;
+      const layout = boxPoint(
+        settings,
+        api,
+        settings.boxIndex,
+        api.value(0),
+        api.value(1),
+        api.value(3)
+      );
+      if (!layout) return;
+      return {
+        type: "circle",
+        shape: { cx: layout.point[0], cy: layout.point[1], r: settings.pointSize / 2 },
+        style: { fill: api.visual("color"), opacity: settings.pointAlpha }
+      };
+    },
+    // Profiles are density positions and relative widths; a one-position
+    // profile is a constant sample, drawn as a crossbar.
+    [BOXPLOT_VIOLIN]: (params, api) => {
+      const settings = params.itemPayload;
+      const profile = settings.profiles[params.dataIndex];
+      if (!profile?.position || !profile.width) return;
+      const dim = settings.horizontal ? 1 : 0;
+      const left = [];
+      const right = [];
+      for (let i = 0; i < profile.position.length; i++) {
+        const layout = boxPoint(
+          settings,
+          api,
+          settings.boxIndex,
+          api.value(0),
+          profile.position[i],
+          0
+        );
+        if (!layout) return;
+        const half = profile.width[i] * layout.width / 2;
+        const a = layout.point.slice();
+        const b = layout.point.slice();
+        a[dim] = a[dim] - half;
+        b[dim] = b[dim] + half;
+        left.push(a);
+        right.push(b);
+      }
+      return {
+        type: left.length === 1 ? "polyline" : "polygon",
+        shape: { points: left.concat(right.reverse()) },
+        style: {
+          fill: left.length === 1 ? null : api.visual("color"),
+          fillOpacity: settings.fillAlpha,
+          stroke: api.visual("color"),
+          lineWidth: 1
+        }
+      };
+    },
+    // Data: [from category, value, offset, to category, value, offset, observation].
+    [BOXPLOT_PAIRS]: (params, api) => {
+      const settings = params.itemPayload;
+      const from = boxPoint(
+        settings,
+        api,
+        settings.boxIndex,
+        api.value(0),
+        api.value(1),
+        api.value(2)
+      );
+      const to = boxPoint(settings, api, settings.boxIndex, api.value(3), api.value(4), api.value(5));
+      if (!from || !to) return;
+      return {
+        type: "polyline",
+        shape: { points: [from.point, to.point] },
+        style: {
+          fill: null,
+          stroke: api.visual("color"),
+          opacity: settings.alpha,
+          lineWidth: settings.width
+        }
+      };
+    },
+    // Data: [from category, to category, value position, from series, to series, label].
+    [BOXPLOT_BRACKETS]: (params, api) => {
+      const settings = params.itemPayload;
+      const from = boxPoint(settings, api, api.value(3), api.value(0), api.value(2), 0);
+      const to = boxPoint(settings, api, api.value(4), api.value(1), api.value(2), 0);
+      if (!from || !to) return;
+      const a = from.point;
+      const b = to.point;
+      const dim = settings.horizontal ? 0 : 1;
+      const tick = settings.horizontal ? -6 : 6;
+      const endA = a.slice();
+      const endB = b.slice();
+      endA[dim] = endA[dim] + tick;
+      endB[dim] = endB[dim] + tick;
+      const center = [
+        (a[0] + b[0]) / 2,
+        (a[1] + b[1]) / 2
+      ];
+      center[dim] = center[dim] + (settings.horizontal ? 5 : -5);
+      return {
+        type: "group",
+        children: [
+          {
+            type: "polyline",
+            shape: { points: [endA, a, b, endB] },
+            style: { fill: null, stroke: "#888888", lineWidth: 1 }
+          },
+          {
+            type: "text",
+            rotation: settings.horizontal ? -Math.PI / 2 : 0,
+            originX: center[0],
+            originY: center[1],
+            style: {
+              x: center[0],
+              y: center[1],
+              text: String(api.value(5)),
+              fill: "#888888",
+              font: api.font({ fontSize: 12 }),
+              align: "center",
+              verticalAlign: "bottom"
+            }
+          }
+        ]
+      };
+    }
+  };
+  var RENDERER_NAMES = Object.freeze(Object.keys(renderers));
+  function registerRenderers(echarts) {
+    for (const [name, render] of Object.entries(renderers)) {
+      echarts.registerCustomSeries(name, render);
+    }
+  }
+
+  // src/charts/boxplot/config.ts
+  var BOXPLOT_CHART_CONFIG_MEMBERS = Object.freeze([
+    "type",
+    "x",
+    "group",
+    "observation",
+    "order",
+    "transform",
+    "geometry",
+    "bandwidth",
+    "adjust",
+    "density_points",
+    "paired",
+    "pair_alpha",
+    "pair_width",
+    "comparisons",
+    "quartiles",
+    "whisker",
+    "boxpoints",
+    "point_size",
+    "point_alpha",
+    "point_spread",
+    "horizontal",
+    "zoom",
+    "na_rm",
+    "labels",
+    "palette",
+    "fill_alpha",
+    "group_layout",
+    "color_by_group",
+    "ylim",
+    "xlab",
+    "ylab",
+    "title",
+    "margin_top",
+    "margin_right",
+    "margin_bottom",
+    "margin_left",
+    "legend_position",
+    "legend_placement",
+    "legend_title"
+  ]);
+  function buildBoxplotOption(data, config, appearance = {}) {
+    const variables = data.variables;
+    if (variables.length === 0) {
+      throw new Error("A boxplot needs `x` set to one or more columns to draw.");
+    }
+    const labels = asArray(config.labels);
+    if (labels.length > 0 && labels.length !== variables.length) {
+      throw new Error(
+        `\`labels\` must have one label per \`x\` column (${variables.length}); it has ${labels.length}.`
+      );
+    }
+    const name = (variable) => labels[variables.indexOf(variable)] ?? variable;
+    const levels = data.levels && data.levels.length > 0 ? data.levels : null;
+    const layout = !levels ? "none" : (config.group_layout ?? "auto") === "auto" ? variables.length === 1 ? "x-axis" : "legend" : config.group_layout;
+    const cell = (variable, level) => data.cells.find((c) => c.variable === variable && (c.level ?? null) === level) ?? null;
+    let categories;
+    let series;
+    if (!levels) {
+      categories = variables.map(name);
+      series = [{ name: null, cells: variables.map((v) => cell(v, null)) }];
+    } else if (layout === "x-axis") {
+      categories = [...levels];
+      series = variables.map((v) => ({
+        name: variables.length > 1 ? name(v) : null,
+        cells: levels.map((l) => cell(v, l))
+      }));
+    } else {
+      categories = variables.map(name);
+      series = levels.map((l) => ({ name: l, cells: variables.map((v) => cell(v, l)) }));
+    }
+    if (new Set(categories).size !== categories.length) {
+      throw new Error("Use unique category labels for a boxplot.");
+    }
+    if (!data.cells.some((c) => c.n > 0)) {
+      throw new Error("Supply at least one available boxplot value; missing groups are not zeros.");
+    }
+    const memberPalette = asArray(config.palette);
+    const palette = memberPalette.length > 0 ? memberPalette : appearance.palette ?? RTEMIS_PALETTE;
+    const single = series.length === 1;
+    const perBox = single && (config.color_by_group === true || memberPalette.length > 1);
+    const colorOf = (s, j) => perBox ? palette[j % palette.length] : palette[s % palette.length];
+    const fillAlpha = config.fill_alpha ?? 0.25;
+    const geometry = config.geometry ?? "box";
+    const boxpoints = config.boxpoints ?? "none";
+    const horizontal = config.horizontal ?? false;
+    const spread = config.point_spread ?? 0.5;
+    const boxSeries = series.map((_, s) => s);
+    const visible = [];
+    const boxes = series.map((s, si) => {
+      const values = s.cells.map((c, j) => {
+        const stats = c?.stats ?? [null, null, null, null, null];
+        for (const v of c?.stats ?? []) visible.push(v);
+        if (!perBox) return stats;
+        const color2 = colorOf(si, j);
+        return {
+          name: categories[j],
+          value: stats,
+          itemStyle: {
+            color: withAlpha2(color2, fillAlpha),
+            borderColor: color2,
+            ...geometry === "violin" ? { opacity: 0 } : {}
+          }
+        };
+      });
+      const color = colorOf(si, 0);
+      return {
+        type: "boxplot",
+        ...s.name === null ? {} : { name: s.name },
+        data: values,
+        ...geometry === "both" ? { boxWidth: [7, 14] } : {},
+        ...geometry === "violin" ? { silent: true } : {},
+        itemStyle: {
+          color: withAlpha2(color, fillAlpha),
+          borderColor: color,
+          ...geometry === "violin" ? { opacity: 0 } : {}
+        }
+      };
+    });
+    const encodeOne = horizontal ? { x: 1, y: 0 } : { x: 0, y: 1 };
+    const overlays = [];
+    const offsetOf = (index) => radicalInverse(index) * spread;
+    series.forEach((s, si) => {
+      if (boxpoints === "none") return;
+      const points = s.cells.flatMap(
+        (c, j) => (c?.points ?? []).map((p) => {
+          visible.push(p.value);
+          return {
+            value: [j, p.value, p.id, offsetOf(p.index)],
+            itemStyle: { color: colorOf(si, j), opacity: config.point_alpha ?? 0.6 }
+          };
+        })
+      );
+      if (points.length === 0) return;
+      overlays.push({
+        type: "custom",
+        ...s.name === null ? {} : { name: s.name },
+        renderItem: BOXPLOT_POINTS,
+        clip: true,
+        z: 3,
+        dimensions: ["Category", "Value", "Observation", "Offset"],
+        encode: { ...encodeOne, tooltip: [1, 2] },
+        itemPayload: {
+          horizontal,
+          boxSeries,
+          boxIndex: si,
+          pointSize: config.point_size ?? 5,
+          pointAlpha: config.point_alpha ?? 0.6
+        },
+        data: points
+      });
+    });
+    const layers = [];
+    const rangeOf = (c) => c?.range ?? null;
+    series.forEach((s, si) => {
+      const payload = { horizontal, boxSeries, boxIndex: si };
+      if (geometry !== "box") {
+        layers.push({
+          type: "custom",
+          ...s.name === null ? {} : { name: s.name },
+          renderItem: BOXPLOT_VIOLIN,
+          clip: true,
+          z: 1,
+          dimensions: ["Category", "Minimum", "Maximum"],
+          encode: horizontal ? { x: [1, 2], y: 0 } : { x: 0, y: [1, 2] },
+          itemPayload: {
+            ...payload,
+            profiles: s.cells.map((c) => c?.profile ?? {}),
+            fillAlpha
+          },
+          data: s.cells.map((c, j) => {
+            const range2 = rangeOf(c);
+            return {
+              value: [j, range2?.[0] ?? null, range2?.[1] ?? null],
+              itemStyle: { color: colorOf(si, j) }
+            };
+          })
+        });
+      }
+      if (config.paired) {
+        const pairs = [];
+        s.cells.forEach((from, j) => {
+          const to = s.cells[j + 1];
+          if (!from || !to) return;
+          const shown = (c) => new Set((c.points ?? []).map((p) => p.id));
+          const fromShown = shown(from);
+          const toShown = shown(to);
+          const target = new Map((to.observations ?? []).map((o) => [o.id, o]));
+          for (const a of from.observations ?? []) {
+            const b = target.get(a.id);
+            if (!b) continue;
+            pairs.push([
+              j,
+              a.value,
+              fromShown.has(a.id) ? offsetOf(a.index) : 0,
+              j + 1,
+              b.value,
+              toShown.has(b.id) ? offsetOf(b.index) : 0,
+              a.id
+            ]);
+          }
+        });
+        layers.push({
+          type: "custom",
+          ...s.name === null ? {} : { name: s.name },
+          renderItem: BOXPLOT_PAIRS,
+          silent: true,
+          clip: true,
+          z: 2,
+          dimensions: [
+            "From",
+            "From value",
+            "From offset",
+            "To",
+            "To value",
+            "To offset",
+            "Observation"
+          ],
+          encode: horizontal ? { x: [1, 4], y: [0, 3] } : { x: [0, 3], y: [1, 4] },
+          itemPayload: {
+            ...payload,
+            alpha: config.pair_alpha ?? 0.35,
+            width: config.pair_width ?? 1
+          },
+          itemStyle: { color: s.name === null ? NEUTRAL : colorOf(si, 0) },
+          data: pairs
+        });
+      }
+    });
+    if (geometry !== "box" || config.paired) {
+      for (const s of series)
+        for (const c of s.cells) for (const v of rangeOf(c) ?? []) visible.push(v);
+    }
+    let limits = calcLimits(visible, 0) ?? [0, 1];
+    const comparisons = data.comparisons ?? [];
+    if (comparisons.length > 0) {
+      const resolved = bracketRecords(comparisons, categories, series, limits);
+      limits = resolved.limits;
+      layers.push({
+        type: "custom",
+        renderItem: BOXPLOT_BRACKETS,
+        silent: true,
+        clip: true,
+        z: 4,
+        dimensions: ["From", "To", "Position", "From series", "To series", "Label"],
+        encode: horizontal ? { x: 2, y: [0, 1] } : { x: [0, 1], y: 2 },
+        itemPayload: { horizontal, boxSeries },
+        data: resolved.records
+      });
+    }
+    const padded = boxpoints !== "none" || geometry !== "box" || config.paired || comparisons.length > 0;
+    const valueLimits = config.ylim ?? (padded ? calcLimits(limits, 0.05) : null);
+    const axisLimits = valueLimits ?? limits;
+    const categoryAxis = {
+      type: "category",
+      data: categories,
+      // Every box keeps its label; ECharts would otherwise thin them.
+      axisLabel: { interval: 0 },
+      // A horizontal chart lists its categories top to bottom, in reading order.
+      ...horizontal ? { inverse: true } : {},
+      axisLine: { show: axisLimits[0] <= 0 && axisLimits[1] >= 0, onZero: true }
+    };
+    const valueAxis = {
+      type: "value",
+      scale: true,
+      ...valueLimits ? { min: valueLimits[0], max: valueLimits[1] } : {}
+    };
+    const xAxis = horizontal ? valueAxis : categoryAxis;
+    const yAxis = horizontal ? categoryAxis : valueAxis;
+    if (config.xlab) Object.assign(xAxis, { name: config.xlab, nameLocation: "middle" });
+    if (config.ylab) Object.assign(yAxis, { name: config.ylab, nameLocation: "middle" });
+    const grid = cartesianGrid(config, Boolean(config.xlab || config.ylab));
+    const dataZoom = config.zoom ? axisZoom(horizontal ? "y" : "x", grid) : void 0;
+    const named = series.filter((s) => s.name !== null);
+    return {
+      ...config.title ? { title: { text: config.title } } : {},
+      tooltip: { trigger: "item", valueFormatter: formatNumber },
+      ...named.length > 0 ? {
+        legend: {
+          data: named.map((s) => s.name),
+          ...geometry === "violin" ? { itemStyle: { opacity: 1 } } : {}
+        }
+      } : {},
+      xAxis,
+      yAxis,
+      grid,
+      ...dataZoom ? { dataZoom } : {},
+      series: [...boxes, ...overlays, ...layers],
+      ...appearance.animation === void 0 ? {} : { animation: appearance.animation }
+    };
+  }
+  var NEUTRAL = "#888888";
+  function radicalInverse(index) {
+    let x = index;
+    let value = 0;
+    let weight = 0.5;
+    while (x > 0) {
+      value += x % 2 * weight;
+      x = Math.floor(x / 2);
+      weight /= 2;
+    }
+    return value - 0.5;
+  }
+  function withAlpha2(color, alpha) {
+    const m = /^#([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i.exec(color);
+    if (!m) return color;
+    const [r, g, b] = [m[1], m[2], m[3]].map((h) => Number.parseInt(h, 16));
+    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+  }
+  function bracketRecords(comparisons, categories, series, limits) {
+    const grouped = series.length > 1;
+    const span = limits[1] - limits[0] === 0 ? Math.max(Math.abs(limits[1]), 1) : limits[1] - limits[0];
+    const positions = [];
+    const records = comparisons.map((c, i) => {
+      if (!grouped && (c.from_group || c.to_group)) {
+        throw new Error("Omit comparison group columns for a single series; use category names.");
+      }
+      const from = categories.indexOf(c.from);
+      const to = categories.indexOf(c.to);
+      const seriesIndex = (g) => grouped ? series.findIndex((s) => s.name === g) : 0;
+      const fromSeries = seriesIndex(c.from_group);
+      const toSeries = seriesIndex(c.to_group);
+      if (from < 0 || to < 0 || fromSeries < 0 || toSeries < 0) {
+        throw new Error("Use existing category and group names in comparison endpoints.");
+      }
+      if (from === to && fromSeries === toSeries) {
+        throw new Error("Choose two distinct comparison endpoints.");
+      }
+      for (const [cat, s] of [
+        [from, fromSeries],
+        [to, toSeries]
+      ]) {
+        if (!((series[s]?.cells[cat]?.n ?? 0) > 0)) {
+          throw new Error("Choose comparison endpoints with available observations.");
+        }
+      }
+      const position = c.position ?? limits[1] + (i + 1) * span * 0.12;
+      positions.push(position);
+      return [from, to, position, fromSeries, toSeries, c.label];
+    });
+    const extended = calcLimits(
+      [...limits, ...positions.map((p) => p - span * 0.04), ...positions.map((p) => p + span * 0.12)],
+      0
+    );
+    return { records, limits: extended ?? limits };
+  }
+
   // src/charts/line/config.ts
   var LINE_CHART_CONFIG_MEMBERS = Object.freeze([
     "type",
@@ -1578,187 +2264,11 @@ var RtemisDraw = (() => {
     }
   }
 
-  // src/theme/tokens.ts
-  var RTEMIS_PALETTE = Object.freeze([
-    "#6CA3A0",
-    "#F08904",
-    "#BE2E5F",
-    "#B3CFE8",
-    "#0F6A66",
-    "#FDB808",
-    "#EA384A",
-    "#466D96",
-    "#526551",
-    "#F384FF",
-    "#7D0830",
-    "#375D86",
-    "#B1A7B3",
-    "#7364F2",
-    "#895140",
-    "#C5A267"
-  ]);
-  var SIGN_COLORS = Object.freeze({
-    negative: "#2D83D3",
-    neutral: "#808080",
-    positive: "#C55E28"
-  });
-  function lightThemeTokens(overrides = {}) {
-    return Object.freeze({
-      scheme: "light",
-      base_font_size: 12,
-      palette: RTEMIS_PALETTE,
-      bg_color: "#ffffff",
-      fg_color: "rgba(0, 0, 0, 0.7)",
-      negative_color: SIGN_COLORS.negative,
-      neutral_color: SIGN_COLORS.neutral,
-      positive_color: SIGN_COLORS.positive,
-      ...overrides
-    });
-  }
-  function darkThemeTokens(overrides = {}) {
-    return Object.freeze({
-      scheme: "dark",
-      base_font_size: 12,
-      palette: RTEMIS_PALETTE,
-      bg_color: "#181818",
-      fg_color: "rgba(255, 255, 255, 0.7)",
-      title_color: "rgba(255, 255, 255, 0.9)",
-      subtitle_color: "rgba(255, 255, 255, 0.5)",
-      axis_color: "rgba(255, 255, 255, 0.3)",
-      grid_color: "rgba(255, 255, 255, 0.1)",
-      tooltip_bg: "rgba(20, 20, 20, 0.9)",
-      tooltip_border_color: "rgba(255, 255, 255, 0.1)",
-      negative_color: SIGN_COLORS.negative,
-      neutral_color: SIGN_COLORS.neutral,
-      positive_color: SIGN_COLORS.positive,
-      ...overrides
-    });
-  }
-  var DEFAULT_FONT_FAMILY = "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif";
-  var GENERIC_FONT_FAMILIES = /* @__PURE__ */ new Set([
-    "serif",
-    "sans-serif",
-    "monospace",
-    "cursive",
-    "fantasy",
-    "math",
-    "emoji",
-    "fangsong",
-    "system-ui",
-    "ui-serif",
-    "ui-sans-serif",
-    "ui-monospace",
-    "ui-rounded",
-    "-apple-system",
-    "blinkmacsystemfont"
-  ]);
-  function fontStack(fontFamily) {
-    if (fontFamily === void 0 || fontFamily === null) return DEFAULT_FONT_FAMILY;
-    const entries = fontFamily.split(",").map((e) => e.trim()).filter((e) => e.length > 0);
-    if (entries.length === 0) throw new Error("`font_family` must be a nonempty font family.");
-    const ident = /^-?[A-Za-z_][A-Za-z0-9_-]*( +-?[A-Za-z_][A-Za-z0-9_-]*)*$/;
-    const quoted = /^(['"]).*\1$/;
-    const out = entries.map((e) => {
-      const generic = GENERIC_FONT_FAMILIES.has(e.toLowerCase());
-      return quoted.test(e) || generic || ident.test(e) ? e : `'${e.replaceAll("'", "\\'")}'`;
-    });
-    const last = entries[entries.length - 1] ?? "";
-    if (!GENERIC_FONT_FAMILIES.has(last.toLowerCase())) out.push(DEFAULT_FONT_FAMILY);
-    return out.join(", ");
-  }
-  function roundHalfEven(x) {
-    const floor = Math.floor(x);
-    const diff = x - floor;
-    if (Math.abs(diff - 0.5) > 1e-9) return Math.round(x);
-    return floor % 2 === 0 ? floor : floor + 1;
-  }
-  function themeFontSizes(tokens) {
-    const base = tokens.base_font_size;
-    return {
-      base,
-      title: tokens.title_font_size ?? roundHalfEven(base * 1.2),
-      subtitle: tokens.subtitle_font_size ?? base,
-      axisLabel: tokens.axis_label_font_size ?? base,
-      legend: tokens.legend_font_size ?? base,
-      tooltip: tokens.tooltip_font_size ?? base
-    };
-  }
-  function present(entries) {
-    return Object.fromEntries(
-      Object.entries(entries).filter(([, v]) => v !== void 0 && v !== null)
-    );
-  }
-  function themeOption(tokens) {
-    const sizes = themeFontSizes(tokens);
-    const dark = tokens.scheme === "dark";
-    const fg = tokens.fg_color;
-    const textStyle = { color: fg, fontFamily: fontStack(tokens.font_family), fontSize: sizes.base };
-    const withText = (style) => ({ ...textStyle, ...style });
-    const axisLabel = { fontSize: sizes.axisLabel, color: fg };
-    const axisLine = tokens.axis_color ? { lineStyle: { color: tokens.axis_color } } : void 0;
-    const axisTick = { show: false };
-    const valueAxis = present({
-      axisLabel,
-      axisLine,
-      axisTick,
-      splitLine: tokens.grid_color ? { lineStyle: { color: tokens.grid_color } } : void 0
-    });
-    return {
-      color: [...tokens.palette],
-      backgroundColor: tokens.bg_color,
-      textStyle,
-      title: {
-        textStyle: withText(present({ color: tokens.title_color, fontSize: sizes.title })),
-        subtextStyle: withText(present({ color: tokens.subtitle_color, fontSize: sizes.subtitle }))
-      },
-      legend: {
-        textStyle: withText({ color: tokens.legend_color ?? fg, fontSize: sizes.legend })
-      },
-      tooltip: present({
-        backgroundColor: tokens.tooltip_bg,
-        borderColor: tokens.tooltip_border_color,
-        textStyle: withText({ color: tokens.tooltip_color ?? fg, fontSize: sizes.tooltip })
-      }),
-      visualMap: { textStyle },
-      // Neutral controls leave the palette to encode data; every accent-bearing
-      // slider state is set so ECharts' blue defaults cannot show.
-      // spec: draw/visual-qa-docs#neutral-data-zoom-sliders
-      dataZoom: {
-        backgroundColor: "rgba(128,128,128,0.06)",
-        borderColor: dark ? "#606060" : "#b0b0b0",
-        fillerColor: "rgba(128,128,128,0.18)",
-        dataBackground: {
-          lineStyle: { color: "#808080" },
-          areaStyle: { color: "#808080", opacity: 0.12 }
-        },
-        selectedDataBackground: {
-          lineStyle: { color: dark ? "#b0b0b0" : "#707070" },
-          areaStyle: { color: "#808080", opacity: 0.25 }
-        },
-        handleStyle: {
-          color: dark ? "#303030" : "#ffffff",
-          borderColor: dark ? "#909090" : "#808080"
-        },
-        moveHandleStyle: { color: "#909090", opacity: 0.6 },
-        brushStyle: { color: "#808080", opacity: 0.3 },
-        textStyle: axisLabel,
-        emphasis: {
-          handleStyle: { borderColor: dark ? "#cccccc" : "#505050" },
-          moveHandleStyle: { color: dark ? "#b0b0b0" : "#707070" }
-        }
-      },
-      line: { symbol: "circle" },
-      categoryAxis: present({ axisLabel, axisLine, axisTick, splitLine: { show: false } }),
-      valueAxis,
-      logAxis: valueAxis,
-      timeAxis: valueAxis
-    };
-  }
-
   // src/index.ts
   var builders = Object.freeze({
     a3: buildA3Option,
     bar: buildBarOption,
+    boxplot: buildBoxplotOption,
     line: buildLineOption
   });
   var aspectHints = Object.freeze({

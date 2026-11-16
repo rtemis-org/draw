@@ -37,6 +37,9 @@ BoxplotConfig(
   labels = NULL,
   palette = NULL,
   fill_alpha = 0.25,
+  group_layout = "auto",
+  color_by_group = FALSE,
+  ylim = NULL,
   xlab = NULL,
   ylab = NULL,
   margin_top = NULL,
@@ -127,9 +130,21 @@ the category axis.}
 names.}
 
 \item{palette}{Optional Character: Box colors, overriding the theme palette
-for this chart. \code{NULL} uses the package's box colors.}
+for this chart. \code{NULL} uses the theme palette.}
 
 \item{fill_alpha}{Numeric \verb{[0, 1]}: Box fill opacity.}
+
+\item{group_layout}{Character \{"auto", "x-axis", "legend"\}: Where group
+levels go. \code{"x-axis"} makes them the categories, with one series per
+column; \code{"legend"} makes the columns the categories, with one series per
+level. \code{"auto"} uses \code{"x-axis"} for one column and \code{"legend"} for several.}
+
+\item{color_by_group}{Logical: Color each box of a one-series chart by its
+category. A one-series chart otherwise takes one color, since the axis
+already names each box.}
+
+\item{ylim}{Optional Numeric [length 2]: Value axis limits. \code{NULL} fits
+the drawn marks.}
 
 \item{xlab, ylab}{Optional Character: Axis labels.}
 

@@ -25,10 +25,10 @@ const echartsPath = path.resolve(
 const echarts = require(echartsPath);
 const registerRenderers = require("../htmlwidgets/lib/draw/renderers.js");
 const rendererNames = registerRenderers(echarts);
+const builders = require("../htmlwidgets/lib/draw/rtemis-draw-builders.js");
 const layout = require("../htmlwidgets/lib/draw/panels.js");
 const confusion = require("../htmlwidgets/lib/draw/confusion.js");
 const a3 = require("../htmlwidgets/lib/draw/a3.js");
-const builders = require("../htmlwidgets/lib/draw/rtemis-draw-builders.js");
 // The id and handle size of a zoom preset's slider (zoom.R, @rtemis/draw).
 const ZOOM_SLIDER_ID = builders.ZOOM_SLIDER_ID;
 const ZOOM_SLIDER_HANDLE = 7;

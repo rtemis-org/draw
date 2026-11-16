@@ -33,7 +33,7 @@
 #' @param comparisons Optional Character: Name of a comparison data frame in the
 #'   bound data list. Its columns follow [draw_boxplot()].
 #' @param palette Optional Character: Box colors, overriding the theme palette
-#'   for this chart. `NULL` uses the package's box colors.
+#'   for this chart. `NULL` uses the theme palette.
 #' @param fill_alpha Numeric `[0, 1]`: Box fill opacity.
 #' @param xlab,ylab Optional Character: Axis labels.
 #' @param margin_top,margin_right,margin_bottom,margin_left Optional Integer
@@ -184,13 +184,34 @@ BoxplotConfig <- new_class(
         NULL,
         nullable = TRUE,
         vector = TRUE,
-        description = "Box colors. Unset uses the package box colors."
+        description = "Box colors. Unset uses the theme palette."
       ),
       fill_alpha = prop_float(
         0.25,
         min = 0,
         max = 1,
         description = "Box fill opacity."
+      ),
+      group_layout = prop_string(
+        "auto",
+        enum = c("auto", "x-axis", "legend"),
+        description = paste(
+          "Where group levels go: x-axis makes them the categories with one",
+          "series per column; legend makes the columns the categories with",
+          "one series per level; auto is x-axis for one column, legend for",
+          "several."
+        )
+      ),
+      color_by_group = prop_boolean(
+        FALSE,
+        description = "Color each box of a one-series chart by its category."
+      ),
+      ylim = prop_float(
+        NULL,
+        nullable = TRUE,
+        vector = TRUE,
+        min_items = 2L,
+        description = "Value axis limits. Unset fits the drawn marks."
       ),
       xlab = prop_string(NULL, nullable = TRUE, description = "X axis label."),
       ylab = prop_string(NULL, nullable = TRUE, description = "Y axis label."),
@@ -296,7 +317,10 @@ setup_BoxplotConfig <- function(
   comparisons = NULL,
   order = "input",
   transform = "none",
-  zoom = FALSE
+  zoom = FALSE,
+  group_layout = "auto",
+  color_by_group = FALSE,
+  ylim = NULL
 ) {
   origin <- origin %||% chart_origin(match.call(), BOXPLOT_ORIGIN_NAMES)
   BoxplotConfig(
@@ -323,8 +347,12 @@ setup_BoxplotConfig <- function(
     point_size = point_size,
     point_alpha = point_alpha,
     point_spread = point_spread,
-    palette = palette,
+    # A named color vector, such as a subset of `rtemis_colors`, is a palette.
+    palette = if (!is.null(palette)) unname(palette),
     fill_alpha = fill_alpha,
+    group_layout = group_layout,
+    color_by_group = color_by_group,
+    ylim = ylim,
     xlab = xlab,
     ylab = ylab,
     title = title,
@@ -398,7 +426,13 @@ method(compile, BoxplotConfig) <- function(
     ylab = config@ylab,
     title = config@title,
     margins = config_margins(config) %||% DEFAULT_MARGINS,
-    zoom = config@zoom
+    zoom = config@zoom,
+    group_layout = config@group_layout,
+    color_by_group = config@color_by_group,
+    ylim = config@ylim,
+    legend_position = config@legend_position,
+    legend_placement = config@legend_placement,
+    legend_title = config@legend_title
   )
 }
 

@@ -39,6 +39,12 @@ function rtemisDrawSurface(el, bounded = false) {
   };
 }
 
+// The custom-series renderers of the charts @rtemis/draw builds (the
+// boxplot's), registered once with the page's ECharts.
+if (typeof RtemisDraw !== 'undefined' && typeof echarts !== 'undefined') {
+  RtemisDraw.registerRenderers(echarts);
+}
+
 // Build the ECharts option of a payload that carries a build request, with the
 // @rtemis/draw builders (rtemis-draw-builders.js), for the current color
 // scheme. The A3 surface hints come from the same package; flags set in R

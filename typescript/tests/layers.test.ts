@@ -18,6 +18,7 @@ const THEME_OWNED = [
 const PENDING: Record<string, RegExp | "all"> = {
   a3: "all",
   bar: /(^|\.)nameLocation$/,
+  boxplot: /(^|\.)nameLocation$/,
   line: /(^|\.)nameLocation$/,
 };
 
