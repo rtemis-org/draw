@@ -490,6 +490,30 @@ export function fitKeys(echarts: ECharts, chart: Chart, context: KeyContext): Ke
   if (placement.inside) reserved.delete(chart);
   else reserved.set(chart, side);
   context.afterReserve?.();
+  const box = (type: string): Rect | null => {
+    const model = chart.getModel().getComponent(type);
+    const view = model && chart.getViewOfComponentModel(model);
+    if (!view) return null;
+    const r = view.group.getBoundingRect().clone();
+    r.applyTransform(view.group.getComputedTransform());
+    return r.width > 0 && r.height > 0 ? r : null;
+  };
+  // Axis labels and names can sit outside the grid's margin (an axis name
+  // beyond contained labels); the keys then take that much more space.
+  let reservedExtra = extra;
+  if (!placement.inside && (side === "left" || side === "bottom")) {
+    const axis = box(side === "left" ? "yAxis" : "xAxis");
+    const deficit = !axis
+      ? 0
+      : side === "left"
+        ? GAP + blockW + GAP / 2 - axis.x
+        : axis.y + axis.height + GAP / 2 + blockH - (height - GAP);
+    if (deficit > 0) {
+      reservedExtra += deficit;
+      chart.setOption({ grid: { [side]: margin(side) + reservedExtra } });
+      context.afterReserve?.();
+    }
+  }
   const gridModel = chart.getModel().getComponent("grid") as unknown as
     | { coordinateSystem?: { getRect(): { x: number; y: number; width: number; height: number } } }
     | undefined;
@@ -524,14 +548,6 @@ export function fitKeys(echarts: ECharts, chart: Chart, context: KeyContext): Ke
   }
   // Outside the plot, the keys clear the axis labels and names on their side
   // and the title above.
-  const box = (type: string): Rect | null => {
-    const model = chart.getModel().getComponent(type);
-    const view = model && chart.getViewOfComponentModel(model);
-    if (!view) return null;
-    const r = view.group.getBoundingRect().clone();
-    r.applyTransform(view.group.getComputedTransform());
-    return r.width > 0 && r.height > 0 ? r : null;
-  };
   if (!placement.inside) {
     if (side === "bottom") {
       const axis = box("xAxis");
@@ -584,12 +600,12 @@ export function fitKeys(echarts: ECharts, chart: Chart, context: KeyContext): Ke
     offset += (vertical ? part.h : part.w) + GAP;
   }
   if (elements.length > 0) chart.setOption({ graphic: { elements } });
-  return { side, extra };
+  return { side, extra: reservedExtra };
 }
 
 /**
- * The keys' drawn state: the color scale's and the size key's placement and
- * the grid margins, with the chart's size. A host compares it after a render
+ * The keys' drawn state: the color scale's, the size key's, and the
+ * legend's placement and the grid margins, with the chart's size. A host compares it after a render
  * with the state `fitKeys()` left, and fits again only when another
  * `setOption()` or a resize changed it.
  */
@@ -611,6 +627,49 @@ export function keyState(chart: Chart): string {
     chart.getHeight(),
     pick(scale, ["left", "top", "orient", "align", "text"]),
     pick(grid, ["left", "right", "top", "bottom"]),
+    pick(first(option.legend), ["left", "right", "top", "bottom"]),
     keys,
   ]);
+}
+
+/**
+ * Align a categorical legend in a row above or below the plot with the plot
+ * area rather than the chart's edges: a legend the host anchored right ends
+ * at the plot's right edge, one anchored left starts at its left edge, and a
+ * centered one centers on it. Each pass reads the anchor from the option the
+ * host set. A vertical legend, or a chart without a plotting grid, is left as
+ * it is. spec: draw/shared-builders#keys
+ */
+export function fitLegend(
+  chart: Chart,
+  context: { readonly option: Record<string, unknown> },
+): void {
+  const authored = ([context.option.legend ?? []].flat()[0] ?? null) as Record<
+    string,
+    unknown
+  > | null;
+  const model = chart.getModel().getComponent("legend");
+  if (!authored || !model || model.get("show") === false) return;
+  if (authored.orient === "vertical") return;
+  const gridModel = chart.getModel().getComponent("grid") as unknown as
+    | { coordinateSystem?: { getRect(): { x: number; width: number } } }
+    | undefined;
+  const area = gridModel?.coordinateSystem?.getRect();
+  const view = chart.getViewOfComponentModel(model);
+  if (!area || !view) return;
+  const width = chart.getWidth();
+  const legendWidth = view.group.getBoundingRect().width;
+  const anchor =
+    authored.right !== undefined && authored.right !== null && authored.left === undefined
+      ? "right"
+      : authored.left === "center" || authored.left === undefined
+        ? "center"
+        : "left";
+  const position =
+    anchor === "right"
+      ? { right: Math.max(0, width - (area.x + area.width)), left: null }
+      : anchor === "left"
+        ? { left: area.x, right: null }
+        : { left: Math.max(0, area.x + (area.width - legendWidth) / 2), right: null };
+  chart.setOption({ legend: position });
 }

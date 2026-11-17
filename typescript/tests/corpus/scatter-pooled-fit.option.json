@@ -1624,6 +1624,9 @@
         "color": "#808080",
         "opacity": 0.25
       },
+      "itemStyle": {
+        "color": "#808080"
+      },
       "silent": true,
       "z": 0,
       "legendHoverLink": false

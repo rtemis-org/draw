@@ -172,6 +172,8 @@ export function fitSeries(
         showSymbol: false,
         lineStyle: { opacity: 0 },
         areaStyle: { color, opacity: config.fit_alpha ?? 0.25 },
+        // The legend key of a series sharing the fit's name takes this color.
+        itemStyle: { color },
         silent: true,
         z: 0,
         legendHoverLink: false,

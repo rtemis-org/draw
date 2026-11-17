@@ -53,6 +53,7 @@ var RtemisDraw = (() => {
     darkThemeTokens: () => darkThemeTokens,
     fitKeys: () => fitKeys,
     fitLabel: () => fitLabel,
+    fitLegend: () => fitLegend,
     fontStack: () => fontStack,
     formatNumber: () => formatNumber,
     keyPlacement: () => keyPlacement,
@@ -2041,6 +2042,8 @@ var RtemisDraw = (() => {
           showSymbol: false,
           lineStyle: { opacity: 0 },
           areaStyle: { color, opacity: config.fit_alpha ?? 0.25 },
+          // The legend key of a series sharing the fit's name takes this color.
+          itemStyle: { color },
           silent: true,
           z: 0,
           legendHoverLink: false
@@ -2683,6 +2686,24 @@ var RtemisDraw = (() => {
     if (placement.inside) reserved.delete(chart);
     else reserved.set(chart, side);
     context.afterReserve?.();
+    const box = (type) => {
+      const model = chart.getModel().getComponent(type);
+      const view = model && chart.getViewOfComponentModel(model);
+      if (!view) return null;
+      const r = view.group.getBoundingRect().clone();
+      r.applyTransform(view.group.getComputedTransform());
+      return r.width > 0 && r.height > 0 ? r : null;
+    };
+    let reservedExtra = extra;
+    if (!placement.inside && (side === "left" || side === "bottom")) {
+      const axis = box(side === "left" ? "yAxis" : "xAxis");
+      const deficit = !axis ? 0 : side === "left" ? GAP + blockW + GAP / 2 - axis.x : axis.y + axis.height + GAP / 2 + blockH - (height - GAP);
+      if (deficit > 0) {
+        reservedExtra += deficit;
+        chart.setOption({ grid: { [side]: margin(side) + reservedExtra } });
+        context.afterReserve?.();
+      }
+    }
     const gridModel = chart.getModel().getComponent("grid");
     const area = gridModel?.coordinateSystem?.getRect() ?? {
       x: GAP,
@@ -2699,14 +2720,6 @@ var RtemisDraw = (() => {
       x = placement.inside ? area.x + area.width - blockW - GAP : area.x + (area.width - blockW) / 2;
       y = placement.inside ? side === "bottom" ? area.y + area.height - blockH - GAP : area.y + GAP : side === "bottom" ? height - GAP - blockH : Math.max(GAP, area.y - GAP - blockH);
     }
-    const box = (type) => {
-      const model = chart.getModel().getComponent(type);
-      const view = model && chart.getViewOfComponentModel(model);
-      if (!view) return null;
-      const r = view.group.getBoundingRect().clone();
-      r.applyTransform(view.group.getComputedTransform());
-      return r.width > 0 && r.height > 0 ? r : null;
-    };
     if (!placement.inside) {
       if (side === "bottom") {
         const axis = box("xAxis");
@@ -2757,7 +2770,7 @@ var RtemisDraw = (() => {
       offset += (vertical ? part.h : part.w) + GAP;
     }
     if (elements.length > 0) chart.setOption({ graphic: { elements } });
-    return { side, extra };
+    return { side, extra: reservedExtra };
   }
   function keyState(chart) {
     const option = chart.getOption();
@@ -2772,8 +2785,24 @@ var RtemisDraw = (() => {
       chart.getHeight(),
       pick(scale, ["left", "top", "orient", "align", "text"]),
       pick(grid, ["left", "right", "top", "bottom"]),
+      pick(first(option.legend), ["left", "right", "top", "bottom"]),
       keys
     ]);
+  }
+  function fitLegend(chart, context) {
+    const authored = [context.option.legend ?? []].flat()[0] ?? null;
+    const model = chart.getModel().getComponent("legend");
+    if (!authored || !model || model.get("show") === false) return;
+    if (authored.orient === "vertical") return;
+    const gridModel = chart.getModel().getComponent("grid");
+    const area = gridModel?.coordinateSystem?.getRect();
+    const view = chart.getViewOfComponentModel(model);
+    if (!area || !view) return;
+    const width = chart.getWidth();
+    const legendWidth = view.group.getBoundingRect().width;
+    const anchor = authored.right !== void 0 && authored.right !== null && authored.left === void 0 ? "right" : authored.left === "center" || authored.left === void 0 ? "center" : "left";
+    const position = anchor === "right" ? { right: Math.max(0, width - (area.x + area.width)), left: null } : anchor === "left" ? { left: area.x, right: null } : { left: Math.max(0, area.x + (area.width - legendWidth) / 2), right: null };
+    chart.setOption({ legend: position });
   }
 
   // src/charts/scatter/renderers.ts

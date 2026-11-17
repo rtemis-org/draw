@@ -54,11 +54,11 @@ method(scatter_input, class_any) <- function(
         is.complex(size) ||
         !is.null(dim(size)) ||
         !length(size) %in% c(1L, length(x)) ||
-        any(!is.finite(size)) ||
-        any(size < 0)
+        any(is.infinite(size)) ||
+        any(size < 0, na.rm = TRUE)
     ) {
       abort(
-        "Supply a nonnegative finite size or one size per observation.",
+        "Supply a nonnegative size or one size per observation, allowing NA but not infinity.",
         class = c("rtemis_value_error", "rtemis_input_error")
       )
     }
@@ -92,6 +92,9 @@ method(scatter_input, class_any) <- function(
   }
   if (!is.null(color)) {
     keep <- keep & !is.na(color)
+  }
+  if (!is.null(size)) {
+    keep <- keep & !is.na(size)
   }
   if (!any(keep)) {
     abort(

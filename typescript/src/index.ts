@@ -59,7 +59,14 @@ export {
   scatterAspect,
 } from "./charts/scatter/index.ts";
 export type { KeyContext, KeyPlacement, KeyReserve, SizeKeySpec } from "./layout/keys.ts";
-export { fitKeys, keyPlacement, keyState, SIZE_KEY_ID, sizeKeyValues } from "./layout/keys.ts";
+export {
+  fitKeys,
+  fitLegend,
+  keyPlacement,
+  keyState,
+  SIZE_KEY_ID,
+  sizeKeyValues,
+} from "./layout/keys.ts";
 export type { FitCurve, FitMembers } from "./shared/fit.ts";
 export { FIT_MEMBERS, fitLabel } from "./shared/fit.ts";
 export { formatNumber, SIGNIFICANT_DIGITS } from "./shared/format.ts";

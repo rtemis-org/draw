@@ -57,7 +57,8 @@ draw_scatter(
 
 \item{size}{Optional Numeric: Nonnegative values, one per point, that set
 each symbol's area in proportion to the value, the largest value at five
-times \code{point_size} across (30 pixels at the default).}
+times \code{point_size} across (30 pixels at the default). A point with a
+missing size is not drawn.}
 
 \item{group}{Optional Atomic vector or single-column data frame: Grouping
 variable for multiple series. Series, colors, and legend entries follow

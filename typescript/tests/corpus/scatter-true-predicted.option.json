@@ -417,6 +417,9 @@
         "color": "#6CA3A0",
         "opacity": 0.25
       },
+      "itemStyle": {
+        "color": "#6CA3A0"
+      },
       "silent": true,
       "z": 0,
       "legendHoverLink": false

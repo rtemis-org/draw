@@ -170,3 +170,11 @@ test_that("unset point size uses point_size", {
   option <- built_option(draw_scatter(1:3, 1:3, point_size = 9))
   expect_equal(option[["series"]][[1L]][["symbolSize"]], 9)
 })
+
+test_that("a missing size drops its row, as a missing color does", {
+  skip_if_no_node()
+  w <- draw_scatter(1:4, c(2, 3, 1, 4), size = c(10, NA, 30, 40))
+  points <- built_option(w, simplify = FALSE)[["series"]][[1L]][["data"]]
+  expect_length(points, 3L)
+  expect_error(draw_scatter(1:2, 1:2, size = c(1, Inf)), "infinity")
+})
