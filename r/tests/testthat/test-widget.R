@@ -1039,9 +1039,10 @@ test_that("draw_histogram creates widget", {
   set.seed(1)
   w <- draw_histogram(rnorm(200))
   expect_s3_class(w, "htmlwidget")
-  expect_equal(w$x$option$series[[1]]$type, "custom")
-  expect_equal(w$x$option$xAxis$type, "value")
-  expect_identical(w$x$option$series[[1]]$renderItem, "rtemis.histogram.v1")
+  option <- raw_option(w)
+  expect_equal(option$series[[1]]$type, "custom")
+  expect_equal(option$xAxis$type, "value")
+  expect_identical(option$series[[1]]$renderItem, "rtemis.histogram.v1")
 })
 
 test_that("draw_histogram with groups", {
@@ -1050,17 +1051,18 @@ test_that("draw_histogram with groups", {
     x = c(rnorm(100, 0), rnorm(100, 3)),
     group = rep(c("A", "B"), each = 100)
   )
-  expect_equal(length(w$x$option$series), 2L)
-  expect_equal(w$x$option$series[[1]]$name, "A")
-  expect_equal(w$x$option$series[[2]]$name, "B")
-  expect_false(is.null(w$x$option$legend))
+  option <- raw_option(w)
+  expect_equal(length(option$series), 2L)
+  expect_equal(option$series[[1]]$name, "A")
+  expect_equal(option$series[[2]]$name, "B")
+  expect_false(is.null(option$legend))
 })
 
 test_that("draw_histogram respects breaks parameter", {
   set.seed(1)
   w <- draw_histogram(rnorm(200), breaks = 20)
   # hist() treats the requested bin count as a suggestion for pretty breaks.
-  expect_true(length(w$x$option$series[[1]]$data) >= 15L)
+  expect_true(length(raw_option(w)$series[[1]]$data) >= 15L)
 })
 
 # -- margins -------------------------------------------------------------------
@@ -1122,7 +1124,7 @@ test_that("draw_density applies margins", {
 test_that("draw_histogram applies margins", {
   set.seed(1)
   w <- draw_histogram(rnorm(50), margins = c(right = 15))
-  expect_equal(w$x$option$grid$right, 15)
+  expect_equal(node_option(w)$grid$right, 15)
 })
 
 test_that("draw_boxplot applies margins across grouped/ungrouped branches", {
@@ -1252,8 +1254,8 @@ test_that("draw_density applies xlab and ylab", {
 test_that("draw_histogram applies xlab and ylab", {
   set.seed(1)
   w <- draw_histogram(rnorm(50), xlab = "Bin", ylab = "Count")
-  expect_equal(w$x$option$xAxis[["name"]], "Bin")
-  expect_equal(w$x$option$yAxis[["name"]], "Count")
+  expect_equal(node_option(w)$xAxis[["name"]], "Bin")
+  expect_equal(node_option(w)$yAxis[["name"]], "Count")
 })
 
 test_that("draw_boxplot applies xlab and ylab (ungrouped)", {

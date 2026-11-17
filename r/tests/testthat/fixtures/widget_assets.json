@@ -460,5 +460,23 @@
     "md5": [
       "83a86566f6258c5ee767ee883d5299eb"
     ]
+  },
+  "rtemis-draw-renderers-1.7.0": {
+    "scripts": [
+      "renderers.js",
+      "scatter3d.js"
+    ],
+    "md5": [
+      "ce8068ae4b239c491918f985a2058548",
+      "63cb6341255715ba101b1b78d613c839"
+    ]
+  },
+  "rtemis-draw-builders-0.6.0": {
+    "scripts": [
+      "rtemis-draw-builders.js"
+    ],
+    "md5": [
+      "1d2aca1753fa0bd36bc6c964e21911d4"
+    ]
   }
 }

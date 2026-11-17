@@ -140,5 +140,5 @@ test_that("palette reaches the option for density and histogram", {
   d <- draw_density(rnorm(50), group = rep(c("a", "b"), 25), palette = pal)
   expect_identical(d[["x"]][["option"]][["color"]], pal)
   h <- draw_histogram(rnorm(50), group = rep(c("a", "b"), 25), palette = pal)
-  expect_identical(h[["x"]][["option"]][["color"]], pal)
+  expect_identical(node_option(h)[["color"]], pal)
 })

@@ -23,7 +23,7 @@ test_that("EChartsOption simple line chart", {
   expect_equal(out$xAxis$type, "category")
   expect_equal(out$xAxis$data, c("Mon", "Tue", "Wed", "Thu", "Fri"))
   expect_equal(out$yAxis$type, "value")
-  # Series should be a list of one series
+  # Series is a list of one series.
   expect_true(is.list(out$series))
   expect_equal(length(out$series), 1L)
   expect_equal(out$series[[1]]$type, "line")
@@ -153,7 +153,7 @@ test_that("to_json produces valid JSON", {
   )
   json <- to_json(opt)
   expect_true(is.character(json))
-  # Should parse back
+  # The JSON parses back.
   parsed <- jsonlite::fromJSON(as.character(json), simplifyVector = FALSE)
   expect_equal(parsed$xAxis$type, "value")
   expect_equal(parsed$series[[1]]$type, "scatter")
@@ -282,8 +282,8 @@ test_that("EChartsOption serializes animation_duration_update", {
   out <- to_list(EChartsOption(animation_duration_update = 0))
   expect_identical(out[["animationDurationUpdate"]], 0)
   expect_null(to_list(EChartsOption())[["animationDurationUpdate"]])
-  expect_identical(
-    draw_histogram(iris$Sepal.Length)$x$option$animationDurationUpdate,
+  expect_equal(
+    node_option(draw_histogram(iris$Sepal.Length))$animationDurationUpdate,
     0
   )
 })

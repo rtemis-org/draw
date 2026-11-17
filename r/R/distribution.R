@@ -293,9 +293,15 @@ histogram_fill_alpha <- function(samples, bar_mode, mode) {
 } # /rtemis.draw::histogram_fill_alpha
 
 
-#' Build numeric-axis histogram bins and optional density curves
+#' Bin histogram samples and build their request
+#'
+#' Bins every sample on one set of edges with `graphics::hist()` (intervals
+#' `(left, right]`, the lowest edge included), and computes each sample's bin
+#' statistic and density curve; `@rtemis/draw`'s histogram builder applies
+#' the normalization and lays out the bars.
+#' spec: draw/shared-builders#histogram
 #' @inheritParams draw_histogram
-#' @return EChartsOption: Native rectangles and optional density lines.
+#' @return [BuildRequest] of type `"histogram"`.
 #' @keywords internal
 #' @noRd
 histogram_option <- new_generic("histogram_option", "x")
@@ -325,8 +331,13 @@ method(histogram_option, class_any) <- function(
   order = "input",
   bin_stat = "count",
   bar_mode = "overlay",
-  zoom = FALSE
+  zoom = FALSE,
+  legend_position = "top",
+  legend_placement = "outside",
+  legend_title = NULL
 ) {
+  check_zoom_flag(zoom)
+  margin <- pixel_margins(margins)
   config <- setup_HistogramConfig(
     bin_stat = bin_stat,
     bar_mode = bar_mode,
@@ -344,14 +355,24 @@ method(histogram_option, class_any) <- function(
     adjust = adjust,
     fill_alpha = fill_alpha,
     border_alpha = border_alpha,
-    na_rm = na_rm
+    na_rm = na_rm,
+    palette = palette,
+    xlab = xlab,
+    ylab = ylab,
+    title = title,
+    zoom = zoom,
+    margin_top = margin[["top"]],
+    margin_right = margin[["right"]],
+    margin_bottom = margin[["bottom"]],
+    margin_left = margin[["left"]],
+    legend_position = legend_position,
+    legend_placement = legend_placement,
+    legend_title = legend_title
   )
   samples <- distribution_order(
     distribution_samples(x, group, na_rm, verbosity),
     order
   )
-  fill_alpha <- config@fill_alpha %||%
-    histogram_fill_alpha(samples, bar_mode, mode)
   values <- unlist(samples, use.names = FALSE)
   edges <- config@bin_edges
   if (
@@ -372,173 +393,58 @@ method(histogram_option, class_any) <- function(
   widths <- diff(edges)
   equal_width <- max(abs(widths / widths[[1L]] - 1)) < 1e-7
   if (
-    bin_stat == "count" &&
+    config@bin_stat == "count" &&
       !equal_width &&
-      !normalization %in% c("density", "count_density")
+      !config@normalization %in% c("density", "count_density")
   ) {
     abort(
       "Use `normalization = \"density\"` or `\"count_density\"` for unequal-width bins.",
       class = c("rtemis_value_error", "rtemis_input_error")
     )
   }
-  series <- list()
-  for (i in seq_along(samples)) {
-    sample <- samples[[i]]
-    size <- length(sample)
-    # Fix interval semantics for every path: (left, right], including the
-    # lowest edge, with graphics::hist's documented boundary tolerance.
-    counts <- if (size) {
-      graphics::hist(
-        sample,
-        breaks = edges,
-        plot = FALSE,
-        right = TRUE,
-        include.lowest = TRUE
-      )[["counts"]]
-    } else {
-      integer(length(widths))
-    }
-    heights <- if (bin_stat == "count") {
-      histogram_heights(counts, widths, size, normalization)
-    } else {
-      histogram_stat(sample, edges, bin_stat)
-    }
-    series[[length(series) + 1L]] <- list(
-      type = "custom",
-      name = names(samples)[[i]],
-      renderItem = "rtemis.histogram.v1",
-      clip = TRUE,
-      z = 2,
-      dimensions = list(
-        "Lower",
-        "Upper",
-        switch(
-          normalization,
-          count = if (bin_stat == "count") "Height" else bin_stat,
-          probability = "Probability",
-          percent = "Percent",
-          density = "Density",
-          count_density = "Count density"
-        ),
-        "Count"
-      ),
-      encode = list(
-        x = list(0L, 1L),
-        y = 2L,
-        tooltip = if (normalization == "count" && bin_stat == "count") {
-          list(0L, 1L, 3L)
-        } else {
-          list(0L, 1L, 2L, 3L)
-        }
-      ),
-      itemPayload = list(
-        fillAlpha = fill_alpha,
-        borderAlpha = config@border_alpha
-      ),
-      data = Map(
-        function(lo, hi, height, count) list(lo, hi, height, count),
-        head(edges, -1L),
-        tail(edges, -1L),
-        heights,
-        counts
-      )
-    )
-    if (density) {
-      estimate <- distribution_density(sample, config)
-      # Counts/probabilities per bin need a width factor; density scales do not.
-      multiplier <- switch(
-        normalization,
-        count = size * widths[[1L]],
-        probability = widths[[1L]],
-        percent = 100 * widths[[1L]],
-        density = 1,
-        count_density = size
-      )
-      # Match ROC's native item-tooltip pattern: an unmarked line alone can
-      # intercept a bin hover without identifying a data item. Transparent
-      # point targets expose evaluated density values; SVG omits the targets.
-      curve <- to_list(LineSeries(
-        name = names(samples)[[i]],
-        data = Map(c, estimate[["x"]], estimate[["y"]] * multiplier),
-        show_symbol = TRUE,
-        symbol = "circle",
-        symbol_size = 8,
-        item_style = ItemStyle(opacity = 0),
-        line_style = LineStyle(opacity = 1),
-        z = 3
-      ))
-      curve[["emphasis"]] <- list(itemStyle = list(opacity = 1))
-      series[[length(series) + 1L]] <- curve
-    }
-  }
-  # Keep the whole height matrix in the renderer payload so legend filtering
-  # can recompute dodging/stacking without mutating statistical values.
-  bar_indices <- which(vapply(
-    series,
-    function(s) s[["type"]] == "custom",
-    logical(1)
-  ))
-  height_rows <- lapply(series[bar_indices], function(s) {
-    vapply(s[["data"]], `[[`, numeric(1), 3L)
-  })
-  for (i in bar_indices) {
-    series[[i]][["itemPayload"]] <- list(
-      fillAlpha = fill_alpha,
-      borderAlpha = config@border_alpha,
-      mode = bar_mode,
-      seriesIndices = as.list(bar_indices - 1L),
-      heights = lapply(height_rows, as.list)
-    )
-  }
-  totals <- if (bar_mode == "stack") {
-    c(
-      Reduce(`+`, lapply(height_rows, pmax, 0)),
-      Reduce(`+`, lapply(height_rows, pmin, 0))
-    )
-  } else {
-    unlist(height_rows, use.names = FALSE)
-  }
-  limits <- range(c(0, totals))
-  option <- EChartsOption(
-    title = if (!is.null(title)) Title(text = title) else NULL,
-    tooltip = Tooltip(
-      trigger = "item",
-      value_formatter = number_value_formatter()
-    ),
-    legend = if (length(samples) > 1L) {
-      Legend(
-        data = as.list(names(samples)),
-        item_style = ItemStyle(opacity = 1)
-      )
-    } else {
-      NULL
-    },
-    x_axis = Axis(
-      type = "value",
-      scale = TRUE,
-      name = axis_title(xlab),
-      name_location = if (!is.null(axis_title(xlab))) "middle" else NULL
-    ),
-    # Updates apply without transition. In ECharts 6.1.0, hovering a bar of
-    # this custom series during an update transition (legend toggle or zoom)
-    # leaves the y-axis drawn at an intermediate scale.
-    animation_duration_update = 0,
-    y_axis = Axis(
-      type = "value",
-      min = if (limits[[1]] < 0) limits[[1]] * 1.05 else 0,
-      max = if (bar_mode == "stack" && limits[[2]] > 0) {
-        limits[[2]] * 1.05
+  data <- list(
+    edges = I(edges),
+    samples = lapply(names(samples), function(name) {
+      sample <- samples[[name]]
+      size <- length(sample)
+      counts <- if (size) {
+        graphics::hist(
+          sample,
+          breaks = edges,
+          plot = FALSE,
+          right = TRUE,
+          include.lowest = TRUE
+        )[["counts"]]
       } else {
-        NULL
-      },
-      name = axis_title(ylab),
-      name_location = if (!is.null(axis_title(ylab))) "middle" else NULL
-    ),
-    grid = resolve_margins(margins),
-    series = series,
-    color = palette
+        integer(length(widths))
+      }
+      out <- list(
+        name = jsonlite::unbox(name),
+        n = jsonlite::unbox(size),
+        counts = I(counts)
+      )
+      if (config@bin_stat != "count") {
+        out[["values"]] <- I(histogram_stat(sample, edges, config@bin_stat))
+      }
+      if (config@density && size) {
+        estimate <- distribution_density(sample, config)
+        out[["density"]] <- list(x = I(estimate[["x"]]), y = I(estimate[["y"]]))
+      }
+      out
+    })
   )
-  distribution_zoom(distribution_layout(option, names(samples), mode), zoom)
+  BuildRequest(
+    type = "histogram",
+    data = as.character(jsonlite::toJSON(
+      data,
+      auto_unbox = FALSE,
+      na = "null",
+      null = "null",
+      digits = NA
+    )),
+    config = config_members(config),
+    appearance = list()
+  )
 }
 
 

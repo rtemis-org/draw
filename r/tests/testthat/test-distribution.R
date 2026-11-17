@@ -1,3 +1,9 @@
+# The option of a distribution chart: built in Node through @rtemis/draw for
+# a histogram's build request, and serialized in R for a density option.
+as_option <- function(x) {
+  if (S7::S7_inherits(x, BuildRequest)) raw_option(x) else to_list(x)
+}
+
 test_that("distribution samples validate values and preserve grouping alignment", {
   for (bad in list(
     c(1, Inf),
@@ -96,7 +102,7 @@ test_that("histogram edges and every normalization use actual sample sizes and w
   samples <- list(A = c(0, 1, 1, 2, 4), B = c(0, 2, 4))
   edges <- c(0, 1, 2, 4)
   for (normalization in c("density", "count_density")) {
-    opt <- to_list(histogram_option(
+    opt <- as_option(histogram_option(
       samples,
       bin_edges = edges,
       normalization = normalization
@@ -122,7 +128,7 @@ test_that("histogram edges and every normalization use actual sample sizes and w
     }
   }
   for (normalization in c("count", "probability", "percent")) {
-    opt <- to_list(histogram_option(
+    opt <- as_option(histogram_option(
       samples,
       breaks = c(0, 2, 4),
       normalization = normalization
@@ -153,8 +159,8 @@ test_that("histogram edges and every normalization use actual sample sizes and w
     )
   }
   # A row excluded by its group must not distort shared bin edges.
-  a <- to_list(histogram_option(c(1, 2, 1e6), group = c("A", "A", NA)))
-  b <- to_list(histogram_option(c(1, 2), group = c("A", "A")))
+  a <- as_option(histogram_option(c(1, 2, 1e6), group = c("A", "A", NA)))
+  b <- as_option(histogram_option(c(1, 2), group = c("A", "A")))
   expect_identical(a, b)
   expect_error(histogram_option(1:5, bin_edges = c(1, 3)), "spanning")
   for (args in list(
@@ -180,7 +186,7 @@ test_that("density overlays carry the exact histogram units and preserve empty s
     "density",
     "count_density"
   )) {
-    opt <- to_list(histogram_option(
+    opt <- as_option(histogram_option(
       values,
       bin_edges = c(-2, 0, 2, 4, 6, 8),
       density = TRUE,
@@ -193,7 +199,7 @@ test_that("density overlays carry the exact histogram units and preserve empty s
     expect_equal(line[["itemStyle"]][["opacity"]], 0)
     expect_equal(line[["lineStyle"]][["opacity"]], 1)
     expect_equal(line[["emphasis"]][["itemStyle"]][["opacity"]], 1)
-    curve <- do.call(rbind, opt[["series"]][[2L]][["data"]])
+    curve <- do.call(rbind, lapply(opt[["series"]][[2L]][["data"]], unlist))
     multiplier <- switch(
       normalization,
       count = 14,
@@ -209,7 +215,7 @@ test_that("density overlays carry the exact histogram units and preserve empty s
       opt[["series"]][[2L]][["name"]]
     )
   }
-  opt <- to_list(histogram_option(
+  opt <- as_option(histogram_option(
     list(A = values, Empty = numeric()),
     density = TRUE
   ))
@@ -239,8 +245,8 @@ test_that("functional and config density controls and numeric conveniences round
       on.exit(unlink(path), add = TRUE)
       write_chart_config(cfg, path, complete = complete)
       expect_identical(
-        to_list(compile(read_chart_config(path), data)),
-        to_list(compile(cfg, data))
+        as_option(compile(read_chart_config(path), data)),
+        as_option(compile(cfg, data))
       )
     }
   }
@@ -255,8 +261,8 @@ test_that("functional and config density controls and numeric conveniences round
   expect_equal(cfg@bin_edges, c(0, 1, 4, 10))
   expect_identical(cfg@origin[["bin_edges"]], "user")
   expect_identical(
-    to_list(compile(cfg, data)),
-    to_list(histogram_option(
+    as_option(compile(cfg, data)),
+    as_option(histogram_option(
       data,
       breaks = c(0, 1, 4, 10),
       density = TRUE,
@@ -299,7 +305,7 @@ test_that("functional and config density controls and numeric conveniences round
 
 test_that("histogram bars are more translucent where overlaid groups overlap", {
   payload <- function(...) {
-    series <- to_list(histogram_option(...))[["series"]]
+    series <- as_option(histogram_option(...))[["series"]]
     bars <- Filter(function(s) identical(s[["type"]], "custom"), series)
     lapply(bars, `[[`, "itemPayload")
   }
@@ -325,7 +331,7 @@ test_that("histogram bars are more translucent where overlaid groups overlap", {
 
 test_that("histogram bar borders are drawn at border_alpha", {
   border_alpha <- function(...) {
-    series <- to_list(histogram_option(...))[["series"]]
+    series <- as_option(histogram_option(...))[["series"]]
     bars <- Filter(function(s) identical(s[["type"]], "custom"), series)
     unique(vapply(bars, function(s) s[["itemPayload"]][["borderAlpha"]], 1))
   }
@@ -371,11 +377,14 @@ test_that("resolving a histogram config records the bar opacity drawn", {
 })
 
 test_that("distribution tooltips retain the shared numeric formatting", {
-  for (option in list(density_option(1:5), histogram_option(1:5))) {
-    tooltip <- to_list(option)[["tooltip"]]
-    expect_identical(tooltip[["valueFormatter"]], number_value_formatter())
-    expect_null(tooltip[["formatter"]])
-  }
+  tooltip <- to_list(density_option(1:5))[["tooltip"]]
+  expect_identical(tooltip[["valueFormatter"]], number_value_formatter())
+  expect_null(tooltip[["formatter"]])
+  # @rtemis/draw sets the histogram's formatter, `formatNumber()`, a function
+  # the JSON of a built option leaves out (its tests check it).
+  tooltip <- as_option(histogram_option(1:5))[["tooltip"]]
+  expect_identical(tooltip[["trigger"]], "item")
+  expect_null(tooltip[["formatter"]])
 })
 
 test_that("numeric histograms and density overlays export exact native geometry", {
@@ -391,7 +400,7 @@ test_that("numeric histograms and density overlays export exact native geometry"
     )) {
       for (overlay in c(FALSE, TRUE)) {
         charts[[length(charts) + 1L]] <- list(
-          option = to_list(histogram_option(
+          option = as_option(histogram_option(
             list(A = c(0, .5, 1, 2, 3), B = c(1, 3)),
             bin_edges = c(0, 1, 2, 3),
             normalization = normalization,
@@ -410,7 +419,7 @@ test_that("numeric histograms and density overlays export exact native geometry"
       list(A = 1:4, Empty = numeric())
     )) {
       charts[[length(charts) + 1L]] <- list(
-        option = to_list(histogram_option(
+        option = as_option(histogram_option(
           values,
           bin_edges = c(0, 1, 4),
           normalization = "density",
@@ -424,7 +433,7 @@ test_that("numeric histograms and density overlays export exact native geometry"
     for (layout in c("overlay", "group", "stack")) {
       for (stat in c("count", "sum", "mean", "min", "max")) {
         charts[[length(charts) + 1L]] <- list(
-          option = to_list(histogram_option(
+          option = as_option(histogram_option(
             list(A = c(-2, -1, 0, 1, 2), B = c(-1, 1)),
             bin_edges = c(-2, 0, 2),
             bin_stat = stat,
@@ -435,7 +444,7 @@ test_that("numeric histograms and density overlays export exact native geometry"
       }
     }
     charts[[length(charts) + 1L]] <- list(
-      option = to_list(histogram_option(
+      option = as_option(histogram_option(
         list(A = 1:5, B = 3:7),
         mode = "ridge",
         bins = 3
@@ -444,7 +453,7 @@ test_that("numeric histograms and density overlays export exact native geometry"
     )
     # A single numeric bin must remain a rectangle, not disappear via unboxing.
     charts[[length(charts) + 1L]] <- list(
-      option = to_list(histogram_option(2, bin_edges = c(1, 3))),
+      option = as_option(histogram_option(2, bin_edges = c(1, 3))),
       theme = to_list(theme)
     )
   }
@@ -484,7 +493,7 @@ test_that("ridge layouts retain common statistical scales and stable ordering", 
   samples <- list(Low = 1:8, High = 9:16, Empty = numeric())
   expect_named(distribution_order(samples, "mean"), c("High", "Low", "Empty"))
   for (builder in list(density_option, histogram_option)) {
-    opt <- to_list(builder(samples, mode = "ridge", order = "median"))
+    opt <- as_option(builder(samples, mode = "ridge", order = "median"))
     expect_false(opt[["legend"]][["show"]])
     expect_length(opt[["grid"]], 3)
     expect_equal(
@@ -522,7 +531,7 @@ test_that("histogram statistics retain counts and explicit normalization semanti
     max = c(0, 2)
   )
   for (stat in names(expected)) {
-    opt <- to_list(histogram_option(
+    opt <- as_option(histogram_option(
       x,
       bin_edges = c(-2, 0, 2),
       bin_stat = stat
@@ -550,11 +559,11 @@ test_that("histogram statistics retain counts and explicit normalization semanti
     bin_edges = c(-2, 0, 2)
   )
   data <- data.frame(value = rep(x, 2), group = rep(c("A", "B"), each = 5))
-  opt <- to_list(compile(cfg, data))
+  opt <- as_option(compile(cfg, data))
   expect_lt(opt[["yAxis"]][["min"]], -6)
   expect_gt(opt[["yAxis"]][["max"]], 6)
   expect_equal(
-    to_list(compile(
+    as_option(compile(
       read_chart_config(write_chart_config(cfg, tempfile(fileext = ".json"))),
       data
     )),

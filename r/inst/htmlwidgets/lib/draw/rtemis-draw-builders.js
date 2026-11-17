@@ -29,6 +29,7 @@ var RtemisDraw = (() => {
     DEFAULT_PAD: () => DEFAULT_PAD,
     DEFAULT_POINT_SIZE: () => DEFAULT_POINT_SIZE,
     FIT_MEMBERS: () => FIT_MEMBERS,
+    HISTOGRAM_CHART_CONFIG_MEMBERS: () => HISTOGRAM_CHART_CONFIG_MEMBERS,
     LINE_CHART_CONFIG_MEMBERS: () => LINE_CHART_CONFIG_MEMBERS,
     MAX_SYMBOL_SIZE: () => MAX_SYMBOL_SIZE,
     RENDERER_NAMES: () => RENDERER_NAMES,
@@ -45,21 +46,26 @@ var RtemisDraw = (() => {
     buildA3Option: () => buildA3Option,
     buildBarOption: () => buildBarOption,
     buildBoxplotOption: () => buildBoxplotOption,
+    buildHistogramOption: () => buildHistogramOption,
     buildLineOption: () => buildLineOption,
     buildScatterOption: () => buildScatterOption,
     builders: () => builders,
     calcLimits: () => calcLimits,
     calcLimitsFromZero: () => calcLimitsFromZero,
+    classCount: () => classCount,
     darkThemeTokens: () => darkThemeTokens,
     fitKeys: () => fitKeys,
     fitLabel: () => fitLabel,
     fitLegend: () => fitLegend,
     fontStack: () => fontStack,
     formatNumber: () => formatNumber,
+    histogramEdges: () => histogramEdges,
+    histogramValueLabel: () => histogramValueLabel,
     keyPlacement: () => keyPlacement,
     keyState: () => keyState,
     lightThemeTokens: () => lightThemeTokens,
     lineAspect: () => lineAspect,
+    pretty: () => pretty,
     radicalInverse: () => radicalInverse,
     registerRenderers: () => registerRenderers,
     scatterAspect: () => lineAspect,
@@ -1006,7 +1012,7 @@ var RtemisDraw = (() => {
   var SLIDER_SIZE = 30;
   var SLIDER_HANDLE = 7;
   var SLIDER_GAP = 8;
-  function axisZoom(axis, grid) {
+  function axisZoom(axis, grid, options = {}) {
     const side = axis === "x" ? "bottom" : "right";
     const current = grid[side];
     const margin = typeof current === "number" ? current : axis === "x" ? 80 : 15;
@@ -1019,10 +1025,11 @@ var RtemisDraw = (() => {
         start: 0,
         end: 100,
         ...index,
+        ...options,
         [side]: margin + SLIDER_HANDLE,
         ...axis === "x" ? { height: SLIDER_SIZE } : { width: SLIDER_SIZE }
       },
-      { type: "inside", ...index, zoomOnMouseWheel: "shift", moveOnMouseMove: true }
+      { type: "inside", ...index, ...options, zoomOnMouseWheel: "shift", moveOnMouseMove: true }
     ];
   }
   function xyZoom(boxZoom) {
@@ -1969,6 +1976,414 @@ var RtemisDraw = (() => {
       0
     );
     return { records, limits: extended ?? limits };
+  }
+
+  // src/charts/histogram/renderers.ts
+  var HISTOGRAM = "rtemis.histogram.v1";
+  var histogramRenderers = {
+    // Data: [lower edge, upper edge, height, count]. A bar spans its edges on
+    // a numeric x axis, so unequal widths draw true and a density curve
+    // aligns. Dodging and stacking follow the series the legend shows, so a
+    // hidden group's bars give their room and their stack height back.
+    [HISTOGRAM]: (params, api) => {
+      const settings = params.itemPayload;
+      const height = api.value(2);
+      if (height === 0) return void 0;
+      let lo = api.value(0);
+      let hi = api.value(1);
+      let base = 0;
+      if (settings.mode !== "overlay") {
+        const active = api.currentSeriesIndices();
+        const shown = settings.seriesIndices.filter((i) => active.includes(i));
+        const position = shown.indexOf(params.seriesIndex);
+        if (position < 0) return void 0;
+        if (settings.mode === "group") {
+          const span = (hi - lo) / shown.length;
+          lo += position * span;
+          hi = lo + span;
+        } else {
+          for (const index of shown.slice(0, position)) {
+            const row = settings.heights[settings.seriesIndices.indexOf(index)];
+            const value = row?.[params.dataIndex] ?? 0;
+            if (height >= 0 && value >= 0 || height < 0 && value < 0) base += value;
+          }
+        }
+      }
+      const left = api.coord([lo, base + height]);
+      const right = api.coord([hi, base]);
+      const [x1, y1] = left;
+      const [x2, y2] = right;
+      const color = api.visual("color");
+      return {
+        type: "rect",
+        shape: {
+          x: Math.min(x1, x2),
+          y: Math.min(y1, y2),
+          width: Math.abs(x2 - x1),
+          height: Math.abs(y2 - y1)
+        },
+        style: {
+          fill: color,
+          fillOpacity: settings.fillAlpha,
+          stroke: color,
+          strokeOpacity: settings.borderAlpha,
+          lineWidth: settings.borderAlpha > 0 ? 1 : 0
+        }
+      };
+    }
+  };
+
+  // src/charts/histogram/config.ts
+  var HISTOGRAM_CHART_CONFIG_MEMBERS = Object.freeze([
+    "type",
+    "x",
+    "group",
+    "breaks",
+    "bins",
+    "bin_edges",
+    "normalization",
+    "bin_stat",
+    "bar_mode",
+    "mode",
+    "order",
+    "density",
+    "n",
+    "bw",
+    "bandwidth",
+    "kernel",
+    "adjust",
+    "na_rm",
+    "fill_alpha",
+    "border_alpha",
+    "zoom",
+    "palette",
+    "xlab",
+    "ylab",
+    "title",
+    "margin_top",
+    "margin_right",
+    "margin_bottom",
+    "margin_left",
+    "legend_position",
+    "legend_placement",
+    "legend_title"
+  ]);
+  function heightName(config) {
+    const stat = config.bin_stat ?? "count";
+    if (stat !== "count") return stat;
+    switch (config.normalization ?? "count") {
+      case "count":
+        return "Height";
+      case "probability":
+        return "Probability";
+      case "percent":
+        return "Percent";
+      case "density":
+        return "Density";
+      case "count_density":
+        return "Count density";
+    }
+  }
+  function histogramValueLabel(config) {
+    const stat = config.bin_stat ?? "count";
+    if (stat !== "count") return stat.charAt(0).toUpperCase() + stat.slice(1);
+    const name = heightName(config);
+    return name === "Height" ? "Count" : name;
+  }
+  function normalize(counts, widths, n, normalization) {
+    if (n === 0) return counts.map(() => 0);
+    const scale = {
+      count: (c) => c,
+      probability: (c) => c / n,
+      percent: (c) => 100 * c / n,
+      density: (c, w) => c / (n * w),
+      count_density: (c, w) => c / w
+    };
+    return counts.map((c, i) => scale[normalization](c, widths[i]));
+  }
+  function buildHistogramOption(data, config, appearance = {}) {
+    const edges = data.edges;
+    if (edges.length < 2 || edges.some((e, i) => i > 0 && !(e > edges[i - 1]))) {
+      throw new Error("Histogram `edges` must be at least two strictly increasing values.");
+    }
+    const samples = data.samples;
+    if (samples.length === 0) {
+      throw new Error("A histogram needs `x` set to one or more columns to draw.");
+    }
+    const nBins = edges.length - 1;
+    for (const s of samples) {
+      if (s.counts.length !== nBins || s.values && s.values.length !== nBins) {
+        throw new Error(
+          `Each sample needs one count per bin (${nBins}); '${s.name ?? "x"}' has ${s.counts.length}.`
+        );
+      }
+    }
+    const normalization = config.normalization ?? "count";
+    const binStat = config.bin_stat ?? "count";
+    const barMode = config.bar_mode ?? "overlay";
+    const ridge = (config.mode ?? "overlap") === "ridge";
+    const density = config.density ?? false;
+    if (binStat !== "count" && (normalization !== "count" || density)) {
+      throw new Error(
+        'A `bin_stat` other than count takes `normalization = "count"` and no `density`.'
+      );
+    }
+    if (barMode !== "overlay" && (ridge || density)) {
+      throw new Error('A `bar_mode` other than overlay takes `mode = "overlap"` and no `density`.');
+    }
+    const widths = edges.slice(1).map((e, i) => e - edges[i]);
+    const first = widths[0];
+    const equalWidth = Math.max(...widths.map((w) => Math.abs(w / first - 1))) < 1e-7;
+    if (binStat === "count" && !equalWidth && normalization !== "density" && normalization !== "count_density") {
+      throw new Error('Use `normalization = "density"` or `"count_density"` for unequal-width bins.');
+    }
+    const names = samples.map((s, i) => s.name ?? `Series ${i + 1}`);
+    const nonempty = samples.filter((s) => s.n > 0).length;
+    const fillAlpha = config.fill_alpha ?? (barMode === "overlay" && !ridge && nonempty > 1 ? 0.5 : 0.75);
+    const borderAlpha = config.border_alpha ?? 1;
+    const height = heightName(config);
+    const heights = samples.map(
+      (s) => binStat === "count" ? normalize(s.counts, widths, s.n, normalization) : [...s.values ?? []]
+    );
+    const series = [];
+    const barIndices = [];
+    samples.forEach((s, i) => {
+      const name = names[i];
+      barIndices.push(series.length);
+      series.push({
+        type: "custom",
+        name,
+        renderItem: HISTOGRAM,
+        clip: true,
+        z: 2,
+        dimensions: ["Lower", "Upper", height, "Count"],
+        encode: {
+          x: [0, 1],
+          y: 2,
+          tooltip: normalization === "count" && binStat === "count" ? [0, 1, 3] : [0, 1, 2, 3]
+        },
+        data: s.counts.map((c, b) => [edges[b], edges[b + 1], heights[i]?.[b] ?? 0, c])
+      });
+      if (density) {
+        const multiplier = normalization === "count" ? s.n * first : normalization === "probability" ? first : normalization === "percent" ? 100 * first : normalization === "density" ? 1 : s.n;
+        const curve = s.density ?? { x: [], y: [] };
+        series.push({
+          type: "line",
+          name,
+          // Transparent point targets give the curve an item tooltip, which an
+          // unmarked line does not; the SVG export draws them invisibly.
+          showSymbol: true,
+          symbol: "circle",
+          symbolSize: 8,
+          itemStyle: { opacity: 0 },
+          lineStyle: { opacity: 1 },
+          emphasis: { itemStyle: { opacity: 1 } },
+          z: 3,
+          data: curve.x.map((x, j) => [x, curve.y[j] * multiplier])
+        });
+      }
+    });
+    const payload = {
+      fillAlpha,
+      borderAlpha,
+      mode: barMode,
+      seriesIndices: barIndices,
+      heights
+    };
+    for (const i of barIndices) series[i].itemPayload = payload;
+    const curveHeights = series.filter((s) => s.type === "line").flatMap((s) => s.data.map((d) => d[1]));
+    const totals = barMode === "stack" ? edges.slice(1).flatMap((_, b) => [
+      heights.reduce((sum, h) => sum + Math.max(h[b] ?? 0, 0), 0),
+      heights.reduce((sum, h) => sum + Math.min(h[b] ?? 0, 0), 0)
+    ]) : heights.flat();
+    const low = Math.min(0, ...totals, ...curveHeights);
+    const high = Math.max(0, ...totals, ...curveHeights);
+    const palette = asArray(config.palette);
+    const colors = palette.length > 0 ? palette : appearance.palette;
+    const xlab = config.xlab || null;
+    const ylab = config.ylab || null;
+    const common = {
+      ...config.title ? { title: { text: config.title } } : {},
+      tooltip: { trigger: "item", valueFormatter: formatNumber },
+      // A custom bar hovered during an update transition leaves the y axis at
+      // an intermediate scale (ECharts 6.1.0), so updates apply at once.
+      animationDurationUpdate: 0,
+      ...colors && colors.length > 0 ? { color: [...colors] } : {},
+      ...appearance.animation === void 0 ? {} : { animation: appearance.animation }
+    };
+    if (ridge && samples.length > 1) {
+      return ridgeOption(common, series, names, edges, low, high, xlab, config.zoom ?? false);
+    }
+    const xAxis = {
+      type: "value",
+      scale: true,
+      ...xlab ? { name: xlab, nameLocation: "middle" } : {}
+    };
+    const yAxis = {
+      type: "value",
+      min: low < 0 ? low * 1.05 : 0,
+      ...barMode === "stack" && high > 0 ? { max: high * 1.05 } : {},
+      ...ylab ? { name: ylab, nameLocation: "middle" } : {}
+    };
+    const grid = cartesianGrid(config, Boolean(xlab || ylab));
+    const dataZoom = config.zoom ? axisZoom("x", grid, { filterMode: "none" }) : void 0;
+    return {
+      ...common,
+      ...samples.length > 1 ? { legend: { data: names, itemStyle: { opacity: 1 } } } : {},
+      xAxis,
+      yAxis,
+      grid,
+      ...dataZoom ? { dataZoom } : {},
+      series
+    };
+  }
+  function ridgeOption(common, series, names, edges, low, high, xlab, zoom) {
+    const rows = names.length;
+    const curveX = series.filter((s) => s.type === "line").flatMap((s) => s.data.map((d) => d[0]));
+    const xMin = Math.min(edges[0], ...curveX);
+    const xMax = Math.max(edges[edges.length - 1], ...curveX);
+    const placed = series.map((s) => {
+      const row = names.indexOf(s.name);
+      return { ...s, xAxisIndex: row, yAxisIndex: row };
+    });
+    return {
+      ...common,
+      legend: { show: false },
+      // Each row's plotting box is its grid's rectangle, so the rows share one
+      // left edge and one x scale whatever their labels' widths.
+      grid: names.map((_, i) => ({
+        left: 100,
+        right: 30,
+        top: `${8 + i * 80 / rows}%`,
+        height: `${64 / rows}%`,
+        outerBoundsMode: "none"
+      })),
+      xAxis: names.map((_, i) => ({
+        type: "value",
+        min: xMin,
+        max: xMax,
+        gridIndex: i,
+        show: i === rows - 1,
+        ...i === rows - 1 && xlab ? { name: xlab, nameLocation: "middle" } : {}
+      })),
+      yAxis: names.map((name, i) => ({
+        type: "value",
+        min: low < 0 ? low * 1.05 : 0,
+        max: high > 0 ? high * 1.05 : 1,
+        gridIndex: i,
+        name,
+        nameLocation: "middle",
+        nameGap: 55,
+        splitNumber: 2,
+        axisLabel: { showMinLabel: false, showMaxLabel: false }
+      })),
+      ...zoom ? {
+        dataZoom: [
+          {
+            type: "inside",
+            xAxisIndex: names.map((_, i) => i),
+            filterMode: "none",
+            zoomOnMouseWheel: "shift",
+            moveOnMouseMove: true
+          }
+        ]
+      } : {},
+      series: placed
+    };
+  }
+
+  // src/charts/histogram/edges.ts
+  var MAX_CLASSES = 1e6;
+  function classCount(summary, breaks) {
+    const { n } = summary;
+    const range2 = summary.max - summary.min;
+    switch (breaks) {
+      case "Sturges":
+        return Math.ceil(Math.log2(n) + 1);
+      case "Scott": {
+        const h = 3.5 * (summary.sd ?? 0) * n ** (-1 / 3);
+        return h > 0 ? Math.max(1, Math.ceil(range2 / h)) : 1;
+      }
+      case "FD":
+      case "Freedman-Diaconis": {
+        const iqr = (summary.q3 ?? 0) - (summary.q1 ?? 0);
+        const h = 2 * iqr * n ** (-1 / 3);
+        return h > 0 ? Math.max(1, Math.ceil(range2 / h)) : 1;
+      }
+    }
+  }
+  function pretty(lo, hi, n = 5, minN = Math.floor(n / 3)) {
+    const h = 1.5;
+    const h5 = 0.5 + 1.5 * h;
+    const shrink = 0.75;
+    const roundingEps = 1e-10;
+    const dx = hi - lo;
+    let cell;
+    let small;
+    if (dx === 0 && hi === 0) {
+      cell = 1;
+      small = true;
+    } else {
+      cell = Math.max(Math.abs(lo), Math.abs(hi));
+      const u2 = (1 + (h5 >= 1.5 * h + 0.5 ? 1 / (1 + h) : 1.5 / (1 + h5))) * Math.max(1, n);
+      small = dx < cell * u2 * Number.EPSILON * 3;
+    }
+    if (small) {
+      if (cell > 10) cell = 9 + cell / 10;
+      cell *= shrink;
+      if (minN > 1) cell /= minN;
+    } else {
+      cell = dx;
+      if (n > 1) cell /= n;
+    }
+    const tiny = 2 ** -20 * Number.MIN_VALUE;
+    if (cell < (tiny === 0 ? Number.MIN_VALUE : tiny)) cell = Number.MIN_VALUE;
+    else if (cell > Number.MAX_VALUE / 1.25) cell = 0.1 * Number.MAX_VALUE;
+    const base = 10 ** Math.floor(Math.log10(cell));
+    let unit = base;
+    if (2 * base - cell < h * (cell - unit)) {
+      unit = 2 * base;
+      if (5 * base - cell < h5 * (cell - unit)) {
+        unit = 5 * base;
+        if (10 * base - cell < h * (cell - unit)) unit = 10 * base;
+      }
+    }
+    let ns = Math.floor(lo / unit + roundingEps);
+    let nu = Math.ceil(hi / unit - roundingEps);
+    while (ns * unit > lo + roundingEps * unit) ns--;
+    while (nu * unit < hi - roundingEps * unit) nu++;
+    let k = Math.trunc(0.5 + nu - ns);
+    if (k < minN) {
+      const d = minN - k;
+      if (ns >= 0) {
+        nu += Math.trunc(d / 2);
+        ns -= Math.trunc(d / 2) + d % 2;
+      } else {
+        ns -= Math.trunc(d / 2);
+        nu += Math.trunc(d / 2) + d % 2;
+      }
+      k = minN;
+    }
+    const l = Math.min(lo, ns * unit);
+    const u = Math.max(hi, nu * unit);
+    const by = (u - l) / k;
+    return Array.from({ length: k + 1 }, (_, i) => {
+      const v = i === k ? u : l + i * by;
+      return Math.abs(v) < 1e-14 * by ? 0 : v;
+    });
+  }
+  function histogramEdges(summary, options = {}) {
+    if (!(summary.n > 0) || !Number.isFinite(summary.min) || !Number.isFinite(summary.max)) {
+      throw new Error("A histogram needs at least one finite value to bin.");
+    }
+    const count = Math.min(
+      options.bins ?? classCount(summary, options.breaks ?? "Sturges"),
+      MAX_CLASSES
+    );
+    if (!(count >= 1)) {
+      throw new Error(`\`bins\` must be at least 1; it is ${count}.`);
+    }
+    return pretty(summary.min, summary.max, count, 1);
   }
 
   // src/shared/fit.ts
@@ -3190,6 +3605,7 @@ var RtemisDraw = (() => {
   // src/shared/renderers.ts
   var renderers = Object.freeze({
     ...boxplotRenderers,
+    ...histogramRenderers,
     ...scatterRenderers
   });
   var RENDERER_NAMES = Object.freeze(Object.keys(renderers));
@@ -3204,6 +3620,7 @@ var RtemisDraw = (() => {
     a3: buildA3Option,
     bar: buildBarOption,
     boxplot: buildBoxplotOption,
+    histogram: buildHistogramOption,
     line: buildLineOption,
     scatter: buildScatterOption
   });

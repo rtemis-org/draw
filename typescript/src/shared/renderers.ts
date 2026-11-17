@@ -5,10 +5,12 @@
  * spec: draw/shared-builders#package
  */
 import { boxplotRenderers } from "../charts/boxplot/renderers.ts";
+import { histogramRenderers } from "../charts/histogram/renderers.ts";
 import { scatterRenderers } from "../charts/scatter/renderers.ts";
 
 const renderers: Readonly<Record<string, unknown>> = Object.freeze({
   ...boxplotRenderers,
+  ...histogramRenderers,
   ...scatterRenderers,
 });
 

@@ -183,7 +183,7 @@ draw_annotate <- function(
 
 # %% CARTESIAN_BUILDER_TYPES ----
 # Chart types built by @rtemis/draw on one cartesian grid, which take layers.
-CARTESIAN_BUILDER_TYPES <- c("bar", "boxplot", "line", "scatter")
+CARTESIAN_BUILDER_TYPES <- c("bar", "boxplot", "histogram", "line", "scatter")
 
 
 # %% add_cartesian_layer ----

@@ -12,7 +12,8 @@ BuildRequest(
 )
 }
 \arguments{
-\item{type}{Character \{"a3", "bar", "boxplot", "line"\}: Chart type.}
+\item{type}{Character \{"a3", "bar", "boxplot", "histogram", "line",
+"scatter"\}: Chart type.}
 
 \item{data}{Character: The chart data as JSON text.}
 

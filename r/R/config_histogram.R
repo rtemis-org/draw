@@ -468,6 +468,9 @@ method(compile, HistogramConfig) <- function(
     ylab = config@ylab,
     title = config@title,
     margins = config_margins(config) %||% DEFAULT_MARGINS,
-    zoom = config@zoom
+    zoom = config@zoom,
+    legend_position = config@legend_position,
+    legend_placement = config@legend_placement,
+    legend_title = config@legend_title
   )
 }

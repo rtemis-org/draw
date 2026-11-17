@@ -54,8 +54,8 @@ test_that("density compiles to the same option as the vector path", {
 test_that("histogram compiles to the same option as the vector path", {
   d <- dh_data()
   expect_identical(
-    compile(setup_HistogramConfig(x = "v"), data = d),
-    histogram_option(x = d[["v"]], xlab = "v")
+    raw_option(compile(setup_HistogramConfig(x = "v"), data = d)),
+    raw_option(histogram_option(x = d[["v"]], xlab = "v"))
   )
 })
 

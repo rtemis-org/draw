@@ -65,9 +65,8 @@ palette for this chart. \code{NULL} uses the theme's.}
 \item{theme}{Optional \link{Theme}: Theme override.}
 
 \item{margins}{Optional Named numeric vector or named list: Plot margins in
-pixels (or percentage strings) for any of \code{"top"}, \code{"right"},
-\code{"bottom"}, \code{"left"}. Unspecified sides keep echarts' default auto-sizing.
-See \code{\link[=draw_line]{draw_line()}} for details.}
+pixels for any of \code{"top"}, \code{"right"}, \code{"bottom"}, \code{"left"}. See
+\code{\link[=draw_line]{draw_line()}}.}
 
 \item{width}{Optional Character or Numeric: Widget width.}
 
@@ -144,11 +143,9 @@ statistics require normalization = "count" and density = FALSE.}
 Stacks accumulate positive and negative values separately. Group/stack
 layouts require mode = "overlap" and density = FALSE.}
 
-\item{zoom}{Logical, \link{DataZoom}, or list of \link{DataZoom}: Enable x-axis zoom.
-\code{TRUE} adds a slider below the axis title, Shift+wheel zoom, and drag
-panning; in ridge mode, every row zooms together and no slider is drawn.
-Double-click resets the view. \code{FALSE} disables zoom. Pass \link{DataZoom}
-objects (or a list of them) for full control.}
+\item{zoom}{Logical: Enable x-axis zoom: a slider below the axis title,
+Shift+wheel zoom, and drag panning. Ridge rows zoom together without a
+slider. Bins crossing the window edge stay whole, clipped by the plot.}
 }
 \value{
 htmlwidget: Widget object.

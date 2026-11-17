@@ -25,6 +25,8 @@ for (const item of input.charts) {
         for (let i = 0; i < data.count(); i++) {
           const raw = data.getRawDataItem(i);
           const mark = data.getItemGraphicEl(i);
+          // An empty bin draws nothing.
+          if (raw[2] === 0) { assert.equal(mark, undefined); continue; }
           assert.equal(mark.type, 'rect');
           const settings=series.get('itemPayload');
           const active=model.getSeries().filter(s=>s.subType==='custom'&&!model.isSeriesFiltered(s));
@@ -51,7 +53,9 @@ for (const item of input.charts) {
       } else if (series.subType === 'line' && data.count()) {
         const line = chart.getViewOfSeriesModel(series)._polyline;
         const hist = model.getSeriesByName(series.name).find(s => s.subType === 'custom');
-        assert.equal(line.style.stroke, hist.getData().getItemGraphicEl(0).style.fill, 'Layer colors disagree');
+        const histData = hist.getData();
+        const bar = [...Array(histData.count()).keys()].map(j => histData.getItemGraphicEl(j)).find(Boolean);
+        if (bar) assert.equal(line.style.stroke, bar.style.fill, 'Layer colors disagree');
         const points = line.shape.points;
         for (let i = 0; i < data.count(); i++) {
           const raw = data.getRawDataItem(i);

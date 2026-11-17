@@ -1777,7 +1777,10 @@ draw_density <- function(
 #'   one nonempty group outside ridge mode) and 0.75 otherwise.
 #' @param border_alpha Numeric `[0, 1]`: Opacity of the bar borders, drawn in
 #'   the series color. 0 draws no border.
-#' @inheritParams draw_density n bw bandwidth kernel adjust na_rm verbosity zoom
+#' @inheritParams draw_density n bw bandwidth kernel adjust na_rm verbosity
+#' @param zoom Logical: Enable x-axis zoom: a slider below the axis title,
+#'   Shift+wheel zoom, and drag panning. Ridge rows zoom together without a
+#'   slider. Bins crossing the window edge stay whole, clipped by the plot.
 #' @param palette Optional Character: Series colors, overriding the theme
 #'   palette for this chart. `NULL` uses the theme's.
 #' @param xlab Optional Character: X-axis title. `""` draws no title.
@@ -1785,9 +1788,8 @@ draw_density <- function(
 #' @param title Optional Character: Chart title.
 #' @param theme Optional [Theme]: Theme override.
 #' @param margins Optional Named numeric vector or named list: Plot margins in
-#'   pixels (or percentage strings) for any of `"top"`, `"right"`,
-#'   `"bottom"`, `"left"`. Unspecified sides keep echarts' default auto-sizing.
-#'   See [draw_line()] for details.
+#'   pixels for any of `"top"`, `"right"`, `"bottom"`, `"left"`. See
+#'   [draw_line()].
 #' @param width Optional Character or Numeric: Widget width.
 #' @param height Optional Character or Numeric: Widget height.
 #' @param element_id Optional Character: Explicit DOM element ID for the widget

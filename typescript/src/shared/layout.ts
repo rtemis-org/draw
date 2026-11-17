@@ -47,12 +47,15 @@ const SLIDER_GAP = 8;
 /**
  * The zoom preset on one axis: a slider placed in a band the grid reserves on
  * the axis side, and an inside zoom on Shift+wheel with drag panning, so the
- * plain wheel scrolls the host page. Mutates `grid` to reserve the band.
+ * plain wheel scrolls the host page. `filterMode: "none"` keeps marks that
+ * cross the window edge whole, clipped by the grid. Mutates `grid` to
+ * reserve the band.
  * spec: draw/zoom-controls#design
  */
 export function axisZoom(
   axis: "x" | "y",
   grid: Record<string, unknown>,
+  options: { readonly filterMode?: "none" } = {},
 ): Record<string, unknown>[] {
   const side: Side = axis === "x" ? "bottom" : "right";
   const current = grid[side];
@@ -66,10 +69,11 @@ export function axisZoom(
       start: 0,
       end: 100,
       ...index,
+      ...options,
       [side]: margin + SLIDER_HANDLE,
       ...(axis === "x" ? { height: SLIDER_SIZE } : { width: SLIDER_SIZE }),
     },
-    { type: "inside", ...index, zoomOnMouseWheel: "shift", moveOnMouseMove: true },
+    { type: "inside", ...index, ...options, zoomOnMouseWheel: "shift", moveOnMouseMove: true },
   ];
 }
 

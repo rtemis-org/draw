@@ -1,7 +1,8 @@
 // Shared custom-series renderers for browser widgets and Node SVG export.
 // renderItem names and itemPayload remain plain JSON in the compiled option.
-// The boxplot's and the scatter rug's renderers are @rtemis/draw's: in Node
-// this module registers them too, and in a browser the binding does.
+// The boxplot's, the histogram's, and the scatter rug's renderers are
+// @rtemis/draw's: in Node this module registers them too, and in a browser
+// the binding does.
 // See CustomSeriesOption / CustomSeriesRenderItemParams in ECharts
 // src/chart/custom/CustomSeries.ts and name lookup in CustomView.ts.
 (function (root, register) {
@@ -32,35 +33,6 @@
       return { type: "text", style: { x: point[0], y: box.y + box.height + 10,
         text: String(api.value(1)), align: "center", verticalAlign: "top",
         fill: "#888888", font: api.font({ fontSize: 12 }) } };
-    },
-    // Data: [lower edge, upper edge, normalized height, raw count]. Numeric
-    // coordinates retain unequal bin widths and align optional density lines.
-    "rtemis.histogram.v1": function (params, api) {
-      const settings=params.itemPayload, height=api.value(2);
-      let lo=api.value(0), hi=api.value(1), base=0;
-      if(settings.mode && settings.mode!=="overlay") {
-        const active=api.currentSeriesIndices();
-        const indices=settings.seriesIndices.filter(i=>active.includes(i));
-        const position=indices.indexOf(params.seriesIndex);
-        if(position<0) return;
-        if(settings.mode==="group") {
-          const span=(hi-lo)/indices.length;
-          lo+=position*span;hi=lo+span;
-        } else {
-          for(const index of indices.slice(0,position)) {
-            const value=settings.heights[settings.seriesIndices.indexOf(index)][params.dataIndex];
-            if((height>=0 && value>=0)||(height<0 && value<0)) base+=value;
-          }
-        }
-      }
-      const left = api.coord([lo, base+height]);
-      const right = api.coord([hi, base]);
-      return { type: "rect", shape: {
-        x: Math.min(left[0], right[0]), y: Math.min(left[1], right[1]),
-        width: Math.abs(right[0] - left[0]), height: Math.abs(right[1] - left[1])
-      }, style: { fill: api.visual("color"), fillOpacity: settings.fillAlpha,
-        stroke: api.visual("color"), strokeOpacity: settings.borderAlpha,
-        lineWidth: settings.borderAlpha > 0 ? 1 : 0 } };
     },
     // Data: [row, start, end, optional border flag]. Colors are resolved by
     // ECharts so series legends and per-datum styling use the same visual.
