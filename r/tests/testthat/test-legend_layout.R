@@ -281,7 +281,7 @@ test_that("legend titles clear legends and plots across anchors and resizes", {
   jsonlite::write_json(
     list(
       charts = lapply(charts, function(x) strip_js(built_payload(x))),
-      untitled = lapply(untitled, function(x) strip_js(x[["x"]])),
+      untitled = lapply(untitled, function(x) strip_js(built_payload(x))),
       echarts = system.file(
         "htmlwidgets/lib/echarts/echarts.min.js",
         package = "rtemis.draw"

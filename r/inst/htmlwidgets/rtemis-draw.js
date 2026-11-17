@@ -49,7 +49,8 @@ if (typeof RtemisDraw !== 'undefined' && typeof echarts !== 'undefined') {
 // @rtemis/draw builders (rtemis-draw-builders.js), for the current color
 // scheme. The A3 surface hints come from the same package; flags set in R
 // (autoHeight, autoGrid) take precedence. A grid set in R replaces the built
-// margins. spec: draw/shared-builders#r-widget
+// margins, and the request's layers follow the built series.
+// spec: draw/shared-builders#r-widget
 function rtemisDrawBuild(x, dark) {
   const request = x.build;
   const builder = RtemisDraw.builders[request.type];
@@ -60,7 +61,8 @@ function rtemisDrawBuild(x, dark) {
   // The builders leave the background to the host; the widget paints the theme's.
   delete option.backgroundColor;
   if (request.appearance?.grid) option.grid = {...option.grid, ...request.appearance.grid};
-  x.option = option;
+  // Layers added in R (draw_add_fit(), draw_annotate()) follow every build.
+  x.option = RtemisDraw.appendLayers(option, request.layers);
   x.builtDark = dark;
   if (request.type === 'a3') {
     x.a3 = {...RtemisDraw.a3SurfaceHints(data, request.config, appearance), ...x.a3};

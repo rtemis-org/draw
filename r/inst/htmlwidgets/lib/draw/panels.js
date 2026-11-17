@@ -52,7 +52,7 @@
     grid.left = a.leftPx + (width - a.leftPx - a.rightPx - grid.width) / 2;
     grid.top = a.topPx + (height - a.topPx - a.botPx - grid.height) / 2;
   }
-  // Native outer bounds reserve axis-label/name space before we enforce the
+  // Native outer bounds reserve axis-label/name space before the layout enforces the
   // data-area ratio. Pinning the unmeasured outer box instead clips labels;
   // leaving native shrinkage unconstrained makes an identity line non-square.
   // Shared by standalone widgets, bounded panels, and Node SVG rendering.
@@ -428,8 +428,10 @@
     chart.setOption({grid: grids});
     if (payload.squareCells) fitHeatmap(chart, adjusted);
     const areas = [];
+    // The plotting area of the scale's series: a heatmap's cells, or a
+    // scatter chart's points.
     model.eachTargetSeries(series => {
-      if (series.subType === 'heatmap' && series.coordinateSystem?.type === 'cartesian2d') areas.push(series.coordinateSystem.getArea());
+      if (series.coordinateSystem?.type === 'cartesian2d') areas.push(series.coordinateSystem.getArea());
     });
     if (!areas.length) return;
     const grid = areas[0];
@@ -513,9 +515,9 @@
   }
   // Fit the package-owned timeline renderer on every surface. Measure native
   // legend/text bounds instead of reserving a fixed right-hand strip. ECharts
-  // GridOption, LegendOption and AxisLabelBaseOption are the source contracts
+  // GridOption, LegendOption, and AxisLabelBaseOption are the source contracts
   // (coord/cartesian/GridModel.ts, component/legend/LegendModel.ts,
-  // coord/axisCommonTypes.ts). No data, zoom or selection settings are replaced.
+  // coord/axisCommonTypes.ts). No data, zoom, or selection settings are replaced.
   // spec: draw/first-cran-release#responsive-timelines
   function fitGantt(echarts, chart, payload) {
     const source = payload.option;

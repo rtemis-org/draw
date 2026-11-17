@@ -58,7 +58,7 @@ function build(panel) {
   }
   delete option.dataZoom;
   delete option.toolbox;
-  panel.option = option;
+  panel.option = builders.appendLayers(option, request.layers);
   if (request.type === "a3") {
     panel.a3 = {...builders.a3SurfaceHints(data, request.config, appearance), ...panel.a3};
   }

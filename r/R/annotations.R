@@ -146,15 +146,6 @@ draw_annotate <- function(
   y_axis = 0L,
   layer = NULL
 ) {
-  if (
-    !inherits(plot, "rtemis-draw") ||
-      is.null(plot[["x"]][["option"]][["xAxis"]])
-  ) {
-    abort(
-      "Annotate an ECharts cartesian drawing before panel composition.",
-      class = c("rtemis_type_error", "rtemis_input_error")
-    )
-  }
   if (is.null(layer)) {
     layer <- AnnotationLayer(
       hline = hline,
@@ -180,11 +171,81 @@ draw_annotate <- function(
       )
     }
   }
-  option <- cartesian_layer_option(plot, layer@x_axis, layer@y_axis)
-  option[["series"]] <- c(option[["series"]], list(to_list(layer)))
-  plot[["x"]][["option"]] <- option
-  plot
+  add_cartesian_layer(
+    plot,
+    list(to_list(layer)),
+    NULL,
+    layer@x_axis,
+    layer@y_axis
+  )
 }
+
+
+# %% CARTESIAN_BUILDER_TYPES ----
+# Chart types built by @rtemis/draw on one cartesian grid, which take layers.
+CARTESIAN_BUILDER_TYPES <- c("bar", "boxplot", "line", "scatter")
+
+
+# %% add_cartesian_layer ----
+#' Add series to a cartesian drawing
+#'
+#' A drawing that carries a build request takes the series as a layer of the
+#' request, which the widget, SVG export, and [echarts_option()] append after
+#' every build (`appendLayers()` in `@rtemis/draw`). Any other drawing takes
+#' them in its option.
+#'
+#' @param plot htmlwidget: Cartesian ECharts drawing.
+#' @param series List: ECharts series, as named lists.
+#' @param legend Optional Character: Legend entry the series add.
+#' @param x_axis,y_axis Integer `[0, Inf)`: Zero-based axis indices.
+#'
+#' @return htmlwidget: The drawing with the series added.
+#'
+#' @author EDG
+#' @keywords internal
+#' @noRd
+add_cartesian_layer <- function(plot, series, legend, x_axis, y_axis) {
+  build <- if (inherits(plot, "rtemis-draw")) plot[["x"]][["build"]]
+  if (is.null(build)) {
+    option <- cartesian_layer_option(plot, x_axis, y_axis)
+    option[["series"]] <- c(option[["series"]], series)
+    if (!is.null(legend)) {
+      if (is.null(option[["legend"]])) {
+        option[["legend"]] <- list(show = TRUE)
+      }
+      if (!is.null(option[["legend"]][["data"]])) {
+        option[["legend"]][["data"]] <- as.list(unique(c(
+          unlist(option[["legend"]][["data"]], use.names = FALSE),
+          legend
+        )))
+      }
+    }
+    plot[["x"]][["option"]] <- option
+    return(plot)
+  }
+  if (!build[["type"]] %in% CARTESIAN_BUILDER_TYPES) {
+    abort(
+      "Add layers to a cartesian drawing (",
+      paste(CARTESIAN_BUILDER_TYPES, collapse = ", "),
+      "); this one is of type '",
+      build[["type"]],
+      "'.",
+      class = c("rtemis_type_error", "rtemis_input_error")
+    )
+  }
+  if (x_axis != 0L || y_axis != 0L) {
+    abort(
+      "This chart has one x axis and one y axis: set `x_axis` and `y_axis` to 0.",
+      class = c("rtemis_value_error", "rtemis_input_error")
+    )
+  }
+  build[["layers"]] <- c(
+    build[["layers"]],
+    list(Filter(Negate(is.null), list(series = series, legend = legend)))
+  )
+  plot[["x"]][["build"]] <- build
+  plot
+} # /rtemis.draw::add_cartesian_layer
 
 
 #' Validate the target of a Cartesian layer

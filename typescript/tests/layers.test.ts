@@ -20,6 +20,7 @@ const PENDING: Record<string, RegExp | "all"> = {
   bar: /(^|\.)nameLocation$/,
   boxplot: /(^|\.)nameLocation$/,
   line: /(^|\.)nameLocation$/,
+  scatter: /(^|\.)nameLocation$/,
 };
 
 function leafPaths(value: unknown, prefix = ""): string[] {

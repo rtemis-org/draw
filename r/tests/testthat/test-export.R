@@ -132,7 +132,7 @@ test_that("static preparation preserves missing data dimensions and positions", 
 
 test_that("unsupported callbacks and backends leave existing output untouched", {
   # An option built in R, where a caller can attach a JavaScript callback.
-  w <- draw_scatter(x = c(1, 2), y = c(1, 2))
+  w <- draw_pie(c(A = 1, B = 2))
   path <- tempfile(fileext = ".svg")
   on.exit(unlink(path), add = TRUE)
   writeLines("existing output", path)

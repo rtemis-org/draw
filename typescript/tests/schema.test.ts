@@ -5,6 +5,7 @@ import { A3_CHART_CONFIG_MEMBERS } from "../src/charts/a3/config.ts";
 import { BAR_CHART_CONFIG_MEMBERS } from "../src/charts/bar/config.ts";
 import { BOXPLOT_CHART_CONFIG_MEMBERS } from "../src/charts/boxplot/config.ts";
 import { LINE_CHART_CONFIG_MEMBERS } from "../src/charts/line/config.ts";
+import { SCATTER_CHART_CONFIG_MEMBERS } from "../src/charts/scatter/config.ts";
 
 // `just ts-schema-check` generates the chart schemas from the R classes into a
 // temporary directory and sets RTEMIS_DRAW_SCHEMA_DIR; without it the check is
@@ -19,6 +20,7 @@ describe.skipIf(!schemaDir)("config types against the generated schemas", () => 
     ["bar", BAR_CHART_CONFIG_MEMBERS],
     ["boxplot", BOXPLOT_CHART_CONFIG_MEMBERS],
     ["line", LINE_CHART_CONFIG_MEMBERS],
+    ["scatter", SCATTER_CHART_CONFIG_MEMBERS],
   ];
   for (const [type, members] of cases) {
     it(`the ${type} config type has every chart/${type}/v1 property and no other`, () => {

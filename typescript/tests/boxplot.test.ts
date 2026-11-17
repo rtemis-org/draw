@@ -4,7 +4,7 @@ import {
   buildBoxplotOption,
   radicalInverse,
 } from "../src/charts/boxplot/config.ts";
-import { RENDERER_NAMES, registerRenderers } from "../src/charts/boxplot/renderers.ts";
+import { RENDERER_NAMES, registerRenderers } from "../src/shared/renderers.ts";
 
 type Series = {
   type: string;

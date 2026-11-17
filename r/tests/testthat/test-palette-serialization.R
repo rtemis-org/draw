@@ -83,9 +83,8 @@ test_that("palette_colors strips names and leaves values alone", {
 # %% the color vocabulary ----
 
 test_that("every chart taking a categorical palette calls it `palette`", {
-  # One concept, one name. `color` used to mean this on most functions and
-  # `palette` on the network ones; `palette` is the accurate name, since the
-  # value is a vector of colors cycled across series.
+  # One concept, one name: `palette` is a vector of colors cycled across
+  # series.
   categorical <- c(
     "draw_line",
     "draw_bar",
@@ -102,8 +101,15 @@ test_that("every chart taking a categorical palette calls it `palette`", {
   for (fn in categorical) {
     args <- names(formals(get(fn)))
     expect_true("palette" %in% args, label = fn)
-    expect_false("color" %in% args, label = fn)
+    # draw_scatter()'s `color` takes values mapped to its continuous scale,
+    # `colormap`, as `size` takes values mapped to symbol area.
+    expect_identical(
+      "color" %in% args,
+      fn == "draw_scatter",
+      label = fn
+    )
   }
+  expect_true("colormap" %in% names(formals(draw_scatter)))
 })
 
 test_that("every chart taking a continuous scale calls it `colormap`", {
@@ -129,7 +135,7 @@ test_that("role colors keep their own names", {
 })
 
 test_that("palette reaches the option for density and histogram", {
-  # Both previously had no way to override the theme palette at all.
+  # Both take a palette that overrides the theme's.
   pal <- c("#111111", "#222222")
   d <- draw_density(rnorm(50), group = rep(c("a", "b"), 25), palette = pal)
   expect_identical(d[["x"]][["option"]][["color"]], pal)

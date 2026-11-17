@@ -10,7 +10,7 @@
 
 # %% BUILDER_TYPES ----
 # Chart types with a builder in the bundled @rtemis/draw.
-BUILDER_TYPES <- c("a3", "bar", "boxplot", "line")
+BUILDER_TYPES <- c("a3", "bar", "boxplot", "line", "scatter")
 
 
 # %% BuildRequest ----
@@ -139,10 +139,11 @@ config_members <- function(config) {
 # %% tabular_json ----
 #' A tabular chart's data, as @rtemis/draw's tabular builders take it
 #'
-#' The JSON text of `{columns, levels, types, frequency}`: `columns` maps each
+#' The JSON text of `{columns, levels, types, frequency, fits}`: `columns` maps each
 #' named column to an array of values, `levels` maps each factor column to its
 #' level order, `types` marks each date or date-time column `"time"`, and
-#' `frequency` names the column of row counts, or is `null`. Numbers are
+#' `frequency` names the column of row counts, or is `null`; `fits`, present
+#' when given, lists the fitted curves. Numbers are
 #' written as numbers and missing values as `null`. A factor is written as its
 #' labels. A date or date-time is written as epoch milliseconds of its
 #' wall-clock reading in UTC (`time_axis_ms()`), which the builders place and
@@ -152,13 +153,15 @@ config_members <- function(config) {
 #' @param columns Character: Columns to include.
 #' @param frequency Optional Character: Column holding the number of rows each
 #'   row stands for, written with the columns and named as `frequency`.
+#' @param fits Optional List: Fitted curves from `fit_curves()`, written as
+#'   `fits`.
 #'
 #' @return Character: JSON text.
 #'
 #' @author EDG
 #' @keywords internal
 #' @noRd
-tabular_json <- function(data, columns, frequency = NULL) {
+tabular_json <- function(data, columns, frequency = NULL, fits = NULL) {
   columns <- unique(c(columns, frequency))
   as_values <- function(x) {
     if (is.factor(x)) {
@@ -186,14 +189,17 @@ tabular_json <- function(data, columns, frequency = NULL) {
     if (length(x)) x else stats::setNames(list(), character(0))
   }
   as.character(jsonlite::toJSON(
-    list(
-      columns = values,
-      levels = as_object(levels),
-      types = as_object(stats::setNames(
-        lapply(times, function(name) jsonlite::unbox("time")),
-        times
-      )),
-      frequency = if (!is.null(frequency)) jsonlite::unbox(frequency)
+    c(
+      list(
+        columns = values,
+        levels = as_object(levels),
+        types = as_object(stats::setNames(
+          lapply(times, function(name) jsonlite::unbox("time")),
+          times
+        )),
+        frequency = if (!is.null(frequency)) jsonlite::unbox(frequency)
+      ),
+      if (!is.null(fits)) list(fits = lapply(fits, fit_json))
     ),
     auto_unbox = FALSE,
     na = "null",
@@ -201,3 +207,27 @@ tabular_json <- function(data, columns, frequency = NULL) {
     digits = NA
   ))
 }
+
+
+# %% fit_json ----
+#' One fitted curve as the builders take it
+#'
+#' @param curve Named list: A curve from `fit_curves()`.
+#'
+#' @return Named list for `jsonlite::toJSON(auto_unbox = FALSE)`: the column
+#'   and group as scalars, the coordinates as arrays.
+#'
+#' @author EDG
+#' @keywords internal
+#' @noRd
+fit_json <- function(curve) {
+  list(
+    y = jsonlite::unbox(curve[["y"]]),
+    group = if (!is.null(curve[["group"]])) jsonlite::unbox(curve[["group"]]),
+    x = curve[["x"]],
+    fitted = curve[["fitted"]],
+    lower = curve[["lower"]],
+    upper = curve[["upper"]],
+    rsq = jsonlite::unbox(curve[["rsq"]])
+  )
+} # /rtemis.draw::fit_json

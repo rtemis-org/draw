@@ -28,7 +28,7 @@ if (!builder) {
 const data = typeof request.data === "string" ? JSON.parse(request.data) : request.data;
 const appearance = { ...request.appearance, dark: input.dark === true };
 try {
-	const option = builder(data, request.config, appearance);
+	const option = builders.appendLayers(builder(data, request.config, appearance), request.layers);
 	const aspect = builders.aspectHints[request.type]?.(option, request.config) ?? null;
 	process.stdout.write(JSON.stringify(input.what === "aspect" ? aspect : option));
 } catch (e) {

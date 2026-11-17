@@ -7,7 +7,12 @@ test_that("fit defaults retain their coordinate expressions", {
 })
 
 test_that("fit coordinates add a named curve and extend explicit legend entries", {
-  plot <- draw_scatter(1:3, 2:4)
+  # An option built in R keeps the layer in its option.
+  plot <- draw(EChartsOption(
+    x_axis = Axis(type = "value"),
+    y_axis = Axis(type = "value"),
+    series = ScatterSeries(name = "Observed", data = list(c(1, 2), c(2, 3)))
+  ))
   plot[["x"]][["option"]][["legend"]] <- list(data = list("Observed"))
   out <- draw_add_fit(plot, x = c(3, 1, 2), y = c(4, 2, 3), name = "Predicted")
   option <- out[["x"]][["option"]]
@@ -20,6 +25,45 @@ test_that("fit coordinates add a named curve and extend explicit legend entries"
   expect_identical(
     again[["x"]][["option"]][["legend"]][["data"]],
     list("Observed", "Predicted")
+  )
+})
+
+test_that("a fit added to a built chart follows its build", {
+  skip_if_no_node()
+  plot <- draw_scatter(1:6, c(2, 3, 2, 5, 4, 6), group = rep(c("a", "b"), 3))
+  out <- draw_add_fit(plot, x = c(3, 1, 2), y = c(4, 2, 3), name = "Predicted")
+  option <- built_option(out, simplify = FALSE)
+  expect_identical(
+    unlist(option[["legend"]][["data"]]),
+    c("a", "b", "Predicted")
+  )
+  expect_equal(
+    lapply(tail(option[["series"]], 1L)[[1L]][["data"]], unlist),
+    list(c(1, 2), c(2, 3), c(3, 4))
+  )
+  # Without a listed legend, the legend shows.
+  single <- built_option(draw_add_fit(draw_scatter(1:3, 2:4), 1:3, 2:4))
+  expect_true(single[["legend"]][["show"]])
+})
+
+test_that("fit coordinates from predict() matrix columns drop their names", {
+  skip_if_no_node()
+  model <- lm(dist ~ speed, data = cars)
+  new <- data.frame(speed = c(5, 15, 25))
+  prediction <- predict(model, newdata = new, interval = "confidence")
+  out <- draw_add_fit(
+    draw_scatter(cars$speed, cars$dist),
+    new$speed,
+    prediction[, "fit"],
+    lower = prediction[, "lwr"],
+    upper = prediction[, "upr"],
+    name = "Linear fit"
+  )
+  series <- tail(built_option(out, simplify = FALSE)[["series"]], 2L)
+  expect_identical(series[[1L]][["type"]], "custom")
+  expect_equal(
+    unlist(series[[2L]][["data"]][[1L]]),
+    c(5, unname(prediction[1L, "fit"]))
   )
 })
 
@@ -43,7 +87,7 @@ test_that("supplied fits preserve paired coordinates and interval bounds", {
   expect_error(FitLayer(x = 1:2, y = 1:2, lower = 2:3, upper = 1:2))
   expect_error(FitLayer(x = c(1, Inf), y = 1:2))
   w <- draw_add_fit(draw_scatter(1:3, 2:4), layer = layer)
-  expect_length(w[["x"]][["option"]][["series"]], 3L)
+  expect_length(w[["x"]][["build"]][["layers"]][[1L]][["series"]], 2L)
   expect_error(draw_add_fit(draw_pie(c(A = 2, B = 3)), layer = layer))
   expect_error(draw_add_fit(
     draw_scatter(1:3, 2:4),
@@ -74,7 +118,7 @@ test_that("fits, rugs, references and phase labels retain vector geometry", {
       bands = list(c(2, 3))
     )
     charts[[length(charts) + 1L]] <- list(
-      option = strip_js(plot[["x"]][["option"]]),
+      option = strip_js(built_payload(plot)[["option"]]),
       theme = to_list(theme),
       labels = list("Peak {b}")
     )

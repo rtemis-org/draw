@@ -102,22 +102,27 @@ test_that("zoom_layout adds a toolbox for xy and leaves the grid unchanged", {
 
 # %% draw_scatter ----
 test_that("draw_scatter zoom = TRUE adds inside zooms on both axes and a toolbox", {
-  opt <- draw_scatter(mtcars$wt, mtcars$mpg, zoom = TRUE)$x$option
+  skip_if_no_node()
+  opt <- built_option(
+    draw_scatter(mtcars$wt, mtcars$mpg, zoom = TRUE),
+    simplify = FALSE
+  )
   expect_identical(zoom_types(opt), c("inside", "inside"))
   for (z in opt[["dataZoom"]]) {
     expect_identical(z[["zoomOnMouseWheel"]], "shift")
     expect_identical(z[["filterMode"]], "none")
   }
   expect_false(is.null(opt[["toolbox"]][["feature"]][["dataZoom"]]))
-  opt <- draw_scatter(mtcars$wt, mtcars$mpg)$x$option
+  opt <- built_option(draw_scatter(mtcars$wt, mtcars$mpg))
   expect_null(opt[["dataZoom"]])
   expect_null(opt[["toolbox"]])
 })
 
 test_that("ScatterConfig carries zoom to the option", {
+  skip_if_no_node()
   cfg <- setup_ScatterConfig(x = "wt", y = "mpg", zoom = TRUE)
   expect_true(cfg@zoom)
-  opt <- draw(cfg, data = mtcars)$x$option
+  opt <- built_option(draw(cfg, data = mtcars), simplify = FALSE)
   expect_identical(zoom_types(opt), c("inside", "inside"))
   expect_false(setup_ScatterConfig()@zoom)
 })
@@ -248,11 +253,12 @@ test_that("zoom_toolbox(box_zoom = FALSE) keeps reset alone", {
 })
 
 test_that("equally scaled scatter plots omit box zoom", {
+  skip_if_no_node()
   for (args in list(list(square = TRUE), list(equal_axes = TRUE))) {
-    opt <- do.call(
-      draw_scatter,
-      c(list(mtcars$wt, mtcars$mpg, zoom = TRUE), args)
-    )$x$option
+    opt <- built_option(
+      do.call(draw_scatter, c(list(mtcars$wt, mtcars$mpg, zoom = TRUE), args)),
+      simplify = FALSE
+    )
     expect_identical(zoom_types(opt), c("inside", "inside"))
     expect_named(opt[["toolbox"]][["feature"]], "restore")
   }

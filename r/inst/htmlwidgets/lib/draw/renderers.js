@@ -1,7 +1,7 @@
 // Shared custom-series renderers for browser widgets and Node SVG export.
 // renderItem names and itemPayload remain plain JSON in the compiled option.
-// The boxplot's renderers are @rtemis/draw's: in Node this module registers
-// them too, and in a browser the binding does.
+// The boxplot's and the scatter rug's renderers are @rtemis/draw's: in Node
+// this module registers them too, and in a browser the binding does.
 // See CustomSeriesOption / CustomSeriesRenderItemParams in ECharts
 // src/chart/custom/CustomSeries.ts and name lookup in CustomView.ts.
 (function (root, register) {
@@ -20,14 +20,6 @@
   "use strict";
 
   const renderers = {
-    "rtemis.rug.v1": function(params, api) {
-      const point=api.coord([api.value(0),api.value(1)]), box=params.coordSys;
-      const style={stroke:api.visual("color"), opacity:.5, lineWidth:1};
-      return {type:"group",children:[
-        {type:"line",shape:{x1:point[0],x2:point[0],y1:box.y+box.height,y2:box.y+box.height-6},style},
-        {type:"line",shape:{x1:box.x,x2:box.x+6,y1:point[1],y2:point[1]},style}
-      ]};
-    },
     "rtemis.ribbon.v1": function(params, api) {
       return { type: "polygon", shape: {points:params.itemPayload.vertices.map(p=>api.coord(p))},
         style: {fill:api.visual("color"), opacity:params.itemPayload.opacity} };

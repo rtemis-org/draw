@@ -95,7 +95,8 @@ test_that("rtemis learners fit by name", {
 
 test_that("draw_scatter draws a learner fit without a band", {
   skip_if_no_rtemis_fit()
-  o <- draw_scatter(fit_x, fit_y, fit = "linad")[["x"]][["option"]]
+  skip_if_no_node()
+  o <- built_option(draw_scatter(fit_x, fit_y, fit = "linad"), simplify = FALSE)
   types <- vapply(o[["series"]], `[[`, "", "type")
   expect_identical(types, c("scatter", "line"))
   expect_length(o[["series"]][[2L]][["data"]], 200L)
@@ -111,10 +112,13 @@ test_that("draw_scatter fits a learner per group and labels R-squared", {
     fit = "LINAD",
     rsq = TRUE,
     n_fit = 20L
-  )[["x"]][["option"]]
+  )
+  skip_if_no_node()
+  o <- built_option(o, simplify = FALSE)
   names <- vapply(o[["series"]], `[[`, "", "name")
   expect_length(names, 4L)
-  expect_match(names, "^(FALSE|TRUE) \\(R\\^2 = [0-9.]+\\)$")
+  expect_match(names, "^(FALSE|TRUE) \\(R\u00b2 = [0-9.]+\\)$")
+  # Each group's points and fit share one legend entry.
   expect_identical(names[1:2], names[3:4])
 })
 
@@ -126,10 +130,7 @@ test_that("a config with a learner fit round-trips through JSON", {
   write_chart_config(cfg, path)
   restored <- read_chart_config(path)
   expect_identical(restored@fit, "LINAD")
-  expect_equal(
-    to_list(compile(restored, mtcars)),
-    to_list(compile(cfg, mtcars))
-  )
+  expect_equal(compile(restored, mtcars), compile(cfg, mtcars))
 })
 
 
@@ -278,7 +279,12 @@ test_that("fit_params reach the rtemis setup function", {
     fit = "linad",
     fit_params = list(max_leaves = 1),
     n_fit = 10L
-  )[["x"]][["option"]][["series"]][[2L]][["data"]]
+  )
+  skip_if_no_node()
+  one_leaf <- lapply(
+    built_option(one_leaf, simplify = FALSE)[["series"]][[2L]][["data"]],
+    unlist
+  )
   # A single leaf is one linear model: a straight line.
   slopes <- diff(vapply(one_leaf, `[[`, 1, 2L)) /
     diff(vapply(one_leaf, `[[`, 1, 1L))
@@ -308,8 +314,5 @@ test_that("fit_params need a fit and round-trip through JSON", {
   write_chart_config(cfg, path)
   restored <- read_chart_config(path)
   expect_identical(restored@fit_params, list(family = "poisson"))
-  expect_equal(
-    to_list(compile(restored, mtcars)),
-    to_list(compile(cfg, mtcars))
-  )
+  expect_equal(compile(restored, mtcars), compile(cfg, mtcars))
 })

@@ -1,0 +1,1 @@
+{"type":"scatter","data":"penguins-bills-pooled.json","config":{"x":"bill_len","y":"bill_dep","group":"species","fit":"glm","fit_per_group":false,"n_fit":20,"fit_name":"Linear"}}

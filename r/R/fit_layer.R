@@ -95,7 +95,9 @@ method(to_list, FitLayer) <- function(x) {
 #' Accepts predictions from any model without keeping a fitted R object in the
 #' chart. Existing axis limits are preserved, including explicitly requested
 #' limits. Annotate child drawings before composing panels. For built-in GLM or
-#' GAM estimation, use [draw_scatter()] or [draw_fit()].
+#' GAM estimation, use [draw_scatter()] or [draw_fit()]. Coordinates and bounds
+#' are taken as plain vectors, so names, such as the row names of a `predict()`
+#' matrix column, are dropped.
 #' @param plot htmlwidget: Existing Cartesian ECharts drawing.
 #' @inheritParams FitLayer
 #' @param layer Optional FitLayer: Complete geometry; do not combine with other settings.
@@ -119,10 +121,10 @@ draw_add_fit <- function(
 ) {
   if (is.null(layer)) {
     layer <- FitLayer(
-      x = x,
-      y = y,
-      lower = lower,
-      upper = upper,
+      x = as.vector(x),
+      y = as.vector(y),
+      lower = as.vector(lower),
+      upper = as.vector(upper),
       name = name,
       color = color,
       line_width = line_width,
@@ -139,17 +141,11 @@ draw_add_fit <- function(
       class = c("rtemis_value_error", "rtemis_input_error")
     )
   }
-  option <- cartesian_layer_option(plot, layer@x_axis, layer@y_axis)
-  option[["series"]] <- c(option[["series"]], to_list(layer))
-  if (is.null(option[["legend"]])) {
-    option[["legend"]] <- list(show = TRUE)
-  }
-  if (!is.null(option[["legend"]][["data"]])) {
-    option[["legend"]][["data"]] <- as.list(unique(c(
-      unlist(option[["legend"]][["data"]], use.names = FALSE),
-      layer@name
-    )))
-  }
-  plot[["x"]][["option"]] <- option
-  plot
+  add_cartesian_layer(
+    plot,
+    to_list(layer),
+    layer@name,
+    layer@x_axis,
+    layer@y_axis
+  )
 }

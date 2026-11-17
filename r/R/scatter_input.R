@@ -1,5 +1,6 @@
 # scatter_input.R
-# Pairwise filtering applies identically to coordinates, groups, sizes and labels.
+# Pairwise filtering applies identically to coordinates, groups, sizes, colors,
+# and labels.
 
 #' Normalize scatter observations and optional point metadata
 #' @inheritParams draw_scatter
@@ -7,11 +8,18 @@
 #' @keywords internal
 #' @noRd
 scatter_input <- new_generic("scatter_input", "x")
-method(scatter_input, class_any) <- function(x, y, group, size, hover) {
+method(scatter_input, class_any) <- function(
+  x,
+  y,
+  group,
+  size,
+  hover,
+  color = NULL
+) {
   if (is.list(x) || is.list(y)) {
-    if (!is.null(size) || !is.null(hover)) {
+    if (!is.null(size) || !is.null(hover) || !is.null(color)) {
       abort(
-        "Supply flattened vectors with group labels when using size or hover metadata.",
+        "Supply flattened vectors with group labels when using size, color, or hover metadata.",
         class = c("rtemis_value_error", "rtemis_input_error")
       )
     }
@@ -57,6 +65,19 @@ method(scatter_input, class_any) <- function(x, y, group, size, hover) {
     size <- rep_len(size, length(x))
   }
   if (
+    !is.null(color) &&
+      (!is.numeric(color) ||
+        is.complex(color) ||
+        !is.null(dim(color)) ||
+        length(color) != length(x) ||
+        any(is.infinite(color)))
+  ) {
+    abort(
+      "Supply one numeric color value per observation, allowing NA but not infinity.",
+      class = c("rtemis_value_error", "rtemis_input_error")
+    )
+  }
+  if (
     !is.null(hover) &&
       (!is.character(hover) || length(hover) != length(x) || anyNA(hover))
   ) {
@@ -69,6 +90,9 @@ method(scatter_input, class_any) <- function(x, y, group, size, hover) {
   if (!is.null(group)) {
     keep <- keep & !is.na(group)
   }
+  if (!is.null(color)) {
+    keep <- keep & !is.na(color)
+  }
   if (!any(keep)) {
     abort(
       "Supply at least one complete scatter observation.",
@@ -80,29 +104,7 @@ method(scatter_input, class_any) <- function(x, y, group, size, hover) {
     y = y[keep],
     group = if (!is.null(group)) group[keep],
     size = if (!is.null(size)) size[keep],
-    hover = if (!is.null(hover)) hover[keep]
+    hover = if (!is.null(hover)) hover[keep],
+    color = if (!is.null(color)) color[keep]
   )
-}
-
-#' Materialize native point records
-#' @inheritParams draw_scatter
-#' @return List: Coordinate vectors or native records with size and label.
-#' @keywords internal
-#' @noRd
-scatter_points <- new_generic("scatter_points", "x")
-method(scatter_points, class_numeric) <- function(x, y, size, hover) {
-  lapply(seq_along(x), function(i) {
-    value <- c(x[[i]], y[[i]])
-    if (is.null(size) && is.null(hover)) {
-      return(value)
-    }
-    Filter(
-      Negate(is.null),
-      list(
-        value = value,
-        symbolSize = if (!is.null(size)) size[[i]],
-        name = if (!is.null(hover)) hover[[i]]
-      )
-    )
-  })
 }

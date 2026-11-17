@@ -12,6 +12,15 @@ LineConfig(
   legend_position = "top",
   legend_placement = "outside",
   legend_title = NULL,
+  fit = NULL,
+  fit_params = NULL,
+  fit_per_group = TRUE,
+  se = TRUE,
+  se_times = 1.96,
+  rsq = FALSE,
+  n_fit = 200L,
+  fit_alpha = 0.25,
+  fit_name = NULL,
   x = NULL,
   y = NULL,
   group = NULL,
@@ -67,6 +76,32 @@ inside placement overlays the data. Neither setting adds a missing legend.}
 colorbar: above left/right legends and vertical colorbars, before the
 first row of top/bottom legends and horizontal colorbars. \code{NULL} draws no
 title. A title does not add a missing legend.}
+
+\item{fit}{Optional Character: Model fitted to each series: \code{"glm"},
+\code{"polynomial"}, \code{"loess"}, \code{"gam"}, or an rtemis supervised learning
+algorithm name such as \code{"LINAD"}, which requires the rtemis package.
+\code{NULL} draws no fit. See \code{\link[=draw_scatter]{draw_scatter()}}.}
+
+\item{fit_params}{Optional Named list: Arguments of the model, e.g.
+\code{list(degree = 2)} for \code{"polynomial"} or \code{list(max_leaves = 8)} for
+\code{"LINAD"}. See \code{\link[=draw_scatter]{draw_scatter()}}.}
+
+\item{fit_per_group}{Logical: Fit each series. \code{FALSE} fits one curve over
+every group.}
+
+\item{se}{Logical: If TRUE, shade the interval of the fit's standard error.}
+
+\item{se_times}{Numeric \verb{[0, Inf)}: Multiplier of the standard error bounding
+the interval.}
+
+\item{rsq}{Logical: Add each fit's R-squared to its legend entry.}
+
+\item{n_fit}{Integer \verb{[2, Inf)}: Points each fitted curve is evaluated at.}
+
+\item{fit_alpha}{Numeric \verb{[0, 1]}: Opacity of the interval.}
+
+\item{fit_name}{Optional Character: Text added to the legend entry of each
+fitted series.}
 
 \item{x}{Optional Character: Column along the horizontal axis. A numeric
 column gets a value axis, a \code{Date} or \code{POSIXct} column a time axis with

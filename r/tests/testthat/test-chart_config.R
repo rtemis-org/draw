@@ -95,45 +95,51 @@ test_that("setup_ScatterConfig passes values through and coerces n_fit", {
 
 # %% compile ----
 
-test_that("compile() returns an EChartsOption", {
+test_that("compile() returns a scatter build request", {
   cfg <- setup_ScatterConfig(x = "wt", y = "mpg")
-  expect_s3_class(compile(cfg, data = mtcars), "rtemis.draw::EChartsOption")
+  request <- compile(cfg, data = mtcars)
+  expect_true(S7::S7_inherits(request, BuildRequest))
+  expect_identical(request@type, "scatter")
 })
 
 test_that("compile() and draw_scatter() produce the same option", {
-  # The one-implementation guarantee: both entry points go through
-  # scatter_option(), so a config and the equivalent vector call agree exactly.
+  # Both entry points build with the @rtemis/draw scatter builder; the
+  # tooltip formatter, absent from JSON, names the columns differently.
+  skip_if_no_node()
   cfg <- setup_ScatterConfig(x = "wt", y = "mpg", fit = "glm", title = "Cars")
-  from_config <- draw(cfg, data = mtcars)[["x"]][["option"]]
-  from_vectors <- draw_scatter(
+  from_config <- built_option(draw(cfg, data = mtcars))
+  from_vectors <- built_option(draw_scatter(
     mtcars[["wt"]],
     mtcars[["mpg"]],
     fit = "glm",
     title = "Cars",
     xlab = "wt",
     ylab = "mpg"
-  )[["x"]][["option"]]
-  expect_identical(from_config, from_vectors)
+  ))
+  expect_equal(from_config, from_vectors)
 })
 
 test_that("axis labels default to the bound column names", {
+  skip_if_no_node()
   cfg <- setup_ScatterConfig(x = "wt", y = "mpg")
-  opt <- compile(cfg, data = mtcars)
-  expect_identical(opt@x_axis@name, "wt")
-  expect_identical(opt@y_axis@name, "mpg")
+  opt <- built_option(compile(cfg, data = mtcars))
+  expect_identical(opt[["xAxis"]][["name"]], "wt")
+  expect_identical(opt[["yAxis"]][["name"]], "mpg")
 })
 
 test_that("explicit axis labels win over the column names", {
+  skip_if_no_node()
   cfg <- setup_ScatterConfig(x = "wt", y = "mpg", xlab = "Weight")
-  opt <- compile(cfg, data = mtcars)
-  expect_identical(opt@x_axis@name, "Weight")
+  opt <- built_option(compile(cfg, data = mtcars))
+  expect_identical(opt[["xAxis"]][["name"]], "Weight")
 })
 
 test_that("compile() groups points when `group` names a column", {
+  skip_if_no_node()
   cfg <- setup_ScatterConfig(x = "wt", y = "mpg", group = "cyl")
-  opt <- compile(cfg, data = mtcars)
+  opt <- built_option(compile(cfg, data = mtcars))
   # One series per level of the grouping column.
-  expect_length(opt@series, length(unique(mtcars[["cyl"]])))
+  expect_length(opt[["series"]], length(unique(mtcars[["cyl"]])))
 })
 
 test_that("compile() errors when x or y is unset", {
@@ -164,7 +170,7 @@ test_that("dat_path is read when no data is supplied", {
   on.exit(unlink(path), add = TRUE)
   utils::write.csv(mtcars, path, row.names = FALSE)
   cfg <- setup_ScatterConfig(x = "wt", y = "mpg", dat_path = path)
-  expect_s3_class(compile(cfg), "rtemis.draw::EChartsOption")
+  expect_true(S7::S7_inherits(compile(cfg), BuildRequest))
 })
 
 test_that("a missing dat_path errors", {
@@ -176,7 +182,7 @@ test_that("supplied data takes precedence over dat_path", {
   # `dat_path` is never read when the caller hands over data, so a bad path is
   # harmless in that case.
   cfg <- setup_ScatterConfig(x = "wt", y = "mpg", dat_path = "no/such.csv")
-  expect_s3_class(compile(cfg, data = mtcars), "rtemis.draw::EChartsOption")
+  expect_true(S7::S7_inherits(compile(cfg, data = mtcars), BuildRequest))
 })
 
 
@@ -189,19 +195,21 @@ test_that("per-side margin scalars assemble into a margins vector", {
     margin_left = 60L,
     margin_top = 10L
   )
-  opt <- compile(cfg, data = mtcars)
-  expect_identical(opt@grid@left, 60)
-  expect_identical(opt@grid@top, 10)
-  # Sides not named stay unset, so the chart's own layout still applies to them.
-  expect_null(opt@grid@right)
-  expect_null(opt@grid@bottom)
+  skip_if_no_node()
+  opt <- built_option(compile(cfg, data = mtcars))
+  expect_identical(opt[["grid"]][["left"]], 60L)
+  expect_identical(opt[["grid"]][["top"]], 10L)
+  # Sides not named stay unset, so the chart's own layout applies to them.
+  expect_null(opt[["grid"]][["right"]])
+  expect_null(opt[["grid"]][["bottom"]])
 })
 
-test_that("unset margins fall back to the package default", {
+test_that("unset margins take the builder's default on every side", {
+  skip_if_no_node()
   cfg <- setup_ScatterConfig(x = "wt", y = "mpg")
-  opt <- compile(cfg, data = mtcars)
-  expect_identical(opt@grid@left, DEFAULT_MARGINS[["left"]])
-  expect_identical(opt@grid@right, DEFAULT_MARGINS[["right"]])
+  opt <- built_option(compile(cfg, data = mtcars))
+  expect_identical(opt[["grid"]][["left"]], 36L)
+  expect_identical(opt[["grid"]][["right"]], 36L)
 })
 
 
@@ -363,11 +371,9 @@ test_that("a negative pad is rejected", {
 })
 
 test_that("draw_scatter takes pad and it reaches the axis", {
+  skip_if_no_node()
   tight <- draw_scatter(mtcars[["wt"]], mtcars[["mpg"]], pad = 0)
-  expect_equal(
-    tight[["x"]][["option"]][["xAxis"]][["min"]],
-    min(mtcars[["wt"]])
-  )
+  expect_equal(built_option(tight)[["xAxis"]][["min"]], min(mtcars[["wt"]]))
 })
 
 test_that("pad round-trips through JSON", {
@@ -383,11 +389,12 @@ test_that("pad round-trips through JSON", {
 test_that("animation is left to ECharts by default", {
   # NULL means "say nothing", so ECharts applies its own default rather than
   # rtemis.draw pinning one.
-  expect_null(draw_scatter(1:5, 1:5)[["x"]][["option"]][["animation"]])
+  skip_if_no_node()
+  expect_null(built_option(draw_scatter(1:5, 1:5))[["animation"]])
   expect_null(
-    draw(setup_ScatterConfig(x = "wt", y = "mpg"), data = mtcars)[["x"]][[
-      "option"
-    ]][["animation"]]
+    built_option(
+      draw(setup_ScatterConfig(x = "wt", y = "mpg"), data = mtcars)
+    )[["animation"]]
   )
 })
 
@@ -397,11 +404,12 @@ test_that("animation can be turned off through every ECharts entry point", {
     EChartsOption(series = ScatterSeries(data = list(c(1, 2)))),
     animation = FALSE
   )))
-  expect_false(off(draw(
+  skip_if_no_node()
+  expect_false(built_option(draw(
     setup_ScatterConfig(x = "wt", y = "mpg"),
     data = mtcars,
     animation = FALSE
-  )))
+  ))[["animation"]])
 })
 
 test_that("animation is a render target, not a config property", {
@@ -460,10 +468,11 @@ test_that("compile() hands its method a resolved config and materialized data", 
 test_that("every chart type resolves before it compiles", {
   # A config whose derived values are visible in the compiled option: if
   # resolution were skipped, the axis labels would be absent.
+  skip_if_no_node()
   config <- setup_ScatterConfig(x = "wt", y = "mpg")
-  option <- compile(config, data = mtcars)
-  expect_identical(option@x_axis@name, "wt")
-  expect_identical(option@y_axis@name, "mpg")
+  option <- built_option(compile(config, data = mtcars))
+  expect_identical(option[["xAxis"]][["name"]], "wt")
+  expect_identical(option[["yAxis"]][["name"]], "mpg")
 })
 
 test_that("compile() requires data", {
@@ -550,7 +559,8 @@ test_that("a config without the flags derives per-axis limits as before", {
   expect_false(identical(config@xlim, config@ylim))
 })
 
-test_that("drawing a config carries its aspect hint to the widget", {
+test_that("a drawn config's built option carries its aspect hint", {
+  skip_if_no_node()
   data <- data.frame(true = c(1, 2, 3, 4), predicted = c(1.1, 1.9, 3.4, 3.7))
   widget <- draw(
     setup_ScatterConfig(
@@ -561,7 +571,7 @@ test_that("drawing a config carries its aspect hint to the widget", {
     ),
     data = data
   )
-  expect_equal(widget[["x"]][["aspect"]][["ratio"]], 1)
+  expect_equal(built_option(widget, what = "aspect")[["ratio"]], 1)
 })
 
 test_that("a chart type with no render hints sends none", {

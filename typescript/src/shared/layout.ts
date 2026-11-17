@@ -72,3 +72,52 @@ export function axisZoom(
     { type: "inside", ...index, zoomOnMouseWheel: "shift", moveOnMouseMove: true },
   ];
 }
+
+/**
+ * The zoom preset on both axes of a scatter chart: an inside zoom per axis on
+ * Shift+wheel with drag panning, and a toolbox with box zoom, undo, and reset.
+ * Wheel zoom and panning scale both axes by one factor; box zoom sets each
+ * axis independently, so `boxZoom` is `false` for a square or equally scaled
+ * plot. Fits stay continuous to the window edge (`filterMode: "none"`), and
+ * the grid clips them. spec: draw/zoom-controls#design
+ */
+export function xyZoom(boxZoom: boolean): {
+  dataZoom: Record<string, unknown>[];
+  toolbox: Record<string, unknown>;
+} {
+  const inside = (index: Record<string, number>) => ({
+    type: "inside",
+    ...index,
+    filterMode: "none",
+    zoomOnMouseWheel: "shift",
+    moveOnMouseMove: true,
+  });
+  return {
+    dataZoom: [inside({ xAxisIndex: 0 }), inside({ yAxisIndex: 0 })],
+    toolbox: {
+      show: true,
+      right: 12,
+      top: 8,
+      itemSize: 14,
+      showTitle: false,
+      iconStyle: { borderColor: "#808080" },
+      emphasis: { iconStyle: { borderColor: "#3F6FB5" } },
+      feature: {
+        ...(boxZoom
+          ? {
+              dataZoom: {
+                filterMode: "none",
+                brushStyle: {
+                  color: "rgba(128,128,128,0.2)",
+                  borderColor: "rgba(128,128,128,0.6)",
+                  borderWidth: 1,
+                },
+                title: { zoom: "Box zoom", back: "Undo zoom" },
+              },
+            }
+          : {}),
+        restore: { title: "Reset" },
+      },
+    },
+  };
+}

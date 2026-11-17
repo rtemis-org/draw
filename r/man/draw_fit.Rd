@@ -33,23 +33,19 @@ draw_fit(
 variable for multiple series. Series, colors, and legend entries follow
 factor level order, or first appearance for other vectors.}
 
-\item{fit}{Optional Character: Model fitted to \code{y} on \code{x} and drawn as a line.
-\code{"glm"} uses \code{\link[stats:glm]{stats::glm()}} and \code{"gam"} uses \code{\link[mgcv:gam]{mgcv::gam()}}. Any other name,
-matched case-insensitively, is an rtemis supervised learning algorithm,
-such as \code{"LINAD"}, \code{"CART"} or \code{"LightGBM"}, trained with its default
-hyperparameters; this requires the rtemis package (>= 1.4.1). \code{NULL}
-disables fitting. The fitted line and standard-error band are computed per
-group when \code{group} is provided.}
+\item{fit}{Optional Character: Model fitted to \code{y} on \code{x} and drawn as a
+curve. See Details. \code{NULL} draws no fit.}
 
-\item{se}{Logical: Whether to show the standard-error band. Algorithms
-without standard errors (every rtemis algorithm except GLM, GAM, and a few
-others) draw the line alone.}
+\item{se}{Logical: Shade the interval of \code{se_times} standard errors around
+each fit. Algorithms without standard errors (every rtemis algorithm
+except GLM, GAM, and a few others) draw the curve alone.}
 
-\item{se_times}{Numeric \verb{[0, Inf)}: Standard-error multiplier for the band.}
+\item{se_times}{Numeric \verb{[0, Inf)}: Standard-error multiplier for the
+interval.}
 
-\item{rsq}{Logical: Include the fitted model's R-squared in series labels.
-This describes the overlay fit, not predictive performance against the
-identity line. Constant responses have undefined R-squared, labeled \code{NA}.}
+\item{rsq}{Logical: Add each fit's R-squared to its legend entry. This
+describes the fit, not predictive performance against the identity line.
+A constant response has undefined R-squared, labeled \code{NA}.}
 
 \item{diagonal}{Logical: Draw a dashed identity line within the axis limits.}
 
@@ -59,10 +55,7 @@ identity line. Constant responses have undefined R-squared, labeled \code{NA}.}
 and width in pixels, excluding axis labels and margins.}
 
 \item{equal_axes}{Logical: If TRUE, give one data unit the same size in
-pixels on both axes. Set both for a plot that is square \emph{and} to scale,
-such as a true-versus-predicted plot whose identity line runs at 45
-degrees; the two axes are then made to span the same interval. See
-Details.}
+pixels on both axes. See Details.}
 
 \item{xlab}{Optional Character: X-axis title.}
 

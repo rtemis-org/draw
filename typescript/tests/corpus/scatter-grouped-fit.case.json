@@ -1,0 +1,1 @@
+{"type":"scatter","data":"penguins-bills.json","config":{"x":"bill_len","y":"bill_dep","group":"species","fit":"glm","n_fit":20,"rsq":true,"xlab":"Bill length (mm)","ylab":"Bill depth (mm)"}}

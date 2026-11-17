@@ -1,0 +1,1 @@
+{"type":"scatter","data":"penguins-measures.json","config":{"x":"bill_len","y":"bill_dep","size":"body_mass","color":"flipper_len","point_alpha":0.6,"rug":true}}

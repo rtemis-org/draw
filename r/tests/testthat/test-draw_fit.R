@@ -37,10 +37,15 @@ test_that("malformed pairs fail before concatenation or recycling", {
 })
 
 
+# The option a fit drawing builds, every JSON array a list.
+fit_option <- function(widget) built_option(widget, simplify = FALSE)
+
+
 test_that("draw_fit supplies true/predicted defaults and a clipped identity line", {
+  skip_if_no_node()
   w <- draw_fit(1:5, c(1.2, 1.8, 3.3, 3.8, 5.2))
   expect_s3_class(w, "htmlwidget")
-  o <- w[["x"]][["option"]]
+  o <- fit_option(w)
   expect_identical(o[["xAxis"]][["name"]], "True")
   expect_identical(o[["yAxis"]][["name"]], "Predicted")
   expect_equal(o[["xAxis"]][["min"]], o[["yAxis"]][["min"]])
@@ -48,14 +53,14 @@ test_that("draw_fit supplies true/predicted defaults and a clipped identity line
   expect_length(o[["series"]], 4L)
   identity <- o[["series"]][[4L]]
   expect_equal(
-    identity[["data"]],
+    lapply(identity[["data"]], unlist),
     list(rep(o[["xAxis"]][["min"]], 2L), rep(o[["xAxis"]][["max"]], 2L))
   )
   expect_true(identity[["silent"]])
   expect_false(identity[["showSymbol"]])
   expect_null(identity[["name"]])
   expect_identical(identity[["lineStyle"]][["type"]], "dashed")
-  expect_match(o[["series"]][[1L]][["name"]], "R\\^2 = ")
+  expect_match(o[["series"]][[1L]][["name"]], "R\u00b2 = ")
   expect_identical(o[["series"]][[1L]][["name"]], o[["series"]][[3L]][["name"]])
   o <- draw_fit(
     1:5,
@@ -67,11 +72,15 @@ test_that("draw_fit supplies true/predicted defaults and a clipped identity line
     xlim = c(0, 4),
     ylim = c(2, 6),
     diagonal_color = "#123456"
-  )[["x"]][["option"]]
-  expect_equal(o[["series"]][[2L]][["data"]], list(c(2, 2), c(4, 4)))
+  )
+  o <- fit_option(o)
+  expect_equal(
+    lapply(o[["series"]][[2L]][["data"]], unlist),
+    list(c(2, 2), c(4, 4))
+  )
   expect_identical(o[["series"]][[2L]][["lineStyle"]][["color"]], "#123456")
   expect_length(
-    draw_fit(
+    fit_option(draw_fit(
       1:3,
       4:6,
       fit = NULL,
@@ -79,7 +88,7 @@ test_that("draw_fit supplies true/predicted defaults and a clipped identity line
       equal_axes = FALSE,
       xlim = c(0, 3),
       ylim = c(4, 7)
-    )[["x"]][["option"]][["series"]],
+    ))[["series"]],
     1L
   )
 })
@@ -96,9 +105,10 @@ test_that("fit coefficients, uncertainty, and R-squared match independent OLS ca
   xgrid <- seq(1, 6, length.out = 5L)
   fitted <- intercept + slope * xgrid
   se <- residual_sd * sqrt(1 / n + (xgrid - mean(x))^2 / sum((x - mean(x))^2))
-  o <- draw_fit(x, y, n_fit = 5L, se_times = 2)[["x"]][["option"]]
-  fit <- do.call(rbind, o[["series"]][[3L]][["data"]])
-  band <- do.call(rbind, o[["series"]][[2L]][["data"]])
+  skip_if_no_node()
+  o <- fit_option(draw_fit(x, y, n_fit = 5L, se_times = 2))
+  fit <- do.call(rbind, lapply(o[["series"]][[3L]][["data"]], unlist))
+  band <- do.call(rbind, lapply(o[["series"]][[2L]][["data"]], unlist))
   expect_equal(unname(fit[, 1L]), xgrid)
   expect_equal(unname(fit[, 2L]), fitted, tolerance = 1e-10)
   expect_equal(
@@ -109,7 +119,7 @@ test_that("fit coefficients, uncertainty, and R-squared match independent OLS ca
   r2 <- 1 - residual_ss / sum((y - mean(y))^2)
   expect_identical(
     o[["series"]][[1L]][["name"]],
-    paste0("Fit (R^2 = ", formatC(r2, format = "f", digits = 3L), ")")
+    paste0("Fit (R\u00b2 = ", formatC(r2, format = "f", digits = 3L), ")")
   )
 })
 
@@ -118,8 +128,9 @@ test_that("fits handle insufficient and constant data explicitly", {
   expect_error(draw_fit(rep(1, 4), 1:4), "two distinct x")
   expect_error(draw_fit(1:2, 1:2), "at least 3")
   expect_s3_class(draw_fit(rep(1, 4), 1:4, fit = NULL), "htmlwidget")
-  o <- draw_fit(1:5, rep(2, 5))[["x"]][["option"]]
-  expect_match(o[["series"]][[1L]][["name"]], "R\\^2 = NA")
+  skip_if_no_node()
+  o <- fit_option(draw_fit(1:5, rep(2, 5)))
+  expect_match(o[["series"]][[1L]][["name"]], "R\u00b2 = NA")
   expect_error(draw_fit(1:4, 1:4, fit = "unsupported"))
 })
 
@@ -168,12 +179,13 @@ test_that("fit options validate and survive portable config round trips", {
     se_times = 2,
     diagonal_color = "#123456"
   )
-  expect_identical(draw(cfg, data = data)[["x"]], direct[["x"]])
+  skip_if_no_node()
+  expect_equal(fit_option(draw(cfg, data = data)), fit_option(direct))
   path <- tempfile(fileext = ".json")
   on.exit(unlink(path), add = TRUE)
   write_chart_config(cfg, path)
   restored <- read_chart_config(path)
-  expect_identical(draw(restored, data = data)[["x"]], direct[["x"]])
+  expect_equal(fit_option(draw(restored, data = data)), fit_option(direct))
   schema <- chart_schema(
     ScatterConfig,
     id = "https://example.org/scatter.json",

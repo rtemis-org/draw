@@ -1,0 +1,1 @@
+{"type":"scatter","data":"true-predicted.json","config":{"x":"true","y":"predicted","fit":"glm","n_fit":20,"diagonal":true,"square":true,"equal_axes":true,"zoom":true,"margin_top":36,"margin_right":36,"margin_bottom":36,"margin_left":36,"xlab":"True","ylab":"Predicted"}}

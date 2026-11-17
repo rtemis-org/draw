@@ -9,11 +9,16 @@ setup_ScatterConfig(
   y = NULL,
   size = NULL,
   group = NULL,
+  color = NULL,
+  color_scale = "sequential",
+  colormap = NULL,
   fit = NULL,
   fit_params = NULL,
+  fit_per_group = TRUE,
   se = TRUE,
   n_fit = 200L,
   fit_alpha = 0.25,
+  point_size = 6,
   palette = NULL,
   pad = DEFAULT_PAD,
   square = FALSE,
@@ -45,24 +50,47 @@ setup_ScatterConfig(
 )
 }
 \arguments{
-\item{x, y}{Optional Character: Columns drawn on each axis.}
+\item{x}{Optional Character: Column drawn on the x axis: numeric, or a date
+or date-time.}
 
-\item{size}{Optional Character: Column giving per-point size.}
+\item{y}{Optional Character: Numeric columns drawn on the y axis, one series
+each.}
+
+\item{size}{Optional Character: Nonnegative numeric column that sets each
+symbol's area in proportion to its value, the largest value at 30 pixels
+across.}
 
 \item{group}{Optional Character: Column to group and color points by.}
 
-\item{fit}{Optional Character: Fit to overlay: \code{"glm"}, \code{"gam"}, or an rtemis
-supervised learning algorithm name such as \code{"LINAD"}, which requires the
-rtemis package. \code{NULL} draws no fit. See \code{\link[=draw_scatter]{draw_scatter()}}.}
+\item{color}{Optional Character: Numeric column mapped to a continuous color
+scale. Excludes \code{group}.}
 
-\item{fit_params}{Optional Named list: Arguments passed to the learner named
-in \code{fit}, e.g. \code{list(max_leaves = 8)} for \code{"LINAD"}. See \code{\link[=draw_scatter]{draw_scatter()}}.}
+\item{color_scale}{Character: Color scale of \code{color}: \code{"sequential"}, from
+the lowest to the highest value, or \code{"diverging"}, centered on zero.}
 
-\item{se}{Logical: If TRUE, shade the fit standard-error band.}
+\item{colormap}{Optional Character: Colors of the color scale, low to
+high, at least two. \code{NULL} uses the theme's sign colors.}
 
-\item{n_fit}{Integer \verb{[2, Inf)}: Points used to draw the fit line.}
+\item{fit}{Optional Character: Model fitted to each series: \code{"glm"},
+\code{"polynomial"}, \code{"loess"}, \code{"gam"}, or an rtemis supervised learning
+algorithm name such as \code{"LINAD"}, which requires the rtemis package.
+\code{NULL} draws no fit. See \code{\link[=draw_scatter]{draw_scatter()}}.}
 
-\item{fit_alpha}{Numeric \verb{[0, 1]}: Opacity of the standard-error band.}
+\item{fit_params}{Optional Named list: Arguments of the model, e.g.
+\code{list(degree = 2)} for \code{"polynomial"} or \code{list(max_leaves = 8)} for
+\code{"LINAD"}. See \code{\link[=draw_scatter]{draw_scatter()}}.}
+
+\item{fit_per_group}{Logical: Fit each series. \code{FALSE} fits one curve over
+every group.}
+
+\item{se}{Logical: If TRUE, shade the interval of the fit's standard error.}
+
+\item{n_fit}{Integer \verb{[2, Inf)}: Points each fitted curve is evaluated at.}
+
+\item{fit_alpha}{Numeric \verb{[0, 1]}: Opacity of the interval.}
+
+\item{point_size}{Numeric \verb{(0, Inf)}: Symbol diameter in pixels of points
+without \code{size}.}
 
 \item{palette}{Optional Character: Series colors, overriding the theme
 palette for this chart. \code{NULL} uses the theme's.}
@@ -102,9 +130,10 @@ config that already carries provenance.}
 \item{writer}{Optional Named character: Which interface wrote the config, as
 \code{name} and \code{version}.}
 
-\item{se_times}{Numeric \verb{[0, Inf)}: Multiplier for the fitted standard error.}
+\item{se_times}{Numeric \verb{[0, Inf)}: Multiplier of the standard error bounding
+the interval.}
 
-\item{rsq}{Logical: Include the fitted model's R-squared in series labels.}
+\item{rsq}{Logical: Add each fit's R-squared to its legend entry.}
 
 \item{diagonal}{Logical: Draw the identity line within the axis limits.}
 
@@ -124,7 +153,8 @@ colorbar: above left/right legends and vertical colorbars, before the
 first row of top/bottom legends and horizontal colorbars. \code{NULL} draws no
 title. A title does not add a missing legend.}
 
-\item{fit_name}{Optional Character: Label for fitted layers.}
+\item{fit_name}{Optional Character: Text added to the legend entry of each
+fitted series.}
 
 \item{rug}{Logical: Show marginal marks along the x and y axes.}
 
@@ -142,15 +172,10 @@ box zoom, which sets each axis independently.}
 \link{ScatterConfig} object.
 }
 \description{
-The seam between convenient input and a complete, validated object: pass the
-handful of things you care about, get back a \code{ScatterConfig} with everything
-else at its default.
-}
-\details{
-\strong{Every argument is optional}, which is what lets the published schema
-require nothing: an authored config is a subset of the full set, and the
-interface fills in the rest. This is a different entry point from
-\code{\link[=draw_scatter]{draw_scatter()}}, which takes vectors and keeps its mandatory \code{x} and \code{y}.
+Builds a complete, validated \link{ScatterConfig} from the arguments given, every
+other member at its default. \strong{Every argument is optional}, so the
+published schema requires nothing: an authored config is a subset of the
+full set. \code{\link[=draw_scatter]{draw_scatter()}} takes vectors instead, and requires \code{x} and \code{y}.
 }
 \examples{
 cfg <- setup_ScatterConfig(x = "wt", y = "mpg", fit = "glm", title = "Cars")

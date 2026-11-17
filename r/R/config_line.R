@@ -63,6 +63,7 @@
 #'   the data.
 #' @param margin_top,margin_right,margin_bottom,margin_left Optional Integer
 #'   `[0, Inf)`: Plot margins in pixels.
+#' @inheritParams ScatterConfig fit fit_params fit_per_group se se_times rsq n_fit fit_alpha fit_name
 #' @inheritParams draw_line legend_position legend_placement legend_title
 #' @inheritParams ChartConfig
 #'
@@ -79,6 +80,7 @@ LineConfig <- new_class(
   package = "rtemis.draw",
   properties = c(
     legend_properties(),
+    fit_properties(),
     list(
       type = prop_chart_type("line"),
       # -- data binding ------------------------------------------------------
@@ -283,6 +285,25 @@ LineConfig <- new_class(
             "stack draws each line on the sum of those below it, which only",
             "filled bands show: set area too."
           )
+        ),
+        FIT_PARAMS_RULE,
+        list(
+          schema = list(
+            `if` = list(
+              required = list("fit"),
+              properties = list(fit = list(not = list(type = "null")))
+            ),
+            then = list(
+              properties = list(
+                aggregate = list(const = "none"),
+                area = list(const = FALSE)
+              )
+            )
+          ),
+          message = paste(
+            "A fit models observations drawn as lines: set aggregate to none",
+            "and area to FALSE, or unset fit."
+          )
         )
       )
     ),
@@ -384,10 +405,28 @@ setup_LineConfig <- function(
   writer = NULL,
   legend_position = "top",
   legend_placement = "outside",
-  legend_title = NULL
+  legend_title = NULL,
+  fit = NULL,
+  fit_params = NULL,
+  fit_per_group = TRUE,
+  se = TRUE,
+  se_times = 1.96,
+  rsq = FALSE,
+  n_fit = 200L,
+  fit_alpha = 0.25,
+  fit_name = NULL
 ) {
   origin <- origin %||% chart_origin(match.call(), LINE_ORIGIN_NAMES)
   LineConfig(
+    fit = fit,
+    fit_params = fit_params,
+    fit_per_group = fit_per_group,
+    se = se,
+    se_times = se_times,
+    rsq = rsq,
+    n_fit = clean_int(n_fit),
+    fit_alpha = fit_alpha,
+    fit_name = fit_name,
     x = x,
     y = y,
     group = group,
@@ -494,9 +533,10 @@ method(compile, LineConfig) <- function(
   for (name in columns) {
     config_column(data, name, if (name %in% config@y) "y" else "x")
   }
+  rows <- line_rows(config, data)
   BuildRequest(
     type = "line",
-    data = tabular_json(line_rows(config, data), columns),
+    data = tabular_json(rows, columns, fits = fit_curves(config, rows)),
     config = config_members(config),
     appearance = list()
   )

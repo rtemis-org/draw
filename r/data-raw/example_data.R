@@ -138,3 +138,43 @@ write_summary(
   ),
   "paired-scores"
 )
+
+# Scatter data and fits, as rtemis.draw computes them for the scatter builder.
+# Bill length and depth of the Palmer penguins (datasets, R >= 4.5.0): within
+# each species depth rises with length, and over all three it falls.
+penguins <- stats::na.omit(datasets::penguins[c(
+  "species",
+  "bill_len",
+  "bill_dep",
+  "flipper_len",
+  "body_mass"
+)])
+bills <- setup_ScatterConfig(
+  x = "bill_len",
+  y = "bill_dep",
+  group = "species",
+  fit = "glm",
+  n_fit = 20L
+)
+write_summary(compile(bills, data = penguins), "penguins-bills")
+bills@fit_per_group <- FALSE
+write_summary(compile(bills, data = penguins), "penguins-bills-pooled")
+write_fixture(
+  penguins,
+  c("bill_len", "bill_dep", "flipper_len", "body_mass"),
+  "penguins-measures"
+)
+# Synthetic predictions of a quantity known exactly, for a true-versus-
+# predicted plot.
+truth <- seq(1, 20, by = 0.5)
+predictions <- data.frame(
+  true = truth,
+  predicted = round(truth + 1.5 * sin(truth), 3)
+)
+write_summary(
+  compile(
+    setup_ScatterConfig(x = "true", y = "predicted", fit = "glm", n_fit = 20L),
+    data = predictions
+  ),
+  "true-predicted"
+)

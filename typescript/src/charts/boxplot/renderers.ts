@@ -1,7 +1,7 @@
 /**
  * Custom-series renderers of the boxplot, registered by name so the built
- * option stays JSON. Hosts call {@link registerRenderers} once with their
- * ECharts module before drawing. See CustomSeriesRenderItem in ECharts
+ * option stays JSON. Hosts register them through `registerRenderers()`
+ * (`src/shared/renderers.ts`) before drawing. See CustomSeriesRenderItem in ECharts
  * src/chart/custom/CustomSeries.ts. spec: draw/shared-builders#boxplot
  */
 
@@ -62,7 +62,8 @@ function boxPoint(
   return { point, width: visibleWidth };
 }
 
-const renderers: Record<string, Renderer> = {
+/** The boxplot's renderers, by name. */
+export const boxplotRenderers: Readonly<Record<string, Renderer>> = {
   // Data: [category, value, observation, offset].
   [BOXPLOT_POINTS]: (params, api) => {
     const settings = params.itemPayload as unknown as BoxSettings & {
@@ -201,18 +202,3 @@ const renderers: Record<string, Renderer> = {
     };
   },
 };
-
-/** Names of the custom-series renderers this package registers. */
-export const RENDERER_NAMES: readonly string[] = Object.freeze(Object.keys(renderers));
-
-/**
- * Register the package's custom-series renderers with an ECharts module, once
- * before drawing a chart that uses them.
- */
-export function registerRenderers(echarts: {
-  registerCustomSeries(name: string, renderItem: never): void;
-}): void {
-  for (const [name, render] of Object.entries(renderers)) {
-    echarts.registerCustomSeries(name, render as never);
-  }
-}

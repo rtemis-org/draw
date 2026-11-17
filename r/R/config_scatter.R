@@ -2,10 +2,9 @@
 # ::rtemis.draw::
 # 2026- EDG rtemis.org
 
-# The scatter chart's config, its compile method, and the setup function that
-# builds it. This is the reference implementation for the other chart types: the
-# property groups, the naming, and the split between what a config states and
-# what `draw()` supplies are all meant to be copied from here.
+# The scatter chart's config, the setup function that builds it, and its
+# compile method, which returns the build request the @rtemis/draw scatter
+# builder draws. spec: draw/shared-builders#scatter
 
 # %% ScatterConfig ----
 #' Scatter Chart Configuration
@@ -14,32 +13,53 @@
 #' semantics, and its appearance. Build one with [setup_ScatterConfig()] rather
 #' than calling this constructor directly.
 #'
-#' The data-binding properties (`x`, `y`, `size`, `group`) hold **column names**,
-#' not values. The values come from the `data` argument to [draw()], or from the
-#' inherited `dat_path`.
+#' The data-binding properties (`x`, `y`, `size`, `group`, `color`, `hover`)
+#' hold **column names**, not values. The values come from the `data` argument
+#' to [draw()], or from the inherited `dat_path`.
 #'
-#' Margins are declared as four scalars rather than one named vector: that is
-#' what states cleanly in a schema, while [draw_scatter()] keeps the convenient
-#' `margins` vector. Sides left `NULL` fall back to the chart's own layout.
+#' The fit members name a model, which rtemis.draw fits in R; the
+#' `@rtemis/draw` scatter builder draws the points and the fitted curves.
 #'
-#' @param x,y Optional Character: Columns drawn on each axis.
-#' @param size Optional Character: Column giving per-point size.
+#' Margins are four scalars, one per side; [draw_scatter()] takes them as one
+#' `margins` vector. Sides left `NULL` take the chart's layout.
+#'
+#' @param x Optional Character: Column drawn on the x axis: numeric, or a date
+#'   or date-time.
+#' @param y Optional Character: Numeric columns drawn on the y axis, one series
+#'   each.
+#' @param size Optional Character: Nonnegative numeric column that sets each
+#'   symbol's area in proportion to its value, the largest value at 30 pixels
+#'   across.
 #' @param group Optional Character: Column to group and color points by.
-#' @param fit Optional Character: Fit to overlay: `"glm"`, `"gam"`, or an rtemis
-#'   supervised learning algorithm name such as `"LINAD"`, which requires the
-#'   rtemis package. `NULL` draws no fit. See [draw_scatter()].
-#' @param fit_params Optional Named list: Arguments passed to the learner named
-#'   in `fit`, e.g. `list(max_leaves = 8)` for `"LINAD"`. See [draw_scatter()].
-#' @param fit_name Optional Character: Label for fitted layers.
+#' @param color Optional Character: Numeric column mapped to a continuous color
+#'   scale. Excludes `group`.
+#' @param color_scale Character: Color scale of `color`: `"sequential"`, from
+#'   the lowest to the highest value, or `"diverging"`, centered on zero.
+#' @param colormap Optional Character: Colors of the color scale, low to
+#'   high, at least two. `NULL` uses the theme's sign colors.
+#' @param fit Optional Character: Model fitted to each series: `"glm"`,
+#'   `"polynomial"`, `"loess"`, `"gam"`, or an rtemis supervised learning
+#'   algorithm name such as `"LINAD"`, which requires the rtemis package.
+#'   `NULL` draws no fit. See [draw_scatter()].
+#' @param fit_params Optional Named list: Arguments of the model, e.g.
+#'   `list(degree = 2)` for `"polynomial"` or `list(max_leaves = 8)` for
+#'   `"LINAD"`. See [draw_scatter()].
+#' @param fit_per_group Logical: Fit each series. `FALSE` fits one curve over
+#'   every group.
+#' @param fit_name Optional Character: Text added to the legend entry of each
+#'   fitted series.
 #' @param rug Logical: Show marginal marks along the x and y axes.
 #' @param hover Optional Character: Column containing per-observation tooltip labels.
-#' @param se Logical: If TRUE, shade the fit standard-error band.
-#' @param se_times Numeric `[0, Inf)`: Multiplier for the fitted standard error.
-#' @param rsq Logical: Include the fitted model's R-squared in series labels.
+#' @param se Logical: If TRUE, shade the interval of the fit's standard error.
+#' @param se_times Numeric `[0, Inf)`: Multiplier of the standard error bounding
+#'   the interval.
+#' @param rsq Logical: Add each fit's R-squared to its legend entry.
 #' @param diagonal Logical: Draw the identity line within the axis limits.
 #' @param diagonal_color Optional Character: Identity-line color.
-#' @param n_fit Integer `[2, Inf)`: Points used to draw the fit line.
-#' @param fit_alpha Numeric `[0, 1]`: Opacity of the standard-error band.
+#' @param n_fit Integer `[2, Inf)`: Points each fitted curve is evaluated at.
+#' @param fit_alpha Numeric `[0, 1]`: Opacity of the interval.
+#' @param point_size Numeric `(0, Inf)`: Symbol diameter in pixels of points
+#'   without `size`.
 #' @param zoom Logical: Enable Shift+wheel zoom, drag panning, and box-zoom
 #'   controls on both axes. With `square` or `equal_axes`, the controls omit
 #'   box zoom, which sets each axis independently.
@@ -75,80 +95,58 @@
 #'
 #' @examples
 #' cfg <- setup_ScatterConfig(x = "wt", y = "mpg", fit = "glm")
-#' cfg@type
+#' cfg@fit
 ScatterConfig <- new_class(
   name = "ScatterConfig",
   parent = ChartConfig,
   package = "rtemis.draw",
   properties = c(
     legend_properties(),
+    fit_properties(),
     list(
       type = prop_chart_type("scatter"),
       # -- data binding: column names, never values --------------------------
       x = prop_string(
         NULL,
         nullable = TRUE,
-        description = "Column drawn on the x axis."
+        description = "Column drawn on the x axis: numeric, or a date or date-time."
       ),
       y = prop_string(
         NULL,
         nullable = TRUE,
-        description = "Column drawn on the y axis."
+        vector = TRUE,
+        description = "Numeric columns drawn on the y axis, one series each."
       ),
       size = prop_string(
         NULL,
         nullable = TRUE,
-        description = "Column giving per-point size."
+        description = paste(
+          "Nonnegative numeric column that sets each symbol's area in",
+          "proportion to its value."
+        )
       ),
       group = prop_string(
         NULL,
         nullable = TRUE,
         description = "Column to group and color points by."
       ),
+      color = prop_string(
+        NULL,
+        nullable = TRUE,
+        description = paste(
+          "Numeric column mapped to a continuous color scale. Excludes group."
+        )
+      ),
       hover = prop_string(
         NULL,
         nullable = TRUE,
         description = "Column containing literal observation tooltip labels."
-      ),
-      fit_name = prop_string(
-        NULL,
-        nullable = TRUE,
-        description = "Label for fitted layers."
       ),
       rug = prop_boolean(
         FALSE,
         description = "Show marginal marks on both axes."
       ),
       # -- semantics ---------------------------------------------------------
-      fit = prop_string(
-        NULL,
-        nullable = TRUE,
-        description = paste(
-          "Fit to overlay: glm, gam, or an rtemis supervised learning",
-          "algorithm name. Unset draws no fit."
-        )
-      ),
-      fit_params = prop_bag(
-        nullable = TRUE,
-        description = paste(
-          "Arguments passed to the learner named in fit: to glm() or gam()",
-          "(k sets each smooth's basis dimension), or to the rtemis",
-          "algorithm's setup function. Unset uses the learner's defaults."
-        )
-      ),
-      se = prop_boolean(
-        TRUE,
-        description = "Shade the fit standard-error band."
-      ),
-      se_times = prop_float(
-        1.96,
-        min = 0,
-        description = "Multiplier for the fitted standard error."
-      ),
-      rsq = prop_boolean(
-        FALSE,
-        description = "Include the fitted model's R-squared in series labels."
-      ),
       diagonal = prop_boolean(
         FALSE,
         description = "Draw the identity line within the axis limits."
@@ -158,11 +156,6 @@ ScatterConfig <- new_class(
         nullable = TRUE,
         description = "Identity-line color. Unset uses a neutral gray."
       ),
-      n_fit = prop_integer(
-        200L,
-        min = 2L,
-        description = "Points used to draw the fit line."
-      ),
       zoom = prop_boolean(
         FALSE,
         description = paste(
@@ -171,11 +164,28 @@ ScatterConfig <- new_class(
         )
       ),
       # -- appearance --------------------------------------------------------
-      fit_alpha = prop_float(
-        0.25,
-        min = 0,
-        max = 1,
-        description = "Opacity of the standard-error band."
+      color_scale = prop_string(
+        "sequential",
+        enum = c("sequential", "diverging"),
+        description = paste(
+          "Color scale of color: sequential from the lowest to the highest",
+          "value, or diverging, centered on zero."
+        )
+      ),
+      colormap = prop_string(
+        NULL,
+        nullable = TRUE,
+        vector = TRUE,
+        min_items = 2L,
+        description = paste(
+          "Colors of the color scale, low to high. Unset uses the theme's",
+          "sign colors."
+        )
+      ),
+      point_size = prop_float(
+        6,
+        exclusive_min = 0,
+        description = "Symbol diameter in pixels of points without size."
       ),
       point_alpha = prop_float(
         NULL,
@@ -266,15 +276,15 @@ ScatterConfig <- new_class(
     )
   ),
   validator = config_validator(
-    c(CONFIG_LIMIT_RULES, list(FIT_PARAMS_RULE)),
+    c(CONFIG_LIMIT_RULES, list(FIT_PARAMS_RULE, COLOR_GROUP_RULE)),
     extra = config_ordered_limits
   )
 ) # /rtemis.draw::ScatterConfig
 
 
 # %% SCATTER_ORIGIN_NAMES ----
-# The properties an origin map covers: every settable one, so a complete map is
-# only producible by having actually resolved them all.
+# The properties an origin map covers: every settable one, so a complete map
+# records the provenance of every member.
 SCATTER_ORIGIN_NAMES <- setdiff(
   names(ScatterConfig@properties),
   c("type", PROVENANCE_PROPS)
@@ -284,14 +294,10 @@ SCATTER_ORIGIN_NAMES <- setdiff(
 # %% setup_ScatterConfig ----
 #' Set up a Scatter Chart Configuration
 #'
-#' The seam between convenient input and a complete, validated object: pass the
-#' handful of things you care about, get back a `ScatterConfig` with everything
-#' else at its default.
-#'
-#' **Every argument is optional**, which is what lets the published schema
-#' require nothing: an authored config is a subset of the full set, and the
-#' interface fills in the rest. This is a different entry point from
-#' [draw_scatter()], which takes vectors and keeps its mandatory `x` and `y`.
+#' Builds a complete, validated [ScatterConfig] from the arguments given, every
+#' other member at its default. **Every argument is optional**, so the
+#' published schema requires nothing: an authored config is a subset of the
+#' full set. [draw_scatter()] takes vectors instead, and requires `x` and `y`.
 #'
 #' @inheritParams ScatterConfig
 #' @param origin Optional Named character: Where each value came from. Normally
@@ -313,11 +319,16 @@ setup_ScatterConfig <- function(
   y = NULL,
   size = NULL,
   group = NULL,
+  color = NULL,
+  color_scale = "sequential",
+  colormap = NULL,
   fit = NULL,
   fit_params = NULL,
+  fit_per_group = TRUE,
   se = TRUE,
   n_fit = 200L,
   fit_alpha = 0.25,
+  point_size = 6,
   palette = NULL,
   pad = DEFAULT_PAD,
   square = FALSE,
@@ -347,18 +358,20 @@ setup_ScatterConfig <- function(
   point_alpha = NULL,
   zoom = FALSE
 ) {
-  # Which values the caller chose, versus which this function filled in. An
-  # explicit `origin` (from read_chart_config()) wins: provenance is carried
-  # through a round trip, never recomputed, or a defaulted value would harden
-  # into a user choice on the first hop.
+  # An explicit `origin` (from read_chart_config()) is carried through a round
+  # trip as given, so a defaulted value keeps its provenance.
   origin <- origin %||% chart_origin(match.call(), SCATTER_ORIGIN_NAMES)
   ScatterConfig(
     x = x,
     y = y,
     size = size,
     group = group,
+    color = color,
+    color_scale = color_scale,
+    colormap = colormap,
     fit = fit,
     fit_params = fit_params,
+    fit_per_group = fit_per_group,
     fit_name = fit_name,
     rug = rug,
     hover = hover,
@@ -369,6 +382,7 @@ setup_ScatterConfig <- function(
     diagonal_color = diagonal_color,
     n_fit = clean_int(n_fit),
     fit_alpha = fit_alpha,
+    point_size = point_size,
     point_alpha = point_alpha,
     zoom = zoom,
     palette = palette,
@@ -395,22 +409,28 @@ setup_ScatterConfig <- function(
 
 
 # %% resolve.ScatterConfig ----
-# Fill in what the data determines: axis labels from the bound column names,
-# axis limits from the values, and point opacity from how many there are. Nothing here touches the display surface, and
-# nothing is derived for a property the author already set.
-#
-# `palette` is deliberately NOT resolved: it belongs to the interface, and baking
-# one interface's palette into a document would stop another from applying its
-# own. It is left NULL, meaning "use your palette".
+# Fills in what the data determines: axis labels from the bound column names,
+# axis limits from the rows drawn, and point opacity from their number. A
+# property the author set is kept. `palette` stays NULL, so each interface
+# applies its own.
 method(resolve, ScatterConfig) <- function(config, data = NULL, ...) {
-  x <- config_column(data, config@x, "x")
-  y <- config_column(data, config@y, "y")
-  # `square` + `equal_axes` is a statement about the limits, so it is settled
-  # here rather than in the builder: the document then records the interval the
-  # chart is actually drawn on, and reading it back draws the same chart.
+  keep <- if (!is.null(data) && !is.null(config@x) && !is.null(config@y)) {
+    scatter_keep(config, data)
+  }
+  x <- if (!is.null(keep)) config_column(data, config@x, "x")[keep]
+  ys <- if (!is.null(keep)) {
+    unlist(
+      lapply(config@y, function(y) config_column(data, y, "y")[keep]),
+      use.names = FALSE
+    )
+  }
+  numeric_x <- if (!is.null(x) && is.numeric(x)) x
+  time_x <- if (!is.null(x) && is_time_axis(x)) time_axis_ms(x)
+  # `square` with `equal_axes` sets both axes to one interval, recorded in the
+  # document so that reading it back draws the same chart.
   common <- equal_axis_limits(
-    x,
-    y,
+    numeric_x,
+    ys,
     config@xlim,
     config@ylim,
     config@pad,
@@ -420,84 +440,96 @@ method(resolve, ScatterConfig) <- function(config, data = NULL, ...) {
   config_derive(
     config,
     list(
-      # Labels come from names; a config naming no column derives no label.
       xlab = config@x,
-      ylab = config@y,
-      xlim = common[["xlim"]] %||% if (!is.null(x)) calc_limits(x, config@pad),
-      ylim = common[["ylim"]] %||% if (!is.null(y)) calc_limits(y, config@pad),
-      point_alpha = if (!is.null(x) && !is.null(y)) {
-        # Count what is drawn: scatter_input() drops incomplete rows.
-        group <- config_column(data, config@group, "group")
-        keep <- !is.na(x) & !is.na(y)
-        if (!is.null(group)) {
-          keep <- keep & !is.na(group)
-        }
-        auto_alpha(sum(keep))
-      }
+      ylab = if (length(config@y) == 1L) config@y,
+      xlim = common[["xlim"]] %||%
+        if (!is.null(numeric_x %||% time_x)) {
+          calc_limits(numeric_x %||% time_x, config@pad)
+        },
+      ylim = common[["ylim"]] %||%
+        if (!is.null(ys)) calc_limits(ys, config@pad),
+      point_alpha = if (!is.null(keep)) auto_alpha(sum(keep) * length(config@y))
     )
   )
 }
 
 
+# %% scatter_keep ----
+#' The rows a scatter chart draws
+#'
+#' A row is drawn when its x, its group, its size, and its color are present;
+#' each `y` column then draws the rows where it has a value.
+#'
+#' @param config [ScatterConfig].
+#' @param data data.frame: The chart data.
+#'
+#' @return Logical, one per row of `data`.
+#'
+#' @author EDG
+#' @keywords internal
+#' @noRd
+scatter_keep <- function(config, data) {
+  keep <- !is.na(config_column(data, config@x, "x"))
+  for (name in c(config@group, config@size, config@color)) {
+    keep <- keep & !is.na(data[[name]])
+  }
+  keep &
+    Reduce(
+      `|`,
+      lapply(config@y, function(y) !is.na(config_column(data, y, "y")))
+    )
+} # /rtemis.draw::scatter_keep
+
+
 # %% compile.ScatterConfig ----
-# Translate a config into the render option. `resolve()` runs first, so every
-# derivable value is already present and this is a straight hand-off to the same
-# builder `draw_scatter()` uses -- one implementation, two entry points.
+# A build request for the @rtemis/draw scatter builder: the bound columns, and
+# the curves `fit` names, fitted in R.
 method(compile, ScatterConfig) <- function(
   config,
   data = NULL,
   theme = NULL,
   ...
 ) {
-  x <- config_column(data, config@x, "x")
-  y <- config_column(data, config@y, "y")
-  if (is.null(x) || is.null(y)) {
+  if (is.null(config@x) || is.null(config@y)) {
     abort(
       "A ScatterConfig needs both `x` and `y` set to draw.",
       class = c("rtemis_null_input", "rtemis_input_error")
     )
   }
-  scatter_option(
-    x = x,
-    y = y,
-    size = config_column(data, config@size, "size"),
-    group = config_column(data, config@group, "group"),
-    fit = config@fit,
-    fit_params = config@fit_params,
-    fit_name = config@fit_name,
-    rug = config@rug,
-    hover = config_column(data, config@hover, "hover"),
-    se = config@se,
-    se_times = config@se_times,
-    rsq = config@rsq,
-    diagonal = config@diagonal,
-    diagonal_color = config@diagonal_color,
-    fit_alpha = config@fit_alpha,
-    point_alpha = config@point_alpha,
-    n_fit = config@n_fit,
-    palette = config@palette,
-    pad = config@pad,
-    square = config@square,
-    equal_axes = config@equal_axes,
-    xlim = config@xlim,
-    ylim = config@ylim,
-    xlab = config@xlab,
-    ylab = config@ylab,
-    title = config@title,
-    margins = config_margins(config) %||% DEFAULT_MARGINS,
-    zoom = config@zoom
+  columns <- unique(c(
+    config@x,
+    config@y,
+    config@group,
+    config@size,
+    config@color,
+    config@hover
+  ))
+  for (name in columns) {
+    config_column(data, name, if (name %in% config@y) "y" else "x")
+  }
+  BuildRequest(
+    type = "scatter",
+    data = tabular_json(
+      data,
+      columns,
+      fits = fit_curves(config, data, keep = scatter_keep(config, data))
+    ),
+    config = config_members(config),
+    appearance = list()
   )
 }
 
 
 # %% render_meta.ScatterConfig ----
-# A square or equally-scaled plot is solved in the browser, from the ratio and
-# padding derived here. The limits are already reconciled by resolve(), so this
-# only reads what compile() produced.
+# The widget and SVG export place the legend from the legend members; with
+# `color`, the legend is the color scale.
 method(render_meta, ScatterConfig) <- function(config, option) {
-  aspect_meta(
-    option,
-    square = config@square,
-    equal_axes = config@equal_axes
+  c(
+    legend_meta(
+      config@legend_position,
+      config@legend_placement,
+      config@legend_title
+    ),
+    if (!is.null(config@color)) list(legendTarget = "visualMap")
   )
 }

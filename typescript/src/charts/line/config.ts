@@ -1,3 +1,10 @@
+import {
+  FIT_MEMBERS,
+  type FitCurve,
+  type FitMembers,
+  type FitTarget,
+  fitSeries,
+} from "../../shared/fit.ts";
 import { formatNumber } from "../../shared/format.ts";
 import { axisZoom, cartesianGrid, type MarginMembers } from "../../shared/layout.ts";
 import type { LegendMembers } from "../../shared/legend.ts";
@@ -19,6 +26,7 @@ import {
   textColumn,
   timeMs,
 } from "../../shared/source.ts";
+import { RTEMIS_PALETTE } from "../../theme/tokens.ts";
 
 /** A dash pattern of a line. */
 export type LineDash = "solid" | "dashed" | "dotted";
@@ -27,7 +35,7 @@ export type LineDash = "solid" | "dashed" | "dotted";
  * An instance of the `chart/line/v1` schema, written by rtemis.draw's
  * `LineConfig` class. Every member is optional. spec: draw/shared-builders#line
  */
-export interface LineChartConfig extends MarginMembers, LegendMembers {
+export interface LineChartConfig extends MarginMembers, LegendMembers, FitMembers {
   readonly type?: "line";
   /**
    * Column along the horizontal axis. A numeric column gets a value axis, a
@@ -89,8 +97,19 @@ export interface LineChartConfig extends MarginMembers, LegendMembers {
   readonly title?: string | null;
 }
 
-/** What is not chart config: animation. */
+/**
+ * A line chart's data: the bound columns, and the curves the host fitted when
+ * `fit` is set. spec: draw/shared-builders#fits
+ */
+export interface LineData extends TabularData {
+  /** One curve per line, or one per `y` column when pooled; unset draws no fit. */
+  readonly fits?: readonly FitCurve[];
+}
+
+/** What is not chart config: the theme palette and animation. */
 export interface LineAppearance {
+  /** The theme's categorical palette, which colors the fits; unset uses rtemis.draw's. */
+  readonly palette?: readonly string[];
   /** Animate the first render and updates; unset leaves the ECharts default. */
   readonly animation?: boolean;
 }
@@ -127,6 +146,7 @@ export const LINE_CHART_CONFIG_MEMBERS = Object.freeze([
   "legend_position",
   "legend_placement",
   "legend_title",
+  ...FIT_MEMBERS,
 ] as const satisfies readonly (keyof LineChartConfig)[]);
 
 type MissingMember = Exclude<keyof LineChartConfig, (typeof LINE_CHART_CONFIG_MEMBERS)[number]>;
@@ -137,6 +157,9 @@ type XType = "value" | "time" | "category";
 
 interface LineSeries {
   readonly name: string;
+  /** The `y` column and the group level the line draws. */
+  readonly column: string;
+  readonly group: string | null;
   /** Row indices of the series, in row order. */
   readonly rows: readonly number[];
   readonly y: readonly (number | null)[];
@@ -152,7 +175,7 @@ interface LineSeries {
  * and a filled area's y range holds zero, unpadded on that side.
  */
 export function buildLineOption(
-  data: TabularData,
+  data: LineData,
   config: LineChartConfig,
   appearance: LineAppearance = {},
 ): Record<string, unknown> {
@@ -178,6 +201,20 @@ export function buildLineOption(
     throw new Error(
       "A stacked y axis shows sums, so `equal_axes` cannot apply: unset one of the two.",
     );
+  }
+  if (config.fit && (config.aggregate ?? "none") !== "none") {
+    throw new Error(
+      "A fit models observations, and with `aggregate` each point is a summary of several: set `aggregate` to none, or unset `fit`.",
+    );
+  }
+  if (config.fit && xType !== "value") {
+    throw new Error(
+      "A fit needs a numeric x; this chart's x is " +
+        (xType === "time" ? "a date or time." : "categorical."),
+    );
+  }
+  if (config.fit && config.area) {
+    throw new Error("A fit is drawn over lines, and `area` fills them: unset one of the two.");
   }
   if (config.stack && !config.area) {
     throw new Error(
@@ -210,7 +247,19 @@ export function buildLineOption(
   const yDerive = config.area ? calcLimitsFromZero : calcLimits;
   const yLim = limits.ylim ?? yDerive(config.stack ? stackedValues(series, xKey) : yValues, pad);
 
-  const palette = asArray(config.palette);
+  const memberPalette = asArray(config.palette);
+  // A fit takes its line's color, so with a fit every line's color is explicit.
+  const palette =
+    memberPalette.length > 0 || !config.fit
+      ? memberPalette
+      : (appearance.palette ?? RTEMIS_PALETTE);
+  const targets: FitTarget[] = series.map((s, i) => ({
+    y: s.column,
+    group: s.group,
+    name: series.length === 1 ? null : s.name,
+    color: palette.length > 0 ? (palette[i % palette.length] as string) : "",
+  }));
+  const fits = config.fit ? fitSeries(data.fits ?? [], targets, config, "dashed") : null;
   const dashes = asArray(config.line_style);
   const at = categories ? new Map(categories.map((c, i) => [c, i])) : null;
   const inOrder =
@@ -235,9 +284,10 @@ export function buildLineOption(
       : points;
     const color = palette.length > 0 ? palette[i % palette.length] : undefined;
     const dash = dashes.length > 0 ? dashes[i % dashes.length] : undefined;
+    const name = fits?.names.get(targets[i] as FitTarget) ?? (series.length === 1 ? null : s.name);
     return {
       type: "line",
-      ...(series.length === 1 ? {} : { name: s.name }),
+      ...(name === null ? {} : { name }),
       data: values,
       ...(config.smooth ? { smooth: true } : {}),
       ...(config.points || marked ? {} : { showSymbol: false }),
@@ -274,17 +324,24 @@ export function buildLineOption(
 
   const grid = cartesianGrid(config, Boolean(config.xlab || config.ylab));
   const dataZoom = config.zoom ? axisZoom("x", grid) : undefined;
+  const legendNames = [
+    ...new Set(
+      [...builtSeries, ...(fits?.series ?? [])]
+        .map((s) => s.name)
+        .filter((n): n is string => typeof n === "string"),
+    ),
+  ];
 
   return {
     ...(config.title ? { title: { text: config.title } } : {}),
     tooltip: { trigger: "axis", valueFormatter: formatNumber },
-    ...(series.length > 1 ? { legend: { data: series.map((s) => s.name) } } : {}),
+    ...(legendNames.length > 0 ? { legend: { data: legendNames } } : {}),
     xAxis,
     yAxis,
     grid,
     ...(dataZoom ? { dataZoom } : {}),
     ...(xType === "time" ? { useUTC: true } : {}),
-    series: builtSeries,
+    series: [...builtSeries, ...(fits?.series ?? [])],
     ...(appearance.animation === undefined ? {} : { animation: appearance.animation }),
   };
 }
@@ -325,7 +382,13 @@ function lineSeries(
     return rows.map((row) => values[row] ?? null);
   };
   if (!config.group) {
-    return yColumns.map((y) => ({ name: y, rows: allRows, y: select(y, allRows) }));
+    return yColumns.map((y) => ({
+      name: y,
+      column: y,
+      group: null,
+      rows: allRows,
+      y: select(y, allRows),
+    }));
   }
   const raw = column(data.columns, config.group, "group");
   const labels = textColumn(data, config.group, "group");
@@ -337,6 +400,8 @@ function lineSeries(
     const rows = allRows.filter((row) => !missing(raw[row]) && labels[row] === g);
     return yColumns.map((y) => ({
       name: groups.length > 1 ? (multiY ? `${y} / ${g}` : g) : y,
+      column: y,
+      group: g,
       rows,
       y: select(y, rows),
     }));

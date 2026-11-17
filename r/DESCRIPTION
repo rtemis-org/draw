@@ -83,6 +83,7 @@ Collate:
     'fit_layer.R'
     'fit_model.R'
     'scatter_input.R'
+    'draw_scatter.R'
     'config_line.R'
     'timeseries.R'
     'scatter3d.R'

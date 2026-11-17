@@ -27,28 +27,37 @@ var RtemisDraw = (() => {
     DEFAULT_FONT_FAMILY: () => DEFAULT_FONT_FAMILY,
     DEFAULT_MARGIN: () => DEFAULT_MARGIN,
     DEFAULT_PAD: () => DEFAULT_PAD,
+    DEFAULT_POINT_SIZE: () => DEFAULT_POINT_SIZE,
+    FIT_MEMBERS: () => FIT_MEMBERS,
     LINE_CHART_CONFIG_MEMBERS: () => LINE_CHART_CONFIG_MEMBERS,
+    MAX_SYMBOL_SIZE: () => MAX_SYMBOL_SIZE,
     RENDERER_NAMES: () => RENDERER_NAMES,
     RTEMIS_PALETTE: () => RTEMIS_PALETTE,
+    SCATTER_CHART_CONFIG_MEMBERS: () => SCATTER_CHART_CONFIG_MEMBERS,
     SIGNIFICANT_DIGITS: () => SIGNIFICANT_DIGITS,
     SIGN_COLORS: () => SIGN_COLORS,
     ZOOM_SLIDER_ID: () => ZOOM_SLIDER_ID,
     a3SurfaceHints: () => a3SurfaceHints,
+    appendLayers: () => appendLayers,
     aspectHints: () => aspectHints,
+    autoAlpha: () => autoAlpha,
     buildA3Option: () => buildA3Option,
     buildBarOption: () => buildBarOption,
     buildBoxplotOption: () => buildBoxplotOption,
     buildLineOption: () => buildLineOption,
+    buildScatterOption: () => buildScatterOption,
     builders: () => builders,
     calcLimits: () => calcLimits,
     calcLimitsFromZero: () => calcLimitsFromZero,
     darkThemeTokens: () => darkThemeTokens,
+    fitLabel: () => fitLabel,
     fontStack: () => fontStack,
     formatNumber: () => formatNumber,
     lightThemeTokens: () => lightThemeTokens,
     lineAspect: () => lineAspect,
     radicalInverse: () => radicalInverse,
     registerRenderers: () => registerRenderers,
+    scatterAspect: () => lineAspect,
     themeFontSizes: () => themeFontSizes,
     themeOption: () => themeOption,
     timeLabel: () => timeLabel,
@@ -1010,6 +1019,41 @@ var RtemisDraw = (() => {
       { type: "inside", ...index, zoomOnMouseWheel: "shift", moveOnMouseMove: true }
     ];
   }
+  function xyZoom(boxZoom) {
+    const inside = (index) => ({
+      type: "inside",
+      ...index,
+      filterMode: "none",
+      zoomOnMouseWheel: "shift",
+      moveOnMouseMove: true
+    });
+    return {
+      dataZoom: [inside({ xAxisIndex: 0 }), inside({ yAxisIndex: 0 })],
+      toolbox: {
+        show: true,
+        right: 12,
+        top: 8,
+        itemSize: 14,
+        showTitle: false,
+        iconStyle: { borderColor: "#808080" },
+        emphasis: { iconStyle: { borderColor: "#3F6FB5" } },
+        feature: {
+          ...boxZoom ? {
+            dataZoom: {
+              filterMode: "none",
+              brushStyle: {
+                color: "rgba(128,128,128,0.2)",
+                borderColor: "rgba(128,128,128,0.6)",
+                borderWidth: 1
+              },
+              title: { zoom: "Box zoom", back: "Undo zoom" }
+            }
+          } : {},
+          restore: { title: "Reset" }
+        }
+      }
+    };
+  }
 
   // src/shared/source.ts
   function isTime(data, name) {
@@ -1445,7 +1489,7 @@ var RtemisDraw = (() => {
     point[dim] = point[dim] + offset + jitter * visibleWidth;
     return { point, width: visibleWidth };
   }
-  var renderers = {
+  var boxplotRenderers = {
     // Data: [category, value, observation, offset].
     [BOXPLOT_POINTS]: (params, api) => {
       const settings = params.itemPayload;
@@ -1572,12 +1616,6 @@ var RtemisDraw = (() => {
       };
     }
   };
-  var RENDERER_NAMES = Object.freeze(Object.keys(renderers));
-  function registerRenderers(echarts) {
-    for (const [name, render] of Object.entries(renderers)) {
-      echarts.registerCustomSeries(name, render);
-    }
-  }
 
   // src/charts/boxplot/config.ts
   var BOXPLOT_CHART_CONFIG_MEMBERS = Object.freeze([
@@ -1927,6 +1965,100 @@ var RtemisDraw = (() => {
     return { records, limits: extended ?? limits };
   }
 
+  // src/shared/fit.ts
+  var FIT_MEMBERS = Object.freeze([
+    "fit",
+    "fit_params",
+    "fit_per_group",
+    "se",
+    "se_times",
+    "rsq",
+    "n_fit",
+    "fit_alpha",
+    "fit_name"
+  ]);
+  var POOLED_FIT_COLOR = "#808080";
+  function fitLabel(base, config, rsq) {
+    let name = base;
+    if (config.fit_name) name = [base, config.fit_name].filter(Boolean).join(" - ");
+    if (config.rsq) {
+      const value = typeof rsq === "number" && Number.isFinite(rsq) ? rsq.toFixed(3) : "NA";
+      name = `${name ?? "Fit"} (R\xB2 = ${value})`;
+    }
+    return name;
+  }
+  function fitRenames(config) {
+    return Boolean(config.fit) && Boolean(config.fit_name || config.rsq);
+  }
+  function checkCurve(curve, at) {
+    const n = curve.x.length;
+    const where = `fits[${at}]`;
+    if (curve.fitted.length !== n) {
+      throw new Error(`${where}: \`x\` and \`fitted\` must have the same length.`);
+    }
+    const lower = curve.lower ?? null;
+    const upper = curve.upper ?? null;
+    if (lower === null !== (upper === null)) {
+      throw new Error(`${where}: give both interval bounds, \`lower\` and \`upper\`, or neither.`);
+    }
+    if (lower && upper && (lower.length !== n || upper.length !== n)) {
+      throw new Error(`${where}: \`lower\` and \`upper\` must have the length of \`x\`.`);
+    }
+  }
+  function fitSeries(curves, targets, config, lineType = "solid") {
+    const pooled = config.fit_per_group === false;
+    const names = /* @__PURE__ */ new Map();
+    const series = [];
+    const multiY = new Set(targets.map((t) => t.y)).size > 1;
+    curves.forEach((curve, at) => {
+      checkCurve(curve, at);
+      if (curve.x.length === 0) return;
+      const target = targets.find(
+        (t) => (!multiY || t.y === curve.y) && (pooled || (curve.group ?? null) === t.group || t.group === null)
+      );
+      if (!target) {
+        throw new Error(
+          `fits[${at}] (y = ${String(curve.y ?? null)}, group = ${String(curve.group ?? null)}) matches no series of the chart.`
+        );
+      }
+      const owned = !pooled || targets.every((t) => t.group === null);
+      const name = owned ? fitLabel(target.name, config, curve.rsq) : pooledLabel(multiY ? target.y : null, config, curve.rsq);
+      if (owned && fitRenames(config)) names.set(target, name);
+      const color = owned ? target.color : POOLED_FIT_COLOR;
+      const named = name === null ? {} : { name };
+      if (config.se !== false && curve.lower && curve.upper) {
+        const upper = curve.x.map((x, i) => [x, curve.upper?.[i] ?? null]);
+        const lower = curve.x.map((x, i) => [x, curve.lower?.[i] ?? null]).reverse();
+        series.push({
+          type: "line",
+          ...named,
+          data: [...upper, ...lower],
+          showSymbol: false,
+          lineStyle: { opacity: 0 },
+          areaStyle: { color, opacity: config.fit_alpha ?? 0.25 },
+          silent: true,
+          z: 0,
+          legendHoverLink: false
+        });
+      }
+      series.push({
+        type: "line",
+        ...named,
+        data: curve.x.map((x, i) => [x, curve.fitted[i] ?? null]),
+        showSymbol: false,
+        lineStyle: { color, ...lineType === "dashed" ? { type: "dashed" } : {} },
+        itemStyle: { color },
+        silent: true
+      });
+    });
+    return { series, names };
+  }
+  function pooledLabel(y, config, rsq) {
+    const label = fitLabel(y, config, rsq);
+    if (label !== y && label !== null) return label;
+    return y === null ? "Fit" : `Fit (${y})`;
+  }
+
   // src/charts/line/config.ts
   var LINE_CHART_CONFIG_MEMBERS = Object.freeze([
     "type",
@@ -1958,7 +2090,8 @@ var RtemisDraw = (() => {
     "margin_left",
     "legend_position",
     "legend_placement",
-    "legend_title"
+    "legend_title",
+    ...FIT_MEMBERS
   ]);
   function buildLineOption(data, config, appearance = {}) {
     const yColumns = asArray(config.y);
@@ -1983,6 +2116,19 @@ var RtemisDraw = (() => {
       throw new Error(
         "A stacked y axis shows sums, so `equal_axes` cannot apply: unset one of the two."
       );
+    }
+    if (config.fit && (config.aggregate ?? "none") !== "none") {
+      throw new Error(
+        "A fit models observations, and with `aggregate` each point is a summary of several: set `aggregate` to none, or unset `fit`."
+      );
+    }
+    if (config.fit && xType !== "value") {
+      throw new Error(
+        "A fit needs a numeric x; this chart's x is " + (xType === "time" ? "a date or time." : "categorical.")
+      );
+    }
+    if (config.fit && config.area) {
+      throw new Error("A fit is drawn over lines, and `area` fills them: unset one of the two.");
     }
     if (config.stack && !config.area) {
       throw new Error(
@@ -2011,7 +2157,15 @@ var RtemisDraw = (() => {
     const xLim = xNum ? limits.xlim ?? calcLimits(xNum, pad) : null;
     const yDerive = config.area ? calcLimitsFromZero : calcLimits;
     const yLim = limits.ylim ?? yDerive(config.stack ? stackedValues(series, xKey) : yValues, pad);
-    const palette = asArray(config.palette);
+    const memberPalette = asArray(config.palette);
+    const palette = memberPalette.length > 0 || !config.fit ? memberPalette : appearance.palette ?? RTEMIS_PALETTE;
+    const targets = series.map((s, i) => ({
+      y: s.column,
+      group: s.group,
+      name: series.length === 1 ? null : s.name,
+      color: palette.length > 0 ? palette[i % palette.length] : ""
+    }));
+    const fits = config.fit ? fitSeries(data.fits ?? [], targets, config, "dashed") : null;
     const dashes = asArray(config.line_style);
     const at = categories ? new Map(categories.map((c, i) => [c, i])) : null;
     const inOrder = xText !== null && categories !== null && !config.group && xText.length === categories.length && xText.every((x, i) => x === categories[i]);
@@ -2027,9 +2181,10 @@ var RtemisDraw = (() => {
       const values = marked ? points.map((value, j) => isolated.includes(j) ? value : { value, symbol: "none" }) : points;
       const color = palette.length > 0 ? palette[i % palette.length] : void 0;
       const dash = dashes.length > 0 ? dashes[i % dashes.length] : void 0;
+      const name = fits?.names.get(targets[i]) ?? (series.length === 1 ? null : s.name);
       return {
         type: "line",
-        ...series.length === 1 ? {} : { name: s.name },
+        ...name === null ? {} : { name },
         data: values,
         ...config.smooth ? { smooth: true } : {},
         ...config.points || marked ? {} : { showSymbol: false },
@@ -2063,16 +2218,21 @@ var RtemisDraw = (() => {
     };
     const grid = cartesianGrid(config, Boolean(config.xlab || config.ylab));
     const dataZoom = config.zoom ? axisZoom("x", grid) : void 0;
+    const legendNames = [
+      ...new Set(
+        [...builtSeries, ...fits?.series ?? []].map((s) => s.name).filter((n) => typeof n === "string")
+      )
+    ];
     return {
       ...config.title ? { title: { text: config.title } } : {},
       tooltip: { trigger: "axis", valueFormatter: formatNumber },
-      ...series.length > 1 ? { legend: { data: series.map((s) => s.name) } } : {},
+      ...legendNames.length > 0 ? { legend: { data: legendNames } } : {},
       xAxis,
       yAxis,
       grid,
       ...dataZoom ? { dataZoom } : {},
       ...xType === "time" ? { useUTC: true } : {},
-      series: builtSeries,
+      series: [...builtSeries, ...fits?.series ?? []],
       ...appearance.animation === void 0 ? {} : { animation: appearance.animation }
     };
   }
@@ -2095,7 +2255,13 @@ var RtemisDraw = (() => {
       return rows.map((row) => values[row] ?? null);
     };
     if (!config.group) {
-      return yColumns.map((y) => ({ name: y, rows: allRows, y: select(y, allRows) }));
+      return yColumns.map((y) => ({
+        name: y,
+        column: y,
+        group: null,
+        rows: allRows,
+        y: select(y, allRows)
+      }));
     }
     const raw = column(data.columns, config.group, "group");
     const labels = textColumn(data, config.group, "group");
@@ -2107,6 +2273,8 @@ var RtemisDraw = (() => {
       const rows = allRows.filter((row) => !missing(raw[row]) && labels[row] === g);
       return yColumns.map((y) => ({
         name: groups.length > 1 ? multiY ? `${y} / ${g}` : g : y,
+        column: y,
+        group: g,
         rows,
         y: select(y, rows)
       }));
@@ -2247,6 +2415,326 @@ var RtemisDraw = (() => {
     };
   }
 
+  // src/charts/scatter/renderers.ts
+  var RUG = "rtemis.rug.v1";
+  var RUG_LENGTH = 6;
+  var scatterRenderers = {
+    // A mark inside the plotting box at the bottom edge for x and at the left
+    // edge for y, so the marks stay on the axes through zoom and resize.
+    [RUG]: (params, api) => {
+      const point = api.coord([api.value(0), api.value(1)]);
+      const box = params.coordSys;
+      const style = { stroke: api.visual("color"), opacity: 0.5, lineWidth: 1 };
+      const px = point[0];
+      const py = point[1];
+      const bottom = box.y + box.height;
+      return {
+        type: "group",
+        children: [
+          { type: "line", shape: { x1: px, x2: px, y1: bottom, y2: bottom - RUG_LENGTH }, style },
+          { type: "line", shape: { x1: box.x, x2: box.x + RUG_LENGTH, y1: py, y2: py }, style }
+        ]
+      };
+    }
+  };
+
+  // src/charts/scatter/config.ts
+  var SCATTER_CHART_CONFIG_MEMBERS = Object.freeze([
+    "type",
+    "x",
+    "y",
+    "group",
+    "size",
+    "color",
+    "color_scale",
+    "colormap",
+    "hover",
+    "rug",
+    "diagonal",
+    "diagonal_color",
+    "zoom",
+    "point_size",
+    "point_alpha",
+    "palette",
+    "square",
+    "equal_axes",
+    "pad",
+    "xlim",
+    "ylim",
+    "xlab",
+    "ylab",
+    "title",
+    "margin_top",
+    "margin_right",
+    "margin_bottom",
+    "margin_left",
+    "legend_position",
+    "legend_placement",
+    "legend_title",
+    ...FIT_MEMBERS
+  ]);
+  var MAX_SYMBOL_SIZE = 30;
+  var DEFAULT_POINT_SIZE = 6;
+  var COLOR_SCALE_MARGIN = 90;
+  function autoAlpha(n) {
+    return Math.min(0.9, Math.max(0.15, 0.9 - 0.15 * Math.log10(Math.max(n, 1))));
+  }
+  function buildScatterOption(data, config, appearance = {}) {
+    const yColumns = asArray(config.y);
+    if (!config.x || yColumns.length === 0) {
+      throw new Error("A scatter chart needs both `x` and `y` set to draw.");
+    }
+    if (config.color && config.group) {
+      throw new Error("`color` and `group` both set the color of a point: bind one of the two.");
+    }
+    const time = isTime(data, config.x);
+    const xValues = time ? column(data.columns, config.x, "x").map(timeMs) : numberColumn(data, config.x, "x");
+    if (config.equal_axes && time) {
+      throw new Error("`equal_axes` compares the two axes' scales, which needs a numeric x.");
+    }
+    const ys = new Map(yColumns.map((y) => [y, numberColumn(data, y, "y")]));
+    const size = config.size ? numberColumn(data, config.size, "size") : null;
+    if (size?.some((v) => v !== null && v < 0)) {
+      throw new Error(
+        `Column '${config.size}' (config member 'size') has negative values; a symbol's area shows a nonnegative quantity.`
+      );
+    }
+    const colorValues = config.color ? numberColumn(data, config.color, "color") : null;
+    const hover = config.hover ? column(data.columns, config.hover, "hover") : null;
+    const memberPalette = asArray(config.palette);
+    const palette = memberPalette.length > 0 ? memberPalette : appearance.palette ?? RTEMIS_PALETTE;
+    const series = pointSeries(data, config, yColumns, xValues, ys, [size, colorValues], palette);
+    if (series.every((s) => s.rows.length === 0)) {
+      throw new Error("A scatter chart needs at least one row with every bound column set.");
+    }
+    const pad = config.pad ?? DEFAULT_PAD;
+    const drawnX = series.flatMap((s) => s.rows.map((row) => xValues[row]));
+    const drawnY = series.flatMap((s) => s.rows.map((row) => ys.get(s.y)?.[row] ?? null));
+    const limits = equalAxisLimits(
+      drawnX,
+      drawnY,
+      config.xlim ?? null,
+      config.ylim ?? null,
+      pad,
+      config.square ?? false,
+      config.equal_axes ?? false
+    );
+    const xLim = limits.xlim ?? calcLimits(drawnX, pad);
+    const yLim = limits.ylim ?? calcLimits(drawnY, pad);
+    const fits = config.fit ? fitSeries(data.fits ?? [], series, config) : null;
+    const nameOf = (s) => fits?.names.get(s) ?? s.name;
+    const alpha = config.point_alpha ?? autoAlpha(drawnX.length);
+    const maxSize = size ? Math.max(0, ...series.flatMap((s) => s.rows.map((r) => size[r] ?? 0))) : 0;
+    const symbolSize = (row) => {
+      const v = size?.[row] ?? 0;
+      return maxSize > 0 ? MAX_SYMBOL_SIZE * Math.sqrt(v / maxSize) : 0;
+    };
+    const points = series.map((s) => {
+      const y = ys.get(s.y) ?? [];
+      const values = s.rows.map((row) => {
+        const value = [
+          xValues[row],
+          y[row],
+          ...colorValues ? [colorValues[row]] : [],
+          ...size ? [size[row]] : []
+        ];
+        if (!size && !hover) return value;
+        return {
+          value,
+          ...size ? { symbolSize: symbolSize(row) } : {},
+          ...hover ? { name: String(hover[row]) } : {}
+        };
+      });
+      const name = nameOf(s);
+      return {
+        type: "scatter",
+        ...name === null ? {} : { name },
+        data: values,
+        ...size ? {} : { symbolSize: config.point_size ?? DEFAULT_POINT_SIZE },
+        itemStyle: { ...colorValues ? {} : { color: s.color }, opacity: alpha }
+      };
+    });
+    const rugs = config.rug ? series.map((s) => {
+      const y = ys.get(s.y) ?? [];
+      const name = nameOf(s);
+      return {
+        type: "custom",
+        ...name === null ? {} : { name },
+        renderItem: RUG,
+        silent: true,
+        clip: true,
+        itemStyle: { color: s.color },
+        data: s.rows.map((row) => [xValues[row], y[row]]),
+        encode: { x: 0, y: 1 }
+      };
+    }) : [];
+    const diagonal = config.diagonal && xLim && yLim ? diagonalSeries(xLim, yLim, config) : [];
+    const legendNames = [
+      ...new Set(
+        [...points, ...fits?.series ?? []].map((s) => s.name).filter((n) => typeof n === "string")
+      )
+    ];
+    const xName = config.xlab ?? null;
+    const yName = config.ylab ?? null;
+    const xAxis = {
+      type: time ? "time" : "value",
+      ...xName ? { name: xName, nameLocation: "middle" } : {},
+      ...time ? {} : { scale: true },
+      ...xLim ? { min: xLim[0], max: xLim[1] } : {},
+      splitLine: NO_CORNER_LINES2,
+      ...time ? { axisLabel: { showMinLabel: false, showMaxLabel: false } } : {},
+      ...yLim ? { axisLine: zeroAxisLine2(yLim) } : {}
+    };
+    const yAxis = {
+      type: "value",
+      ...yName ? { name: yName, nameLocation: "middle" } : {},
+      scale: true,
+      ...yLim ? { min: yLim[0], max: yLim[1] } : {},
+      splitLine: NO_CORNER_LINES2,
+      ...xLim && !time ? { axisLine: zeroAxisLine2(xLim) } : {}
+    };
+    const grid = cartesianGrid(config, Boolean(xName || yName));
+    if (colorValues && typeof config.margin_right !== "number") {
+      grid.right = Math.max(Number(grid.right ?? 0), COLOR_SCALE_MARGIN);
+    }
+    const zoom = config.zoom ? xyZoom(!(config.square || config.equal_axes)) : null;
+    return {
+      ...config.title ? { title: { text: config.title } } : {},
+      tooltip: {
+        trigger: "item",
+        formatter: pointTooltip(config, series.length > 1, xName ?? config.x, yColumns, time)
+      },
+      ...legendNames.length > 0 ? { legend: { data: legendNames, itemStyle: { opacity: 1 } } } : {},
+      xAxis,
+      yAxis,
+      grid,
+      ...zoom ? zoom : {},
+      ...colorValues ? { visualMap: colorScale(config, colorValues, points.length) } : {},
+      ...time ? { useUTC: true } : {},
+      series: [...points, ...fits?.series ?? [], ...rugs, ...diagonal],
+      ...appearance.animation === void 0 ? {} : { animation: appearance.animation }
+    };
+  }
+  var NO_CORNER_LINES2 = Object.freeze({ showMinLine: false, showMaxLine: false });
+  function zeroAxisLine2(otherLimits) {
+    return { show: otherLimits[0] <= 0 && otherLimits[1] >= 0, onZero: true };
+  }
+  function numberColumn(data, name, member) {
+    const values = column(data.columns, name, member);
+    const out = values.map(numberOrNull);
+    const text = values.findIndex((v) => v !== null && v !== void 0 && typeof v !== "number");
+    if (text >= 0) {
+      throw new Error(
+        `Column '${name}' (config member '${member}') must be numeric; row ${text + 1} holds '${String(values[text])}'.`
+      );
+    }
+    return out;
+  }
+  function pointSeries(data, config, yColumns, x, ys, extra, palette) {
+    const complete = (row) => x[row] !== null && extra.every((values) => values === null || values[row] !== null);
+    const rowsOf = (y, candidates) => candidates.filter((row) => complete(row) && (ys.get(y)?.[row] ?? null) !== null);
+    const all = x.map((_, row) => row);
+    const color = (i) => palette[i % palette.length];
+    if (!config.group) {
+      return yColumns.map((y, i) => ({
+        y,
+        group: null,
+        name: yColumns.length > 1 ? y : null,
+        color: color(i),
+        rows: rowsOf(y, all)
+      }));
+    }
+    const raw = column(data.columns, config.group, "group");
+    const labels = textColumn(data, config.group, "group");
+    const missing = (v) => v === null || v === void 0 || Number.isNaN(v);
+    const present2 = labels.filter((_, row) => !missing(raw[row]));
+    const groups = distinct(present2, data.levels?.[config.group]);
+    const multiY = yColumns.length > 1;
+    return groups.flatMap((g, gi) => {
+      const rows = all.filter((row) => !missing(raw[row]) && labels[row] === g);
+      return yColumns.map((y, yi) => ({
+        y,
+        group: g,
+        name: multiY ? `${y} / ${g}` : g,
+        color: color(gi * yColumns.length + yi),
+        rows: rowsOf(y, rows)
+      }));
+    });
+  }
+  function diagonalSeries(xLim, yLim, config) {
+    const lo = Math.max(xLim[0], yLim[0]);
+    const hi = Math.min(xLim[1], yLim[1]);
+    if (!(lo < hi)) return [];
+    return [
+      {
+        type: "line",
+        data: [
+          [lo, lo],
+          [hi, hi]
+        ],
+        showSymbol: false,
+        silent: true,
+        legendHoverLink: false,
+        lineStyle: { color: config.diagonal_color ?? SIGN_COLORS.neutral, type: "dashed" },
+        z: 1
+      }
+    ];
+  }
+  function colorScale(config, values, pointSeriesCount) {
+    const finite = values.filter((v) => v !== null);
+    const diverging = config.color_scale === "diverging";
+    let min = Math.min(...finite);
+    let max = Math.max(...finite);
+    if (diverging) {
+      const m = Math.max(Math.abs(min), Math.abs(max)) || 1;
+      min = -m;
+      max = m;
+    } else if (min === max) {
+      max = min + 1;
+    }
+    const given = asArray(config.colormap);
+    if (given.length === 1) {
+      throw new Error("`colormap` needs at least two colors, low to high.");
+    }
+    const colors = given.length > 0 ? given : diverging ? [SIGN_COLORS.negative, SIGN_COLORS.neutral, SIGN_COLORS.positive] : [SIGN_COLORS.neutral, SIGN_COLORS.positive];
+    return {
+      type: "continuous",
+      dimension: 2,
+      seriesIndex: Array.from({ length: pointSeriesCount }, (_, i) => i),
+      min,
+      max,
+      calculable: true,
+      orient: "vertical",
+      right: 10,
+      top: "middle",
+      inRange: { color: colors },
+      // The scale names its column; a host draws `legend_title` itself, as
+      // rtemis.draw's legend layout does for every color scale.
+      ...config.legend_title ? {} : { text: [config.color, ""] }
+    };
+  }
+  function pointTooltip(config, named, xName, yColumns, time) {
+    const html = (s) => String(s).replace(
+      /[&<>"]/g,
+      (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]
+    );
+    return (params) => {
+      const p = params;
+      const value = Array.isArray(p.value) ? p.value : [];
+      const x = time && typeof value[0] === "number" ? new Date(value[0]).toISOString().slice(0, 19).replace("T", " ") : formatNumber(value[0]);
+      const yName = yColumns.length === 1 ? config.ylab ?? yColumns[0] : config.ylab ?? "y";
+      const lines = [
+        ...config.hover && p.name ? [`<b>${html(p.name)}</b>`] : [],
+        ...named && p.seriesName ? [`${p.marker ?? ""}${html(p.seriesName)}`] : [],
+        `${html(xName)}: ${html(x)}`,
+        `${html(yName)}: ${html(formatNumber(value[1]))}`,
+        ...config.color ? [`${html(config.color)}: ${html(formatNumber(value[2]))}`] : [],
+        ...config.size ? [`${html(config.size)}: ${html(formatNumber(value[config.color ? 3 : 2]))}`] : []
+      ];
+      return lines.join("<br/>");
+    };
+  }
+
   // src/shared/labels.ts
   function valueLabel(config, name = (column2) => column2) {
     const ys = asArray(config.y);
@@ -2264,15 +2752,45 @@ var RtemisDraw = (() => {
     }
   }
 
+  // src/shared/layers.ts
+  function appendLayers(option, layers) {
+    if (!layers || layers.length === 0) return option;
+    const series = option.series === void 0 ? [] : [option.series].flat();
+    const out = {
+      ...option,
+      series: [...series, ...layers.flatMap((layer) => layer.series)]
+    };
+    const names = layers.flatMap((layer) => layer.legend ? [layer.legend] : []);
+    if (names.length > 0) {
+      const legend = option.legend ?? {};
+      out.legend = Array.isArray(legend.data) ? { ...legend, data: [.../* @__PURE__ */ new Set([...legend.data, ...names])] } : { ...legend, show: true };
+    }
+    return out;
+  }
+
+  // src/shared/renderers.ts
+  var renderers = Object.freeze({
+    ...boxplotRenderers,
+    ...scatterRenderers
+  });
+  var RENDERER_NAMES = Object.freeze(Object.keys(renderers));
+  function registerRenderers(echarts) {
+    for (const [name, render] of Object.entries(renderers)) {
+      echarts.registerCustomSeries(name, render);
+    }
+  }
+
   // src/index.ts
   var builders = Object.freeze({
     a3: buildA3Option,
     bar: buildBarOption,
     boxplot: buildBoxplotOption,
-    line: buildLineOption
+    line: buildLineOption,
+    scatter: buildScatterOption
   });
   var aspectHints = Object.freeze({
-    line: lineAspect
+    line: lineAspect,
+    scatter: lineAspect
   });
   return __toCommonJS(index_exports);
 })();

@@ -158,12 +158,13 @@ test_that("grouped charts draw series in factor-level order", {
     expect_identical(unique(drawn[drawn %in% expected]), expected)
   }
   # The first level takes the first palette color.
+  skip_if_no_node()
   opt <- draw_scatter(x, y, group = group, palette = c("#111111", "#222222"))
-  series <- opt[["x"]][["option"]][["series"]]
+  series <- built_option(opt, simplify = FALSE)[["series"]]
   expect_identical(series[[1L]][["name"]], "a")
   expect_identical(series[[1L]][["itemStyle"]][["color"]], "#111111")
   expect_length(series[[1L]][["data"]], 4L)
-  expect_identical(series[[1L]][["data"]][[1L]], c(1, 4))
+  expect_equal(unlist(series[[1L]][["data"]][[1L]]), c(1, 4))
 })
 
 test_that("character groups keep first-appearance order", {

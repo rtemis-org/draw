@@ -12,23 +12,28 @@ ScatterConfig(
   legend_position = "top",
   legend_placement = "outside",
   legend_title = NULL,
+  fit = NULL,
+  fit_params = NULL,
+  fit_per_group = TRUE,
+  se = TRUE,
+  se_times = 1.96,
+  rsq = FALSE,
+  n_fit = 200L,
+  fit_alpha = 0.25,
+  fit_name = NULL,
   x = NULL,
   y = NULL,
   size = NULL,
   group = NULL,
+  color = NULL,
   hover = NULL,
-  fit_name = NULL,
   rug = FALSE,
-  fit = NULL,
-  fit_params = NULL,
-  se = TRUE,
-  se_times = 1.96,
-  rsq = FALSE,
   diagonal = FALSE,
   diagonal_color = NULL,
-  n_fit = 200L,
   zoom = FALSE,
-  fit_alpha = 0.25,
+  color_scale = "sequential",
+  colormap = NULL,
+  point_size = 6,
   point_alpha = NULL,
   palette = NULL,
   square = FALSE,
@@ -73,42 +78,67 @@ colorbar: above left/right legends and vertical colorbars, before the
 first row of top/bottom legends and horizontal colorbars. \code{NULL} draws no
 title. A title does not add a missing legend.}
 
-\item{x, y}{Optional Character: Columns drawn on each axis.}
+\item{fit}{Optional Character: Model fitted to each series: \code{"glm"},
+\code{"polynomial"}, \code{"loess"}, \code{"gam"}, or an rtemis supervised learning
+algorithm name such as \code{"LINAD"}, which requires the rtemis package.
+\code{NULL} draws no fit. See \code{\link[=draw_scatter]{draw_scatter()}}.}
 
-\item{size}{Optional Character: Column giving per-point size.}
+\item{fit_params}{Optional Named list: Arguments of the model, e.g.
+\code{list(degree = 2)} for \code{"polynomial"} or \code{list(max_leaves = 8)} for
+\code{"LINAD"}. See \code{\link[=draw_scatter]{draw_scatter()}}.}
+
+\item{fit_per_group}{Logical: Fit each series. \code{FALSE} fits one curve over
+every group.}
+
+\item{se}{Logical: If TRUE, shade the interval of the fit's standard error.}
+
+\item{se_times}{Numeric \verb{[0, Inf)}: Multiplier of the standard error bounding
+the interval.}
+
+\item{rsq}{Logical: Add each fit's R-squared to its legend entry.}
+
+\item{n_fit}{Integer \verb{[2, Inf)}: Points each fitted curve is evaluated at.}
+
+\item{fit_alpha}{Numeric \verb{[0, 1]}: Opacity of the interval.}
+
+\item{fit_name}{Optional Character: Text added to the legend entry of each
+fitted series.}
+
+\item{x}{Optional Character: Column drawn on the x axis: numeric, or a date
+or date-time.}
+
+\item{y}{Optional Character: Numeric columns drawn on the y axis, one series
+each.}
+
+\item{size}{Optional Character: Nonnegative numeric column that sets each
+symbol's area in proportion to its value, the largest value at 30 pixels
+across.}
 
 \item{group}{Optional Character: Column to group and color points by.}
 
+\item{color}{Optional Character: Numeric column mapped to a continuous color
+scale. Excludes \code{group}.}
+
 \item{hover}{Optional Character: Column containing per-observation tooltip labels.}
 
-\item{fit_name}{Optional Character: Label for fitted layers.}
-
 \item{rug}{Logical: Show marginal marks along the x and y axes.}
-
-\item{fit}{Optional Character: Fit to overlay: \code{"glm"}, \code{"gam"}, or an rtemis
-supervised learning algorithm name such as \code{"LINAD"}, which requires the
-rtemis package. \code{NULL} draws no fit. See \code{\link[=draw_scatter]{draw_scatter()}}.}
-
-\item{fit_params}{Optional Named list: Arguments passed to the learner named
-in \code{fit}, e.g. \code{list(max_leaves = 8)} for \code{"LINAD"}. See \code{\link[=draw_scatter]{draw_scatter()}}.}
-
-\item{se}{Logical: If TRUE, shade the fit standard-error band.}
-
-\item{se_times}{Numeric \verb{[0, Inf)}: Multiplier for the fitted standard error.}
-
-\item{rsq}{Logical: Include the fitted model's R-squared in series labels.}
 
 \item{diagonal}{Logical: Draw the identity line within the axis limits.}
 
 \item{diagonal_color}{Optional Character: Identity-line color.}
 
-\item{n_fit}{Integer \verb{[2, Inf)}: Points used to draw the fit line.}
-
 \item{zoom}{Logical: Enable Shift+wheel zoom, drag panning, and box-zoom
 controls on both axes. With \code{square} or \code{equal_axes}, the controls omit
 box zoom, which sets each axis independently.}
 
-\item{fit_alpha}{Numeric \verb{[0, 1]}: Opacity of the standard-error band.}
+\item{color_scale}{Character: Color scale of \code{color}: \code{"sequential"}, from
+the lowest to the highest value, or \code{"diverging"}, centered on zero.}
+
+\item{colormap}{Optional Character: Colors of the color scale, low to
+high, at least two. \code{NULL} uses the theme's sign colors.}
+
+\item{point_size}{Numeric \verb{(0, Inf)}: Symbol diameter in pixels of points
+without \code{size}.}
 
 \item{point_alpha}{Optional Numeric \verb{[0, 1]}: Point opacity. \code{NULL} sets it
 from the number of points drawn, falling from 0.9 for a handful of points
@@ -147,17 +177,19 @@ semantics, and its appearance. Build one with \code{\link[=setup_ScatterConfig]{
 than calling this constructor directly.
 }
 \details{
-The data-binding properties (\code{x}, \code{y}, \code{size}, \code{group}) hold \strong{column names},
-not values. The values come from the \code{data} argument to \code{\link[=draw]{draw()}}, or from the
-inherited \code{dat_path}.
+The data-binding properties (\code{x}, \code{y}, \code{size}, \code{group}, \code{color}, \code{hover})
+hold \strong{column names}, not values. The values come from the \code{data} argument
+to \code{\link[=draw]{draw()}}, or from the inherited \code{dat_path}.
 
-Margins are declared as four scalars rather than one named vector: that is
-what states cleanly in a schema, while \code{\link[=draw_scatter]{draw_scatter()}} keeps the convenient
-\code{margins} vector. Sides left \code{NULL} fall back to the chart's own layout.
+The fit members name a model, which rtemis.draw fits in R; the
+\verb{@rtemis/draw} scatter builder draws the points and the fitted curves.
+
+Margins are four scalars, one per side; \code{\link[=draw_scatter]{draw_scatter()}} takes them as one
+\code{margins} vector. Sides left \code{NULL} take the chart's layout.
 }
 \examples{
 cfg <- setup_ScatterConfig(x = "wt", y = "mpg", fit = "glm")
-cfg@type
+cfg@fit
 }
 \author{
 EDG

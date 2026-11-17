@@ -45,7 +45,9 @@ htmlwidget: Drawing with native vector curve and interval layers.
 Accepts predictions from any model without keeping a fitted R object in the
 chart. Existing axis limits are preserved, including explicitly requested
 limits. Annotate child drawings before composing panels. For built-in GLM or
-GAM estimation, use \code{\link[=draw_scatter]{draw_scatter()}} or \code{\link[=draw_fit]{draw_fit()}}.
+GAM estimation, use \code{\link[=draw_scatter]{draw_scatter()}} or \code{\link[=draw_fit]{draw_fit()}}. Coordinates and bounds
+are taken as plain vectors, so names, such as the row names of a \code{predict()}
+matrix column, are dropped.
 }
 \examples{
 draw_add_fit(draw_scatter(1:3, c(2, 4, 5)), 1:3, c(2.1, 3.8, 5.1), name = "Predicted")

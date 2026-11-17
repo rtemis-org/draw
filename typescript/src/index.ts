@@ -12,6 +12,7 @@ import { buildA3Option } from "./charts/a3/index.ts";
 import { buildBarOption } from "./charts/bar/index.ts";
 import { buildBoxplotOption } from "./charts/boxplot/index.ts";
 import { buildLineOption, lineAspect } from "./charts/line/index.ts";
+import { buildScatterOption, scatterAspect } from "./charts/scatter/index.ts";
 
 export type {
   A3Appearance,
@@ -34,24 +35,42 @@ export type {
 export {
   BOXPLOT_CHART_CONFIG_MEMBERS,
   buildBoxplotOption,
-  RENDERER_NAMES,
   radicalInverse,
-  registerRenderers,
 } from "./charts/boxplot/index.ts";
-export type { AspectHint, LineAppearance, LineChartConfig, LineDash } from "./charts/line/index.ts";
+export type {
+  AspectHint,
+  LineAppearance,
+  LineChartConfig,
+  LineDash,
+  LineData,
+} from "./charts/line/index.ts";
 export {
   buildLineOption,
   LINE_CHART_CONFIG_MEMBERS,
   lineAspect,
 } from "./charts/line/index.ts";
+export type { ScatterAppearance, ScatterChartConfig, ScatterData } from "./charts/scatter/index.ts";
+export {
+  autoAlpha,
+  buildScatterOption,
+  DEFAULT_POINT_SIZE,
+  MAX_SYMBOL_SIZE,
+  SCATTER_CHART_CONFIG_MEMBERS,
+  scatterAspect,
+} from "./charts/scatter/index.ts";
+export type { FitCurve, FitMembers } from "./shared/fit.ts";
+export { FIT_MEMBERS, fitLabel } from "./shared/fit.ts";
 export { formatNumber, SIGNIFICANT_DIGITS } from "./shared/format.ts";
 export type { MeasureMembers } from "./shared/labels.ts";
 export { valueLabel } from "./shared/labels.ts";
+export type { Layer } from "./shared/layers.ts";
+export { appendLayers } from "./shared/layers.ts";
 export type { MarginMembers } from "./shared/layout.ts";
 export { DEFAULT_MARGIN, ZOOM_SLIDER_ID } from "./shared/layout.ts";
 export type { LegendMembers } from "./shared/legend.ts";
 export type { AxisLimits } from "./shared/limits.ts";
 export { calcLimits, calcLimitsFromZero, DEFAULT_PAD } from "./shared/limits.ts";
+export { RENDERER_NAMES, registerRenderers } from "./shared/renderers.ts";
 export type { ColumnarSource, ColumnNames, ColumnType, TabularData } from "./shared/source.ts";
 export { timeLabel, timeMs } from "./shared/source.ts";
 export type { ColorScheme, ThemeTokens } from "./theme/tokens.ts";
@@ -72,6 +91,7 @@ export const builders = Object.freeze({
   bar: buildBarOption,
   boxplot: buildBoxplotOption,
   line: buildLineOption,
+  scatter: buildScatterOption,
 });
 
 /**
@@ -80,6 +100,7 @@ export const builders = Object.freeze({
  */
 export const aspectHints = Object.freeze({
   line: lineAspect,
+  scatter: scatterAspect,
 });
 
 /** A chart type with a builder in this package. */

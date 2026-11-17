@@ -503,14 +503,14 @@ test_that("draw_bar horizontal", {
 test_that("draw_scatter creates widget", {
   w <- draw_scatter(x = c(1, 2, 3), y = c(4, 5, 6))
   expect_s3_class(w, "htmlwidget")
-  expect_equal(w$x$option$series[[1]]$type, "scatter")
-  expect_equal(w$x$option$xAxis$type, "value")
+  expect_equal(raw_option(w)$series[[1]]$type, "scatter")
+  expect_equal(raw_option(w)$xAxis$type, "value")
 })
 
 test_that("draw_scatter sets point opacity from the number of points", {
   w <- draw_scatter(x = c(1, NA, 3), y = c(4, 5, 6))
   expect_equal(
-    w$x$option$series[[1]]$itemStyle$opacity,
+    raw_option(w)$series[[1]]$itemStyle$opacity,
     rtemis.draw:::auto_alpha(2)
   )
   # Grouped series share the opacity for the whole chart, not per group.
@@ -520,18 +520,18 @@ test_that("draw_scatter sets point opacity from the number of points", {
     group = iris$Species
   )
   opacity <- vapply(
-    w$x$option$series,
+    raw_option(w)$series,
     function(s) s$itemStyle$opacity,
     numeric(1)
   )
   expect_equal(opacity, rep(rtemis.draw:::auto_alpha(150), 3))
-  expect_equal(w$x$option$legend$itemStyle$opacity, 1)
+  expect_equal(raw_option(w)$legend$itemStyle$opacity, 1)
   w <- draw_scatter(1:3, 4:6, point_alpha = 0.4)
-  expect_equal(w$x$option$series[[1]]$itemStyle$opacity, 0.4)
+  expect_equal(raw_option(w)$series[[1]]$itemStyle$opacity, 0.4)
   expect_error(draw_scatter(1:3, 4:6, point_alpha = 2))
   # draw_fit forwards it.
   w <- draw_fit(1:5, c(1.2, 1.8, 3.3, 3.8, 5.2), point_alpha = 0.5)
-  expect_equal(w$x$option$series[[1]]$itemStyle$opacity, 0.5)
+  expect_equal(raw_option(w)$series[[1]]$itemStyle$opacity, 0.5)
 })
 
 test_that("draw_scatter with groups", {
@@ -540,8 +540,8 @@ test_that("draw_scatter with groups", {
     y = c(5, 6, 7, 8),
     group = c("A", "A", "B", "B")
   )
-  expect_equal(length(w$x$option$series), 2L)
-  expect_false(is.null(w$x$option$legend))
+  expect_equal(length(raw_option(w)$series), 2L)
+  expect_false(is.null(raw_option(w)$legend))
 })
 
 test_that("draw_scatter fit = 'glm' adds fit line and CI polygon", {
@@ -550,16 +550,16 @@ test_that("draw_scatter fit = 'glm' adds fit line and CI polygon", {
   yv <- 2 * xv + rnorm(20)
   w <- draw_scatter(xv, yv, fit = "glm")
   # 1 scatter + 1 CI polygon + 1 fit line = 3
-  expect_equal(length(w$x$option$series), 3L)
-  types <- sapply(w$x$option$series, "[[", "type")
+  expect_equal(length(raw_option(w)$series), 3L)
+  types <- sapply(raw_option(w)$series, "[[", "type")
   expect_equal(types, c("scatter", "line", "line"))
   # Fit line: 200 points, no symbols, no name (ungrouped)
-  fit_s <- w$x$option$series[[3]]
+  fit_s <- raw_option(w)$series[[3]]
   expect_null(fit_s$name)
   expect_equal(length(fit_s$data), 200L)
   expect_equal(fit_s$showSymbol, FALSE)
   # CI polygon: upper L->R + lower R->L = 400 points, has area fill
-  ci_s <- w$x$option$series[[2]]
+  ci_s <- raw_option(w)$series[[2]]
   expect_equal(length(ci_s$data), 400L)
   expect_false(is.null(ci_s$areaStyle))
   expect_equal(ci_s$lineStyle$opacity, 0)
@@ -573,8 +573,8 @@ test_that("draw_scatter fit = 'gam' works", {
   yv <- sin(xv) + rnorm(50, sd = 0.3)
   w <- draw_scatter(xv, yv, fit = "gam")
   # 1 scatter + 1 CI polygon + 1 fit line = 3
-  expect_equal(length(w$x$option$series), 3L)
-  expect_null(w$x$option$series[[3]]$name)
+  expect_equal(length(raw_option(w)$series), 3L)
+  expect_null(raw_option(w)$series[[3]]$name)
 })
 
 test_that("draw_scatter fit with se = FALSE omits CI band", {
@@ -583,8 +583,8 @@ test_that("draw_scatter fit with se = FALSE omits CI band", {
   yv <- xv + rnorm(20)
   w <- draw_scatter(xv, yv, fit = "glm", se = FALSE)
   # 1 scatter + 1 fit line = 2
-  expect_equal(length(w$x$option$series), 2L)
-  types <- sapply(w$x$option$series, "[[", "type")
+  expect_equal(length(raw_option(w)$series), 2L)
+  types <- sapply(raw_option(w)$series, "[[", "type")
   expect_equal(types, c("scatter", "line"))
 })
 
@@ -595,8 +595,8 @@ test_that("draw_scatter fit with groups adds per-group fits", {
   g <- rep(c("A", "B"), each = 10)
   w <- draw_scatter(xv, yv, group = g, fit = "glm")
   # 2 scatter + 2 * (CI polygon + fit line) = 6
-  expect_equal(length(w$x$option$series), 6L)
-  types <- sapply(w$x$option$series, "[[", "type")
+  expect_equal(length(raw_option(w)$series), 6L)
+  types <- sapply(raw_option(w)$series, "[[", "type")
   expect_equal(sum(types == "scatter"), 2L)
   expect_equal(sum(types == "line"), 4L)
 })
@@ -606,17 +606,17 @@ test_that("draw_scatter fit respects n_fit", {
   xv <- 1:20
   yv <- xv + rnorm(20)
   w <- draw_scatter(xv, yv, fit = "glm", n_fit = 50)
-  fit_s <- w$x$option$series[[3]]
+  fit_s <- raw_option(w)$series[[3]]
   expect_equal(length(fit_s$data), 50L)
 })
 
 test_that("draw_scatter defaults xlim/ylim to range + 4% padding", {
   w <- draw_scatter(x = c(0, 10), y = c(0, 100))
   # 4% of span (10) = 0.4; 4% of span (100) = 4
-  expect_equal(w$x$option$xAxis$min, -0.4)
-  expect_equal(w$x$option$xAxis$max, 10.4)
-  expect_equal(w$x$option$yAxis$min, -4)
-  expect_equal(w$x$option$yAxis$max, 104)
+  expect_equal(raw_option(w)$xAxis$min, -0.4)
+  expect_equal(raw_option(w)$xAxis$max, 10.4)
+  expect_equal(raw_option(w)$yAxis$min, -4)
+  expect_equal(raw_option(w)$yAxis$max, 104)
 })
 
 test_that("draw_scatter honors explicit xlim and ylim (no padding)", {
@@ -626,10 +626,10 @@ test_that("draw_scatter honors explicit xlim and ylim (no padding)", {
     xlim = c(0, 10),
     ylim = c(0, 100)
   )
-  expect_equal(w$x$option$xAxis$min, 0)
-  expect_equal(w$x$option$xAxis$max, 10)
-  expect_equal(w$x$option$yAxis$min, 0)
-  expect_equal(w$x$option$yAxis$max, 100)
+  expect_equal(raw_option(w)$xAxis$min, 0)
+  expect_equal(raw_option(w)$xAxis$max, 10)
+  expect_equal(raw_option(w)$yAxis$min, 0)
+  expect_equal(raw_option(w)$yAxis$max, 100)
 })
 
 test_that("draw_scatter rejects malformed xlim/ylim", {
@@ -640,16 +640,16 @@ test_that("draw_scatter rejects malformed xlim/ylim", {
 
 test_that("draw_scatter suppresses corner split lines on both axes", {
   w <- draw_scatter(x = 1:5, y = 1:5)
-  expect_equal(w$x$option$xAxis$splitLine$showMinLine, FALSE)
-  expect_equal(w$x$option$xAxis$splitLine$showMaxLine, FALSE)
-  expect_equal(w$x$option$yAxis$splitLine$showMinLine, FALSE)
-  expect_equal(w$x$option$yAxis$splitLine$showMaxLine, FALSE)
+  expect_equal(raw_option(w)$xAxis$splitLine$showMinLine, FALSE)
+  expect_equal(raw_option(w)$xAxis$splitLine$showMaxLine, FALSE)
+  expect_equal(raw_option(w)$yAxis$splitLine$showMinLine, FALSE)
+  expect_equal(raw_option(w)$yAxis$splitLine$showMaxLine, FALSE)
 })
 
 test_that("draw_scatter leaves endpoint labels to the layout", {
   w <- draw_scatter(x = 1:5, y = 1:5)
-  expect_null(w$x$option$xAxis$axisLabel)
-  expect_null(w$x$option$yAxis$axisLabel)
+  expect_null(raw_option(w)$xAxis$axisLabel)
+  expect_null(raw_option(w)$yAxis$axisLabel)
 })
 
 test_that("draw_scatter axisLine: on_zero always TRUE; show gated on 0 in orthogonal range", {
@@ -657,17 +657,17 @@ test_that("draw_scatter axisLine: on_zero always TRUE; show gated on 0 in orthog
   #   xAxis.show <- (0 in y) -> FALSE.
   #   yAxis.show <- (0 in x) -> TRUE.
   w1 <- draw_scatter(x = c(-2, -1, 0, 1, 2), y = c(10, 12, 15, 18, 20))
-  expect_equal(w1$x$option$xAxis$axisLine$show, FALSE)
-  expect_equal(w1$x$option$yAxis$axisLine$show, TRUE)
-  expect_equal(w1$x$option$xAxis$axisLine$onZero, TRUE)
-  expect_equal(w1$x$option$yAxis$axisLine$onZero, TRUE)
+  expect_equal(raw_option(w1)$xAxis$axisLine$show, FALSE)
+  expect_equal(raw_option(w1)$yAxis$axisLine$show, TRUE)
+  expect_equal(raw_option(w1)$xAxis$axisLine$onZero, TRUE)
+  expect_equal(raw_option(w1)$yAxis$axisLine$onZero, TRUE)
 
   # Neither axis contains 0 -> show = FALSE on both; onZero still TRUE.
   w2 <- draw_scatter(x = c(10, 11, 12), y = c(100, 200, 300))
-  expect_equal(w2$x$option$xAxis$axisLine$show, FALSE)
-  expect_equal(w2$x$option$yAxis$axisLine$show, FALSE)
-  expect_equal(w2$x$option$xAxis$axisLine$onZero, TRUE)
-  expect_equal(w2$x$option$yAxis$axisLine$onZero, TRUE)
+  expect_equal(raw_option(w2)$xAxis$axisLine$show, FALSE)
+  expect_equal(raw_option(w2)$yAxis$axisLine$show, FALSE)
+  expect_equal(raw_option(w2)$xAxis$axisLine$onZero, TRUE)
+  expect_equal(raw_option(w2)$yAxis$axisLine$onZero, TRUE)
 })
 
 # -- draw_pie -------------------------------------------------------------------
@@ -1110,7 +1110,7 @@ test_that("draw_bar applies margins", {
 
 test_that("draw_scatter applies margins", {
   w <- draw_scatter(x = 1:3, y = 1:3, margins = c(bottom = 60))
-  expect_equal(w$x$option$grid$bottom, 60)
+  expect_equal(raw_option(w)$grid$bottom, 60)
 })
 
 test_that("draw_density applies margins", {
@@ -1238,8 +1238,8 @@ test_that("draw_bar xlab stays on the bottom axis in horizontal orientation", {
 
 test_that("draw_scatter applies xlab and ylab", {
   w <- draw_scatter(x = 1:3, y = 1:3, xlab = "X", ylab = "Y")
-  expect_equal(w$x$option$xAxis[["name"]], "X")
-  expect_equal(w$x$option$yAxis[["name"]], "Y")
+  expect_equal(raw_option(w)$xAxis[["name"]], "X")
+  expect_equal(raw_option(w)$yAxis[["name"]], "Y")
 })
 
 test_that("draw_density applies xlab and ylab", {
@@ -1315,7 +1315,7 @@ test_that("draw_boxplot xlab applies in grouped multi-variable branch", {
 # typo to behave: the chart still renders, but not as asked.
 
 test_that("draw() rejects an argument it does not recognize", {
-  option <- scatter_option(x = 1:5, y = 1:5)
+  option <- EChartsOption(series = ScatterSeries(data = list(c(1, 2))))
   expect_error(
     draw(option, elementId = "typo"),
     class = "rtemis_value_error"
@@ -1324,12 +1324,12 @@ test_that("draw() rejects an argument it does not recognize", {
 })
 
 test_that("draw() names every unrecognized argument it was given", {
-  option <- scatter_option(x = 1:5, y = 1:5)
+  option <- EChartsOption(series = ScatterSeries(data = list(c(1, 2))))
   expect_error(draw(option, foo = 1, bar = 2), "`foo`, `bar`")
 })
 
 test_that("draw() accepts the arguments its backends declare", {
-  option <- scatter_option(x = 1:5, y = 1:5)
+  option <- EChartsOption(series = ScatterSeries(data = list(c(1, 2))))
   widget <- draw(option, element_id = "kept", renderer = "svg")
   expect_identical(widget[["elementId"]], "kept")
 })
@@ -1361,33 +1361,37 @@ test_that("a config's draw() forwards the guard rather than swallowing it", {
 # padding to reserve outside the grid.
 
 test_that("equal_axes sets the ratio from the two axis spans", {
+  skip_if_no_node()
   # x spans ten units, y spans one: equal scaling means a wide, short box.
   w <- draw_scatter(x = c(0, 10), y = c(0, 1), equal_axes = TRUE)
-  expect_equal(w[["x"]][["aspect"]][["ratio"]], 0.1)
+  expect_equal(built_option(w, what = "aspect")[["ratio"]], 0.1)
 })
 
 test_that("square asks for a ratio of 1 and leaves the limits alone", {
+  skip_if_no_node()
   w <- draw_scatter(x = c(0, 10), y = c(0, 1), square = TRUE)
-  expect_equal(w[["x"]][["aspect"]][["ratio"]], 1)
+  expect_equal(built_option(w, what = "aspect")[["ratio"]], 1)
   # The spans still differ; only the box is square.
-  expect_equal(w[["x"]][["option"]][["xAxis"]][["min"]], -0.4)
-  expect_equal(w[["x"]][["option"]][["yAxis"]][["min"]], -0.04)
+  expect_equal(raw_option(w)[["xAxis"]][["min"]], -0.4)
+  expect_equal(raw_option(w)[["yAxis"]][["min"]], -0.04)
 })
 
 test_that("both together put the axes on one common interval", {
+  skip_if_no_node()
   w <- draw_scatter(x = c(0, 10), y = c(0, 1), square = TRUE, equal_axes = TRUE)
-  expect_equal(w[["x"]][["aspect"]][["ratio"]], 1)
+  expect_equal(built_option(w, what = "aspect")[["ratio"]], 1)
   expect_equal(
-    w[["x"]][["option"]][["xAxis"]][["min"]],
-    w[["x"]][["option"]][["yAxis"]][["min"]]
+    raw_option(w)[["xAxis"]][["min"]],
+    raw_option(w)[["yAxis"]][["min"]]
   )
   expect_equal(
-    w[["x"]][["option"]][["xAxis"]][["max"]],
-    w[["x"]][["option"]][["yAxis"]][["max"]]
+    raw_option(w)[["xAxis"]][["max"]],
+    raw_option(w)[["yAxis"]][["max"]]
   )
 })
 
 test_that("one stated limit governs both axes", {
+  skip_if_no_node()
   w <- draw_scatter(
     x = c(1, 4),
     y = c(1.1, 3.7),
@@ -1395,8 +1399,8 @@ test_that("one stated limit governs both axes", {
     square = TRUE,
     equal_axes = TRUE
   )
-  expect_equal(w[["x"]][["option"]][["yAxis"]][["min"]], 0)
-  expect_equal(w[["x"]][["option"]][["yAxis"]][["max"]], 5)
+  expect_equal(raw_option(w)[["yAxis"]][["min"]], 0)
+  expect_equal(raw_option(w)[["yAxis"]][["max"]], 5)
 })
 
 test_that("two stated limits that disagree are an error, not an override", {
@@ -1414,13 +1418,14 @@ test_that("two stated limits that disagree are an error, not an override", {
 })
 
 test_that("the aspect carries the padding the browser needs", {
+  skip_if_no_node()
   w <- draw_scatter(
     x = c(0, 1),
     y = c(0, 1),
     square = TRUE,
     margins = c(top = 10, right = 20, bottom = 30, left = 40)
   )
-  aspect <- w[["x"]][["aspect"]]
+  aspect <- built_option(w, what = "aspect")
   expect_equal(aspect[["topPx"]], 10)
   expect_equal(aspect[["rightPx"]], 20)
   expect_equal(aspect[["botPx"]], 30)
@@ -1430,7 +1435,8 @@ test_that("the aspect carries the padding the browser needs", {
 })
 
 test_that("neither flag means no aspect at all", {
-  expect_null(draw_scatter(x = 1:3, y = 1:3)[["x"]][["aspect"]])
+  skip_if_no_node()
+  expect_null(built_option(draw_scatter(x = 1:3, y = 1:3), what = "aspect"))
 })
 
 test_that("a margin the browser cannot know is refused", {

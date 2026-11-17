@@ -36,7 +36,16 @@ draw_line(
   filename = NULL,
   legend_position = "top",
   legend_placement = "outside",
-  legend_title = NULL
+  legend_title = NULL,
+  fit = NULL,
+  fit_params = NULL,
+  fit_per_group = TRUE,
+  se = TRUE,
+  se_times = 1.96,
+  rsq = FALSE,
+  n_fit = 200L,
+  fit_alpha = 0.25,
+  fit_name = NULL
 )
 }
 \arguments{
@@ -159,6 +168,38 @@ inside placement overlays the data. Neither setting adds a missing legend.}
 colorbar: above left/right legends and vertical colorbars, before the
 first row of top/bottom legends and horizontal colorbars. \code{NULL} draws no
 title. A title does not add a missing legend.}
+
+\item{fit}{Optional Character: Model fitted to each line and drawn as a
+dashed curve: \code{"glm"}, \code{"polynomial"}, \code{"loess"}, \code{"gam"}, or an rtemis
+learner name, as in \code{\link[=draw_scatter]{draw_scatter()}}. Requires a numeric \code{x}, \code{aggregate = "none"}, and \code{area = FALSE}. \code{NULL} draws no fit.}
+
+\item{fit_params}{Optional Named list: Arguments of the model:
+\code{list(degree = 2)} for \code{"polynomial"}, \code{list(span = 0.5)} for \code{"loess"},
+\code{list(k = 5)} for \code{"gam"}, arguments of \code{\link[stats:glm]{stats::glm()}} for \code{"glm"}, e.g.
+\code{list(family = "poisson")}, and arguments of the rtemis setup function
+otherwise, e.g. \code{list(max_leaves = 8)} for \code{"LINAD"} (see
+\code{?rtemis::setup_LINAD}). \code{NULL} uses the model's defaults.}
+
+\item{fit_per_group}{Logical: Fit each group. \code{FALSE} fits one curve over
+every group, drawn in gray under its own legend entry.}
+
+\item{se}{Logical: Shade the interval of \code{se_times} standard errors around
+each fit. Algorithms without standard errors (every rtemis algorithm
+except GLM, GAM, and a few others) draw the curve alone.}
+
+\item{se_times}{Numeric \verb{[0, Inf)}: Standard-error multiplier for the
+interval.}
+
+\item{rsq}{Logical: Add each fit's R-squared to its legend entry. This
+describes the fit, not predictive performance against the identity line.
+A constant response has undefined R-squared, labeled \code{NA}.}
+
+\item{n_fit}{Integer \verb{[2, Inf)}: Points each fitted curve is evaluated at.}
+
+\item{fit_alpha}{Numeric \verb{[0, 1]}: Opacity of the interval.}
+
+\item{fit_name}{Optional Character: Text added to the legend entry of each
+fitted series.}
 }
 \value{
 htmlwidget: Widget object.
