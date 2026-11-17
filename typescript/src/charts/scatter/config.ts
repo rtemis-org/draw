@@ -1,4 +1,11 @@
 import {
+  COLOR_SCALE_LENGTH,
+  KEY_COLUMN_WIDTH,
+  type SizeKeySpec,
+  sizeKeyElement,
+  sizeKeyValues,
+} from "../../layout/keys.ts";
+import {
   FIT_MEMBERS,
   type FitCurve,
   type FitMembers,
@@ -38,7 +45,7 @@ export interface ScatterChartConfig extends MarginMembers, LegendMembers, FitMem
   readonly group?: string | null;
   /**
    * Nonnegative numeric column that sets each symbol's area in proportion to
-   * its value, the largest value at {@link MAX_SYMBOL_SIZE} pixels across.
+   * its value, the largest value at five times `point_size` across.
    */
   readonly size?: string | null;
   /** Numeric column mapped to a continuous color scale; excludes `group`. */
@@ -50,6 +57,10 @@ export interface ScatterChartConfig extends MarginMembers, LegendMembers, FitMem
   readonly color_scale?: "sequential" | "diverging";
   /** Colors of the color scale, low to high; unset uses the theme's sign colors. */
   readonly colormap?: ColumnNames | null;
+  /** Title of the color scale; unset uses the `color` column's name. */
+  readonly color_title?: string | null;
+  /** Title of the size key; unset uses the `size` column's name. */
+  readonly size_title?: string | null;
   /** Column of literal tooltip labels, one per row. */
   readonly hover?: string | null;
   /** Marks along both axes at each point. Default `false`. */
@@ -60,7 +71,10 @@ export interface ScatterChartConfig extends MarginMembers, LegendMembers, FitMem
   readonly diagonal_color?: string | null;
   /** Shift+wheel zoom, drag panning, and box-zoom controls on both axes. Default `false`. */
   readonly zoom?: boolean;
-  /** Symbol diameter in pixels of points without `size`. Default `6`. */
+  /**
+   * Symbol diameter in pixels of points without `size`; with `size`, the
+   * largest value's symbol is five times it across. Default `6`.
+   */
   readonly point_size?: number;
   /** Point opacity, `[0, 1]`; unset sets it from the number of points ({@link autoAlpha}). */
   readonly point_alpha?: number | null;
@@ -108,6 +122,8 @@ export const SCATTER_CHART_CONFIG_MEMBERS = Object.freeze([
   "color",
   "color_scale",
   "colormap",
+  "color_title",
+  "size_title",
   "hover",
   "rug",
   "diagonal",
@@ -141,14 +157,11 @@ type MissingMember = Exclude<
 const _everyMember: MissingMember extends never ? true : never = true;
 void _everyMember;
 
-/** Diameter in pixels of the symbol of the largest `size` value. */
+/** Diameter in pixels of the symbol of the largest `size` value at the default `point_size`. */
 export const MAX_SYMBOL_SIZE = 30;
 
 /** Default symbol diameter in pixels of points without `size`. */
 export const DEFAULT_POINT_SIZE = 6;
-
-/** Right margin that holds the color scale's bar and handles. */
-const COLOR_SCALE_MARGIN = 90;
 
 /**
  * Point opacity from the number of points drawn, a guard against
@@ -184,6 +197,11 @@ export function buildScatterOption(
   if (config.color && config.group) {
     throw new Error("`color` and `group` both set the color of a point: bind one of the two.");
   }
+  if (config.color && yColumns.length > 1) {
+    throw new Error(
+      "With `color`, a point's color shows its `color` value, so points of several `y` columns cannot be told apart: bind one `y` column.",
+    );
+  }
   const time = isTime(data, config.x);
   const xValues = time
     ? column(data.columns, config.x, "x").map(timeMs)
@@ -203,7 +221,11 @@ export function buildScatterOption(
 
   const memberPalette = asArray(config.palette);
   const palette = memberPalette.length > 0 ? memberPalette : (appearance.palette ?? RTEMIS_PALETTE);
-  const series = pointSeries(data, config, yColumns, xValues, ys, [size, colorValues], palette);
+  // With a color scale, a point's color is a value: the fits, the rug, and
+  // the size key take the neutral color, which belongs to no value.
+  const series = pointSeries(data, config, yColumns, xValues, ys, [size, colorValues], palette).map(
+    (s) => (colorValues ? { ...s, color: SIGN_COLORS.neutral } : s),
+  );
   if (series.every((s) => s.rows.length === 0)) {
     throw new Error("A scatter chart needs at least one row with every bound column set.");
   }
@@ -227,9 +249,13 @@ export function buildScatterOption(
   const nameOf = (s: PointSeries) => fits?.names.get(s) ?? s.name;
   const alpha = config.point_alpha ?? autoAlpha(drawnX.length);
   const maxSize = size ? Math.max(0, ...series.flatMap((s) => s.rows.map((r) => size[r] ?? 0))) : 0;
+  // `point_size` scales the mapped symbols too: the largest value draws at
+  // MAX_SYMBOL_SIZE / DEFAULT_POINT_SIZE (5) times it, 30 pixels at 6.
+  const largestSymbol =
+    (MAX_SYMBOL_SIZE * (config.point_size ?? DEFAULT_POINT_SIZE)) / DEFAULT_POINT_SIZE;
   const symbolSize = (row: number) => {
     const v = size?.[row] ?? 0;
-    return maxSize > 0 ? MAX_SYMBOL_SIZE * Math.sqrt(v / maxSize) : 0;
+    return maxSize > 0 ? largestSymbol * Math.sqrt(v / maxSize) : 0;
   };
   const points: Record<string, unknown>[] = series.map((s) => {
     const y = ys.get(s.y) ?? [];
@@ -306,9 +332,22 @@ export function buildScatterOption(
   };
 
   const grid = cartesianGrid(config, Boolean(xName || yName));
-  if (colorValues && typeof config.margin_right !== "number") {
-    grid.right = Math.max(Number(grid.right ?? 0), COLOR_SCALE_MARGIN);
+  // The keys stand in a column right of the plot: the color scale, then the
+  // size key. A host that measures (`fitKeys()`) places them again.
+  const sizeKey: SizeKeySpec | null =
+    size && maxSize > 0
+      ? {
+          title: config.size_title ?? (config.size as string),
+          items: sizeKeyValues(
+            Math.min(...series.flatMap((s) => s.rows.map((r) => size[r] ?? 0))),
+            maxSize,
+          ).map((value) => ({ value, diameter: largestSymbol * Math.sqrt(value / maxSize) })),
+        }
+      : null;
+  if ((colorValues || sizeKey) && typeof config.margin_right !== "number") {
+    grid.right = Math.max(Number(grid.right ?? 0), KEY_COLUMN_WIDTH);
   }
+  const keysTop = typeof grid.top === "number" ? grid.top : 36;
   const zoom = config.zoom ? xyZoom(!(config.square || config.equal_axes)) : null;
 
   return {
@@ -322,7 +361,19 @@ export function buildScatterOption(
     yAxis,
     grid,
     ...(zoom ? zoom : {}),
-    ...(colorValues ? { visualMap: colorScale(config, colorValues, points.length) } : {}),
+    ...(colorValues ? { visualMap: colorScale(config, colorValues, points.length, keysTop) } : {}),
+    ...(sizeKey
+      ? {
+          graphic: {
+            elements: [
+              sizeKeyElement(sizeKey, "vertical", {
+                right: 10,
+                top: keysTop + (colorValues ? COLOR_SCALE_LENGTH + 60 : 0),
+              }),
+            ],
+          },
+        }
+      : {}),
     ...(time ? { useUTC: true } : {}),
     series: [...points, ...(fits?.series ?? []), ...rugs, ...diagonal],
     ...(appearance.animation === undefined ? {} : { animation: appearance.animation }),
@@ -431,6 +482,7 @@ function colorScale(
   config: ScatterChartConfig,
   values: readonly (number | null)[],
   pointSeriesCount: number,
+  top: number,
 ): Record<string, unknown> {
   const finite = values.filter((v): v is number => v !== null);
   const diverging = config.color_scale === "diverging";
@@ -459,14 +511,16 @@ function colorScale(
     seriesIndex: Array.from({ length: pointSeriesCount }, (_, i) => i),
     min,
     max,
+    // ECharts labels the ends with `precision` decimals (default 0, which
+    // reads 0.4 to 0.65 as 0 to 1): two significant digits of the span.
+    precision: Math.max(0, 1 - Math.floor(Math.log10(max - min))),
     calculable: true,
     orient: "vertical",
+    itemHeight: COLOR_SCALE_LENGTH,
     right: 10,
-    top: "middle",
+    top,
     inRange: { color: colors },
-    // The scale names its column; a host draws `legend_title` itself, as
-    // rtemis.draw's legend layout does for every color scale.
-    ...(config.legend_title ? {} : { text: [config.color, ""] }),
+    text: [config.color_title ?? config.color, ""],
   };
 }
 

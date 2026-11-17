@@ -45,7 +45,9 @@ draw_scatter(
   color_scale = "sequential",
   colormap = NULL,
   fit_per_group = TRUE,
-  point_size = 6
+  point_size = 6,
+  color_title = NULL,
+  size_title = NULL
 )
 }
 \arguments{
@@ -54,8 +56,8 @@ draw_scatter(
 \item{y}{Numeric: Y values.}
 
 \item{size}{Optional Numeric: Nonnegative values, one per point, that set
-each symbol's area in proportion to the value, the largest value at 30
-pixels across.}
+each symbol's area in proportion to the value, the largest value at five
+times \code{point_size} across (30 pixels at the default).}
 
 \item{group}{Optional Atomic vector or single-column data frame: Grouping
 variable for multiple series. Series, colors, and legend entries follow
@@ -175,7 +177,12 @@ high, at least two. \code{NULL} uses the theme's sign colors.}
 every group, drawn in gray under its own legend entry.}
 
 \item{point_size}{Numeric \verb{(0, Inf)}: Symbol diameter in pixels of points
-without \code{size}.}
+without \code{size}; with \code{size}, the largest value's symbol is five times it
+across.}
+
+\item{color_title}{Optional Character: Title of the color scale.}
+
+\item{size_title}{Optional Character: Title of the size key.}
 }
 \value{
 htmlwidget: Widget object.

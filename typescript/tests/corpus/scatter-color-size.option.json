@@ -32,7 +32,7 @@
   },
   "grid": {
     "top": 36,
-    "right": 90,
+    "right": 100,
     "bottom": 36,
     "left": 36,
     "outerBoundsMode": "same",
@@ -46,10 +46,12 @@
     ],
     "min": 172,
     "max": 231,
+    "precision": 0,
     "calculable": true,
     "orient": "vertical",
+    "itemHeight": 140,
     "right": 10,
-    "top": "middle",
+    "top": 36,
     "inRange": {
       "color": [
         "#808080",
@@ -59,6 +61,131 @@
     "text": [
       "flipper_len",
       ""
+    ]
+  },
+  "graphic": {
+    "elements": [
+      {
+        "id": "rtemis-size-key",
+        "type": "group",
+        "silent": true,
+        "z": 100,
+        "info": {
+          "sizeKey": {
+            "title": "body_mass",
+            "items": [
+              {
+                "value": 6000,
+                "diameter": 29.277002188455995
+              },
+              {
+                "value": 5000,
+                "diameter": 26.726124191242437
+              },
+              {
+                "value": 4000,
+                "diameter": 23.904572186687872
+              }
+            ]
+          }
+        },
+        "children": [
+          {
+            "id": "rtemis-size-key-title",
+            "type": "text",
+            "x": 0,
+            "y": 0,
+            "style": {
+              "text": "body_mass",
+              "fontSize": 12,
+              "fontFamily": "sans-serif",
+              "fontWeight": "bold",
+              "fill": "#888888",
+              "verticalAlign": "top"
+            }
+          },
+          {
+            "id": "rtemis-size-key-circle-0",
+            "type": "circle",
+            "shape": {
+              "cx": 14.638501094227998,
+              "cy": 37.638501094228,
+              "r": 14.638501094227998
+            },
+            "style": {
+              "fill": "#808080",
+              "opacity": 0.6
+            }
+          },
+          {
+            "id": "rtemis-size-key-label-0",
+            "type": "text",
+            "x": 35.277002188455995,
+            "y": 37.638501094228,
+            "style": {
+              "text": "6000",
+              "fontSize": 12,
+              "fontFamily": "sans-serif",
+              "fill": "#888888",
+              "verticalAlign": "middle"
+            }
+          },
+          {
+            "id": "rtemis-size-key-circle-1",
+            "type": "circle",
+            "shape": {
+              "cx": 14.638501094227998,
+              "cy": 72.915503282684,
+              "r": 13.363062095621219
+            },
+            "style": {
+              "fill": "#808080",
+              "opacity": 0.6
+            }
+          },
+          {
+            "id": "rtemis-size-key-label-1",
+            "type": "text",
+            "x": 35.277002188455995,
+            "y": 72.915503282684,
+            "style": {
+              "text": "5000",
+              "fontSize": 12,
+              "fontFamily": "sans-serif",
+              "fill": "#888888",
+              "verticalAlign": "middle"
+            }
+          },
+          {
+            "id": "rtemis-size-key-circle-2",
+            "type": "circle",
+            "shape": {
+              "cx": 14.638501094227998,
+              "cy": 108.19250547113998,
+              "r": 11.952286093343936
+            },
+            "style": {
+              "fill": "#808080",
+              "opacity": 0.6
+            }
+          },
+          {
+            "id": "rtemis-size-key-label-2",
+            "type": "text",
+            "x": 35.277002188455995,
+            "y": 108.19250547113998,
+            "style": {
+              "text": "4000",
+              "fontSize": 12,
+              "fontFamily": "sans-serif",
+              "fill": "#888888",
+              "verticalAlign": "middle"
+            }
+          }
+        ],
+        "right": 10,
+        "top": 236
+      }
     ]
   },
   "series": [
@@ -3154,7 +3281,7 @@
       "silent": true,
       "clip": true,
       "itemStyle": {
-        "color": "#6CA3A0"
+        "color": "#808080"
       },
       "data": [
         [

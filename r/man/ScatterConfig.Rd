@@ -33,6 +33,8 @@ ScatterConfig(
   zoom = FALSE,
   color_scale = "sequential",
   colormap = NULL,
+  color_title = NULL,
+  size_title = NULL,
   point_size = 6,
   point_alpha = NULL,
   palette = NULL,
@@ -111,8 +113,8 @@ or date-time.}
 each.}
 
 \item{size}{Optional Character: Nonnegative numeric column that sets each
-symbol's area in proportion to its value, the largest value at 30 pixels
-across.}
+symbol's area in proportion to its value, the largest value at five times
+\code{point_size} across (30 pixels at the default).}
 
 \item{group}{Optional Character: Column to group and color points by.}
 
@@ -137,8 +139,15 @@ the lowest to the highest value, or \code{"diverging"}, centered on zero.}
 \item{colormap}{Optional Character: Colors of the color scale, low to
 high, at least two. \code{NULL} uses the theme's sign colors.}
 
+\item{color_title}{Optional Character: Title of the color scale. \code{NULL} uses
+the \code{color} column's name.}
+
+\item{size_title}{Optional Character: Title of the size key. \code{NULL} uses the
+\code{size} column's name.}
+
 \item{point_size}{Numeric \verb{(0, Inf)}: Symbol diameter in pixels of points
-without \code{size}.}
+without \code{size}; with \code{size}, the largest value's symbol is five times it
+across.}
 
 \item{point_alpha}{Optional Numeric \verb{[0, 1]}: Point opacity. \code{NULL} sets it
 from the number of points drawn, falling from 0.9 for a handful of points

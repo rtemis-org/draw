@@ -36,6 +36,7 @@ var RtemisDraw = (() => {
     SCATTER_CHART_CONFIG_MEMBERS: () => SCATTER_CHART_CONFIG_MEMBERS,
     SIGNIFICANT_DIGITS: () => SIGNIFICANT_DIGITS,
     SIGN_COLORS: () => SIGN_COLORS,
+    SIZE_KEY_ID: () => SIZE_KEY_ID,
     ZOOM_SLIDER_ID: () => ZOOM_SLIDER_ID,
     a3SurfaceHints: () => a3SurfaceHints,
     appendLayers: () => appendLayers,
@@ -50,14 +51,18 @@ var RtemisDraw = (() => {
     calcLimits: () => calcLimits,
     calcLimitsFromZero: () => calcLimitsFromZero,
     darkThemeTokens: () => darkThemeTokens,
+    fitKeys: () => fitKeys,
     fitLabel: () => fitLabel,
     fontStack: () => fontStack,
     formatNumber: () => formatNumber,
+    keyPlacement: () => keyPlacement,
+    keyState: () => keyState,
     lightThemeTokens: () => lightThemeTokens,
     lineAspect: () => lineAspect,
     radicalInverse: () => radicalInverse,
     registerRenderers: () => registerRenderers,
     scatterAspect: () => lineAspect,
+    sizeKeyValues: () => sizeKeyValues,
     themeFontSizes: () => themeFontSizes,
     themeOption: () => themeOption,
     timeLabel: () => timeLabel,
@@ -2415,6 +2420,362 @@ var RtemisDraw = (() => {
     };
   }
 
+  // src/layout/keys.ts
+  var SIZE_KEY_ID = "rtemis-size-key";
+  var GAP = 16;
+  var LABEL_GAP = 6;
+  var KEY_TITLE_GAP = 8;
+  var DEFAULT_KEY_TEXT = Object.freeze({
+    fontFamily: "sans-serif",
+    titleSize: 12,
+    labelSize: 12,
+    color: "#888888",
+    titleGap: KEY_TITLE_GAP
+  });
+  var CIRCLE_COLOR = "#808080";
+  var COLOR_SCALE_LENGTH = 140;
+  var KEY_COLUMN_WIDTH = 100;
+  function sizeKeyValues(min, max) {
+    if (!(max > 0)) return [];
+    const lo = Math.max(0, min);
+    const span = max - lo;
+    if (span <= 0) return [max];
+    const raw = span / 3;
+    const magnitude = 10 ** Math.floor(Math.log10(raw));
+    const step = [1, 2, 5, 10].map((m) => m * magnitude).reduce((best, s) => Math.abs(Math.log(s / raw)) < Math.abs(Math.log(best / raw)) ? s : best);
+    const values = [];
+    for (let v = Math.ceil(lo / step) * step; v <= max + step * 1e-9; v += step) {
+      if (v > 0) values.push(Number(v.toPrecision(12)));
+    }
+    const chosen = values.length >= 2 ? values.slice(-3) : [lo > 0 ? lo : max / 2, max];
+    return [...new Set(chosen)].sort((a, b) => b - a);
+  }
+  function textWidth(text, size) {
+    return text.length * size * 0.6;
+  }
+  function titleHeight(text) {
+    return Math.ceil(text.titleSize * 1.2) + text.titleGap;
+  }
+  function sizeKeyElement(spec, orient, at, text = DEFAULT_KEY_TEXT, labelWidths, columns) {
+    const largest = Math.max(...spec.items.map((i) => i.diameter), 1);
+    const lead = titleHeight(text);
+    const children = [
+      {
+        id: `${SIZE_KEY_ID}-title`,
+        type: "text",
+        x: 0,
+        y: 0,
+        style: {
+          text: spec.title,
+          fontSize: text.titleSize,
+          fontFamily: text.fontFamily,
+          fontWeight: "bold",
+          fill: text.color,
+          verticalAlign: "top"
+        }
+      }
+    ];
+    let x = 0;
+    let y = lead;
+    for (const [i, item] of spec.items.entries()) {
+      const label = String(formatNumber(item.value));
+      const vertical = orient === "vertical";
+      const cx = vertical && columns ? columns.center : largest / 2;
+      const cy = vertical ? y + largest / 2 : lead + largest / 2;
+      const left = vertical ? 0 : x;
+      const labelX = vertical && columns ? columns.label : left + largest + LABEL_GAP;
+      children.push(
+        {
+          id: `${SIZE_KEY_ID}-circle-${i}`,
+          type: "circle",
+          shape: { cx: left + cx, cy, r: item.diameter / 2 },
+          style: { fill: CIRCLE_COLOR, opacity: 0.6 }
+        },
+        {
+          id: `${SIZE_KEY_ID}-label-${i}`,
+          type: "text",
+          x: labelX,
+          y: cy,
+          style: {
+            text: label,
+            fontSize: text.labelSize,
+            fontFamily: text.fontFamily,
+            fill: text.color,
+            verticalAlign: "middle"
+          }
+        }
+      );
+      if (orient === "vertical") y += largest + LABEL_GAP;
+      else x += largest + LABEL_GAP + (labelWidths?.[i] ?? textWidth(label, text.labelSize)) + GAP;
+    }
+    return {
+      id: SIZE_KEY_ID,
+      type: "group",
+      silent: true,
+      z: 100,
+      info: { sizeKey: spec },
+      children,
+      ...at
+    };
+  }
+  var COLOR_KEY_TITLE_ID = "rtemis-color-key-title";
+  var reserved = /* @__PURE__ */ new WeakMap();
+  function keyPlacement(legendPosition, legendPlacement, hasLegend) {
+    const position = legendPosition ?? "right";
+    const side = position.endsWith("right") ? "right" : position.endsWith("left") ? "left" : position === "bottom" ? "bottom" : "top";
+    if (!hasLegend) return { side, inside: legendPlacement === "inside" };
+    return { side: side === "right" ? "left" : "right", inside: false };
+  }
+  function keyText(chart, titleGap) {
+    const global = chart.getModel().getModel?.("textStyle");
+    const scale = chart.getModel().getComponent("visualMap")?.getModel?.("textStyle");
+    const pick = (key) => scale?.get(key) ?? global?.get(key);
+    const number = (v, fallback) => typeof v === "number" && v > 0 ? v : fallback;
+    const titleSize = number(global?.get("fontSize"), DEFAULT_KEY_TEXT.titleSize);
+    return {
+      fontFamily: String(pick("fontFamily") ?? DEFAULT_KEY_TEXT.fontFamily),
+      titleSize,
+      labelSize: number(pick("fontSize"), titleSize),
+      color: String(pick("color") ?? DEFAULT_KEY_TEXT.color),
+      titleGap
+    };
+  }
+  function transparent(fill) {
+    if (fill === void 0 || fill === null || fill === "none" || fill === "transparent") return true;
+    return typeof fill === "string" && /^rgba\(.*,\s*0(\.0*)?\s*\)$/.test(fill);
+  }
+  function measurer(echarts, text) {
+    const regular = (size) => `${size}px ${text.fontFamily}`;
+    return (t, size, bold = false) => {
+      const width = echarts.format.getTextRect(
+        t,
+        bold ? `bold ${regular(size)}` : regular(size)
+      ).width;
+      return bold && width === echarts.format.getTextRect(t, regular(size)).width ? width * 1.1 : width;
+    };
+  }
+  function sizeKeyBox(echarts, spec, orient, text) {
+    const measure = measurer(echarts, text);
+    const title = measure(spec.title, text.titleSize, true);
+    const largest = Math.max(...spec.items.map((i) => i.diameter), 1);
+    const labels = spec.items.map((i) => measure(String(formatNumber(i.value)), text.labelSize));
+    const lead = titleHeight(text);
+    if (orient === "vertical") {
+      const w = Math.max(title, largest + LABEL_GAP + Math.max(0, ...labels));
+      return { w, h: lead + spec.items.length * (largest + LABEL_GAP) - LABEL_GAP, labels };
+    }
+    const row = labels.reduce((sum, l) => sum + largest + LABEL_GAP + l + GAP, 0) - GAP;
+    return { w: Math.max(title, row), h: lead + largest, labels };
+  }
+  function fitKeys(echarts, chart, context) {
+    const option = context.option;
+    const placement = context.placement ?? { side: "right", inside: false };
+    const vertical = placement.side === "left" || placement.side === "right";
+    const orient = vertical ? "vertical" : "horizontal";
+    const graphics = [option.graphic ?? []].flat().flatMap((g) => g.elements ?? [g]);
+    const sizeSpec = graphics.find((g) => g.id === SIZE_KEY_ID)?.info?.sizeKey;
+    const scaleOption = [option.visualMap ?? []].flat()[0];
+    const scaleModel = chart.getModel().getComponent("visualMap");
+    const hasScale = Boolean(scaleOption && scaleModel && scaleModel.get("show") !== false);
+    if (!sizeSpec && !hasScale) return null;
+    const scaleTitle = String([scaleOption?.text ?? []].flat()[0] ?? "");
+    const text = keyText(chart, context.titleGap ?? KEY_TITLE_GAP);
+    const width = chart.getWidth();
+    const height = chart.getHeight();
+    let scaleBox = null;
+    let bar = null;
+    let labelsLeft = null;
+    let symbolTop = null;
+    if (hasScale) {
+      chart.setOption({
+        visualMap: {
+          orient,
+          // ECharts' `align` names the bar's side: left of the labels when
+          // stacked, above them in a row.
+          align: vertical ? "left" : "top",
+          itemHeight: COLOR_SCALE_LENGTH,
+          text: ["", ""],
+          left: 0,
+          top: 0,
+          right: null,
+          bottom: null
+        }
+      });
+      const model = chart.getModel().getComponent("visualMap");
+      const view = model && chart.getViewOfComponentModel(model);
+      if (view) {
+        scaleBox = view.group.getBoundingRect().clone();
+        scaleBox.applyTransform(view.group.getComputedTransform());
+        const absolute = (el) => {
+          const r = el.getBoundingRect().clone();
+          r.applyTransform(el.getComputedTransform());
+          return r;
+        };
+        view.group.traverse((el) => {
+          if (el.isGroup) return;
+          const fill = el.style?.fill;
+          if (fill && typeof fill === "object" && fill.colorStops) {
+            const r = absolute(el);
+            if (!bar || r.width * r.height > bar.width * bar.height) bar = r;
+            symbolTop = symbolTop === null ? r.y : Math.min(symbolTop, r.y);
+          } else if (el.type === "text" && el.style?.text) {
+            const r = absolute(el);
+            labelsLeft = labelsLeft === null ? r.x : Math.min(labelsLeft, r.x);
+          } else if (!el.invisible && !transparent(el.style?.fill)) {
+            const r = absolute(el);
+            if (r.width > 0 && r.height > 0) {
+              symbolTop = symbolTop === null ? r.y : Math.min(symbolTop, r.y);
+            }
+          }
+        });
+      }
+    }
+    const symbolOffset = scaleBox && symbolTop !== null ? symbolTop - scaleBox.y : 0;
+    const scaleLead = scaleTitle ? titleHeight(text) - symbolOffset : 0;
+    const scaleTitleWidth = scaleTitle ? measurer(echarts, text)(scaleTitle, text.titleSize, true) : 0;
+    const parts = [];
+    if (scaleBox) {
+      parts.push({
+        kind: "scale",
+        w: Math.max(scaleBox.width, scaleTitleWidth),
+        h: scaleBox.height + scaleLead,
+        dx: scaleBox.x,
+        dy: scaleBox.y
+      });
+    }
+    const sized = sizeSpec ? sizeKeyBox(echarts, sizeSpec, orient, text) : null;
+    if (sized) parts.push({ kind: "size", w: sized.w, h: sized.h, dx: 0, dy: 0 });
+    let columns = null;
+    if (vertical && scaleBox) {
+      const box2 = scaleBox;
+      const b = bar ?? box2;
+      const largest = sizeSpec ? Math.max(...sizeSpec.items.map((i) => i.diameter), 1) : 0;
+      const symbol = Math.max(b.width, largest);
+      const barOffset = b.x - box2.x;
+      const scaleLeft = Math.max(0, symbol / 2 - b.width / 2 - barOffset);
+      const center = scaleLeft + barOffset + b.width / 2;
+      const scaleLabel = labelsLeft === null ? center + b.width / 2 + LABEL_GAP : scaleLeft + (labelsLeft - box2.x);
+      const label = Math.max(scaleLabel, center + largest / 2 + LABEL_GAP);
+      columns = { center, label, scaleLeft };
+      for (const part of parts) {
+        if (part.kind === "scale") part.w = Math.max(scaleLeft + box2.width, scaleTitleWidth);
+        else if (sized && sizeSpec) {
+          const titleWidth = measurer(echarts, text)(sizeSpec.title, text.titleSize, true);
+          part.w = Math.max(titleWidth, center + largest / 2, label + Math.max(0, ...sized.labels));
+        }
+      }
+    }
+    if (parts.length === 0) return null;
+    const blockW = vertical ? Math.max(...parts.map((p) => p.w)) : parts.reduce((sum, p) => sum + p.w, 0) + GAP * (parts.length - 1);
+    const blockH = vertical ? parts.reduce((sum, p) => sum + p.h, 0) + GAP * (parts.length - 1) : Math.max(...parts.map((p) => p.h));
+    const authored = [option.grid ?? {}].flat()[0] ?? {};
+    const px = (v, extent, fallback) => typeof v === "number" ? v : typeof v === "string" && v.endsWith("%") ? Number.parseFloat(v) * extent / 100 : fallback;
+    const side = placement.side;
+    const extra = placement.inside ? 0 : (vertical ? blockW : blockH) + GAP;
+    const margin = (s) => px(authored[s], s === "left" || s === "right" ? width : height, 36);
+    const before = reserved.get(chart);
+    const grid = {};
+    if (before && before !== side) grid[before] = margin(before);
+    if (!placement.inside) {
+      Object.assign(grid, { [side]: margin(side) + extra, width: null, height: null });
+    }
+    if (Object.keys(grid).length > 0) chart.setOption({ grid });
+    if (placement.inside) reserved.delete(chart);
+    else reserved.set(chart, side);
+    context.afterReserve?.();
+    const gridModel = chart.getModel().getComponent("grid");
+    const area = gridModel?.coordinateSystem?.getRect() ?? {
+      x: GAP,
+      y: GAP,
+      width: width - 2 * GAP,
+      height: height - 2 * GAP
+    };
+    let x;
+    let y;
+    if (vertical) {
+      x = placement.inside ? side === "right" ? area.x + area.width - blockW - GAP : area.x + GAP : side === "right" ? width - GAP - blockW : GAP;
+      y = placement.inside ? area.y + GAP : area.y + Math.max(0, (area.height - blockH) / 2);
+    } else {
+      x = placement.inside ? area.x + area.width - blockW - GAP : area.x + (area.width - blockW) / 2;
+      y = placement.inside ? side === "bottom" ? area.y + area.height - blockH - GAP : area.y + GAP : side === "bottom" ? height - GAP - blockH : Math.max(GAP, area.y - GAP - blockH);
+    }
+    const box = (type) => {
+      const model = chart.getModel().getComponent(type);
+      const view = model && chart.getViewOfComponentModel(model);
+      if (!view) return null;
+      const r = view.group.getBoundingRect().clone();
+      r.applyTransform(view.group.getComputedTransform());
+      return r.width > 0 && r.height > 0 ? r : null;
+    };
+    if (!placement.inside) {
+      if (side === "bottom") {
+        const axis = box("xAxis");
+        if (axis) y = Math.max(y, axis.y + axis.height + GAP / 2);
+      } else if (side === "left") {
+        const axis = box("yAxis");
+        if (axis) x = Math.min(x, axis.x - GAP / 2 - blockW);
+      } else if (side === "top") {
+        const title = box("title");
+        if (title) y = Math.max(y, title.y + title.height + GAP / 2);
+      }
+    }
+    x = Math.max(0, x);
+    y = Math.max(0, y);
+    let offset = 0;
+    const elements = [];
+    for (const part of parts) {
+      const left = vertical ? x : x + offset;
+      const top = vertical ? y + offset : y;
+      if (part.kind === "scale") {
+        chart.setOption({
+          visualMap: {
+            left: left + (columns?.scaleLeft ?? 0) - part.dx,
+            top: top + scaleLead - part.dy
+          }
+        });
+        elements.push({
+          id: COLOR_KEY_TITLE_ID,
+          type: "text",
+          left,
+          top,
+          silent: true,
+          z: 100,
+          invisible: !scaleTitle,
+          style: {
+            text: scaleTitle,
+            fontSize: text.titleSize,
+            fontFamily: text.fontFamily,
+            fontWeight: "bold",
+            fill: text.color
+          }
+        });
+      } else if (sizeSpec && sized) {
+        elements.push(
+          sizeKeyElement(sizeSpec, orient, { left, top }, text, sized.labels, columns ?? void 0)
+        );
+      }
+      offset += (vertical ? part.h : part.w) + GAP;
+    }
+    if (elements.length > 0) chart.setOption({ graphic: { elements } });
+    return { side, extra };
+  }
+  function keyState(chart) {
+    const option = chart.getOption();
+    const first = (v) => [v ?? []].flat()[0] ?? {};
+    const pick = (o, keys2) => keys2.map((k) => o[k] ?? null);
+    const scale = first(option.visualMap);
+    const grid = first(option.grid);
+    const graphics = [option.graphic ?? []].flat().flatMap((g) => g.elements ?? []);
+    const keys = graphics.filter((g) => g?.id === SIZE_KEY_ID || g?.id === COLOR_KEY_TITLE_ID).map((g) => [g.id, ...pick(g, ["left", "top", "right", "invisible"])]);
+    return JSON.stringify([
+      chart.getWidth(),
+      chart.getHeight(),
+      pick(scale, ["left", "top", "orient", "align", "text"]),
+      pick(grid, ["left", "right", "top", "bottom"]),
+      keys
+    ]);
+  }
+
   // src/charts/scatter/renderers.ts
   var RUG = "rtemis.rug.v1";
   var RUG_LENGTH = 6;
@@ -2448,6 +2809,8 @@ var RtemisDraw = (() => {
     "color",
     "color_scale",
     "colormap",
+    "color_title",
+    "size_title",
     "hover",
     "rug",
     "diagonal",
@@ -2475,7 +2838,6 @@ var RtemisDraw = (() => {
   ]);
   var MAX_SYMBOL_SIZE = 30;
   var DEFAULT_POINT_SIZE = 6;
-  var COLOR_SCALE_MARGIN = 90;
   function autoAlpha(n) {
     return Math.min(0.9, Math.max(0.15, 0.9 - 0.15 * Math.log10(Math.max(n, 1))));
   }
@@ -2486,6 +2848,11 @@ var RtemisDraw = (() => {
     }
     if (config.color && config.group) {
       throw new Error("`color` and `group` both set the color of a point: bind one of the two.");
+    }
+    if (config.color && yColumns.length > 1) {
+      throw new Error(
+        "With `color`, a point's color shows its `color` value, so points of several `y` columns cannot be told apart: bind one `y` column."
+      );
     }
     const time = isTime(data, config.x);
     const xValues = time ? column(data.columns, config.x, "x").map(timeMs) : numberColumn(data, config.x, "x");
@@ -2503,7 +2870,9 @@ var RtemisDraw = (() => {
     const hover = config.hover ? column(data.columns, config.hover, "hover") : null;
     const memberPalette = asArray(config.palette);
     const palette = memberPalette.length > 0 ? memberPalette : appearance.palette ?? RTEMIS_PALETTE;
-    const series = pointSeries(data, config, yColumns, xValues, ys, [size, colorValues], palette);
+    const series = pointSeries(data, config, yColumns, xValues, ys, [size, colorValues], palette).map(
+      (s) => colorValues ? { ...s, color: SIGN_COLORS.neutral } : s
+    );
     if (series.every((s) => s.rows.length === 0)) {
       throw new Error("A scatter chart needs at least one row with every bound column set.");
     }
@@ -2525,9 +2894,10 @@ var RtemisDraw = (() => {
     const nameOf = (s) => fits?.names.get(s) ?? s.name;
     const alpha = config.point_alpha ?? autoAlpha(drawnX.length);
     const maxSize = size ? Math.max(0, ...series.flatMap((s) => s.rows.map((r) => size[r] ?? 0))) : 0;
+    const largestSymbol = MAX_SYMBOL_SIZE * (config.point_size ?? DEFAULT_POINT_SIZE) / DEFAULT_POINT_SIZE;
     const symbolSize = (row) => {
       const v = size?.[row] ?? 0;
-      return maxSize > 0 ? MAX_SYMBOL_SIZE * Math.sqrt(v / maxSize) : 0;
+      return maxSize > 0 ? largestSymbol * Math.sqrt(v / maxSize) : 0;
     };
     const points = series.map((s) => {
       const y = ys.get(s.y) ?? [];
@@ -2594,9 +2964,17 @@ var RtemisDraw = (() => {
       ...xLim && !time ? { axisLine: zeroAxisLine2(xLim) } : {}
     };
     const grid = cartesianGrid(config, Boolean(xName || yName));
-    if (colorValues && typeof config.margin_right !== "number") {
-      grid.right = Math.max(Number(grid.right ?? 0), COLOR_SCALE_MARGIN);
+    const sizeKey = size && maxSize > 0 ? {
+      title: config.size_title ?? config.size,
+      items: sizeKeyValues(
+        Math.min(...series.flatMap((s) => s.rows.map((r) => size[r] ?? 0))),
+        maxSize
+      ).map((value) => ({ value, diameter: largestSymbol * Math.sqrt(value / maxSize) }))
+    } : null;
+    if ((colorValues || sizeKey) && typeof config.margin_right !== "number") {
+      grid.right = Math.max(Number(grid.right ?? 0), KEY_COLUMN_WIDTH);
     }
+    const keysTop = typeof grid.top === "number" ? grid.top : 36;
     const zoom = config.zoom ? xyZoom(!(config.square || config.equal_axes)) : null;
     return {
       ...config.title ? { title: { text: config.title } } : {},
@@ -2609,7 +2987,17 @@ var RtemisDraw = (() => {
       yAxis,
       grid,
       ...zoom ? zoom : {},
-      ...colorValues ? { visualMap: colorScale(config, colorValues, points.length) } : {},
+      ...colorValues ? { visualMap: colorScale(config, colorValues, points.length, keysTop) } : {},
+      ...sizeKey ? {
+        graphic: {
+          elements: [
+            sizeKeyElement(sizeKey, "vertical", {
+              right: 10,
+              top: keysTop + (colorValues ? COLOR_SCALE_LENGTH + 60 : 0)
+            })
+          ]
+        }
+      } : {},
       ...time ? { useUTC: true } : {},
       series: [...points, ...fits?.series ?? [], ...rugs, ...diagonal],
       ...appearance.animation === void 0 ? {} : { animation: appearance.animation }
@@ -2680,7 +3068,7 @@ var RtemisDraw = (() => {
       }
     ];
   }
-  function colorScale(config, values, pointSeriesCount) {
+  function colorScale(config, values, pointSeriesCount, top) {
     const finite = values.filter((v) => v !== null);
     const diverging = config.color_scale === "diverging";
     let min = Math.min(...finite);
@@ -2703,14 +3091,16 @@ var RtemisDraw = (() => {
       seriesIndex: Array.from({ length: pointSeriesCount }, (_, i) => i),
       min,
       max,
+      // ECharts labels the ends with `precision` decimals (default 0, which
+      // reads 0.4 to 0.65 as 0 to 1): two significant digits of the span.
+      precision: Math.max(0, 1 - Math.floor(Math.log10(max - min))),
       calculable: true,
       orient: "vertical",
+      itemHeight: COLOR_SCALE_LENGTH,
       right: 10,
-      top: "middle",
+      top,
       inRange: { color: colors },
-      // The scale names its column; a host draws `legend_title` itself, as
-      // rtemis.draw's legend layout does for every color scale.
-      ...config.legend_title ? {} : { text: [config.color, ""] }
+      text: [config.color_title ?? config.color, ""]
     };
   }
   function pointTooltip(config, named, xName, yColumns, time) {

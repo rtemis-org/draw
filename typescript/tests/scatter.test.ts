@@ -1,7 +1,17 @@
+import { existsSync } from "node:fs";
+import { createRequire } from "node:module";
 import { describe, expect, it } from "vitest";
 import { buildLineOption } from "../src/charts/line/config.ts";
 import { autoAlpha, buildScatterOption, scatterAspect } from "../src/charts/scatter/config.ts";
 import { scatterRenderers } from "../src/charts/scatter/renderers.ts";
+import {
+  fitKeys,
+  keyPlacement,
+  keyState,
+  SIZE_KEY_ID,
+  type SizeKeySpec,
+  sizeKeyValues,
+} from "../src/layout/keys.ts";
 import { fitLabel } from "../src/shared/fit.ts";
 import { appendLayers } from "../src/shared/layers.ts";
 import { SIGN_COLORS } from "../src/theme/tokens.ts";
@@ -129,6 +139,14 @@ describe("buildScatterOption", () => {
     );
     const data = seriesOf(option)[0]?.data as { value: number[]; symbolSize: number }[];
     expect(data.map((d) => d.symbolSize)).toEqual([7.5, 15, 30]);
+    // `point_size` scales the mapped symbols, keeping areas proportional.
+    const doubled = buildScatterOption(
+      { columns: { x: [1, 2, 3], y: [1, 2, 3], n: [1, 4, 16] } },
+      { x: "x", y: "y", size: "n", point_size: 12 },
+    );
+    expect(
+      ((seriesOf(doubled)[0]?.data ?? []) as { symbolSize: number }[]).map((d) => d.symbolSize),
+    ).toEqual([15, 30, 60]);
     expect(data[0]?.value).toEqual([1, 1, -2, 1]);
     expect(option.visualMap).toMatchObject({
       dimension: 2,
@@ -136,7 +154,14 @@ describe("buildScatterOption", () => {
       max: 2,
       inRange: { color: [SIGN_COLORS.negative, SIGN_COLORS.neutral, SIGN_COLORS.positive] },
     });
-    expect((option.grid as { right: number }).right).toBe(90);
+    expect((option.grid as { right: number }).right).toBe(100);
+    // The ends are labeled to two significant digits of the span.
+    expect((option.visualMap as { precision: number }).precision).toBe(1);
+    const narrow = buildScatterOption(
+      { columns: { x: [1, 2], y: [1, 2], c: [0.402, 0.652] } },
+      { x: "x", y: "y", color: "c" },
+    );
+    expect((narrow.visualMap as { precision: number }).precision).toBe(2);
     expect(() =>
       buildScatterOption({ columns: { x: [1], y: [1], n: [-1] } }, { x: "x", y: "y", size: "n" }),
     ).toThrow(/nonnegative/);
@@ -250,3 +275,104 @@ describe("appendLayers", () => {
     expect(shown.legend).toEqual({ show: true });
   });
 });
+
+describe("keys", () => {
+  it("picks round size key values within the range, largest first", () => {
+    expect(sizeKeyValues(0.37, 0.65)).toEqual([0.6, 0.5, 0.4]);
+    expect(sizeKeyValues(2700, 6300)).toEqual([6000, 5000, 4000]);
+    expect(sizeKeyValues(5, 5)).toEqual([5]);
+  });
+
+  it("draws a size key and gray fits with a color scale, and rejects several y with color", () => {
+    const data = {
+      columns: { x: [1, 2, 3], y: [1, 2, 3], n: [1, 4, 16], c: [0, 1, 2], z: [3, 2, 1] },
+      fits: [{ y: "y", x: [1, 3], fitted: [1, 3] }],
+    };
+    const option = buildScatterOption(data, {
+      x: "x",
+      y: "y",
+      size: "n",
+      color: "c",
+      fit: "glm",
+      size_title: "Count",
+    });
+    const key = (option.graphic as { elements: { id: string; info: { sizeKey: SizeKeySpec } }[] })
+      .elements[0];
+    expect(key?.id).toBe(SIZE_KEY_ID);
+    expect(key?.info.sizeKey.title).toBe("Count");
+    expect(key?.info.sizeKey.items[0]).toEqual({ value: 15, diameter: 30 * Math.sqrt(15 / 16) });
+    expect(seriesOf(option).at(-1)?.lineStyle?.color).toBe(SIGN_COLORS.neutral);
+    expect(() => buildScatterOption(data, { x: "x", y: ["y", "z"], color: "c" })).toThrow(
+      /one `y` column/,
+    );
+  });
+
+  it("places the keys from measured geometry beside the plot, on each side", () => {
+    const echarts = loadECharts();
+    if (!echarts) return;
+    const option = buildScatterOption(
+      { columns: { x: [1, 2, 3], y: [1, 2, 3], n: [1, 4, 16], c: [0, 1, 2] } },
+      { x: "x", y: "y", size: "n", color: "c", margin_right: 36 },
+      { animation: false },
+    );
+    for (const side of ["right", "left", "top", "bottom"] as const) {
+      const chart = echarts.init(null, null, {
+        renderer: "svg",
+        ssr: true,
+        width: 600,
+        height: 400,
+      });
+      chart.setOption(option);
+      const reserve = fitKeys(echarts, chart, { option, placement: { side, inside: false } });
+      expect(reserve?.side).toBe(side);
+      expect(reserve?.extra).toBeGreaterThan(30);
+      const grid = chart.getOption().grid[0];
+      expect(grid[side]).toBeCloseTo((side === "right" ? 36 : 36) + (reserve?.extra ?? 0));
+      // A second pass starts from the authored margin and does not accumulate.
+      expect(fitKeys(echarts, chart, { option, placement: { side, inside: false } })?.extra).toBe(
+        reserve?.extra,
+      );
+      expect(chart.getOption().grid[0][side]).toBeCloseTo(grid[side]);
+      chart.dispose();
+    }
+  });
+
+  it("reports a key state that a later setOption changes and a refit restores", () => {
+    const echarts = loadECharts();
+    if (!echarts) return;
+    const option = buildScatterOption(
+      { columns: { x: [1, 2, 3], y: [1, 2, 3], n: [1, 4, 16], c: [0, 1, 2] } },
+      { x: "x", y: "y", size: "n", color: "c", margin_right: 36 },
+      { animation: false },
+    );
+    const chart = echarts.init(null, null, { renderer: "svg", ssr: true, width: 600, height: 400 });
+    chart.setOption(option);
+    fitKeys(echarts, chart, { option });
+    const fitted = keyState(chart);
+    fitKeys(echarts, chart, { option });
+    expect(keyState(chart)).toBe(fitted);
+    // A host merging the built option again puts the keys back in their static places.
+    const { series: _series, ...cosmetic } = option;
+    chart.setOption(cosmetic);
+    expect(keyState(chart)).not.toBe(fitted);
+    fitKeys(echarts, chart, { option });
+    expect(keyState(chart)).toBe(fitted);
+    chart.dispose();
+  });
+
+  it("maps a legend position to the keys' side", () => {
+    expect(keyPlacement("top", "outside", false)).toEqual({ side: "top", inside: false });
+    expect(keyPlacement("bottom-right", "inside", false)).toEqual({ side: "right", inside: true });
+    expect(keyPlacement("right", "outside", true)).toEqual({ side: "left", inside: false });
+    expect(keyPlacement("top", "outside", true)).toEqual({ side: "right", inside: false });
+  });
+});
+
+// The ECharts build rtemis.draw bundles, for the layout tests; they are
+// skipped without it.
+// biome-ignore lint/suspicious/noExplicitAny: ECharts is untyped here.
+function loadECharts(): any {
+  const path = new URL("../../r/inst/htmlwidgets/lib/echarts/echarts.min.js", import.meta.url)
+    .pathname;
+  return existsSync(path) ? createRequire(import.meta.url)(path) : null;
+}

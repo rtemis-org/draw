@@ -21,7 +21,7 @@ dependencies:
       - a3.js
       - panel_widget.js
   - name: rtemis-draw-builders
-    version: 0.5.0
+    version: 0.5.1
     src: htmlwidgets/lib/draw
     script: rtemis-draw-builders.js
   - name: rtemis-theme-watch

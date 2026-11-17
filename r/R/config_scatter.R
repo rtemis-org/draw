@@ -28,8 +28,8 @@
 #' @param y Optional Character: Numeric columns drawn on the y axis, one series
 #'   each.
 #' @param size Optional Character: Nonnegative numeric column that sets each
-#'   symbol's area in proportion to its value, the largest value at 30 pixels
-#'   across.
+#'   symbol's area in proportion to its value, the largest value at five times
+#'   `point_size` across (30 pixels at the default).
 #' @param group Optional Character: Column to group and color points by.
 #' @param color Optional Character: Numeric column mapped to a continuous color
 #'   scale. Excludes `group`.
@@ -59,7 +59,12 @@
 #' @param n_fit Integer `[2, Inf)`: Points each fitted curve is evaluated at.
 #' @param fit_alpha Numeric `[0, 1]`: Opacity of the interval.
 #' @param point_size Numeric `(0, Inf)`: Symbol diameter in pixels of points
-#'   without `size`.
+#'   without `size`; with `size`, the largest value's symbol is five times it
+#'   across.
+#' @param color_title Optional Character: Title of the color scale. `NULL` uses
+#'   the `color` column's name.
+#' @param size_title Optional Character: Title of the size key. `NULL` uses the
+#'   `size` column's name.
 #' @param zoom Logical: Enable Shift+wheel zoom, drag panning, and box-zoom
 #'   controls on both axes. With `square` or `equal_axes`, the controls omit
 #'   box zoom, which sets each axis independently.
@@ -182,10 +187,23 @@ ScatterConfig <- new_class(
           "sign colors."
         )
       ),
+      color_title = prop_string(
+        NULL,
+        nullable = TRUE,
+        description = "Title of the color scale. Unset uses the color column's name."
+      ),
+      size_title = prop_string(
+        NULL,
+        nullable = TRUE,
+        description = "Title of the size key. Unset uses the size column's name."
+      ),
       point_size = prop_float(
         6,
         exclusive_min = 0,
-        description = "Symbol diameter in pixels of points without size."
+        description = paste(
+          "Symbol diameter in pixels of points without size; with size, the",
+          "largest value's symbol is five times it across."
+        )
       ),
       point_alpha = prop_float(
         NULL,
@@ -276,7 +294,10 @@ ScatterConfig <- new_class(
     )
   ),
   validator = config_validator(
-    c(CONFIG_LIMIT_RULES, list(FIT_PARAMS_RULE, COLOR_GROUP_RULE)),
+    c(
+      CONFIG_LIMIT_RULES,
+      list(FIT_PARAMS_RULE, COLOR_GROUP_RULE, COLOR_Y_RULE)
+    ),
     extra = config_ordered_limits
   )
 ) # /rtemis.draw::ScatterConfig
@@ -322,6 +343,8 @@ setup_ScatterConfig <- function(
   color = NULL,
   color_scale = "sequential",
   colormap = NULL,
+  color_title = NULL,
+  size_title = NULL,
   fit = NULL,
   fit_params = NULL,
   fit_per_group = TRUE,
@@ -369,6 +392,8 @@ setup_ScatterConfig <- function(
     color = color,
     color_scale = color_scale,
     colormap = colormap,
+    color_title = color_title,
+    size_title = size_title,
     fit = fit,
     fit_params = fit_params,
     fit_per_group = fit_per_group,
@@ -521,15 +546,12 @@ method(compile, ScatterConfig) <- function(
 
 
 # %% render_meta.ScatterConfig ----
-# The widget and SVG export place the legend from the legend members; with
-# `color`, the legend is the color scale.
+# The widget and SVG export place the legend, the color scale, and the size
+# key from the legend members.
 method(render_meta, ScatterConfig) <- function(config, option) {
-  c(
-    legend_meta(
-      config@legend_position,
-      config@legend_placement,
-      config@legend_title
-    ),
-    if (!is.null(config@color)) list(legendTarget = "visualMap")
+  legend_meta(
+    config@legend_position,
+    config@legend_placement,
+    config@legend_title
   )
 }

@@ -26,6 +26,9 @@ const echarts = require(echartsPath);
 const registerRenderers = require("../htmlwidgets/lib/draw/renderers.js");
 const rendererNames = registerRenderers(echarts);
 const builders = require("../htmlwidgets/lib/draw/rtemis-draw-builders.js");
+// The shared layout (panels.js) reaches the package through the global the
+// browser bundle defines.
+globalThis.RtemisDraw = builders;
 const layout = require("../htmlwidgets/lib/draw/panels.js");
 const confusion = require("../htmlwidgets/lib/draw/confusion.js");
 const a3 = require("../htmlwidgets/lib/draw/a3.js");
@@ -64,6 +67,8 @@ function build(panel) {
   }
   const aspect = builders.aspectHints[request.type]?.(option, request.config);
   if (aspect) panel.aspect = aspect;
+  // The package places the scatter chart's color scale and size key.
+  if (request.type === "scatter") panel.fitKeys = true;
   delete panel.build;
 }
 

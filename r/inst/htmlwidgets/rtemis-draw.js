@@ -67,6 +67,8 @@ function rtemisDrawBuild(x, dark) {
   if (request.type === 'a3') {
     x.a3 = {...RtemisDraw.a3SurfaceHints(data, request.config, appearance), ...x.a3};
   }
+  // The package places the scatter chart's color scale and size key.
+  if (request.type === 'scatter') x.fitKeys = true;
   const aspect = RtemisDraw.aspectHints[request.type]?.(option, request.config);
   if (aspect) x.aspect = aspect;
 }

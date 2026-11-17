@@ -6,7 +6,7 @@
 
 * `draw_line()` and `LineConfig` take the fit arguments of `draw_scatter()` and draw each fit dashed in its line's color, with `aggregate = "none"` and `area = FALSE`.
 
-* `draw_scatter()` gains `color`, `color_scale`, and `colormap`, a continuous color scale, and `point_size`; `size` sets each symbol's area in proportion to its value.
+* `draw_scatter()` gains `color`, `color_scale`, `colormap`, and `color_title`, a continuous color scale for one `y` column, and `point_size`; `size` sets each symbol's area in proportion to its value, the largest at five times `point_size` across, and adds a size key titled by `size_title`. The color scale and the size key sit beside the plot on the side `legend_position` names, or opposite a categorical legend; with a color scale, fits are gray.
 
 * Fit legend entries write R-squared as `R²`.
 

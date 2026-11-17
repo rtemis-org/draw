@@ -12,6 +12,8 @@ setup_ScatterConfig(
   color = NULL,
   color_scale = "sequential",
   colormap = NULL,
+  color_title = NULL,
+  size_title = NULL,
   fit = NULL,
   fit_params = NULL,
   fit_per_group = TRUE,
@@ -57,8 +59,8 @@ or date-time.}
 each.}
 
 \item{size}{Optional Character: Nonnegative numeric column that sets each
-symbol's area in proportion to its value, the largest value at 30 pixels
-across.}
+symbol's area in proportion to its value, the largest value at five times
+\code{point_size} across (30 pixels at the default).}
 
 \item{group}{Optional Character: Column to group and color points by.}
 
@@ -70,6 +72,12 @@ the lowest to the highest value, or \code{"diverging"}, centered on zero.}
 
 \item{colormap}{Optional Character: Colors of the color scale, low to
 high, at least two. \code{NULL} uses the theme's sign colors.}
+
+\item{color_title}{Optional Character: Title of the color scale. \code{NULL} uses
+the \code{color} column's name.}
+
+\item{size_title}{Optional Character: Title of the size key. \code{NULL} uses the
+\code{size} column's name.}
 
 \item{fit}{Optional Character: Model fitted to each series: \code{"glm"},
 \code{"polynomial"}, \code{"loess"}, \code{"gam"}, or an rtemis supervised learning
@@ -90,7 +98,8 @@ every group.}
 \item{fit_alpha}{Numeric \verb{[0, 1]}: Opacity of the interval.}
 
 \item{point_size}{Numeric \verb{(0, Inf)}: Symbol diameter in pixels of points
-without \code{size}.}
+without \code{size}; with \code{size}, the largest value's symbol is five times it
+across.}
 
 \item{palette}{Optional Character: Series colors, overriding the theme
 palette for this chart. \code{NULL} uses the theme's.}

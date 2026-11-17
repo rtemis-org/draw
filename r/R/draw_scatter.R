@@ -50,8 +50,8 @@
 #' @param x Numeric: X values.
 #' @param y Numeric: Y values.
 #' @param size Optional Numeric: Nonnegative values, one per point, that set
-#'   each symbol's area in proportion to the value, the largest value at 30
-#'   pixels across.
+#'   each symbol's area in proportion to the value, the largest value at five
+#'   times `point_size` across (30 pixels at the default).
 #' @param group Optional Atomic vector or single-column data frame: Grouping
 #'   variable for multiple series. Series, colors, and legend entries follow
 #'   factor level order, or first appearance for other vectors.
@@ -61,6 +61,8 @@
 #'   `color`: from the lowest to the highest value, or centered on zero.
 #' @param colormap Optional Character: Colors of the color scale, low to
 #'   high, at least two. `NULL` uses the theme's sign colors.
+#' @param color_title Optional Character: Title of the color scale.
+#' @param size_title Optional Character: Title of the size key.
 #' @param fit Optional Character: Model fitted to `y` on `x` and drawn as a
 #'   curve. See Details. `NULL` draws no fit.
 #' @param fit_params Optional Named list: Arguments of the model:
@@ -87,7 +89,8 @@
 #' @param diagonal_color Optional Character: Identity-line color.
 #' @param fit_alpha Numeric `[0, 1]`: Opacity of the interval.
 #' @param point_size Numeric `(0, Inf)`: Symbol diameter in pixels of points
-#'   without `size`.
+#'   without `size`; with `size`, the largest value's symbol is five times it
+#'   across.
 #' @param point_alpha Optional Numeric `[0, 1]`: Point opacity. `NULL` sets it
 #'   from the number of points drawn, as a guard against overplotting: 0.75 at
 #'   10 points, 0.57 at 150, 0.45 at 1,000 and 0.3 at 10,000, within
@@ -191,7 +194,9 @@ draw_scatter <- function(
   color_scale = "sequential",
   colormap = NULL,
   fit_per_group = TRUE,
-  point_size = 6
+  point_size = 6,
+  color_title = NULL,
+  size_title = NULL
 ) {
   request <- scatter_request(
     x = x,
@@ -201,6 +206,8 @@ draw_scatter <- function(
     color = color,
     color_scale = color_scale,
     colormap = colormap,
+    color_title = color_title,
+    size_title = size_title,
     fit = fit,
     fit_params = fit_params,
     fit_per_group = fit_per_group,
@@ -238,11 +245,7 @@ draw_scatter <- function(
     height = height,
     element_id = element_id,
     filename = filename,
-    meta = c(
-      legend_meta(legend_position, legend_placement, legend_title),
-      # The color scale is the legend of a scatter with `color`.
-      if (!is.null(color)) list(legendTarget = "visualMap")
-    )
+    meta = legend_meta(legend_position, legend_placement, legend_title)
   )
 } # /rtemis.draw::draw_scatter
 
@@ -269,6 +272,8 @@ scatter_request <- function(
   color = NULL,
   color_scale = "sequential",
   colormap = NULL,
+  color_title = NULL,
+  size_title = NULL,
   fit = NULL,
   fit_params = NULL,
   fit_per_group = TRUE,
@@ -350,6 +355,8 @@ scatter_request <- function(
     color = if (!is.null(data[["color"]])) "color",
     color_scale = color_scale,
     colormap = colormap,
+    color_title = color_title,
+    size_title = size_title,
     hover = if (!is.null(data[["hover"]])) "hover",
     fit = fit,
     fit_params = fit_params,

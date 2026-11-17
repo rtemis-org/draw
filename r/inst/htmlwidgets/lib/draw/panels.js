@@ -483,11 +483,27 @@
     });
     if (updates.some(update => update.radius)) chart.setOption({series: updates});
   }
+  // The color scale and size key of a chart @rtemis/draw builds are placed by
+  // the package's fitKeys(), on the side the legend members ask for and away
+  // from a categorical legend. A fixed-aspect plot is fitted again inside the
+  // narrowed area before the keys are placed. spec: draw/shared-builders#keys
+  function fitKeys(chart, payload, echarts) {
+    const draw = typeof RtemisDraw !== 'undefined' ? RtemisDraw : globalThis.RtemisDraw;
+    if (!draw?.fitKeys) return;
+    let hasLegend = false;
+    chart.getModel().eachComponent('legend', model => {
+      if (model.get('show') && model.getData().length) hasLegend = true;
+    });
+    const placement = draw.keyPlacement(payload.legendPosition, payload.legendPlacement, hasLegend);
+    draw.fitKeys(echarts, chart, {option: payload.option, placement,
+      afterReserve: payload.aspect ? () => fitAxes(chart, payload) : undefined});
+  }
   // A centered vertical colorbar belongs beside the data grid, which may be
   // offset by titles, rotated labels, or dendrograms. Measure the native view
   // after layout so its handles and endpoint text are included. Keep this in
   // the shared renderer so browser resize and vector export agree.
   function centerVisualMaps(chart, payload, echarts) {
+    if (payload.fitKeys) return fitKeys(chart, payload, echarts);
     if (payload.legendTarget === 'visualMap') return positionVisualMaps(chart, payload, echarts);
     const definitions = payload.option?.visualMap;
     if (!definitions) return;

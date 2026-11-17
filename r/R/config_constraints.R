@@ -193,6 +193,30 @@ COLOR_GROUP_RULE <- list(
   message = "Set color or group, not both: each sets the color of a point."
 )
 
+
+# %% COLOR_Y_RULE ----
+# With `color`, a point's color shows its color value, so points of several
+# `y` columns would not be told apart.
+COLOR_Y_RULE <- list(
+  schema = list(
+    `if` = list(
+      required = list("color"),
+      properties = list(color = list(not = list(type = "null")))
+    ),
+    then = list(
+      properties = list(
+        y = list(
+          anyOf = list(
+            list(type = "null"),
+            list(maxItems = 1L)
+          )
+        )
+      )
+    )
+  ),
+  message = "Bind one y column with color: a point's color shows its color value."
+)
+
 #' Check ordered axis limits after property validation
 #' @param config ChartConfig: Configuration containing xlim and ylim.
 #' @return Optional Character: Corrective validation messages.
