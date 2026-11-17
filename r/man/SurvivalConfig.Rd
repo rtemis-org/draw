@@ -89,7 +89,8 @@ title. A title does not add a missing legend.}
 
 \item{censor_size}{Numeric \verb{(0, Inf)}: Censor tick height in pixels.}
 
-\item{digits}{Integer: Decimal places for AUC labels and tooltip values.}
+\item{digits}{Integer: Decimal places for displayed probabilities, written
+as \code{\link[rtemis.core:ddSci]{rtemis.core::ddSci()}} writes them.}
 
 \item{palette}{Optional Character: Group colors; unset uses the chart theme.}
 

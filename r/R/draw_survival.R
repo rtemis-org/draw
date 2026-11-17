@@ -190,11 +190,7 @@ method(survival_option, SurvivalConfig) <- function(config, data) {
     domain <- domain + c(-.5, .5)
   }
   fmt <- function(v) {
-    ifelse(
-      is.na(v),
-      "NA",
-      formatC(v, digits = config@digits, format = "f", decimal.mark = ".")
-    )
+    ddSci(as.numeric(v), config@digits)
   }
   series <- list()
   for (i in seq_along(groups)) {

@@ -127,7 +127,8 @@ recommended.}
 \item{show_values}{Logical: Whether to print the cell value as a label inside
 each cell.}
 
-\item{value_digits}{Integer: Decimal places used in cell labels and the tooltip.}
+\item{value_digits}{Integer: Decimal places used in cell labels and the
+tooltip, written as \code{\link[rtemis.core:ddSci]{rtemis.core::ddSci()}} writes them.}
 
 \item{show_colorbar}{Logical: Whether to display the continuous color-scale bar.}
 

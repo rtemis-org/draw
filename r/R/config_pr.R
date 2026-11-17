@@ -35,10 +35,12 @@
 #' prevalence of its defined folds. The baseline toggles with its curves in the
 #' legend.
 #'
-#' The legend uses the shared position and placement controls. Hover describes
-#' the selected curve, including its resample identifier. Numeric tooltip labels
-#' use `digits`; coordinates and summaries retain their full precision in the
-#' compiled data.
+#' The legend title names the values, "AP" or, per resample, "AP: mean (SD)",
+#' on its own row above the entries. Each entry is the curve identity and its
+#' value. The legend uses the shared position and placement controls. Hover
+#' describes the selected curve, including its resample identifier. Numeric
+#' tooltip labels use `digits`; coordinates and summaries retain their full
+#' precision in the compiled data.
 #'
 #' @references
 #' Davis J, Goadrich M (2006). The relationship between precision-recall and ROC
@@ -58,7 +60,8 @@
 #' @param fold Optional Character: Optional resample column; aggregate identifies pooled curves.
 #' @param omitted Optional Character: Optional omitted-observation count column, constant within each curve.
 #' @param variant Character: Draw pooled curves or separate resample curves.
-#' @param digits Integer: Decimal places for average precision labels and tooltip values.
+#' @param digits Integer: Decimal places for average precision labels and
+#'   tooltip values, written as [rtemis.core::ddSci()] writes them.
 #' @param baseline Logical: Show the prevalence baseline of each curve group.
 #' @param palette Optional Character: Group colors; unset uses the chart theme.
 #' @param legend Logical: Show group labels and average precision summaries.
@@ -128,7 +131,7 @@ PRConfig <- new_class(
         description = "Draw pooled curves or separate resample curves."
       ),
       digits = prop_integer(
-        3L,
+        2L,
         min = 0L,
         max = 8L,
         description = "Decimal places for average precision labels and tooltip values."
@@ -200,7 +203,7 @@ setup_PRConfig <- function(
   fold = NULL,
   omitted = NULL,
   variant = "aggregate",
-  digits = 3L,
+  digits = 2L,
   baseline = TRUE,
   palette = NULL,
   legend = TRUE,
@@ -253,5 +256,5 @@ method(compile, PRConfig) <- function(config, data = NULL, theme = NULL, ...) {
   check_dots_empty(...)
   pr_option(config, data)
 }
-method(render_meta, PRConfig) <- square_render_meta
+method(render_meta, PRConfig) <- curve_render_meta
 method(draw, PRConfig) <- draw_curve_config

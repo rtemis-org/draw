@@ -82,11 +82,13 @@ and may describe a higher-resolution curve. Without an AUC binding, the
 supplied vertices define trapezoidal AUC. An undefined curve is represented
 by missing FPR, TPR, and AUC and is reported in the console when omitted.
 Per-resample legends report the unweighted mean and sample SD of defined
-fold AUCs, with available/total curve counts. SD is NA for one defined fold.
-Pooled AUC is never inferred from per-fold AUCs.
-The legend uses the shared position and placement controls. Curve identity
-and AUC share a line; long labels wrap to the available width. All entries
-remain present in static SVG output, without a scrolling legend.
+fold AUCs. SD is NA for one defined fold. Pooled AUC is never inferred from
+per-fold AUCs.
+The legend title names the values, "AUC" or, per resample, "AUC: mean (SD)",
+on its own row above the entries. Each entry is the curve identity and its
+value. The legend uses the shared position and placement controls; long
+labels wrap to the available width. All entries remain present in static SVG
+output, without a scrolling legend.
 Hover describes the selected curve, including its resample identifier.
 Numeric tooltip labels use \code{digits}; coordinates and AUCs retain their full
 precision in the compiled data.

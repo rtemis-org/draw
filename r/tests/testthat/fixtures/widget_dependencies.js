@@ -29,7 +29,4 @@ function renderWithScripts(paths) {
 }
 
 renderWithScripts(scripts);
-// Reproduce a frozen header from before confusion.js became a dependency.
-assert.throws(() => renderWithScripts(scripts.filter(path => !path.endsWith('/confusion.js'))),
-  /rtemisConfusion is not defined/);
-console.log('Declared dependencies render; the incomplete frozen header is detected');
+console.log('Declared dependencies render');

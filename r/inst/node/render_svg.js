@@ -30,7 +30,6 @@ const builders = require("../htmlwidgets/lib/draw/rtemis-draw-builders.js");
 // browser bundle defines.
 globalThis.RtemisDraw = builders;
 const layout = require("../htmlwidgets/lib/draw/panels.js");
-const confusion = require("../htmlwidgets/lib/draw/confusion.js");
 const a3 = require("../htmlwidgets/lib/draw/a3.js");
 // The id and handle size of a zoom preset's slider (zoom.R, @rtemis/draw).
 const ZOOM_SLIDER_ID = builders.ZOOM_SLIDER_ID;
@@ -117,7 +116,7 @@ process.stdin.on("end", () => {
 	const creator = payload.creator || "rtemis.draw";
 	function renderPanel(panel, w, h) {
     if (panel.option?.grid3D) return require("../htmlwidgets/lib/draw/scatter3d.js").svg(panel,w,h);
-		confusion.prepare(echarts, panel, panel.theme, w, h);
+		if (panel.confusion) builders.fitConfusion(echarts, panel, panel.theme, w, h);
 		layout.prepareLabels(panel);
 		layout.prepareColors(echarts, panel, panel.theme);
 		const option = panel.option;

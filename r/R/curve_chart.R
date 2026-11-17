@@ -6,7 +6,7 @@
 #' Describe a threshold curve chart
 #'
 #' One definition of what distinguishes a threshold curve chart, read by
-#' `curve_data()` and `curve_option()`.
+#' `curve_data()` and `curve_request()`.
 #' @param config [ChartConfig]: Curve chart configuration.
 #' @return List of `name`, `summary`, `x`, and `y` labels; the `step` mode;
 #'   `order`, `valid`, and `area` functions of the curve coordinates; and the
@@ -326,74 +326,20 @@ curve_data <- function(config, data, x, y, summary = NULL, reference = NULL) {
 }
 
 
-# %% curve_option ----
-#' Compile curve records to independent native line series
+# %% curve_request ----
+#' Build the request of a curve chart from grouped records
 #'
-#' Curve identity sets the series name, so a legend entry toggles the folds of a
-#' group together with its chance level. Each chance level follows the curves:
-#' a legend key takes its style from the first series of that name.
+#' Reports undefined curves and excluded pairs, and hands the groups and the
+#' ordered curves to `@rtemis/draw`'s ROC or precision-recall builder, which
+#' names, colors, and draws them.
+#' spec: draw/shared-builders#curves
+#' @param type Character \{"roc", "pr"\}: Builder.
 #' @param config [ChartConfig]: Bound curve configuration.
 #' @param prepared List: Output of `curve_data()`.
-#' @param before List: Series drawn ahead of the curves.
-#' @return An [EChartsOption] with full legend.
+#' @return [BuildRequest] of type `type`.
 #' @keywords internal
 #' @noRd
-curve_option <- function(config, prepared, before = list()) {
-  spec <- curve_spec(config)
-  curves <- prepared[["curves"]]
-  groups <- prepared[["groups"]]
-  per_fold <- config@variant == "per_resample"
-  fmt <- function(x) {
-    if (is.na(x)) {
-      "NA"
-    } else {
-      formatC(x, format = "f", digits = config@digits, decimal.mark = ".")
-    }
-  }
-  classes <- unique(vapply(groups, `[[`, character(1), "class"))
-  splits <- unique(vapply(groups, `[[`, character(1), "split"))
-  # Omit the generic single-sample prefix, keeping explicit sample/model names
-  # and class identity. Shared native names toggle all folds in a group.
-  labels <- vapply(
-    groups,
-    function(g) {
-      paste0(
-        if (!identical(splits, "Sample")) paste0(g[["split"]], ": "),
-        g[["class"]],
-        if (per_fold) {
-          paste0(
-            " (",
-            spec[["summary"]],
-            " mean ",
-            fmt(g[["mean"]]),
-            "; SD ",
-            fmt(g[["sd"]]),
-            ")"
-          )
-        } else {
-          paste0(" (", spec[["summary"]], " ", fmt(g[["mean"]]), ")")
-        }
-      )
-    },
-    character(1)
-  )
-  labels <- make.unique(labels)
-  active <- unique(vapply(curves, `[[`, integer(1), "group"))
-  legend_names <- labels[active]
-  group_color <- function(g) {
-    color_id <- if (length(classes) > 1L) {
-      match(g[["class"]], classes)
-    } else {
-      match(g[["split"]], splits)
-    }
-    if (!is.null(config@palette)) {
-      config@palette[[(color_id - 1L) %% length(config@palette) + 1L]]
-    } else {
-      NULL
-    }
-  }
-  # The shared renderer measures legend space independently of curve geometry.
-  bottom <- 65
+curve_request <- function(type, config, prepared) {
   if (prepared[["undefined"]]) {
     msg(prepared[["undefined"]], "undefined curve(s) omitted")
   }
@@ -404,145 +350,86 @@ curve_option <- function(config, prepared, before = list()) {
       "per curve"
     )
   }
-  top <- 25 + if (!is.null(config@title)) 25 else 0
-  grid <- to_list(Grid(
-    left = 70,
-    right = 24,
-    top = top,
-    bottom = bottom,
-    contain_label = FALSE
-  ))
-  grid[["outerBoundsMode"]] <- "none"
-  series <- before
-  for (curve in curves) {
-    id <- curve[["group"]]
-    g <- groups[[id]]
-    color <- group_color(g)
-    points <- lapply(seq_along(curve[["x"]]), function(j) {
+  na_null <- function(x) if (is.na(x)) NULL else jsonlite::unbox(x)
+  document <- list(
+    groups = lapply(prepared[["groups"]], function(g) {
       list(
-        unname(curve[["x"]][[j]]),
-        unname(curve[["y"]][[j]]),
-        if (is.na(curve[["summary"]])) NULL else curve[["summary"]],
-        curve[["fold"]],
-        curve[["omitted"]],
-        fmt(curve[["x"]][[j]]),
-        fmt(curve[["y"]][[j]]),
-        fmt(curve[["summary"]])
+        split = jsonlite::unbox(g[["split"]]),
+        class = jsonlite::unbox(g[["class"]]),
+        mean = na_null(g[["mean"]]),
+        sd = na_null(g[["sd"]]),
+        reference = na_null(g[["reference"]])
+      )
+    }),
+    curves = lapply(prepared[["curves"]], function(curve) {
+      list(
+        group = jsonlite::unbox(curve[["group"]] - 1L),
+        fold = jsonlite::unbox(curve[["fold"]]),
+        x = I(unname(curve[["x"]])),
+        y = I(unname(curve[["y"]])),
+        summary = na_null(curve[["summary"]]),
+        omitted = jsonlite::unbox(curve[["omitted"]])
       )
     })
-    s <- to_list(LineSeries(
-      name = labels[[id]],
-      data = points,
-      smooth = FALSE,
-      step = spec[["step"]],
-      show_symbol = TRUE,
-      symbol = "circle",
-      symbol_size = 8,
-      connect_nulls = FALSE,
-      clip = TRUE,
-      line_style = LineStyle(
-        color = color,
-        width = config@line_width,
-        opacity = if (per_fold) config@fold_opacity else 1,
-        type = c("solid", "dashed", "dotted")[[
-          (match(g[["split"]], splits) - 1L) %% 3L + 1L
-        ]]
-      ),
-      item_style = ItemStyle(color = color, opacity = 0),
-      z = 3
-    ))
-    # Native transparent symbols provide point hit targets for item tooltips.
-    # Only the hovered point becomes visible; unhovered charts and SVG retain
-    # the line-only appearance. LineSeriesOption inherits emphasis from
-    # SeriesOption (ECharts util/types.ts); no browser-only handler is required.
-    s[["emphasis"]] <- list(itemStyle = list(opacity = 1))
-    display <- c(spec[["x"]], spec[["y"]], spec[["summary"]])
-    s[["dimensions"]] <- as.list(c(display, "Resample", "Missing pairs"))
-    # DimensionDefinition (ECharts util/types.ts) separates display text from
-    # full-precision values. Ordinal labels survive JSON without callbacks.
-    # spec: draw/first-cran-release#roc-views
-    s[["dimensions"]] <- c(
-      s[["dimensions"]],
-      lapply(display, function(label) {
-        list(
-          name = paste(label, "label"),
-          displayName = label,
-          type = "ordinal"
-        )
-      })
-    )
-    s[["encode"]] <- list(
-      x = 0L,
-      y = 1L,
-      tooltip = as.list(c(5L, 6L, 7L, 3L))
-    )
-    series[[length(series) + 1L]] <- s
-  }
-  for (id in active) {
-    level <- groups[[id]][["reference"]]
-    if (!is.na(level)) {
-      series[[length(series) + 1L]] <- LineSeries(
-        name = labels[[id]],
-        data = list(c(0, level), c(1, level)),
-        show_symbol = FALSE,
-        silent = TRUE,
-        legend_hover_link = FALSE,
-        line_style = LineStyle(
-          color = group_color(groups[[id]]),
-          type = "dotted",
-          width = 1
-        ),
-        z = 1
-      )
-    }
-  }
-  EChartsOption(
-    title = Title(
-      text = config@title,
-      left = "center",
-      text_align = "center"
-    ),
-    grid = grid,
-    x_axis = Axis(
-      type = "value",
-      min = 0,
-      max = 1,
-      name = config@xlab,
-      name_location = "middle",
-      name_gap = 30
-    ),
-    y_axis = Axis(
-      type = "value",
-      min = 0,
-      max = 1,
-      name = config@ylab,
-      name_location = "middle",
-      name_gap = 45
-    ),
-    legend = Legend(
-      show = config@legend,
-      orient = "horizontal",
-      # Shared render hints position this native legend after grid measurement.
-      padding = 0,
-      item_gap = 6,
-      icon = "roundRect",
-      item_width = 20,
-      item_height = 3,
-      # Legend keys stay visible independently of transparent hover targets.
-      item_style = ItemStyle(opacity = 1),
-      data = as.list(legend_names),
-      text_style = TextStyle(font_size = 12, line_height = 14)
-    ),
-    tooltip = Tooltip(trigger = "item", confine = TRUE),
-    series = series
   )
-}
+  BuildRequest(
+    type = type,
+    data = as.character(jsonlite::toJSON(
+      document,
+      auto_unbox = FALSE,
+      null = "null",
+      digits = NA
+    )),
+    config = config_members(config),
+    appearance = list()
+  )
+} # /rtemis.draw::curve_request
+
+
+# %% curve_legend_title ----
+#' Legend title of a curve chart
+#'
+#' Names what the legend entries' values are, as `@rtemis/draw`'s
+#' `curveLegendTitle()` does: `legend_title` when set, else the summary
+#' ("AUC", "AP"), or over resamples "AUC: mean (SD)".
+#' @param config [ChartConfig]: Curve configuration.
+#' @return Character.
+#' @keywords internal
+#' @noRd
+curve_legend_title <- function(config) {
+  if (!is.null(config@legend_title)) {
+    return(config@legend_title)
+  }
+  summary <- curve_spec(config)[["summary"]]
+  if (config@variant == "per_resample") {
+    paste0(summary, ": mean (SD)")
+  } else {
+    summary
+  }
+} # /rtemis.draw::curve_legend_title
+
+
+# %% curve_grid ----
+#' Plot margins of a curve chart, as `@rtemis/draw`'s curve builder sets them
+#' @param config [ChartConfig]: Curve configuration.
+#' @return Named list of `left`, `right`, `top`, and `bottom` pixels.
+#' @keywords internal
+#' @noRd
+curve_grid <- function(config) {
+  list(
+    left = 70,
+    right = 24,
+    top = 25 + if (is.null(config@title)) 0 else 25,
+    bottom = 65
+  )
+} # /rtemis.draw::curve_grid
 
 
 # %% square_render_meta ----
 #' Render hints of a chart with an optional square plotting grid
 #' @param config [ChartConfig]: Configuration with a `square` property.
-#' @param option [EChartsOption]: Compiled option.
+#' @param option [EChartsOption] or [BuildRequest]: Compiled option, or the
+#'   request of a curve chart, whose margins are `curve_grid()`'s.
 #' @return List of render hints.
 #' @keywords internal
 #' @noRd
@@ -550,7 +437,11 @@ square_render_meta <- function(config, option) {
   if (!config@square) {
     return(list())
   }
-  grid <- option@grid
+  grid <- if (S7::S7_inherits(option, BuildRequest)) {
+    curve_grid(config)
+  } else {
+    option@grid
+  }
   list(
     aspect = list(
       ratio = 1,
@@ -562,6 +453,19 @@ square_render_meta <- function(config, option) {
   )
 }
 
+
+# %% curve_render_meta ----
+#' Render hints of a ROC or PR chart
+#'
+#' The square plotting grid of `square_render_meta()`, and `legendTitleAbove`,
+#' which draws the legend title on its own row above the entries.
+#' @inheritParams square_render_meta
+#' @return List of render hints.
+#' @keywords internal
+#' @noRd
+curve_render_meta <- function(config, option) {
+  c(square_render_meta(config, option), list(legendTitleAbove = TRUE))
+} # /rtemis.draw::curve_render_meta
 
 # %% draw_curve_config ----
 #' Render a curve config with shared legend layout
@@ -582,7 +486,9 @@ draw_curve_config <- function(
   data = NULL
 ) {
   built <- compile(option, data = data, theme = theme)
-  grid <- built@grid
+  # The legend title names the entries' values, which then read as numbers.
+  option@legend_title <- curve_legend_title(option)
+  grid <- curve_grid(option)
   export_size <- list(
     width = 480 + grid[["left"]] + grid[["right"]],
     height = 480 + grid[["top"]] + grid[["bottom"]]

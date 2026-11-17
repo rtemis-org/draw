@@ -47,7 +47,8 @@
 #' @param row_cut,col_cut Optional Integer: Number of clusters for branch coloring,
 #'   requiring a computed or supplied tree.
 #' @param show_values Logical: Print each cell's value.
-#' @param value_digits Integer `[0, Inf)`: Digits for printed values.
+#' @param value_digits Integer `[0, Inf)`: Decimal places for printed values,
+#'   written as [rtemis.core::ddSci()] writes them.
 #' @param show_colorbar Logical: Draw the color bar.
 #' @param colorbar_orient Character \{"vertical", "horizontal"\}: Color bar
 #'   orientation.

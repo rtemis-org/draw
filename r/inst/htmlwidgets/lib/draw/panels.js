@@ -276,10 +276,11 @@
     const initial = area();
     const availableWidth = vertical ? Math.max(60, Math.min(initial.width * .4, 240)) : Math.max(1, initial.width - (inside ? 2 * gap : 0));
     // A title sits before the first row of a horizontal legend, with the rows
-    // indented after it, unless it takes more than half the width; otherwise
-    // it sits above the items.
+    // indented after it, unless it takes more than half the width or the
+    // payload sets `legendTitleAbove`; otherwise it sits above the items.
     let title = measureLegendTitle(echarts, chart, models[0], payload.legendTitle);
-    const inline = !!title && !vertical && title.width + 10 <= availableWidth / 2;
+    const inline = !!title && !vertical && !payload.legendTitleAbove &&
+      title.width + 10 <= availableWidth / 2;
     if (title && !inline) {
       title = measureLegendTitle(echarts, chart, models[0], payload.legendTitle,
         availableWidth - 2 * title.padLeft);

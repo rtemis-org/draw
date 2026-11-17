@@ -13,8 +13,8 @@ setup_ConfusionConfig(
   show_metrics = TRUE,
   digits = 2L,
   ncol = 2L,
-  correct_color = "#0F6A66",
-  incorrect_color = "#BE2E5F",
+  correct_color = NULL,
+  incorrect_color = NULL,
   low_color = NULL,
   summary_color = NULL,
   font_size = 12,
@@ -43,9 +43,12 @@ setup_ConfusionConfig(
 
 \item{ncol}{Integer: Maximum number of panels per row.}
 
-\item{correct_color}{Character: Six-digit hex color at unit fraction for correct predictions.}
+\item{correct_color}{Optional Character: Six-digit hex color at unit fraction
+for correct predictions; unset uses the theme's negative sign color.}
 
-\item{incorrect_color}{Character: Six-digit hex color at unit fraction for incorrect predictions.}
+\item{incorrect_color}{Optional Character: Six-digit hex color at unit
+fraction for incorrect predictions; unset uses the theme's positive sign
+color.}
 
 \item{low_color}{Optional Character: Six-digit hex color at zero row fraction;
 unset uses the active theme background.}

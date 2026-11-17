@@ -35,6 +35,8 @@
 #' @param group Optional Character: Curve group column.
 #' @param lower,upper Optional Character: Pointwise confidence bound columns.
 #' @param n_censor Optional Character: Censor count column.
+#' @param digits Integer: Decimal places for displayed probabilities, written
+#'   as [rtemis.core::ddSci()] writes them.
 #' @param n_risk Optional Character: Risk count column at recorded times.
 #' @param show_ci Logical: Draw available pointwise confidence bands.
 #' @param show_censors Logical: Draw censor ticks.

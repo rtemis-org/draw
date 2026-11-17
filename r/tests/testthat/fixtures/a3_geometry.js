@@ -11,7 +11,6 @@ const echarts = require(input.echarts), directory = path.dirname(input.layout);
 const body = {style:{}, classList:{contains:()=>false}};
 const context = {document:{body}, window:{}, HTMLWidgets:{widget() {}},
   rtemisPanels: require(input.layout), rtemisA3: require(path.join(directory,'a3.js')),
-  rtemisConfusion: require(path.join(directory,'confusion.js')),
   echarts:{...echarts, init:(_,theme,options)=>echarts.init(null,theme,{...options,renderer:'svg',ssr:true})}};
 vm.createContext(context);
 // The binding's shared theme detection must see this context's stub DOM.

@@ -33,8 +33,11 @@
 #' @param show_metrics Logical: Show per-class rates, accuracy, and balanced accuracy.
 #' @param digits Integer: Decimal places for rates in cells and hover text.
 #' @param ncol Integer: Maximum number of panels per row.
-#' @param correct_color Character: Six-digit hex color at unit fraction for correct predictions.
-#' @param incorrect_color Character: Six-digit hex color at unit fraction for incorrect predictions.
+#' @param correct_color Optional Character: Six-digit hex color at unit fraction
+#'   for correct predictions; unset uses the theme's negative sign color.
+#' @param incorrect_color Optional Character: Six-digit hex color at unit
+#'   fraction for incorrect predictions; unset uses the theme's positive sign
+#'   color.
 #' @param low_color Optional Character: Six-digit hex color at zero row fraction;
 #'   unset uses the active theme background.
 #' @param summary_color Optional Character: Six-digit hex background for metric
@@ -98,12 +101,14 @@ ConfusionConfig <- new_class(
       description = "Maximum number of panels per row."
     ),
     correct_color = prop_string(
-      "#0F6A66",
-      description = "Six-digit hex color at unit fraction for correct predictions."
+      NULL,
+      nullable = TRUE,
+      description = "Six-digit hex color at unit fraction for correct predictions; unset uses the theme's negative sign color."
     ),
     incorrect_color = prop_string(
-      "#BE2E5F",
-      description = "Six-digit hex color at unit fraction for incorrect predictions."
+      NULL,
+      nullable = TRUE,
+      description = "Six-digit hex color at unit fraction for incorrect predictions; unset uses the theme's positive sign color."
     ),
     low_color = prop_string(
       NULL,
@@ -161,8 +166,8 @@ setup_ConfusionConfig <- function(
   show_metrics = TRUE,
   digits = 2L,
   ncol = 2L,
-  correct_color = "#0F6A66",
-  incorrect_color = "#BE2E5F",
+  correct_color = NULL,
+  incorrect_color = NULL,
   low_color = NULL,
   summary_color = NULL,
   font_size = 12,
@@ -221,7 +226,7 @@ method(compile, ConfusionConfig) <- function(
   ...
 ) {
   check_dots_empty(...)
-  confusion_option(config, data)
+  confusion_option(config, data, theme)
 }
 
 method(to_list, ConfusionConfig) <- function(x) chart_config_to_list(x)

@@ -61,7 +61,10 @@ test_that("histogram compiles to the same option as the vector path", {
 
 test_that("a grouping column splits the chart into series", {
   d <- dh_data()
-  opt <- raw_option(compile(setup_DensityConfig(x = "v", group = "g"), data = d))
+  opt <- raw_option(compile(
+    setup_DensityConfig(x = "v", group = "g"),
+    data = d
+  ))
   expect_length(opt[["series"]], length(unique(d[["g"]])))
 })
 
@@ -108,7 +111,10 @@ test_that("a histogram's y label says what a bar's height is", {
 
 test_that("a density's y label says the height is a density", {
   d <- dh_data()
-  expect_identical(resolve(setup_DensityConfig(x = "v"), data = d)@ylab, "Density")
+  expect_identical(
+    resolve(setup_DensityConfig(x = "v"), data = d)@ylab,
+    "Density"
+  )
   expect_identical(
     raw_option(compile(setup_DensityConfig(x = "v"), data = d))[["yAxis"]][[
       "name"
@@ -119,7 +125,9 @@ test_that("a density's y label says the height is a density", {
     raw_option(draw_density(d[["v"]]))[["yAxis"]][["name"]],
     "Density"
   )
-  expect_null(raw_option(draw_density(d[["v"]], ylab = ""))[["yAxis"]][["name"]])
+  expect_null(raw_option(draw_density(d[["v"]], ylab = ""))[["yAxis"]][[
+    "name"
+  ]])
 })
 
 

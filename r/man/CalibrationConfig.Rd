@@ -88,7 +88,8 @@ title. A title does not add a missing legend.}
 
 \item{line_width}{Numeric: Curve stroke width in pixels.}
 
-\item{digits}{Integer: Decimal places for AUC labels and tooltip values.}
+\item{digits}{Integer: Decimal places for displayed probabilities and Brier
+scores, written as \code{\link[rtemis.core:ddSci]{rtemis.core::ddSci()}} writes them.}
 
 \item{diagonal}{Logical: Show an independent chance diagonal.}
 

@@ -215,7 +215,7 @@ calibration_option <- new_generic("calibration_option", "config")
 method(calibration_option, CalibrationConfig) <- function(config, data) {
   groups <- calibration_data(config, data)
   fmt <- function(x) {
-    formatC(x, digits = config@digits, format = "f", decimal.mark = ".")
+    ddSci(as.numeric(x), config@digits)
   }
   labels <- vapply(
     groups,

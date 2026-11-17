@@ -126,7 +126,7 @@ test_that("confusion hover precision is configurable without rounding numeric da
   )
   for (digits in c(0L, 2L, 3L, 8L)) {
     widget <- draw_confusion(counts, digits = digits)
-    option <- widget[["x"]][["option"]]
+    option <- raw_option(widget)
     first <- option[["series"]][[1L]][["data"]][[1L]][["value"]]
     expect_equal(first[[3L]], 8 / 15)
     expect_equal(first[[4L]], 8)
@@ -148,14 +148,10 @@ test_that("confusion hover precision is configurable without rounding numeric da
       )
     )
     expect_identical(strip_js(option), option)
-    # Materialized hover text survives the same plain JSON transport as data.
-    wire <- widget_wire(widget)
-    expect_identical(
-      wire[["option"]][["series"]][[1L]][["data"]][[1L]][["value"]][[8L]],
-      first[[8L]]
-    )
+    # The widget carries the request; the package writes the hover text.
+    expect_identical(widget_wire(widget)[["build"]][["type"]], "confusion")
   }
-  default <- draw_confusion(counts)[["x"]][["option"]]
+  default <- raw_option(draw_confusion(counts))
   expect_identical(
     default[["series"]][[1L]][["data"]][[1L]][["value"]][[8L]],
     "0.53"
@@ -164,7 +160,7 @@ test_that("confusion hover precision is configurable without rounding numeric da
     default[["series"]][[3L]][["data"]][[1L]][["label"]][["formatter"]],
     "0.53"
   )
-  sparse <- draw_confusion(matrix(c(4, 0, 0, 0), 2))[["x"]][["option"]][[
+  sparse <- raw_option(draw_confusion(matrix(c(4, 0, 0, 0), 2)))[[
     "series"
   ]]
   expect_identical(sparse[[1L]][["data"]][[1L]][["value"]][[8L]], "1.00")
@@ -219,7 +215,7 @@ test_that("functional and config rendering agree and every panel has independent
   cfg <- setup_ConfusionConfig(panel = "panel", classes = c("no", "yes"))
   w <- draw_confusion(x, classes = c("no", "yes"))
   expect_identical(w[["x"]], draw(cfg, data = d)[["x"]])
-  opt <- w[["x"]][["option"]]
+  opt <- raw_option(w)
   expect_length(opt[["grid"]], 8L)
   expect_length(opt[["series"]], 10L)
   expect_identical(opt[["xAxis"]][[1L]][["data"]], as.list(c("no", "yes")))
@@ -241,12 +237,10 @@ test_that("functional and config rendering agree and every panel has independent
   expect_identical(w[["width"]], "100%")
   expect_equal(w[["height"]], 500)
   expect_equal(w[["x"]][["exportSize"]], list(width = 1120, height = 500))
-  simple <- draw_confusion(x, show_metrics = FALSE)[["x"]][["option"]]
+  simple <- raw_option(draw_confusion(x, show_metrics = FALSE))
   expect_length(simple[["grid"]], 2L)
   expect_length(simple[["series"]], 4L)
-  one <- draw_confusion(matrix(3, 1, 1), show_metrics = FALSE)[["x"]][[
-    "option"
-  ]]
+  one <- raw_option(draw_confusion(matrix(3, 1, 1), show_metrics = FALSE))
   json <- jsonlite::fromJSON(
     jsonlite::toJSON(one, auto_unbox = TRUE),
     simplifyVector = FALSE
@@ -370,13 +364,13 @@ test_that("confusion layout uses square native cells and theme-aware colors", {
   on.exit(unlink(path), add = TRUE)
   jsonlite::write_json(
     list(
-      charts = lapply(widgets, `[[`, "x"),
+      charts = lapply(widgets, built_payload),
       echarts = system.file(
         "htmlwidgets/lib/echarts/echarts.min.js",
         package = "rtemis.draw"
       ),
       confusion = system.file(
-        "htmlwidgets/lib/draw/confusion.js",
+        "htmlwidgets/lib/draw/rtemis-draw-builders.js",
         package = "rtemis.draw"
       )
     ),
@@ -436,7 +430,7 @@ test_that("confusion omissions are reported in the console without changing the 
       show_metrics = metrics
     )
     expect_identical(widget[["x"]], complete[["x"]])
-    expect_null(widget[["x"]][["option"]][["graphic"]])
+    expect_null(raw_option(widget)[["graphic"]])
     skip_if_no_node()
     path <- tempfile(fileext = ".svg")
     on.exit(unlink(path), add = TRUE)

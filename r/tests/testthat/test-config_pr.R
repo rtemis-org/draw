@@ -34,7 +34,10 @@ test_that("precision-recall configs validate settings and preserve portable bind
     write_chart_config(cfg, path, complete = complete)
     back <- read_chart_config(path)
     expect_s7_class(back, PRConfig)
-    expect_identical(to_list(compile(back, data)), to_list(compile(cfg, data)))
+    expect_identical(
+      raw_option(compile(back, data)),
+      raw_option(compile(cfg, data))
+    )
   }
   expect_identical(chart_registry()[["pr"]][["setup"]], "setup_PRConfig")
   schema <- chart_schema(

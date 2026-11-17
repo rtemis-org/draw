@@ -11,6 +11,8 @@
 import { buildA3Option } from "./charts/a3/index.ts";
 import { buildBarOption } from "./charts/bar/index.ts";
 import { buildBoxplotOption } from "./charts/boxplot/index.ts";
+import { buildConfusionOption } from "./charts/confusion/index.ts";
+import { buildPrOption, buildRocOption, curveAspect } from "./charts/curves/index.ts";
 import { buildDensityOption } from "./charts/density/index.ts";
 import { buildHistogramOption } from "./charts/histogram/index.ts";
 import { buildLineOption, lineAspect } from "./charts/line/index.ts";
@@ -39,6 +41,40 @@ export {
   buildBoxplotOption,
   radicalInverse,
 } from "./charts/boxplot/index.ts";
+export type {
+  ConfusionAppearance,
+  ConfusionChartConfig,
+  ConfusionData,
+  ConfusionLayout,
+  ConfusionPanel,
+  ConfusionPayload,
+  ConfusionRates,
+} from "./charts/confusion/index.ts";
+export {
+  buildConfusionOption,
+  CONFUSION_CHART_CONFIG_MEMBERS,
+  confusionHeight,
+  confusionLayout,
+  confusionRates,
+  fitConfusion,
+} from "./charts/confusion/index.ts";
+export type {
+  Curve,
+  CurveAppearance,
+  CurveData,
+  CurveGroup,
+  PrChartConfig,
+  RocChartConfig,
+} from "./charts/curves/index.ts";
+export {
+  buildPrOption,
+  buildRocOption,
+  curveAspect,
+  curveLabel,
+  curveLegendTitle,
+  PR_CHART_CONFIG_MEMBERS,
+  ROC_CHART_CONFIG_MEMBERS,
+} from "./charts/curves/index.ts";
 export type {
   BandwidthRule,
   DensityAppearance,
@@ -106,7 +142,7 @@ export {
 } from "./layout/keys.ts";
 export type { FitCurve, FitMembers } from "./shared/fit.ts";
 export { FIT_MEMBERS, fitLabel } from "./shared/fit.ts";
-export { formatNumber, SIGNIFICANT_DIGITS } from "./shared/format.ts";
+export { ddSci, formatNumber, SIGNIFICANT_DIGITS } from "./shared/format.ts";
 export type { MeasureMembers } from "./shared/labels.ts";
 export { valueLabel } from "./shared/labels.ts";
 export type { Layer } from "./shared/layers.ts";
@@ -136,9 +172,12 @@ export const builders = Object.freeze({
   a3: buildA3Option,
   bar: buildBarOption,
   boxplot: buildBoxplotOption,
+  confusion: buildConfusionOption,
   density: buildDensityOption,
   histogram: buildHistogramOption,
   line: buildLineOption,
+  pr: buildPrOption,
+  roc: buildRocOption,
   scatter: buildScatterOption,
 });
 
@@ -148,6 +187,8 @@ export const builders = Object.freeze({
  */
 export const aspectHints = Object.freeze({
   line: lineAspect,
+  pr: curveAspect,
+  roc: curveAspect,
   scatter: scatterAspect,
 });
 

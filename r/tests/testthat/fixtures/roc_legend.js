@@ -23,6 +23,18 @@ for (const original of input.charts) {
       const group = chart.getViewOfComponentModel(legend).group;
       const box = group.getBoundingRect().clone();
       box.applyTransform(group.getComputedTransform());
+      // The legend title takes its own row above the entries, left-aligned
+      // with them; the anchor holds for both.
+      let title = null;
+      chart.getZr().storage.traverse(el => {
+        if (el.type === 'text' && el.style?.text === payload.legendTitle) title = el;
+      });
+      assert.ok(title, 'Missing legend title');
+      const titleBox = title.getBoundingRect().clone();
+      titleBox.applyTransform(title.getComputedTransform());
+      assert.ok(titleBox.y + titleBox.height <= box.y + 0.01, 'Legend title is not above the entries');
+      assert.ok(Math.abs(titleBox.x - box.x) < 1, `Legend title is not left-aligned: ${titleBox.x} vs ${box.x}`);
+      box.union(titleBox);
       const position = payload.legendPosition;
       const xGap = position.endsWith('right') ? grid.x + grid.width - box.x - box.width : box.x - grid.x;
       const yGap = position.startsWith('bottom') ? grid.y + grid.height - box.y - box.height : box.y - grid.y;
@@ -37,7 +49,8 @@ for (const original of input.charts) {
           el.update();
           // Inspect rendered spans, not the original unwrapped style string.
           const spans = el.childrenRef().filter(child => child.type === 'tspan');
-          if (!String(el.style.text).includes('AUC mean')) {
+          // A per-resample label, with its SD in parentheses, may wrap.
+          if (!/\(.*\)$/.test(String(el.style.text))) {
             assert.equal(spans.length, 1, 'Ordinary class/AUC label wrapped unnecessarily');
           }
           text.push(spans.map(child => child.style.text).join(''));

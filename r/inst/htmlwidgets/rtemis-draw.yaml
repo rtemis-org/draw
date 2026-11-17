@@ -13,11 +13,10 @@ dependencies:
       - renderers.js
       - scatter3d.js
   - name: rtemis-panel-layout
-    version: 1.0.11
+    version: 1.0.12
     src: htmlwidgets/lib/draw
     script:
       - panels.js
-      - confusion.js
       - a3.js
       - panel_widget.js
   - name: rtemis-draw-builders

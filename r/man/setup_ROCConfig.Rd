@@ -13,7 +13,7 @@ setup_ROCConfig(
   fold = NULL,
   omitted = NULL,
   variant = "aggregate",
-  digits = 3L,
+  digits = 2L,
   diagonal = TRUE,
   diagonal_color = "#888888",
   palette = NULL,
@@ -49,7 +49,8 @@ setup_ROCConfig(
 
 \item{variant}{Character: Draw pooled curves or separate resample curves.}
 
-\item{digits}{Integer: Decimal places for AUC labels and tooltip values.}
+\item{digits}{Integer: Decimal places for AUC labels and tooltip values,
+written as \code{\link[rtemis.core:ddSci]{rtemis.core::ddSci()}} writes them.}
 
 \item{diagonal}{Logical: Show an independent chance diagonal.}
 

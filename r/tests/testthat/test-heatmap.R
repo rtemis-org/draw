@@ -37,7 +37,7 @@ test_that("hclust_to_dendro_data produces numeric 5-tuples", {
 })
 
 test_that("hclust_to_dendro_data leaf positions cover 0 .. n-1", {
-  # Leaf positions (values 0 and 1 in 5-tuples) should span 0 .. n-1
+  # Leaf positions (values 0 and 1 in 5-tuples) span 0 .. n-1.
   m <- make_mat(5L)
   h <- stats::hclust(stats::dist(m))
   out <- hclust_to_dendro_data(h)
@@ -160,7 +160,7 @@ test_that("show_row_dendro=FALSE reorders rows but does not add a dendro panel",
   expect_equal(opt$series[[1]]$type, "heatmap")
   # Row names must be reordered (different from unclustered)
   w1 <- draw_heatmap(m)
-  # Category data may or may not differ, but the widget should be valid
+  # Category data may differ; the widget is valid either way.
   expect_s3_class(w0, "htmlwidget")
 })
 
@@ -258,6 +258,19 @@ test_that("heatmap labels default to two decimals without rounding source values
   expect_identical(
     explicit[["series"]][[1L]][["data"]][[1L]][["label"]][["formatter"]],
     "0.595"
+  )
+  # A nonzero value that rounds to zero reads in scientific notation.
+  small <- draw_heatmap(matrix(c(.004, 1), 1L), show_values = TRUE)
+  expect_identical(
+    small[["x"]][["option"]][["series"]][[1L]][["data"]][[1L]][["label"]][[
+      "formatter"
+    ]],
+    "4e-03"
+  )
+  expect_match(
+    small[["x"]][["option"]][["tooltip"]][["formatter"]],
+    "RtemisDraw.ddSci(p.value[2],2)",
+    fixed = TRUE
   )
 })
 

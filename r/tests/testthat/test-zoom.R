@@ -303,7 +303,11 @@ test_that("volcano plots zoom both axes and Manhattan plots the outcome axis", {
 test_that("static_controls drops zoom controls and returns the slider band", {
   # An option R builds; static export of a built chart returns the band in
   # Node.
-  zoomed <- zoom_layout(TRUE, axis = "x", grid = resolve_margins(DEFAULT_MARGINS))
+  zoomed <- zoom_layout(
+    TRUE,
+    axis = "x",
+    grid = resolve_margins(DEFAULT_MARGINS)
+  )
   opt <- to_list(EChartsOption(
     data_zoom = zoomed[["data_zoom"]],
     grid = zoomed[["grid"]]

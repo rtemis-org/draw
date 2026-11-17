@@ -25,7 +25,7 @@ test_that("changed widget assets do not overwrite prior frozen dependencies", {
     expect_identical(readLines(path), "previously cached asset")
   }
   headers <- htmltools::renderDependencies(copied)
-  expect_match(headers, "/confusion.js", fixed = TRUE)
+  expect_match(headers, "/rtemis-draw-builders.js", fixed = TRUE)
   expect_false(grepl("rtemis-draw-binding-0.5.1/", headers, fixed = TRUE))
   expect_false(grepl("rtemis-panel-layout-1.0.0/", headers, fixed = TRUE))
 })

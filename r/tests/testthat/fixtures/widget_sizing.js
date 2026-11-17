@@ -24,7 +24,7 @@ function mount(element) {
     document: {body, documentElement: {style: {}}, createElement: () => ({style: {}})},
     window: {MutationObserver: Observer}, MutationObserver: Observer,
     HTMLWidgets: {widget(definition) {context.definition = definition;}},
-    rtemisA3: {fit() {}}, rtemisConfusion: {prepare() {}},
+    rtemisA3: {fit() {}},
     rtemisPanels: {...panels, fitAxes() {}, fitHeatmap() {}, positionLegend() {},
       centerVisualMaps() {}, fitGantt() {}, fitEndpointLabels() {}},
     echarts: {registerTheme() {}, init(_, __, size) {inits.push(size); return chart;}},

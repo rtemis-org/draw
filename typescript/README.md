@@ -30,6 +30,8 @@ const option = builders.a3(a3Document, config)
 | `bar` | `buildBarOption(data, config, appearance)` | tabular data, `{columns, levels, types}` | `https://schema.rtemis.org/chart/bar/v1/schema.json` |
 | `line` | `buildLineOption(data, config, appearance)` | tabular data, `{columns, levels, types}` | `https://schema.rtemis.org/chart/line/v1/schema.json` |
 | `boxplot` | `buildBoxplotOption(data, config, appearance)` | box summaries, `{variables, levels, cells, comparisons}` | `https://schema.rtemis.org/chart/boxplot/v1/schema.json` |
+| `confusion` | `buildConfusionOption(data, config, appearance)` | counts, `{classes, panels}` | `https://schema.rtemis.org/chart/confusion/v1/schema.json` |
+| `roc`, `pr` | `buildRocOption(data, config, appearance)`, `buildPrOption(data, config, appearance)` | grouped curves, `{groups, curves}` | `https://schema.rtemis.org/chart/roc/v1/schema.json`, `https://schema.rtemis.org/chart/pr/v1/schema.json` |
 | `density` | `buildDensityOption(data, config, appearance)` | curves, `{samples}` | `https://schema.rtemis.org/chart/density/v1/schema.json` |
 | `histogram` | `buildHistogramOption(data, config, appearance)` | bins, `{edges, samples}` | `https://schema.rtemis.org/chart/histogram/v1/schema.json` |
 
@@ -45,9 +47,15 @@ A histogram takes bins the host computed: one set of edges, and per sample (an `
 
 A density chart takes curves the host computed: per sample, its size and the density at each evaluation point; rtemis.draw estimates with `stats::density()`. `kernelDensity(summary, counts, options)` estimates from a sample's counts in equal bins between its minimum and maximum, as rtemislive bins them in DuckDB: R's `bw.nrd0` or `bw.nrd` bandwidth (`ruleBandwidth()`) or a given one, times `adjust`, any `stats::density()` kernel, at `n` points from `cut` bandwidths below the minimum to `cut` above the maximum. The builder draws each curve with a filled area; `mode` overlays the curves or gives each a ridge row; `DENSITY_VALUE_LABEL` is the value axis name a host derives.
 
+A confusion chart takes the class order and each panel's count matrix (`counts[r][c]`, reference class `r` predicted as class `c`); the builder computes the rates (`confusionRates()`), fills each count by its reference row's fraction toward the theme's sign colors, and adds strips of sensitivity, specificity, PPV, NPV, accuracy, and balanced accuracy with `show_metrics`. The option places panels in percentages: before drawing and on every resize, a host fits it to its canvas and theme with `fitConfusion(echarts, {option, confusion: confusionLayout(config)}, theme, width, height)`, which measures labels and sizes square cells, and `confusionHeight()` gives the height a width needs.
+
+ROC and precision-recall charts take curves the host validated, ordered, and grouped: per group (a split and class) its summary (the pooled AUC or AP, or the mean and SD over resamples) and its chance level, and per curve its group, resample, vertices, and summary. The builders color each group by class or split, set the line type by split, draw per-resample curves thinner and translucent, and add the ROC chance diagonal or each PR group's prevalence baseline in its color; `curveLabel()` names a legend entry and `curveLegendTitle()` the title a host draws on its own row above the entries, and a point's tooltip reads its coordinates, summary, and resample without a formatter, each written by `ddSci()`, a port of rtemis.core's number format. `curveAspect()` gives the square plotting box.
+
 `lineAspect(option, config)` returns the ratio and pixel margins of the plotting box a host fits for a line chart with `square` or `equal_axes`; `aspectHints` maps each chart type that has such a box to its function.
 
 `a3SurfaceHints(document, config, appearance)` returns the height that keeps the layout's row spacing, the plot body height, and the glyph sizes, for a renderer that sizes its surface before drawing.
+
+`ddSci(value, decimals = 2, hi = 1e6)` writes a number as rtemis.core's `ddSci()` does: fixed to `decimals` places, with a nonzero value that rounds to zero at `decimals` places in scientific notation ("4e-04"). The curve, confusion, and fit labels use it; `formatNumber()` writes other tooltip values to three significant digits.
 
 ## Themes
 

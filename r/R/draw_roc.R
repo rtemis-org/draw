@@ -291,28 +291,14 @@ method(roc_data, ROCConfig) <- function(config, data) {
   )
 }
 
-#' Compile ROC records to independent native line series
+#' Build the request of a ROC chart
+#'
+#' `@rtemis/draw`'s ROC builder draws the curves and the chance diagonal.
 #' @inheritParams roc_data
-#' @return An [EChartsOption] with full legend and an independent chance line.
+#' @return [BuildRequest] of type `"roc"`.
 #' @keywords internal
 #' @noRd
 roc_option <- new_generic("roc_option", "config")
 method(roc_option, ROCConfig) <- function(config, data) {
-  diagonal <- if (config@diagonal) {
-    list(LineSeries(
-      data = list(c(0, 0), c(1, 1)),
-      show_symbol = FALSE,
-      silent = TRUE,
-      legend_hover_link = FALSE,
-      # Background references must not consume a group palette color.
-      item_style = ItemStyle(color = config@diagonal_color),
-      line_style = LineStyle(
-        color = config@diagonal_color,
-        type = "dashed",
-        width = 1
-      ),
-      z = 1
-    ))
-  }
-  curve_option(config, roc_data(config, data), before = diagonal)
+  curve_request("roc", config, roc_data(config, data))
 }

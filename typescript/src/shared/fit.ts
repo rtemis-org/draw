@@ -5,6 +5,8 @@
  * each belongs to. spec: draw/shared-builders#fits
  */
 
+import { ddSci } from "./format.ts";
+
 /**
  * The fit members of a config. `fit`, `fit_params`, `fit_per_group`, `se`,
  * `se_times`, and `n_fit` tell the host what to fit; the builder reads
@@ -82,7 +84,7 @@ export const POOLED_FIT_COLOR = "#808080";
 
 /**
  * The legend entry of a fitted series: its name, joined to `fit_name`, with
- * R² appended when `rsq` is set. A series without a name and a pooled fit are
+ * R² at three decimals (`ddSci()`) appended when `rsq` is set. A series without a name and a pooled fit are
  * named "Fit" when `rsq` asks for a label.
  */
 export function fitLabel(
@@ -93,7 +95,7 @@ export function fitLabel(
   let name = base;
   if (config.fit_name) name = [base, config.fit_name].filter(Boolean).join(" - ");
   if (config.rsq) {
-    const value = typeof rsq === "number" && Number.isFinite(rsq) ? rsq.toFixed(3) : "NA";
+    const value = ddSci(rsq, 3);
     name = `${name ?? "Fit"} (R² = ${value})`;
   }
   return name;

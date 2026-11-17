@@ -14,7 +14,7 @@ for (const source of input.charts) {
   for (const theme of [payload.theme, payload.themeDark || payload.theme, payload.theme]) {
     const densePanels = payload.option.grid.length > 4 && payload.option.yAxis[0].data.some(x => x.length > 20);
     for (const [width, height] of (densePanels ? [[800, 1000], [344, 1500], [1100, 650]] : [[800, 550], [344, 900], [1100, 500]])) {
-      confusion.prepare(echarts, payload, theme, width, height);
+      confusion.fitConfusion(echarts, payload, theme, width, height);
       payload.option.animation = false;
       const chart = echarts.init(null, theme, {renderer: 'svg', ssr: true, width, height});
       try {
@@ -33,7 +33,7 @@ for (const source of input.charts) {
             assert.ok((Math.max(a, b) + .05) / (Math.min(a, b) + .05) >= 4.5,
               'Cell text does not contrast with its resolved fill');
             if (isCount) {
-              // Exercise ECharts' native tooltip, not just the serialized
+              // Exercise ECharts' native tooltip as well as the serialized
               // string: ordinal display text must retain trailing zeros.
               const tooltip = series.formatTooltip(i, false);
               const fraction = tooltip.blocks.find(block => block.name === 'Row fraction');
@@ -83,10 +83,10 @@ for (const source of input.charts) {
     }
   }
   if (payload.option.yAxis[0].data.some(x => x.length > 20)) {
-    assert.throws(() => confusion.prepare(echarts, payload, payload.theme, 200, 100), /Increase confusion figure dimensions/);
+    assert.throws(() => confusion.fitConfusion(echarts, payload, payload.theme, 200, 100), /Increase confusion figure dimensions/);
   }
-  const wide = confusion.heightForWidth(echarts, payload, payload.theme, 1100);
-  const narrow = confusion.heightForWidth(echarts, payload, payload.theme, 344);
+  const wide = confusion.confusionHeight(echarts, payload, payload.theme, 1100);
+  const narrow = confusion.confusionHeight(echarts, payload, payload.theme, 344);
   assert.ok(Number.isFinite(wide) && Number.isFinite(narrow));
 }
 console.log('Confusion squares, theme fades, faint margins, clean labels, bounds, and resize passed');

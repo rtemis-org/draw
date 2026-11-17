@@ -13,7 +13,7 @@ const body = {style: {}, classList: {contains: () => false}};
 const context = {
   document: {body}, window: {}, HTMLWidgets: {widget() {}},
   rtemisA3: require(path.join(directory, 'a3.js')),
-  rtemisPanels: layout, rtemisConfusion: require(path.join(directory, 'confusion.js')),
+  rtemisPanels: layout,
   echarts: {...echarts, init: (_, theme, options) =>
     echarts.init(null, theme, {...options, renderer: 'svg', ssr: true})}
 };

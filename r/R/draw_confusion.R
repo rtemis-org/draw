@@ -277,74 +277,28 @@ method(confusion_data, ConfusionConfig) <- function(config, data) {
 }
 
 
-#' Compile confusion counts and marginal metrics to native ECharts layers
+#' Build the request of a confusion chart
 #'
-#' Labels and colors are materialized so the SVG path requires no callbacks.
-#' Separate continuous maps for correct/error cells follow the same row-fraction
-#' convention as the web interface. Metric cells use a neutral third map.
+#' Counts every panel's frequency records (`confusion_data()`) and hands the
+#' class order and the count matrices to `@rtemis/draw`'s confusion builder,
+#' which computes the rates and draws the matrix and its metric strips; the
+#' widget and SVG export fit the panels to the canvas (`fitConfusion()`).
+#' Cells fade toward the theme's sign colors unless the config sets colors.
+#' spec: draw/shared-builders#confusion
 #'
 #' @inheritParams confusion_data
-#' @return An [EChartsOption] containing the complete panel composition.
+#' @param theme Optional [Theme]: The theme whose sign colors fill the cells.
+#' @return [BuildRequest] of type `"confusion"`.
 #' @keywords internal
 #' @noRd
 confusion_option <- new_generic("confusion_option", "config")
-method(confusion_option, ConfusionConfig) <- function(config, data) {
+method(confusion_option, ConfusionConfig) <- function(
+  config,
+  data,
+  theme = NULL
+) {
   prepared <- confusion_data(config, data)
-  classes <- prepared[["classes"]]
-  panels <- prepared[["panels"]]
-  k <- length(classes)
-  cols <- min(config@ncol, length(panels))
-  rows <- ceiling(length(panels) / cols)
-  series <- maps <- grids <- xs <- ys <- titles <- list()
-  if (!is.null(config@title)) {
-    titles <- list(Title(text = config@title, left = "center", top = 0L))
-  }
-  # A compiled native option has a usable light fallback. The shared browser/
-  # SVG layout resolves nullable colors against the actual render theme.
-  low_color <- config@low_color %||% "#FFFFFF"
-  summary_color <- config@summary_color %||% "#EFEFEF"
-  # Use linear sRGB luminance when choosing black or white count text.
-  contrast <- function(color) {
-    rgb <- as.numeric(grDevices::col2rgb(color)) / 255
-    linear <- ifelse(rgb <= .04045, rgb / 12.92, ((rgb + .055) / 1.055)^2.4)
-    if (sum(linear * c(.2126, .7152, .0722)) > .179) "#000000" else "#FFFFFF"
-  }
-  format_rate <- function(value) {
-    if (is.na(value)) {
-      "NA"
-    } else {
-      formatC(value, format = "f", digits = config@digits, decimal.mark = ".")
-    }
-  }
-  cell_label <- function(text, color) {
-    to_list(LabelOption(
-      show = TRUE,
-      position = "inside",
-      formatter = text,
-      text_style = TextStyle(
-        font_size = config@font_size,
-        color = contrast(color)
-      )
-    ))
-  }
-  top_offset <- if (is.null(config@title)) 0 else 7
-  for (i in seq_along(panels)) {
-    p <- panels[[i]]
-    left <- 100 * ((i - 1L) %% cols) / cols
-    top <- top_offset + (100 - top_offset) * ((i - 1L) %/% cols) / rows
-    pw <- 100 / cols
-    ph <- (100 - top_offset) / rows
-    titles[[length(titles) + 1L]] <- Title(
-      text = if (length(panels) > 1L || !is.null(config@panel)) {
-        p[["name"]]
-      } else {
-        NULL
-      },
-      text_style = TextStyle(font_size = config@font_size + 2),
-      left = paste0(left + pw / 2, "%"),
-      top = paste0(top, "%"),
-      text_align = "center"
-    )
+  for (p in prepared[["panels"]]) {
     if (p[["omitted"]] > 0) {
       msg(
         p[["name"]],
@@ -354,233 +308,36 @@ method(confusion_option, ConfusionConfig) <- function(config, data) {
         sep = ""
       )
     }
-    base <- length(grids)
-    # Count matrix, narrow right/bottom metric strips, and overall summary.
-    # Percentages provide a native fallback; the shared renderer fits square
-    # count cells and aligned metric strips to the measured canvas.
-    count_width <- if (config@show_metrics) .56 else .76
-    count_height <- if (config@show_metrics) .60 else .74
-    layouts <- list(c(.18, .20, count_width, count_height))
-    xlabels <- list(classes)
-    ylabels <- list(classes)
-    if (config@show_metrics) {
-      layouts <- c(
-        layouts,
-        list(
-          c(.75, .20, .22, .60),
-          c(.18, .82, .56, .15),
-          c(.75, .82, .22, .15)
-        )
-      )
-      xlabels <- c(
-        xlabels,
-        list(c("Sens.", "Spec."), classes, "Summary")
-      )
-      ylabels <- c(ylabels, list(classes, c("PPV", "NPV"), c("Accuracy", "BA")))
-    }
-    for (j in seq_along(layouts)) {
-      box <- layouts[[j]]
-      index <- base + j
-      # Disable outer-bound shrinking: every strip must retain the exact same
-      # category geometry as the matrix it annotates. Margins reserve labels.
-      grid <- to_list(Grid(
-        left = paste0(left + pw * box[[1L]], "%"),
-        top = paste0(top + ph * box[[2L]], "%"),
-        width = paste0(pw * box[[3L]], "%"),
-        height = paste0(ph * box[[4L]], "%"),
-        contain_label = FALSE
-      ))
-      grid[["outerBoundsMode"]] <- "none"
-      grids[[index]] <- grid
-      xs[[index]] <- Axis(
-        type = "category",
-        grid_index = index - 1L,
-        data = as.list(xlabels[[j]]),
-        position = "top",
-        boundary_gap = TRUE,
-        name = if (j == 1L) config@xlab else NULL,
-        name_location = "middle",
-        name_gap = 30,
-        axis_line = AxisLine(show = FALSE),
-        split_line = SplitLine(show = FALSE),
-        axis_label = AxisLabel(
-          show = j %in% c(1L, 2L),
-          interval = 0,
-          text_style = TextStyle(font_size = config@font_size)
-        )
-      )
-      ys[[index]] <- Axis(
-        type = "category",
-        grid_index = index - 1L,
-        data = as.list(ylabels[[j]]),
-        inverse = TRUE,
-        boundary_gap = TRUE,
-        name = if (j == 1L) config@ylab else NULL,
-        name_location = "middle",
-        name_gap = 50,
-        axis_line = AxisLine(show = FALSE),
-        split_line = SplitLine(show = FALSE),
-        axis_label = AxisLabel(
-          show = j %in% c(1L, 3L),
-          interval = 0,
-          text_style = TextStyle(font_size = config@font_size)
-        )
-      )
-    }
-    for (correct in c(TRUE, FALSE)) {
-      at <- which(
-        if (correct) diag(TRUE, k) else !diag(TRUE, k),
-        arr.ind = TRUE
-      )
-      hue <- if (correct) config@correct_color else config@incorrect_color
-      ramp <- grDevices::colorRamp(c(low_color, hue))
-      marks <- lapply(seq_len(nrow(at)), function(j) {
-        # which(..., arr.ind = TRUE) can retain row/col names on a scalar;
-        # htmlwidgets preserves named scalars as JSON objects, not coordinates.
-        r <- unname(at[j, 1L])
-        column <- unname(at[j, 2L])
-        fraction <- p[["fraction"]][r, column]
-        rgb <- ramp(if (is.na(fraction)) 0 else fraction)
-        fill <- grDevices::rgb(
-          rgb[[1L]],
-          rgb[[2L]],
-          rgb[[3L]],
-          maxColorValue = 255
-        )
-        list(
-          value = list(
-            column - 1L,
-            r - 1L,
-            if (is.na(fraction)) 0 else fraction,
-            p[["counts"]][r, column],
-            classes[[r]],
-            classes[[column]],
-            if (is.na(fraction)) NULL else fraction,
-            format_rate(fraction)
-          ),
-          label = cell_label(
-            format(p[["counts"]][r, column], scientific = FALSE, trim = TRUE),
-            fill
-          )
-        )
-      })
-      s <- to_list(HeatmapSeries(
-        name = p[["name"]],
-        data = marks,
-        x_axis_index = base,
-        y_axis_index = base,
-        item_style = ItemStyle(
-          border_width = 1,
-          border_color = low_color
-        )
-      ))
-      s[["dimensions"]] <- as.list(c(
-        "Column",
-        "Row",
-        "Color fraction",
-        "Count",
-        "Reference",
-        "Predicted",
-        "Row fraction"
-      ))
-      # DimensionDefinition in ECharts util/types.ts supports an independent
-      # displayName and ordinal type. Keep the full numeric fraction above;
-      # the native tooltip reads fixed-decimal text without a JS formatter.
-      s[["dimensions"]][[8L]] <- list(
-        name = "Row fraction label",
-        displayName = "Row fraction",
-        type = "ordinal"
-      )
-      s[["encode"]] <- list(
-        x = 0L,
-        y = 1L,
-        tooltip = as.list(c(4L, 5L, 3L, 7L))
-      )
-      map <- to_list(VisualMap(
-        show = FALSE,
-        min = 0,
-        max = 1,
-        in_range = list(color = c(low_color, hue))
-      ))
-      map[["dimension"]] <- 2L
-      map[["seriesIndex"]] <- length(series)
-      maps[[length(maps) + 1L]] <- map
-      series[[length(series) + 1L]] <- s
-    }
-    if (config@show_metrics) {
-      # Each strip contains only metrics; its positions share the count grid's
-      # row or column layout. Store every visible label as plain text.
-      right <- bottom <- list()
-      for (j in seq_len(k)) {
-        for (m in 1:2) {
-          right[[length(right) + 1L]] <- list(
-            value = list(m - 1L, j - 1L, 0),
-            label = cell_label(
-              format_rate(p[[c("sensitivity", "specificity")[[m]]]][[j]]),
-              summary_color
-            )
-          )
-          bottom[[length(bottom) + 1L]] <- list(
-            value = list(j - 1L, m - 1L, 0),
-            label = cell_label(
-              format_rate(p[[c("ppv", "npv")[[m]]]][[j]]),
-              summary_color
-            )
-          )
-        }
-      }
-      # Stack the two overall summaries so their names do not compete for
-      # half of an already narrow strip at phone widths.
-      overall <- list(
-        list(
-          value = list(0L, 0L, 0),
-          label = cell_label(
-            paste0("Accuracy\n", format_rate(p[["accuracy"]])),
-            summary_color
-          )
-        ),
-        list(
-          value = list(0L, 1L, 0),
-          label = cell_label(
-            paste0("BA\n", format_rate(p[["balanced_accuracy"]])),
-            summary_color
-          )
-        )
-      )
-      for (j in 1:3) {
-        map <- to_list(VisualMap(
-          show = FALSE,
-          min = 0,
-          max = 1,
-          in_range = list(color = rep(summary_color, 2L))
-        ))
-        map[["dimension"]] <- 2L
-        map[["seriesIndex"]] <- length(series)
-        maps[[length(maps) + 1L]] <- map
-        series[[length(series) + 1L]] <- HeatmapSeries(
-          data = list(right, bottom, overall)[[j]],
-          x_axis_index = base + j,
-          y_axis_index = base + j,
-          silent = TRUE,
-          item_style = ItemStyle(
-            border_width = 1,
-            border_color = low_color
-          )
-        )
-      }
-    }
   }
-  EChartsOption(
-    title = titles,
-    grid = grids,
-    x_axis = xs,
-    y_axis = ys,
-    visual_map = maps,
-    series = series,
-    legend = Legend(show = FALSE),
-    tooltip = Tooltip(trigger = "item", confine = TRUE)
+  sign <- theme_sign_colors(theme)
+  document <- list(
+    classes = I(prepared[["classes"]]),
+    panels = lapply(prepared[["panels"]], function(p) {
+      list(
+        name = jsonlite::unbox(p[["name"]]),
+        counts = lapply(seq_len(nrow(p[["counts"]])), function(r) {
+          I(unname(p[["counts"]][r, ]))
+        })
+      )
+    })
+  )
+  BuildRequest(
+    type = "confusion",
+    data = as.character(jsonlite::toJSON(
+      document,
+      auto_unbox = FALSE,
+      digits = NA
+    )),
+    config = config_members(config),
+    appearance = list(
+      signColors = list(
+        negative = sign[["negative"]],
+        positive = sign[["positive"]]
+      )
+    )
   )
 }
+
 
 #' Render confusion panels at the container width
 #'
@@ -604,7 +361,7 @@ method(draw, ConfusionConfig) <- function(
   data = NULL
 ) {
   built <- compile(option, data = data, theme = theme)
-  panels <- length(built@grid) / if (option@show_metrics) 4L else 1L
+  panels <- length(jsonlite::parse_json(built@data)[["panels"]])
   cols <- min(option@ncol, panels)
   rows <- ceiling(panels / cols)
   height <- height %||% (rows * 500 + if (is.null(option@title)) 0 else 40)

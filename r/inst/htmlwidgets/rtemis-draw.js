@@ -198,11 +198,14 @@ function rtemisDrawFactory(el, width, height, bounded = false, onBackground = ()
       }
       renderedDark = dark;
       currentTheme = themeObj;
-      if (x.confusion && !bounded) {
-        currentHeight = rtemisConfusion.heightForWidth(echarts, x, themeObj, currentWidth);
-        el.style.height = `${currentHeight}px`;
+      // The package fits a confusion chart's square cells and strips.
+      if (x.confusion) {
+        if (!bounded) {
+          currentHeight = RtemisDraw.confusionHeight(echarts, x, themeObj, currentWidth);
+          el.style.height = `${currentHeight}px`;
+        }
+        RtemisDraw.fitConfusion(echarts, x, themeObj, currentWidth, currentHeight);
       }
-      rtemisConfusion.prepare(echarts, x, themeObj, currentWidth, currentHeight);
 
       if (themeObj) {
         // Propagate the global theme text color to visualMap labels.
@@ -363,10 +366,10 @@ function rtemisDrawFactory(el, width, height, bounded = false, onBackground = ()
 
         if (currentPayload?.confusion) {
           if (!bounded) {
-            currentHeight = rtemisConfusion.heightForWidth(echarts, currentPayload, currentTheme, width);
+            currentHeight = RtemisDraw.confusionHeight(echarts, currentPayload, currentTheme, width);
             el.style.height = `${currentHeight}px`;
           }
-          rtemisConfusion.prepare(echarts, currentPayload, currentTheme, width, currentHeight);
+          RtemisDraw.fitConfusion(echarts, currentPayload, currentTheme, width, currentHeight);
           if (chart) {
             chart.resize({width, height: currentHeight});
             chart.setOption(currentPayload.option, true);

@@ -35,6 +35,8 @@
 #' @param group Optional Character: Column identifying samples or models.
 #' @param n_bins Integer `[1, Inf)`: Requested number of bins per group.
 #' @param bin_method Character \{"quantile", "equidistant"\}: Binning rule.
+#' @param digits Integer: Decimal places for displayed probabilities and Brier
+#'   scores, written as [rtemis.core::ddSci()] writes them.
 #' @param na_rm Logical: Remove incomplete observation/probability pairs.
 #' @param mode Character \{"lines", "markers", "lines+markers"\}: Curve display.
 #' @param show_brier Logical: Include each sample's Brier score in its legend label.

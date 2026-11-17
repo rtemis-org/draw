@@ -2256,12 +2256,7 @@ heatmap_option <- function(
             } else if (is.na(val)) {
               ""
             } else {
-              formatC(
-                val,
-                format = "f",
-                digits = value_digits,
-                decimal.mark = "."
-              )
+              ddSci(as.numeric(val), value_digits)
             }
           )
         )
@@ -2386,7 +2381,7 @@ heatmap_option <- function(
     "function esc(s){return String(s).replace(/[&<>\"']/g,function(c){",
     "return {'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',\"'\":'&#39;'}[c];});}",
     "return function(p){if(!p.value)return '';",
-    "var v=p.value[2]==null?'NA':p.value[2].toFixed(",
+    "var v=p.value[2]==null?'NA':RtemisDraw.ddSci(p.value[2],",
     value_digits,
     ");",
     "if(p.data&&p.data.label&&",
@@ -2920,7 +2915,8 @@ heatmap_option <- function(
 #'   (or `dendro_color`); within-cluster branches share a deterministic color.
 #' @param show_values Logical: Whether to print the cell value as a label inside
 #'   each cell.
-#' @param value_digits Integer: Decimal places used in cell labels and the tooltip.
+#' @param value_digits Integer: Decimal places used in cell labels and the
+#'   tooltip, written as [rtemis.core::ddSci()] writes them.
 #' @param show_colorbar Logical: Whether to display the continuous color-scale bar.
 #' @param colorbar_orient Character \{"vertical", "horizontal"\}: Orientation of the
 #'   color bar.

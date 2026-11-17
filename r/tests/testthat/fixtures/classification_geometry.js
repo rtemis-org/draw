@@ -17,7 +17,7 @@ for (const original of input.charts) {
       current.option.animation = false;
       chart.resize({width, height});
       layout.fit(current, width, height);
-      confusion.prepare(echarts, current, current.theme, width, height);
+      if (current.confusion) confusion.fitConfusion(echarts, current, current.theme, width, height);
       chart.setOption(current.option, true);
       layout.fitAxes(chart, current);
       layout.positionLegend(echarts, chart, current);

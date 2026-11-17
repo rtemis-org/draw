@@ -113,7 +113,8 @@ requiring a computed or supplied tree.}
 
 \item{show_values}{Logical: Print each cell's value.}
 
-\item{value_digits}{Integer \verb{[0, Inf)}: Digits for printed values.}
+\item{value_digits}{Integer \verb{[0, Inf)}: Decimal places for printed values,
+written as \code{\link[rtemis.core:ddSci]{rtemis.core::ddSci()}} writes them.}
 
 \item{show_colorbar}{Logical: Draw the color bar.}
 

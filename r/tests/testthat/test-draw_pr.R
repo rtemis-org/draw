@@ -218,7 +218,7 @@ test_that("drawn curves are stepped and their area is average precision", {
   y <- factor(sample(c("no", "yes"), 300L, TRUE, c(.9, .1)))
   score <- round(stats::runif(300L) * .7 + .3 * (y == "yes"), 2L)
   records <- pr_input(y, score)
-  option <- draw_pr(records)[["x"]][["option"]]
+  option <- raw_option(draw_pr(records))
   curve <- option[["series"]][[1L]]
   expect_identical(curve[["step"]], "start")
   expect_false(curve[["smooth"]])
@@ -241,9 +241,7 @@ test_that("each curve group draws its own prevalence baseline", {
     list(Training = y, Test = skewed),
     list(Training = pr_test_scores(), Test = pr_test_scores())
   )
-  option <- draw_pr(records, palette = c("#111111", "#222222"))[["x"]][[
-    "option"
-  ]]
+  option <- raw_option(draw_pr(records, palette = c("#111111", "#222222")))
   series <- option[["series"]]
   expect_length(series, 4L)
   # Curves precede their baselines: a legend key styles from the first series.
@@ -263,11 +261,11 @@ test_that("each curve group draws its own prevalence baseline", {
   expect_identical(series[[3L]][["lineStyle"]][["type"]], "dotted")
   expect_true(series[[3L]][["silent"]])
   expect_length(
-    draw_pr(records, baseline = FALSE)[["x"]][["option"]][["series"]],
+    raw_option(draw_pr(records, baseline = FALSE))[["series"]],
     2L
   )
   table <- data.frame(recall = c(0, 1), precision = c(1, .5))
-  expect_length(draw_pr(table)[["x"]][["option"]][["series"]], 1L)
+  expect_length(raw_option(draw_pr(table))[["series"]], 1L)
 })
 
 test_that("fold summaries count each fold once and baselines use defined folds", {
@@ -294,9 +292,9 @@ test_that("fold summaries count each fold once and baselines use defined folds",
     widget <- draw_pr(records, variant = "per_resample", palette = "#123456"),
     "1 undefined curve"
   )
-  option <- widget[["x"]][["option"]]
+  option <- raw_option(widget)
   expect_length(option[["legend"]][["data"]], 1L)
-  expect_match(option[["legend"]][["data"]][[1L]], "AP mean")
+  expect_match(option[["legend"]][["data"]][[1L]], "\\(([0-9.]+|NA)\\)$")
   expect_length(option[["series"]], 3L)
   expect_identical(
     option[["series"]][[3L]][["name"]],
@@ -313,13 +311,13 @@ test_that("fold summaries count each fold once and baselines use defined folds",
 })
 
 test_that("hover labels round without changing numeric vertices or AP", {
-  option <- draw_pr(pr_test_records(), digits = 2L)[["x"]][["option"]]
+  option <- raw_option(draw_pr(pr_test_records(), digits = 2L))
   curve <- option[["series"]][[1L]]
   point <- curve[["data"]][[4L]]
   expect_equal(point[[2L]], 2 / 3)
   expect_identical(point[[7L]], "0.67")
   expect_identical(point[[8L]], "0.83")
-  expect_match(option[["legend"]][["data"]][[1L]], "yes \\(AP 0.83\\)")
+  expect_match(option[["legend"]][["data"]][[1L]], "yes 0.83", fixed = TRUE)
   expect_identical(
     vapply(curve[["dimensions"]][1:5], identity, character(1L)),
     c("Recall", "Precision", "AP", "Resample", "Missing pairs")
@@ -334,13 +332,14 @@ test_that("precision-recall SVG contains stepped curves, baseline, and labels", 
   on.exit(unlink(path), add = TRUE)
   widget <- draw_pr(pr_test_records(), palette = "#123456", filename = path)
   text <- paste(readLines(path, warn = FALSE), collapse = "\n")
-  expect_match(text, "yes (AP 0.833)", fixed = TRUE)
+  expect_match(text, "yes 0.83", fixed = TRUE)
+  expect_match(text, ">AP<", fixed = TRUE)
   expect_match(text, 'stroke="#123456"', fixed = TRUE)
   expect_match(text, 'stroke-dasharray', fixed = TRUE)
   expect_false(grepl("<image", text, fixed = TRUE))
   expect_false(grepl('fill-opacity="0"[^>]*ecmeta_ssr_type="chart"', text))
   grid <- static_aspect(
-    widget[["x"]][["option"]],
+    raw_option(widget),
     widget[["x"]][["aspect"]],
     800,
     500

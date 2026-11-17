@@ -35,7 +35,10 @@ test_that("ROC configs validate settings and preserve portable bindings", {
     on.exit(unlink(path), add = TRUE)
     write_chart_config(cfg, path, complete = complete)
     back <- read_chart_config(path)
-    expect_identical(to_list(compile(back, data)), to_list(compile(cfg, data)))
+    expect_identical(
+      raw_option(compile(back, data)),
+      raw_option(compile(cfg, data))
+    )
   }
   schema <- chart_schema(
     ROCConfig,

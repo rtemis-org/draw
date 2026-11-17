@@ -168,13 +168,13 @@ test_that("fold AUC summaries count each fold once and keep undefined uncertaint
   expect_equal(g[["available"]], 2)
   expect_equal(g[["total"]], 3)
   expect_equal(out[["undefined"]], 1)
-  one <- draw_roc(d, variant = "per_resample")[["x"]][["option"]]
-  expect_match(one[["legend"]][["data"]][[1]], "SD NA")
+  one <- raw_option(draw_roc(d, variant = "per_resample"))
+  expect_match(one[["legend"]][["data"]][[1]], "\\(NA\\)$")
   expect_message(
     widget <- draw_roc(records, variant = "per_resample", palette = "#123456"),
     "1 undefined curve"
   )
-  option <- widget[["x"]][["option"]]
+  option <- raw_option(widget)
   expect_length(option[["legend"]][["data"]], 1)
   expect_null(option[["series"]][[1]][["name"]])
   expect_identical(
@@ -194,8 +194,7 @@ test_that("fold AUC summaries count each fold once and keep undefined uncertaint
     "function\\s*\\(",
     jsonlite::toJSON(option, auto_unbox = TRUE)
   ))
-  wire <- widget_wire(widget)
-  expect_type(wire[["option"]][["series"]][[2]][["data"]][[1]][[1]], "integer")
+  expect_identical(widget_wire(widget)[["build"]][["type"]], "roc")
 })
 
 test_that("ROC SVG contains curves, chance line, full labels, and a square plotting grid", {
@@ -204,13 +203,14 @@ test_that("ROC SVG contains curves, chance line, full labels, and a square plott
   on.exit(unlink(path), add = TRUE)
   widget <- draw_roc(roc_test_records(), palette = "#123456", filename = path)
   text <- paste(readLines(path, warn = FALSE), collapse = "\n")
-  expect_match(text, "yes \\(AUC 0.875\\)")
-  expect_match(text, "AUC 0.875")
+  expect_match(text, "yes 0.88", fixed = TRUE)
+  expect_match(text, ">AUC<", fixed = TRUE)
+  expect_true(widget[["x"]][["legendTitleAbove"]])
   expect_match(text, 'stroke="#123456"')
   expect_match(text, 'stroke="#888888"')
   expect_false(grepl("<image", text, fixed = TRUE))
   grid <- static_aspect(
-    widget[["x"]][["option"]],
+    raw_option(widget),
     widget[["x"]][["aspect"]],
     800,
     500
@@ -245,13 +245,13 @@ test_that("classification labels and square ROC axes fit phone and SVG layouts",
   on.exit(unlink(path), add = TRUE)
   jsonlite::write_json(
     list(
-      charts = lapply(widgets, `[[`, "x"),
+      charts = lapply(widgets, built_payload),
       echarts = system.file(
         "htmlwidgets/lib/echarts/echarts.min.js",
         package = "rtemis.draw"
       ),
       confusion = system.file(
-        "htmlwidgets/lib/draw/confusion.js",
+        "htmlwidgets/lib/draw/rtemis-draw-builders.js",
         package = "rtemis.draw"
       ),
       layout = system.file(
@@ -282,15 +282,15 @@ test_that("ROC legends use compact labels and portable corner placement", {
   default <- draw_roc(records)
   expect_identical(default[["x"]][["legendPosition"]], "top")
   expect_identical(
-    default[["x"]][["option"]][["legend"]][["data"]],
-    list("yes (AUC 0.875)")
+    raw_option(default)[["legend"]][["data"]],
+    list("yes 0.88")
   )
   records[["split"]] <- "Validation"
   named <- draw_roc(records, legend_position = "top-left")
   expect_identical(named[["x"]][["legendPosition"]], "top-left")
   expect_identical(
-    named[["x"]][["option"]][["legend"]][["data"]],
-    list("Validation: yes (AUC 0.875)")
+    raw_option(named)[["legend"]][["data"]],
+    list("Validation 0.88")
   )
   expect_equal(named[["height"]], default[["height"]])
   expect_identical(
@@ -339,7 +339,7 @@ test_that("ROC legend anchors and complete labels survive resize and selection",
   on.exit(unlink(path), add = TRUE)
   jsonlite::write_json(
     list(
-      charts = lapply(widgets, `[[`, "x"),
+      charts = lapply(widgets, built_payload),
       echarts = system.file(
         "htmlwidgets/lib/echarts/echarts.min.js",
         package = "rtemis.draw"
@@ -380,26 +380,24 @@ test_that("ROC hover labels round without changing numeric vertices or AUC", {
     fold = "Fold 1",
     omitted = 0L
   )
+  # The labels are `ddSci()` text: 1/3 rounds to zero at no decimals.
+  labels <- list(
+    "0" = c("3.3e-01", "1", "1"),
+    "2" = c("0.33", "0.67", "0.67"),
+    "3" = c("0.333", "0.667", "0.667")
+  )
   for (digits in c(0L, 2L, 3L)) {
     widget <- draw_roc(records, variant = "per_resample", digits = digits)
-    option <- widget[["x"]][["option"]]
+    option <- raw_option(widget)
     expect_identical(option[["tooltip"]][["trigger"]], "item")
-    expect_identical(option[["legend"]][["itemStyle"]][["opacity"]], 1)
+    expect_equal(option[["legend"]][["itemStyle"]][["opacity"]], 1)
     curve <- option[["series"]][[2L]]
     expect_true(curve[["showSymbol"]])
-    expect_identical(curve[["itemStyle"]][["opacity"]], 0)
-    expect_identical(curve[["emphasis"]][["itemStyle"]][["opacity"]], 1)
+    expect_equal(curve[["itemStyle"]][["opacity"]], 0)
+    expect_equal(curve[["emphasis"]][["itemStyle"]][["opacity"]], 1)
     value <- curve[["data"]][[2L]]
     expect_equal(unlist(value[1:3]), c(1 / 3, 2 / 3, 2 / 3))
-    expect_identical(
-      unlist(value[6:8]),
-      formatC(
-        c(1 / 3, 2 / 3, 2 / 3),
-        format = "f",
-        digits = digits,
-        decimal.mark = "."
-      )
-    )
+    expect_identical(unlist(value[6:8]), labels[[as.character(digits)]])
     expect_identical(
       curve[["encode"]][["tooltip"]],
       as.list(c(5L, 6L, 7L, 3L))
@@ -412,9 +410,8 @@ test_that("ROC hover labels round without changing numeric vertices or AUC", {
         type = "ordinal"
       )
     )
-    # Numeric geometry and ordinal display text must both survive the wire.
-    wire <- widget_wire(widget)
-    expect_identical(wire[["option"]][["series"]][[2L]][["data"]][[2L]], value)
+    # The widget carries the request; the package writes the display text.
+    expect_identical(widget_wire(widget)[["build"]][["type"]], "roc")
   }
 })
 
@@ -428,7 +425,8 @@ test_that("static ROC export omits invisible hover symbols and retains its color
   expect_false(grepl('fill-opacity="0"[^>]*ecmeta_ssr_type="chart"', svg))
   expect_match(svg, 'fill="#123456"', fixed = TRUE)
   expect_match(svg, 'stroke="#123456"', fixed = TRUE)
-  expect_match(svg, "AUC 0.875", fixed = TRUE)
+  expect_match(svg, "yes 0.88", fixed = TRUE)
+  expect_match(svg, ">AUC<", fixed = TRUE)
 })
 test_that("ROC and precision-recall curves take the same theme colors", {
   skip_if_no_node()

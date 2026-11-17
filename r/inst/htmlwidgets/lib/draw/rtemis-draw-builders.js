@@ -24,6 +24,7 @@ var RtemisDraw = (() => {
     A3_CHART_CONFIG_MEMBERS: () => A3_CHART_CONFIG_MEMBERS,
     BAR_CHART_CONFIG_MEMBERS: () => BAR_CHART_CONFIG_MEMBERS,
     BOXPLOT_CHART_CONFIG_MEMBERS: () => BOXPLOT_CHART_CONFIG_MEMBERS,
+    CONFUSION_CHART_CONFIG_MEMBERS: () => CONFUSION_CHART_CONFIG_MEMBERS,
     DEFAULT_FONT_FAMILY: () => DEFAULT_FONT_FAMILY,
     DEFAULT_MARGIN: () => DEFAULT_MARGIN,
     DEFAULT_PAD: () => DEFAULT_PAD,
@@ -34,7 +35,9 @@ var RtemisDraw = (() => {
     HISTOGRAM_CHART_CONFIG_MEMBERS: () => HISTOGRAM_CHART_CONFIG_MEMBERS,
     LINE_CHART_CONFIG_MEMBERS: () => LINE_CHART_CONFIG_MEMBERS,
     MAX_SYMBOL_SIZE: () => MAX_SYMBOL_SIZE,
+    PR_CHART_CONFIG_MEMBERS: () => PR_CHART_CONFIG_MEMBERS,
     RENDERER_NAMES: () => RENDERER_NAMES,
+    ROC_CHART_CONFIG_MEMBERS: () => ROC_CHART_CONFIG_MEMBERS,
     RTEMIS_PALETTE: () => RTEMIS_PALETTE,
     SCATTER_CHART_CONFIG_MEMBERS: () => SCATTER_CHART_CONFIG_MEMBERS,
     SIGNIFICANT_DIGITS: () => SIGNIFICANT_DIGITS,
@@ -48,15 +51,26 @@ var RtemisDraw = (() => {
     buildA3Option: () => buildA3Option,
     buildBarOption: () => buildBarOption,
     buildBoxplotOption: () => buildBoxplotOption,
+    buildConfusionOption: () => buildConfusionOption,
     buildDensityOption: () => buildDensityOption,
     buildHistogramOption: () => buildHistogramOption,
     buildLineOption: () => buildLineOption,
+    buildPrOption: () => buildPrOption,
+    buildRocOption: () => buildRocOption,
     buildScatterOption: () => buildScatterOption,
     builders: () => builders,
     calcLimits: () => calcLimits,
     calcLimitsFromZero: () => calcLimitsFromZero,
     classCount: () => classCount,
+    confusionHeight: () => confusionHeight,
+    confusionLayout: () => confusionLayout,
+    confusionRates: () => confusionRates,
+    curveAspect: () => curveAspect,
+    curveLabel: () => curveLabel,
+    curveLegendTitle: () => curveLegendTitle,
     darkThemeTokens: () => darkThemeTokens,
+    ddSci: () => ddSci,
+    fitConfusion: () => fitConfusion,
     fitKeys: () => fitKeys,
     fitLabel: () => fitLabel,
     fitLegend: () => fitLegend,
@@ -996,6 +1010,19 @@ var RtemisDraw = (() => {
     const rounded = Number(value.toPrecision(digits));
     const decimals = Math.max(0, digits - 1 - Math.floor(Math.log10(Math.abs(rounded))));
     return rounded.toFixed(decimals);
+  }
+  function ddSci(value, decimals = 2, hi = 1e6) {
+    if (value === null || value === void 0 || !Number.isFinite(value)) return "NA";
+    if (value === 0) return 0 .toFixed(decimals);
+    if (Math.abs(value) >= hi) return scientific(Number(value.toFixed(decimals)), decimals);
+    if (Number(value.toFixed(decimals)) === 0) return scientific(value, 2);
+    return value.toFixed(decimals);
+  }
+  function scientific(value, digits) {
+    const [mantissa = "", exponent = "0"] = value.toExponential(Math.max(0, digits - 1)).split("e");
+    const trimmed = mantissa.includes(".") ? mantissa.replace(/\.?0+$/, "") : mantissa;
+    const e = Number(exponent);
+    return `${trimmed}e${e < 0 ? "-" : "+"}${String(Math.abs(e)).padStart(2, "0")}`;
   }
 
   // src/shared/layout.ts
@@ -1983,6 +2010,763 @@ var RtemisDraw = (() => {
     return { records, limits: extended ?? limits };
   }
 
+  // src/charts/confusion/config.ts
+  var CONFUSION_CHART_CONFIG_MEMBERS = Object.freeze([
+    "type",
+    "reference",
+    "predicted",
+    "count",
+    "panel",
+    "classes",
+    "show_metrics",
+    "digits",
+    "ncol",
+    "correct_color",
+    "incorrect_color",
+    "low_color",
+    "summary_color",
+    "font_size",
+    "xlab",
+    "ylab",
+    "title"
+  ]);
+  var ratio = (a, b) => b > 0 ? a / b : null;
+  function confusionRates(counts) {
+    const k = counts.length;
+    const at = (r, c) => counts[r]?.[c] ?? 0;
+    const actual = counts.map((row) => row.reduce((a, b) => a + b, 0));
+    const predicted = counts[0]?.map((_, c) => counts.reduce((a, row) => a + (row[c] ?? 0), 0)) ?? [];
+    const total = actual.reduce((a, b) => a + b, 0);
+    const hits = Array.from({ length: k }, (_, i) => at(i, i));
+    const tn = hits.map((h, i) => total - (actual[i] ?? 0) - (predicted[i] ?? 0) + h);
+    const sensitivity = hits.map((h, i) => ratio(h, actual[i] ?? 0));
+    return {
+      total,
+      fraction: counts.map((row, r) => row.map((v) => ratio(v, actual[r] ?? 0))),
+      sensitivity,
+      specificity: tn.map((t, i) => ratio(t, total - (actual[i] ?? 0))),
+      ppv: hits.map((h, i) => ratio(h, predicted[i] ?? 0)),
+      npv: tn.map((t, i) => ratio(t, total - (predicted[i] ?? 0))),
+      accuracy: ratio(
+        hits.reduce((a, b) => a + b, 0),
+        total
+      ),
+      balancedAccuracy: sensitivity.some((s) => s === null) ? null : sensitivity.reduce((a, b) => a + b, 0) / k
+    };
+  }
+  function confusionLayout(config) {
+    return {
+      metrics: config.show_metrics ?? true,
+      ncol: config.ncol ?? 2,
+      fontSize: config.font_size ?? 12,
+      ...config.low_color ? { lowColor: config.low_color } : {},
+      ...config.summary_color ? { summaryColor: config.summary_color } : {}
+    };
+  }
+  function percent(value) {
+    return `${+value.toPrecision(15)}%`;
+  }
+  function channels(hex) {
+    const m = /^#?([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i.exec(hex);
+    if (!m) return [255, 255, 255];
+    return [m[1], m[2], m[3]].map((h) => Number.parseInt(h, 16));
+  }
+  function ramp(low, high, fraction) {
+    const a = channels(low);
+    const b = channels(high);
+    return `#${a.map(
+      (v, i) => Math.trunc(v + (b[i] - v) * fraction).toString(16).padStart(2, "0")
+    ).join("")}`;
+  }
+  function contrast(color) {
+    const luminance = channels(color).map((v) => {
+      const c = v / 255;
+      return c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+    }).reduce((sum, v, i) => sum + v * [0.2126, 0.7152, 0.0722][i], 0);
+    return luminance > 0.179 ? "#000000" : "#FFFFFF";
+  }
+  function buildConfusionOption(data, config, appearance = {}) {
+    const { classes, panels } = data;
+    const k = classes.length;
+    if (k === 0) throw new Error("A confusion chart needs at least one class.");
+    if (panels.length === 0) throw new Error("A confusion chart needs at least one panel.");
+    for (const p of panels) {
+      if (p.counts.length !== k || p.counts.some((row) => row.length !== k)) {
+        throw new Error(`Panel '${p.name}' needs a ${k} by ${k} count matrix.`);
+      }
+    }
+    const metrics = config.show_metrics ?? true;
+    const digits = config.digits ?? 2;
+    const fontSize = config.font_size ?? 12;
+    const sign = appearance.signColors ?? SIGN_COLORS;
+    const correctColor = config.correct_color ?? sign.negative;
+    const incorrectColor = config.incorrect_color ?? sign.positive;
+    const low = config.low_color ?? "#FFFFFF";
+    const summary = config.summary_color ?? "#EFEFEF";
+    const xlab = config.xlab === void 0 ? "Predicted" : config.xlab;
+    const ylab = config.ylab === void 0 ? "Reference" : config.ylab;
+    const rate = (v) => ddSci(v, digits);
+    const label = (text, color) => ({
+      show: true,
+      position: "inside",
+      formatter: text,
+      fontSize,
+      color: contrast(color)
+    });
+    const cols = Math.min(config.ncol ?? 2, panels.length);
+    const rows = Math.ceil(panels.length / cols);
+    const topOffset = config.title ? 7 : 0;
+    const titles = config.title ? [{ text: config.title, left: "center", top: 0 }] : [];
+    const grids = [];
+    const xAxes = [];
+    const yAxes = [];
+    const maps = [];
+    const series = [];
+    const named = panels.length > 1 || Boolean(config.panel);
+    panels.forEach((p, i) => {
+      const r = confusionRates(p.counts);
+      const left = 100 * (i % cols) / cols;
+      const top = topOffset + (100 - topOffset) * Math.floor(i / cols) / rows;
+      const pw = 100 / cols;
+      const ph = (100 - topOffset) / rows;
+      titles.push({
+        ...named ? { text: p.name } : {},
+        textStyle: { fontSize: fontSize + 2 },
+        left: percent(left + pw / 2),
+        top: percent(top),
+        textAlign: "center"
+      });
+      const base = grids.length;
+      const layouts = [
+        [0.18, 0.2, metrics ? 0.56 : 0.76, metrics ? 0.6 : 0.74]
+      ];
+      const xLabels = [[...classes]];
+      const yLabels = [[...classes]];
+      if (metrics) {
+        layouts.push([0.75, 0.2, 0.22, 0.6], [0.18, 0.82, 0.56, 0.15], [0.75, 0.82, 0.22, 0.15]);
+        xLabels.push(["Sens.", "Spec."], [...classes], ["Summary"]);
+        yLabels.push([...classes], ["PPV", "NPV"], ["Accuracy", "BA"]);
+      }
+      layouts.forEach((box, j) => {
+        const index = base + j;
+        grids.push({
+          left: percent(left + pw * box[0]),
+          top: percent(top + ph * box[1]),
+          width: percent(pw * box[2]),
+          height: percent(ph * box[3]),
+          containLabel: false,
+          outerBoundsMode: "none"
+        });
+        xAxes.push({
+          type: "category",
+          gridIndex: index,
+          data: xLabels[j],
+          position: "top",
+          boundaryGap: true,
+          ...j === 0 && xlab ? { name: xlab } : {},
+          nameLocation: "middle",
+          nameGap: 30,
+          axisLine: { show: false },
+          splitLine: { show: false },
+          axisLabel: { show: j === 0 || j === 1, interval: 0, fontSize }
+        });
+        yAxes.push({
+          type: "category",
+          gridIndex: index,
+          data: yLabels[j],
+          inverse: true,
+          boundaryGap: true,
+          ...j === 0 && ylab ? { name: ylab } : {},
+          nameLocation: "middle",
+          nameGap: 50,
+          axisLine: { show: false },
+          splitLine: { show: false },
+          axisLabel: { show: j === 0 || j === 2, interval: 0, fontSize }
+        });
+      });
+      for (const correct of [true, false]) {
+        const hue = correct ? correctColor : incorrectColor;
+        const marks = [];
+        for (let col = 0; col < k; col++) {
+          for (let row = 0; row < k; row++) {
+            if (row === col !== correct) continue;
+            const fraction = r.fraction[row]?.[col] ?? null;
+            const count = p.counts[row]?.[col] ?? 0;
+            marks.push({
+              value: [
+                col,
+                row,
+                fraction ?? 0,
+                count,
+                classes[row],
+                classes[col],
+                fraction,
+                rate(fraction)
+              ],
+              label: label(
+                Number.isInteger(count) ? count.toFixed(0) : String(count),
+                ramp(low, hue, fraction ?? 0)
+              )
+            });
+          }
+        }
+        maps.push({
+          type: "continuous",
+          show: false,
+          min: 0,
+          max: 1,
+          inRange: { color: [low, hue] },
+          dimension: 2,
+          seriesIndex: series.length
+        });
+        series.push({
+          type: "heatmap",
+          name: p.name,
+          data: marks,
+          xAxisIndex: base,
+          yAxisIndex: base,
+          itemStyle: { borderWidth: 1, borderColor: low },
+          dimensions: [
+            "Column",
+            "Row",
+            "Color fraction",
+            "Count",
+            "Reference",
+            "Predicted",
+            "Row fraction",
+            // A display name and an ordinal type, so the tooltip reads the
+            // fixed-decimal text without a formatter (DimensionDefinition).
+            { name: "Row fraction label", displayName: "Row fraction", type: "ordinal" }
+          ],
+          encode: { x: 0, y: 1, tooltip: [4, 5, 3, 7] }
+        });
+      }
+      if (metrics) {
+        const right = [];
+        const bottom = [];
+        for (let j = 0; j < k; j++) {
+          [r.sensitivity, r.specificity].forEach((values, m) => {
+            right.push({ value: [m, j, 0], label: label(rate(values[j] ?? null), summary) });
+          });
+          [r.ppv, r.npv].forEach((values, m) => {
+            bottom.push({ value: [j, m, 0], label: label(rate(values[j] ?? null), summary) });
+          });
+        }
+        const overall = [
+          { value: [0, 0, 0], label: label(`Accuracy
+${rate(r.accuracy)}`, summary) },
+          { value: [0, 1, 0], label: label(`BA
+${rate(r.balancedAccuracy)}`, summary) }
+        ];
+        [right, bottom, overall].forEach((strip, j) => {
+          maps.push({
+            type: "continuous",
+            show: false,
+            min: 0,
+            max: 1,
+            inRange: { color: [summary, summary] },
+            dimension: 2,
+            seriesIndex: series.length
+          });
+          series.push({
+            type: "heatmap",
+            data: strip,
+            xAxisIndex: base + j + 1,
+            yAxisIndex: base + j + 1,
+            silent: true,
+            itemStyle: { borderWidth: 1, borderColor: low }
+          });
+        });
+      }
+    });
+    return {
+      title: titles,
+      grid: grids,
+      xAxis: xAxes,
+      yAxis: yAxes,
+      visualMap: maps,
+      series,
+      legend: { show: false },
+      tooltip: { trigger: "item", confine: true }
+    };
+  }
+
+  // src/charts/confusion/fit.ts
+  function rgb(echarts, color, fallback) {
+    return color && echarts.color.parse(color) || echarts.color.parse(fallback) || [0, 0, 0];
+  }
+  function blend(echarts, low, high, fraction) {
+    const a = rgb(echarts, low, "#ffffff");
+    const b = rgb(echarts, high, "#000000");
+    return `#${a.slice(0, 3).map(
+      (v, i) => Math.round(v + (b[i] - v) * fraction).toString(16).padStart(2, "0")
+    ).join("")}`;
+  }
+  function contrast2(echarts, color) {
+    const luminance = rgb(echarts, color, "#ffffff").slice(0, 3).map((v) => {
+      const c = v / 255;
+      return c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+    }).reduce((sum, v, i) => sum + v * [0.2126, 0.7152, 0.0722][i], 0);
+    return luminance > 0.179 ? "#000000" : "#ffffff";
+  }
+  function dimensions(echarts, payload, theme, width, height = Number.POSITIVE_INFINITY) {
+    const meta = payload.confusion;
+    const option = payload.option;
+    const family = option.textStyle?.fontFamily || theme?.textStyle?.fontFamily || "sans-serif";
+    const step = meta.metrics ? 4 : 1;
+    const panels = option.grid.length / step;
+    const classes = option.yAxis[0].data;
+    const cols = Math.max(1, Math.min(meta.ncol, panels, Math.floor(width / 360)));
+    const rows = Math.ceil(panels / cols);
+    const panelWidth = width / cols;
+    const titleOffset = option.title.length - panels;
+    const metricLabels = meta.metrics ? option.series.filter((_, i) => i % 5 >= 2).flatMap(
+      (s) => s.data.map((d) => d.label.formatter)
+    ) : [];
+    for (let fontSize = meta.fontSize; ; fontSize = Math.max(8, fontSize - 1)) {
+      const measure = (text) => echarts.format.getTextRect(String(text), `${fontSize}px ${family}`).width;
+      const wrappedHeight = (text, w) => new echarts.graphic.Text({
+        style: {
+          text: String(text),
+          fontSize,
+          fontFamily: family,
+          width: Math.max(1, w),
+          overflow: "break",
+          lineHeight: fontSize + 2
+        }
+      }).getBoundingRect().height;
+      const labelWidth = Math.min(
+        Math.max(...classes.map(measure), meta.metrics ? measure("NPV") : 0),
+        panelWidth * 0.26
+      );
+      const left = 12 + labelWidth + 10 + (option.yAxis[0].name ? fontSize + 16 : 0);
+      const rateWidth = Math.max(
+        0,
+        ...metricLabels.map((text) => measure(String(text).split("\n").pop() ?? ""))
+      );
+      const strip = meta.metrics ? 2 * (Math.max(measure("Sens."), measure("Spec."), rateWidth) + 16) : 0;
+      const header = option.title.slice(titleOffset).some((t) => t.text) ? meta.fontSize + 14 : 0;
+      const bottom = meta.metrics ? 8 + 2 * (2 * fontSize + 12) : 0;
+      const footer = 12;
+      const globalTop = titleOffset ? meta.fontSize + 28 : 0;
+      const availableWidth = panelWidth - left - strip - (strip ? 8 : 0) - 12;
+      const panelHeight = (height - globalTop) / rows;
+      let side = availableWidth;
+      let top = 0;
+      let columnLabelHeight = 0;
+      let columnLabelWidth = 0;
+      let columnRotation = 0;
+      for (let pass = 0; pass < 20; pass++) {
+        columnRotation = Math.max(...classes.map(measure)) > side / classes.length - 4 ? 90 : 0;
+        columnLabelWidth = columnRotation ? Math.max(labelWidth, Math.min(180, panelHeight * 0.28)) : Math.max(1, side / classes.length - 4);
+        columnLabelHeight = columnRotation ? Math.min(columnLabelWidth, Math.max(...classes.map(measure))) : fontSize + 2;
+        top = 12 + header + (option.xAxis[0].name ? fontSize + 18 : 0) + columnLabelHeight + 12;
+        const next = Math.max(1, Math.min(availableWidth, panelHeight - top - bottom - footer));
+        if (Math.abs(next - side) < 0.01) break;
+        side = next;
+      }
+      const rowHeight = Math.max(
+        ...classes.map((t) => wrappedHeight(t, labelWidth)),
+        ...columnRotation ? classes.map((t) => wrappedHeight(t, columnLabelWidth)) : []
+      );
+      if (Math.max(rowHeight + 2, rateWidth + 4) <= side / classes.length && side > 0) {
+        return {
+          fontSize,
+          family,
+          step,
+          panels,
+          cols,
+          rows,
+          titleOffset,
+          header,
+          left,
+          strip,
+          top,
+          bottom,
+          footer,
+          labelWidth,
+          columnLabelHeight,
+          columnLabelWidth,
+          columnRotation,
+          globalTop
+        };
+      }
+      if (fontSize <= Math.min(8, meta.fontSize)) {
+        throw new Error(
+          "Increase confusion figure dimensions or reduce panels per figure to keep class labels and metrics readable."
+        );
+      }
+    }
+  }
+  function confusionHeight(echarts, payload, theme, width) {
+    const d = dimensions(echarts, payload, theme, width);
+    const side = Math.max(
+      1,
+      Math.min(400, width / d.cols - d.left - d.strip - (d.strip ? 8 : 0) - 12)
+    );
+    return Math.ceil(d.globalTop + d.rows * (d.top + side + d.bottom + d.footer));
+  }
+  function fitConfusion(echarts, payload, theme, width, height) {
+    const option = payload.option;
+    const meta = payload.confusion;
+    const d = dimensions(echarts, payload, theme, width, height);
+    const bg = option.backgroundColor || theme?.backgroundColor || "#ffffff";
+    const fg = option.textStyle?.color || theme?.textStyle?.color || contrast2(echarts, bg);
+    const low = meta.lowColor || bg;
+    const neutral = contrast2(echarts, bg);
+    const summary = meta.summaryColor || blend(echarts, bg, neutral, 0.05);
+    const overall = meta.summaryColor || blend(echarts, bg, neutral, 0.025);
+    const muted = blend(echarts, bg, fg, 0.72);
+    const panelWidth = width / d.cols;
+    const panelHeight = (height - d.globalTop) / d.rows;
+    const side = Math.max(
+      1,
+      Math.min(
+        panelWidth - d.left - d.strip - (d.strip ? 8 : 0) - 12,
+        panelHeight - d.top - d.bottom - d.footer
+      )
+    );
+    const wholeWidth = d.left + side + (d.strip ? 8 : 0) + d.strip + 12;
+    const wholeHeight = d.top + side + d.bottom + d.footer;
+    const seriesStep = meta.metrics ? 5 : 2;
+    for (let i = 0; i < d.panels; i++) {
+      const x = i % d.cols * panelWidth + (panelWidth - wholeWidth) / 2;
+      const y = d.globalTop + Math.floor(i / d.cols) * panelHeight + (panelHeight - wholeHeight) / 2;
+      const left = x + d.left;
+      const top = y + d.top;
+      const boxes = [[left, top, side, side]];
+      if (meta.metrics) {
+        boxes.push(
+          [left + side + 8, top, d.strip, side],
+          [left, top + side + 8, side, d.bottom - 8],
+          [left + side + 8, top + side + 8, d.strip, d.bottom - 8]
+        );
+      }
+      boxes.forEach((box, j) => {
+        const index = i * d.step + j;
+        Object.assign(option.grid[index], {
+          left: box[0],
+          top: box[1],
+          width: box[2],
+          height: box[3],
+          containLabel: false,
+          outerBoundsMode: "none"
+        });
+        for (const axis of [option.xAxis[index], option.yAxis[index]]) {
+          Object.assign(axis.axisLabel, {
+            color: muted,
+            fontSize: d.fontSize,
+            lineHeight: d.fontSize + 2
+          });
+          axis.axisTick = { show: false };
+          axis.nameMoveOverlap = false;
+          axis.nameTextStyle = { fontSize: d.fontSize, color: muted };
+        }
+        option.xAxis[index].nameGap = d.columnLabelHeight + 18;
+        if (j === 0) {
+          Object.assign(option.xAxis[index].axisLabel, {
+            width: d.columnLabelWidth,
+            rotate: d.columnRotation,
+            overflow: "break"
+          });
+          Object.assign(option.yAxis[index].axisLabel, {
+            width: d.labelWidth + 2,
+            overflow: "break"
+          });
+        }
+        option.yAxis[index].nameGap = d.labelWidth + 20;
+      });
+      const title = option.title[i + d.titleOffset];
+      Object.assign(title, { left: left + side / 2, top: y + 4, textAlign: "center" });
+      title.textStyle = { ...title.textStyle, color: fg };
+      for (let j = 0; j < seriesStep; j++) {
+        const index = i * seriesStep + j;
+        const series = option.series[index];
+        const map = option.visualMap[index];
+        const high = j < 2 ? map.inRange.color[1] : j === 4 ? overall : summary;
+        map.inRange.color = j < 2 ? [low, high] : [high, high];
+        Object.assign(series.itemStyle, { borderColor: bg, borderWidth: 1 });
+        for (const point of series.data) {
+          point.label.color = j < 2 ? contrast2(echarts, blend(echarts, low, high, point.value[2])) : meta.summaryColor ? contrast2(echarts, high) : fg;
+          point.label.fontWeight = j < 2 ? "bold" : "normal";
+          point.label.fontSize = d.fontSize;
+        }
+      }
+    }
+  }
+
+  // src/charts/curves/config.ts
+  var SHARED_MEMBERS = [
+    "type",
+    "title",
+    "legend_position",
+    "legend_placement",
+    "legend_title",
+    "class_label",
+    "split",
+    "fold",
+    "omitted",
+    "variant",
+    "digits",
+    "palette",
+    "legend",
+    "square",
+    "line_width",
+    "fold_opacity",
+    "xlab",
+    "ylab"
+  ];
+  var ROC_CHART_CONFIG_MEMBERS = Object.freeze([
+    ...SHARED_MEMBERS,
+    "fpr",
+    "tpr",
+    "auc",
+    "diagonal",
+    "diagonal_color"
+  ]);
+  var PR_CHART_CONFIG_MEMBERS = Object.freeze([
+    ...SHARED_MEMBERS,
+    "recall",
+    "precision",
+    "ap",
+    "prevalence",
+    "baseline"
+  ]);
+  var ROC = {
+    name: "ROC",
+    summary: "AUC",
+    x: "FPR",
+    y: "TPR",
+    xlab: "False positive rate",
+    ylab: "True positive rate",
+    step: false
+  };
+  var PR = {
+    name: "PR",
+    summary: "AP",
+    x: "Recall",
+    y: "Precision",
+    xlab: "Recall",
+    ylab: "Precision",
+    // Precision at a vertex holds back to the previous recall, so the drawn area
+    // is the average precision; precision is not linear in recall in between.
+    step: "start"
+  };
+  function makeUnique(names) {
+    const seen = /* @__PURE__ */ new Map();
+    const used = new Set(names);
+    return names.map((name) => {
+      if (!seen.has(name)) {
+        seen.set(name, 0);
+        return name;
+      }
+      let k = seen.get(name);
+      let candidate;
+      do {
+        k += 1;
+        candidate = `${name}.${k}`;
+      } while (used.has(candidate));
+      seen.set(name, k);
+      used.add(candidate);
+      return candidate;
+    });
+  }
+  var capitalize = (s) => s ? s.charAt(0).toUpperCase() + s.slice(1) : s;
+  function curveLabel(group, context) {
+    const fmt = (v) => ddSci(v, context.digits);
+    const multiclass = context.classes.length > 1;
+    const parts = [];
+    if (multiclass) parts.push(group.class);
+    if ((context.splits.length > 1 || !multiclass) && group.split !== "Sample") {
+      parts.push(capitalize(group.split));
+    }
+    if (parts.length === 0) parts.push(group.class);
+    const summary = context.perResample ? `${fmt(group.mean)} (${fmt(group.sd)})` : fmt(group.mean);
+    return `${parts.join(" \xB7 ")} ${summary}`;
+  }
+  function curveLegendTitle(type, config) {
+    if (config.legend_title) return config.legend_title;
+    const summary = type === "roc" ? ROC.summary : PR.summary;
+    return (config.variant ?? "aggregate") === "per_resample" ? `${summary}: mean (SD)` : summary;
+  }
+  function buildCurveOption(kind, data, config, appearance, before, baselines) {
+    const { groups, curves } = data;
+    if (curves.length === 0) throw new Error(`A ${kind.name} chart needs at least one curve.`);
+    for (const c of curves) {
+      if (!groups[c.group]) throw new Error(`Curve group ${c.group} is not among the groups.`);
+      if (c.x.length !== c.y.length) {
+        throw new Error(`A ${kind.name} curve needs one ${kind.y} per ${kind.x}.`);
+      }
+    }
+    const digits = config.digits ?? 2;
+    const perResample = (config.variant ?? "aggregate") === "per_resample";
+    const fmt = (v) => ddSci(v, digits);
+    const classes = [...new Set(groups.map((g) => g.class))];
+    const splits = [...new Set(groups.map((g) => g.split))];
+    const labels = makeUnique(
+      groups.map((g) => curveLabel(g, { classes, splits, perResample, digits }))
+    );
+    const palette = asArray(config.palette);
+    const colors = palette.length > 0 ? palette : appearance.palette ?? [];
+    const colorOf = (g) => {
+      const id = classes.length > 1 ? classes.indexOf(g.class) : splits.indexOf(g.split);
+      return colors.length > 0 ? colors[id % colors.length] : void 0;
+    };
+    const lineTypes = ["solid", "dashed", "dotted"];
+    const display = [kind.x, kind.y, kind.summary];
+    const series = [...before];
+    for (const c of curves) {
+      const g = groups[c.group];
+      const color = colorOf(g);
+      series.push({
+        type: "line",
+        name: labels[c.group],
+        data: c.x.map((x, j) => [
+          x,
+          c.y[j],
+          c.summary,
+          c.fold,
+          c.omitted ?? 0,
+          fmt(x),
+          fmt(c.y[j]),
+          fmt(c.summary)
+        ]),
+        smooth: false,
+        step: kind.step,
+        // Transparent points are the hover targets of the point tooltip; only
+        // the hovered point shows, so the drawn chart and SVG keep the line.
+        showSymbol: true,
+        symbol: "circle",
+        symbolSize: 8,
+        connectNulls: false,
+        clip: true,
+        lineStyle: {
+          ...color ? { color } : {},
+          width: config.line_width ?? 2,
+          opacity: perResample ? config.fold_opacity ?? 0.45 : 1,
+          type: lineTypes[splits.indexOf(g.split) % 3]
+        },
+        itemStyle: { ...color ? { color } : {}, opacity: 0 },
+        z: 3,
+        emphasis: { itemStyle: { opacity: 1 } },
+        // A display name and an ordinal type, so the tooltip reads each value's
+        // `ddSci()` text without a formatter (DimensionDefinition).
+        dimensions: [
+          ...display,
+          "Resample",
+          "Missing pairs",
+          ...display.map((label) => ({
+            name: `${label} label`,
+            displayName: label,
+            type: "ordinal"
+          }))
+        ],
+        encode: { x: 0, y: 1, tooltip: [5, 6, 7, 3] }
+      });
+    }
+    const active = [...new Set(curves.map((c) => c.group))];
+    if (baselines) {
+      for (const id of active) {
+        const g = groups[id];
+        const level = g.reference;
+        if (level === null || level === void 0 || !Number.isFinite(level)) continue;
+        const color = colorOf(g);
+        series.push({
+          type: "line",
+          name: labels[id],
+          data: [
+            [0, level],
+            [1, level]
+          ],
+          showSymbol: false,
+          silent: true,
+          legendHoverLink: false,
+          lineStyle: { ...color ? { color } : {}, type: "dotted", width: 1 },
+          z: 1
+        });
+      }
+    }
+    const xlab = config.xlab === void 0 ? kind.xlab : config.xlab;
+    const ylab = config.ylab === void 0 ? kind.ylab : config.ylab;
+    return {
+      ...config.title ? { title: { text: config.title, left: "center", textAlign: "center" } } : {},
+      grid: {
+        left: 70,
+        right: 24,
+        top: 25 + (config.title ? 25 : 0),
+        bottom: 65,
+        containLabel: false,
+        outerBoundsMode: "none"
+      },
+      xAxis: {
+        type: "value",
+        min: 0,
+        max: 1,
+        ...xlab ? { name: xlab } : {},
+        nameLocation: "middle",
+        nameGap: 30
+      },
+      yAxis: {
+        type: "value",
+        min: 0,
+        max: 1,
+        ...ylab ? { name: ylab } : {},
+        nameLocation: "middle",
+        nameGap: 45
+      },
+      legend: {
+        show: config.legend ?? true,
+        orient: "horizontal",
+        padding: 0,
+        itemGap: 6,
+        icon: "roundRect",
+        itemWidth: 20,
+        itemHeight: 3,
+        // Legend keys stay visible whatever the transparent hover targets.
+        itemStyle: { opacity: 1 },
+        data: active.map((id) => labels[id]),
+        textStyle: { fontSize: 12, lineHeight: 14 }
+      },
+      tooltip: { trigger: "item", confine: true },
+      series,
+      ...appearance.animation === void 0 ? {} : { animation: appearance.animation }
+    };
+  }
+  function buildRocOption(data, config, appearance = {}) {
+    const color = config.diagonal_color ?? "#888888";
+    const diagonal = config.diagonal ?? true ? [
+      {
+        type: "line",
+        data: [
+          [0, 0],
+          [1, 1]
+        ],
+        showSymbol: false,
+        silent: true,
+        legendHoverLink: false,
+        // A reference line takes no palette color from the groups.
+        itemStyle: { color },
+        lineStyle: { color, type: "dashed", width: 1 },
+        z: 1
+      }
+    ] : [];
+    return buildCurveOption(ROC, data, config, appearance, diagonal, false);
+  }
+  function buildPrOption(data, config, appearance = {}) {
+    return buildCurveOption(PR, data, config, appearance, [], config.baseline ?? true);
+  }
+  function curveAspect(option, config) {
+    if (!(config.square ?? true)) return null;
+    const grid = option.grid;
+    return {
+      ratio: 1,
+      leftPx: grid.left,
+      rightPx: grid.right,
+      topPx: grid.top,
+      botPx: grid.bottom
+    };
+  }
+
   // src/shared/ridge.ts
   function ridgeOption(input) {
     const { names, xlab } = input;
@@ -2600,7 +3384,7 @@ var RtemisDraw = (() => {
     let name = base;
     if (config.fit_name) name = [base, config.fit_name].filter(Boolean).join(" - ");
     if (config.rsq) {
-      const value = typeof rsq === "number" && Number.isFinite(rsq) ? rsq.toFixed(3) : "NA";
+      const value = ddSci(rsq, 3);
       name = `${name ?? "Fit"} (R\xB2 = ${value})`;
     }
     return name;
@@ -3817,13 +4601,18 @@ var RtemisDraw = (() => {
     a3: buildA3Option,
     bar: buildBarOption,
     boxplot: buildBoxplotOption,
+    confusion: buildConfusionOption,
     density: buildDensityOption,
     histogram: buildHistogramOption,
     line: buildLineOption,
+    pr: buildPrOption,
+    roc: buildRocOption,
     scatter: buildScatterOption
   });
   var aspectHints = Object.freeze({
     line: lineAspect,
+    pr: curveAspect,
+    roc: curveAspect,
     scatter: lineAspect
   });
   return __toCommonJS(index_exports);

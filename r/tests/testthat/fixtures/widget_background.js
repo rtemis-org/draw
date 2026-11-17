@@ -46,7 +46,6 @@ for (const location of ['standalone', 'embedded', 'embedded-direct', 'embedded-h
     window: {MutationObserver: Observer}, MutationObserver: Observer,
     HTMLWidgets: {widget() {}},
     rtemisA3: {fit() {}},
-    rtemisConfusion: {prepare() {}},
     rtemisPanels: {background: require(path.join(directory, 'panels.js')).background, cells: require(path.join(directory, 'panels.js')).cells, fitHeatmap() {}, fitGantt() {}, prepareLabels: require(path.join(directory, 'panels.js')).prepareLabels, prepareColors() {}, fitAxes() {}, positionLegend() {}, centerVisualMaps() {}},
     echarts: {registerTheme() {}, init() {return {setOption() {}, dispose() {}};}}
   };

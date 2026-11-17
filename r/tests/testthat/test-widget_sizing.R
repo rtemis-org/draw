@@ -76,7 +76,7 @@ test_that("curve charts fill the host and keep their square export size", {
   default <- draw_roc(y, p)
   expect_null(default[["width"]])
   expect_null(default[["height"]])
-  grid <- default[["x"]][["option"]][["grid"]]
+  grid <- raw_option(default)[["grid"]]
   expect_identical(
     default[["x"]][["exportSize"]],
     list(

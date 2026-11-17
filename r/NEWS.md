@@ -18,6 +18,10 @@
 
 * `draw_histogram()` and `draw()` on a `HistogramConfig` build the chart with the `@rtemis/draw` histogram builder, the one rtemislive uses; `compile()` on a `HistogramConfig` returns a `BuildRequest`. `draw_histogram()` takes `zoom` as `TRUE` or `FALSE` and `margins` in pixels. The y axis is named after a bar's height unless `ylab` is given: the normalization ("Count", "Percent", ...) or the bin statistic of the column ("Mean X").
 
+* `draw_roc()`, `draw_pr()`, and `draw()` on a `ROCConfig` or `PRConfig` build the chart with the `@rtemis/draw` curve builders, the ones rtemislive uses; `compile()` on either returns a `BuildRequest`. A legend title, on its own row above the entries, names the measure ("AUC", or per resample "AUC: mean (SD)"), and each entry names the split, or the class for a multiclass chart, and its value: "Test 0.85", or "Test 0.77 (0.07)" per resample. `digits` defaults to 2, and values are written as `rtemis.core::ddSci()` writes them, so a nonzero SD below 0.005 reads "4e-04".
+
+* `draw_confusion()` and `draw()` on a `ConfusionConfig` build the chart with the `@rtemis/draw` confusion builder, the one rtemislive uses; `compile()` on a `ConfusionConfig` returns a `BuildRequest`. `correct_color` and `incorrect_color` default to the theme's negative (blue) and positive (orange) sign colors.
+
 * `draw_density()` and `draw()` on a `DensityConfig` build the chart with the `@rtemis/draw` density builder, the one rtemislive uses; `compile()` on a `DensityConfig` returns a `BuildRequest`. The y axis is named "Density" unless `ylab` is given. `draw_density()` takes `zoom` as `TRUE` or `FALSE` and `margins` in pixels.
 
 * `draw_a3()` and `draw()` on an `A3Config` build the diagram with the `@rtemis/draw` A3 builder, the one rtemislive uses, in the widget and in `save_drawing()`; the widget rebuilds it when the viewer switches between light and dark. Its tooltip groups annotations under family headings, as in rtemislive.

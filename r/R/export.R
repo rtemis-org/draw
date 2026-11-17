@@ -235,6 +235,7 @@ save_drawing <- function(widget, filename, width = NULL, height = NULL) {
         "botPx",
         "legendTarget",
         "legendTitle",
+        "legendTitleAbove",
         "legendReserveRight",
         "colorLight",
         "colorDark"

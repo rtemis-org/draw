@@ -21,7 +21,7 @@ PRConfig(
   fold = NULL,
   omitted = NULL,
   variant = "aggregate",
-  digits = 3L,
+  digits = 2L,
   baseline = TRUE,
   palette = NULL,
   legend = TRUE,
@@ -77,7 +77,8 @@ title. A title does not add a missing legend.}
 
 \item{variant}{Character: Draw pooled curves or separate resample curves.}
 
-\item{digits}{Integer: Decimal places for average precision labels and tooltip values.}
+\item{digits}{Integer: Decimal places for average precision labels and
+tooltip values, written as \code{\link[rtemis.core:ddSci]{rtemis.core::ddSci()}} writes them.}
 
 \item{baseline}{Logical: Show the prevalence baseline of each curve group.}
 
@@ -131,10 +132,12 @@ curve group draws its own dotted baseline, in the group color, at the mean
 prevalence of its defined folds. The baseline toggles with its curves in the
 legend.
 
-The legend uses the shared position and placement controls. Hover describes
-the selected curve, including its resample identifier. Numeric tooltip labels
-use \code{digits}; coordinates and summaries retain their full precision in the
-compiled data.
+The legend title names the values, "AP" or, per resample, "AP: mean (SD)",
+on its own row above the entries. Each entry is the curve identity and its
+value. The legend uses the shared position and placement controls. Hover
+describes the selected curve, including its resample identifier. Numeric
+tooltip labels use \code{digits}; coordinates and summaries retain their full
+precision in the compiled data.
 }
 
 \examples{

@@ -14,7 +14,7 @@ setup_PRConfig(
   fold = NULL,
   omitted = NULL,
   variant = "aggregate",
-  digits = 3L,
+  digits = 2L,
   baseline = TRUE,
   palette = NULL,
   legend = TRUE,
@@ -51,7 +51,8 @@ setup_PRConfig(
 
 \item{variant}{Character: Draw pooled curves or separate resample curves.}
 
-\item{digits}{Integer: Decimal places for average precision labels and tooltip values.}
+\item{digits}{Integer: Decimal places for average precision labels and
+tooltip values, written as \code{\link[rtemis.core:ddSci]{rtemis.core::ddSci()}} writes them.}
 
 \item{baseline}{Logical: Show the prevalence baseline of each curve group.}
 

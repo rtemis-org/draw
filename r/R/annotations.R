@@ -189,6 +189,8 @@ CARTESIAN_BUILDER_TYPES <- c(
   "density",
   "histogram",
   "line",
+  "pr",
+  "roc",
   "scatter"
 )
 

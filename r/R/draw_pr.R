@@ -192,12 +192,15 @@ method(pr_data, PRConfig) <- function(config, data) {
   )
 }
 
-#' Compile precision-recall records to independent native line series
+#' Build the request of a precision-recall chart
+#'
+#' `@rtemis/draw`'s precision-recall builder draws the step curves and the
+#' prevalence baselines.
 #' @inheritParams pr_data
-#' @return An [EChartsOption] with full legend and prevalence baselines.
+#' @return [BuildRequest] of type `"pr"`.
 #' @keywords internal
 #' @noRd
 pr_option <- new_generic("pr_option", "config")
 method(pr_option, PRConfig) <- function(config, data) {
-  curve_option(config, pr_data(config, data))
+  curve_request("pr", config, pr_data(config, data))
 }

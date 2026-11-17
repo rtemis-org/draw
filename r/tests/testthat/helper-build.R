@@ -39,10 +39,12 @@ raw_option <- function(widget) node_option(widget, simplify = FALSE)
 
 # A widget payload with its build request replaced by the option and aspect
 # hint the widget builds from it, for fixtures that render payloads in Node.
+# Every JSON array stays a list, so a record that mixes numbers and text (a
+# confusion cell) and a one-element array keep their JSON form.
 built_payload <- function(widget) {
   x <- widget[["x"]]
   if (!is.null(x[["build"]])) {
-    x[["option"]] <- built_option(widget)
+    x[["option"]] <- built_option(widget, simplify = FALSE)
     x[["aspect"]] <- built_option(widget, what = "aspect")
     x[["build"]] <- NULL
   }
