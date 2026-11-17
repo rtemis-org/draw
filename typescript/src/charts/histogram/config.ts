@@ -1,6 +1,7 @@
 import { formatNumber } from "../../shared/format.ts";
 import { axisZoom, cartesianGrid, type MarginMembers } from "../../shared/layout.ts";
 import type { LegendMembers } from "../../shared/legend.ts";
+import { ridgeOption } from "../../shared/ridge.ts";
 import { asArray, type ColumnNames } from "../../shared/source.ts";
 import type { BreaksRule } from "./edges.ts";
 import { HISTOGRAM, type HistogramPayload } from "./renderers.ts";
@@ -179,15 +180,32 @@ function heightName(config: HistogramChartConfig): string {
 
 /**
  * The value axis name a host derives for a histogram when the author sets
- * none: the normalization ("Count", "Probability", "Percent", "Density",
- * "Count density"), or the statistic of the x values ("Sum", "Mean", "Min",
- * "Max").
+ * none, which says what a bar's height is: the normalization ("Count",
+ * "Probability", "Percent", "Density", "Count density"), or the statistic of
+ * the x values in a bin, with the column when `x` is one column ("Sum of X",
+ * "Mean X", "Minimum X", "Maximum X"). `name` maps a column name to its
+ * display text. rtemis.draw's `resolve()` derives the same text.
  */
-export function histogramValueLabel(config: HistogramChartConfig): string {
-  const stat = config.bin_stat ?? "count";
-  if (stat !== "count") return stat.charAt(0).toUpperCase() + stat.slice(1);
-  const name = heightName(config);
-  return name === "Height" ? "Count" : name;
+export function histogramValueLabel(
+  config: HistogramChartConfig,
+  name: (column: string) => string = (column) => column,
+): string {
+  const xs = asArray(config.x);
+  const only = xs.length === 1 ? name(xs[0] as string) : null;
+  switch (config.bin_stat ?? "count") {
+    case "sum":
+      return only === null ? "Sum" : `Sum of ${only}`;
+    case "mean":
+      return only === null ? "Mean" : `Mean ${only}`;
+    case "min":
+      return only === null ? "Minimum" : `Minimum ${only}`;
+    case "max":
+      return only === null ? "Maximum" : `Maximum ${only}`;
+    default: {
+      const height = heightName(config);
+      return height === "Height" ? "Count" : height;
+    }
+  }
 }
 
 /** Bar heights of one sample on a normalization scale; an empty sample is all zeros. */
@@ -361,7 +379,21 @@ export function buildHistogramOption(
   };
 
   if (ridge && samples.length > 1) {
-    return ridgeOption(common, series, names, edges, low, high, xlab, config.zoom ?? false);
+    const curveX = series
+      .filter((s) => s.type === "line")
+      .flatMap((s) => (s.data as number[][]).map((d) => d[0] as number));
+    return ridgeOption({
+      common,
+      series,
+      names,
+      x: [
+        Math.min(edges[0] as number, ...curveX),
+        Math.max(edges[edges.length - 1] as number, ...curveX),
+      ],
+      y: [low, high],
+      xlab,
+      zoom: config.zoom ?? false,
+    });
   }
 
   const xAxis: Record<string, unknown> = {
@@ -385,78 +417,5 @@ export function buildHistogramOption(
     grid,
     ...(dataZoom ? { dataZoom } : {}),
     series,
-  };
-}
-
-/**
- * One row per sample on a shared x range: each row's y axis is named after
- * its sample and spans the heights of every row, and only the bottom row
- * shows its x axis. Rows zoom together.
- */
-function ridgeOption(
-  common: Record<string, unknown>,
-  series: Record<string, unknown>[],
-  names: readonly string[],
-  edges: readonly number[],
-  low: number,
-  high: number,
-  xlab: string | null,
-  zoom: boolean,
-): Record<string, unknown> {
-  const rows = names.length;
-  const curveX = series
-    .filter((s) => s.type === "line")
-    .flatMap((s) => (s.data as number[][]).map((d) => d[0] as number));
-  const xMin = Math.min(edges[0] as number, ...curveX);
-  const xMax = Math.max(edges[edges.length - 1] as number, ...curveX);
-  const placed = series.map((s) => {
-    const row = names.indexOf(s.name as string);
-    return { ...s, xAxisIndex: row, yAxisIndex: row };
-  });
-  return {
-    ...common,
-    legend: { show: false },
-    // Each row's plotting box is its grid's rectangle, so the rows share one
-    // left edge and one x scale whatever their labels' widths.
-    grid: names.map((_, i) => ({
-      left: 100,
-      right: 30,
-      top: `${8 + (i * 80) / rows}%`,
-      height: `${64 / rows}%`,
-      outerBoundsMode: "none",
-    })),
-    xAxis: names.map((_, i) => ({
-      type: "value",
-      min: xMin,
-      max: xMax,
-      gridIndex: i,
-      show: i === rows - 1,
-      ...(i === rows - 1 && xlab ? { name: xlab, nameLocation: "middle" } : {}),
-    })),
-    yAxis: names.map((name, i) => ({
-      type: "value",
-      min: low < 0 ? low * 1.05 : 0,
-      max: high > 0 ? high * 1.05 : 1,
-      gridIndex: i,
-      name,
-      nameLocation: "middle",
-      nameGap: 55,
-      splitNumber: 2,
-      axisLabel: { showMinLabel: false, showMaxLabel: false },
-    })),
-    ...(zoom
-      ? {
-          dataZoom: [
-            {
-              type: "inside",
-              xAxisIndex: names.map((_, i) => i),
-              filterMode: "none",
-              zoomOnMouseWheel: "shift",
-              moveOnMouseMove: true,
-            },
-          ],
-        }
-      : {}),
-    series: placed,
   };
 }

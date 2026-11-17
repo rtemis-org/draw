@@ -1645,13 +1645,13 @@ draw_pie <- function(
 #' @param palette Optional Character: Series colors, overriding the theme
 #'   palette for this chart. `NULL` uses the theme's.
 #' @param xlab Optional Character: X-axis title. `""` draws no title.
-#' @param ylab Optional Character: Y-axis title. `""` draws no title.
+#' @param ylab Optional Character: Y-axis title. `NULL` names it "Density",
+#'   and `""` draws no title.
 #' @param title Optional Character: Chart title.
 #' @param theme Optional [Theme]: Theme override.
 #' @param margins Optional Named numeric vector or named list: Plot margins in
-#'   pixels (or percentage strings) for any of `"top"`, `"right"`,
-#'   `"bottom"`, `"left"`. Unspecified sides keep echarts' default auto-sizing.
-#'   See [draw_line()] for details.
+#'   pixels for any of `"top"`, `"right"`, `"bottom"`, `"left"`. See
+#'   [draw_line()].
 #' @param width Optional Character or Numeric: Widget width.
 #' @param height Optional Character or Numeric: Widget height.
 #' @param verbosity Integer `[0, Inf)`: Verbosity level for removed-`NA` messages.
@@ -1659,11 +1659,9 @@ draw_pie <- function(
 #'   container. `NULL` lets htmlwidgets generate one.
 #' @param filename Optional Character: If provided, save the widget to this file via
 #'   [save_drawing()].
-#' @param zoom Logical, [DataZoom], or list of [DataZoom]: Enable x-axis zoom.
-#'   `TRUE` adds a slider below the axis title, Shift+wheel zoom, and drag
-#'   panning; in ridge mode, every row zooms together and no slider is drawn.
-#'   Double-click resets the view. `FALSE` disables zoom. Pass [DataZoom]
-#'   objects (or a list of them) for full control.
+#' @param zoom Logical: Enable x-axis zoom: a slider below the axis title,
+#'   Shift+wheel zoom, and drag panning. Ridge rows zoom together without a
+#'   slider. Curves crossing the window edge stay whole, clipped by the plot.
 #' @return htmlwidget: Widget object.
 #' @export
 #'
@@ -1716,7 +1714,10 @@ draw_density <- function(
     fill_alpha = fill_alpha,
     mode = mode,
     order = order,
-    zoom = zoom
+    zoom = zoom,
+    legend_position = legend_position,
+    legend_placement = legend_placement,
+    legend_title = legend_title
   )
 
   draw(
@@ -1784,7 +1785,9 @@ draw_density <- function(
 #' @param palette Optional Character: Series colors, overriding the theme
 #'   palette for this chart. `NULL` uses the theme's.
 #' @param xlab Optional Character: X-axis title. `""` draws no title.
-#' @param ylab Optional Character: Y-axis title. `""` draws no title.
+#' @param ylab Optional Character: Y-axis title. `NULL` names it after a
+#'   bar's height: the normalization ("Count", "Percent", ...) or the bin
+#'   statistic of the column ("Mean X"). `""` draws no title.
 #' @param title Optional Character: Chart title.
 #' @param theme Optional [Theme]: Theme override.
 #' @param margins Optional Named numeric vector or named list: Plot margins in

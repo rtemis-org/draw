@@ -11,6 +11,7 @@
 import { buildA3Option } from "./charts/a3/index.ts";
 import { buildBarOption } from "./charts/bar/index.ts";
 import { buildBoxplotOption } from "./charts/boxplot/index.ts";
+import { buildDensityOption } from "./charts/density/index.ts";
 import { buildHistogramOption } from "./charts/histogram/index.ts";
 import { buildLineOption, lineAspect } from "./charts/line/index.ts";
 import { buildScatterOption, scatterAspect } from "./charts/scatter/index.ts";
@@ -38,6 +39,23 @@ export {
   buildBoxplotOption,
   radicalInverse,
 } from "./charts/boxplot/index.ts";
+export type {
+  BandwidthRule,
+  DensityAppearance,
+  DensityChartConfig,
+  DensityData,
+  DensityKernel,
+  DensityOptions,
+  DensitySample,
+  DensitySummary,
+} from "./charts/density/index.ts";
+export {
+  buildDensityOption,
+  DENSITY_CHART_CONFIG_MEMBERS,
+  DENSITY_VALUE_LABEL,
+  kernelDensity,
+  ruleBandwidth,
+} from "./charts/density/index.ts";
 export type {
   BreaksRule,
   HistogramAppearance,
@@ -118,6 +136,7 @@ export const builders = Object.freeze({
   a3: buildA3Option,
   bar: buildBarOption,
   boxplot: buildBoxplotOption,
+  density: buildDensityOption,
   histogram: buildHistogramOption,
   line: buildLineOption,
   scatter: buildScatterOption,

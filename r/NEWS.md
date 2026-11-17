@@ -16,7 +16,9 @@
 
 * `draw_bar()` and `draw()` on a `BarConfig` build the chart with the `@rtemis/draw` bar builder, the one rtemislive uses; `compile()` on a `BarConfig` returns a `BuildRequest`. `BarConfig` gains `group`, which splits each value column into one series per group, `aggregate` (`"none"`, `"sum"`, `"mean"`, `"median"`, `"count"`), which combines rows that share a category and group, and `ylim`, the value axis limits. A factor group or category keeps its level order. `draw_bar()` takes `zoom` as `TRUE` or `FALSE` and `margins` in pixels.
 
-* `draw_histogram()` and `draw()` on a `HistogramConfig` build the chart with the `@rtemis/draw` histogram builder, the one rtemislive uses; `compile()` on a `HistogramConfig` returns a `BuildRequest`. `draw_histogram()` takes `zoom` as `TRUE` or `FALSE` and `margins` in pixels.
+* `draw_histogram()` and `draw()` on a `HistogramConfig` build the chart with the `@rtemis/draw` histogram builder, the one rtemislive uses; `compile()` on a `HistogramConfig` returns a `BuildRequest`. `draw_histogram()` takes `zoom` as `TRUE` or `FALSE` and `margins` in pixels. The y axis is named after a bar's height unless `ylab` is given: the normalization ("Count", "Percent", ...) or the bin statistic of the column ("Mean X").
+
+* `draw_density()` and `draw()` on a `DensityConfig` build the chart with the `@rtemis/draw` density builder, the one rtemislive uses; `compile()` on a `DensityConfig` returns a `BuildRequest`. The y axis is named "Density" unless `ylab` is given. `draw_density()` takes `zoom` as `TRUE` or `FALSE` and `margins` in pixels.
 
 * `draw_a3()` and `draw()` on an `A3Config` build the diagram with the `@rtemis/draw` A3 builder, the one rtemislive uses, in the widget and in `save_drawing()`; the widget rebuilds it when the viewer switches between light and dark. Its tooltip groups annotations under family headings, as in rtemislive.
 

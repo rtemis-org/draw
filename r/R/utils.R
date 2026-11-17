@@ -731,3 +731,15 @@ check_dots_empty <- function(...) {
     class = c("rtemis_value_error", "rtemis_input_error")
   )
 } # /rtemis.draw::check_dots_empty
+
+
+# %% axis_title ----
+#' Axis title a label draws
+#'
+#' @param x Optional Character: Axis label.
+#' @return Character: `x`, or `NULL` for `NULL` or `""`.
+#' @keywords internal
+#' @noRd
+axis_title <- function(x) {
+  if (!is.null(x) && nzchar(x)) x
+} # /rtemis.draw::axis_title

@@ -28,6 +28,8 @@ var RtemisDraw = (() => {
     DEFAULT_MARGIN: () => DEFAULT_MARGIN,
     DEFAULT_PAD: () => DEFAULT_PAD,
     DEFAULT_POINT_SIZE: () => DEFAULT_POINT_SIZE,
+    DENSITY_CHART_CONFIG_MEMBERS: () => DENSITY_CHART_CONFIG_MEMBERS,
+    DENSITY_VALUE_LABEL: () => DENSITY_VALUE_LABEL,
     FIT_MEMBERS: () => FIT_MEMBERS,
     HISTOGRAM_CHART_CONFIG_MEMBERS: () => HISTOGRAM_CHART_CONFIG_MEMBERS,
     LINE_CHART_CONFIG_MEMBERS: () => LINE_CHART_CONFIG_MEMBERS,
@@ -46,6 +48,7 @@ var RtemisDraw = (() => {
     buildA3Option: () => buildA3Option,
     buildBarOption: () => buildBarOption,
     buildBoxplotOption: () => buildBoxplotOption,
+    buildDensityOption: () => buildDensityOption,
     buildHistogramOption: () => buildHistogramOption,
     buildLineOption: () => buildLineOption,
     buildScatterOption: () => buildScatterOption,
@@ -61,6 +64,7 @@ var RtemisDraw = (() => {
     formatNumber: () => formatNumber,
     histogramEdges: () => histogramEdges,
     histogramValueLabel: () => histogramValueLabel,
+    kernelDensity: () => kernelDensity,
     keyPlacement: () => keyPlacement,
     keyState: () => keyState,
     lightThemeTokens: () => lightThemeTokens,
@@ -68,6 +72,7 @@ var RtemisDraw = (() => {
     pretty: () => pretty,
     radicalInverse: () => radicalInverse,
     registerRenderers: () => registerRenderers,
+    ruleBandwidth: () => ruleBandwidth,
     scatterAspect: () => lineAspect,
     sizeKeyValues: () => sizeKeyValues,
     themeFontSizes: () => themeFontSizes,
@@ -1978,6 +1983,228 @@ var RtemisDraw = (() => {
     return { records, limits: extended ?? limits };
   }
 
+  // src/shared/ridge.ts
+  function ridgeOption(input) {
+    const { names, xlab } = input;
+    const rows = names.length;
+    const [low, high] = input.y;
+    return {
+      ...input.common,
+      legend: { show: false },
+      grid: names.map((_, i) => ({
+        left: 100,
+        right: 30,
+        top: `${8 + i * 80 / rows}%`,
+        height: `${64 / rows}%`,
+        outerBoundsMode: "none"
+      })),
+      xAxis: names.map((_, i) => ({
+        type: "value",
+        min: input.x[0],
+        max: input.x[1],
+        gridIndex: i,
+        show: i === rows - 1,
+        ...i === rows - 1 && xlab ? { name: xlab, nameLocation: "middle" } : {}
+      })),
+      yAxis: names.map((name, i) => ({
+        type: "value",
+        min: low < 0 ? low * 1.05 : 0,
+        max: high > 0 ? high * 1.05 : 1,
+        gridIndex: i,
+        name,
+        nameLocation: "middle",
+        nameGap: 55,
+        splitNumber: 2,
+        axisLabel: { showMinLabel: false, showMaxLabel: false }
+      })),
+      ...input.zoom ? {
+        dataZoom: [
+          {
+            type: "inside",
+            xAxisIndex: names.map((_, i) => i),
+            filterMode: "none",
+            zoomOnMouseWheel: "shift",
+            moveOnMouseMove: true
+          }
+        ]
+      } : {},
+      series: input.series.map((s) => {
+        const row = names.indexOf(s.name);
+        return { ...s, xAxisIndex: row, yAxisIndex: row };
+      })
+    };
+  }
+
+  // src/charts/density/config.ts
+  var DENSITY_CHART_CONFIG_MEMBERS = Object.freeze([
+    "type",
+    "x",
+    "group",
+    "mode",
+    "order",
+    "zoom",
+    "n",
+    "bw",
+    "bandwidth",
+    "kernel",
+    "adjust",
+    "fill_alpha",
+    "na_rm",
+    "palette",
+    "xlab",
+    "ylab",
+    "title",
+    "margin_top",
+    "margin_right",
+    "margin_bottom",
+    "margin_left",
+    "legend_position",
+    "legend_placement",
+    "legend_title"
+  ]);
+  var DENSITY_VALUE_LABEL = "Density";
+  function buildDensityOption(data, config, appearance = {}) {
+    const samples = data.samples;
+    if (samples.length === 0) {
+      throw new Error("A density chart needs `x` set to one or more columns to draw.");
+    }
+    for (const s of samples) {
+      if (s.x.length !== s.y.length) {
+        throw new Error(`Sample '${s.name ?? "x"}' needs one density per evaluation point.`);
+      }
+    }
+    const names = samples.map((s, i) => s.name ?? `Series ${i + 1}`);
+    const series = samples.map((s, i) => ({
+      type: "line",
+      name: names[i],
+      showSymbol: false,
+      areaStyle: { opacity: config.fill_alpha ?? 0.25 },
+      data: s.x.map((x, j) => [x, s.y[j]])
+    }));
+    const xs = samples.flatMap((s) => s.x);
+    const ys = samples.flatMap((s) => s.y);
+    const palette = asArray(config.palette);
+    const colors = palette.length > 0 ? palette : appearance.palette;
+    const xlab = config.xlab || null;
+    const ylab = config.ylab || null;
+    const common = {
+      ...config.title ? { title: { text: config.title } } : {},
+      tooltip: { trigger: "axis", valueFormatter: formatNumber },
+      ...colors && colors.length > 0 ? { color: [...colors] } : {},
+      ...appearance.animation === void 0 ? {} : { animation: appearance.animation }
+    };
+    if ((config.mode ?? "overlap") === "ridge" && samples.length > 1) {
+      return ridgeOption({
+        common,
+        series,
+        names,
+        x: [Math.min(...xs), Math.max(...xs)],
+        y: [Math.min(0, ...ys), Math.max(0, ...ys)],
+        xlab,
+        zoom: config.zoom ?? false
+      });
+    }
+    const xAxis = {
+      type: "value",
+      scale: true,
+      ...xlab ? { name: xlab, nameLocation: "middle" } : {}
+    };
+    const yAxis = {
+      type: "value",
+      min: 0,
+      ...ylab ? { name: ylab, nameLocation: "middle" } : {}
+    };
+    const grid = cartesianGrid(config, Boolean(xlab || ylab));
+    const dataZoom = config.zoom ? axisZoom("x", grid, { filterMode: "none" }) : void 0;
+    return {
+      ...common,
+      ...samples.length > 1 ? { legend: { data: names } } : {},
+      xAxis,
+      yAxis,
+      grid,
+      ...dataZoom ? { dataZoom } : {},
+      series
+    };
+  }
+
+  // src/charts/density/kde.ts
+  function ruleBandwidth(summary, rule = "nrd0") {
+    const sd = summary.sd ?? 0;
+    const iqr = ((summary.q3 ?? 0) - (summary.q1 ?? 0)) / 1.34;
+    const scale = summary.n ** -0.2;
+    switch (rule) {
+      case "nrd0": {
+        const lo = Math.min(sd, iqr) || sd || Math.abs(summary.min) || 1;
+        return 0.9 * lo * scale;
+      }
+      case "nrd":
+        return 1.06 * Math.min(sd, iqr) * scale;
+      default:
+        throw new Error(
+          `The bandwidth rule '${rule}' is computed in R; set \`bw\` to "nrd0" or "nrd", or set \`bandwidth\`.`
+        );
+    }
+  }
+  function kernelAt(kernel, u, bw) {
+    const au = Math.abs(u);
+    switch (kernel) {
+      case "gaussian":
+        return Math.exp(-0.5 * (u / bw) ** 2) / (bw * Math.sqrt(2 * Math.PI));
+      case "rectangular": {
+        const a = bw * Math.sqrt(3);
+        return au < a ? 0.5 / a : 0;
+      }
+      case "triangular": {
+        const a = bw * Math.sqrt(6);
+        return au < a ? (1 - au / a) / a : 0;
+      }
+      case "epanechnikov": {
+        const a = bw * Math.sqrt(5);
+        return au < a ? 0.75 * (1 - (au / a) ** 2) / a : 0;
+      }
+      case "biweight": {
+        const a = bw * Math.sqrt(7);
+        return au < a ? 15 / 16 * (1 - (au / a) ** 2) ** 2 / a : 0;
+      }
+      case "cosine": {
+        const a = bw / Math.sqrt(1 / 3 - 2 / Math.PI ** 2);
+        return au < a ? (1 + Math.cos(Math.PI * u / a)) / (2 * a) : 0;
+      }
+      case "optcosine": {
+        const a = bw / Math.sqrt(1 - 8 / Math.PI ** 2);
+        return au < a ? Math.PI / 4 * Math.cos(Math.PI * u / (2 * a)) / a : 0;
+      }
+    }
+  }
+  function kernelDensity(summary, counts, options = {}) {
+    const { n: size, min, max } = summary;
+    const explicit = options.bandwidth ?? null;
+    if (!(size > 0) || explicit === null && (size < 2 || max === min)) return null;
+    const bw = (explicit ?? ruleBandwidth(summary, options.bw)) * (options.adjust ?? 1);
+    if (!(bw > 0) || !Number.isFinite(bw)) return null;
+    const kernel = options.kernel ?? "gaussian";
+    const points = options.n ?? 512;
+    const cut = options.cut ?? 3;
+    const lo = min - cut * bw;
+    const hi = max + cut * bw;
+    const bins = counts.length;
+    const step = (max - min) / bins;
+    const centers = Array.from(
+      { length: bins },
+      (_, b) => max === min ? min : min + (b + 0.5) * step
+    );
+    const x = Array.from({ length: points }, (_, i) => lo + (hi - lo) * i / (points - 1));
+    const y = x.map((at) => {
+      let sum = 0;
+      for (let b = 0; b < bins; b++) {
+        const count = counts[b];
+        if (count !== 0) sum += count * kernelAt(kernel, at - centers[b], bw);
+      }
+      return sum / size;
+    });
+    return { x, y, bw };
+  }
+
   // src/charts/histogram/renderers.ts
   var HISTOGRAM = "rtemis.histogram.v1";
   var histogramRenderers = {
@@ -2084,11 +2311,23 @@ var RtemisDraw = (() => {
         return "Count density";
     }
   }
-  function histogramValueLabel(config) {
-    const stat = config.bin_stat ?? "count";
-    if (stat !== "count") return stat.charAt(0).toUpperCase() + stat.slice(1);
-    const name = heightName(config);
-    return name === "Height" ? "Count" : name;
+  function histogramValueLabel(config, name = (column2) => column2) {
+    const xs = asArray(config.x);
+    const only = xs.length === 1 ? name(xs[0]) : null;
+    switch (config.bin_stat ?? "count") {
+      case "sum":
+        return only === null ? "Sum" : `Sum of ${only}`;
+      case "mean":
+        return only === null ? "Mean" : `Mean ${only}`;
+      case "min":
+        return only === null ? "Minimum" : `Minimum ${only}`;
+      case "max":
+        return only === null ? "Maximum" : `Maximum ${only}`;
+      default: {
+        const height = heightName(config);
+        return height === "Height" ? "Count" : height;
+      }
+    }
   }
   function normalize(counts, widths, n, normalization) {
     if (n === 0) return counts.map(() => 0);
@@ -2212,7 +2451,19 @@ var RtemisDraw = (() => {
       ...appearance.animation === void 0 ? {} : { animation: appearance.animation }
     };
     if (ridge && samples.length > 1) {
-      return ridgeOption(common, series, names, edges, low, high, xlab, config.zoom ?? false);
+      const curveX = series.filter((s) => s.type === "line").flatMap((s) => s.data.map((d) => d[0]));
+      return ridgeOption({
+        common,
+        series,
+        names,
+        x: [
+          Math.min(edges[0], ...curveX),
+          Math.max(edges[edges.length - 1], ...curveX)
+        ],
+        y: [low, high],
+        xlab,
+        zoom: config.zoom ?? false
+      });
     }
     const xAxis = {
       type: "value",
@@ -2235,60 +2486,6 @@ var RtemisDraw = (() => {
       grid,
       ...dataZoom ? { dataZoom } : {},
       series
-    };
-  }
-  function ridgeOption(common, series, names, edges, low, high, xlab, zoom) {
-    const rows = names.length;
-    const curveX = series.filter((s) => s.type === "line").flatMap((s) => s.data.map((d) => d[0]));
-    const xMin = Math.min(edges[0], ...curveX);
-    const xMax = Math.max(edges[edges.length - 1], ...curveX);
-    const placed = series.map((s) => {
-      const row = names.indexOf(s.name);
-      return { ...s, xAxisIndex: row, yAxisIndex: row };
-    });
-    return {
-      ...common,
-      legend: { show: false },
-      // Each row's plotting box is its grid's rectangle, so the rows share one
-      // left edge and one x scale whatever their labels' widths.
-      grid: names.map((_, i) => ({
-        left: 100,
-        right: 30,
-        top: `${8 + i * 80 / rows}%`,
-        height: `${64 / rows}%`,
-        outerBoundsMode: "none"
-      })),
-      xAxis: names.map((_, i) => ({
-        type: "value",
-        min: xMin,
-        max: xMax,
-        gridIndex: i,
-        show: i === rows - 1,
-        ...i === rows - 1 && xlab ? { name: xlab, nameLocation: "middle" } : {}
-      })),
-      yAxis: names.map((name, i) => ({
-        type: "value",
-        min: low < 0 ? low * 1.05 : 0,
-        max: high > 0 ? high * 1.05 : 1,
-        gridIndex: i,
-        name,
-        nameLocation: "middle",
-        nameGap: 55,
-        splitNumber: 2,
-        axisLabel: { showMinLabel: false, showMaxLabel: false }
-      })),
-      ...zoom ? {
-        dataZoom: [
-          {
-            type: "inside",
-            xAxisIndex: names.map((_, i) => i),
-            filterMode: "none",
-            zoomOnMouseWheel: "shift",
-            moveOnMouseMove: true
-          }
-        ]
-      } : {},
-      series: placed
     };
   }
 
@@ -3620,6 +3817,7 @@ var RtemisDraw = (() => {
     a3: buildA3Option,
     bar: buildBarOption,
     boxplot: buildBoxplotOption,
+    density: buildDensityOption,
     histogram: buildHistogramOption,
     line: buildLineOption,
     scatter: buildScatterOption

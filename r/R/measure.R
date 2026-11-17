@@ -91,3 +91,39 @@ value_label <- function(config) {
     only
   )
 } # /rtemis.draw::value_label
+
+
+# %% histogram_value_label ----
+#' Label for a histogram's value axis
+#'
+#' What a bar's height is, as `@rtemis/draw`'s `histogramValueLabel()` names
+#' it: the normalization ("Count", "Probability", "Percent", "Density",
+#' "Count density"), or the statistic of the x values in a bin, with the
+#' column when `x` is one column ("Sum of X", "Mean X", "Minimum X",
+#' "Maximum X").
+#'
+#' @param config [HistogramConfig]: The histogram config.
+#'
+#' @return Character.
+#'
+#' @author EDG
+#' @keywords internal
+#' @noRd
+histogram_value_label <- function(config) {
+  only <- if (length(config@x) == 1L) config@x
+  switch(
+    config@bin_stat,
+    sum = if (is.null(only)) "Sum" else paste("Sum of", only),
+    mean = paste(c("Mean", only), collapse = " "),
+    min = paste(c("Minimum", only), collapse = " "),
+    max = paste(c("Maximum", only), collapse = " "),
+    switch(
+      config@normalization,
+      count = "Count",
+      probability = "Probability",
+      percent = "Percent",
+      density = "Density",
+      count_density = "Count density"
+    )
+  )
+} # /rtemis.draw::histogram_value_label

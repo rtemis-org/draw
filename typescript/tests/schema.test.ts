@@ -4,6 +4,7 @@ import { describe, expect, it } from "vitest";
 import { A3_CHART_CONFIG_MEMBERS } from "../src/charts/a3/config.ts";
 import { BAR_CHART_CONFIG_MEMBERS } from "../src/charts/bar/config.ts";
 import { BOXPLOT_CHART_CONFIG_MEMBERS } from "../src/charts/boxplot/config.ts";
+import { DENSITY_CHART_CONFIG_MEMBERS } from "../src/charts/density/config.ts";
 import { HISTOGRAM_CHART_CONFIG_MEMBERS } from "../src/charts/histogram/config.ts";
 import { LINE_CHART_CONFIG_MEMBERS } from "../src/charts/line/config.ts";
 import { SCATTER_CHART_CONFIG_MEMBERS } from "../src/charts/scatter/config.ts";
@@ -20,6 +21,7 @@ describe.skipIf(!schemaDir)("config types against the generated schemas", () => 
     ["a3", A3_CHART_CONFIG_MEMBERS],
     ["bar", BAR_CHART_CONFIG_MEMBERS],
     ["boxplot", BOXPLOT_CHART_CONFIG_MEMBERS],
+    ["density", DENSITY_CHART_CONFIG_MEMBERS],
     ["histogram", HISTOGRAM_CHART_CONFIG_MEMBERS],
     ["line", LINE_CHART_CONFIG_MEMBERS],
     ["scatter", SCATTER_CHART_CONFIG_MEMBERS],

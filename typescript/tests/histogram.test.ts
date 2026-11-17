@@ -176,7 +176,12 @@ describe("histogramValueLabel", () => {
   it("names the height by normalization or statistic", () => {
     expect(histogramValueLabel({})).toBe("Count");
     expect(histogramValueLabel({ normalization: "count_density" })).toBe("Count density");
+    expect(histogramValueLabel({ normalization: "percent" })).toBe("Percent");
     expect(histogramValueLabel({ bin_stat: "mean" })).toBe("Mean");
+    expect(histogramValueLabel({ bin_stat: "sum", x: ["len"] })).toBe("Sum of len");
+    expect(histogramValueLabel({ bin_stat: "max", x: "len" }, (c) => c.toUpperCase())).toBe(
+      "Maximum LEN",
+    );
   });
 });
 

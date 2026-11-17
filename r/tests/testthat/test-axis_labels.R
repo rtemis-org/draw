@@ -84,11 +84,8 @@ test_that("an empty label draws no axis name", {
   )
   expect_null(ts@x_axis@name)
   expect_null(ts@y_axis[[1]]@name)
-  option <- compile(configs[["density"]], data = d)
-  expect_null(option@x_axis@name)
-  expect_null(option@y_axis@name)
   skip_if_no_node()
-  for (type in c("scatter", "line", "bar", "histogram")) {
+  for (type in c("scatter", "line", "bar", "histogram", "density")) {
     option <- built_option(compile(configs[[type]], data = d))
     expect_null(option[["xAxis"]][["name"]])
     expect_null(option[["yAxis"]][["name"]])

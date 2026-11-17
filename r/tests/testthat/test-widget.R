@@ -878,15 +878,15 @@ test_that("draw_density creates widget", {
   set.seed(1)
   w <- draw_density(rnorm(100))
   expect_s3_class(w, "htmlwidget")
-  expect_equal(w$x$option$series[[1]]$type, "line")
-  expect_equal(w$x$option$xAxis$type, "value")
+  expect_equal(raw_option(w)$series[[1]]$type, "line")
+  expect_equal(raw_option(w)$xAxis$type, "value")
   # 512 density points by default, each an [x, y] pair
-  expect_equal(length(w$x$option$series[[1]]$data), 512L)
-  expect_equal(length(w$x$option$series[[1]]$data[[1]]), 2L)
+  expect_equal(length(raw_option(w)$series[[1]]$data), 512L)
+  expect_equal(length(raw_option(w)$series[[1]]$data[[1]]), 2L)
   # No symbols on density curves
-  expect_equal(w$x$option$series[[1]]$showSymbol, FALSE)
+  expect_equal(raw_option(w)$series[[1]]$showSymbol, FALSE)
   # Area fill enabled
-  expect_false(is.null(w$x$option$series[[1]]$areaStyle))
+  expect_false(is.null(raw_option(w)$series[[1]]$areaStyle))
 })
 
 test_that("draw_density with groups", {
@@ -895,10 +895,10 @@ test_that("draw_density with groups", {
     x = c(rnorm(50, 0), rnorm(50, 3)),
     group = rep(c("A", "B"), each = 50)
   )
-  expect_equal(length(w$x$option$series), 2L)
-  expect_equal(w$x$option$series[[1]]$name, "A")
-  expect_equal(w$x$option$series[[2]]$name, "B")
-  expect_false(is.null(w$x$option$legend))
+  expect_equal(length(raw_option(w)$series), 2L)
+  expect_equal(raw_option(w)$series[[1]]$name, "A")
+  expect_equal(raw_option(w)$series[[2]]$name, "B")
+  expect_false(is.null(raw_option(w)$legend))
 })
 
 test_that("draw_density with a named list creates one series per variable", {
@@ -909,12 +909,12 @@ test_that("draw_density with a named list creates one series per variable", {
       "Bill Length" = rnorm(50, 45, 4)
     )
   )
-  expect_equal(length(w$x$option$series), 2L)
-  expect_equal(w$x$option$series[[1]]$name, "Flipper Length")
-  expect_equal(w$x$option$series[[2]]$name, "Bill Length")
-  expect_equal(length(w$x$option$series[[1]]$data), 512L)
-  expect_equal(length(w$x$option$series[[2]]$data), 512L)
-  expect_false(is.null(w$x$option$legend))
+  expect_equal(length(raw_option(w)$series), 2L)
+  expect_equal(raw_option(w)$series[[1]]$name, "Flipper Length")
+  expect_equal(raw_option(w)$series[[2]]$name, "Bill Length")
+  expect_equal(length(raw_option(w)$series[[1]]$data), 512L)
+  expect_equal(length(raw_option(w)$series[[2]]$data), 512L)
+  expect_false(is.null(raw_option(w)$legend))
 })
 
 test_that("draw_density with a list removes NAs per variable", {
@@ -928,9 +928,9 @@ test_that("draw_density with a list removes NAs per variable", {
     ),
     "Removed 1 NA value from Flipper Length"
   )
-  expect_equal(length(w$x$option$series), 2L)
-  expect_equal(w$x$option$series[[1]]$name, "Flipper Length")
-  expect_equal(w$x$option$series[[2]]$name, "Bill Length")
+  expect_equal(length(raw_option(w)$series), 2L)
+  expect_equal(raw_option(w)$series[[1]]$name, "Flipper Length")
+  expect_equal(raw_option(w)$series[[2]]$name, "Bill Length")
 })
 
 test_that("draw_density with grouped list creates variable-group series", {
@@ -942,9 +942,9 @@ test_that("draw_density with grouped list creates variable-group series", {
     group = rep(c("A", "B"), each = 3)
   )
 
-  expect_equal(length(w$x$option$series), 4L)
+  expect_equal(length(raw_option(w)$series), 4L)
   expect_equal(
-    vapply(w$x$option$series, `[[`, character(1), "name"),
+    vapply(raw_option(w)$series, `[[`, character(1), "name"),
     c(
       "Flipper Length - A",
       "Flipper Length - B",
@@ -952,7 +952,7 @@ test_that("draw_density with grouped list creates variable-group series", {
       "Bill Length - B"
     )
   )
-  expect_false(is.null(w$x$option$legend))
+  expect_false(is.null(raw_option(w)$legend))
 })
 
 test_that("draw_density with grouped list drops missing group values", {
@@ -964,9 +964,9 @@ test_that("draw_density with grouped list drops missing group values", {
     group = c("A", "A", NA, "B", "B", NA)
   )
 
-  expect_equal(length(w$x$option$series), 4L)
+  expect_equal(length(raw_option(w)$series), 4L)
   expect_equal(
-    vapply(w$x$option$series, `[[`, character(1), "name"),
+    vapply(raw_option(w)$series, `[[`, character(1), "name"),
     c(
       "Flipper Length - A",
       "Flipper Length - B",
@@ -989,15 +989,15 @@ test_that("draw_density with grouped list removes NAs per variable and keeps gro
     "Removed 1 NA value from Flipper Length"
   )
 
-  expect_equal(length(w$x$option$series), 4L)
-  expect_equal(w$x$option$series[[1]]$name, "Flipper Length - A")
-  expect_equal(w$x$option$series[[4]]$name, "Bill Length - B")
+  expect_equal(length(raw_option(w)$series), 4L)
+  expect_equal(raw_option(w)$series[[1]]$name, "Flipper Length - A")
+  expect_equal(raw_option(w)$series[[4]]$name, "Bill Length - B")
 })
 
 test_that("draw_density respects n parameter", {
   set.seed(1)
   w <- draw_density(rnorm(100), n = 256)
-  expect_equal(length(w$x$option$series[[1]]$data), 256L)
+  expect_equal(length(raw_option(w)$series[[1]]$data), 256L)
 })
 
 test_that("draw_density removes NAs and messages", {
@@ -1008,7 +1008,7 @@ test_that("draw_density removes NAs and messages", {
     "Removed 2 NA values"
   )
   expect_s3_class(w, "htmlwidget")
-  expect_equal(length(w$x$option$series[[1]]$data), 512L)
+  expect_equal(length(raw_option(w)$series[[1]]$data), 512L)
 })
 
 test_that("draw_density removes NAs silently with verbosity = 0", {
@@ -1028,9 +1028,9 @@ test_that("draw_density with group removes NAs and keeps group aligned", {
     w <- draw_density(xv, group = g, verbosity = 1L),
     "Removed 3 NA values"
   )
-  expect_equal(length(w$x$option$series), 2L)
-  expect_equal(w$x$option$series[[1]]$name, "A")
-  expect_equal(w$x$option$series[[2]]$name, "B")
+  expect_equal(length(raw_option(w)$series), 2L)
+  expect_equal(raw_option(w)$series[[1]]$name, "A")
+  expect_equal(raw_option(w)$series[[2]]$name, "B")
 })
 
 # -- draw_histogram ------------------------------------------------------------
@@ -1118,7 +1118,7 @@ test_that("draw_scatter applies margins", {
 test_that("draw_density applies margins", {
   set.seed(1)
   w <- draw_density(rnorm(50), margins = c(left = 100))
-  expect_equal(w$x$option$grid$left, 100)
+  expect_equal(node_option(w)$grid$left, 100)
 })
 
 test_that("draw_histogram applies margins", {
@@ -1247,8 +1247,8 @@ test_that("draw_scatter applies xlab and ylab", {
 test_that("draw_density applies xlab and ylab", {
   set.seed(1)
   w <- draw_density(rnorm(50), xlab = "Value", ylab = "Density")
-  expect_equal(w$x$option$xAxis[["name"]], "Value")
-  expect_equal(w$x$option$yAxis[["name"]], "Density")
+  expect_equal(node_option(w)$xAxis[["name"]], "Value")
+  expect_equal(node_option(w)$yAxis[["name"]], "Density")
 })
 
 test_that("draw_histogram applies xlab and ylab", {

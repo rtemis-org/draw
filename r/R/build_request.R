@@ -10,7 +10,15 @@
 
 # %% BUILDER_TYPES ----
 # Chart types with a builder in the bundled @rtemis/draw.
-BUILDER_TYPES <- c("a3", "bar", "boxplot", "histogram", "line", "scatter")
+BUILDER_TYPES <- c(
+  "a3",
+  "bar",
+  "boxplot",
+  "density",
+  "histogram",
+  "line",
+  "scatter"
+)
 
 
 # %% BuildRequest ----
@@ -21,8 +29,8 @@ BUILDER_TYPES <- c("a3", "bar", "boxplot", "histogram", "line", "scatter")
 #' [draw()] sends it to the widget, and [save_drawing()] sends it to Node.js;
 #' each calls the builder for `type` with `data`, `config`, and `appearance`.
 #'
-#' @param type Character \{"a3", "bar", "boxplot", "histogram", "line",
-#'   "scatter"\}: Chart type.
+#' @param type Character \{"a3", "bar", "boxplot", "density", "histogram",
+#'   "line", "scatter"\}: Chart type.
 #' @param data Character: The chart data as JSON text.
 #' @param config Named list: The chart config, an instance of the
 #'   `chart/<type>/v1` schema.

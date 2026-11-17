@@ -377,11 +377,11 @@ test_that("resolving a histogram config records the bar opacity drawn", {
 })
 
 test_that("distribution tooltips retain the shared numeric formatting", {
-  tooltip <- to_list(density_option(1:5))[["tooltip"]]
-  expect_identical(tooltip[["valueFormatter"]], number_value_formatter())
+  # @rtemis/draw sets each formatter, `formatNumber()`, a function the JSON of
+  # a built option leaves out (its tests check it).
+  tooltip <- as_option(density_option(1:5))[["tooltip"]]
+  expect_identical(tooltip[["trigger"]], "axis")
   expect_null(tooltip[["formatter"]])
-  # @rtemis/draw sets the histogram's formatter, `formatNumber()`, a function
-  # the JSON of a built option leaves out (its tests check it).
   tooltip <- as_option(histogram_option(1:5))[["tooltip"]]
   expect_identical(tooltip[["trigger"]], "item")
   expect_null(tooltip[["formatter"]])
@@ -511,7 +511,7 @@ test_that("ridge layouts retain common statistical scales and stable ordering", 
     group = "Species",
     mode = "ridge"
   )
-  expect_length(to_list(compile(config, iris))[["grid"]], 3)
+  expect_length(as_option(compile(config, iris))[["grid"]], 3)
   expect_equal(
     read_chart_config(write_chart_config(
       config,

@@ -279,7 +279,8 @@ method(resolve, DensityConfig) <- function(config, data = NULL, ...) {
   config_derive(
     config,
     list(
-      xlab = if (length(config@x) == 1L) config@x else NULL
+      xlab = if (length(config@x) == 1L) config@x else NULL,
+      ylab = "Density"
     )
   )
 }
@@ -326,6 +327,9 @@ method(compile, DensityConfig) <- function(
     ylab = config@ylab,
     title = config@title,
     margins = config_margins(config) %||% DEFAULT_MARGINS,
-    zoom = config@zoom
+    zoom = config@zoom,
+    legend_position = config@legend_position,
+    legend_placement = config@legend_placement,
+    legend_title = config@legend_title
   )
 }

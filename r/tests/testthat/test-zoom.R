@@ -166,7 +166,7 @@ test_that("BarConfig carries zoom to the option", {
 test_that("draw_histogram and draw_density zoom the x-axis without filtering", {
   for (opt in list(
     raw_option(draw_histogram(iris$Sepal.Length, zoom = TRUE)),
-    draw_density(iris$Sepal.Length, zoom = TRUE)$x$option
+    raw_option(draw_density(iris$Sepal.Length, zoom = TRUE))
   )) {
     expect_identical(zoom_types(opt), c("slider", "inside"))
     expect_equal(opt[["dataZoom"]][[1L]][["xAxisIndex"]], 0)
@@ -175,25 +175,25 @@ test_that("draw_histogram and draw_density zoom the x-axis without filtering", {
     }
     expect_identical(inside_zooms(opt)[[1L]][["zoomOnMouseWheel"]], "shift")
   }
-  expect_null(draw_density(iris$Sepal.Length)$x$option[["dataZoom"]])
+  expect_null(raw_option(draw_density(iris$Sepal.Length))[["dataZoom"]])
 })
 
 test_that("ridge distributions zoom every row together without a slider", {
-  opt <- draw_density(
+  opt <- raw_option(draw_density(
     split(iris$Sepal.Length, iris$Species),
     mode = "ridge",
     zoom = TRUE
-  )$x$option
+  ))
   expect_identical(zoom_types(opt), "inside")
-  expect_identical(opt[["dataZoom"]][[1L]][["xAxisIndex"]], "all")
+  expect_equal(unlist(opt[["dataZoom"]][[1L]][["xAxisIndex"]]), 0:2)
   expect_identical(opt[["dataZoom"]][[1L]][["zoomOnMouseWheel"]], "shift")
 })
 
 test_that("DensityConfig and HistogramConfig carry zoom to the option", {
-  opt <- draw(
+  opt <- raw_option(draw(
     setup_DensityConfig(x = "mpg", zoom = TRUE),
     data = mtcars
-  )$x$option
+  ))
   expect_identical(zoom_types(opt), c("slider", "inside"))
   opt <- raw_option(draw(
     setup_HistogramConfig(x = "mpg", zoom = TRUE),
@@ -301,9 +301,13 @@ test_that("volcano plots zoom both axes and Manhattan plots the outcome axis", {
 
 # %% static export ----
 test_that("static_controls drops zoom controls and returns the slider band", {
-  # A chart R builds; static export of a built chart returns the band in Node.
-  sample <- iris[["Sepal.Length"]]
-  opt <- strip_js(draw_density(sample, zoom = TRUE)$x$option, path = "option")
+  # An option R builds; static export of a built chart returns the band in
+  # Node.
+  zoomed <- zoom_layout(TRUE, axis = "x", grid = resolve_margins(DEFAULT_MARGINS))
+  opt <- to_list(EChartsOption(
+    data_zoom = zoomed[["data_zoom"]],
+    grid = zoomed[["grid"]]
+  ))
   expect_identical(opt[["dataZoom"]][[1L]][["id"]], ZOOM_SLIDER_ID)
   out <- static_controls(opt)
   expect_null(out[["dataZoom"]])
@@ -315,14 +319,10 @@ test_that("static_controls drops zoom controls and returns the slider band", {
   out <- static_controls(opt)
   expect_null(out[["toolbox"]])
   expect_identical(out[["grid"]], opt[["grid"]])
-  explicit <- strip_js(
-    draw_density(
-      sample,
-      zoom = DataZoom(type = "slider"),
-      margins = c(bottom = 50)
-    )$x$option,
-    path = "option"
-  )
+  explicit <- to_list(EChartsOption(
+    data_zoom = list(DataZoom(type = "slider")),
+    grid = resolve_margins(c(bottom = 50))
+  ))
   expect_equal(static_controls(explicit)[["grid"]][["bottom"]], 50)
 })
 

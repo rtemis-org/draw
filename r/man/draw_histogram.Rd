@@ -58,7 +58,9 @@ palette for this chart. \code{NULL} uses the theme's.}
 
 \item{xlab}{Optional Character: X-axis title. \code{""} draws no title.}
 
-\item{ylab}{Optional Character: Y-axis title. \code{""} draws no title.}
+\item{ylab}{Optional Character: Y-axis title. \code{NULL} names it after a
+bar's height: the normalization ("Count", "Percent", ...) or the bin
+statistic of the column ("Mean X"). \code{""} draws no title.}
 
 \item{title}{Optional Character: Chart title.}
 

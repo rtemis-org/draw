@@ -138,7 +138,7 @@ test_that("palette reaches the option for density and histogram", {
   # Both take a palette that overrides the theme's.
   pal <- c("#111111", "#222222")
   d <- draw_density(rnorm(50), group = rep(c("a", "b"), 25), palette = pal)
-  expect_identical(d[["x"]][["option"]][["color"]], pal)
+  expect_identical(node_option(d)[["color"]], pal)
   h <- draw_histogram(rnorm(50), group = rep(c("a", "b"), 25), palette = pal)
   expect_identical(node_option(h)[["color"]], pal)
 })

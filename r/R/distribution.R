@@ -1,16 +1,6 @@
 # distribution.R
 # spec: draw/first-cran-release#histogram-density-foundation
 
-#' Axis title a label draws
-#'
-#' @param x Optional Character: Axis label.
-#' @return Character: `x`, or `NULL` for `NULL` or `""`.
-#' @keywords internal
-#' @noRd
-axis_title <- function(x) {
-  if (!is.null(x) && nzchar(x)) x
-} # /rtemis.draw::axis_title
-
 #' Validate and split numeric distribution observations
 #' @param x Numeric or List: Vectors to summarize.
 #' @inheritParams draw_density
@@ -162,9 +152,14 @@ method(distribution_density, class_numeric) <- function(x, config) {
   estimate[c("x", "y")]
 }
 
-#' Build density curves from the shared statistical configuration
+#' Estimate density curves and build their request
+#'
+#' Estimates each sample's density with `stats::density()`
+#' (`distribution_density()`); `@rtemis/draw`'s density builder draws the
+#' curves and lays out `mode`.
+#' spec: draw/shared-builders#density
 #' @inheritParams draw_density
-#' @return EChartsOption: Native density lines and fills.
+#' @return [BuildRequest] of type `"density"`.
 #' @keywords internal
 #' @noRd
 density_option <- new_generic("density_option", "x")
@@ -186,8 +181,13 @@ method(density_option, class_any) <- function(
   fill_alpha = .25,
   mode = "overlap",
   order = "input",
-  zoom = FALSE
+  zoom = FALSE,
+  legend_position = "top",
+  legend_placement = "outside",
+  legend_title = NULL
 ) {
+  check_zoom_flag(zoom)
+  margin <- pixel_margins(margins)
   config <- setup_DensityConfig(
     mode = mode,
     order = order,
@@ -197,76 +197,48 @@ method(density_option, class_any) <- function(
     kernel = kernel,
     adjust = adjust,
     fill_alpha = fill_alpha,
-    na_rm = na_rm
+    na_rm = na_rm,
+    palette = palette,
+    xlab = xlab,
+    ylab = ylab,
+    title = title,
+    zoom = zoom,
+    margin_top = margin[["top"]],
+    margin_right = margin[["right"]],
+    margin_bottom = margin[["bottom"]],
+    margin_left = margin[["left"]],
+    legend_position = legend_position,
+    legend_placement = legend_placement,
+    legend_title = legend_title
   )
+  # The value axis says what the curve's height is, unless the author names it.
+  config <- config_derive(config, list(ylab = "Density"))
   samples <- distribution_order(
     distribution_samples(x, group, na_rm, verbosity),
     order
   )
-  series <- lapply(seq_along(samples), function(i) {
-    estimate <- distribution_density(samples[[i]], config)
-    LineSeries(
-      name = names(samples)[[i]],
-      data = Map(c, estimate[["x"]], estimate[["y"]]),
-      show_symbol = FALSE,
-      area_style = AreaStyle(opacity = fill_alpha)
-    )
-  })
-  option <- EChartsOption(
-    title = if (!is.null(title)) Title(text = title) else NULL,
-    tooltip = Tooltip(
-      trigger = "axis",
-      value_formatter = number_value_formatter()
-    ),
-    legend = if (length(samples) > 1L) {
-      Legend(data = as.list(names(samples)))
-    } else {
-      NULL
-    },
-    x_axis = Axis(
-      type = "value",
-      name = axis_title(xlab),
-      scale = TRUE,
-      name_location = if (!is.null(axis_title(xlab))) "middle" else NULL
-    ),
-    y_axis = Axis(
-      type = "value",
-      min = 0,
-      name = axis_title(ylab),
-      name_location = if (!is.null(axis_title(ylab))) "middle" else NULL
-    ),
-    grid = resolve_margins(margins),
-    series = series,
-    color = palette
+  data <- list(
+    samples = lapply(names(samples), function(name) {
+      estimate <- distribution_density(samples[[name]], config)
+      list(
+        name = jsonlite::unbox(name),
+        n = jsonlite::unbox(length(samples[[name]])),
+        x = I(estimate[["x"]]),
+        y = I(estimate[["y"]])
+      )
+    })
   )
-  distribution_zoom(distribution_layout(option, names(samples), mode), zoom)
-}
-
-#' Compute histogram heights on an explicit normalization scale
-#' @param x Numeric: Nonnegative bin counts.
-#' @param widths Numeric: Positive bin widths.
-#' @param size Integer: Available observations in this sample.
-#' @inheritParams draw_histogram
-#' @return Numeric: Heights; empty samples have zero heights on every scale.
-#' @keywords internal
-#' @noRd
-histogram_heights <- new_generic("histogram_heights", "x")
-method(histogram_heights, class_numeric) <- function(
-  x,
-  widths,
-  size,
-  normalization
-) {
-  if (!size) {
-    return(rep(0, length(x)))
-  }
-  switch(
-    normalization,
-    count = x,
-    probability = x / size,
-    percent = 100 * x / size,
-    density = x / (size * widths),
-    count_density = x / widths
+  BuildRequest(
+    type = "density",
+    data = as.character(jsonlite::toJSON(
+      data,
+      auto_unbox = FALSE,
+      na = "null",
+      null = "null",
+      digits = NA
+    )),
+    config = config_members(config),
+    appearance = list()
   )
 }
 
@@ -369,6 +341,8 @@ method(histogram_option, class_any) <- function(
     legend_placement = legend_placement,
     legend_title = legend_title
   )
+  # The value axis says what a bar's height is, unless the author names it.
+  config <- config_derive(config, list(ylab = histogram_value_label(config)))
   samples <- distribution_order(
     distribution_samples(x, group, na_rm, verbosity),
     order
@@ -468,117 +442,6 @@ method(distribution_order, class_list) <- function(x, order) {
     numeric(1)
   )
   x[base::order(scores, decreasing = TRUE, na.last = TRUE)]
-}
-
-#' Align distribution layers on common axes in independent rows
-#'
-#' Uses GridOption and CartesianAxisOption from ECharts coord/cartesian.
-#' Every row retains density/count units; no peak normalization is applied.
-#' @param x EChartsOption: Complete distribution layers.
-#' @param labels Character: Ordered sample names.
-#' @param mode Character: Overlap or ridge layout.
-#' @return EChartsOption: Native multi-grid option for ridge mode.
-#' @keywords internal
-#' @noRd
-distribution_layout <- new_generic("distribution_layout", "x")
-method(distribution_layout, EChartsOption) <- function(x, labels, mode) {
-  if (mode == "overlap") {
-    return(x)
-  }
-  series <- to_list(x)[["series"]]
-  limits <- range(unlist(lapply(series, function(s) {
-    lapply(s[["data"]], function(d) {
-      if (s[["type"]] == "custom") d[1:2] else d[1]
-    })
-  })))
-  heights <- c(
-    0,
-    unlist(lapply(series, function(s) {
-      lapply(s[["data"]], function(d) {
-        d[[if (s[["type"]] == "custom") 3L else 2L]]
-      })
-    }))
-  )
-  minimum <- min(heights)
-  maximum <- max(heights)
-  nrow <- length(labels)
-  x@series <- lapply(series, function(s) {
-    index <- match(s[["name"]], labels) - 1L
-    s[["xAxisIndex"]] <- index
-    s[["yAxisIndex"]] <- index
-    s
-  })
-  x@legend <- Legend(show = FALSE)
-  x@grid <- lapply(seq_along(labels), function(i) {
-    list(
-      left = 100,
-      right = 30,
-      top = paste0(8 + (i - 1) * 80 / nrow, "%"),
-      height = paste0(64 / nrow, "%"),
-      containLabel = FALSE
-    )
-  })
-  x_name <- x@x_axis@name
-  x@x_axis <- lapply(seq_along(labels), function(i) {
-    Axis(
-      type = "value",
-      min = limits[[1]],
-      max = limits[[2]],
-      grid_index = i - 1,
-      name = if (i == nrow) x_name else NULL,
-      name_location = "middle",
-      show = i == nrow
-    )
-  })
-  x@y_axis <- lapply(seq_along(labels), function(i) {
-    Axis(
-      type = "value",
-      min = if (minimum < 0) minimum * 1.05 else 0,
-      max = if (maximum > 0) maximum * 1.05 else 1,
-      grid_index = i - 1,
-      name = labels[[i]],
-      name_location = "middle",
-      name_gap = 55,
-      split_number = 2,
-      axis_label = AxisLabel(show_max_label = FALSE, show_min_label = FALSE)
-    )
-  })
-  x
-}
-
-#' Add zoom to a distribution option
-#'
-#' A single grid takes the `"x"` preset of `zoom_layout()`: a slider below the
-#' axis title, Shift+wheel zoom, and drag panning. Ridge rows, which share
-#' one x range, take inside zooms on every x-axis and no slider. Both use
-#' `filterMode = "none"`, so bins and curves crossing the window edge are
-#' clipped by the grid and stay whole inside it.
-#'
-#' @param x EChartsOption: Distribution option after `distribution_layout()`.
-#' @param zoom Logical, [DataZoom], or list: User-facing `zoom` argument.
-#' @return EChartsOption: The option with `dataZoom` and margins set.
-#' @keywords internal
-#' @noRd
-distribution_zoom <- new_generic("distribution_zoom", "x")
-method(distribution_zoom, EChartsOption) <- function(x, zoom) {
-  if (is.list(x@x_axis) && !S7::S7_inherits(x@x_axis)) {
-    x@data_zoom <- if (isTRUE(zoom)) {
-      list(DataZoom(
-        type = "inside",
-        x_axis_index = "all",
-        filter_mode = "none",
-        zoom_on_mouse_wheel = "shift",
-        move_on_mouse_move = TRUE
-      ))
-    } else {
-      resolve_zoom(zoom)
-    }
-    return(x)
-  }
-  zoomed <- zoom_layout(zoom, axis = "x", grid = x@grid, filter_mode = "none")
-  x@grid <- zoomed[["grid"]]
-  x@data_zoom <- zoomed[["data_zoom"]]
-  x
 }
 
 #' Aggregate observations inside the histogram boundary convention

@@ -46,8 +46,8 @@ test_that("setup coerces n to an integer", {
 test_that("density compiles to the same option as the vector path", {
   d <- dh_data()
   expect_identical(
-    compile(setup_DensityConfig(x = "v"), data = d),
-    density_option(x = d[["v"]], xlab = "v")
+    raw_option(compile(setup_DensityConfig(x = "v"), data = d)),
+    raw_option(density_option(x = d[["v"]], xlab = "v"))
   )
 })
 
@@ -61,8 +61,8 @@ test_that("histogram compiles to the same option as the vector path", {
 
 test_that("a grouping column splits the chart into series", {
   d <- dh_data()
-  opt <- compile(setup_DensityConfig(x = "v", group = "g"), data = d)
-  expect_length(opt@series, length(unique(d[["g"]])))
+  opt <- raw_option(compile(setup_DensityConfig(x = "v", group = "g"), data = d))
+  expect_length(opt[["series"]], length(unique(d[["g"]])))
 })
 
 test_that("compile errors when x is unset", {
@@ -79,19 +79,47 @@ test_that("the x label comes from the bound column", {
   expect_identical(r@origin[["xlab"]], "derived")
 })
 
-test_that("no y label is invented", {
-  # The y axis shows an estimated density or a bin count, which has no name in
-  # the data. A constant like "Density" would be a default, not a derivation --
-  # and it would make the config path disagree with the vector path.
+test_that("a histogram's y label says what a bar's height is", {
   d <- dh_data()
-  for (cfg in list(
-    setup_DensityConfig(x = "v"),
-    setup_HistogramConfig(x = "v")
-  )) {
-    expect_null(resolve(cfg, data = d)@ylab)
-  }
-  expect_null(compile(setup_DensityConfig(x = "v"), data = d)@y_axis@name)
-  expect_null(draw_density(d[["v"]])[["x"]][["option"]][["yAxis"]][["name"]])
+  label <- function(...) resolve(setup_HistogramConfig(x = "v", ...), d)@ylab
+  expect_identical(label(), "Count")
+  expect_identical(label(normalization = "percent"), "Percent")
+  expect_identical(label(normalization = "count_density"), "Count density")
+  expect_identical(label(bin_stat = "mean"), "Mean v")
+  expect_identical(label(bin_stat = "sum"), "Sum of v")
+  expect_identical(label(ylab = "Penguins"), "Penguins")
+  expect_identical(
+    resolve(setup_HistogramConfig(x = "v"), d)@origin[["ylab"]],
+    "derived"
+  )
+  expect_identical(
+    raw_option(draw_histogram(d[["v"]], normalization = "density"))[[
+      "yAxis"
+    ]][["name"]],
+    "Density"
+  )
+  expect_identical(
+    raw_option(compile(setup_HistogramConfig(x = "v", bin_stat = "max"), d))[[
+      "yAxis"
+    ]][["name"]],
+    "Maximum v"
+  )
+})
+
+test_that("a density's y label says the height is a density", {
+  d <- dh_data()
+  expect_identical(resolve(setup_DensityConfig(x = "v"), data = d)@ylab, "Density")
+  expect_identical(
+    raw_option(compile(setup_DensityConfig(x = "v"), data = d))[["yAxis"]][[
+      "name"
+    ]],
+    "Density"
+  )
+  expect_identical(
+    raw_option(draw_density(d[["v"]]))[["yAxis"]][["name"]],
+    "Density"
+  )
+  expect_null(raw_option(draw_density(d[["v"]], ylab = ""))[["yAxis"]][["name"]])
 })
 
 

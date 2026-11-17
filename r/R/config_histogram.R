@@ -389,6 +389,7 @@ method(resolve, HistogramConfig) <- function(config, data = NULL, ...) {
     config,
     list(
       xlab = if (length(config@x) == 1L) config@x else NULL,
+      ylab = histogram_value_label(config),
       fill_alpha = if (!is.null(x)) {
         histogram_fill_alpha(
           distribution_samples(
@@ -465,7 +466,7 @@ method(compile, HistogramConfig) <- function(
     na_rm = config@na_rm,
     palette = config@palette,
     xlab = config@xlab,
-    ylab = config@ylab,
+    ylab = config@ylab %||% histogram_value_label(config),
     title = config@title,
     margins = config_margins(config) %||% DEFAULT_MARGINS,
     zoom = config@zoom,
