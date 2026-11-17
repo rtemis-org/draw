@@ -112,11 +112,11 @@ slider on the outcome axis for Manhattan plots.}
 \item{negative_color}{Optional Character: Color for significant effects
 below x_thresh. \code{NULL} uses the theme's negative color.}
 
-\item{neutral_color}{Optional Character: Color for other results, including
-effects equal to x_thresh. \code{NULL} uses the theme's neutral color.}
+\item{neutral_color}{Optional Character: Color for results that are not
+significant. \code{NULL} uses the theme's neutral color.}
 
-\item{positive_color}{Optional Character: Color for significant effects
-above x_thresh. \code{NULL} uses the theme's positive color.}
+\item{positive_color}{Optional Character: Color for significant effects at
+or above x_thresh. \code{NULL} uses the theme's positive color.}
 
 \item{alpha}{Numeric \verb{[0, 1]}: Mark opacity.}
 
@@ -148,7 +148,8 @@ Compiles to \code{ScatterSeriesOption} / \code{BarSeriesOption} in ECharts
 \code{src/chart/scatter/ScatterSeries.ts} and \code{src/chart/bar/BarSeries.ts}, with
 \code{MarkLineOption} from \code{src/component/marker/MarkLineModel.ts}.
 \code{to_list()} serializes the semantic configuration using schema keys;
-\code{compile()} produces the ECharts option.
+\code{compile()} returns a \link{BuildRequest} for \verb{@rtemis/draw}'s significance
+builder.
 }
 \section{Statistical semantics}{
 
@@ -162,6 +163,13 @@ Under \code{neg_log10}, zero p-values have infinite mathematical height. They
 retain their zero value but are displayed at \code{zero_cap}, identified by
 triangles and a caption. No positive p-value is clamped. For identity and
 one-minus transforms, zeros are finite and no cap is used.
+
+A result is significant when its adjusted p-value is below \code{p_thresh}. A
+significant result is negative (low) when its estimate is below \code{x_thresh}
+and positive (high) otherwise. The legend names the groups "Significant
+negative", "Not significant", and "Significant positive", or "Significant
+low" and "Significant high" when \code{x_thresh} is not zero. The bundled
+\verb{@rtemis/draw} builds the chart.
 }
 
 \examples{

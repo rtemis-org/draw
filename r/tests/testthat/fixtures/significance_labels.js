@@ -1,6 +1,8 @@
 const assert=require('node:assert/strict'), path=require('node:path'), fs=require('node:fs');
 const root=process.argv[2];
 const echarts=require(path.join(root,'htmlwidgets/lib/echarts/echarts.min.js'));
+// panels.js places repelled labels with the bundled @rtemis/draw.
+globalThis.RtemisDraw=require(path.join(root,'htmlwidgets/lib/draw/rtemis-draw-builders.js'));
 const layout=require(path.join(root,'htmlwidgets/lib/draw/panels.js'));
 const options=JSON.parse(fs.readFileSync(process.argv[3],'utf8'));
 const overlaps=(a,b)=>a.x<b.x+b.width&&b.x<a.x+a.width&&a.y<b.y+b.height&&b.y<a.y+a.height;

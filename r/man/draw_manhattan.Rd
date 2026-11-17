@@ -95,6 +95,13 @@ Under \code{neg_log10}, zero p-values have infinite mathematical height. They
 retain their zero value but are displayed at \code{zero_cap}, identified by
 triangles and a caption. No positive p-value is clamped. For identity and
 one-minus transforms, zeros are finite and no cap is used.
+
+A result is significant when its adjusted p-value is below \code{p_thresh}. A
+significant result is negative (low) when its estimate is below \code{x_thresh}
+and positive (high) otherwise. The legend names the groups "Significant
+negative", "Not significant", and "Significant positive", or "Significant
+low" and "Significant high" when \code{x_thresh} is not zero. The bundled
+\verb{@rtemis/draw} builds the chart.
 }
 
 \examples{

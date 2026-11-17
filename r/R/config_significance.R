@@ -10,7 +10,8 @@
 #' `src/chart/scatter/ScatterSeries.ts` and `src/chart/bar/BarSeries.ts`, with
 #' `MarkLineOption` from `src/component/marker/MarkLineModel.ts`.
 #' `to_list()` serializes the semantic configuration using schema keys;
-#' `compile()` produces the ECharts option.
+#' `compile()` returns a [BuildRequest] for `@rtemis/draw`'s significance
+#' builder.
 #'
 #' @section Statistical semantics:
 #' P-values are adjusted once over the full supplied family before rows with
@@ -23,6 +24,13 @@
 #' retain their zero value but are displayed at `zero_cap`, identified by
 #' triangles and a caption. No positive p-value is clamped. For identity and
 #' one-minus transforms, zeros are finite and no cap is used.
+#'
+#' A result is significant when its adjusted p-value is below `p_thresh`. A
+#' significant result is negative (low) when its estimate is below `x_thresh`
+#' and positive (high) otherwise. The legend names the groups "Significant
+#' negative", "Not significant", and "Significant positive", or "Significant
+#' low" and "Significant high" when `x_thresh` is not zero. The bundled
+#' `@rtemis/draw` builds the chart.
 #'
 #' @param view Character \{"volcano", "manhattan"\}: Scatter or categorical bar view.
 #' @param estimate Character: Column containing coefficients or other signed effects.
@@ -47,10 +55,10 @@
 #'   slider on the outcome axis for Manhattan plots.
 #' @param negative_color Optional Character: Color for significant effects
 #'   below x_thresh. `NULL` uses the theme's negative color.
-#' @param neutral_color Optional Character: Color for other results, including
-#'   effects equal to x_thresh. `NULL` uses the theme's neutral color.
-#' @param positive_color Optional Character: Color for significant effects
-#'   above x_thresh. `NULL` uses the theme's positive color.
+#' @param neutral_color Optional Character: Color for results that are not
+#'   significant. `NULL` uses the theme's neutral color.
+#' @param positive_color Optional Character: Color for significant effects at
+#'   or above x_thresh. `NULL` uses the theme's positive color.
 #' @param alpha Numeric `[0, 1]`: Mark opacity.
 #' @param point_size Numeric (0, Inf): Scatter symbol size in pixels.
 #' @param xlab Optional Character: X-axis label.
@@ -167,12 +175,12 @@ SignificanceConfig <- new_class(
       neutral_color = prop_string(
         NULL,
         nullable = TRUE,
-        description = "Color for other results, including effects equal to x_thresh. Unset uses the theme's neutral color."
+        description = "Color for results that are not significant. Unset uses the theme's neutral color."
       ),
       positive_color = prop_string(
         NULL,
         nullable = TRUE,
-        description = "Color for significant effects above x_thresh. Unset uses the theme's positive color."
+        description = "Color for significant effects at or above x_thresh. Unset uses the theme's positive color."
       ),
       alpha = prop_float(0.8, min = 0, max = 1, description = "Mark opacity."),
       point_size = prop_float(
@@ -368,18 +376,45 @@ setup_SignificanceConfig <- function(
   )
 }
 
+# %% significance_axis_names ----
+#' Axis names of a significance chart when the author sets none
+#'
+#' x: "Coefficient" for a volcano and "Outcome" for Manhattan bars. y: the
+#' transformed adjusted p-value, "-log10(Holm-adjusted p)", "Holm-adjusted p",
+#' or "1 - Holm-adjusted p", with "p" alone for `none`. `@rtemis/draw`'s
+#' `significanceAxisNames()` writes the same text.
+#' @param config [SignificanceConfig].
+#' @return Named list of `x` and `y`.
+#' @keywords internal
+#' @noRd
+significance_axis_names <- function(config) {
+  method <- c(
+    holm = "Holm",
+    hochberg = "Hochberg",
+    hommel = "Hommel",
+    bonferroni = "Bonferroni",
+    BH = "BH",
+    BY = "BY",
+    fdr = "FDR",
+    none = ""
+  )[[config@p_adjust_method]]
+  p <- if (nzchar(method)) paste0(method, "-adjusted p") else "p"
+  list(
+    x = if (config@view == "volcano") "Coefficient" else "Outcome",
+    y = switch(
+      config@p_transform,
+      neg_log10 = paste0("-log10(", p, ")"),
+      identity = p,
+      one_minus = paste("1 -", p)
+    )
+  )
+} # /rtemis.draw::significance_axis_names
+
+
 # Resolve inexpensive metadata here. Data adjustment and mark preparation run
 # once in compile(), which always starts from the unadjusted p-value column.
 method(resolve, SignificanceConfig) <- function(config, data = NULL, ...) {
-  label <- switch(
-    config@p_transform,
-    neg_log10 = "-log10(p-value)",
-    identity = "p-value",
-    one_minus = "1 - p-value"
-  )
-  if (config@p_adjust_method != "none") {
-    label <- paste0(label, " (", config@p_adjust_method, "-adjusted)")
-  }
+  names <- significance_axis_names(config)
   config_derive(
     config,
     list(
@@ -388,8 +423,8 @@ method(resolve, SignificanceConfig) <- function(config, data = NULL, ...) {
       } else {
         NULL
       },
-      xlab = if (config@view == "volcano") "Coefficient" else "Outcome",
-      ylab = label
+      xlab = names[["x"]],
+      ylab = names[["y"]]
     )
   )
 }
@@ -401,7 +436,7 @@ method(compile, SignificanceConfig) <- function(
   ...
 ) {
   check_dots_empty(...)
-  significance_option(config, data, theme = theme)
+  significance_request(config, data, theme = theme)
 }
 
 # Serialize the semantic configuration; compile() produces the ECharts option.

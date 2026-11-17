@@ -191,7 +191,8 @@ CARTESIAN_BUILDER_TYPES <- c(
   "line",
   "pr",
   "roc",
-  "scatter"
+  "scatter",
+  "significance"
 )
 
 

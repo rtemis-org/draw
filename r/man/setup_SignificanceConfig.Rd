@@ -73,11 +73,11 @@ setup_SignificanceConfig(
 \item{negative_color}{Optional Character: Color for significant effects
 below x_thresh. \code{NULL} uses the theme's negative color.}
 
-\item{neutral_color}{Optional Character: Color for other results, including
-effects equal to x_thresh. \code{NULL} uses the theme's neutral color.}
+\item{neutral_color}{Optional Character: Color for results that are not
+significant. \code{NULL} uses the theme's neutral color.}
 
-\item{positive_color}{Optional Character: Color for significant effects
-above x_thresh. \code{NULL} uses the theme's positive color.}
+\item{positive_color}{Optional Character: Color for significant effects at
+or above x_thresh. \code{NULL} uses the theme's positive color.}
 
 \item{alpha}{Numeric \verb{[0, 1]}: Mark opacity.}
 

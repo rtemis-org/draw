@@ -60,8 +60,8 @@ test_that("significance resolve preserves authorship and complete JSON round tri
       write_chart_config(resolved, path, complete = complete)
       restored <- read_chart_config(path)
       expect_identical(
-        to_list(compile(restored, data)),
-        to_list(compile(resolved, data))
+        raw_option(draw(restored, data = data)),
+        raw_option(draw(resolved, data = data))
       )
       doc <- jsonlite::fromJSON(path, simplifyVector = FALSE)
       expect_identical(doc[["type"]], "significance")

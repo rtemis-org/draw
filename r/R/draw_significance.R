@@ -125,16 +125,6 @@ method(significance_data, SignificanceConfig) <- function(config, data) {
     }
     transformed[capped] <- cap
   }
-  group <- rep(2L, length(p))
-  significant <- keep & adjusted < config@p_thresh
-  group[significant & estimate < config@x_thresh] <- 1L
-  group[significant & estimate > config@x_thresh] <- 3L
-  annotate <- rep(FALSE, length(p))
-  for (side in c(1L, 3L)) {
-    at <- which(keep & group == side)
-    selected <- head(at[order(p[at], at)], config@annotate_n)
-    annotate[selected] <- TRUE
-  }
   list(
     data = data.frame(
       row = seq_along(p),
@@ -143,11 +133,9 @@ method(significance_data, SignificanceConfig) <- function(config, data) {
       p_value = p,
       p_adjusted = adjusted,
       value = transformed,
-      group = group,
       display_group = display_group %||% rep(NA_character_, length(p)),
       keep = keep,
       capped = capped,
-      annotate = annotate,
       stringsAsFactors = FALSE
     ),
     zero_cap = cap,
@@ -157,295 +145,78 @@ method(significance_data, SignificanceConfig) <- function(config, data) {
 }
 
 
-#' Right margin that holds the significance threshold label
+#' Build the request of a significance chart
 #'
-#' The threshold label sits past the grid's right edge, so the margin must fit
-#' it. ECharts places a reference-line label 5 px from the line end in 12 px
-#' sans-serif; 0.6 em per character overestimates its glyphs, so the estimate
-#' errs toward spare space rather than clipping.
-#'
-#' @param label Character: Threshold label text.
-#' @return Integer: Right margin in pixels, at least the 36 px default.
-#' @keywords internal
-#' @noRd
-reference_label_margin <- function(label) {
-  max(36L, as.integer(ceiling(nchar(label) * 12 * 0.6)) + 5L + 8L)
-}
-
-
-#' Compile materialized significance marks to ECharts
-#'
-#' Uses native scatter/bar data, labels, and reference lines. No JavaScript
-#' callback is needed for visible marks or tooltip values. Volcano series carry
-#' `rtemisRepelLabels`, which the shared browser/SVG label layout reads to
-#' place annotations clear of each other.
+#' Validates and adjusts the family (`significance_data()`), reports omitted
+#' outcomes, and hands each hypothesis's label, estimate, and raw and adjusted
+#' p-values to `@rtemis/draw`'s significance builder, which transforms, caps,
+#' groups, labels, and draws them.
+#' spec: draw/shared-builders#significance
 #'
 #' @inheritParams significance_data
 #' @param theme Optional [Theme], list, or `NA`: Supplies the sign colors the
 #'   config leaves unset.
-#' @return An [EChartsOption] with portable series data and configuration.
+#' @return [BuildRequest] of type `significance`.
 #' @keywords internal
 #' @noRd
-significance_option <- new_generic("significance_option", "config")
+significance_request <- new_generic("significance_request", "config")
 
-method(significance_option, SignificanceConfig) <- function(
+method(significance_request, SignificanceConfig) <- function(
   config,
   data,
   theme = NULL
 ) {
   prepared <- significance_data(config, data)
   d <- prepared[["data"]]
-  keep <- d[["keep"]]
-  volcano <- config@view == "volcano"
-  sign <- theme_sign_colors(theme)
-  colors <- c(
-    config@negative_color %||% sign[["negative"]],
-    config@neutral_color %||% sign[["neutral"]],
-    config@positive_color %||% sign[["positive"]]
-  )
-  groups <- c("Significant low", "Other", "Significant high")
-  if (config@x_thresh == 0) {
-    groups <- c("Significant negative", "Other", "Significant positive")
-  }
-  group_index <- d[["group"]]
-  if (!is.null(config@group)) {
-    groups <- group_levels(d[["display_group"]][keep])
-    group_index <- match(as.character(d[["display_group"]]), groups)
-    # NULL leaves palette ownership with the active browser/export theme.
-    colors <- if (is.null(config@palette)) {
-      rep(list(NULL), length(groups))
-    } else {
-      as.list(rep(config@palette, length.out = length(groups)))
-    }
-  }
-  present <- sort(unique(group_index[keep]))
-  series <- lapply(present, function(group) {
-    at <- which(keep & group_index == group)
-    marks <- lapply(at, function(i) {
-      item <- list(
-        name = d[["label"]][[i]],
-        value = list(
-          if (volcano) d[["estimate"]][[i]] else i - 1L,
-          d[["value"]][[i]],
-          d[["estimate"]][[i]],
-          d[["p_value"]][[i]],
-          d[["p_adjusted"]][[i]]
-        )
-      )
-      if (volcano) {
-        item[["symbol"]] <- if (d[["capped"]][[i]]) "triangle" else "circle"
-        if (d[["annotate"]][[i]]) {
-          item[["label"]] <- to_list(LabelOption(
-            show = TRUE,
-            position = "top",
-            formatter = "{b}",
-            text_style = TextStyle(font_size = 11)
-          ))
-        }
-      }
-      item
-    })
-    s <- if (volcano) {
-      to_list(ScatterSeries(
-        name = groups[[group]],
-        data = marks,
-        symbol_size = config@point_size,
-        item_style = ItemStyle(color = colors[[group]], opacity = config@alpha)
-      ))
-    } else {
-      to_list(BarSeries(
-        name = groups[[group]],
-        data = marks,
-        item_style = ItemStyle(color = colors[[group]], opacity = config@alpha)
-      ))
-    }
-    # Native dimensions/encode preserve raw values for hover without a callback.
-    s[["dimensions"]] <- as.list(c(
-      "Position",
-      "Display value",
-      "Estimate",
-      "Raw p-value",
-      "Adjusted p-value"
-    ))
-    s[["encode"]] <- list(x = 0L, y = 1L, tooltip = as.list(2:4))
-    if (volcano) {
-      # ECharts' own moveOverlap cannot move labels attached to scatter
-      # symbols; the shared label layout places flagged series' labels.
-      s[["rtemisRepelLabels"]] <- TRUE
-      s[["labelLine"]] <- drop_nulls(list(
-        show = TRUE,
-        lineStyle = if (!is.null(colors[[group]])) {
-          list(color = colors[[group]])
-        } else {
-          NULL
-        }
-      ))
-    } else {
-      # Disjoint significance series share one category position. Each outcome
-      # has exactly one bar; disabling grouping prevents horizontal offsets.
-      s[["barGap"]] <- "-100%"
-    }
-    s
-  })
-  threshold_label <- paste0("p < ", format(config@p_thresh, trim = TRUE))
-  if (config@reference) {
-    refs <- list(list(
-      yAxis = prepared[["threshold"]],
-      label = list(
-        formatter = threshold_label,
-        # Outside the grid's right edge, where no mark can sit under it.
-        position = "end"
-      )
-    ))
-    if (volcano) {
-      refs <- c(
-        refs,
-        list(list(xAxis = config@x_thresh, label = list(show = FALSE)))
-      )
-    }
-    # References belong to an unnamed series so legend filtering cannot hide
-    # the statistical thresholds together with one significance group.
-    reference_series <- to_list(ScatterSeries(data = list(), silent = TRUE))
-    reference_series[["markLine"]] <- list(
-      silent = TRUE,
-      animation = FALSE,
-      symbol = "none",
-      lineStyle = list(color = "#888888", type = "dashed", width = 1),
-      data = refs
-    )
-    series <- c(series, list(reference_series))
-  }
-  # A separate vector triangle identifies capped bars without changing their
-  # significance color or adding a spurious legend entry.
-  capped_at <- which(keep & d[["capped"]])
-  if (!volcano && length(capped_at)) {
-    series <- c(
-      series,
-      lapply(sort(unique(group_index[capped_at])), function(group) {
-        at <- capped_at[group_index[capped_at] == group]
-        to_list(ScatterSeries(
-          # Sharing the group's name makes its cap markers follow the same
-          # legend toggle as its bars.
-          name = groups[[group]],
-          data = lapply(at, function(i) {
-            list(value = list(i - 1L, d[["value"]][[i]]))
-          }),
-          item_style = ItemStyle(
-            color = colors[[group]],
-            opacity = config@alpha
-          ),
-          symbol = "triangle",
-          symbol_size = config@point_size,
-          silent = TRUE,
-          z = 5L
-        ))
-      })
-    )
-  }
-  notes <- character()
-  if (length(capped_at)) {
-    notes <- c(
-      notes,
-      paste0(
-        "p = 0 shown at ",
-        format(prepared[["zero_cap"]], trim = TRUE),
-        " (triangles)"
-      )
-    )
-  }
-  if (any(!keep)) {
-    msg(
-      sum(!keep),
-      "outcome(s) omitted;",
-      prepared[["n_tests"]],
-      "tests in family"
-    )
-  }
-  x_range <- if (volcano) {
-    config@xlim %||%
-      calc_limits(
-        c(
-          d[["estimate"]][keep],
-          if (config@reference) config@x_thresh
-        ),
-        0.12
-      )
-  } else {
-    NULL
-  }
-  y_range <- config@ylim %||%
-    calc_limits(
-      c(
-        0,
-        d[["value"]][keep],
-        if (config@reference) prepared[["threshold"]]
-      ),
-      0.12
-    )
-  # A user-supplied range must not silently discard the explicitly capped marks.
+  # A user-supplied range must not silently discard the capped marks.
+  capped <- d[["keep"]] & d[["capped"]]
   if (
-    length(capped_at) &&
-      (prepared[["zero_cap"]] < y_range[[1L]] ||
-        prepared[["zero_cap"]] > y_range[[2L]])
+    any(capped) &&
+      !is.null(config@ylim) &&
+      (prepared[["zero_cap"]] < config@ylim[[1L]] ||
+        prepared[["zero_cap"]] > config@ylim[[2L]])
   ) {
     abort(
       "Expand `ylim` to include `zero_cap`, or change the display transform.",
       class = c("rtemis_value_error", "rtemis_input_error")
     )
   }
-  # Volcano plots zoom both value axes; Manhattan plots zoom the outcome axis.
-  # filterMode = "none" keeps threshold lines whole; the grid clips them.
-  zoomed <- zoom_layout(
-    config@zoom,
-    axis = if (volcano) "xy" else "x",
-    grid = Grid(
-      left = config@margin_left %||% 60L,
-      right = config@margin_right %||%
-        if (config@reference) reference_label_margin(threshold_label) else 36L,
-      top = config@margin_top %||% if (length(notes)) 70L else 42L,
-      bottom = config@margin_bottom %||% if (config@legend) 68L else 40L
-    ),
-    filter_mode = if (volcano) "none" else NULL
+  if (any(!d[["keep"]])) {
+    msg(
+      sum(!d[["keep"]]),
+      "outcome(s) omitted;",
+      prepared[["n_tests"]],
+      "tests in family"
+    )
+  }
+  na_null <- function(x) lapply(x, function(v) if (is.na(v)) NULL else v)
+  document <- list(
+    label = I(d[["label"]]),
+    estimate = na_null(d[["estimate"]]),
+    p_value = na_null(d[["p_value"]]),
+    p_adjusted = na_null(d[["p_adjusted"]])
   )
-  EChartsOption(
-    color = config@palette,
-    title = if (!is.null(config@title) || length(notes)) {
-      Title(
-        text = config@title,
-        subtext = if (length(notes)) paste(notes, collapse = "; "),
-        left = "center"
+  if (!is.null(config@group)) {
+    document[["group"]] <- na_null(as.character(d[["display_group"]]))
+    document[["groups"]] <- I(group_levels(d[["display_group"]][d[["keep"]]]))
+  }
+  sign <- theme_sign_colors(theme)
+  BuildRequest(
+    type = "significance",
+    data = as.character(jsonlite::toJSON(
+      document,
+      auto_unbox = TRUE,
+      null = "null",
+      digits = NA
+    )),
+    config = config_members(config),
+    appearance = list(
+      signColors = list(
+        negative = sign[["negative"]],
+        neutral = sign[["neutral"]],
+        positive = sign[["positive"]]
       )
-    } else {
-      NULL
-    },
-    legend = if (config@legend) {
-      Legend(data = as.list(groups[present]), bottom = 0L, item_gap = 20)
-    } else {
-      NULL
-    },
-    tooltip = Tooltip(trigger = "item"),
-    x_axis = Axis(
-      type = if (volcano) "value" else "category",
-      name = config@xlab,
-      name_location = "middle",
-      scale = volcano,
-      data = if (!volcano) as.list(d[["label"]]) else NULL,
-      split_line = if (volcano) no_corner_split_line() else NULL,
-      min = if (volcano) x_range[[1L]] else NULL,
-      max = if (volcano) x_range[[2L]] else NULL
-    ),
-    y_axis = Axis(
-      type = "value",
-      name = config@ylab,
-      name_location = "middle",
-      split_line = no_corner_split_line(),
-      min = y_range[[1L]],
-      max = y_range[[2L]]
-    ),
-    grid = zoomed[["grid"]],
-    data_zoom = zoomed[["data_zoom"]],
-    toolbox = zoomed[["toolbox"]],
-    series = series
+    )
   )
 }
 

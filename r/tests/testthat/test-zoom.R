@@ -284,17 +284,17 @@ test_that("volcano plots zoom both axes and Manhattan plots the outcome axis", {
   set.seed(2026)
   estimates <- rnorm(40)
   pvals <- runif(40)
-  opt <- draw_volcano(estimates, pvals, zoom = TRUE)$x$option
+  opt <- raw_option(draw_volcano(estimates, pvals, zoom = TRUE))
   expect_identical(zoom_types(opt), c("inside", "inside"))
   for (z in opt[["dataZoom"]]) {
     expect_identical(z[["filterMode"]], "none")
   }
   expect_false(is.null(opt[["toolbox"]][["feature"]][["dataZoom"]]))
-  opt <- draw_manhattan(estimates, pvals, zoom = TRUE)$x$option
+  opt <- raw_option(draw_manhattan(estimates, pvals, zoom = TRUE))
   expect_identical(zoom_types(opt), c("slider", "inside"))
   expect_equal(opt[["dataZoom"]][[1L]][["xAxisIndex"]], 0)
   expect_gt(opt[["grid"]][["bottom"]], 68)
-  expect_null(draw_volcano(estimates, pvals)$x$option[["dataZoom"]])
+  expect_null(raw_option(draw_volcano(estimates, pvals))[["dataZoom"]])
   expect_true(setup_SignificanceConfig(zoom = TRUE)@zoom)
 })
 

@@ -8,7 +8,6 @@ test_that("adjustment precedes display filtering and retains the complete family
   out <- significance_data(cfg, data)
   expect_equal(out[["data"]][["p_adjusted"]], c(.03, .04, .004, NA))
   expect_identical(out[["data"]][["keep"]], c(TRUE, TRUE, FALSE, FALSE))
-  expect_identical(out[["data"]][["group"]], c(1L, 3L, 2L, 2L))
   expect_equal(out[["data"]][["value"]][1:2], -log10(c(.03, .04)))
   cfg@p_adjust_method <- "bonferroni"
   expect_equal(
@@ -72,16 +71,36 @@ test_that("zero heights are visibly capped while raw values and small positives 
 test_that("group and annotation semantics handle boundaries, ties, and missing groups", {
   data <- data.frame(
     estimate = c(-2, -1, 0, 1, 2, 3),
-    p_value = c(.01, .01, .01, .05, .01, .01)
+    p_value = c(.01, .01, .01, .05, .01, .01),
+    label = LETTERS[1:6]
   )
-  cfg <- setup_SignificanceConfig(p_adjust_method = "none", annotate_n = 1L)
-  out <- significance_data(cfg, data)[["data"]]
-  expect_identical(out[["group"]], c(1L, 1L, 2L, 2L, 3L, 3L))
-  expect_identical(which(out[["annotate"]]), c(1L, 5L))
+  cfg <- setup_SignificanceConfig(
+    label = "label",
+    p_adjust_method = "none",
+    annotate_n = 1L
+  )
+  s <- raw_option(draw(cfg, data = data))[["series"]]
+  # A significant estimate at x_thresh is positive; p equal to p_thresh is not
+  # significant.
+  names_of <- function(s) vapply(s[["data"]], function(d) d[["name"]], "")
+  expect_identical(
+    vapply(s[1:3], function(x) x[["name"]], ""),
+    c("Significant negative", "Not significant", "Significant positive")
+  )
+  expect_identical(
+    lapply(s[1:3], names_of),
+    list(c("A", "B"), "D", c("C", "E", "F"))
+  )
+  # One label per side: the smallest raw p-value, ties in input order.
+  labeled <- function(s) {
+    names_of(s)[vapply(s[["data"]], function(d) !is.null(d[["label"]]), TRUE)]
+  }
+  expect_identical(unlist(lapply(s[1:3], labeled)), c("A", "C"))
   cfg@annotate_n <- 0L
-  expect_false(any(significance_data(cfg, data)[["data"]][["annotate"]]))
+  s <- raw_option(draw(cfg, data = data))[["series"]]
+  expect_length(unlist(lapply(s[1:3], labeled)), 0L)
   w <- draw_volcano(c(1, 2), c(.001, .001))
-  s <- w[["x"]][["option"]][["series"]]
+  s <- raw_option(w)[["series"]]
   expect_length(s, 2L)
   expect_identical(s[[1L]][["name"]], "Significant positive")
   expect_identical(
@@ -144,14 +163,14 @@ test_that("both functional views compile through the same portable config", {
       )
     )
     expect_identical(w[["x"]], draw(cfg, data = data)[["x"]])
-    expect_identical(strip_js(w[["x"]][["option"]]), w[["x"]][["option"]])
+    expect_identical(widget_wire(w)[["build"]][["type"]], "significance")
   }
   w <- draw_manhattan(
     c(-1, NA, 2),
     c(.001, NA, 0),
     xnames = c("same", "missing", "same")
   )
-  opt <- w[["x"]][["option"]]
+  opt <- raw_option(w)
   expect_identical(
     opt[["xAxis"]][["data"]],
     as.list(c("same", "missing", "same"))
@@ -223,18 +242,22 @@ test_that("display groups preserve full-family adjustment and threshold annotati
     stats::p.adjust(data[["p_value"]], "holm", n = 5)
   )
   expect_identical(prepared[["keep"]], c(TRUE, TRUE, TRUE, TRUE, FALSE))
-  expect_identical(which(prepared[["annotate"]]), c(1L, 2L))
-  expect_identical(prepared[["group"]][1:4], c(1L, 3L, 2L, 2L))
-  option <- to_list(compile(cfg, data))
+  option <- raw_option(draw(cfg, data = data))
   expect_equal(option[["legend"]][["data"]], list("B", "A"))
   expect_equal(option[["series"]][[1]][["itemStyle"]][["color"]], "#123456")
   expect_length(option[["series"]][[1]][["data"]], 2L)
+  # Annotations rank within significance sides, whatever the display group.
+  labeled <- Filter(
+    function(d) !is.null(d[["label"]]),
+    option[["series"]][[1]][["data"]]
+  )
+  expect_identical(vapply(labeled, function(d) d[["name"]], ""), c("A", "B"))
   expect_length(option[["series"]][[3]][["markLine"]][["data"]], 2L)
   expect_null(option[["series"]][[3]][["name"]])
   file <- tempfile(fileext = ".json")
   on.exit(unlink(file))
   write_chart_config(cfg, file)
-  expect_equal(to_list(compile(read_chart_config(file), data)), option)
+  expect_equal(raw_option(draw(read_chart_config(file), data = data)), option)
   for (view in c("volcano", "manhattan")) {
     cfg@view <- view
     widget <- do.call(
@@ -248,10 +271,7 @@ test_that("display groups preserve full-family adjustment and threshold annotati
         palette = cfg@palette
       )
     )
-    expect_equal(
-      widget[["x"]][["option"]],
-      draw(cfg, data = data)[["x"]][["option"]]
-    )
+    expect_equal(raw_option(widget), raw_option(draw(cfg, data = data)))
   }
   expect_error(draw_volcano(1:2, c(.1, .2), group = "A"), "one value")
   expect_error(draw_volcano(1:2, c(.1, .2), group = c("", "A")), "nonempty")
@@ -339,7 +359,7 @@ test_that("volcano annotations and threshold labels clear marks and each other",
   label <- paste0("feature_", seq_along(estimate))
   volcano <- draw_volcano(estimate, p_value, label, annotate_n = 11L)
   manhattan <- draw_manhattan(estimate, p_value, label)
-  series <- volcano[["x"]][["option"]][["series"]]
+  series <- raw_option(volcano)[["series"]]
   named <- Filter(function(s) !is.null(s[["name"]]), series)
   # The flag is the whole contract: ECharts' static labelLayout cannot move a
   # label attached to a scatter symbol.
@@ -348,20 +368,21 @@ test_that("volcano annotations and threshold labels clear marks and each other",
     expect_null(s[["labelLayout"]])
   }
   for (w in list(volcano, manhattan)) {
-    opt <- w[["x"]][["option"]]
+    opt <- raw_option(w)
     ref <- Filter(function(s) !is.null(s[["markLine"]]), opt[["series"]])[[1L]]
     expect_identical(
       ref[["markLine"]][["data"]][[1L]][["label"]][["position"]],
       "end"
     )
-    expect_gte(opt[["grid"]][["right"]], reference_label_margin("p < 0.05"))
+    # 8 characters at 0.6 em of 12 px, 5 px from the line end, 8 px spare.
+    expect_gte(opt[["grid"]][["right"]], 71)
   }
   # A supplied margin wins over the reserved space.
-  expect_identical(
-    draw_manhattan(estimate, p_value, label, margin_right = 10L)[["x"]][[
-      "option"
-    ]][["grid"]][["right"]],
-    10L
+  expect_equal(
+    raw_option(draw_manhattan(estimate, p_value, label, margin_right = 10L))[[
+      "grid"
+    ]][["right"]],
+    10
   )
 
   skip_if_no_node()
@@ -370,8 +391,8 @@ test_that("volcano annotations and threshold labels clear marks and each other",
   writeLines(
     jsonlite::toJSON(
       list(
-        volcano = volcano[["x"]][["option"]],
-        manhattan = manhattan[["x"]][["option"]]
+        volcano = raw_option(volcano),
+        manhattan = raw_option(manhattan)
       ),
       auto_unbox = TRUE,
       null = "null",
@@ -393,5 +414,16 @@ test_that("volcano annotations and threshold labels clear marks and each other",
   expect_match(
     paste(output, collapse = "\n"),
     "Significance labels clear marks and each other"
+  )
+})
+
+
+test_that("a significance chart takes annotation layers", {
+  w <- draw_annotate(draw_volcano(c(-2, 1, 3), c(.001, .5, .002)), vline = 1)
+  expect_length(widget_wire(w)[["build"]][["layers"]], 1L)
+  series <- raw_option(w)[["series"]]
+  expect_identical(
+    tail(series, 1L)[[1L]][["markLine"]][["data"]][[1L]][["xAxis"]],
+    1L
   )
 })

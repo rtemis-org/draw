@@ -87,7 +87,7 @@ test_that("significance marks take config, then theme, then SIGN_COLORS", {
     unlist(lapply(series, function(s) s[["itemStyle"]][["color"]]))
   }
   colors <- function(config, theme = NULL) {
-    option <- to_list(compile(config, data = data, theme = theme))
+    option <- raw_option(draw(config, data = data, theme = theme))
     mark_colors(option[["series"]])
   }
   config <- setup_SignificanceConfig(p_adjust_method = "none")
@@ -105,7 +105,7 @@ test_that("significance marks take config, then theme, then SIGN_COLORS", {
   # The theme reaches compile() through draw().
   widget <- draw(config, data = data, theme = custom_theme())
   expect_setequal(
-    mark_colors(widget[["x"]][["option"]][["series"]]),
+    mark_colors(raw_option(widget)[["series"]]),
     unname(custom_sign)
   )
 })

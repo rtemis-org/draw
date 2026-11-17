@@ -40,12 +40,14 @@ var RtemisDraw = (() => {
     ROC_CHART_CONFIG_MEMBERS: () => ROC_CHART_CONFIG_MEMBERS,
     RTEMIS_PALETTE: () => RTEMIS_PALETTE,
     SCATTER_CHART_CONFIG_MEMBERS: () => SCATTER_CHART_CONFIG_MEMBERS,
+    SIGNIFICANCE_CHART_CONFIG_MEMBERS: () => SIGNIFICANCE_CHART_CONFIG_MEMBERS,
     SIGNIFICANT_DIGITS: () => SIGNIFICANT_DIGITS,
     SIGN_COLORS: () => SIGN_COLORS,
     SIZE_KEY_ID: () => SIZE_KEY_ID,
     ZOOM_SLIDER_ID: () => ZOOM_SLIDER_ID,
     a3SurfaceHints: () => a3SurfaceHints,
     appendLayers: () => appendLayers,
+    applyRepelLabels: () => applyRepelLabels,
     aspectHints: () => aspectHints,
     autoAlpha: () => autoAlpha,
     buildA3Option: () => buildA3Option,
@@ -58,6 +60,7 @@ var RtemisDraw = (() => {
     buildPrOption: () => buildPrOption,
     buildRocOption: () => buildRocOption,
     buildScatterOption: () => buildScatterOption,
+    buildSignificanceOption: () => buildSignificanceOption,
     builders: () => builders,
     calcLimits: () => calcLimits,
     calcLimitsFromZero: () => calcLimitsFromZero,
@@ -86,8 +89,11 @@ var RtemisDraw = (() => {
     pretty: () => pretty,
     radicalInverse: () => radicalInverse,
     registerRenderers: () => registerRenderers,
+    repelLabels: () => repelLabels,
     ruleBandwidth: () => ruleBandwidth,
     scatterAspect: () => lineAspect,
+    significanceAxisNames: () => significanceAxisNames,
+    significanceGroupNames: () => significanceGroupNames,
     sizeKeyValues: () => sizeKeyValues,
     themeFontSizes: () => themeFontSizes,
     themeOption: () => themeOption,
@@ -4494,10 +4500,10 @@ ${rate(r.balancedAccuracy)}`, summary) }
     ];
   }
   function colorScale(config, values, pointSeriesCount, top) {
-    const finite = values.filter((v) => v !== null);
+    const finite2 = values.filter((v) => v !== null);
     const diverging = config.color_scale === "diverging";
-    let min = Math.min(...finite);
-    let max = Math.max(...finite);
+    let min = Math.min(...finite2);
+    let max = Math.max(...finite2);
     if (diverging) {
       const m = Math.max(Math.abs(min), Math.abs(max)) || 1;
       min = -m;
@@ -4550,6 +4556,302 @@ ${rate(r.balancedAccuracy)}`, summary) }
     };
   }
 
+  // src/charts/significance/config.ts
+  var SIGNIFICANCE_CHART_CONFIG_MEMBERS = Object.freeze([
+    "type",
+    "title",
+    "legend_position",
+    "legend_placement",
+    "legend_title",
+    "view",
+    "estimate",
+    "p_value",
+    "label",
+    "group",
+    "palette",
+    "p_adjust_method",
+    "n_tests",
+    "p_transform",
+    "p_thresh",
+    "x_thresh",
+    "zero_cap",
+    "annotate_n",
+    "reference",
+    "legend",
+    "zoom",
+    "negative_color",
+    "neutral_color",
+    "positive_color",
+    "alpha",
+    "point_size",
+    "xlab",
+    "ylab",
+    "xlim",
+    "ylim",
+    "margin_top",
+    "margin_right",
+    "margin_bottom",
+    "margin_left"
+  ]);
+  var METHOD_LABELS = {
+    holm: "Holm",
+    hochberg: "Hochberg",
+    hommel: "Hommel",
+    bonferroni: "Bonferroni",
+    BH: "BH",
+    BY: "BY",
+    fdr: "FDR",
+    none: ""
+  };
+  function significanceAxisNames(config) {
+    const method = METHOD_LABELS[config.p_adjust_method ?? "holm"];
+    const p = method ? `${method}-adjusted p` : "p";
+    const transform = config.p_transform ?? "neg_log10";
+    const y = transform === "neg_log10" ? `-log10(${p})` : transform === "one_minus" ? `1 - ${p}` : p;
+    return { x: (config.view ?? "volcano") === "volcano" ? "Coefficient" : "Outcome", y };
+  }
+  function significanceGroupNames(x_thresh = 0) {
+    return x_thresh === 0 ? ["Significant negative", "Not significant", "Significant positive"] : ["Significant low", "Not significant", "Significant high"];
+  }
+  function referenceLabelMargin(label) {
+    return Math.max(36, Math.ceil(label.length * 12 * 0.6) + 5 + 8);
+  }
+  var finite = (v) => typeof v === "number" && Number.isFinite(v);
+  function buildSignificanceOption(data, config, appearance = {}) {
+    const n = data.p_value.length;
+    for (const [name, values2] of [
+      ["label", data.label],
+      ["estimate", data.estimate],
+      ["p_adjusted", data.p_adjusted]
+    ]) {
+      if (values2.length !== n) {
+        throw new Error(`Significance data needs one ${name} per p-value.`);
+      }
+    }
+    const grouped = Boolean(config.group) && Array.isArray(data.group);
+    if (grouped && data.group.length !== n) {
+      throw new Error("Significance data needs one group per p-value.");
+    }
+    const volcano = (config.view ?? "volcano") === "volcano";
+    const transform = config.p_transform ?? "neg_log10";
+    const pThresh = config.p_thresh ?? 0.05;
+    const xThresh = config.x_thresh ?? 0;
+    const annotateN = config.annotate_n ?? 7;
+    const reference = config.reference ?? true;
+    const legend = config.legend ?? true;
+    const alpha = config.alpha ?? 0.8;
+    const pointSize = config.point_size ?? 8;
+    const apply = (p) => transform === "neg_log10" ? -Math.log10(p) : transform === "one_minus" ? 1 - p : p;
+    const threshold = apply(pThresh);
+    const keep = data.p_value.map(
+      (p, i) => finite(p) && finite(data.estimate[i]) && (!grouped || data.group?.[i] != null)
+    );
+    if (!keep.some(Boolean)) {
+      throw new Error(
+        "A significance chart needs at least one complete estimate and p-value, with a display group when grouping."
+      );
+    }
+    const adjusted = data.p_adjusted;
+    const values = adjusted.map((p) => finite(p) ? apply(p) : Number.NaN);
+    const capped = adjusted.map((p) => p === 0 && transform === "neg_log10");
+    let cap = null;
+    if (capped.some((c, i) => c && keep[i])) {
+      let highest = Math.max(0, threshold);
+      values.forEach((v, i) => {
+        if (keep[i] && Number.isFinite(v) && v > highest) highest = v;
+      });
+      cap = config.zero_cap ?? Math.ceil(highest) + 1;
+      if (cap <= highest) {
+        throw new Error(
+          "Set zero_cap above all finite displayed heights and the significance threshold."
+        );
+      }
+      capped.forEach((c, i) => {
+        if (c) values[i] = cap;
+      });
+    }
+    const sig = data.p_value.map((_, i) => {
+      const p = adjusted[i];
+      if (!keep[i] || !finite(p) || p >= pThresh) return 1;
+      return data.estimate[i] < xThresh ? 0 : 2;
+    });
+    const annotate = new Array(n).fill(false);
+    if (volcano) {
+      for (const side of [0, 2]) {
+        const at = sig.flatMap((g, i) => keep[i] && g === side ? [i] : []);
+        at.sort((a, b) => data.p_value[a] - data.p_value[b] || a - b);
+        for (const i of at.slice(0, annotateN)) annotate[i] = true;
+      }
+    }
+    const sign = appearance.signColors ?? SIGN_COLORS;
+    let names = significanceGroupNames(xThresh);
+    let colors = [
+      config.negative_color ?? sign.negative,
+      config.neutral_color ?? sign.neutral,
+      config.positive_color ?? sign.positive
+    ];
+    let groupOf = sig;
+    if (grouped) {
+      const labels = data.group;
+      const order2 = [...data.groups ?? []];
+      labels.forEach((g, i) => {
+        if (keep[i] && g != null && !order2.includes(g)) order2.push(g);
+      });
+      const present2 = order2.filter((g) => labels.some((l, i) => keep[i] && l === g));
+      names = present2;
+      groupOf = labels.map((g) => g == null ? -1 : present2.indexOf(g));
+      const palette2 = asArray(config.palette);
+      colors = present2.map((_, k) => palette2.length > 0 ? palette2[k % palette2.length] : void 0);
+    }
+    const shown = [...new Set(groupOf.filter((g, i) => keep[i] && g >= 0))].sort((a, b) => a - b);
+    const dimensions2 = [
+      volcano ? "Estimate" : "Position",
+      "Display value",
+      { name: "Estimate label", displayName: "Estimate", type: "ordinal" },
+      { name: "Raw p label", displayName: "Raw p-value", type: "ordinal" },
+      { name: "Adjusted p label", displayName: "Adjusted p-value", type: "ordinal" }
+    ];
+    const text = (v) => finite(v) ? String(formatNumber(v)) : "NA";
+    const series = shown.map((g) => {
+      const color = colors[g];
+      const marks = groupOf.flatMap((gi, i) => {
+        if (!keep[i] || gi !== g) return [];
+        const item = {
+          name: data.label[i],
+          value: [
+            volcano ? data.estimate[i] : i,
+            values[i],
+            text(data.estimate[i]),
+            text(data.p_value[i]),
+            text(adjusted[i])
+          ]
+        };
+        if (volcano) {
+          item.symbol = capped[i] ? "triangle" : "circle";
+          if (annotate[i]) {
+            item.label = { show: true, position: "top", formatter: "{b}", fontSize: 11 };
+          }
+        }
+        return [item];
+      });
+      const itemStyle = { ...color ? { color } : {}, opacity: alpha };
+      const common = {
+        name: names[g],
+        data: marks,
+        itemStyle,
+        dimensions: dimensions2,
+        encode: { x: 0, y: 1, tooltip: [2, 3, 4] }
+      };
+      return volcano ? {
+        type: "scatter",
+        ...common,
+        symbolSize: pointSize,
+        rtemisRepelLabels: true,
+        labelLine: { show: true, ...color ? { lineStyle: { color } } : {} }
+      } : (
+        // Disjoint groups share one category position: each outcome has one bar.
+        { type: "bar", ...common, barGap: "-100%" }
+      );
+    });
+    const thresholdLabel = `p < ${pThresh}`;
+    if (reference) {
+      const refs = [
+        // Past the grid's right edge, where no mark sits under it.
+        { yAxis: threshold, label: { formatter: thresholdLabel, position: "end" } }
+      ];
+      if (volcano) refs.push({ xAxis: xThresh, label: { show: false } });
+      series.push({
+        type: "scatter",
+        data: [],
+        silent: true,
+        markLine: {
+          silent: true,
+          animation: false,
+          symbol: "none",
+          lineStyle: { color: "#888888", type: "dashed", width: 1 },
+          data: refs
+        }
+      });
+    }
+    const cappedShown = capped.flatMap((c, i) => c && keep[i] ? [i] : []);
+    if (!volcano && cappedShown.length > 0) {
+      for (const g of [...new Set(cappedShown.map((i) => groupOf[i]))].sort(
+        (a, b) => a - b
+      )) {
+        const color = colors[g];
+        series.push({
+          type: "scatter",
+          name: names[g],
+          data: cappedShown.filter((i) => groupOf[i] === g).map((i) => ({ value: [i, values[i]] })),
+          itemStyle: { ...color ? { color } : {}, opacity: alpha },
+          symbol: "triangle",
+          symbolSize: pointSize,
+          silent: true,
+          z: 5
+        });
+      }
+    }
+    const note = cap !== null && cappedShown.length > 0 ? `p = 0 shown at ${cap} (triangles)` : null;
+    const kept = (v) => v.filter((_, i) => keep[i]);
+    const xRange = volcano ? config.xlim ?? calcLimits([...kept(data.estimate), ...reference ? [xThresh] : []], 0.12) : null;
+    const yRange = config.ylim ?? calcLimits([0, ...kept(values), ...reference ? [threshold] : []], 0.12);
+    if (cap !== null && cappedShown.length > 0 && yRange && (cap < yRange[0] || cap > yRange[1])) {
+      throw new Error("Expand ylim to include zero_cap, or change the display transform.");
+    }
+    const grid = {
+      left: config.margin_left ?? 60,
+      right: config.margin_right ?? (reference ? referenceLabelMargin(thresholdLabel) : 36),
+      top: config.margin_top ?? (note ? 70 : 42),
+      bottom: config.margin_bottom ?? (legend ? 68 : 40)
+    };
+    const zoom = config.zoom ?? false;
+    const xyZoomed = zoom && volcano ? xyZoom(true) : null;
+    const dataZoom = zoom ? volcano ? xyZoomed?.dataZoom : axisZoom("x", grid) : void 0;
+    const axisNames = significanceAxisNames(config);
+    const xlab = config.xlab === void 0 ? axisNames.x : config.xlab;
+    const ylab = config.ylab === void 0 ? axisNames.y : config.ylab;
+    const splitLine = { showMinLine: false, showMaxLine: false };
+    const palette = asArray(config.palette);
+    const dense = !volcano && n > 40;
+    return {
+      ...palette.length > 0 ? { color: [...palette] } : {},
+      ...config.title || note ? {
+        title: {
+          ...config.title ? { text: config.title } : {},
+          ...note ? { subtext: note } : {},
+          left: "center"
+        }
+      } : {},
+      ...legend ? { legend: { data: shown.map((g) => names[g]), bottom: 0, itemGap: 20 } } : {},
+      tooltip: { trigger: "item" },
+      xAxis: volcano ? {
+        type: "value",
+        ...xlab ? { name: xlab } : {},
+        nameLocation: "middle",
+        scale: true,
+        splitLine,
+        ...xRange ? { min: xRange[0], max: xRange[1] } : {}
+      } : {
+        type: "category",
+        ...xlab ? { name: xlab } : {},
+        nameLocation: "middle",
+        data: [...data.label],
+        ...dense ? { axisLabel: { show: false }, axisTick: { show: false } } : {}
+      },
+      yAxis: {
+        type: "value",
+        ...ylab ? { name: ylab } : {},
+        nameLocation: "middle",
+        splitLine,
+        ...yRange ? { min: yRange[0], max: yRange[1] } : {}
+      },
+      grid,
+      ...dataZoom ? { dataZoom } : {},
+      ...xyZoomed ? { toolbox: xyZoomed.toolbox } : {},
+      series
+    };
+  }
+
   // src/shared/labels.ts
   function valueLabel(config, name = (column2) => column2) {
     const ys = asArray(config.y);
@@ -4596,6 +4898,74 @@ ${rate(r.balancedAccuracy)}`, summary) }
     }
   }
 
+  // src/shared/repel.ts
+  var overlaps = (a, b) => a.x < b.x + b.width && b.x < a.x + a.width && a.y < b.y + b.height && b.y < a.y + a.height;
+  function repelLabels() {
+    let placed = [];
+    let seen = /* @__PURE__ */ new Set();
+    let clearQueued = false;
+    const clear = () => {
+      placed = [];
+      seen = /* @__PURE__ */ new Set();
+    };
+    return (params) => {
+      const key = `${params.seriesIndex}:${params.dataIndex}`;
+      if (seen.has(key)) clear();
+      seen.add(key);
+      if (!clearQueued) {
+        clearQueued = true;
+        void Promise.resolve().then(() => {
+          clear();
+          clearQueued = false;
+        });
+      }
+      const host = params.rect;
+      const label = params.labelRect;
+      const w = label.width;
+      const h = label.height;
+      const gap = 2;
+      const step = h + gap;
+      const cx = host.x + host.width / 2;
+      const cy = host.y + host.height / 2;
+      const above = host.y - gap - h;
+      const below = host.y + host.height + gap;
+      const right = host.x + host.width + gap;
+      const left = host.x - gap - w;
+      const candidates = [
+        { x: label.x, y: label.y },
+        { x: cx - w / 2, y: below },
+        { x: right, y: cy - h / 2 },
+        { x: left, y: cy - h / 2 }
+      ];
+      for (let k = 1; k <= 6; k++) {
+        candidates.push(
+          { x: cx - w / 2, y: above - k * step },
+          { x: cx - w / 2, y: below + k * step },
+          { x: right, y: cy - h / 2 - k * step },
+          { x: left, y: cy - h / 2 - k * step },
+          { x: right, y: cy - h / 2 + k * step },
+          { x: left, y: cy - h / 2 + k * step }
+        );
+      }
+      placed.push({ x: host.x, y: host.y, width: host.width, height: host.height });
+      const fits = (c) => c.x >= 0 && c.y >= 0 && placed.every((p) => !overlaps({ x: c.x, y: c.y, width: w, height: h }, p));
+      const spot = candidates.find(fits) ?? candidates[0];
+      placed.push({ x: spot.x, y: spot.y, width: w, height: h });
+      return { x: spot.x, y: spot.y, align: "left", verticalAlign: "top" };
+    };
+  }
+  function applyRepelLabels(option) {
+    const series = option.series;
+    if (!Array.isArray(series)) return option;
+    let repel = null;
+    for (const s of series) {
+      if (!s?.rtemisRepelLabels) continue;
+      repel = repel ?? repelLabels();
+      s.labelLayout = repel;
+    }
+    return option;
+  }
+
   // src/index.ts
   var builders = Object.freeze({
     a3: buildA3Option,
@@ -4607,7 +4977,8 @@ ${rate(r.balancedAccuracy)}`, summary) }
     line: buildLineOption,
     pr: buildPrOption,
     roc: buildRocOption,
-    scatter: buildScatterOption
+    scatter: buildScatterOption,
+    significance: buildSignificanceOption
   });
   var aspectHints = Object.freeze({
     line: lineAspect,

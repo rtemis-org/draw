@@ -17,6 +17,7 @@ import { buildDensityOption } from "./charts/density/index.ts";
 import { buildHistogramOption } from "./charts/histogram/index.ts";
 import { buildLineOption, lineAspect } from "./charts/line/index.ts";
 import { buildScatterOption, scatterAspect } from "./charts/scatter/index.ts";
+import { buildSignificanceOption } from "./charts/significance/index.ts";
 
 export type {
   A3Appearance,
@@ -131,6 +132,18 @@ export {
   SCATTER_CHART_CONFIG_MEMBERS,
   scatterAspect,
 } from "./charts/scatter/index.ts";
+export type {
+  PAdjustMethod,
+  SignificanceAppearance,
+  SignificanceChartConfig,
+  SignificanceData,
+} from "./charts/significance/index.ts";
+export {
+  buildSignificanceOption,
+  SIGNIFICANCE_CHART_CONFIG_MEMBERS,
+  significanceAxisNames,
+  significanceGroupNames,
+} from "./charts/significance/index.ts";
 export type { KeyContext, KeyPlacement, KeyReserve, SizeKeySpec } from "./layout/keys.ts";
 export {
   fitKeys,
@@ -153,6 +166,8 @@ export type { LegendMembers } from "./shared/legend.ts";
 export type { AxisLimits } from "./shared/limits.ts";
 export { calcLimits, calcLimitsFromZero, DEFAULT_PAD } from "./shared/limits.ts";
 export { RENDERER_NAMES, registerRenderers } from "./shared/renderers.ts";
+export type { RepelLabelParams, RepelLabelPosition } from "./shared/repel.ts";
+export { applyRepelLabels, repelLabels } from "./shared/repel.ts";
 export type { ColumnarSource, ColumnNames, ColumnType, TabularData } from "./shared/source.ts";
 export { timeLabel, timeMs } from "./shared/source.ts";
 export type { ColorScheme, ThemeTokens } from "./theme/tokens.ts";
@@ -179,6 +194,7 @@ export const builders = Object.freeze({
   pr: buildPrOption,
   roc: buildRocOption,
   scatter: buildScatterOption,
+  significance: buildSignificanceOption,
 });
 
 /**
