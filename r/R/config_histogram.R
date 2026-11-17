@@ -25,7 +25,7 @@
 #' @param palette Optional Character: Series colors, overriding the theme
 #'   palette for this chart. `NULL` uses the theme's.
 #' @param xlab,ylab Optional Character: Axis labels. `NULL` derives them from
-#'   the data.
+#'   the data, and `""` draws no label.
 #' @param margin_top,margin_right,margin_bottom,margin_left Optional Integer
 #'   `[0, Inf)`: Plot margins in pixels.
 #' @inheritParams draw_line legend_position legend_placement legend_title
@@ -140,13 +140,15 @@ HistogramConfig <- new_class(
       ),
       xlab = prop_string(
         NULL,
+        min_length = 0L,
         nullable = TRUE,
-        description = "X axis label. Unset derives it from the data."
+        description = "X axis label. Unset derives it from the data, and an empty string draws no label."
       ),
       ylab = prop_string(
         NULL,
+        min_length = 0L,
         nullable = TRUE,
-        description = "Y axis label. Unset derives it from the data."
+        description = "Y axis label. Unset derives it from the data, and an empty string draws no label."
       ),
       margin_top = prop_integer(
         NULL,

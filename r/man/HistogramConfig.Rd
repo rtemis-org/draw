@@ -135,7 +135,7 @@ the series color. 0 draws no border.}
 palette for this chart. \code{NULL} uses the theme's.}
 
 \item{xlab, ylab}{Optional Character: Axis labels. \code{NULL} derives them from
-the data.}
+the data, and \code{""} draws no label.}
 
 \item{margin_top, margin_right, margin_bottom, margin_left}{Optional Integer
 \verb{[0, Inf)}: Plot margins in pixels.}

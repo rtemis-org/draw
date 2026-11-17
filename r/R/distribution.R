@@ -1,6 +1,16 @@
 # distribution.R
 # spec: draw/first-cran-release#histogram-density-foundation
 
+#' Axis title a label draws
+#'
+#' @param x Optional Character: Axis label.
+#' @return Character: `x`, or `NULL` for `NULL` or `""`.
+#' @keywords internal
+#' @noRd
+axis_title <- function(x) {
+  if (!is.null(x) && nzchar(x)) x
+} # /rtemis.draw::axis_title
+
 #' Validate and split numeric distribution observations
 #' @param x Numeric or List: Vectors to summarize.
 #' @inheritParams draw_density
@@ -215,15 +225,15 @@ method(density_option, class_any) <- function(
     },
     x_axis = Axis(
       type = "value",
-      name = xlab,
+      name = axis_title(xlab),
       scale = TRUE,
-      name_location = if (!is.null(xlab)) "middle" else NULL
+      name_location = if (!is.null(axis_title(xlab))) "middle" else NULL
     ),
     y_axis = Axis(
       type = "value",
       min = 0,
-      name = ylab,
-      name_location = if (!is.null(ylab)) "middle" else NULL
+      name = axis_title(ylab),
+      name_location = if (!is.null(axis_title(ylab))) "middle" else NULL
     ),
     grid = resolve_margins(margins),
     series = series,
@@ -263,7 +273,7 @@ method(histogram_heights, class_numeric) <- function(
 #' Default histogram bar opacity
 #'
 #' Bars are more translucent where they can overlap: overlaid bars of more
-#' than one nonempty sample. Dodged, stacked, ridge and single-sample bars
+#' than one nonempty sample. Dodged, stacked, ridge, and single-sample bars
 #' never cover one another and are drawn more solidly.
 #'
 #' @param samples List: Samples as returned by `distribution_samples()`.
@@ -506,8 +516,8 @@ method(histogram_option, class_any) <- function(
     x_axis = Axis(
       type = "value",
       scale = TRUE,
-      name = xlab,
-      name_location = if (!is.null(xlab)) "middle" else NULL
+      name = axis_title(xlab),
+      name_location = if (!is.null(axis_title(xlab))) "middle" else NULL
     ),
     # Updates apply without transition. In ECharts 6.1.0, hovering a bar of
     # this custom series during an update transition (legend toggle or zoom)
@@ -521,8 +531,8 @@ method(histogram_option, class_any) <- function(
       } else {
         NULL
       },
-      name = ylab,
-      name_location = if (!is.null(ylab)) "middle" else NULL
+      name = axis_title(ylab),
+      name_location = if (!is.null(axis_title(ylab))) "middle" else NULL
     ),
     grid = resolve_margins(margins),
     series = series,

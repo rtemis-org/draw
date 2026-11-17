@@ -165,7 +165,7 @@ from the data, padded by \code{pad}. On a time axis \code{xlim} is in epoch
 milliseconds, the unit the chart positions by.}
 
 \item{xlab, ylab}{Optional Character: Axis labels. \code{NULL} derives them from
-the data.}
+the data, and \code{""} draws no label.}
 
 \item{margin_top, margin_right, margin_bottom, margin_left}{Optional Integer
 \verb{[0, Inf)}: Plot margins in pixels.}

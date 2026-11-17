@@ -120,7 +120,7 @@ axes are then made to span the same interval.}
 from the data, padded by \code{pad}.}
 
 \item{xlab, ylab}{Optional Character: Axis labels. \code{NULL} derives them from
-the data.}
+the data, and \code{""} draws no label.}
 
 \item{title}{Optional Character: Chart title. Declared here because it is the
 one property every chart type has; \code{palette} is not (four take a \code{colormap}

@@ -387,8 +387,8 @@ method(timeseries_option, class_any) <- function(
   axes <- list(Axis(
     type = "value",
     scale = TRUE,
-    name = config@ylab,
-    name_location = "middle"
+    name = axis_title(config@ylab),
+    name_location = if (!is.null(axis_title(config@ylab))) "middle"
   ))
   if (!is.null(y2)) {
     axes[[2L]] <- Axis(
@@ -406,8 +406,8 @@ method(timeseries_option, class_any) <- function(
     x_axis = Axis(
       type = if (temporal[[1]]) "time" else "value",
       scale = TRUE,
-      name = config@xlab,
-      name_location = "middle"
+      name = axis_title(config@xlab),
+      name_location = if (!is.null(axis_title(config@xlab))) "middle"
     ),
     y_axis = axes,
     legend = Legend(

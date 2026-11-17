@@ -115,8 +115,8 @@
 #'   and width in pixels, excluding axis labels and margins.
 #' @param equal_axes Logical: If TRUE, give one data unit the same size in
 #'   pixels on both axes. See Details.
-#' @param xlab Optional Character: X-axis title.
-#' @param ylab Optional Character: Y-axis title.
+#' @param xlab Optional Character: X-axis title. `""` draws no title.
+#' @param ylab Optional Character: Y-axis title. `""` draws no title.
 #' @param title Optional Character: Chart title.
 #' @param theme Optional [Theme]: Theme override.
 #' @param margins Optional Named numeric vector or named list: Plot margins in

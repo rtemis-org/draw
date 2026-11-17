@@ -43,9 +43,11 @@ across individual bars. \code{palette} takes precedence over the theme palette.}
 
 \item{horizontal}{Logical: Whether to draw horizontal bars.}
 
-\item{xlab}{Optional Character: X-axis title (bottom axis).}
+\item{xlab}{Optional Character: X-axis title (bottom axis). \code{""} draws no
+title.}
 
-\item{ylab}{Optional Character: Y-axis title (left axis).}
+\item{ylab}{Optional Character: Y-axis title (left axis). \code{""} draws no
+title.}
 
 \item{title}{Optional Character: Chart title.}
 

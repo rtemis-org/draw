@@ -57,9 +57,9 @@ and width in pixels, excluding axis labels and margins.}
 \item{equal_axes}{Logical: If TRUE, give one data unit the same size in
 pixels on both axes. See Details.}
 
-\item{xlab}{Optional Character: X-axis title.}
+\item{xlab}{Optional Character: X-axis title. \code{""} draws no title.}
 
-\item{ylab}{Optional Character: Y-axis title.}
+\item{ylab}{Optional Character: Y-axis title. \code{""} draws no title.}
 
 \item{...}{Additional arguments to \code{\link[=draw_scatter]{draw_scatter()}}, including \code{theme},
 \code{palette}, limits, margins, dimensions, and \code{filename}.}

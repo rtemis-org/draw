@@ -10,6 +10,8 @@
 
 * Fit legend entries write R-squared as `R²`.
 
+* `xlab` and `ylab` accept `""`, which draws no axis name, in `draw_scatter()`, `draw_line()`, `draw_bar()`, `draw_boxplot()`, `draw_histogram()`, `draw_density()`, and their configs, `TimeSeriesConfig` included; `NULL` derives the label from the data.
+
 * `draw_add_fit()` accepts named coordinate and bound vectors, such as the columns of a `predict(..., interval = "confidence")` matrix, and drops their names.
 
 * `draw_bar()` and `draw()` on a `BarConfig` build the chart with the `@rtemis/draw` bar builder, the one rtemislive uses; `compile()` on a `BarConfig` returns a `BuildRequest`. `BarConfig` gains `group`, which splits each value column into one series per group, `aggregate` (`"none"`, `"sum"`, `"mean"`, `"median"`, `"count"`), which combines rows that share a category and group, and `ylim`, the value axis limits. A factor group or category keeps its level order. `draw_bar()` takes `zoom` as `TRUE` or `FALSE` and `margins` in pixels.

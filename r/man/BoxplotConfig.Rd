@@ -146,7 +146,7 @@ already names each box.}
 \item{ylim}{Optional Numeric [length 2]: Value axis limits. \code{NULL} fits
 the drawn marks.}
 
-\item{xlab, ylab}{Optional Character: Axis labels.}
+\item{xlab, ylab}{Optional Character: Axis labels. \code{""} draws no label.}
 
 \item{margin_top, margin_right, margin_bottom, margin_left}{Optional Integer
 \verb{[0, Inf)}: Plot margins in pixels.}

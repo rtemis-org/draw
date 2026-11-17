@@ -35,7 +35,7 @@
 #' @param palette Optional Character: Box colors, overriding the theme palette
 #'   for this chart. `NULL` uses the theme palette.
 #' @param fill_alpha Numeric `[0, 1]`: Box fill opacity.
-#' @param xlab,ylab Optional Character: Axis labels.
+#' @param xlab,ylab Optional Character: Axis labels. `""` draws no label.
 #' @param margin_top,margin_right,margin_bottom,margin_left Optional Integer
 #'   `[0, Inf)`: Plot margins in pixels.
 #' @inheritParams draw_line legend_position legend_placement legend_title
@@ -213,8 +213,18 @@ BoxplotConfig <- new_class(
         min_items = 2L,
         description = "Value axis limits. Unset fits the drawn marks."
       ),
-      xlab = prop_string(NULL, nullable = TRUE, description = "X axis label."),
-      ylab = prop_string(NULL, nullable = TRUE, description = "Y axis label."),
+      xlab = prop_string(
+        NULL,
+        min_length = 0L,
+        nullable = TRUE,
+        description = "X axis label. An empty string draws no label."
+      ),
+      ylab = prop_string(
+        NULL,
+        min_length = 0L,
+        nullable = TRUE,
+        description = "Y axis label. An empty string draws no label."
+      ),
       margin_top = prop_integer(
         NULL,
         min = 0L,

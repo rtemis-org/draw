@@ -68,7 +68,7 @@ produce the same plot.}
 
 \item{na_rm}{Logical: Remove missing values. FALSE rejects missing input.}
 
-\item{xlab, ylab}{Optional Character: Axis labels.}
+\item{xlab, ylab}{Optional Character: Axis labels. \code{""} draws no label.}
 
 \item{title}{Optional Character: Chart title.}
 

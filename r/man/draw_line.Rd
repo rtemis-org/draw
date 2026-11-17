@@ -126,9 +126,9 @@ pixels on both axes. Set both for a plot that is square \emph{and} to scale,
 such as an ROC curve; the two axes are then made to span the same
 interval. Requires a numeric \code{x}. See Details.}
 
-\item{xlab}{Optional Character: X-axis title.}
+\item{xlab}{Optional Character: X-axis title. \code{""} draws no title.}
 
-\item{ylab}{Optional Character: Y-axis title.}
+\item{ylab}{Optional Character: Y-axis title. \code{""} draws no title.}
 
 \item{title}{Optional Character: Chart title.}
 

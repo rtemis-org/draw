@@ -442,7 +442,7 @@ method(boxplot_option, class_any) <- function(
 #' @param na_rm Logical: Remove missing values. FALSE rejects missing input.
 #' @param palette Optional Character: Box colors, recycled across boxes or groups.
 #' @param fill_alpha Numeric `[0, 1]`: Box fill opacity.
-#' @param xlab,ylab Optional Character: Axis labels.
+#' @param xlab,ylab Optional Character: Axis labels. `""` draws no label.
 #' @param title Optional Character: Chart title.
 #' @param verbosity Integer `[0, Inf)`: Verbosity for missing-value messages.
 #' @param order Character `{"input", "mean", "median"}`: Keep input order or sort

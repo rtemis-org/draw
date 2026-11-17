@@ -55,7 +55,7 @@ numeric vector of break points. Numeric forms are normalized to \code{bins} or
 palette for this chart. \code{NULL} uses the theme's.}
 
 \item{xlab, ylab}{Optional Character: Axis labels. \code{NULL} derives them from
-the data.}
+the data, and \code{""} draws no label.}
 
 \item{title}{Optional Character: Chart title. Declared here because it is the
 one property every chart type has; \code{palette} is not (four take a \code{colormap}

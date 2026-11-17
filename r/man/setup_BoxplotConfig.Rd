@@ -80,7 +80,7 @@ for this chart. \code{NULL} uses the theme palette.}
 
 \item{fill_alpha}{Numeric \verb{[0, 1]}: Box fill opacity.}
 
-\item{xlab, ylab}{Optional Character: Axis labels.}
+\item{xlab, ylab}{Optional Character: Axis labels. \code{""} draws no label.}
 
 \item{title}{Optional Character: Chart title.}
 

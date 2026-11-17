@@ -56,9 +56,9 @@ numeric vector of break points. Numeric forms are normalized to \code{bins} or
 \item{palette}{Optional Character: Series colors, overriding the theme
 palette for this chart. \code{NULL} uses the theme's.}
 
-\item{xlab}{Optional Character: X-axis title.}
+\item{xlab}{Optional Character: X-axis title. \code{""} draws no title.}
 
-\item{ylab}{Optional Character: Y-axis title.}
+\item{ylab}{Optional Character: Y-axis title. \code{""} draws no title.}
 
 \item{title}{Optional Character: Chart title.}
 

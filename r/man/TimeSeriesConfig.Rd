@@ -70,7 +70,7 @@ columns share x; group splits a single y column.}
 \item{group}{Optional Character: Group column binding.}
 
 \item{xlab, ylab}{Optional Character: Axis labels. \code{NULL} derives them from
-the data.}
+the data, and \code{""} draws no label.}
 
 \item{palette}{Optional Character: Series colors, overriding the theme
 palette for this chart. \code{NULL} uses the theme's.}

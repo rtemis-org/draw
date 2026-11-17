@@ -85,7 +85,7 @@
 #' @param xlim,ylim Optional Numeric: Axis limits, length 2. `NULL` derives them
 #'   from the data, padded by `pad`.
 #' @param xlab,ylab Optional Character: Axis labels. `NULL` derives them from
-#'   the data.
+#'   the data, and `""` draws no label.
 #' @param margin_top,margin_right,margin_bottom,margin_left Optional Integer
 #'   `[0, Inf)`: Plot margins in pixels.
 #' @param dat_path Optional Character: Path to the data, read at draw time. The
@@ -259,13 +259,15 @@ ScatterConfig <- new_class(
       ),
       xlab = prop_string(
         NULL,
+        min_length = 0L,
         nullable = TRUE,
-        description = "X axis label. Unset derives it from the data."
+        description = "X axis label. Unset derives it from the data, and an empty string draws no label."
       ),
       ylab = prop_string(
         NULL,
+        min_length = 0L,
         nullable = TRUE,
-        description = "Y axis label. Unset derives it from the data."
+        description = "Y axis label. Unset derives it from the data, and an empty string draws no label."
       ),
       margin_top = prop_integer(
         NULL,

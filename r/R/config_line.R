@@ -60,7 +60,7 @@
 #'   from the data, padded by `pad`. On a time axis `xlim` is in epoch
 #'   milliseconds, the unit the chart positions by.
 #' @param xlab,ylab Optional Character: Axis labels. `NULL` derives them from
-#'   the data.
+#'   the data, and `""` draws no label.
 #' @param margin_top,margin_right,margin_bottom,margin_left Optional Integer
 #'   `[0, Inf)`: Plot margins in pixels.
 #' @inheritParams ScatterConfig fit fit_params fit_per_group se se_times rsq n_fit fit_alpha fit_name
@@ -209,13 +209,15 @@ LineConfig <- new_class(
       ),
       xlab = prop_string(
         NULL,
+        min_length = 0L,
         nullable = TRUE,
-        description = "X axis label. Unset derives it from the data."
+        description = "X axis label. Unset derives it from the data, and an empty string draws no label."
       ),
       ylab = prop_string(
         NULL,
+        min_length = 0L,
         nullable = TRUE,
-        description = "Y axis label. Unset derives it from the data."
+        description = "Y axis label. Unset derives it from the data, and an empty string draws no label."
       ),
       margin_top = prop_integer(
         NULL,

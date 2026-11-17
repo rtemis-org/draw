@@ -858,8 +858,8 @@ number_value_formatter <- function() {
 #'   pixels on both axes. Set both for a plot that is square *and* to scale,
 #'   such as an ROC curve; the two axes are then made to span the same
 #'   interval. Requires a numeric `x`. See Details.
-#' @param xlab Optional Character: X-axis title.
-#' @param ylab Optional Character: Y-axis title.
+#' @param xlab Optional Character: X-axis title. `""` draws no title.
+#' @param ylab Optional Character: Y-axis title. `""` draws no title.
 #' @param title Optional Character: Chart title.
 #' @param theme Optional [Theme]: Theme override. The palette inside the theme can be
 #'   overridden per-chart with the `color` argument.
@@ -1364,8 +1364,10 @@ build_block_mark_area <- function(x, blocks, block_color, block_opacity) {
 #' @param stack Logical: Whether to stack bars.
 #' @param horizontal Logical: Whether to draw horizontal bars.
 #' @inheritParams BarConfig
-#' @param xlab Optional Character: X-axis title (bottom axis).
-#' @param ylab Optional Character: Y-axis title (left axis).
+#' @param xlab Optional Character: X-axis title (bottom axis). `""` draws no
+#'   title.
+#' @param ylab Optional Character: Y-axis title (left axis). `""` draws no
+#'   title.
 #' @param title Optional Character: Chart title.
 #' @param theme Optional [Theme]: Theme override. The palette inside the theme can be
 #'   overridden per-chart with the `palette` argument.
@@ -1642,8 +1644,8 @@ draw_pie <- function(
 #'   computing densities.
 #' @param palette Optional Character: Series colors, overriding the theme
 #'   palette for this chart. `NULL` uses the theme's.
-#' @param xlab Optional Character: X-axis title.
-#' @param ylab Optional Character: Y-axis title.
+#' @param xlab Optional Character: X-axis title. `""` draws no title.
+#' @param ylab Optional Character: Y-axis title. `""` draws no title.
 #' @param title Optional Character: Chart title.
 #' @param theme Optional [Theme]: Theme override.
 #' @param margins Optional Named numeric vector or named list: Plot margins in
@@ -1778,8 +1780,8 @@ draw_density <- function(
 #' @inheritParams draw_density n bw bandwidth kernel adjust na_rm verbosity zoom
 #' @param palette Optional Character: Series colors, overriding the theme
 #'   palette for this chart. `NULL` uses the theme's.
-#' @param xlab Optional Character: X-axis title.
-#' @param ylab Optional Character: Y-axis title.
+#' @param xlab Optional Character: X-axis title. `""` draws no title.
+#' @param ylab Optional Character: Y-axis title. `""` draws no title.
 #' @param title Optional Character: Chart title.
 #' @param theme Optional [Theme]: Theme override.
 #' @param margins Optional Named numeric vector or named list: Plot margins in

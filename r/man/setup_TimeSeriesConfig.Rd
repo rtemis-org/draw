@@ -63,7 +63,7 @@ since a sum over fewer values is smaller by construction.}
 \item{points}{Logical: Show raw points; FALSE draws raw lines.}
 
 \item{xlab, ylab}{Optional Character: Axis labels. \code{NULL} derives them from
-the data.}
+the data, and \code{""} draws no label.}
 
 \item{y2lab}{Optional Character: Secondary axis name.}
 
