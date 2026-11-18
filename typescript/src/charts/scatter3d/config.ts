@@ -1,4 +1,6 @@
 import type { FitMembers } from "../../shared/fit.ts";
+import { formatNumber, tickLabel } from "../../shared/format.ts";
+import { type NiceAxis, niceAxis } from "../../shared/limits.ts";
 import {
   asArray,
   type ColumnNames,
@@ -195,11 +197,30 @@ function axisRange(values: readonly number[]): [number, number] {
 }
 
 /**
+ * The tick label formatter of an axis: {@link tickLabel} at the interval's
+ * decimals. The z axis leaves its minimum unlabeled, since that tick sits at
+ * the corner where the x axis's labels begin.
+ */
+function axisTicks(nice: NiceAxis, skipMin: boolean): (value: unknown) => string {
+  const label = tickLabel(nice.decimals);
+  return (value) =>
+    skipMin && Math.abs(Number(value) - nice.min) <= nice.interval * 1e-6 ? "" : label(value);
+}
+
+/** An axis's limits and interval: {@link niceAxis} of about four intervals. */
+function valueAxis(min: number, max: number): { min: number; max: number; interval: number } {
+  const nice = niceAxis(min, max);
+  return { min: nice.min, max: nice.max, interval: nice.interval };
+}
+
+/**
  * The ECharts-GL option of a 3D scatter chart: one `scatter3D` series of
  * points per group, one `line3D` path per run of consecutive complete
  * observations of a group, and one `surface` per surface of the data; axes
- * spanning the complete observations and the surfaces, each with four
- * intervals; a 100-unit box under the configured camera. Groups follow the
+ * spanning the complete observations and the surfaces at nice limits
+ * ({@link niceAxis}, about four intervals), each tick labeled at the
+ * interval's decimals; a 100-unit box under the configured camera; a tooltip
+ * of the coordinates to three significant digits. Groups follow the
  * group column's level order, otherwise first appearance; rows missing a
  * coordinate or the group are left out, and break paths. The legend lists
  * the groups and the surfaces not named after one, when there are two or more.
@@ -293,13 +314,11 @@ export function buildScatter3DOption(
     const [min, max] = axisRange(v);
     return {
       type: "value",
-      min,
-      max,
-      interval: (max - min) / 4,
+      ...valueAxis(min, max),
       name: labels[d],
       nameGap: 25,
       axisLine: { lineStyle: { color: "#888888" } },
-      axisLabel: { color: "#888888" },
+      axisLabel: { color: "#888888", formatter: axisTicks(niceAxis(min, max), d === 2) },
       nameTextStyle: { color: "#888888" },
     };
   });
@@ -310,7 +329,14 @@ export function buildScatter3DOption(
   return {
     ...(config.title ? { title: { text: config.title } } : {}),
     ...(palette && palette.length > 0 ? { color: [...palette] } : {}),
-    tooltip: { trigger: "item" },
+    tooltip: {
+      trigger: "item",
+      formatter: (p: { marker?: string; seriesName?: string; value?: unknown }) => {
+        const v = Array.isArray(p.value) ? p.value : [];
+        const lines = labels.map((name, d) => `${name}: ${formatNumber(v[d])}`);
+        return [`${p.marker ?? ""}${p.seriesName ?? ""}`, ...lines].join("<br/>");
+      },
+    },
     legend: legendNames.length > 1 ? { data: legendNames } : { show: false },
     ...Object.fromEntries(AXIS_KEYS.map((key, d) => [key, axes[d]])),
     grid3D: {
@@ -372,7 +398,14 @@ export function fitSurfaceAxes(
         `A surface layer drawn without expanding the axes must lie within them; its ${"xyz"[d]} coordinates span beyond [${min}, ${max}].`,
       );
     }
-    out[key] = { ...axis, min: lo, max: hi, interval: (hi - lo) / 4 };
+    if (lo < min || hi > max) {
+      const nice = niceAxis(lo, hi);
+      out[key] = {
+        ...axis,
+        ...valueAxis(lo, hi),
+        axisLabel: { ...(axis.axisLabel as object), formatter: axisTicks(nice, d === 2) },
+      };
+    }
   });
   return out;
 }

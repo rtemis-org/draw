@@ -1,4 +1,4 @@
-import { tooltipValue } from "../../shared/format.ts";
+import { formatNumber, tooltipValue } from "../../shared/format.ts";
 import type { LegendMembers } from "../../shared/legend.ts";
 import {
   asArray,
@@ -75,12 +75,17 @@ export interface PieSlice {
   readonly value: number;
 }
 
-/** The ECharts label template of each `label_format`. */
+type PieLabelParams = { name?: string; value?: unknown };
+
+/**
+ * The label of each `label_format`: an ECharts template, or, for a value, a
+ * function writing it with {@link formatNumber}.
+ */
 const LABEL_TEMPLATES = {
   name: "{b}",
-  value: "{c}",
+  value: (p: PieLabelParams) => String(formatNumber(p.value)),
   percent: "{d}%",
-  name_value: "{b}: {c}",
+  name_value: (p: PieLabelParams) => `${p.name ?? ""}: ${formatNumber(p.value)}`,
   name_percent: "{b}: {d}%",
 } as const;
 

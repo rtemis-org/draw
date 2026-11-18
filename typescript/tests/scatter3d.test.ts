@@ -43,7 +43,25 @@ describe("buildScatter3DOption", () => {
         { ...parity.data, ...(c.surfaces ? { surfaces: c.surfaces } : {}) },
         c.config,
       );
-      expect(rounded(option)).toEqual(rounded(c.option));
+      // The builder places nice ticks where R divided the data range in four,
+      // and formats the tooltip; the rest matches.
+      const strip = (o: Record<string, unknown>) => {
+        const { tooltip: _t, xAxis3D, yAxis3D, zAxis3D, ...rest } = o;
+        const axis = (a: unknown) => {
+          const { min: _a, max: _b, interval: _c, axisLabel, ...r } = a as Record<string, unknown>;
+          const { formatter: _f, ...label } = axisLabel as Record<string, unknown>;
+          return { ...r, axisLabel: label };
+        };
+        return { ...rest, axes: [xAxis3D, yAxis3D, zAxis3D].map(axis) };
+      };
+      expect(rounded(strip(option))).toEqual(rounded(strip(c.option)));
+      // Each axis spans R's data range.
+      for (const key of ["xAxis3D", "yAxis3D", "zAxis3D"]) {
+        const got = option[key] as { min: number; max: number };
+        const want = c.option[key] as { min: number; max: number };
+        expect(got.min).toBeLessThanOrEqual(want.min + 1e-12);
+        expect(got.max).toBeGreaterThanOrEqual(want.max - 1e-12);
+      }
     });
   }
 
@@ -112,6 +130,37 @@ describe("buildScatter3DOption", () => {
         { ...xyz, mode: "lines" },
       ),
     ).toThrow("two consecutive complete observations");
+  });
+});
+
+describe("axes", () => {
+  it("ticks at nice values and labels them at the interval's decimals", () => {
+    const option = buildScatter3DOption(
+      { columns: { x: [0.2884351517, 0.7642381465], y: [1, 2], z: [1500, 2600] } },
+      { x: "x", y: "y", z: "z" },
+    );
+    const x = option.xAxis3D as {
+      min: number;
+      max: number;
+      interval: number;
+      axisLabel: { formatter: (v: number) => string };
+    };
+    expect([x.min, x.max, x.interval]).toEqual([0.2, 0.8, 0.2]);
+    expect(x.axisLabel.formatter(0.6000000000000001)).toBe("0.6");
+    const z = option.zAxis3D as {
+      min: number;
+      max: number;
+      interval: number;
+      axisLabel: { formatter: (v: number) => string };
+    };
+    expect([z.min, z.max, z.interval]).toEqual([1400, 2600, 200]);
+    expect(z.axisLabel.formatter(2000)).toBe("2000");
+    expect(z.axisLabel.formatter(1400)).toBe("");
+    expect(x.axisLabel.formatter(0.2)).toBe("0.2");
+    const tooltip = option.tooltip as { formatter: (p: unknown) => string };
+    expect(tooltip.formatter({ seriesName: "Observations", value: [0.2884351517, 1, 1500] })).toBe(
+      "Observations<br/>x: 0.288<br/>y: 1<br/>z: 1500",
+    );
   });
 });
 

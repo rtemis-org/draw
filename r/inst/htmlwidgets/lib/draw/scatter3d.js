@@ -48,13 +48,17 @@
         silent:true,invisible:width>=500,style:{text:dimension+': '+axis.rtemisAxisName,
           fill:color,font:'11px '+(theme?.textStyle?.fontFamily || 'sans-serif')}});
       option[key].axisLabel.color = color;
-      option[key].axisLabel.formatter = v => Number(Number(v).toPrecision(4));
+      // The builder's tick labels take the decimals of its interval.
+      if (typeof option[key].axisLabel.formatter !== 'function')
+        option[key].axisLabel.formatter = v => Number(Number(v).toPrecision(4));
       option[key].axisLabel.fontSize = 11;
       option[key].axisLabel.fontFamily = theme?.textStyle?.fontFamily || "sans-serif";
       option[key].nameTextStyle.fontFamily = theme?.textStyle?.fontFamily || "sans-serif";
       option[key].nameTextStyle.fontSize = width < 500 ? 11 : 12;
       option[key].nameGap = width < 500 ? (key==='zAxis3D'?50:35) : 25;
-      option[key].interval=(option[key].max-option[key].min)/(width<500?2:4);
+      // Narrow layouts label every other tick of the builder's interval.
+      axis.rtemisInterval=axis.rtemisInterval || axis.interval || (axis.max-axis.min)/4;
+      option[key].interval=axis.rtemisInterval*(width<500?2:1);
       option[key].nameTextStyle.color = color;
     }
     const graphics=option.graphic ? (Array.isArray(option.graphic)?option.graphic:[option.graphic]) : [];
@@ -322,10 +326,12 @@
         normal=normal.map(v=>-v);
       const anchor=normal[0]<-.5?'end':normal[0]>.5?'start':'middle';
       // Interior ticks avoid duplicate endpoint labels at shared corners.
-      for(let k=1;k<4;k++) {
-        const value=axis.min+(axis.max-axis.min)*k/4,p=edge.start.slice();p[dim]=value;
+      const step=axis.interval>0 ? axis.interval : (axis.max-axis.min)/4;
+      const label=typeof axis.axisLabel?.formatter==='function' ? axis.axisLabel.formatter : v=>Number(v.toPrecision(4));
+      for(let k=1;axis.min+step*k<axis.max-step*1e-6;k++) {
+        const value=axis.min+step*k,p=edge.start.slice();p[dim]=value;
         const xy=g.project(p);
-        out+=`<text x="${f(xy[0]+normal[0]*9)}" y="${f(xy[1]+normal[1]*9+4)}" text-anchor="${anchor}">${esc(Number(value.toPrecision(4)))}</text>`;
+        out+=`<text x="${f(xy[0]+normal[0]*9)}" y="${f(xy[1]+normal[1]*9+4)}" text-anchor="${anchor}">${esc(label(value))}</text>`;
       }
       const name=[edge.mid[0]+normal[0]*48,edge.mid[1]+normal[1]*48];
       // Keep long axis names inside the canvas without placing them over data.

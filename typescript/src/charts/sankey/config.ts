@@ -1,3 +1,4 @@
+import { tooltipValue } from "../../shared/format.ts";
 import type { MarginMembers } from "../../shared/layout.ts";
 import {
   asArray,
@@ -190,7 +191,7 @@ export function buildSankeyOption(
   );
   return {
     ...(config.title ? { title: { text: config.title, left: "center" } } : {}),
-    tooltip: { trigger: "item" },
+    tooltip: { trigger: "item", valueFormatter: tooltipValue },
     series: [
       {
         type: "sankey",

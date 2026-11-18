@@ -114,6 +114,14 @@ describe("buildPieOption", () => {
     expect(option.legend).toBeUndefined();
   });
 
+  it("writes value labels to three significant digits", () => {
+    const value = seriesOf(buildPieOption(counts, { ...bound, label_format: "name_value" }));
+    const formatter = value.label.formatter as (p: unknown) => string;
+    expect(formatter({ name: "a", value: 0.30000000000000004 })).toBe("a: 0.300");
+    const only = seriesOf(buildPieOption(counts, { ...bound, label_format: "value" }));
+    expect((only.label.formatter as (p: unknown) => string)({ value: 1234.5678 })).toBe("1235");
+  });
+
   it("builds JSON apart from the tooltip's value formatter", () => {
     const option = buildPieOption(counts, bound);
     const { tooltip: _tooltip, ...rest } = option;

@@ -30,7 +30,7 @@
 
 * `draw_pie()` and `draw()` on a `PieConfig` build the chart with the `@rtemis/draw` pie builder, the one rtemislive uses; `compile()` on a `PieConfig` returns a `BuildRequest`. Values that share a label sum into one slice. `PieConfig` gains `inner_radius` and `show_labels`; `draw_pie()` gains `show_labels`, and its two-element `radius` sets the inner and outer radius.
 
-* `draw_scatter3d()`, `draw_spectrogram()`, `draw_calibration()`, and `draw()` on their configs build the chart with the `@rtemis/draw` builders; `compile()` returns a `BuildRequest`. `draw_add_surface(expand = FALSE)` on a 3D scatter stops when the chart is built if the surface lies outside the axes. The spectrogram's `margins` take pixels, `SpectrogramConfig`'s `overlap` is a fraction of `n_fft`, and its tooltip names each value after its axis. The calibration chart's title is centered. viridisLite is no longer a dependency.
+* `draw_scatter3d()`, `draw_spectrogram()`, `draw_calibration()`, and `draw()` on their configs build the chart with the `@rtemis/draw` builders; `compile()` returns a `BuildRequest`. `draw_add_surface(expand = FALSE)` on a 3D scatter stops when the chart is built if the surface lies outside the axes. The spectrogram's `margins` take pixels, `SpectrogramConfig`'s `overlap` is a fraction of `n_fft`, and its tooltip names each value after its axis. The calibration chart's title is centered. viridisLite is no longer a dependency. The 3D scatter's axes take nice limits and ticks labeled at the interval's decimals.
 
 * `draw_fit()` names the x axis "Observed" by default.
 

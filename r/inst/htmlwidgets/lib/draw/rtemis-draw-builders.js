@@ -1077,6 +1077,9 @@ var RtemisDraw = (() => {
     const e = Number(exponent);
     return `${trimmed}e${e < 0 ? "-" : "+"}${String(Math.abs(e)).padStart(2, "0")}`;
   }
+  function tickLabel(decimals) {
+    return (value) => ddSci(typeof value === "number" ? value : Number(value), decimals);
+  }
 
   // src/shared/layout.ts
   var DEFAULT_MARGIN = 36;
@@ -1398,6 +1401,43 @@ var RtemisDraw = (() => {
     const common = xlim ?? ylim ?? calcLimits([...x ?? [], ...y], pad);
     return common ? { xlim: common, ylim: common } : { xlim, ylim };
   }
+  function niceAxis(min, max, fewest = 3, most = 6) {
+    let lo = min;
+    let hi = max;
+    if (lo === hi) {
+      const r = Math.max(1, Math.abs(lo) * 0.05);
+      lo -= r;
+      hi += r;
+    }
+    const decimalsOf = (interval2) => {
+      const text = Number(interval2.toPrecision(12)).toString();
+      const [, frac = ""] = text.split(".");
+      return text.includes("e-") ? Number(text.split("e-")[1]) + frac.length : frac.length;
+    };
+    let best = null;
+    let bestSpan = Number.POSITIVE_INFINITY;
+    const top = Math.floor(Math.log10((hi - lo) / fewest)) + 1;
+    for (let e = top; e >= top - 2; e--) {
+      for (const m of [1, 2, 2.5, 5]) {
+        const interval2 = m * 10 ** e;
+        const decimals = Math.max(0, decimalsOf(interval2));
+        const clean = (v) => Number(v.toFixed(Math.min(20, decimals + 2)));
+        const a = clean(Math.floor(lo / interval2 + 1e-9) * interval2);
+        const b = clean(Math.ceil(hi / interval2 - 1e-9) * interval2);
+        const n = Math.round((b - a) / interval2);
+        if (n < fewest || n > most) continue;
+        const span = b - a;
+        const better = best === null || span < bestSpan - 1e-9 * span || Math.abs(span - bestSpan) <= 1e-9 * span && (decimals < best.decimals || decimals === best.decimals && Math.abs(n - 4) < Math.abs(Math.round((best.max - best.min) / best.interval) - 4));
+        if (better) {
+          best = { min: a, max: b, interval: clean(interval2), decimals };
+          bestSpan = span;
+        }
+      }
+    }
+    if (best) return best;
+    const interval = (hi - lo) / 4;
+    return { min: lo, max: hi, interval, decimals: Math.max(0, decimalsOf(interval)) };
+  }
 
   // src/theme/tokens.ts
   var RTEMIS_PALETTE = Object.freeze([
@@ -1547,7 +1587,7 @@ var RtemisDraw = (() => {
     const axisLabel = { fontSize: sizes.axisLabel, color: fg };
     const axisLine = tokens.axis_color ? { lineStyle: { color: tokens.axis_color } } : void 0;
     const axisTick = { show: false };
-    const valueAxis = present({
+    const valueAxis2 = present({
       axisLabel,
       axisLine,
       axisTick,
@@ -1576,9 +1616,9 @@ var RtemisDraw = (() => {
       dataZoom: { ...zoomSliderStyle(dark), textStyle: axisLabel },
       ...SERIES_THEME,
       categoryAxis: present({ axisLabel, axisLine, axisTick, splitLine: { show: false } }),
-      valueAxis,
-      logAxis: valueAxis,
-      timeAxis: valueAxis
+      valueAxis: valueAxis2,
+      logAxis: valueAxis2,
+      timeAxis: valueAxis2
     };
   }
 
@@ -2036,13 +2076,13 @@ var RtemisDraw = (() => {
       ...horizontal ? { inverse: true } : {},
       axisLine: { show: axisLimits[0] <= 0 && axisLimits[1] >= 0, onZero: true }
     };
-    const valueAxis = {
+    const valueAxis2 = {
       type: "value",
       scale: true,
       ...valueLimits ? { min: valueLimits[0], max: valueLimits[1] } : {}
     };
-    const xAxis = horizontal ? valueAxis : categoryAxis;
-    const yAxis = horizontal ? categoryAxis : valueAxis;
+    const xAxis = horizontal ? valueAxis2 : categoryAxis;
+    const yAxis = horizontal ? categoryAxis : valueAxis2;
     if (config.xlab) Object.assign(xAxis, { name: config.xlab, nameLocation: "middle" });
     if (config.ylab) Object.assign(yAxis, { name: config.ylab, nameLocation: "middle" });
     const grid = cartesianGrid(config, Boolean(config.xlab || config.ylab));
@@ -4916,9 +4956,9 @@ ${rate(r.balancedAccuracy)}`, summary) }
   ]);
   var LABEL_TEMPLATES = {
     name: "{b}",
-    value: "{c}",
+    value: (p) => String(formatNumber(p.value)),
     percent: "{d}%",
-    name_value: "{b}: {c}",
+    name_value: (p) => `${p.name ?? ""}: ${formatNumber(p.value)}`,
     name_percent: "{b}: {d}%"
   };
   var isMissing = (v) => v === null || v === void 0 || typeof v === "number" && Number.isNaN(v);
@@ -5086,7 +5126,7 @@ ${rate(r.balancedAccuracy)}`, summary) }
     );
     return {
       ...config.title ? { title: { text: config.title, left: "center" } } : {},
-      tooltip: { trigger: "item" },
+      tooltip: { trigger: "item", valueFormatter: tooltipValue },
       series: [
         {
           type: "sankey",
@@ -5921,6 +5961,14 @@ ${rate(r.balancedAccuracy)}`, summary) }
     }
     return [lo, hi];
   }
+  function axisTicks(nice, skipMin) {
+    const label = tickLabel(nice.decimals);
+    return (value) => skipMin && Math.abs(Number(value) - nice.min) <= nice.interval * 1e-6 ? "" : label(value);
+  }
+  function valueAxis(min, max) {
+    const nice = niceAxis(min, max);
+    return { min: nice.min, max: nice.max, interval: nice.interval };
+  }
   function buildScatter3DOption(data, config, appearance = {}) {
     if (!config.x || !config.y || !config.z) {
       throw new Error("A 3D scatter chart needs the config members 'x', 'y', and 'z' set.");
@@ -6002,13 +6050,11 @@ ${rate(r.balancedAccuracy)}`, summary) }
       const [min, max] = axisRange(v);
       return {
         type: "value",
-        min,
-        max,
-        interval: (max - min) / 4,
+        ...valueAxis(min, max),
         name: labels[d],
         nameGap: 25,
         axisLine: { lineStyle: { color: "#888888" } },
-        axisLabel: { color: "#888888" },
+        axisLabel: { color: "#888888", formatter: axisTicks(niceAxis(min, max), d === 2) },
         nameTextStyle: { color: "#888888" }
       };
     });
@@ -6019,7 +6065,14 @@ ${rate(r.balancedAccuracy)}`, summary) }
     return {
       ...config.title ? { title: { text: config.title } } : {},
       ...palette && palette.length > 0 ? { color: [...palette] } : {},
-      tooltip: { trigger: "item" },
+      tooltip: {
+        trigger: "item",
+        formatter: (p) => {
+          const v = Array.isArray(p.value) ? p.value : [];
+          const lines = labels.map((name, d) => `${name}: ${formatNumber(v[d])}`);
+          return [`${p.marker ?? ""}${p.seriesName ?? ""}`, ...lines].join("<br/>");
+        }
+      },
       legend: legendNames.length > 1 ? { data: legendNames } : { show: false },
       ...Object.fromEntries(AXIS_KEYS.map((key, d) => [key, axes[d]])),
       grid3D: {
@@ -6070,7 +6123,14 @@ ${rate(r.balancedAccuracy)}`, summary) }
           `A surface layer drawn without expanding the axes must lie within them; its ${"xyz"[d]} coordinates span beyond [${min}, ${max}].`
         );
       }
-      out[key] = { ...axis, min: lo, max: hi, interval: (hi - lo) / 4 };
+      if (lo < min || hi > max) {
+        const nice = niceAxis(lo, hi);
+        out[key] = {
+          ...axis,
+          ...valueAxis(lo, hi),
+          axisLabel: { ...axis.axisLabel, formatter: axisTicks(nice, d === 2) }
+        };
+      }
     });
     return out;
   }

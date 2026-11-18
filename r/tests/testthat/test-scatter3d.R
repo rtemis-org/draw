@@ -11,8 +11,14 @@ test_that("3D coordinates, bounds, groups and camera have a portable contract", 
     as.list(unname(as.numeric(iris[1, 1:3])))
   )
   expect_equal(opt[["grid3D"]][["viewControl"]][["projection"]], "perspective")
-  expect_equal(opt[["xAxis3D"]][["min"]], min(iris[[1]]))
-  expect_equal(opt[["xAxis3D"]][["max"]], max(iris[[1]]))
+  # The axis spans the data at nice limits, a multiple of its interval.
+  expect_lte(opt[["xAxis3D"]][["min"]], min(iris[[1]]))
+  expect_gte(opt[["xAxis3D"]][["max"]], max(iris[[1]]))
+  expect_equal(
+    opt[["xAxis3D"]][["min"]] %% opt[["xAxis3D"]][["interval"]],
+    0,
+    tolerance = 1e-9
+  )
   expect_null(to_list(EChartsOption())[["grid3D"]])
   expect_error(setup_Scatter3DConfig(alpha = 91))
   expect_error(setup_Scatter3DConfig(point_size = 0))

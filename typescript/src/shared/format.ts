@@ -61,3 +61,11 @@ function scientific(value: number, digits: number): string {
   const e = Number(exponent);
   return `${trimmed}e${e < 0 ? "-" : "+"}${String(Math.abs(e)).padStart(2, "0")}`;
 }
+
+/**
+ * An axis label formatter writing each tick with `decimals` decimal places
+ * through {@link ddSci}, the decimals of the axis's interval.
+ */
+export function tickLabel(decimals: number): (value: unknown) => string {
+  return (value) => ddSci(typeof value === "number" ? value : Number(value), decimals);
+}

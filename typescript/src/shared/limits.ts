@@ -75,3 +75,64 @@ export function equalAxisLimits(
   const common = xlim ?? ylim ?? calcLimits([...(x ?? []), ...y], pad);
   return common ? { xlim: common, ylim: common } : { xlim, ylim };
 }
+
+/** A value axis with ticks at multiples of a nice interval. */
+export interface NiceAxis {
+  readonly min: number;
+  readonly max: number;
+  /** 1, 2, or 5 times a power of ten. */
+  readonly interval: number;
+  /** Decimal places of the interval, which every tick label takes. */
+  readonly decimals: number;
+}
+
+/**
+ * The axis that spans `[min, max]` with the least room beyond it, among
+ * intervals of 1, 2, 2.5, or 5 times a power of ten giving `fewest` to
+ * `most` intervals; the limits are the multiples of the interval at or beyond
+ * the range, and ties go to fewer decimals, then to a count nearer four. A range of
+ * zero is widened by 5% of the value's magnitude, at least 1.
+ */
+export function niceAxis(min: number, max: number, fewest = 3, most = 6): NiceAxis {
+  let lo = min;
+  let hi = max;
+  if (lo === hi) {
+    const r = Math.max(1, Math.abs(lo) * 0.05);
+    lo -= r;
+    hi += r;
+  }
+  const decimalsOf = (interval: number) => {
+    const text = Number(interval.toPrecision(12)).toString();
+    const [, frac = ""] = text.split(".");
+    return text.includes("e-") ? Number(text.split("e-")[1]) + frac.length : frac.length;
+  };
+  let best: NiceAxis | null = null;
+  let bestSpan = Number.POSITIVE_INFINITY;
+  const top = Math.floor(Math.log10((hi - lo) / fewest)) + 1;
+  for (let e = top; e >= top - 2; e--) {
+    for (const m of [1, 2, 2.5, 5]) {
+      const interval = m * 10 ** e;
+      const decimals = Math.max(0, decimalsOf(interval));
+      const clean = (v: number) => Number(v.toFixed(Math.min(20, decimals + 2)));
+      const a = clean(Math.floor(lo / interval + 1e-9) * interval);
+      const b = clean(Math.ceil(hi / interval - 1e-9) * interval);
+      const n = Math.round((b - a) / interval);
+      if (n < fewest || n > most) continue;
+      const span = b - a;
+      const better =
+        best === null ||
+        span < bestSpan - 1e-9 * span ||
+        (Math.abs(span - bestSpan) <= 1e-9 * span &&
+          (decimals < best.decimals ||
+            (decimals === best.decimals &&
+              Math.abs(n - 4) < Math.abs(Math.round((best.max - best.min) / best.interval) - 4))));
+      if (better) {
+        best = { min: a, max: b, interval: clean(interval), decimals };
+        bestSpan = span;
+      }
+    }
+  }
+  if (best) return best;
+  const interval = (hi - lo) / 4;
+  return { min: lo, max: hi, interval, decimals: Math.max(0, decimalsOf(interval)) };
+}
