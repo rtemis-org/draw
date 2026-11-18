@@ -1,10 +1,11 @@
 // SVG geometry for the initial declarative network/map view. This module never
-// starts a browser and never embeds a raster snapshot. Shared scene modules
-// own the data joins, graph layout, and styling used by the interactive widget.
+// starts a browser and never embeds a raster snapshot. @rtemis/draw's network
+// functions and the map scene module own the graph layout and styling and the
+// map's data joins, as in the interactive widgets.
 const themeUtils = require('../htmlwidgets/lib/draw/vector_theme.js');
 const esc = themeUtils.escape;
 const graphDeps = require('./graph-deps.js');
-const graphScene = require('../htmlwidgets/lib/draw/graph_scene.js')(graphDeps);
+const builders = require('../htmlwidgets/lib/draw/rtemis-draw-builders.js');
 const mapDeps = require('./map-deps.js');
 const mapScene = require('../htmlwidgets/lib/draw/map_scene.js')(mapDeps);
 const echarts = require('../htmlwidgets/lib/echarts/echarts.min.js');
@@ -21,9 +22,11 @@ function frame(x, content) {
 }
 // Reuse Sigma v4's normalization and camera matrix, including its graph aspect
 // correction and 30px stage padding. Screen-referenced sizes remain pixels.
+// spec: draw/shared-builders#network
 function graphGeometry(x) {
-  const t = themeUtils.resolve(x.theme), s = x.style || {};
-  const scene = graphScene.create(x.model || {}, s, t), graph = scene.graph;
+  const t = themeUtils.resolve(x.theme), config = x.config || {}, model = x.model || {};
+  const graph = builders.buildNetworkGraph({...model, nodes: model.nodes || [], edges: model.edges || []}, config, graphDeps);
+  const scene = builders.networkReducers(graph, config, {label_color: t.fg, font_family: t.fontFamily, scheme: t.dark ? 'dark' : 'light'});
   const attrs = graph.mapNodes((id, a) => a);
   const extent = {x:[0,1], y:[0,1]};
   if (attrs.length) for (const axis of ['x','y']) {
@@ -41,7 +44,7 @@ function graphGeometry(x) {
   return {nodes, edges};
 }
 function graphSVG(x) {
-  const t = themeUtils.resolve(x.theme), s = x.style || {};
+  const t = themeUtils.resolve(x.theme), s = x.config || {};
   const scene = graphGeometry(x);
   let content = scene.edges.map(e => {
     const a=e.source,b=e.target;
@@ -57,7 +60,7 @@ function graphSVG(x) {
     return `<path data-source="${esc(a.id)}" data-target="${esc(b.id)}" d="${d}" fill="none" stroke="${esc(e.color)}" stroke-width="${number(e.size)}" opacity="${e.opacity}"/>`;
   }).join('');
   content += scene.nodes.map(n => `<circle data-node-id="${esc(n.id)}" cx="${number(n.x)}" cy="${number(n.y)}" r="${number(n.size)}" fill="${esc(n.color)}" opacity="${n.opacity}"/>`).join('');
-  if (s.showLabels !== false) {
+  if (s.show_labels !== false) {
     // Prefer labels for larger nodes; prevent collisions and keep text inside
     // the exported page. Browser label culling is camera dependent.
     const occupied=[];

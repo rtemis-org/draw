@@ -9,7 +9,7 @@ stopifnot(
   as.character(packageVersion("rtemis.draw")) ==
     read.dcf("r/DESCRIPTION", fields = "Version")[[1L]]
 )
-# A small trait network and real state data make the geometry easy to inspect.
+# Penguin correlations, a trait edge list, and US state data supply the geometry.
 matrix <- stats::cor(
   penguins[c("bill_len", "bill_dep", "flipper_len", "body_mass")],
   use = "complete.obs"
@@ -102,7 +102,7 @@ manifest[["assets"]] <- tools::md5sum(system.file(
   c(
     "htmlwidgets/rtemis-graph.js",
     "htmlwidgets/rtemis-map.js",
-    "htmlwidgets/lib/draw/graph_scene.js",
+    "htmlwidgets/lib/draw/rtemis-draw-builders.js",
     "htmlwidgets/lib/draw/map_scene.js",
     "htmlwidgets/lib/draw/vector_theme.js",
     "htmlwidgets/lib/draw/theme_watch.js",

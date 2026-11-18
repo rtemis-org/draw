@@ -1,0 +1,2239 @@
+{
+  "models": {
+    "cor": {
+      "nodes": [
+        { "id": "mpg", "label": "mpg", "value": 5.83950941732435 },
+        { "id": "cyl", "label": "cyl", "value": 6.52072540308964 },
+        { "id": "disp", "label": "disp", "value": 5.99593881642372 },
+        { "id": "hp", "label": "hp", "value": 5.23944489602648 },
+        { "id": "drat", "label": "drat", "value": 4.2160858546631 },
+        { "id": "wt", "label": "wt", "value": 5.74002156012086 },
+        { "id": "qsec", "label": "qsec", "value": 2.70025013449514 },
+        { "id": "vs", "label": "vs", "value": 4.77742160555074 },
+        { "id": "am", "label": "am", "value": 3.91293166274137 },
+        { "id": "gear", "label": "gear", "value": 2.63252508729014 },
+        { "id": "carb", "label": "carb", "value": 3.05358220854611 }
+      ],
+      "edges": [
+        { "source": "mpg", "target": "cyl", "weight": 0.852161959426613, "sign": -1 },
+        { "source": "mpg", "target": "disp", "weight": 0.847551379262479, "sign": -1 },
+        { "source": "mpg", "target": "hp", "weight": 0.776168371826586, "sign": -1 },
+        { "source": "mpg", "target": "drat", "weight": 0.681171907806749, "sign": 1 },
+        { "source": "mpg", "target": "wt", "weight": 0.867659376517228, "sign": -1 },
+        { "source": "mpg", "target": "vs", "weight": 0.664038919127593, "sign": 1 },
+        { "source": "mpg", "target": "am", "weight": 0.599832429454648, "sign": 1 },
+        { "source": "mpg", "target": "carb", "weight": 0.550925073902459, "sign": -1 },
+        { "source": "cyl", "target": "disp", "weight": 0.902032872146999, "sign": 1 },
+        { "source": "cyl", "target": "hp", "weight": 0.83244745272182, "sign": 1 },
+        { "source": "cyl", "target": "drat", "weight": 0.69993811382877, "sign": -1 },
+        { "source": "cyl", "target": "wt", "weight": 0.782495794463241, "sign": 1 },
+        { "source": "cyl", "target": "qsec", "weight": 0.591242073768869, "sign": -1 },
+        { "source": "cyl", "target": "vs", "weight": 0.810811796083005, "sign": -1 },
+        { "source": "cyl", "target": "am", "weight": 0.522607046900675, "sign": -1 },
+        { "source": "cyl", "target": "carb", "weight": 0.526988293749643, "sign": 1 },
+        { "source": "disp", "target": "hp", "weight": 0.790948586369806, "sign": 1 },
+        { "source": "disp", "target": "drat", "weight": 0.71021392716927, "sign": -1 },
+        { "source": "disp", "target": "wt", "weight": 0.887979922058138, "sign": 1 },
+        { "source": "disp", "target": "vs", "weight": 0.7104158907906, "sign": -1 },
+        { "source": "disp", "target": "am", "weight": 0.591227040063947, "sign": -1 },
+        { "source": "disp", "target": "gear", "weight": 0.555569198562483, "sign": -1 },
+        { "source": "hp", "target": "wt", "weight": 0.658747887344759, "sign": 1 },
+        { "source": "hp", "target": "qsec", "weight": 0.708223388861953, "sign": -1 },
+        { "source": "hp", "target": "vs", "weight": 0.72309673735245, "sign": -1 },
+        { "source": "hp", "target": "carb", "weight": 0.74981247154911, "sign": 1 },
+        { "source": "drat", "target": "wt", "weight": 0.712440646697372, "sign": -1 },
+        { "source": "drat", "target": "am", "weight": 0.71271112722627, "sign": 1 },
+        { "source": "drat", "target": "gear", "weight": 0.699610131934665, "sign": 1 },
+        { "source": "wt", "target": "vs", "weight": 0.554915677663994, "sign": -1 },
+        { "source": "wt", "target": "am", "weight": 0.692495258839484, "sign": -1 },
+        { "source": "wt", "target": "gear", "weight": 0.583286996536648, "sign": -1 },
+        { "source": "qsec", "target": "vs", "weight": 0.744535443526254, "sign": 1 },
+        { "source": "qsec", "target": "carb", "weight": 0.656249228338059, "sign": -1 },
+        { "source": "vs", "target": "carb", "weight": 0.569607141006843, "sign": -1 },
+        { "source": "am", "target": "gear", "weight": 0.794058760256343, "sign": 1 }
+      ],
+      "directed": false
+    },
+    "edges": {
+      "nodes": [
+        { "id": "a", "label": "a", "value": 12 },
+        { "id": "b", "label": "b", "value": 10.5 },
+        { "id": "c", "label": "c", "value": 7.5 },
+        { "id": "d", "label": "d", "value": 5 },
+        { "id": "e", "label": "e", "value": 3 },
+        { "id": "zz", "label": "zz", "value": 1 }
+      ],
+      "edges": [
+        { "source": "a", "target": "b", "weight": 1 },
+        { "source": "a", "target": "c", "weight": 2 },
+        { "source": "b", "target": "c", "weight": 0.5 },
+        { "source": "c", "target": "d", "weight": 3 },
+        { "source": "c", "target": "c", "weight": 1 },
+        { "source": "d", "target": "e", "weight": -2 },
+        { "source": "e", "target": "zz", "weight": 1 }
+      ],
+      "directed": true
+    }
+  },
+  "cases": [
+    {
+      "model": "cor",
+      "config": {
+        "palette": ["#6CA3A0", "#F08904", "#BE2E5F", "#B3CFE8", "#0F6A66"],
+        "node_color": "#6CA3A0",
+        "positive_color": "#C55E28",
+        "negative_color": "#2D83D3",
+        "layout": "force",
+        "color_by_group": true
+      },
+      "nodes": [
+        {
+          "id": "mpg",
+          "x": 15.291985511779785,
+          "y": 3.1328976154327393,
+          "community": 0,
+          "size": 13.955306436546895,
+          "color": "#6CA3A0",
+          "opacity": 0.95,
+          "labelPosition": "left"
+        },
+        {
+          "id": "cyl",
+          "x": -4.207259654998779,
+          "y": -8.400534629821777,
+          "community": 1,
+          "size": 15,
+          "color": "#F08904",
+          "opacity": 0.95,
+          "labelPosition": "right"
+        },
+        {
+          "id": "disp",
+          "x": 1.4531333446502686,
+          "y": 15.006028175354004,
+          "community": 1,
+          "size": 14.195202137453503,
+          "color": "#F08904",
+          "opacity": 0.95,
+          "labelPosition": "left"
+        },
+        {
+          "id": "hp",
+          "x": -3.4025673866271973,
+          "y": -25.542314529418945,
+          "community": 1,
+          "size": 13.035064463140763,
+          "color": "#F08904",
+          "opacity": 0.95,
+          "labelPosition": "right"
+        },
+        {
+          "id": "drat",
+          "x": 0.8096958994865417,
+          "y": 32.25001907348633,
+          "community": 0,
+          "size": 11.465669989209237,
+          "color": "#6CA3A0",
+          "opacity": 0.95,
+          "labelPosition": "right"
+        },
+        {
+          "id": "wt",
+          "x": -17.062795639038086,
+          "y": 7.875568389892578,
+          "community": 1,
+          "size": 13.802734673355715,
+          "color": "#F08904",
+          "opacity": 0.95,
+          "labelPosition": "right"
+        },
+        {
+          "id": "qsec",
+          "x": 5.840677261352539,
+          "y": -42.00420379638672,
+          "community": 2,
+          "size": 9.141027213346097,
+          "color": "#BE2E5F",
+          "opacity": 0.95,
+          "labelPosition": "left"
+        },
+        {
+          "id": "vs",
+          "x": 14.801166534423828,
+          "y": -17.838674545288086,
+          "community": 2,
+          "size": 12.326518615991876,
+          "color": "#BE2E5F",
+          "opacity": 0.95,
+          "labelPosition": "left"
+        },
+        {
+          "id": "am",
+          "x": -15.712724685668945,
+          "y": 25.902753829956055,
+          "community": 0,
+          "size": 11.000761297028934,
+          "color": "#6CA3A0",
+          "opacity": 0.95,
+          "labelPosition": "right"
+        },
+        {
+          "id": "gear",
+          "x": -17.281349182128906,
+          "y": 40.26141357421875,
+          "community": 0,
+          "size": 9.037165996965308,
+          "color": "#6CA3A0",
+          "opacity": 0.95,
+          "labelPosition": "right"
+        },
+        {
+          "id": "carb",
+          "x": 19.288463592529297,
+          "y": -32.987953186035156,
+          "community": 1,
+          "size": 9.682887285974758,
+          "color": "#F08904",
+          "opacity": 0.95,
+          "labelPosition": "left"
+        }
+      ],
+      "edges": [
+        {
+          "id": "0",
+          "source": "mpg",
+          "target": "cyl",
+          "size": 2.834138263935933,
+          "color": "#2D83D3",
+          "opacity": 0.4
+        },
+        {
+          "id": "1",
+          "source": "mpg",
+          "target": "disp",
+          "size": 2.8188042989336597,
+          "color": "#2D83D3",
+          "opacity": 0.4
+        },
+        {
+          "id": "2",
+          "source": "mpg",
+          "target": "hp",
+          "size": 2.581397183383684,
+          "color": "#2D83D3",
+          "opacity": 0.4
+        },
+        {
+          "id": "3",
+          "source": "mpg",
+          "target": "drat",
+          "size": 2.2654559346116905,
+          "color": "#C55E28",
+          "opacity": 0.4
+        },
+        {
+          "id": "4",
+          "source": "mpg",
+          "target": "wt",
+          "size": 2.885679901394427,
+          "color": "#2D83D3",
+          "opacity": 0.4
+        },
+        {
+          "id": "5",
+          "source": "mpg",
+          "target": "vs",
+          "size": 2.20847467857927,
+          "color": "#C55E28",
+          "opacity": 0.4
+        },
+        {
+          "id": "6",
+          "source": "mpg",
+          "target": "am",
+          "size": 1.9949353775553873,
+          "color": "#C55E28",
+          "opacity": 0.4
+        },
+        {
+          "id": "7",
+          "source": "mpg",
+          "target": "carb",
+          "size": 1.832278260296077,
+          "color": "#2D83D3",
+          "opacity": 0.4
+        },
+        {
+          "id": "8",
+          "source": "cyl",
+          "target": "disp",
+          "size": 3,
+          "color": "#C55E28",
+          "opacity": 0.4
+        },
+        {
+          "id": "9",
+          "source": "cyl",
+          "target": "hp",
+          "size": 2.76857134066671,
+          "color": "#C55E28",
+          "opacity": 0.4
+        },
+        {
+          "id": "10",
+          "source": "cyl",
+          "target": "drat",
+          "size": 2.327868979417987,
+          "color": "#2D83D3",
+          "opacity": 0.4
+        },
+        {
+          "id": "11",
+          "source": "cyl",
+          "target": "wt",
+          "size": 2.6024410593843266,
+          "color": "#C55E28",
+          "opacity": 0.4
+        },
+        {
+          "id": "12",
+          "source": "cyl",
+          "target": "qsec",
+          "size": 1.966365390969425,
+          "color": "#2D83D3",
+          "opacity": 0.4
+        },
+        {
+          "id": "13",
+          "source": "cyl",
+          "target": "vs",
+          "size": 2.696615016323502,
+          "color": "#2D83D3",
+          "opacity": 0.4
+        },
+        {
+          "id": "14",
+          "source": "cyl",
+          "target": "am",
+          "size": 1.7380975672985524,
+          "color": "#2D83D3",
+          "opacity": 0.4
+        },
+        {
+          "id": "15",
+          "source": "cyl",
+          "target": "carb",
+          "size": 1.7526688107119095,
+          "color": "#C55E28",
+          "opacity": 0.4
+        },
+        {
+          "id": "16",
+          "source": "disp",
+          "target": "hp",
+          "size": 2.630553533444543,
+          "color": "#C55E28",
+          "opacity": 0.4
+        },
+        {
+          "id": "17",
+          "source": "disp",
+          "target": "drat",
+          "size": 2.3620444967116363,
+          "color": "#2D83D3",
+          "opacity": 0.4
+        },
+        {
+          "id": "18",
+          "source": "disp",
+          "target": "wt",
+          "size": 2.95326240143972,
+          "color": "#C55E28",
+          "opacity": 0.4
+        },
+        {
+          "id": "19",
+          "source": "disp",
+          "target": "vs",
+          "size": 2.3627161915940498,
+          "color": "#2D83D3",
+          "opacity": 0.4
+        },
+        {
+          "id": "20",
+          "source": "disp",
+          "target": "am",
+          "size": 1.9663153915557023,
+          "color": "#2D83D3",
+          "opacity": 0.4
+        },
+        {
+          "id": "21",
+          "source": "disp",
+          "target": "gear",
+          "size": 1.8477237882920914,
+          "color": "#2D83D3",
+          "opacity": 0.4
+        },
+        {
+          "id": "22",
+          "source": "hp",
+          "target": "wt",
+          "size": 2.190877653195127,
+          "color": "#C55E28",
+          "opacity": 0.4
+        },
+        {
+          "id": "23",
+          "source": "hp",
+          "target": "qsec",
+          "size": 2.3554243223185045,
+          "color": "#2D83D3",
+          "opacity": 0.4
+        },
+        {
+          "id": "24",
+          "source": "hp",
+          "target": "vs",
+          "size": 2.404890419230568,
+          "color": "#2D83D3",
+          "opacity": 0.4
+        },
+        {
+          "id": "25",
+          "source": "hp",
+          "target": "carb",
+          "size": 2.4937421729357467,
+          "color": "#C55E28",
+          "opacity": 0.4
+        },
+        {
+          "id": "26",
+          "source": "drat",
+          "target": "wt",
+          "size": 2.369450167602993,
+          "color": "#2D83D3",
+          "opacity": 0.4
+        },
+        {
+          "id": "27",
+          "source": "drat",
+          "target": "am",
+          "size": 2.370349737465411,
+          "color": "#C55E28",
+          "opacity": 0.4
+        },
+        {
+          "id": "28",
+          "source": "drat",
+          "target": "gear",
+          "size": 2.326778170299276,
+          "color": "#C55E28",
+          "opacity": 0.4
+        },
+        {
+          "id": "29",
+          "source": "wt",
+          "target": "vs",
+          "size": 1.8455502946689595,
+          "color": "#2D83D3",
+          "opacity": 0.4
+        },
+        {
+          "id": "30",
+          "source": "wt",
+          "target": "am",
+          "size": 2.303115374912741,
+          "color": "#2D83D3",
+          "opacity": 0.4
+        },
+        {
+          "id": "31",
+          "source": "wt",
+          "target": "gear",
+          "size": 1.9399082268974999,
+          "color": "#2D83D3",
+          "opacity": 0.4
+        },
+        {
+          "id": "32",
+          "source": "qsec",
+          "target": "vs",
+          "size": 2.476191721552653,
+          "color": "#C55E28",
+          "opacity": 0.4
+        },
+        {
+          "id": "33",
+          "source": "qsec",
+          "target": "carb",
+          "size": 2.182567560235589,
+          "color": "#2D83D3",
+          "opacity": 0.4
+        },
+        {
+          "id": "34",
+          "source": "vs",
+          "target": "carb",
+          "size": 1.8944114741109481,
+          "color": "#2D83D3",
+          "opacity": 0.4
+        },
+        {
+          "id": "35",
+          "source": "am",
+          "target": "gear",
+          "size": 2.640897415522147,
+          "color": "#C55E28",
+          "opacity": 0.4
+        }
+      ]
+    },
+    {
+      "model": "cor",
+      "config": {
+        "palette": ["#6CA3A0", "#F08904", "#BE2E5F", "#B3CFE8", "#0F6A66"],
+        "node_color": "#6CA3A0",
+        "positive_color": "#C55E28",
+        "negative_color": "#2D83D3",
+        "layout": "circular",
+        "color_by_group": true,
+        "cluster_resolution": 1.5
+      },
+      "nodes": [
+        {
+          "id": "mpg",
+          "x": 1,
+          "y": 0,
+          "community": 0,
+          "size": 13.955306436546895,
+          "color": "#6CA3A0",
+          "opacity": 0.95,
+          "labelPosition": "left"
+        },
+        {
+          "id": "cyl",
+          "x": -0.654860733945285,
+          "y": 0.7557495743542584,
+          "community": 1,
+          "size": 15,
+          "color": "#F08904",
+          "opacity": 0.95,
+          "labelPosition": "right"
+        },
+        {
+          "id": "disp",
+          "x": -0.9594929736144974,
+          "y": 0.28173255684142967,
+          "community": 1,
+          "size": 14.195202137453503,
+          "color": "#F08904",
+          "opacity": 0.95,
+          "labelPosition": "right"
+        },
+        {
+          "id": "hp",
+          "x": -0.9594929736144975,
+          "y": -0.2817325568414294,
+          "community": 1,
+          "size": 13.035064463140763,
+          "color": "#F08904",
+          "opacity": 0.95,
+          "labelPosition": "right"
+        },
+        {
+          "id": "drat",
+          "x": 0.8412535328311812,
+          "y": 0.5406408174555976,
+          "community": 0,
+          "size": 11.465669989209237,
+          "color": "#6CA3A0",
+          "opacity": 0.95,
+          "labelPosition": "left"
+        },
+        {
+          "id": "wt",
+          "x": -0.6548607339452852,
+          "y": -0.7557495743542582,
+          "community": 1,
+          "size": 13.802734673355715,
+          "color": "#F08904",
+          "opacity": 0.95,
+          "labelPosition": "right"
+        },
+        {
+          "id": "qsec",
+          "x": 0.41541501300188605,
+          "y": -0.9096319953545186,
+          "community": 2,
+          "size": 9.141027213346097,
+          "color": "#BE2E5F",
+          "opacity": 0.95,
+          "labelPosition": "left"
+        },
+        {
+          "id": "vs",
+          "x": 0.8412535328311812,
+          "y": -0.5406408174555974,
+          "community": 2,
+          "size": 12.326518615991876,
+          "color": "#BE2E5F",
+          "opacity": 0.95,
+          "labelPosition": "left"
+        },
+        {
+          "id": "am",
+          "x": 0.41541501300188644,
+          "y": 0.9096319953545183,
+          "community": 0,
+          "size": 11.000761297028934,
+          "color": "#6CA3A0",
+          "opacity": 0.95,
+          "labelPosition": "left"
+        },
+        {
+          "id": "gear",
+          "x": -0.142314838273285,
+          "y": 0.9898214418809328,
+          "community": 0,
+          "size": 9.037165996965308,
+          "color": "#6CA3A0",
+          "opacity": 0.95,
+          "labelPosition": "right"
+        },
+        {
+          "id": "carb",
+          "x": -0.14231483827328523,
+          "y": -0.9898214418809327,
+          "community": 1,
+          "size": 9.682887285974758,
+          "color": "#F08904",
+          "opacity": 0.95,
+          "labelPosition": "right"
+        }
+      ],
+      "edges": [
+        {
+          "id": "0",
+          "source": "mpg",
+          "target": "cyl",
+          "size": 2.834138263935933,
+          "color": "#2D83D3",
+          "opacity": 0.4
+        },
+        {
+          "id": "1",
+          "source": "mpg",
+          "target": "disp",
+          "size": 2.8188042989336597,
+          "color": "#2D83D3",
+          "opacity": 0.4
+        },
+        {
+          "id": "2",
+          "source": "mpg",
+          "target": "hp",
+          "size": 2.581397183383684,
+          "color": "#2D83D3",
+          "opacity": 0.4
+        },
+        {
+          "id": "3",
+          "source": "mpg",
+          "target": "drat",
+          "size": 2.2654559346116905,
+          "color": "#C55E28",
+          "opacity": 0.4
+        },
+        {
+          "id": "4",
+          "source": "mpg",
+          "target": "wt",
+          "size": 2.885679901394427,
+          "color": "#2D83D3",
+          "opacity": 0.4
+        },
+        {
+          "id": "5",
+          "source": "mpg",
+          "target": "vs",
+          "size": 2.20847467857927,
+          "color": "#C55E28",
+          "opacity": 0.4
+        },
+        {
+          "id": "6",
+          "source": "mpg",
+          "target": "am",
+          "size": 1.9949353775553873,
+          "color": "#C55E28",
+          "opacity": 0.4
+        },
+        {
+          "id": "7",
+          "source": "mpg",
+          "target": "carb",
+          "size": 1.832278260296077,
+          "color": "#2D83D3",
+          "opacity": 0.4
+        },
+        {
+          "id": "8",
+          "source": "cyl",
+          "target": "disp",
+          "size": 3,
+          "color": "#C55E28",
+          "opacity": 0.4
+        },
+        {
+          "id": "9",
+          "source": "cyl",
+          "target": "hp",
+          "size": 2.76857134066671,
+          "color": "#C55E28",
+          "opacity": 0.4
+        },
+        {
+          "id": "10",
+          "source": "cyl",
+          "target": "drat",
+          "size": 2.327868979417987,
+          "color": "#2D83D3",
+          "opacity": 0.4
+        },
+        {
+          "id": "11",
+          "source": "cyl",
+          "target": "wt",
+          "size": 2.6024410593843266,
+          "color": "#C55E28",
+          "opacity": 0.4
+        },
+        {
+          "id": "12",
+          "source": "cyl",
+          "target": "qsec",
+          "size": 1.966365390969425,
+          "color": "#2D83D3",
+          "opacity": 0.4
+        },
+        {
+          "id": "13",
+          "source": "cyl",
+          "target": "vs",
+          "size": 2.696615016323502,
+          "color": "#2D83D3",
+          "opacity": 0.4
+        },
+        {
+          "id": "14",
+          "source": "cyl",
+          "target": "am",
+          "size": 1.7380975672985524,
+          "color": "#2D83D3",
+          "opacity": 0.4
+        },
+        {
+          "id": "15",
+          "source": "cyl",
+          "target": "carb",
+          "size": 1.7526688107119095,
+          "color": "#C55E28",
+          "opacity": 0.4
+        },
+        {
+          "id": "16",
+          "source": "disp",
+          "target": "hp",
+          "size": 2.630553533444543,
+          "color": "#C55E28",
+          "opacity": 0.4
+        },
+        {
+          "id": "17",
+          "source": "disp",
+          "target": "drat",
+          "size": 2.3620444967116363,
+          "color": "#2D83D3",
+          "opacity": 0.4
+        },
+        {
+          "id": "18",
+          "source": "disp",
+          "target": "wt",
+          "size": 2.95326240143972,
+          "color": "#C55E28",
+          "opacity": 0.4
+        },
+        {
+          "id": "19",
+          "source": "disp",
+          "target": "vs",
+          "size": 2.3627161915940498,
+          "color": "#2D83D3",
+          "opacity": 0.4
+        },
+        {
+          "id": "20",
+          "source": "disp",
+          "target": "am",
+          "size": 1.9663153915557023,
+          "color": "#2D83D3",
+          "opacity": 0.4
+        },
+        {
+          "id": "21",
+          "source": "disp",
+          "target": "gear",
+          "size": 1.8477237882920914,
+          "color": "#2D83D3",
+          "opacity": 0.4
+        },
+        {
+          "id": "22",
+          "source": "hp",
+          "target": "wt",
+          "size": 2.190877653195127,
+          "color": "#C55E28",
+          "opacity": 0.4
+        },
+        {
+          "id": "23",
+          "source": "hp",
+          "target": "qsec",
+          "size": 2.3554243223185045,
+          "color": "#2D83D3",
+          "opacity": 0.4
+        },
+        {
+          "id": "24",
+          "source": "hp",
+          "target": "vs",
+          "size": 2.404890419230568,
+          "color": "#2D83D3",
+          "opacity": 0.4
+        },
+        {
+          "id": "25",
+          "source": "hp",
+          "target": "carb",
+          "size": 2.4937421729357467,
+          "color": "#C55E28",
+          "opacity": 0.4
+        },
+        {
+          "id": "26",
+          "source": "drat",
+          "target": "wt",
+          "size": 2.369450167602993,
+          "color": "#2D83D3",
+          "opacity": 0.4
+        },
+        {
+          "id": "27",
+          "source": "drat",
+          "target": "am",
+          "size": 2.370349737465411,
+          "color": "#C55E28",
+          "opacity": 0.4
+        },
+        {
+          "id": "28",
+          "source": "drat",
+          "target": "gear",
+          "size": 2.326778170299276,
+          "color": "#C55E28",
+          "opacity": 0.4
+        },
+        {
+          "id": "29",
+          "source": "wt",
+          "target": "vs",
+          "size": 1.8455502946689595,
+          "color": "#2D83D3",
+          "opacity": 0.4
+        },
+        {
+          "id": "30",
+          "source": "wt",
+          "target": "am",
+          "size": 2.303115374912741,
+          "color": "#2D83D3",
+          "opacity": 0.4
+        },
+        {
+          "id": "31",
+          "source": "wt",
+          "target": "gear",
+          "size": 1.9399082268974999,
+          "color": "#2D83D3",
+          "opacity": 0.4
+        },
+        {
+          "id": "32",
+          "source": "qsec",
+          "target": "vs",
+          "size": 2.476191721552653,
+          "color": "#C55E28",
+          "opacity": 0.4
+        },
+        {
+          "id": "33",
+          "source": "qsec",
+          "target": "carb",
+          "size": 2.182567560235589,
+          "color": "#2D83D3",
+          "opacity": 0.4
+        },
+        {
+          "id": "34",
+          "source": "vs",
+          "target": "carb",
+          "size": 1.8944114741109481,
+          "color": "#2D83D3",
+          "opacity": 0.4
+        },
+        {
+          "id": "35",
+          "source": "am",
+          "target": "gear",
+          "size": 2.640897415522147,
+          "color": "#C55E28",
+          "opacity": 0.4
+        }
+      ]
+    },
+    {
+      "model": "cor",
+      "config": {
+        "palette": ["#6CA3A0", "#F08904", "#BE2E5F", "#B3CFE8", "#0F6A66"],
+        "node_color": "#6CA3A0",
+        "positive_color": "#C55E28",
+        "negative_color": "#2D83D3",
+        "layout": "circlepack",
+        "color_by_group": true
+      },
+      "nodes": [
+        {
+          "id": "mpg",
+          "x": -4.000347087506494,
+          "y": -0.2062098339652556,
+          "community": 0,
+          "size": 13.955306436546895,
+          "color": "#6CA3A0",
+          "opacity": 0.95,
+          "labelPosition": "right"
+        },
+        {
+          "id": "cyl",
+          "x": 2.731703720062383,
+          "y": -0.2062098339652556,
+          "community": 1,
+          "size": 15,
+          "color": "#F08904",
+          "opacity": 0.95,
+          "labelPosition": "left"
+        },
+        {
+          "id": "disp",
+          "x": 4.731703720062383,
+          "y": -0.2062098339652556,
+          "community": 1,
+          "size": 14.195202137453503,
+          "color": "#F08904",
+          "opacity": 0.95,
+          "labelPosition": "left"
+        },
+        {
+          "id": "hp",
+          "x": 3.731703720062383,
+          "y": 1.5258409736036216,
+          "community": 1,
+          "size": 13.035064463140763,
+          "color": "#F08904",
+          "opacity": 0.95,
+          "labelPosition": "left"
+        },
+        {
+          "id": "drat",
+          "x": -2.000347087506494,
+          "y": -0.2062098339652556,
+          "community": 0,
+          "size": 11.465669989209237,
+          "color": "#6CA3A0",
+          "opacity": 0.95,
+          "labelPosition": "right"
+        },
+        {
+          "id": "wt",
+          "x": 3.731703720062383,
+          "y": -1.9382606415341328,
+          "community": 1,
+          "size": 13.802734673355715,
+          "color": "#F08904",
+          "opacity": 0.95,
+          "labelPosition": "left"
+        },
+        {
+          "id": "qsec",
+          "x": -1.3617878421817313,
+          "y": 3.7219334875448533,
+          "community": 2,
+          "size": 9.141027213346097,
+          "color": "#BE2E5F",
+          "opacity": 0.95,
+          "labelPosition": "right"
+        },
+        {
+          "id": "vs",
+          "x": 0.6382121578182687,
+          "y": 3.7219334875448533,
+          "community": 2,
+          "size": 12.326518615991876,
+          "color": "#BE2E5F",
+          "opacity": 0.95,
+          "labelPosition": "left"
+        },
+        {
+          "id": "am",
+          "x": -3.000347087506494,
+          "y": 1.5258409736036216,
+          "community": 0,
+          "size": 11.000761297028934,
+          "color": "#6CA3A0",
+          "opacity": 0.95,
+          "labelPosition": "right"
+        },
+        {
+          "id": "gear",
+          "x": -3.000347087506494,
+          "y": -1.9382606415341328,
+          "community": 0,
+          "size": 9.037165996965308,
+          "color": "#6CA3A0",
+          "opacity": 0.95,
+          "labelPosition": "right"
+        },
+        {
+          "id": "carb",
+          "x": 1.731703720062383,
+          "y": -1.9382606415341328,
+          "community": 1,
+          "size": 9.682887285974758,
+          "color": "#F08904",
+          "opacity": 0.95,
+          "labelPosition": "left"
+        }
+      ],
+      "edges": [
+        {
+          "id": "0",
+          "source": "mpg",
+          "target": "cyl",
+          "size": 2.834138263935933,
+          "color": "#2D83D3",
+          "opacity": 0.4
+        },
+        {
+          "id": "1",
+          "source": "mpg",
+          "target": "disp",
+          "size": 2.8188042989336597,
+          "color": "#2D83D3",
+          "opacity": 0.4
+        },
+        {
+          "id": "2",
+          "source": "mpg",
+          "target": "hp",
+          "size": 2.581397183383684,
+          "color": "#2D83D3",
+          "opacity": 0.4
+        },
+        {
+          "id": "3",
+          "source": "mpg",
+          "target": "drat",
+          "size": 2.2654559346116905,
+          "color": "#C55E28",
+          "opacity": 0.4
+        },
+        {
+          "id": "4",
+          "source": "mpg",
+          "target": "wt",
+          "size": 2.885679901394427,
+          "color": "#2D83D3",
+          "opacity": 0.4
+        },
+        {
+          "id": "5",
+          "source": "mpg",
+          "target": "vs",
+          "size": 2.20847467857927,
+          "color": "#C55E28",
+          "opacity": 0.4
+        },
+        {
+          "id": "6",
+          "source": "mpg",
+          "target": "am",
+          "size": 1.9949353775553873,
+          "color": "#C55E28",
+          "opacity": 0.4
+        },
+        {
+          "id": "7",
+          "source": "mpg",
+          "target": "carb",
+          "size": 1.832278260296077,
+          "color": "#2D83D3",
+          "opacity": 0.4
+        },
+        {
+          "id": "8",
+          "source": "cyl",
+          "target": "disp",
+          "size": 3,
+          "color": "#C55E28",
+          "opacity": 0.4
+        },
+        {
+          "id": "9",
+          "source": "cyl",
+          "target": "hp",
+          "size": 2.76857134066671,
+          "color": "#C55E28",
+          "opacity": 0.4
+        },
+        {
+          "id": "10",
+          "source": "cyl",
+          "target": "drat",
+          "size": 2.327868979417987,
+          "color": "#2D83D3",
+          "opacity": 0.4
+        },
+        {
+          "id": "11",
+          "source": "cyl",
+          "target": "wt",
+          "size": 2.6024410593843266,
+          "color": "#C55E28",
+          "opacity": 0.4
+        },
+        {
+          "id": "12",
+          "source": "cyl",
+          "target": "qsec",
+          "size": 1.966365390969425,
+          "color": "#2D83D3",
+          "opacity": 0.4
+        },
+        {
+          "id": "13",
+          "source": "cyl",
+          "target": "vs",
+          "size": 2.696615016323502,
+          "color": "#2D83D3",
+          "opacity": 0.4
+        },
+        {
+          "id": "14",
+          "source": "cyl",
+          "target": "am",
+          "size": 1.7380975672985524,
+          "color": "#2D83D3",
+          "opacity": 0.4
+        },
+        {
+          "id": "15",
+          "source": "cyl",
+          "target": "carb",
+          "size": 1.7526688107119095,
+          "color": "#C55E28",
+          "opacity": 0.4
+        },
+        {
+          "id": "16",
+          "source": "disp",
+          "target": "hp",
+          "size": 2.630553533444543,
+          "color": "#C55E28",
+          "opacity": 0.4
+        },
+        {
+          "id": "17",
+          "source": "disp",
+          "target": "drat",
+          "size": 2.3620444967116363,
+          "color": "#2D83D3",
+          "opacity": 0.4
+        },
+        {
+          "id": "18",
+          "source": "disp",
+          "target": "wt",
+          "size": 2.95326240143972,
+          "color": "#C55E28",
+          "opacity": 0.4
+        },
+        {
+          "id": "19",
+          "source": "disp",
+          "target": "vs",
+          "size": 2.3627161915940498,
+          "color": "#2D83D3",
+          "opacity": 0.4
+        },
+        {
+          "id": "20",
+          "source": "disp",
+          "target": "am",
+          "size": 1.9663153915557023,
+          "color": "#2D83D3",
+          "opacity": 0.4
+        },
+        {
+          "id": "21",
+          "source": "disp",
+          "target": "gear",
+          "size": 1.8477237882920914,
+          "color": "#2D83D3",
+          "opacity": 0.4
+        },
+        {
+          "id": "22",
+          "source": "hp",
+          "target": "wt",
+          "size": 2.190877653195127,
+          "color": "#C55E28",
+          "opacity": 0.4
+        },
+        {
+          "id": "23",
+          "source": "hp",
+          "target": "qsec",
+          "size": 2.3554243223185045,
+          "color": "#2D83D3",
+          "opacity": 0.4
+        },
+        {
+          "id": "24",
+          "source": "hp",
+          "target": "vs",
+          "size": 2.404890419230568,
+          "color": "#2D83D3",
+          "opacity": 0.4
+        },
+        {
+          "id": "25",
+          "source": "hp",
+          "target": "carb",
+          "size": 2.4937421729357467,
+          "color": "#C55E28",
+          "opacity": 0.4
+        },
+        {
+          "id": "26",
+          "source": "drat",
+          "target": "wt",
+          "size": 2.369450167602993,
+          "color": "#2D83D3",
+          "opacity": 0.4
+        },
+        {
+          "id": "27",
+          "source": "drat",
+          "target": "am",
+          "size": 2.370349737465411,
+          "color": "#C55E28",
+          "opacity": 0.4
+        },
+        {
+          "id": "28",
+          "source": "drat",
+          "target": "gear",
+          "size": 2.326778170299276,
+          "color": "#C55E28",
+          "opacity": 0.4
+        },
+        {
+          "id": "29",
+          "source": "wt",
+          "target": "vs",
+          "size": 1.8455502946689595,
+          "color": "#2D83D3",
+          "opacity": 0.4
+        },
+        {
+          "id": "30",
+          "source": "wt",
+          "target": "am",
+          "size": 2.303115374912741,
+          "color": "#2D83D3",
+          "opacity": 0.4
+        },
+        {
+          "id": "31",
+          "source": "wt",
+          "target": "gear",
+          "size": 1.9399082268974999,
+          "color": "#2D83D3",
+          "opacity": 0.4
+        },
+        {
+          "id": "32",
+          "source": "qsec",
+          "target": "vs",
+          "size": 2.476191721552653,
+          "color": "#C55E28",
+          "opacity": 0.4
+        },
+        {
+          "id": "33",
+          "source": "qsec",
+          "target": "carb",
+          "size": 2.182567560235589,
+          "color": "#2D83D3",
+          "opacity": 0.4
+        },
+        {
+          "id": "34",
+          "source": "vs",
+          "target": "carb",
+          "size": 1.8944114741109481,
+          "color": "#2D83D3",
+          "opacity": 0.4
+        },
+        {
+          "id": "35",
+          "source": "am",
+          "target": "gear",
+          "size": 2.640897415522147,
+          "color": "#C55E28",
+          "opacity": 0.4
+        }
+      ]
+    },
+    {
+      "model": "cor",
+      "config": {
+        "palette": ["#6CA3A0", "#F08904", "#BE2E5F", "#B3CFE8", "#0F6A66"],
+        "node_color": "#6CA3A0",
+        "positive_color": "#C55E28",
+        "negative_color": "#2D83D3",
+        "layout": "random"
+      },
+      "nodes": [
+        {
+          "id": "mpg",
+          "x": 0.5042420323006809,
+          "y": 0.7048832636792213,
+          "community": 0,
+          "size": 13.955306436546895,
+          "color": "#6CA3A0",
+          "opacity": 0.95,
+          "labelPosition": "left"
+        },
+        {
+          "id": "cyl",
+          "x": 0.05054362863302231,
+          "y": 0.3695183543022722,
+          "community": 1,
+          "size": 15,
+          "color": "#6CA3A0",
+          "opacity": 0.95,
+          "labelPosition": "right"
+        },
+        {
+          "id": "disp",
+          "x": 0.7747629624791443,
+          "y": 0.556188570568338,
+          "community": 1,
+          "size": 14.195202137453503,
+          "color": "#6CA3A0",
+          "opacity": 0.95,
+          "labelPosition": "left"
+        },
+        {
+          "id": "hp",
+          "x": 0.0164932357147336,
+          "y": 0.6392460397910327,
+          "community": 1,
+          "size": 13.035064463140763,
+          "color": "#6CA3A0",
+          "opacity": 0.95,
+          "labelPosition": "right"
+        },
+        {
+          "id": "drat",
+          "x": 0.2504511415027082,
+          "y": 0.4223777682054788,
+          "community": 0,
+          "size": 11.465669989209237,
+          "color": "#6CA3A0",
+          "opacity": 0.95,
+          "labelPosition": "right"
+        },
+        {
+          "id": "wt",
+          "x": 0.5906901974231005,
+          "y": 0.8369336591567844,
+          "community": 1,
+          "size": 13.802734673355715,
+          "color": "#6CA3A0",
+          "opacity": 0.95,
+          "labelPosition": "left"
+        },
+        {
+          "id": "qsec",
+          "x": 0.23507591942325234,
+          "y": 0.980845961952582,
+          "community": 2,
+          "size": 9.141027213346097,
+          "color": "#6CA3A0",
+          "opacity": 0.95,
+          "labelPosition": "right"
+        },
+        {
+          "id": "vs",
+          "x": 0.8608870944008231,
+          "y": 0.32687550294212997,
+          "community": 2,
+          "size": 12.326518615991876,
+          "color": "#6CA3A0",
+          "opacity": 0.95,
+          "labelPosition": "left"
+        },
+        {
+          "id": "am",
+          "x": 0.6826027217321098,
+          "y": 0.5314591128844768,
+          "community": 0,
+          "size": 11.000761297028934,
+          "color": "#6CA3A0",
+          "opacity": 0.95,
+          "labelPosition": "left"
+        },
+        {
+          "id": "gear",
+          "x": 0.21594200655817986,
+          "y": 0.1045342271681875,
+          "community": 0,
+          "size": 9.037165996965308,
+          "color": "#6CA3A0",
+          "opacity": 0.95,
+          "labelPosition": "right"
+        },
+        {
+          "id": "carb",
+          "x": 0.07054510014131665,
+          "y": 0.31888069794513285,
+          "community": 1,
+          "size": 9.682887285974758,
+          "color": "#6CA3A0",
+          "opacity": 0.95,
+          "labelPosition": "right"
+        }
+      ],
+      "edges": [
+        {
+          "id": "0",
+          "source": "mpg",
+          "target": "cyl",
+          "size": 2.834138263935933,
+          "color": "#2D83D3",
+          "opacity": 0.4
+        },
+        {
+          "id": "1",
+          "source": "mpg",
+          "target": "disp",
+          "size": 2.8188042989336597,
+          "color": "#2D83D3",
+          "opacity": 0.4
+        },
+        {
+          "id": "2",
+          "source": "mpg",
+          "target": "hp",
+          "size": 2.581397183383684,
+          "color": "#2D83D3",
+          "opacity": 0.4
+        },
+        {
+          "id": "3",
+          "source": "mpg",
+          "target": "drat",
+          "size": 2.2654559346116905,
+          "color": "#C55E28",
+          "opacity": 0.4
+        },
+        {
+          "id": "4",
+          "source": "mpg",
+          "target": "wt",
+          "size": 2.885679901394427,
+          "color": "#2D83D3",
+          "opacity": 0.4
+        },
+        {
+          "id": "5",
+          "source": "mpg",
+          "target": "vs",
+          "size": 2.20847467857927,
+          "color": "#C55E28",
+          "opacity": 0.4
+        },
+        {
+          "id": "6",
+          "source": "mpg",
+          "target": "am",
+          "size": 1.9949353775553873,
+          "color": "#C55E28",
+          "opacity": 0.4
+        },
+        {
+          "id": "7",
+          "source": "mpg",
+          "target": "carb",
+          "size": 1.832278260296077,
+          "color": "#2D83D3",
+          "opacity": 0.4
+        },
+        {
+          "id": "8",
+          "source": "cyl",
+          "target": "disp",
+          "size": 3,
+          "color": "#C55E28",
+          "opacity": 0.4
+        },
+        {
+          "id": "9",
+          "source": "cyl",
+          "target": "hp",
+          "size": 2.76857134066671,
+          "color": "#C55E28",
+          "opacity": 0.4
+        },
+        {
+          "id": "10",
+          "source": "cyl",
+          "target": "drat",
+          "size": 2.327868979417987,
+          "color": "#2D83D3",
+          "opacity": 0.4
+        },
+        {
+          "id": "11",
+          "source": "cyl",
+          "target": "wt",
+          "size": 2.6024410593843266,
+          "color": "#C55E28",
+          "opacity": 0.4
+        },
+        {
+          "id": "12",
+          "source": "cyl",
+          "target": "qsec",
+          "size": 1.966365390969425,
+          "color": "#2D83D3",
+          "opacity": 0.4
+        },
+        {
+          "id": "13",
+          "source": "cyl",
+          "target": "vs",
+          "size": 2.696615016323502,
+          "color": "#2D83D3",
+          "opacity": 0.4
+        },
+        {
+          "id": "14",
+          "source": "cyl",
+          "target": "am",
+          "size": 1.7380975672985524,
+          "color": "#2D83D3",
+          "opacity": 0.4
+        },
+        {
+          "id": "15",
+          "source": "cyl",
+          "target": "carb",
+          "size": 1.7526688107119095,
+          "color": "#C55E28",
+          "opacity": 0.4
+        },
+        {
+          "id": "16",
+          "source": "disp",
+          "target": "hp",
+          "size": 2.630553533444543,
+          "color": "#C55E28",
+          "opacity": 0.4
+        },
+        {
+          "id": "17",
+          "source": "disp",
+          "target": "drat",
+          "size": 2.3620444967116363,
+          "color": "#2D83D3",
+          "opacity": 0.4
+        },
+        {
+          "id": "18",
+          "source": "disp",
+          "target": "wt",
+          "size": 2.95326240143972,
+          "color": "#C55E28",
+          "opacity": 0.4
+        },
+        {
+          "id": "19",
+          "source": "disp",
+          "target": "vs",
+          "size": 2.3627161915940498,
+          "color": "#2D83D3",
+          "opacity": 0.4
+        },
+        {
+          "id": "20",
+          "source": "disp",
+          "target": "am",
+          "size": 1.9663153915557023,
+          "color": "#2D83D3",
+          "opacity": 0.4
+        },
+        {
+          "id": "21",
+          "source": "disp",
+          "target": "gear",
+          "size": 1.8477237882920914,
+          "color": "#2D83D3",
+          "opacity": 0.4
+        },
+        {
+          "id": "22",
+          "source": "hp",
+          "target": "wt",
+          "size": 2.190877653195127,
+          "color": "#C55E28",
+          "opacity": 0.4
+        },
+        {
+          "id": "23",
+          "source": "hp",
+          "target": "qsec",
+          "size": 2.3554243223185045,
+          "color": "#2D83D3",
+          "opacity": 0.4
+        },
+        {
+          "id": "24",
+          "source": "hp",
+          "target": "vs",
+          "size": 2.404890419230568,
+          "color": "#2D83D3",
+          "opacity": 0.4
+        },
+        {
+          "id": "25",
+          "source": "hp",
+          "target": "carb",
+          "size": 2.4937421729357467,
+          "color": "#C55E28",
+          "opacity": 0.4
+        },
+        {
+          "id": "26",
+          "source": "drat",
+          "target": "wt",
+          "size": 2.369450167602993,
+          "color": "#2D83D3",
+          "opacity": 0.4
+        },
+        {
+          "id": "27",
+          "source": "drat",
+          "target": "am",
+          "size": 2.370349737465411,
+          "color": "#C55E28",
+          "opacity": 0.4
+        },
+        {
+          "id": "28",
+          "source": "drat",
+          "target": "gear",
+          "size": 2.326778170299276,
+          "color": "#C55E28",
+          "opacity": 0.4
+        },
+        {
+          "id": "29",
+          "source": "wt",
+          "target": "vs",
+          "size": 1.8455502946689595,
+          "color": "#2D83D3",
+          "opacity": 0.4
+        },
+        {
+          "id": "30",
+          "source": "wt",
+          "target": "am",
+          "size": 2.303115374912741,
+          "color": "#2D83D3",
+          "opacity": 0.4
+        },
+        {
+          "id": "31",
+          "source": "wt",
+          "target": "gear",
+          "size": 1.9399082268974999,
+          "color": "#2D83D3",
+          "opacity": 0.4
+        },
+        {
+          "id": "32",
+          "source": "qsec",
+          "target": "vs",
+          "size": 2.476191721552653,
+          "color": "#C55E28",
+          "opacity": 0.4
+        },
+        {
+          "id": "33",
+          "source": "qsec",
+          "target": "carb",
+          "size": 2.182567560235589,
+          "color": "#2D83D3",
+          "opacity": 0.4
+        },
+        {
+          "id": "34",
+          "source": "vs",
+          "target": "carb",
+          "size": 1.8944114741109481,
+          "color": "#2D83D3",
+          "opacity": 0.4
+        },
+        {
+          "id": "35",
+          "source": "am",
+          "target": "gear",
+          "size": 2.640897415522147,
+          "color": "#C55E28",
+          "opacity": 0.4
+        }
+      ]
+    },
+    {
+      "model": "cor",
+      "config": {
+        "palette": ["#6CA3A0", "#F08904", "#BE2E5F", "#B3CFE8", "#0F6A66"],
+        "node_color": "#6CA3A0",
+        "positive_color": "#C55E28",
+        "negative_color": "#2D83D3",
+        "layout": "force",
+        "blend_edges": true,
+        "color_by_group": true,
+        "scale_by_degree": false,
+        "node_size": 6,
+        "edge_scale": 2,
+        "node_opacity": 0.8,
+        "edge_opacity": 0.3
+      },
+      "nodes": [
+        {
+          "id": "mpg",
+          "x": 15.291985511779785,
+          "y": 3.1328976154327393,
+          "community": 0,
+          "size": 6,
+          "color": "#6CA3A0",
+          "opacity": 0.8,
+          "labelPosition": "left"
+        },
+        {
+          "id": "cyl",
+          "x": -4.207259654998779,
+          "y": -8.400534629821777,
+          "community": 1,
+          "size": 6,
+          "color": "#F08904",
+          "opacity": 0.8,
+          "labelPosition": "right"
+        },
+        {
+          "id": "disp",
+          "x": 1.4531333446502686,
+          "y": 15.006028175354004,
+          "community": 1,
+          "size": 6,
+          "color": "#F08904",
+          "opacity": 0.8,
+          "labelPosition": "left"
+        },
+        {
+          "id": "hp",
+          "x": -3.4025673866271973,
+          "y": -25.542314529418945,
+          "community": 1,
+          "size": 6,
+          "color": "#F08904",
+          "opacity": 0.8,
+          "labelPosition": "right"
+        },
+        {
+          "id": "drat",
+          "x": 0.8096958994865417,
+          "y": 32.25001907348633,
+          "community": 0,
+          "size": 6,
+          "color": "#6CA3A0",
+          "opacity": 0.8,
+          "labelPosition": "right"
+        },
+        {
+          "id": "wt",
+          "x": -17.062795639038086,
+          "y": 7.875568389892578,
+          "community": 1,
+          "size": 6,
+          "color": "#F08904",
+          "opacity": 0.8,
+          "labelPosition": "right"
+        },
+        {
+          "id": "qsec",
+          "x": 5.840677261352539,
+          "y": -42.00420379638672,
+          "community": 2,
+          "size": 6,
+          "color": "#BE2E5F",
+          "opacity": 0.8,
+          "labelPosition": "left"
+        },
+        {
+          "id": "vs",
+          "x": 14.801166534423828,
+          "y": -17.838674545288086,
+          "community": 2,
+          "size": 6,
+          "color": "#BE2E5F",
+          "opacity": 0.8,
+          "labelPosition": "left"
+        },
+        {
+          "id": "am",
+          "x": -15.712724685668945,
+          "y": 25.902753829956055,
+          "community": 0,
+          "size": 6,
+          "color": "#6CA3A0",
+          "opacity": 0.8,
+          "labelPosition": "right"
+        },
+        {
+          "id": "gear",
+          "x": -17.281349182128906,
+          "y": 40.26141357421875,
+          "community": 0,
+          "size": 6,
+          "color": "#6CA3A0",
+          "opacity": 0.8,
+          "labelPosition": "right"
+        },
+        {
+          "id": "carb",
+          "x": 19.288463592529297,
+          "y": -32.987953186035156,
+          "community": 1,
+          "size": 6,
+          "color": "#F08904",
+          "opacity": 0.8,
+          "labelPosition": "left"
+        }
+      ],
+      "edges": [
+        {
+          "id": "0",
+          "source": "mpg",
+          "target": "cyl",
+          "size": 1.8894255092906218,
+          "color": "#ae9652",
+          "opacity": 0.3
+        },
+        {
+          "id": "1",
+          "source": "mpg",
+          "target": "disp",
+          "size": 1.8792028659557731,
+          "color": "#ae9652",
+          "opacity": 0.3
+        },
+        {
+          "id": "2",
+          "source": "mpg",
+          "target": "hp",
+          "size": 1.7209314555891229,
+          "color": "#ae9652",
+          "opacity": 0.3
+        },
+        {
+          "id": "3",
+          "source": "mpg",
+          "target": "drat",
+          "size": 1.5103039564077936,
+          "color": "#6ca3a0",
+          "opacity": 0.3
+        },
+        {
+          "id": "4",
+          "source": "mpg",
+          "target": "wt",
+          "size": 1.923786600929618,
+          "color": "#ae9652",
+          "opacity": 0.3
+        },
+        {
+          "id": "5",
+          "source": "mpg",
+          "target": "vs",
+          "size": 1.4723164523861798,
+          "color": "#95687f",
+          "opacity": 0.3
+        },
+        {
+          "id": "6",
+          "source": "mpg",
+          "target": "am",
+          "size": 1.3299569183702582,
+          "color": "#6ca3a0",
+          "opacity": 0.3
+        },
+        {
+          "id": "7",
+          "source": "mpg",
+          "target": "carb",
+          "size": 1.2215188401973847,
+          "color": "#ae9652",
+          "opacity": 0.3
+        },
+        {
+          "id": "8",
+          "source": "cyl",
+          "target": "disp",
+          "size": 2,
+          "color": "#f08904",
+          "opacity": 0.3
+        },
+        {
+          "id": "9",
+          "source": "cyl",
+          "target": "hp",
+          "size": 1.84571422711114,
+          "color": "#f08904",
+          "opacity": 0.3
+        },
+        {
+          "id": "10",
+          "source": "cyl",
+          "target": "drat",
+          "size": 1.5519126529453247,
+          "color": "#ae9652",
+          "opacity": 0.3
+        },
+        {
+          "id": "11",
+          "source": "cyl",
+          "target": "wt",
+          "size": 1.7349607062562178,
+          "color": "#f08904",
+          "opacity": 0.3
+        },
+        {
+          "id": "12",
+          "source": "cyl",
+          "target": "qsec",
+          "size": 1.3109102606462832,
+          "color": "#d75b31",
+          "opacity": 0.3
+        },
+        {
+          "id": "13",
+          "source": "cyl",
+          "target": "vs",
+          "size": 1.797743344215668,
+          "color": "#d75b31",
+          "opacity": 0.3
+        },
+        {
+          "id": "14",
+          "source": "cyl",
+          "target": "am",
+          "size": 1.1587317115323683,
+          "color": "#ae9652",
+          "opacity": 0.3
+        },
+        {
+          "id": "15",
+          "source": "cyl",
+          "target": "carb",
+          "size": 1.1684458738079397,
+          "color": "#f08904",
+          "opacity": 0.3
+        },
+        {
+          "id": "16",
+          "source": "disp",
+          "target": "hp",
+          "size": 1.7537023556296953,
+          "color": "#f08904",
+          "opacity": 0.3
+        },
+        {
+          "id": "17",
+          "source": "disp",
+          "target": "drat",
+          "size": 1.5746963311410909,
+          "color": "#ae9652",
+          "opacity": 0.3
+        },
+        {
+          "id": "18",
+          "source": "disp",
+          "target": "wt",
+          "size": 1.9688416009598133,
+          "color": "#f08904",
+          "opacity": 0.3
+        },
+        {
+          "id": "19",
+          "source": "disp",
+          "target": "vs",
+          "size": 1.5751441277293665,
+          "color": "#d75b31",
+          "opacity": 0.3
+        },
+        {
+          "id": "20",
+          "source": "disp",
+          "target": "am",
+          "size": 1.3108769277038015,
+          "color": "#ae9652",
+          "opacity": 0.3
+        },
+        {
+          "id": "21",
+          "source": "disp",
+          "target": "gear",
+          "size": 1.2318158588613943,
+          "color": "#ae9652",
+          "opacity": 0.3
+        },
+        {
+          "id": "22",
+          "source": "hp",
+          "target": "wt",
+          "size": 1.4605851021300844,
+          "color": "#f08904",
+          "opacity": 0.3
+        },
+        {
+          "id": "23",
+          "source": "hp",
+          "target": "qsec",
+          "size": 1.5702828815456695,
+          "color": "#d75b31",
+          "opacity": 0.3
+        },
+        {
+          "id": "24",
+          "source": "hp",
+          "target": "vs",
+          "size": 1.6032602794870454,
+          "color": "#d75b31",
+          "opacity": 0.3
+        },
+        {
+          "id": "25",
+          "source": "hp",
+          "target": "carb",
+          "size": 1.6624947819571645,
+          "color": "#f08904",
+          "opacity": 0.3
+        },
+        {
+          "id": "26",
+          "source": "drat",
+          "target": "wt",
+          "size": 1.579633445068662,
+          "color": "#ae9652",
+          "opacity": 0.3
+        },
+        {
+          "id": "27",
+          "source": "drat",
+          "target": "am",
+          "size": 1.580233158310274,
+          "color": "#6ca3a0",
+          "opacity": 0.3
+        },
+        {
+          "id": "28",
+          "source": "drat",
+          "target": "gear",
+          "size": 1.551185446866184,
+          "color": "#6ca3a0",
+          "opacity": 0.3
+        },
+        {
+          "id": "29",
+          "source": "wt",
+          "target": "vs",
+          "size": 1.2303668631126397,
+          "color": "#d75b31",
+          "opacity": 0.3
+        },
+        {
+          "id": "30",
+          "source": "wt",
+          "target": "am",
+          "size": 1.5354102499418272,
+          "color": "#ae9652",
+          "opacity": 0.3
+        },
+        {
+          "id": "31",
+          "source": "wt",
+          "target": "gear",
+          "size": 1.2932721512649998,
+          "color": "#ae9652",
+          "opacity": 0.3
+        },
+        {
+          "id": "32",
+          "source": "qsec",
+          "target": "vs",
+          "size": 1.6507944810351023,
+          "color": "#be2e5f",
+          "opacity": 0.3
+        },
+        {
+          "id": "33",
+          "source": "qsec",
+          "target": "carb",
+          "size": 1.4550450401570596,
+          "color": "#d75b31",
+          "opacity": 0.3
+        },
+        {
+          "id": "34",
+          "source": "vs",
+          "target": "carb",
+          "size": 1.2629409827406322,
+          "color": "#d75b31",
+          "opacity": 0.3
+        },
+        {
+          "id": "35",
+          "source": "am",
+          "target": "gear",
+          "size": 1.7605982770147648,
+          "color": "#6ca3a0",
+          "opacity": 0.3
+        }
+      ]
+    },
+    {
+      "model": "edges",
+      "config": {
+        "palette": ["#6CA3A0", "#F08904", "#BE2E5F", "#B3CFE8", "#0F6A66"],
+        "node_color": "#6CA3A0",
+        "positive_color": "#C55E28",
+        "negative_color": "#2D83D3",
+        "layout": "force"
+      },
+      "nodes": [
+        {
+          "id": "a",
+          "x": 14.644936561584473,
+          "y": 16.808475494384766,
+          "community": 0,
+          "size": 15,
+          "color": "#6CA3A0",
+          "opacity": 0.95,
+          "labelPosition": "left"
+        },
+        {
+          "id": "b",
+          "x": 7.264551639556885,
+          "y": 22.120182037353516,
+          "community": 0,
+          "size": 13.75,
+          "color": "#6CA3A0",
+          "opacity": 0.95,
+          "labelPosition": "left"
+        },
+        {
+          "id": "c",
+          "x": 2.9595468044281006,
+          "y": 8.10641860961914,
+          "community": 0,
+          "size": 11.25,
+          "color": "#6CA3A0",
+          "opacity": 0.95,
+          "labelPosition": "left"
+        },
+        {
+          "id": "d",
+          "x": -5.5502448081970215,
+          "y": -9.104125022888184,
+          "community": 1,
+          "size": 9.166666666666668,
+          "color": "#6CA3A0",
+          "opacity": 0.95,
+          "labelPosition": "right"
+        },
+        {
+          "id": "e",
+          "x": -10.482012748718262,
+          "y": -22.97647476196289,
+          "community": 1,
+          "size": 7.5,
+          "color": "#6CA3A0",
+          "opacity": 0.95,
+          "labelPosition": "right"
+        },
+        {
+          "id": "zz",
+          "x": -12.787910461425781,
+          "y": -32.5026741027832,
+          "community": 1,
+          "size": 5.833333333333334,
+          "color": "#6CA3A0",
+          "opacity": 0.95,
+          "labelPosition": "right"
+        }
+      ],
+      "edges": [
+        { "id": "0", "source": "a", "target": "b", "size": 1, "color": "#9aa0a6", "opacity": 0.4 },
+        { "id": "1", "source": "a", "target": "c", "size": 2, "color": "#9aa0a6", "opacity": 0.4 },
+        {
+          "id": "2",
+          "source": "b",
+          "target": "c",
+          "size": 0.5,
+          "color": "#9aa0a6",
+          "opacity": 0.4
+        },
+        { "id": "3", "source": "c", "target": "d", "size": 3, "color": "#9aa0a6", "opacity": 0.4 },
+        { "id": "4", "source": "c", "target": "c", "size": 1, "color": "#9aa0a6", "opacity": 0.4 },
+        { "id": "5", "source": "d", "target": "e", "size": 2, "color": "#9aa0a6", "opacity": 0.4 },
+        { "id": "6", "source": "e", "target": "zz", "size": 1, "color": "#9aa0a6", "opacity": 0.4 }
+      ]
+    }
+  ]
+}

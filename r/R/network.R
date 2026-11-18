@@ -178,13 +178,18 @@ S7::method(to_list, GraphModel) <- function(x, ...) {
 #' build it -- but power users can construct it for full control:
 #' `draw(SigmaOption(model = GraphModel(...), layout = "circular"))`.
 #'
-#' Its [to_list()] produces the `{ model, style, title }` payload consumed by
-#' the `rtemis-graph` htmlwidget binding.
+#' Its [to_list()] produces the `{ model, config, title }` payload consumed by
+#' the `rtemis-graph` htmlwidget binding, `config` holding the
+#' `chart/network/v1` members that `@rtemis/draw`'s `buildNetworkGraph()` and
+#' `networkReducers()` read.
 #'
 #' @param model [GraphModel] or named list: The graph to render (a list must
 #'   contain a `nodes` element).
 #' @param layout Character \{"force", "circular", "circlepack", "random"\}:
 #'   Layout algorithm. `"force"` is ForceAtlas2.
+#' @param seed Integer \[0, Inf): Seed of the random number generator behind
+#'   community detection, the force layout's starting positions, and the random
+#'   layout.
 #' @param node_size Numeric \[0, Inf): Base node radius in screen pixels.
 #' @param edge_scale Numeric \[0, Inf): Multiplier mapping normalized edge weight
 #'   to stroke width.
@@ -249,6 +254,21 @@ SigmaOption <- S7::new_class(
         NULL
       }
     ),
+    seed = S7::new_property(
+      S7::class_numeric,
+      default = 1L,
+      validator = function(value) {
+        if (
+          length(value) != 1L ||
+            is.na(value) ||
+            value < 0 ||
+            value != round(value)
+        ) {
+          return("must be a single nonnegative whole number")
+        }
+        NULL
+      }
+    ),
     node_size = nonneg_numeric_default(10),
     edge_scale = nonneg_numeric_default(3),
     node_opacity = prob_default(0.95),
@@ -289,21 +309,24 @@ S7::method(to_list, SigmaOption) <- function(x, ...) {
   model_list <- if (S7::S7_inherits(model)) to_list(model) else model
   out <- list(
     model = model_list,
-    style = list(
+    # The chart/network/v1 members @rtemis/draw's network functions read.
+    # spec: draw/shared-builders#network
+    config = list(
       layout = x@layout,
-      nodeSize = x@node_size,
-      edgeScale = x@edge_scale,
-      nodeOpacity = x@node_opacity,
-      edgeOpacity = x@edge_opacity,
-      showLabels = x@show_labels,
-      scaleByDegree = x@scale_by_degree,
-      colorByGroup = x@color_by_group,
-      resolution = x@resolution,
-      blendEdges = x@blend_edges,
-      palette = as.character(x@palette),
-      nodeColor = as.character(x@node_color),
-      positiveColor = as.character(x@positive_color),
-      negativeColor = as.character(x@negative_color)
+      seed = as.integer(x@seed),
+      cluster_resolution = x@resolution,
+      scale_by_degree = x@scale_by_degree,
+      color_by_group = x@color_by_group,
+      blend_edges = x@blend_edges,
+      show_labels = x@show_labels,
+      node_size = x@node_size,
+      edge_scale = x@edge_scale,
+      node_opacity = x@node_opacity,
+      edge_opacity = x@edge_opacity,
+      palette = I(as.character(x@palette)),
+      node_color = unname(as.character(x@node_color)),
+      positive_color = unname(as.character(x@positive_color)),
+      negative_color = unname(as.character(x@negative_color))
     )
   )
   if (!is.null(x@title)) {
@@ -572,6 +595,7 @@ graph_from_edge_list <- function(edges, nodes = NULL, directed = FALSE) {
 graph_option <- function(
   model,
   layout = "force",
+  seed = 1L,
   node_size = 10,
   edge_scale = 3,
   node_opacity = 0.95,
@@ -596,6 +620,7 @@ graph_option <- function(
   option <- SigmaOption(
     model = model,
     layout = layout,
+    seed = seed,
     node_size = node_size,
     edge_scale = edge_scale,
     node_opacity = node_opacity,
@@ -625,6 +650,9 @@ graph_option <- function(
 #' @param model [GraphModel] or named list: The graph to render.
 #' @param layout Character \{"force", "circular", "circlepack", "random"\}:
 #'   Layout algorithm. `"force"` is ForceAtlas2.
+#' @param seed Integer \[0, Inf): Seed of the random number generator behind
+#'   community detection, the force layout's starting positions, and the random
+#'   layout. The same graph, layout, and seed give the same drawing.
 #' @param node_size Numeric \[0, Inf): Base node radius in screen pixels.
 #' @param edge_scale Numeric \[0, Inf): Multiplier mapping normalized edge weight
 #'   to stroke width.
@@ -667,6 +695,7 @@ graph_option <- function(
 draw_graph <- function(
   model,
   layout = "force",
+  seed = 1L,
   node_size = 10,
   edge_scale = 3,
   node_opacity = 0.95,
@@ -690,6 +719,7 @@ draw_graph <- function(
   option <- graph_option(
     model = model,
     layout = layout,
+    seed = seed,
     node_size = node_size,
     edge_scale = edge_scale,
     node_opacity = node_opacity,
@@ -762,6 +792,7 @@ draw_network <- function(
   threshold = NULL,
   self_loops = FALSE,
   layout = "force",
+  seed = 1L,
   node_size = 10,
   edge_scale = 3,
   node_opacity = 0.95,
@@ -803,6 +834,7 @@ draw_network <- function(
   draw_graph(
     model,
     layout = layout,
+    seed = seed,
     node_size = node_size,
     edge_scale = edge_scale,
     node_opacity = node_opacity,

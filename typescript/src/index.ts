@@ -1,7 +1,8 @@
 /**
  * ECharts option builders shared by rtemis.draw and rtemislive. Each builder
  * takes a chart's data and its `chart/<type>/v1` config and returns the
- * ECharts option.
+ * ECharts option. The network functions lay out and style a Sigma graph
+ * with the Graphology libraries the host passes in.
  *
  * spec: draw/shared-builders#package
  *
@@ -168,6 +169,25 @@ export {
   LINE_CHART_CONFIG_MEMBERS,
   lineAspect,
 } from "./charts/line/index.ts";
+export type {
+  GraphEdge,
+  GraphModel,
+  GraphNode,
+  NetworkAppearance,
+  NetworkChartConfig,
+  NetworkEdgeAttributes,
+  NetworkGraph,
+  NetworkLayout,
+  NetworkLibraries,
+  NetworkNodeAttributes,
+  NetworkReducers,
+} from "./charts/network/index.ts";
+export {
+  buildNetworkGraph,
+  NETWORK_CHART_CONFIG_MEMBERS,
+  NEUTRAL_EDGE_COLOR,
+  networkReducers,
+} from "./charts/network/index.ts";
 export type { PieAppearance, PieChartConfig, PieSlice } from "./charts/pie/index.ts";
 export { buildPieOption, PIE_CHART_CONFIG_MEMBERS, pieSlices } from "./charts/pie/index.ts";
 export type { SankeyAppearance, SankeyChartConfig, SankeyLink } from "./charts/sankey/index.ts";

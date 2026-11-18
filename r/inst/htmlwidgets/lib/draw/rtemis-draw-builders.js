@@ -41,6 +41,8 @@ var RtemisDraw = (() => {
     KEY_GAP: () => KEY_GAP,
     LINE_CHART_CONFIG_MEMBERS: () => LINE_CHART_CONFIG_MEMBERS,
     MAX_SYMBOL_SIZE: () => MAX_SYMBOL_SIZE,
+    NETWORK_CHART_CONFIG_MEMBERS: () => NETWORK_CHART_CONFIG_MEMBERS,
+    NEUTRAL_EDGE_COLOR: () => NEUTRAL_EDGE_COLOR,
     OBSERVATIONS: () => OBSERVATIONS,
     PIE_CHART_CONFIG_MEMBERS: () => PIE_CHART_CONFIG_MEMBERS,
     PR_CHART_CONFIG_MEMBERS: () => PR_CHART_CONFIG_MEMBERS,
@@ -77,6 +79,7 @@ var RtemisDraw = (() => {
     buildHeatmapOption: () => buildHeatmapOption,
     buildHistogramOption: () => buildHistogramOption,
     buildLineOption: () => buildLineOption,
+    buildNetworkGraph: () => buildNetworkGraph,
     buildPieOption: () => buildPieOption,
     buildPrOption: () => buildPrOption,
     buildRocOption: () => buildRocOption,
@@ -122,6 +125,7 @@ var RtemisDraw = (() => {
     layoutSurvivalRisk: () => layoutSurvivalRisk,
     lightThemeTokens: () => lightThemeTokens,
     lineAspect: () => lineAspect,
+    networkReducers: () => networkReducers,
     pieSlices: () => pieSlices,
     placeColorScale: () => placeColorScale,
     placeZoomSlider: () => placeZoomSlider,
@@ -9548,6 +9552,194 @@ ${rate(r.balancedAccuracy)}`, summary) }
       return `${row.marker}${escapeHtml3(name)}&nbsp;&nbsp;<b>${value(row.raw)}</b>${summary}`;
     });
     return [escapeHtml3(list[0]?.axisValueLabel ?? ""), ...lines].join("<br/>");
+  }
+
+  // src/charts/network/config.ts
+  var NETWORK_CHART_CONFIG_MEMBERS = Object.freeze([
+    "type",
+    "title",
+    "directed",
+    "threshold",
+    "self_loops",
+    "layout",
+    "seed",
+    "cluster_resolution",
+    "scale_by_degree",
+    "color_by_group",
+    "blend_edges",
+    "show_labels",
+    "node_size",
+    "edge_scale",
+    "node_opacity",
+    "edge_opacity",
+    "palette",
+    "node_color",
+    "positive_color",
+    "negative_color"
+  ]);
+  function seededRandom(start) {
+    let seed = Math.trunc(start) >>> 0;
+    return () => {
+      seed = Math.imul(1664525, seed) + 1013904223 >>> 0;
+      return seed / 4294967296;
+    };
+  }
+  var absWeight = (e) => Math.abs(e.weight ?? 1);
+  function buildNetworkGraph(model, config, libraries) {
+    const { Graph, louvain, forceAtlas2, circlepack, random } = libraries;
+    const rng = seededRandom(config.seed ?? 1);
+    const graph = new Graph({ type: model.directed ? "directed" : "undirected" });
+    const nodes = model.nodes;
+    const maxValue = nodes.reduce((m, n) => Math.max(m, n.value ?? 0), 1);
+    nodes.forEach((node, i) => {
+      const angle = 2 * Math.PI * i / nodes.length;
+      graph.addNode(node.id, {
+        label: node.label ?? node.id,
+        x: Math.cos(angle),
+        y: Math.sin(angle),
+        value: node.value ?? 0,
+        valueNorm: (node.value ?? 0) / maxValue,
+        group: node.group ?? null,
+        community: 0
+      });
+    });
+    const kept = [];
+    const pairs = /* @__PURE__ */ new Set();
+    for (const e of model.edges) {
+      if (!graph.hasNode(e.source) || !graph.hasNode(e.target)) continue;
+      const pair = JSON.stringify(
+        model.directed || e.source <= e.target ? [e.source, e.target] : [e.target, e.source]
+      );
+      if (pairs.has(pair)) continue;
+      pairs.add(pair);
+      kept.push(e);
+    }
+    const maxWeight = kept.reduce((m, e) => Math.max(m, absWeight(e)), 1e-9);
+    for (const e of kept) {
+      const sign = e.sign ?? 0;
+      const weightNorm = absWeight(e) / maxWeight;
+      graph.addEdgeWithKey(String(graph.size), e.source, e.target, {
+        weightNorm,
+        sign,
+        louvainWeight: sign < 0 ? 0 : weightNorm
+      });
+    }
+    if (graph.size > 0) {
+      louvain.assign(graph, {
+        nodeCommunityAttribute: "community",
+        getEdgeWeight: "louvainWeight",
+        resolution: config.cluster_resolution ?? 1,
+        rng
+      });
+    }
+    const layout2 = config.layout ?? "force";
+    if (layout2 === "circular") {
+      const community = (id) => nodeAttributes(graph, id).community;
+      const ids = graph.nodes().sort((a, b) => community(a) - community(b));
+      ids.forEach((id, i) => {
+        const angle = 2 * Math.PI * i / ids.length;
+        graph.setNodeAttribute(id, "x", Math.cos(angle));
+        graph.setNodeAttribute(id, "y", Math.sin(angle));
+      });
+    } else if (layout2 === "circlepack") {
+      circlepack.assign(graph, { hierarchyAttributes: ["community"], rng });
+    } else if (layout2 === "random") {
+      random.assign(graph, { rng });
+    } else if (graph.order > 0) {
+      for (const id of graph.nodes()) {
+        graph.setNodeAttribute(id, "x", 2 * rng() - 1);
+        graph.setNodeAttribute(id, "y", 2 * rng() - 1);
+      }
+      forceAtlas2.assign(graph, {
+        iterations: 200,
+        settings: { ...forceAtlas2.inferSettings(graph), scalingRatio: 10 }
+      });
+    }
+    return graph;
+  }
+  var nodeAttributes = (graph, id) => graph.getNodeAttributes(id);
+  var edgeAttributes = (graph, id) => graph.getEdgeAttributes(id);
+  var NEUTRAL_EDGE_COLOR = "#9aa0a6";
+  var HEX6 = /^#[0-9a-f]{6}$/i;
+  function withAlpha3(color, alpha) {
+    if (!HEX6.test(color)) return color;
+    const a = Math.max(0, Math.min(255, Math.round(alpha)));
+    return `${color}${a.toString(16).padStart(2, "0")}`;
+  }
+  function blendHex(a, b) {
+    if (!HEX6.test(a) || !HEX6.test(b)) return a;
+    const pa = Number.parseInt(a.slice(1), 16);
+    const pb = Number.parseInt(b.slice(1), 16);
+    const r = (pa >> 16) + (pb >> 16) >> 1;
+    const g = (pa >> 8 & 255) + (pb >> 8 & 255) >> 1;
+    const bl = (pa & 255) + (pb & 255) >> 1;
+    return `#${(1 << 24 | r << 16 | g << 8 | bl).toString(16).slice(1)}`;
+  }
+  function networkReducers(graph, config, appearance = {}, hovered = () => null) {
+    const memberPalette = asArray(config.palette);
+    const palette = memberPalette.length > 0 ? memberPalette : appearance.palette && appearance.palette.length > 0 ? appearance.palette : RTEMIS_PALETTE;
+    const nodeColor = config.node_color ?? palette[0];
+    const byGroup = config.color_by_group ?? false;
+    const colorOf = (community) => byGroup ? palette[(community % palette.length + palette.length) % palette.length] : nodeColor;
+    const positive = config.positive_color ?? appearance.positive_color ?? SIGN_COLORS.positive;
+    const negative = config.negative_color ?? appearance.negative_color ?? SIGN_COLORS.negative;
+    const dark = appearance.scheme === "dark";
+    const labelColor = appearance.label_color ?? (dark ? "#e6e6e6" : "#1a1a1a");
+    const nodeSize = config.node_size ?? 10;
+    const byDegree = config.scale_by_degree ?? true;
+    const nodeOpacity = config.node_opacity ?? 0.95;
+    const edgeScale = config.edge_scale ?? 3;
+    const edgeOpacity = config.edge_opacity ?? 0.4;
+    let minX = Number.POSITIVE_INFINITY;
+    let maxX = Number.NEGATIVE_INFINITY;
+    for (const id of graph.nodes()) {
+      const x = nodeAttributes(graph, id).x;
+      minX = Math.min(minX, x);
+      maxX = Math.max(maxX, x);
+    }
+    const centerX = graph.order > 0 ? (minX + maxX) / 2 : 0;
+    return {
+      nodeReducer(node, data) {
+        const attrs = nodeAttributes(graph, node);
+        const out = {
+          ...data,
+          size: byDegree ? Math.max(1, nodeSize * (0.5 + (attrs.valueNorm || 0))) : nodeSize,
+          color: colorOf(attrs.community || 0),
+          opacity: nodeOpacity,
+          labelPosition: attrs.x > centerX ? "left" : "right",
+          labelColor,
+          ...appearance.font_family ? { labelFont: appearance.font_family } : {},
+          backdropVisibility: "hidden"
+        };
+        const over = hovered();
+        if (over === node) {
+          out.backdropVisibility = "visible";
+          out.backdropColor = dark ? "#505050" : "#cbcbcb";
+          out.backdropShadowColor = "transparent";
+          out.backdropShadowBlur = 0;
+        } else if (over && !graph.areNeighbors(over, node)) {
+          out.color = withAlpha3(nodeColor, 40);
+          out.opacity = 0.15;
+          out.label = "";
+        }
+        return out;
+      },
+      edgeReducer(edge, data) {
+        const attrs = edgeAttributes(graph, edge);
+        const [source, target] = graph.extremities(edge);
+        const color = config.blend_edges ? blendHex(
+          colorOf(nodeAttributes(graph, source).community),
+          colorOf(nodeAttributes(graph, target).community)
+        ) : attrs.sign > 0 ? positive : attrs.sign < 0 ? negative : NEUTRAL_EDGE_COLOR;
+        const over = hovered();
+        return {
+          ...data,
+          size: Math.max(0.5, (attrs.weightNorm ?? 0.5) * edgeScale),
+          color,
+          opacity: over && source !== over && target !== over ? Math.min(edgeOpacity, 0.06) : edgeOpacity
+        };
+      }
+    };
   }
 
   // src/shared/labels.ts

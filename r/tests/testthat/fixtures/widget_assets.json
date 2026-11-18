@@ -218,7 +218,7 @@
       "rtemis-graph.js"
     ],
     "md5": [
-      "6fc5925b988ac05ececd877f8245a740"
+      "a1c80573422828c5d66fede76209f419"
     ]
   },
   "rtemis-map-binding-0.5.3": {
@@ -495,12 +495,12 @@
       "294f49c71d04acaa81cafb44bdc92acc"
     ]
   },
-"rtemis-draw-builders-0.9.0": {
+  "rtemis-draw-builders-0.9.0": {
     "scripts": [
       "rtemis-draw-builders.js"
     ],
     "md5": [
-      "fdafbc87073029fe917a90ccd38faa56"
+      "4ebe4b078e235afb7ba849a81643a53d"
     ]
   },
   "rtemis-panel-layout-1.0.12": {

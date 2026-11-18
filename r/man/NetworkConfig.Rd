@@ -13,6 +13,7 @@ NetworkConfig(
   threshold = NULL,
   self_loops = FALSE,
   layout = "force",
+  seed = 1L,
   cluster_resolution = 1,
   scale_by_degree = TRUE,
   color_by_group = FALSE,
@@ -49,7 +50,12 @@ authored config; written by the interface that resolved it.}
 
 \item{self_loops}{Logical: Keep self-edges.}
 
-\item{layout}{Character: Layout algorithm.}
+\item{layout}{Character \{"force", "circular", "circlepack", "random"\}:
+Layout algorithm. \code{"force"} is ForceAtlas2.}
+
+\item{seed}{Integer [0, Inf): Seed of the random number generator behind
+community detection, the force layout's starting positions, and the random
+layout.}
 
 \item{cluster_resolution}{Numeric \verb{[0, Inf)}: Community-detection
 resolution. Higher values find more, smaller communities.}
@@ -58,7 +64,8 @@ resolution. Higher values find more, smaller communities.}
 
 \item{color_by_group}{Logical: Color nodes by detected community.}
 
-\item{blend_edges}{Logical: Blend overlapping edges.}
+\item{blend_edges}{Logical: Color each edge as the mean of its two nodes'
+colors instead of by sign.}
 
 \item{show_labels}{Logical: Draw node labels.}
 

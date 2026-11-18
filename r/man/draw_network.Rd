@@ -11,6 +11,7 @@ draw_network(
   threshold = NULL,
   self_loops = FALSE,
   layout = "force",
+  seed = 1L,
   node_size = 10,
   edge_scale = 3,
   node_opacity = 0.95,
@@ -55,6 +56,10 @@ self-edges.}
 
 \item{layout}{Character \{"force", "circular", "circlepack", "random"\}:
 Layout algorithm. \code{"force"} is ForceAtlas2.}
+
+\item{seed}{Integer [0, Inf): Seed of the random number generator behind
+community detection, the force layout's starting positions, and the random
+layout. The same graph, layout, and seed give the same drawing.}
 
 \item{node_size}{Numeric [0, Inf): Base node radius in screen pixels.}
 

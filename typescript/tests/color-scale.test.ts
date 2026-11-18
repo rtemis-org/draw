@@ -7,6 +7,7 @@ import { buildSpectrogramOption } from "../src/charts/spectrogram/config.ts";
 import { fitKeys, KEY_GAP, placeColorScale } from "../src/layout/keys.ts";
 import { registerRenderers } from "../src/shared/renderers.ts";
 
+// biome-ignore lint/suspicious/noExplicitAny: the R package's ECharts bundle carries no types.
 function loadECharts(): any {
   const path = new URL("../../r/inst/htmlwidgets/lib/echarts/echarts.min.js", import.meta.url)
     .pathname;
@@ -14,6 +15,7 @@ function loadECharts(): any {
 }
 
 // The bar's left edge, and the right edge of the rightmost plotting area.
+// biome-ignore lint/suspicious/noExplicitAny: an instance of the untyped ECharts bundle.
 function measure(chart: any) {
   const model = chart.getModel();
   let right = Number.NEGATIVE_INFINITY;
@@ -23,6 +25,7 @@ function measure(chart: any) {
   }
   const view = chart.getViewOfComponentModel(model.getComponent("visualMap"));
   let bar = Number.POSITIVE_INFINITY;
+  // biome-ignore lint/suspicious/noExplicitAny: an element of the untyped ECharts bundle.
   view.group.traverse((el: any) => {
     if (!el.isGroup && el.style?.fill?.colorStops) {
       const r = el.getBoundingRect().clone();

@@ -3,7 +3,8 @@ const fs = require('node:fs');
 const path = require('node:path');
 const root = process.argv[2];
 const v = require(path.join(root, 'node/vector.js'));
-const graph = require(path.join(root, 'htmlwidgets/lib/draw/graph_scene.js'))(require(path.join(root, 'node/graph-deps.js')));
+const builders = require(path.join(root, 'htmlwidgets/lib/draw/rtemis-draw-builders.js'));
+const graphDeps = require(path.join(root, 'node/graph-deps.js'));
 const map = require(path.join(root, 'htmlwidgets/lib/draw/map_scene.js'))(require(path.join(root, 'node/map-deps.js')));
 const theme = require(path.join(root, 'htmlwidgets/lib/draw/vector_theme.js'));
 assert.equal(theme.isDark('#181818'), true);
@@ -11,17 +12,17 @@ assert.equal(theme.isDark('#fff'), false);
 assert.equal(theme.escape('<A & "B">'), '&lt;A &amp; &quot;B&quot;&gt;');
 const model = {nodes:[{id:'A',value:2},{id:'B',value:1},{id:'C',value:3}],edges:[{source:'A',target:'B',weight:1,sign:1},{source:'B',target:'C',weight:0.5,sign:-1}]};
 for (const layout of ['force','circular','circlepack','random']) {
-  const x={model,style:{layout,colorByGroup:true,palette:['#123456','#abcdef']},width:800,height:600};
+  const x={model,config:{layout,color_by_group:true,palette:['#123456','#abcdef']},width:800,height:600};
   const a=v.graphGeometry(x), b=v.graphGeometry(x);
   assert.deepEqual(a,b,layout+' is deterministic');
   assert.equal(a.nodes.length,3); assert.equal(a.edges.length,2);
   assert(a.nodes.every(n=>Number.isFinite(n.x)&&Number.isFinite(n.y)&&n.size>0));
-  const scene=graph.create(model,x.style,theme.resolve(null));
-  const n=scene.nodeReducer('A',scene.graph.getNodeAttributes('A'));
+  const g=builders.buildNetworkGraph(model,x.config,graphDeps);
+  const n=builders.networkReducers(g,x.config).nodeReducer('A',g.getNodeAttributes('A'));
   assert.equal(n.labelPosition,a.nodes[0].labelPosition); assert.equal(n.size,a.nodes[0].size); assert.equal(n.color,a.nodes[0].color);
   assert(!/<image|NaN|Infinity/.test(v.graphSVG(x)));
 }
-const loop = v.graphSVG({model:{nodes:[{id:'A'}],edges:[{source:'A',target:'A'}]},style:{},width:800,height:600});
+const loop = v.graphSVG({model:{nodes:[{id:'A'}],edges:[{source:'A',target:'A'}]},config:{},width:800,height:600});
 assert.match(loop, /d="M[^"]+C/);
 for (const [raw,res,id] of [['CA','state','06'],['California','state','06'],[1001,'county','01001'],['US','country','USA']]) assert.equal(map.normalizeKey(raw,res),id);
 for (const classification of ['quantile','equal','jenks']) {

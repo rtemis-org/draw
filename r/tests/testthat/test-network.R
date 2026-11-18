@@ -147,9 +147,10 @@ test_that("draw_network returns an htmlwidget for matrix input", {
   w <- draw_network(m)
   expect_s3_class(w, "htmlwidget")
   expect_equal(attr(w, "package"), "rtemis.draw")
-  # payload carries the model + style for the JS binding
+  # The payload carries the model and the chart/network/v1 config.
   expect_length(w$x$model$nodes, 2L)
-  expect_equal(w$x$style$layout, "force")
+  expect_equal(w$x$config$layout, "force")
+  expect_identical(w$x$config$seed, 1L)
 })
 
 test_that("draw_network returns an htmlwidget for edge-list input", {
@@ -160,8 +161,25 @@ test_that("draw_network returns an htmlwidget for edge-list input", {
   )
   w <- draw_network(edges, layout = "circular", color_by_group = TRUE)
   expect_s3_class(w, "htmlwidget")
-  expect_equal(w$x$style$layout, "circular")
-  expect_true(w$x$style$colorByGroup)
+  expect_equal(w$x$config$layout, "circular")
+  expect_true(w$x$config$color_by_group)
+})
+
+test_that("draw_network and the network config pass the seed", {
+  m <- matrix(
+    c(0, 1, 1, 0),
+    nrow = 2,
+    dimnames = list(c("a", "b"), c("a", "b"))
+  )
+  expect_identical(draw_network(m, seed = 42)$x$config$seed, 42L)
+  w <- draw(setup_NetworkConfig(seed = 3L), data = m)
+  expect_identical(w$x$config$seed, 3L)
+  expect_error(
+    SigmaOption(model = graph_from_matrix(m), seed = 1.5),
+    "whole number"
+  )
+  expect_error(setup_NetworkConfig(seed = -1L))
+  expect_error(setup_NetworkConfig(layout = "spiral"))
 })
 
 test_that("draw_network rejects unsupported input types", {
@@ -196,19 +214,27 @@ test_that("SigmaOption applies sensible style defaults", {
   expect_equal(opt@negative_color, SIGN_COLORS[["negative"]])
 })
 
-test_that("SigmaOption to_list produces the {model, style} payload shape", {
+test_that("SigmaOption to_list produces the {model, config} payload shape", {
   m <- GraphModel(
     nodes = list(GraphNode(id = "a"), GraphNode(id = "b")),
     edges = list(GraphEdge(source = "a", target = "b", weight = 0.5)),
     directed = FALSE
   )
-  out <- to_list(SigmaOption(model = m, layout = "circular", node_size = 20))
-  expect_named(out, c("model", "style"))
+  out <- to_list(SigmaOption(
+    model = m,
+    layout = "circular",
+    node_size = 20,
+    seed = 7,
+    resolution = 2
+  ))
+  expect_named(out, c("model", "config"))
   expect_length(out$model$nodes, 2L)
-  # style keys are camelCase for the JS binding
-  expect_equal(out$style$layout, "circular")
-  expect_equal(out$style$nodeSize, 20)
-  expect_true("scaleByDegree" %in% names(out$style))
+  # config members take the chart/network/v1 names
+  expect_equal(out$config$layout, "circular")
+  expect_equal(out$config$node_size, 20)
+  expect_identical(out$config$seed, 7L)
+  expect_equal(out$config$cluster_resolution, 2)
+  expect_true(out$config$scale_by_degree)
   # title omitted when NULL
   expect_false("title" %in% names(out))
 })
@@ -248,9 +274,9 @@ test_that("draw() dispatches a SigmaOption to the rtemis-graph backend", {
   )
   w <- draw(SigmaOption(model = m))
   expect_s3_class(w, "htmlwidget")
-  # Sigma payload shape (model/style), not the ECharts shape (option)
+  # Sigma payload shape (model/config), not the ECharts shape (option)
   expect_false(is.null(w$x$model))
-  expect_false(is.null(w$x$style))
+  expect_false(is.null(w$x$config))
   expect_null(w$x$option)
   # theme resolved uniformly by draw(), not carried on the option
   expect_true(w$x$autoTheme)
@@ -317,8 +343,8 @@ test_that("SigmaOption strips names from color scalars when serializing", {
   )
   opt <- SigmaOption(model = m, node_color = c(primary = "#6CA3A0"))
   lst <- to_list(opt)
-  expect_null(names(lst$style$nodeColor))
-  expect_identical(lst$style$nodeColor, "#6CA3A0")
+  expect_null(names(lst$config$node_color))
+  expect_identical(lst$config$node_color, "#6CA3A0")
 })
 test_that("graph builders reject malformed matrices and edge tables", {
   expect_error(

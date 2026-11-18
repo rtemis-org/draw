@@ -1,16 +1,14 @@
 // rtemis-graph htmlwidget binding.
 //
-// Sigma.js renderer for the network / graph plot type. This is the first
-// non-ECharts rendering surface in rtemis.draw; it consumes a renderer-agnostic
-// graph model ({ nodes, edges, directed }) — not an EChartsOption — and manages
-// the sigma instance lifecycle. It is a vanilla-JS port of rtemislive's
-// GraphCanvas.tsx: same
-// graphology build, Louvain community detection, ForceAtlas2 / circular /
-// circlepack / random layouts, and node/edge reducers.
+// Sigma.js renderer for the network chart. The payload carries a graph model
+// ({ nodes, edges, directed }) and its chart/network/v1 config. @rtemis/draw
+// (window.RtemisDraw) builds the laid-out Graphology graph and the node and
+// edge reducers, which rtemislive's GraphCanvas also uses; this binding owns
+// the Sigma instance, the hover tooltip, the title, and theme changes.
+// spec: draw/shared-builders#network
 //
-// graphology + sigma come from the vendored bundle (window.RtemisGraph), built
-// from r/tools/graph-bundle. Styling options arrive once on the payload (no live
-// sliders, unlike the React app) under payload.style.
+// graphology, its algorithms, and sigma come from the vendored bundle
+// (window.RtemisGraph), built from r/tools/graph-bundle.
 
 HTMLWidgets.widget({
   name: "rtemis-graph",
@@ -38,7 +36,6 @@ HTMLWidgets.widget({
       );
     };
 
-    // ── small color helpers (ported from GraphCanvas) ──────────────────────
     // Containers: a graph surface plus a hover tooltip + optional title overlay,
     // pinned absolutely so they never displace the canvas.
     el.style.position = "relative";
@@ -64,9 +61,9 @@ HTMLWidgets.widget({
     // graph in a new theme; a new payload starts from the default view.
     const renderGraph = (x, camera = null) => {
       currentPayload = x;
-      if (!Graph || !Sigma) {
+      if (!Graph || !Sigma || !window.RtemisDraw) {
         surface.innerHTML =
-          '<div style="padding:1rem;color:#b00">rtemis-graph bundle failed to load (window.RtemisGraph missing).</div>';
+          '<div style="padding:1rem;color:#b00">rtemis-graph bundles failed to load (window.RtemisGraph or window.RtemisDraw missing).</div>';
         return;
       }
       if (sigma) {
@@ -75,10 +72,8 @@ HTMLWidgets.widget({
       }
 
       const model = x.model || {};
-      const s = x.style || {};
+      const config = x.config || {};
       const nodes = model.nodes || [];
-      const edges = model.edges || [];
-      const palette = s.palette || ["#6CA3A0"];
       const theme = resolveTheme(x);
 
       el.style.backgroundColor = theme.bg;
@@ -103,9 +98,23 @@ HTMLWidgets.widget({
       }
       surface.innerHTML = "";
 
-      const scene = window.RtemisGraphScene.create(model, s, theme);
-      const graph = scene.graph;
-      const colorByGroup = !!s.colorByGroup;
+      const graph = window.RtemisDraw.buildNetworkGraph(
+        { ...model, edges: model.edges || [], nodes },
+        config,
+        window.RtemisGraph
+      );
+      let hovered = null;
+      const reducers = window.RtemisDraw.networkReducers(
+        graph,
+        config,
+        {
+          label_color: theme.fg,
+          font_family: theme.fontFamily,
+          scheme: theme.dark ? "dark" : "light",
+        },
+        () => hovered
+      );
+      const colorByGroup = !!config.color_by_group;
 
       sigma = new Sigma(graph, surface, {
         // Sigma v4 nests renderer settings under `settings`; passing them flat
@@ -113,21 +122,21 @@ HTMLWidgets.widget({
         // sizing nodes in unit-circle layout coords -> giant nodes).
         settings: {
           allowInvalidContainer: true,
-          renderLabels: s.showLabels !== false,
+          renderLabels: config.show_labels !== false,
           renderEdgeLabels: false,
           enableEdgeEvents: false,
           // Node size N means N screen pixels regardless of layout coordinate
           // scale (without this, unit-circle layouts render giant nodes).
           itemSizesReference: "screen",
         },
-        nodeReducer: scene.nodeReducer,
-        edgeReducer: scene.edgeReducer,
+        nodeReducer: reducers.nodeReducer,
+        edgeReducer: reducers.edgeReducer,
       });
       if (camera) sigma.getCamera().setState(camera);
 
       // Hover: dim the rest, show a themed tooltip with node name + details.
       sigma.on("enterNode", ({ node }) => {
-        scene.setHovered(node);
+        hovered = node;
         const label = graph.getNodeAttribute(node, "label") || node;
         const degree = graph.degree(node);
         const community = graph.getNodeAttribute(node, "community");
@@ -146,7 +155,7 @@ HTMLWidgets.widget({
         sigma.refresh();
       });
       sigma.on("leaveNode", () => {
-        scene.setHovered(null);
+        hovered = null;
         tooltip.style.display = "none";
         sigma.refresh();
       });

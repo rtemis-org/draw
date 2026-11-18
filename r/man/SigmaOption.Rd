@@ -7,6 +7,7 @@
 SigmaOption(
   model = NULL,
   layout = "force",
+  seed = 1L,
   node_size = 10,
   edge_scale = 3,
   node_opacity = 0.95,
@@ -29,6 +30,10 @@ contain a \code{nodes} element).}
 
 \item{layout}{Character \{"force", "circular", "circlepack", "random"\}:
 Layout algorithm. \code{"force"} is ForceAtlas2.}
+
+\item{seed}{Integer [0, Inf): Seed of the random number generator behind
+community detection, the force layout's starting positions, and the random
+layout.}
 
 \item{node_size}{Numeric [0, Inf): Base node radius in screen pixels.}
 
@@ -79,8 +84,10 @@ Most users never touch this directly -- \code{\link[=draw_network]{draw_network(
 build it -- but power users can construct it for full control:
 \code{draw(SigmaOption(model = GraphModel(...), layout = "circular"))}.
 
-Its \code{\link[=to_list]{to_list()}} produces the \verb{\{ model, style, title \}} payload consumed by
-the \code{rtemis-graph} htmlwidget binding.
+Its \code{\link[=to_list]{to_list()}} produces the \verb{\{ model, config, title \}} payload consumed by
+the \code{rtemis-graph} htmlwidget binding, \code{config} holding the
+\code{chart/network/v1} members that \verb{@rtemis/draw}'s \code{buildNetworkGraph()} and
+\code{networkReducers()} read.
 }
 \examples{
 model <- GraphModel(

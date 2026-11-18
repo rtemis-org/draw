@@ -2,7 +2,8 @@
 # ::rtemis.draw::
 # 2026- EDG rtemis.org
 
-# The network graph's config, compiling to a Sigma option.
+# The network graph's config, compiling to a Sigma option whose `config` member
+# @rtemis/draw's network functions read (spec: draw/shared-builders#network).
 #
 # The binding is the shape none of the other charts has: **the bound data is the
 # adjacency matrix itself**, not columns within a table. So this config has no
@@ -30,12 +31,17 @@
 #' @param directed Logical: Treat the matrix as directed.
 #' @param threshold Optional Numeric: Drop edges weaker than this.
 #' @param self_loops Logical: Keep self-edges.
-#' @param layout Character: Layout algorithm.
+#' @param layout Character \{"force", "circular", "circlepack", "random"\}:
+#'   Layout algorithm. `"force"` is ForceAtlas2.
+#' @param seed Integer \[0, Inf): Seed of the random number generator behind
+#'   community detection, the force layout's starting positions, and the random
+#'   layout.
 #' @param cluster_resolution Numeric `[0, Inf)`: Community-detection
 #'   resolution. Higher values find more, smaller communities.
 #' @param scale_by_degree Logical: Size nodes by their degree.
 #' @param color_by_group Logical: Color nodes by detected community.
-#' @param blend_edges Logical: Blend overlapping edges.
+#' @param blend_edges Logical: Color each edge as the mean of its two nodes'
+#'   colors instead of by sign.
 #' @param show_labels Logical: Draw node labels.
 #' @param node_size Numeric `[0, Inf)`: Base node size.
 #' @param edge_scale Numeric `[0, Inf)`: Edge width multiplier.
@@ -72,7 +78,19 @@ NetworkConfig <- new_class(
       description = "Drop edges weaker than this."
     ),
     self_loops = prop_boolean(FALSE, description = "Keep self-edges."),
-    layout = prop_string("force", description = "Layout algorithm."),
+    layout = prop_string(
+      "force",
+      enum = c("force", "circular", "circlepack", "random"),
+      description = "Layout algorithm. 'force' is ForceAtlas2."
+    ),
+    seed = prop_integer(
+      1L,
+      min = 0L,
+      description = paste(
+        "Seed of the random number generator behind community detection,",
+        "the force layout's starting positions, and the random layout."
+      )
+    ),
     cluster_resolution = prop_float(
       1,
       min = 0,
@@ -91,7 +109,7 @@ NetworkConfig <- new_class(
     ),
     blend_edges = prop_boolean(
       FALSE,
-      description = "Blend overlapping edges."
+      description = "Color each edge as the mean of its two nodes' colors instead of by sign."
     ),
     # -- appearance --------------------------------------------------------
     show_labels = prop_boolean(TRUE, description = "Draw node labels."),
@@ -170,6 +188,7 @@ setup_NetworkConfig <- function(
   threshold = NULL,
   self_loops = FALSE,
   layout = "force",
+  seed = 1L,
   cluster_resolution = 1,
   scale_by_degree = TRUE,
   color_by_group = FALSE,
@@ -194,6 +213,7 @@ setup_NetworkConfig <- function(
     threshold = threshold,
     self_loops = self_loops,
     layout = layout,
+    seed = seed,
     cluster_resolution = cluster_resolution,
     scale_by_degree = scale_by_degree,
     color_by_group = color_by_group,
@@ -261,6 +281,7 @@ method(compile, NetworkConfig) <- function(
   graph_option(
     model = model,
     layout = config@layout,
+    seed = config@seed,
     node_size = config@node_size,
     edge_scale = config@edge_scale,
     node_opacity = config@node_opacity,

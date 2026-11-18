@@ -138,9 +138,9 @@ test_that("network edges take config, then theme, then SIGN_COLORS", {
 
   compiled <- compile(setup_NetworkConfig(), data = m, theme = custom_theme())
   expect_identical(compiled@negative_color, custom_sign[["negative"]])
-  style <- draw_network(m, theme = custom_theme())[["x"]][["style"]]
-  expect_identical(style[["negativeColor"]], custom_sign[["negative"]])
-  expect_identical(style[["positiveColor"]], custom_sign[["positive"]])
+  config <- draw_network(m, theme = custom_theme())[["x"]][["config"]]
+  expect_identical(config[["negative_color"]], custom_sign[["negative"]])
+  expect_identical(config[["positive_color"]], custom_sign[["positive"]])
 })
 
 
