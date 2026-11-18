@@ -565,17 +565,7 @@ draw_echarts_option <- function(
   if (!is.null(option[["grid3D"]])) {
     widget[["dependencies"]] <- c(
       widget[["dependencies"]],
-      list(
-        htmltools::htmlDependency(
-          "echarts-gl",
-          "2.1.0",
-          src = system.file(
-            "htmlwidgets/lib/echarts-gl",
-            package = "rtemis.draw"
-          ),
-          script = "echarts-gl.min.js"
-        )
-      )
+      list(echarts_gl_dependency())
     )
   }
   if (!is.null(filename)) {

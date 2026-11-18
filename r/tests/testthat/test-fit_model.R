@@ -137,13 +137,13 @@ test_that("a config with a learner fit round-trips through JSON", {
 # %% draw_scatter3d ----
 
 test_that("draw_scatter3d fits one uncolored surface per group", {
-  o <- draw_scatter3d(
+  o <- raw_option(draw_scatter3d(
     iris[1:3],
     group = iris[["Species"]],
     fit = "glm",
     n_fit = 5L,
     fit_alpha = .5
-  )[["x"]][["option"]]
+  ))
   surfaces <- Filter(function(s) s[["type"]] == "surface", o[["series"]])
   expect_identical(
     vapply(surfaces, `[[`, "", "name"),
@@ -160,9 +160,7 @@ test_that("draw_scatter3d fits one uncolored surface per group", {
 test_that("3D surface predictions follow the fitted plane", {
   x <- rep(1:4, 4)
   y <- rep(1:4, each = 4)
-  o <- draw_scatter3d(x, y, x + 2 * y, fit = "glm", n_fit = 2L)[["x"]][[
-    "option"
-  ]]
+  o <- raw_option(draw_scatter3d(x, y, x + 2 * y, fit = "glm", n_fit = 2L))
   surface <- o[["series"]][[2L]]
   # Corners in ECharts-GL order: x varies fastest.
   expect_equal(
@@ -191,12 +189,12 @@ test_that("3D learner surfaces and fit configs round-trip", {
     fit = "LINAD",
     n_fit = 6L
   )
-  opt <- to_list(compile(cfg, iris))
+  opt <- raw_option(compile(cfg, iris))
   expect_identical(opt[["series"]][[2L]][["type"]], "surface")
   path <- tempfile(fileext = ".json")
   on.exit(unlink(path))
   write_chart_config(cfg, path)
-  expect_equal(to_list(compile(read_chart_config(path), iris)), opt)
+  expect_equal(raw_option(compile(read_chart_config(path), iris)), opt)
 })
 
 

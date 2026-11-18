@@ -25,6 +25,7 @@ BUILDER_TYPES <- c(
   "roc",
   "sankey",
   "scatter",
+  "scatter3d",
   "significance",
   "survival",
   "timeseries"
@@ -91,10 +92,34 @@ S7::method(draw, BuildRequest) <- function(
     height = height,
     element_id = element_id
   )
+  if (option@type == "scatter3d") {
+    widget[["dependencies"]] <- c(
+      widget[["dependencies"]],
+      list(echarts_gl_dependency())
+    )
+  }
   if (!is.null(filename)) {
     save_drawing(widget, filename)
   }
   widget
+}
+
+
+# %% echarts_gl_dependency ----
+#' The ECharts-GL script a 3D chart loads
+#'
+#' @return `html_dependency`.
+#'
+#' @author EDG
+#' @keywords internal
+#' @noRd
+echarts_gl_dependency <- function() {
+  htmltools::htmlDependency(
+    "echarts-gl",
+    "2.1.0",
+    src = system.file("htmlwidgets/lib/echarts-gl", package = "rtemis.draw"),
+    script = "echarts-gl.min.js"
+  )
 }
 
 
@@ -159,11 +184,12 @@ config_members <- function(config) {
 # %% tabular_json ----
 #' A tabular chart's data, as @rtemis/draw's tabular builders take it
 #'
-#' The JSON text of `{columns, levels, types, frequency, fits}`: `columns` maps each
+#' The JSON text of `{columns, levels, types, frequency, fits, surfaces}`: `columns` maps each
 #' named column to an array of values, `levels` maps each factor column to its
 #' level order, `types` marks each date or date-time column `"time"`, and
 #' `frequency` names the column of row counts, or is `null`; `fits`, present
-#' when given, lists the fitted curves. Numbers are
+#' when given, lists the fitted curves, and `surfaces` the fitted surfaces of
+#' a 3D chart. Numbers are
 #' written as numbers and missing values as `null`. A factor is written as its
 #' labels. A date or date-time is written as epoch milliseconds of its
 #' wall-clock reading in UTC (`time_axis_ms()`), which the builders place and
@@ -175,13 +201,22 @@ config_members <- function(config) {
 #'   row stands for, written with the columns and named as `frequency`.
 #' @param fits Optional List: Fitted curves from `fit_curves()`, written as
 #'   `fits`.
+#' @param surfaces Optional List: Surfaces, each a list of `name`, the grid
+#'   coordinates `x` and `y`, and the matrix `z` with one row per `x`, written
+#'   as `surfaces`, `z` as an array of rows.
 #'
 #' @return Character: JSON text.
 #'
 #' @author EDG
 #' @keywords internal
 #' @noRd
-tabular_json <- function(data, columns, frequency = NULL, fits = NULL) {
+tabular_json <- function(
+  data,
+  columns,
+  frequency = NULL,
+  fits = NULL,
+  surfaces = NULL
+) {
   columns <- unique(c(columns, frequency))
   as_values <- function(x) {
     if (is.factor(x)) {
@@ -219,7 +254,19 @@ tabular_json <- function(data, columns, frequency = NULL, fits = NULL) {
         )),
         frequency = if (!is.null(frequency)) jsonlite::unbox(frequency)
       ),
-      if (!is.null(fits)) list(fits = lapply(fits, fit_json))
+      if (!is.null(fits)) list(fits = lapply(fits, fit_json)),
+      if (!is.null(surfaces)) {
+        list(
+          surfaces = lapply(surfaces, function(surface) {
+            list(
+              name = jsonlite::unbox(surface[["name"]]),
+              x = surface[["x"]],
+              y = surface[["y"]],
+              z = surface[["z"]]
+            )
+          })
+        )
+      }
     ),
     auto_unbox = FALSE,
     na = "null",

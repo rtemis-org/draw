@@ -220,18 +220,42 @@ method(resolve, Scatter3DConfig) <- function(config, data = NULL, ...) {
 method(render_meta, Scatter3DConfig) <- function(config, option) {
   legend_meta("top", "outside")
 }
+# The request for the 3D scatter builder (spec: draw/shared-builders#scatter3d).
+# R checks the coordinates and fits the surfaces; the builder draws them.
 method(compile, Scatter3DConfig) <- function(
   config,
   data = NULL,
   theme = NULL,
   ...
 ) {
-  scatter3d_option(
-    config_column(data, config@x, "x"),
-    config_column(data, config@y, "y"),
-    config_column(data, config@z, "z"),
-    config_column(data, config@group, "group"),
-    config
+  if (is.null(config@x) || is.null(config@y) || is.null(config@z)) {
+    abort(
+      "A Scatter3DConfig needs `x`, `y`, and `z` set to draw.",
+      class = c("rtemis_null_input", "rtemis_input_error")
+    )
+  }
+  x <- config_column(data, config@x, "x")
+  y <- config_column(data, config@y, "y")
+  z <- config_column(data, config@z, "z")
+  group <- config_column(data, config@group, "group")
+  input <- scatter3d_input(x, y, z, group, config@mode)
+  surfaces <- NULL
+  if (!is.null(config@fit)) {
+    keep <- input[["keep"]]
+    surfaces <- lapply(input[["groups"]], function(g) {
+      index <- keep & !is.na(input[["group"]]) & input[["group"]] == g
+      fit_surface(x[index], y[index], z[index], g, config)
+    })
+  }
+  BuildRequest(
+    type = "scatter3d",
+    data = tabular_json(
+      data,
+      unique(c(config@x, config@y, config@z, config@group)),
+      surfaces = surfaces
+    ),
+    config = config_members(config),
+    appearance = list()
   )
 }
 
@@ -259,15 +283,20 @@ complete_rows <- function(values) {
   sum(Reduce(`&`, lapply(values, function(v) !is.na(v))))
 }
 
-#' Validate and materialize native 3D point records
+#' Check 3D coordinates and find the complete observations
+#'
+#' The checks the 3D scatter builder repeats, raised in R where the chart is
+#' set up.
 #' @param x,y,z Numeric: Coordinate vectors.
 #' @param group Optional vector: Group identities.
-#' @param config Scatter3DConfig: Display and camera settings.
-#' @return EChartsOption: Native ECharts-GL option with explicit axis ranges.
+#' @param mode Character: `Scatter3DConfig@mode`.
+#' @return List: `keep`, the complete rows; `group`, the group of each row as
+#'   text (`"Observations"` without a group); and `groups`, the groups in level
+#'   order, or in order of first appearance.
 #' @keywords internal
 #' @noRd
-scatter3d_option <- new_generic("scatter3d_option", "x")
-method(scatter3d_option, class_any) <- function(x, y, z, group, config) {
+scatter3d_input <- new_generic("scatter3d_input", "x")
+method(scatter3d_input, class_any) <- function(x, y, z, group, mode) {
   values <- list(x, y, z)
   if (
     length(unique(lengths(values))) != 1L ||
@@ -299,149 +328,46 @@ method(scatter3d_option, class_any) <- function(x, y, z, group, config) {
     )
   }
   groups <- group_levels(group[keep])
-  opacity <- config@opacity %||% scatter3d_opacity(config@mode, sum(keep))
-  series <- list()
-  for (g in groups) {
-    indices <- which(!is.na(group) & as.character(group) == g)
-    complete <- keep[indices]
-    runs <- split(indices[complete], cumsum(!complete)[complete])
-    runs <- lapply(runs, function(index) {
-      if (config@order == "x") {
-        index <- index[order(x[index])]
-      }
-      Map(function(a, b, c) list(a, b, c), x[index], y[index], z[index])
-    })
-    if (config@mode %in% c("points", "both")) {
-      series[[length(series) + 1L]] <- list(
-        type = "scatter3D",
-        name = g,
-        symbolSize = config@point_size,
-        itemStyle = list(opacity = opacity),
-        data = unlist(runs, recursive = FALSE, use.names = FALSE)
-      )
-    }
-    if (config@mode %in% c("lines", "both")) {
-      for (run in runs) {
-        if (length(run) < 2L) {
-          next
-        }
-        series[[length(series) + 1L]] <- list(
-          type = "line3D",
-          name = g,
-          lineStyle = list(width = config@line_width, opacity = opacity),
-          data = run
-        )
-      }
-    }
-  }
-  if (!length(series)) {
-    abort(
-      "Supply at least two consecutive complete observations in a group to draw a 3D path.",
-      class = c("rtemis_value_error", "rtemis_input_error")
-    )
-  }
-  values <- lapply(values, `[`, keep)
-  group <- as.character(group[keep])
-  # One surface per group, named after it: legend selection and the palette
-  # color follow the group. The z axis extends to include the predictions.
-  surfaces <- list()
-  if (!is.null(config@fit)) {
-    surfaces <- lapply(groups, function(g) {
-      index <- group == g
-      fit_surface(
-        values[[1L]][index],
-        values[[2L]][index],
-        values[[3L]][index],
-        g,
-        config
-      )
-    })
-    series <- c(series, surfaces)
-    # Missing predictions are serialized as NULL grid values.
-    values[[3L]] <- c(
-      values[[3L]],
-      unlist(lapply(surfaces, function(surface) {
-        lapply(surface[["data"]], `[[`, 3L)
-      }))
-    )
-  }
-  labels <- list(config@xlab, config@ylab, config@zlab)
-  axes <- lapply(seq_len(3L), function(i) {
-    limits <- range(values[[i]])
-    if (limits[[1]] == limits[[2]]) {
-      radius <- max(1, abs(limits[[1]]) * .05)
-      limits <- limits + c(-radius, radius)
-    }
-    if (
-      !all(is.finite(limits)) || !is.finite(diff(limits)) || diff(limits) <= 0
-    ) {
+  group <- as.character(group)
+  for (v in values) {
+    limits <- range(v[keep])
+    if (!is.finite(diff(limits))) {
       abort(
         "Rescale 3D coordinates to a finite nonzero range.",
         class = c("rtemis_value_error", "rtemis_input_error")
       )
     }
-    list(
-      type = "value",
-      min = limits[[1]],
-      max = limits[[2]],
-      interval = diff(limits) / 4,
-      name = labels[[i]] %||% c("x", "y", "z")[[i]],
-      nameGap = 25,
-      axisLine = list(lineStyle = list(color = "#888888")),
-      axisLabel = list(color = "#888888"),
-      nameTextStyle = list(color = "#888888")
+  }
+  if (mode == "lines") {
+    # A path needs two consecutive complete rows of one group.
+    paths <- vapply(
+      groups,
+      function(g) {
+        runs <- rle(keep[!is.na(group) & group == g])
+        any(runs[["values"]] & runs[["lengths"]] >= 2L)
+      },
+      logical(1)
     )
-  })
-  EChartsOption(
-    x_axis_3d = axes[[1]],
-    y_axis_3d = axes[[2]],
-    z_axis_3d = axes[[3]],
-    grid_3d = list(
-      boxWidth = 100,
-      boxDepth = 100,
-      boxHeight = 100,
-      top = 60,
-      bottom = 20,
-      left = 12,
-      right = 12,
-      viewControl = list(
-        projection = config@projection,
-        distance = config@distance,
-        minDistance = 100,
-        maxDistance = 1000,
-        alpha = config@alpha,
-        beta = config@beta,
-        orthographicSize = config@view_size - 1,
-        minOrthographicSize = 20,
-        maxOrthographicSize = 1000,
-        animation = FALSE,
-        autoRotate = FALSE,
-        panMouseButton = "right"
-      ),
-      rtemisViewSize = config@view_size,
-      rtemisDistance = config@distance
-    ),
-    series = series,
-    color = config@palette,
-    legend = if (length(groups) > 1L) {
-      Legend(data = as.list(groups))
-    } else {
-      Legend(show = FALSE)
-    },
-    tooltip = Tooltip(trigger = "item"),
-    title = if (!is.null(config@title)) Title(text = config@title) else NULL
-  )
+    if (!any(paths)) {
+      abort(
+        "Supply at least two consecutive complete observations in a group to draw a 3D path.",
+        class = c("rtemis_value_error", "rtemis_input_error")
+      )
+    }
+  }
+  list(keep = keep, group = group, groups = groups)
 }
 
-#' Fit and materialize one group's surface
+#' Fit one group's surface
 #'
 #' Predicts z on a regular `n_fit` by `n_fit` grid spanning the group's x and y
 #' ranges, using the same fitting step as 2D scatter fits.
 #' @param x,y,z Numeric: Complete coordinates of one group.
-#' @param name Character: Group name, used as the surface name.
+#' @param name Character: Group name, used as the surface name, which gives
+#'   the surface the group's color and legend entry.
 #' @param config Scatter3DConfig: Settings naming the fit and grid.
-#' @return List: Native ECharts-GL surface series without a color, which the
-#'   renderer assigns from the palette by name.
+#' @return List: `name`, the grid coordinates `x` and `y`, and the prediction
+#'   matrix `z`, one row per `x`.
 #' @keywords internal
 #' @noRd
 fit_surface <- function(x, y, z, name, config) {
@@ -463,20 +389,19 @@ fit_surface <- function(x, y, z, name, config) {
     se = FALSE,
     params = config@fit_params
   )
-  surface <- to_list(SurfaceLayer(
+  layer <- SurfaceLayer(
     x = grid_x,
     y = grid_y,
     z = matrix(pred[["fitted"]], nrow = length(grid_x)),
-    name = name,
-    opacity = config@fit_alpha
-  ))
-  surface[["itemStyle"]][["color"]] <- NULL
-  surface
+    name = name
+  )
+  list(name = name, x = layer@x, y = layer@y, z = layer@z)
 }
 
 #' Draw Interactive Three-Dimensional Points and Paths
 #'
-#' Uses ECharts-GL in the browser and vector circles, paths, and text for SVG.
+#' Drawn by the `@rtemis/draw` 3D scatter builder: ECharts-GL in the browser,
+#' and vector circles, paths, and text for SVG.
 #' The saved view uses the configured camera, not later browser rotations.
 #' Points omit missing coordinate/group rows together. Missing coordinates break
 #' paths within each group; groups keep their input order. A data frame or matrix
@@ -504,6 +429,7 @@ draw_scatter3d <- function(
   filename = NULL
 ) {
   config <- setup_Scatter3DConfig(...)
+  labels <- c("x", "y", "z")
   if (is.data.frame(x) || is.matrix(x)) {
     if (!is.null(y) || !is.null(z) || ncol(x) < 3L) {
       abort(
@@ -511,24 +437,32 @@ draw_scatter3d <- function(
         class = c("rtemis_value_error", "rtemis_input_error")
       )
     }
-    labels <- colnames(x)
-    if (!is.null(labels)) {
-      config <- config_derive(
-        config,
-        list(xlab = labels[[1]], ylab = labels[[2]], zlab = labels[[3]])
-      )
-    }
+    labels <- colnames(x)[1:3] %||% labels
     z <- x[, 3L]
     y <- x[, 2L]
     x <- x[, 1L]
   }
+  group <- group_values(group, length(x))
+  scatter3d_input(x, y, z, group, config@mode)
+  config <- config_derive(
+    config,
+    list(xlab = labels[[1]], ylab = labels[[2]], zlab = labels[[3]])
+  )
+  config@x <- ".x"
+  config@y <- ".y"
+  config@z <- ".z"
+  data <- list(.x = x, .y = y, .z = z)
+  if (!is.null(group)) {
+    config@group <- ".group"
+    data[[".group"]] <- group
+  }
   draw(
-    scatter3d_option(x, y, z, group, config),
+    config,
+    data = data,
     theme = theme,
     width = width,
     height = height,
     element_id = element_id,
-    filename = filename,
-    meta = legend_meta("top", "outside")
+    filename = filename
   )
 }

@@ -14,6 +14,7 @@ import { LINE_CHART_CONFIG_MEMBERS } from "../src/charts/line/config.ts";
 import { PIE_CHART_CONFIG_MEMBERS } from "../src/charts/pie/config.ts";
 import { SANKEY_CHART_CONFIG_MEMBERS } from "../src/charts/sankey/config.ts";
 import { SCATTER_CHART_CONFIG_MEMBERS } from "../src/charts/scatter/config.ts";
+import { SCATTER3D_CHART_CONFIG_MEMBERS } from "../src/charts/scatter3d/config.ts";
 import { SIGNIFICANCE_CHART_CONFIG_MEMBERS } from "../src/charts/significance/config.ts";
 import { SURVIVAL_CHART_CONFIG_MEMBERS } from "../src/charts/survival/config.ts";
 import { TIMESERIES_CHART_CONFIG_MEMBERS } from "../src/charts/timeseries/config.ts";
@@ -41,6 +42,7 @@ describe.skipIf(!schemaDir)("config types against the generated schemas", () => 
     ["roc", ROC_CHART_CONFIG_MEMBERS],
     ["sankey", SANKEY_CHART_CONFIG_MEMBERS],
     ["scatter", SCATTER_CHART_CONFIG_MEMBERS],
+    ["scatter3d", SCATTER3D_CHART_CONFIG_MEMBERS],
     ["significance", SIGNIFICANCE_CHART_CONFIG_MEMBERS],
     ["survival", SURVIVAL_CHART_CONFIG_MEMBERS],
     ["timeseries", TIMESERIES_CHART_CONFIG_MEMBERS],

@@ -42,7 +42,9 @@ htmlwidget: Drawing with native interactive and vector surface layers.
 Fits are computed explicitly before drawing. Supply predictions from any
 model on a rectangular grid; fitted R objects and callbacks are not stored
 in the drawing. The prediction grid may extend the original axis ranges.
-Add surfaces before composing drawings with \code{\link[=draw_panels]{draw_panels()}}.
+Add surfaces before composing drawings with \code{\link[=draw_panels]{draw_panels()}}. On a drawing of
+\code{\link[=draw_scatter3d]{draw_scatter3d()}}, the surface is a layer of its build request, which the
+widget and SVG export apply after every build.
 }
 \examples{
 x <- y <- seq(-1, 1, length.out = 5)

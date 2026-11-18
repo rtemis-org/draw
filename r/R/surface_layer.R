@@ -95,7 +95,9 @@ method(to_list, SurfaceLayer) <- function(x) {
 #' Fits are computed explicitly before drawing. Supply predictions from any
 #' model on a rectangular grid; fitted R objects and callbacks are not stored
 #' in the drawing. The prediction grid may extend the original axis ranges.
-#' Add surfaces before composing drawings with [draw_panels()].
+#' Add surfaces before composing drawings with [draw_panels()]. On a drawing of
+#' [draw_scatter3d()], the surface is a layer of its build request, which the
+#' widget and SVG export apply after every build.
 #' @param plot htmlwidget: Existing Cartesian ECharts-GL drawing.
 #' @inheritParams SurfaceLayer
 #' @param layer Optional SurfaceLayer: Complete geometry, supplied alone.
@@ -138,6 +140,26 @@ draw_add_surface <- function(
       "Supply a SurfaceLayer alone, or supply grid coordinates and surface settings.",
       class = c("rtemis_value_error", "rtemis_input_error")
     )
+  }
+  build <- if (inherits(plot, "rtemis-draw")) plot[["x"]][["build"]]
+  if (identical(build[["type"]], "scatter3d")) {
+    # The builder's appendLayers() widens the axes after every build.
+    if (!is.logical(expand) || length(expand) != 1L || is.na(expand)) {
+      abort(
+        "Set expand to TRUE or FALSE.",
+        class = c("rtemis_value_error", "rtemis_input_error")
+      )
+    }
+    build[["layers"]] <- c(
+      build[["layers"]],
+      list(list(
+        series = list(to_list(layer)),
+        legend = layer@name,
+        expand = expand
+      ))
+    )
+    plot[["x"]][["build"]] <- build
+    return(plot)
   }
   if (
     !inherits(plot, "rtemis-draw") ||

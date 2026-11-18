@@ -38,12 +38,14 @@ var RtemisDraw = (() => {
     HISTOGRAM_CHART_CONFIG_MEMBERS: () => HISTOGRAM_CHART_CONFIG_MEMBERS,
     LINE_CHART_CONFIG_MEMBERS: () => LINE_CHART_CONFIG_MEMBERS,
     MAX_SYMBOL_SIZE: () => MAX_SYMBOL_SIZE,
+    OBSERVATIONS: () => OBSERVATIONS,
     PIE_CHART_CONFIG_MEMBERS: () => PIE_CHART_CONFIG_MEMBERS,
     PR_CHART_CONFIG_MEMBERS: () => PR_CHART_CONFIG_MEMBERS,
     RENDERER_NAMES: () => RENDERER_NAMES,
     ROC_CHART_CONFIG_MEMBERS: () => ROC_CHART_CONFIG_MEMBERS,
     RTEMIS_PALETTE: () => RTEMIS_PALETTE,
     SANKEY_CHART_CONFIG_MEMBERS: () => SANKEY_CHART_CONFIG_MEMBERS,
+    SCATTER3D_CHART_CONFIG_MEMBERS: () => SCATTER3D_CHART_CONFIG_MEMBERS,
     SCATTER_CHART_CONFIG_MEMBERS: () => SCATTER_CHART_CONFIG_MEMBERS,
     SERIES_THEME: () => SERIES_THEME,
     SIGNIFICANCE_CHART_CONFIG_MEMBERS: () => SIGNIFICANCE_CHART_CONFIG_MEMBERS,
@@ -74,6 +76,7 @@ var RtemisDraw = (() => {
     buildPrOption: () => buildPrOption,
     buildRocOption: () => buildRocOption,
     buildSankeyOption: () => buildSankeyOption,
+    buildScatter3DOption: () => buildScatter3DOption,
     buildScatterOption: () => buildScatterOption,
     buildSignificanceOption: () => buildSignificanceOption,
     buildSurvivalOption: () => buildSurvivalOption,
@@ -98,6 +101,7 @@ var RtemisDraw = (() => {
     fitKeys: () => fitKeys,
     fitLabel: () => fitLabel,
     fitLegend: () => fitLegend,
+    fitSurfaceAxes: () => fitSurfaceAxes,
     fontStack: () => fontStack,
     formatNumber: () => formatNumber,
     ganttHeight: () => ganttHeight,
@@ -125,6 +129,7 @@ var RtemisDraw = (() => {
     significanceAxisNames: () => significanceAxisNames,
     significanceGroupNames: () => significanceGroupNames,
     sizeKeyValues: () => sizeKeyValues,
+    surfaceSeries: () => surfaceSeries,
     survivalMedian: () => survivalMedian,
     themeFontSizes: () => themeFontSizes,
     themeOption: () => themeOption,
@@ -175,14 +180,14 @@ var RtemisDraw = (() => {
     const sequenceLength = data.sequence.length;
     const nPerRow = normalizeNPerRow(options.nPerRow, sequenceLength);
     const residueSpacing = normalizeResidueSpacing(options.residueSpacing);
-    const coordinates = createSequenceCoordinates(sequenceLength, nPerRow);
+    const coordinates2 = createSequenceCoordinates(sequenceLength, nPerRow);
     const residues = Array.from(data.sequence).map(
       (residue, index) => Object.freeze({
         position: index + 1,
         residue,
         residueName: AMINO_ACID_NAMES[residue] ?? residue,
-        x: scaleResidueXCoordinate(coordinates.xs[index] ?? 0, residueSpacing),
-        y: coordinates.ys[index] ?? 0
+        x: scaleResidueXCoordinate(coordinates2.xs[index] ?? 0, residueSpacing),
+        y: coordinates2.ys[index] ?? 0
       })
     );
     return Object.freeze({
@@ -5667,6 +5672,239 @@ ${rate(r.balancedAccuracy)}`, summary) }
     };
   }
 
+  // src/charts/scatter3d/config.ts
+  var SCATTER3D_CHART_CONFIG_MEMBERS = Object.freeze([
+    "type",
+    "title",
+    "x",
+    "y",
+    "z",
+    "group",
+    "alpha",
+    "beta",
+    "projection",
+    "distance",
+    "view_size",
+    "point_size",
+    "opacity",
+    "mode",
+    "order",
+    "line_width",
+    "xlab",
+    "ylab",
+    "zlab",
+    "palette",
+    "fit",
+    "fit_params",
+    "n_fit",
+    "fit_alpha"
+  ]);
+  var OBSERVATIONS = "Observations";
+  var AXIS_KEYS = ["xAxis3D", "yAxis3D", "zAxis3D"];
+  var isMissing2 = (v) => v === null || v === void 0 || typeof v === "number" && Number.isNaN(v);
+  function coordinates(data, name, member) {
+    return column(data.columns, name, member).map((v, i) => {
+      if (isMissing2(v)) return null;
+      if (typeof v !== "number" || !Number.isFinite(v)) {
+        throw new Error(
+          `Column '${name}' (config member '${member}') must hold finite numbers or missing values; row ${i + 1} holds '${String(v)}'.`
+        );
+      }
+      return v;
+    });
+  }
+  function surfaceSeries(surface, opacity = 0.35) {
+    const ix = surface.x.map((_, i) => i).sort((a, b) => surface.x[a] - surface.x[b]);
+    const iy = surface.y.map((_, j) => j).sort((a, b) => surface.y[a] - surface.y[b]);
+    const data = iy.flatMap(
+      (j) => ix.map((i) => {
+        const z = surface.z[i]?.[j];
+        return [surface.x[i], surface.y[j], typeof z === "number" && Number.isFinite(z) ? z : null];
+      })
+    );
+    return {
+      type: "surface",
+      name: surface.name,
+      shading: "color",
+      wireframe: { show: false },
+      dataShape: [iy.length, ix.length],
+      itemStyle: {
+        ...surface.color ? { color: surface.color } : {},
+        opacity: surface.opacity ?? opacity
+      },
+      data
+    };
+  }
+  function axisRange(values) {
+    let lo = Number.POSITIVE_INFINITY;
+    let hi = Number.NEGATIVE_INFINITY;
+    for (const v of values) {
+      if (v < lo) lo = v;
+      if (v > hi) hi = v;
+    }
+    if (lo === hi) {
+      const r = Math.max(1, Math.abs(lo) * 0.05);
+      lo -= r;
+      hi += r;
+    }
+    if (!Number.isFinite(lo) || !Number.isFinite(hi) || !Number.isFinite(hi - lo) || hi - lo <= 0) {
+      throw new Error("Rescale 3D coordinates to a finite nonzero range.");
+    }
+    return [lo, hi];
+  }
+  function buildScatter3DOption(data, config, appearance = {}) {
+    if (!config.x || !config.y || !config.z) {
+      throw new Error("A 3D scatter chart needs the config members 'x', 'y', and 'z' set.");
+    }
+    const xs = coordinates(data, config.x, "x");
+    const ys = coordinates(data, config.y, "y");
+    const zs = coordinates(data, config.z, "z");
+    const rawGroup = config.group ? column(data.columns, config.group, "group") : null;
+    const group = xs.map((_, i) => {
+      if (!rawGroup) return OBSERVATIONS;
+      const g = rawGroup[i];
+      return isMissing2(g) ? null : String(g);
+    });
+    const keep = xs.map(
+      (x, i) => x !== null && ys[i] !== null && zs[i] !== null && group[i] !== null
+    );
+    const complete = keep.filter(Boolean).length;
+    if (complete === 0)
+      throw new Error("A 3D scatter chart needs at least one complete observation.");
+    const groups = distinct(
+      group.filter((g, i) => keep[i] === true && g !== null),
+      config.group ? data.levels?.[config.group] : void 0
+    );
+    const mode = config.mode ?? "points";
+    const opacity = config.opacity ?? (mode === "lines" ? 1 : autoAlpha(complete));
+    const series = [];
+    for (const g of groups) {
+      const runs = [];
+      let run = [];
+      group.forEach((value, i) => {
+        if (value !== g) return;
+        if (keep[i]) run.push(i);
+        else if (run.length > 0) {
+          runs.push(run);
+          run = [];
+        }
+      });
+      if (run.length > 0) runs.push(run);
+      const points = runs.map((r) => {
+        const rows = config.order === "x" ? [...r].sort((a, b) => xs[a] - xs[b]) : r;
+        return rows.map((i) => [xs[i], ys[i], zs[i]]);
+      });
+      if (mode === "points" || mode === "both") {
+        series.push({
+          type: "scatter3D",
+          name: g,
+          symbolSize: config.point_size ?? 8,
+          itemStyle: { opacity },
+          data: points.flat()
+        });
+      }
+      if (mode === "lines" || mode === "both") {
+        for (const path of points) {
+          if (path.length < 2) continue;
+          series.push({
+            type: "line3D",
+            name: g,
+            lineStyle: { width: config.line_width ?? 2, opacity },
+            data: path
+          });
+        }
+      }
+    }
+    if (series.length === 0) {
+      throw new Error("A 3D path needs at least two consecutive complete observations in a group.");
+    }
+    const surfaces = data.surfaces ?? [];
+    for (const surface of surfaces) series.push(surfaceSeries(surface, config.fit_alpha ?? 0.35));
+    const finite2 = (v) => typeof v === "number" && Number.isFinite(v);
+    const values = [xs, ys, zs].map((col, d) => [
+      ...col.filter((v, i) => keep[i] === true && v !== null),
+      ...surfaces.flatMap(
+        (s) => d === 0 ? s.x.filter(finite2) : d === 1 ? s.y.filter(finite2) : s.z.flat().filter(finite2)
+      )
+    ]);
+    const labels = [config.xlab ?? config.x, config.ylab ?? config.y, config.zlab ?? config.z];
+    const axes = values.map((v, d) => {
+      const [min, max] = axisRange(v);
+      return {
+        type: "value",
+        min,
+        max,
+        interval: (max - min) / 4,
+        name: labels[d],
+        nameGap: 25,
+        axisLine: { lineStyle: { color: "#888888" } },
+        axisLabel: { color: "#888888" },
+        nameTextStyle: { color: "#888888" }
+      };
+    });
+    const memberPalette = asArray(config.palette);
+    const palette = memberPalette.length > 0 ? memberPalette : appearance.palette;
+    const viewSize = config.view_size ?? 190;
+    const distance = config.distance ?? 250;
+    return {
+      ...config.title ? { title: { text: config.title } } : {},
+      ...palette && palette.length > 0 ? { color: [...palette] } : {},
+      tooltip: { trigger: "item" },
+      legend: groups.length > 1 ? { data: groups } : { show: false },
+      ...Object.fromEntries(AXIS_KEYS.map((key, d) => [key, axes[d]])),
+      grid3D: {
+        boxWidth: 100,
+        boxDepth: 100,
+        boxHeight: 100,
+        top: 60,
+        bottom: 20,
+        left: 12,
+        right: 12,
+        viewControl: {
+          projection: config.projection ?? "perspective",
+          distance,
+          minDistance: 100,
+          maxDistance: 1e3,
+          alpha: config.alpha ?? 20,
+          beta: config.beta ?? 40,
+          orthographicSize: viewSize - 1,
+          minOrthographicSize: 20,
+          maxOrthographicSize: 1e3,
+          animation: false,
+          autoRotate: false,
+          panMouseButton: "right"
+        },
+        // rtemis.draw's widget scales the camera from these at each width.
+        rtemisViewSize: viewSize,
+        rtemisDistance: distance
+      },
+      series
+    };
+  }
+  function fitSurfaceAxes(option, surfaces, expand = true) {
+    if (surfaces.length === 0) return option;
+    const out = { ...option };
+    AXIS_KEYS.forEach((key, d) => {
+      const axis = option[key];
+      const min = axis?.min;
+      const max = axis?.max;
+      if (!axis || typeof min !== "number" || typeof max !== "number") {
+        throw new Error("A surface layer needs a 3D chart with numeric axis limits.");
+      }
+      const coords = surfaces.flatMap(
+        (s) => (s.data ?? []).map((p) => p[d]).filter((v) => typeof v === "number" && Number.isFinite(v))
+      );
+      const [lo, hi] = axisRange([min, max, ...coords]);
+      if (!expand && (lo < min || hi > max)) {
+        throw new Error(
+          `A surface layer drawn without expanding the axes must lie within them; its ${"xyz"[d]} coordinates span beyond [${min}, ${max}].`
+        );
+      }
+      out[key] = { ...axis, min: lo, max: hi, interval: (hi - lo) / 4 };
+    });
+    return out;
+  }
+
   // src/charts/significance/config.ts
   var SIGNIFICANCE_CHART_CONFIG_MEMBERS = Object.freeze([
     "type",
@@ -6728,10 +6966,16 @@ ${rate(r.balancedAccuracy)}`, summary) }
   function appendLayers(option, layers) {
     if (!layers || layers.length === 0) return option;
     const series = option.series === void 0 ? [] : [option.series].flat();
-    const out = {
+    let out = {
       ...option,
       series: [...series, ...layers.flatMap((layer) => layer.series)]
     };
+    if (option.grid3D) {
+      for (const layer of layers) {
+        const surfaces = layer.series.filter((s) => s.type === "surface");
+        out = fitSurfaceAxes(out, surfaces, layer.expand !== false);
+      }
+    }
     const names = layers.flatMap((layer) => layer.legend ? [layer.legend] : []);
     if (names.length > 0) {
       const legend = option.legend ?? {};
@@ -6841,6 +7085,7 @@ ${rate(r.balancedAccuracy)}`, summary) }
     roc: buildRocOption,
     sankey: buildSankeyOption,
     scatter: buildScatterOption,
+    scatter3d: buildScatter3DOption,
     significance: buildSignificanceOption,
     survival: buildSurvivalOption,
     timeseries: buildTimeSeriesOption

@@ -37,14 +37,22 @@ test_that("surface grids sort both axes with predictions and serialize holes", {
 test_that("surface layers expand ranges explicitly and survive panel composition", {
   plot <- draw_scatter3d(c(0, 1), c(0, 1), c(0, 1))
   layer <- SurfaceLayer(x = c(-2, 2), y = c(-1, 3), z = matrix(-3:0, 2))
-  expect_error(draw_add_surface(plot, layer = layer, expand = FALSE), "within")
+  # The builder checks a bounded surface when the chart is built.
+  skip_if_no_node()
+  expect_error(
+    raw_option(draw_add_surface(plot, layer = layer, expand = FALSE)),
+    "within"
+  )
   near <- SurfaceLayer(x = c(0, 1 + 1e-9), z = matrix(0, 2, 2))
-  expect_error(draw_add_surface(plot, layer = near, expand = FALSE), "within")
+  expect_error(
+    raw_option(draw_add_surface(plot, layer = near, expand = FALSE)),
+    "within"
+  )
   inside <- SurfaceLayer(z = matrix(c(0, 1, 0, 1), 2))
   bounded <- draw_add_surface(plot, layer = inside, expand = FALSE)
   expect_equal(
-    bounded[["x"]][["option"]][["xAxis3D"]],
-    plot[["x"]][["option"]][["xAxis3D"]]
+    raw_option(bounded)[["xAxis3D"]],
+    raw_option(plot)[["xAxis3D"]]
   )
   expect_error(draw_add_surface(plot, layer = layer, opacity = .5), "alone")
   expect_error(draw_add_surface(draw_scatter(1:3, 1:3), layer = layer), "3D")
@@ -53,7 +61,7 @@ test_that("surface layers expand ranges explicitly and survive panel composition
     "TRUE or FALSE"
   )
   result <- draw_add_surface(plot, layer = layer)
-  option <- result[["x"]][["option"]]
+  option <- raw_option(result)
   expect_equal(
     c(option[["xAxis3D"]][["min"]], option[["xAxis3D"]][["max"]]),
     c(-2, 2)
@@ -63,7 +71,6 @@ test_that("surface layers expand ranges explicitly and survive panel composition
     c(-3, 1)
   )
   expect_true(option[["legend"]][["show"]])
-  expect_equal(option[["legend"]][["data"]], list("Observations", "Surface"))
   expect_length(option[["series"]], 2L)
   combined <- draw_add_surface(
     result,
@@ -73,10 +80,10 @@ test_that("surface layers expand ranges explicitly and survive panel composition
     name = "Second"
   )
   expect_equal(
-    combined[["x"]][["option"]][["legend"]][["data"]],
-    list("Observations", "Surface", "Second")
+    vapply(raw_option(combined)[["series"]], `[[`, "", "name"),
+    c("Observations", "Surface", "Second")
   )
-  expect_equal(plot[["x"]][["option"]][["xAxis3D"]][["min"]], 0)
+  expect_equal(raw_option(plot)[["xAxis3D"]][["min"]], 0)
   panel <- draw_panels(list(result, draw_bar(c(A = 1))))
   expect_true(
     "echarts-gl" %in% vapply(panel[["dependencies"]], `[[`, "", "name")
@@ -92,7 +99,7 @@ test_that("3D paths preserve group, sorting, gaps and linked point colors", {
     mode = "both",
     order = "x"
   )
-  series <- plot[["x"]][["option"]][["series"]]
+  series <- raw_option(plot)[["series"]]
   expect_equal(
     vapply(series, `[[`, "", "type"),
     c("scatter3D", "line3D", "line3D")
@@ -108,7 +115,7 @@ test_that("3D paths preserve group, sorting, gaps and linked point colors", {
     mode = "lines"
   )
   expect_equal(
-    vapply(grouped[["x"]][["option"]][["series"]], `[[`, "", "name"),
+    vapply(raw_option(grouped)[["series"]], `[[`, "", "name"),
     c("B", "A")
   )
   expect_error(
@@ -131,7 +138,10 @@ test_that("3D paths preserve group, sorting, gaps and linked point colors", {
   restored <- read_chart_config(file)
   expect_equal(restored@mode, "both")
   data <- data.frame(x = x, y = 1:5, z = 1:5)
-  expect_equal(to_list(compile(cfg, data)), to_list(compile(restored, data)))
+  expect_equal(
+    raw_option(compile(cfg, data)),
+    raw_option(compile(restored, data))
+  )
 })
 
 test_that("3D vector visibility splits crossing geometry and preserves topology", {
@@ -147,7 +157,7 @@ test_that("3D vector visibility splits crossing geometry and preserves topology"
   on.exit(unlink(input))
   jsonlite::write_json(
     list(
-      option = strip_js(plot[["x"]][["option"]]),
+      option = strip_js(raw_option(plot)),
       module = system.file(
         "htmlwidgets/lib/draw/scatter3d.js",
         package = "rtemis.draw"
@@ -168,7 +178,8 @@ test_that("3D vector visibility splits crossing geometry and preserves topology"
 })
 test_that("surface overlays reject malformed axes and overflowing spans", {
   layer <- SurfaceLayer(z = matrix(0, 2L, 2L))
-  plot <- draw_scatter3d(0:1, 0:1, 0:1)
+  # An option built in R, which takes the surface in its own axes.
+  plot <- draw(raw_option(draw_scatter3d(0:1, 0:1, 0:1)))
   plot[["x"]][["option"]][["xAxis3D"]][["type"]] <- "category"
   expect_error(
     draw_add_surface(plot, layer = layer),

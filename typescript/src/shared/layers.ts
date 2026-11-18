@@ -5,18 +5,26 @@
  * rebuild on a change of color scheme. spec: draw/shared-builders#layers
  */
 
+import { fitSurfaceAxes } from "../charts/scatter3d/config.ts";
+
 /** Series appended to a built option, and the legend entry they add. */
 export interface Layer {
   /** ECharts series, appended after the builder's. */
   readonly series: readonly Record<string, unknown>[];
   /** Legend entry the series add; unset adds none. */
   readonly legend?: string | null;
+  /**
+   * For `surface` series on a 3D chart: widen the 3D axes to the surface
+   * (`true`, the default), or require the surface to lie within them.
+   */
+  readonly expand?: boolean;
 }
 
 /**
  * The option with each layer's series appended in order. A layer's legend
  * entry joins the legend's listed names, or shows the legend when the option
- * has none.
+ * has none. On a 3D chart, a layer's `surface` series widen the 3D axes as
+ * the layer's `expand` says.
  */
 export function appendLayers(
   option: Record<string, unknown>,
@@ -24,10 +32,16 @@ export function appendLayers(
 ): Record<string, unknown> {
   if (!layers || layers.length === 0) return option;
   const series = option.series === undefined ? [] : [option.series].flat();
-  const out: Record<string, unknown> = {
+  let out: Record<string, unknown> = {
     ...option,
     series: [...series, ...layers.flatMap((layer) => layer.series)],
   };
+  if (option.grid3D) {
+    for (const layer of layers) {
+      const surfaces = layer.series.filter((s) => s.type === "surface");
+      out = fitSurfaceAxes(out, surfaces, layer.expand !== false);
+    }
+  }
   const names = layers.flatMap((layer) => (layer.legend ? [layer.legend] : []));
   if (names.length > 0) {
     const legend = (option.legend ?? {}) as Record<string, unknown>;

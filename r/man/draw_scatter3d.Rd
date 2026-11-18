@@ -44,7 +44,8 @@ container. \code{NULL} lets htmlwidgets generate one.}
 htmlwidget: Interactive, exportable 3D drawing.
 }
 \description{
-Uses ECharts-GL in the browser and vector circles, paths, and text for SVG.
+Drawn by the \verb{@rtemis/draw} 3D scatter builder: ECharts-GL in the browser,
+and vector circles, paths, and text for SVG.
 The saved view uses the configured camera, not later browser rotations.
 Points omit missing coordinate/group rows together. Missing coordinates break
 paths within each group; groups keep their input order. A data frame or matrix
