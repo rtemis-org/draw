@@ -12,7 +12,8 @@ import { formatNumber } from "../shared/format.ts";
 export const SIZE_KEY_ID = "rtemis-size-key";
 
 /** Gap in pixels between the keys, and between the keys and the plot. */
-const GAP = 16;
+export const KEY_GAP = 16;
+const GAP = KEY_GAP;
 /** Gap in pixels between a key's symbol and its label. */
 const LABEL_GAP = 6;
 /**
@@ -435,6 +436,9 @@ export function fitKeys(echarts: ECharts, chart: Chart, context: KeyContext): Ke
   // the bar and the circles centered on one axis, and the scale's labels and
   // the size key's labels starting at one x.
   let columns: { center: number; label: number; scaleLeft: number } | null = null;
+  // The bar's left edge in the block, which an outside block at the right
+  // places KEY_GAP right of the plot.
+  let barLead = 0;
   if (vertical && scaleBox) {
     const box: Rect = scaleBox;
     const b: Rect = bar ?? box;
@@ -450,6 +454,7 @@ export function fitKeys(echarts: ECharts, chart: Chart, context: KeyContext): Ke
       labelsLeft === null ? center + b.width / 2 + LABEL_GAP : scaleLeft + (labelsLeft - box.x);
     const label = Math.max(scaleLabel, center + largest / 2 + LABEL_GAP);
     columns = { center, label, scaleLeft };
+    barLead = center - b.width / 2;
     for (const part of parts) {
       if (part.kind === "scale") part.w = Math.max(scaleLeft + box.width, scaleTitleWidth);
       else if (sized && sizeSpec) {
@@ -533,7 +538,7 @@ export function fitKeys(echarts: ECharts, chart: Chart, context: KeyContext): Ke
         ? area.x + area.width - blockW - GAP
         : area.x + GAP
       : side === "right"
-        ? width - GAP - blockW
+        ? area.x + area.width + GAP - barLead
         : GAP;
     y = placement.inside ? area.y + GAP : area.y + Math.max(0, (area.height - blockH) / 2);
   } else {
@@ -672,4 +677,102 @@ export function fitLegend(
         ? { left: area.x, right: null }
         : { left: Math.max(0, area.x + (area.width - legendWidth) / 2), right: null };
   chart.setOption({ legend: position });
+}
+
+/** The plotting rectangle of a grid's coordinate system. */
+interface GridModel extends ComponentModel {
+  coordinateSystem?: { getRect(): { x: number; y: number; width: number; height: number } };
+}
+
+/**
+ * Places a chart's vertical color scale (its first `visualMap`) {@link KEY_GAP}
+ * pixels right of the rightmost plotting area, such as a heatmap's row
+ * dendrogram, so every chart leaves the same space between its plot and its
+ * scale. The scale's title, the first entry of its `text` in the option the
+ * host set, is drawn above the bar and aligned with it, in bold, as the
+ * scatter chart's is; the scale and its title are centered on the plotting
+ * areas' vertical extent. The grid's right margin holds the scale; a scale
+ * that is hidden or horizontal stays where it is. Returns whether it moved
+ * the scale. spec: draw/shared-builders#keys
+ */
+export function placeColorScale(
+  chart: Chart,
+  context: { readonly option?: Record<string, unknown>; readonly titleGap?: number } = {},
+): boolean {
+  const model = chart.getModel();
+  const scale = model.getComponent("visualMap");
+  if (!scale || scale.get("show") === false || scale.get("orient") !== "vertical") return false;
+  let right = Number.NEGATIVE_INFINITY;
+  let top = Number.POSITIVE_INFINITY;
+  let bottom = Number.NEGATIVE_INFINITY;
+  for (let i = 0; ; i++) {
+    const grid = model.getComponent("grid", i) as GridModel | undefined;
+    if (!grid) break;
+    const rect = grid.coordinateSystem?.getRect();
+    if (!rect || !(rect.width > 0)) continue;
+    right = Math.max(right, rect.x + rect.width);
+    top = Math.min(top, rect.y);
+    bottom = Math.max(bottom, rect.y + rect.height);
+  }
+  if (!Number.isFinite(right)) return false;
+  const authored = [context.option?.visualMap ?? []].flat()[0] as { text?: unknown } | undefined;
+  const title = String(([authored?.text ?? []].flat()[0] as string | undefined) ?? "");
+  const text = keyText(chart, context.titleGap ?? KEY_TITLE_GAP);
+  const lead = title ? titleHeight(text) : 0;
+  // Measure the scale from the origin: the bar's offset and the scale's
+  // height, then place the bar KEY_GAP right of the plot.
+  chart.setOption({
+    visualMap: {
+      left: 0,
+      top: 0,
+      right: null,
+      bottom: null,
+      ...(title ? { text: ["", ""] } : {}),
+    },
+  });
+  const placed = model.getComponent("visualMap") ?? scale;
+  const view = chart.getViewOfComponentModel(placed);
+  if (!view) return false;
+  const box = view.group.getBoundingRect().clone();
+  box.applyTransform(view.group.getComputedTransform());
+  let barX: number | null = null;
+  view.group.traverse((el) => {
+    if (el.isGroup) return;
+    const fill = el.style?.fill as { colorStops?: unknown } | undefined;
+    if (fill && typeof fill === "object" && fill.colorStops) {
+      const r = el.getBoundingRect().clone();
+      r.applyTransform(el.getComputedTransform());
+      barX = barX === null ? r.x : Math.min(barX, r.x);
+    }
+  });
+  const offset = barX ?? box.x;
+  const left = right + KEY_GAP - offset;
+  const blockTop = (top + bottom) / 2 - (box.height + lead) / 2;
+  chart.setOption({
+    visualMap: { left, top: blockTop + lead - box.y },
+    ...(title
+      ? {
+          graphic: {
+            elements: [
+              {
+                id: COLOR_KEY_TITLE_ID,
+                type: "text",
+                left: right + KEY_GAP,
+                top: blockTop,
+                silent: true,
+                z: 100,
+                style: {
+                  text: title,
+                  fontSize: text.titleSize,
+                  fontFamily: text.fontFamily,
+                  fontWeight: "bold",
+                  fill: text.color,
+                },
+              },
+            ],
+          },
+        }
+      : {}),
+  });
+  return true;
 }

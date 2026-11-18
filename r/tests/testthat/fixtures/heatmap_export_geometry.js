@@ -54,7 +54,18 @@ for (const payload of input.charts) {
       const group = chart.getViewOfComponentModel(visualMap).group;
       const box = group.getBoundingRect().clone(); box.applyTransform(group.getComputedTransform());
       near(box.y + box.height / 2, area.y + area.height / 2);
-      assert.ok(box.x >= area.x + area.width && box.x + box.width <= width);
+      assert.ok(box.x + box.width <= width);
+      // The bar starts 16 px (KEY_GAP) right of the rightmost plotting area.
+      let plotRight = area.x + area.width, barX = Infinity;
+      chart.getModel().eachComponent('grid', g => {
+        const r = g.coordinateSystem.getRect(); plotRight = Math.max(plotRight, r.x + r.width);
+      });
+      group.traverse(el => {
+        if (el.isGroup || !el.style?.fill?.colorStops) return;
+        const r = el.getBoundingRect().clone(); r.applyTransform(el.getComputedTransform());
+        barX = Math.min(barX, r.x);
+      });
+      near(barX, plotRight + 16);
       const [min, max] = visualMap.getExtent();
       const selected = [min + (max-min)/4, max - (max-min)/4];
       chart.dispatchAction({type:'selectDataRange', selected});

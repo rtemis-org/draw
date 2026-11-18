@@ -1,7 +1,9 @@
 import { colorRamp, divergingRamp } from "../../shared/color.ts";
 import { COLORMAPS, type ColormapName } from "../../shared/colormaps.ts";
+import { ddSci } from "../../shared/format.ts";
 import type { MarginMembers } from "../../shared/layout.ts";
 import type { LegendMembers } from "../../shared/legend.ts";
+import { niceAxis } from "../../shared/limits.ts";
 import { darkThemeTokens, lightThemeTokens, SIGN_COLORS } from "../../theme/tokens.ts";
 
 /**
@@ -283,7 +285,9 @@ export function buildSpectrogramOption(
   );
   const timeDigits = timeUnit === "ms" ? 1 : 3;
   const freqDigits = freqUnit === "kHz" ? 3 : 1;
-  const valueDigits = db ? 1 : 3;
+  // dB values take one decimal; other values one more than the decimals of a
+  // nice interval of the color scale (numbers: draw/shared-builders#numbers).
+  const valueDigits = db ? 1 : niceAxis(zlim[0], zlim[1]).decimals + 1;
   const xlab = config.xlab ?? `Time (${timeUnit})`;
   const ylab = config.ylab ?? `Frequency (${freqUnit})`;
   const valueName = config.colorbar_title ?? (db ? "dB" : power ? "Power" : "Amplitude");
@@ -324,7 +328,7 @@ export function buildSpectrogramOption(
       formatter: (p: { value?: unknown[] }) => {
         const [t, f, v] = p.value ?? [];
         if (typeof v !== "number") return "N/A";
-        return `${xlab}: ${timeLabels[t as number]}<br/>${ylab}: ${freqLabels[f as number]}<br/>${valueName}: ${v.toFixed(valueDigits)}`;
+        return `${xlab}: ${timeLabels[t as number]}<br/>${ylab}: ${freqLabels[f as number]}<br/>${valueName}: ${ddSci(v, valueDigits)}`;
       },
     },
     grid,
@@ -338,6 +342,9 @@ export function buildSpectrogramOption(
       calculable: true,
       show: config.show_colorbar ?? true,
       orient: "vertical",
+      // The labels sit right of the bar (`align` names the bar's side), away
+      // from the cells.
+      align: "left",
       right: "right",
       top: "middle",
       inRange: { color: colors },

@@ -361,6 +361,14 @@
     // colorbar and a quarter of the chart (at most 160 px) when vertical, and
     // at the chart width when horizontal.
     const native = bounds(model);
+    // The bar's left edge in the measured scale: the scale's bounds start at
+    // its padding and handles.
+    let barX = native.x;
+    chart.getViewOfComponentModel(model).group.traverse(el => {
+      if (el.isGroup || !el.style?.fill?.colorStops) return;
+      const r = el.getBoundingRect().clone(); r.applyTransform(el.getComputedTransform());
+      barX = Math.min(barX === native.x ? r.x : barX, r.x);
+    });
     let title = measureLegendTitle(echarts, chart, model, payload.legendTitle);
     const inline = !!title && !vertical && title.width + 10 + native.width <= width - 2 * gap;
     if (title && !inline) {
@@ -395,8 +403,16 @@
     const grid = areas[0];
     // Outside anchors sit beyond axis/dendrogram bands, not across their labels.
     const dx = payload.squareCells ? Math.max(0, (width - adjusted.leftPx - adjusted.rightPx - grid.width) / 2) : 0;
+    // An outside scale at the right sits 16 px (@rtemis/draw's KEY_GAP) right
+    // of the rightmost plotting area, such as a row dendrogram, as the
+    // scatter chart's keys do. spec: draw/shared-builders#keys
+    let plotRight = grid.x + grid.width;
+    chart.getModel().eachComponent('grid', g => {
+      const r = g.coordinateSystem?.getRect?.();
+      if (r && r.width > 0) plotRight = Math.max(plotRight, r.x + r.width);
+    });
     const x = vertical ? (inside ? right ? grid.x + grid.width - box.width - gap : grid.x + gap :
-      right ? width - gap - box.width - dx : gap + dx) :
+      right ? plotRight + 16 - (barX - native.x) - (title ? 0 : native.x) : gap + dx) :
       left ? grid.x + (inside ? gap : 0) : right ? grid.x + grid.width - box.width - (inside ? gap : 0) : grid.x + (grid.width - box.width) / 2;
     let y = vertical ? grid.y + (grid.height - box.height) / 2 :
       inside ? lower ? grid.y + grid.height - box.height - gap : grid.y + gap :

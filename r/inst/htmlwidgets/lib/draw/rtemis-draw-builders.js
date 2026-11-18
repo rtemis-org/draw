@@ -38,6 +38,7 @@ var RtemisDraw = (() => {
     GANTT_ROW_PX: () => GANTT_ROW_PX,
     HEATMAP_CHART_CONFIG_MEMBERS: () => HEATMAP_CHART_CONFIG_MEMBERS,
     HISTOGRAM_CHART_CONFIG_MEMBERS: () => HISTOGRAM_CHART_CONFIG_MEMBERS,
+    KEY_GAP: () => KEY_GAP,
     LINE_CHART_CONFIG_MEMBERS: () => LINE_CHART_CONFIG_MEMBERS,
     MAX_SYMBOL_SIZE: () => MAX_SYMBOL_SIZE,
     OBSERVATIONS: () => OBSERVATIONS,
@@ -122,6 +123,7 @@ var RtemisDraw = (() => {
     lightThemeTokens: () => lightThemeTokens,
     lineAspect: () => lineAspect,
     pieSlices: () => pieSlices,
+    placeColorScale: () => placeColorScale,
     placeZoomSlider: () => placeZoomSlider,
     pretty: () => pretty,
     radicalInverse: () => radicalInverse,
@@ -4084,7 +4086,9 @@ ${rate(r.balancedAccuracy)}`, summary) }
         show: config.show_colorbar ?? true,
         orient: vertical ? "vertical" : "horizontal",
         inRange: { color: colormap },
-        ...vertical ? { right: "right", top: "middle" } : { left: "center", bottom: "bottom" },
+        // A vertical scale's labels sit right of its bar (`align` names the bar's
+        // side), away from the cells.
+        ...vertical ? { right: "right", top: "middle", align: "left" } : { left: "center", bottom: "bottom" },
         seriesIndex: heatmapIndex
       },
       series
@@ -5151,7 +5155,8 @@ ${rate(r.balancedAccuracy)}`, summary) }
 
   // src/layout/keys.ts
   var SIZE_KEY_ID = "rtemis-size-key";
-  var GAP = 16;
+  var KEY_GAP = 16;
+  var GAP = KEY_GAP;
   var LABEL_GAP = 6;
   var KEY_TITLE_GAP = 8;
   var DEFAULT_KEY_TEXT = Object.freeze({
@@ -5375,6 +5380,7 @@ ${rate(r.balancedAccuracy)}`, summary) }
     const sized = sizeSpec ? sizeKeyBox(echarts, sizeSpec, orient, text) : null;
     if (sized) parts.push({ kind: "size", w: sized.w, h: sized.h, dx: 0, dy: 0 });
     let columns = null;
+    let barLead = 0;
     if (vertical && scaleBox) {
       const box2 = scaleBox;
       const b = bar ?? box2;
@@ -5386,6 +5392,7 @@ ${rate(r.balancedAccuracy)}`, summary) }
       const scaleLabel = labelsLeft === null ? center + b.width / 2 + LABEL_GAP : scaleLeft + (labelsLeft - box2.x);
       const label = Math.max(scaleLabel, center + largest / 2 + LABEL_GAP);
       columns = { center, label, scaleLeft };
+      barLead = center - b.width / 2;
       for (const part of parts) {
         if (part.kind === "scale") part.w = Math.max(scaleLeft + box2.width, scaleTitleWidth);
         else if (sized && sizeSpec) {
@@ -5440,7 +5447,7 @@ ${rate(r.balancedAccuracy)}`, summary) }
     let x;
     let y;
     if (vertical) {
-      x = placement.inside ? side === "right" ? area.x + area.width - blockW - GAP : area.x + GAP : side === "right" ? width - GAP - blockW : GAP;
+      x = placement.inside ? side === "right" ? area.x + area.width - blockW - GAP : area.x + GAP : side === "right" ? area.x + area.width + GAP - barLead : GAP;
       y = placement.inside ? area.y + GAP : area.y + Math.max(0, (area.height - blockH) / 2);
     } else {
       x = placement.inside ? area.x + area.width - blockW - GAP : area.x + (area.width - blockW) / 2;
@@ -5529,6 +5536,80 @@ ${rate(r.balancedAccuracy)}`, summary) }
     const anchor = authored.right !== void 0 && authored.right !== null && authored.left === void 0 ? "right" : authored.left === "center" || authored.left === void 0 ? "center" : "left";
     const position = anchor === "right" ? { right: Math.max(0, width - (area.x + area.width)), left: null } : anchor === "left" ? { left: area.x, right: null } : { left: Math.max(0, area.x + (area.width - legendWidth) / 2), right: null };
     chart.setOption({ legend: position });
+  }
+  function placeColorScale(chart, context = {}) {
+    const model = chart.getModel();
+    const scale = model.getComponent("visualMap");
+    if (!scale || scale.get("show") === false || scale.get("orient") !== "vertical") return false;
+    let right = Number.NEGATIVE_INFINITY;
+    let top = Number.POSITIVE_INFINITY;
+    let bottom = Number.NEGATIVE_INFINITY;
+    for (let i = 0; ; i++) {
+      const grid = model.getComponent("grid", i);
+      if (!grid) break;
+      const rect = grid.coordinateSystem?.getRect();
+      if (!rect || !(rect.width > 0)) continue;
+      right = Math.max(right, rect.x + rect.width);
+      top = Math.min(top, rect.y);
+      bottom = Math.max(bottom, rect.y + rect.height);
+    }
+    if (!Number.isFinite(right)) return false;
+    const authored = [context.option?.visualMap ?? []].flat()[0];
+    const title = String([authored?.text ?? []].flat()[0] ?? "");
+    const text = keyText(chart, context.titleGap ?? KEY_TITLE_GAP);
+    const lead = title ? titleHeight(text) : 0;
+    chart.setOption({
+      visualMap: {
+        left: 0,
+        top: 0,
+        right: null,
+        bottom: null,
+        ...title ? { text: ["", ""] } : {}
+      }
+    });
+    const placed = model.getComponent("visualMap") ?? scale;
+    const view = chart.getViewOfComponentModel(placed);
+    if (!view) return false;
+    const box = view.group.getBoundingRect().clone();
+    box.applyTransform(view.group.getComputedTransform());
+    let barX = null;
+    view.group.traverse((el) => {
+      if (el.isGroup) return;
+      const fill = el.style?.fill;
+      if (fill && typeof fill === "object" && fill.colorStops) {
+        const r = el.getBoundingRect().clone();
+        r.applyTransform(el.getComputedTransform());
+        barX = barX === null ? r.x : Math.min(barX, r.x);
+      }
+    });
+    const offset = barX ?? box.x;
+    const left = right + KEY_GAP - offset;
+    const blockTop = (top + bottom) / 2 - (box.height + lead) / 2;
+    chart.setOption({
+      visualMap: { left, top: blockTop + lead - box.y },
+      ...title ? {
+        graphic: {
+          elements: [
+            {
+              id: COLOR_KEY_TITLE_ID,
+              type: "text",
+              left: right + KEY_GAP,
+              top: blockTop,
+              silent: true,
+              z: 100,
+              style: {
+                text: title,
+                fontSize: text.titleSize,
+                fontFamily: text.fontFamily,
+                fontWeight: "bold",
+                fill: text.color
+              }
+            }
+          ]
+        }
+      } : {}
+    });
+    return true;
   }
 
   // src/charts/scatter/renderers.ts
@@ -8662,7 +8743,7 @@ ${rate(r.balancedAccuracy)}`, summary) }
     );
     const timeDigits = timeUnit === "ms" ? 1 : 3;
     const freqDigits = freqUnit === "kHz" ? 3 : 1;
-    const valueDigits = db ? 1 : 3;
+    const valueDigits = db ? 1 : niceAxis(zlim[0], zlim[1]).decimals + 1;
     const xlab = config.xlab ?? `Time (${timeUnit})`;
     const ylab = config.ylab ?? `Frequency (${freqUnit})`;
     const valueName = config.colorbar_title ?? (db ? "dB" : power ? "Power" : "Amplitude");
@@ -8700,7 +8781,7 @@ ${rate(r.balancedAccuracy)}`, summary) }
         formatter: (p) => {
           const [t, f, v] = p.value ?? [];
           if (typeof v !== "number") return "N/A";
-          return `${xlab}:\xA0${timeLabels[t]}<br/>${ylab}:\xA0${freqLabels[f]}<br/>${valueName}:\xA0${v.toFixed(valueDigits)}`;
+          return `${xlab}: ${timeLabels[t]}<br/>${ylab}: ${freqLabels[f]}<br/>${valueName}: ${ddSci(v, valueDigits)}`;
         }
       },
       grid,
@@ -8714,6 +8795,9 @@ ${rate(r.balancedAccuracy)}`, summary) }
         calculable: true,
         show: config.show_colorbar ?? true,
         orient: "vertical",
+        // The labels sit right of the bar (`align` names the bar's side), away
+        // from the cells.
+        align: "left",
         right: "right",
         top: "middle",
         inRange: { color: colors }

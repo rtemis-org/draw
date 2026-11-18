@@ -702,7 +702,11 @@ export function buildHeatmapOption(
       show: config.show_colorbar ?? true,
       orient: vertical ? "vertical" : "horizontal",
       inRange: { color: colormap },
-      ...(vertical ? { right: "right", top: "middle" } : { left: "center", bottom: "bottom" }),
+      // A vertical scale's labels sit right of its bar (`align` names the bar's
+      // side), away from the cells.
+      ...(vertical
+        ? { right: "right", top: "middle", align: "left" }
+        : { left: "center", bottom: "bottom" }),
       seriesIndex: heatmapIndex,
     },
     series,

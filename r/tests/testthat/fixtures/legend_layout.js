@@ -4,6 +4,18 @@ const input = JSON.parse(fs.readFileSync(process.argv[2], 'utf8'));
 const echarts = require(input.echarts), layout = require(input.layout);
 require(require('node:path').join(require('node:path').dirname(input.layout), 'renderers.js'))(echarts);
 const near = (a, b, message) => assert.ok(Math.abs(a - b) < .05, `${message}: ${a} / ${b}`);
+// The drawn marks of a color scale: its bar, handles, and labels, without its
+// transparent layout background.
+const drawn = group => {
+  let box = null;
+  group.traverse(el => {
+    if (el.isGroup || el.invisible || el.style?.fill === 'rgba(0,0,0,0)') return;
+    const r = el.getBoundingRect().clone(); r.applyTransform(el.getComputedTransform());
+    if (!(r.width > 0 && r.height > 0)) return;
+    if (!box) box = r; else box.union(r);
+  });
+  return box;
+};
 for (const [name, original] of Object.entries(input.charts)) {
   for (const position of input.positions) for (const placement of ['outside', 'inside']) {
     const payload = structuredClone(original);
@@ -15,7 +27,8 @@ for (const [name, original] of Object.entries(input.charts)) {
       const result = [];
       chart.getModel().eachComponent(payload.legendTarget || 'legend', model => {
         const group = chart.getViewOfComponentModel(model).group;
-        const box = group.getBoundingRect().clone(); box.applyTransform(group.getComputedTransform());
+        const box = model.mainType === 'visualMap' ? drawn(group) : group.getBoundingRect().clone();
+        if (model.mainType !== 'visualMap') box.applyTransform(group.getComputedTransform());
         result.push({box, model});
       }); return result;
     };

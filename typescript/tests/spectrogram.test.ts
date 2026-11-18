@@ -53,7 +53,14 @@ describe("buildSpectrogramOption", () => {
       expect(got.rest).toEqual(want.rest);
       expect(got.tooltip).toEqual(want.tooltip);
       expect(got.grid).toEqual(want.grid);
-      expect(got.map).toEqual(want.map);
+      // Values other than dB take one decimal more than a nice interval of
+      // the color scale, where R wrote three.
+      // The labels sit right of the bar, where R left ECharts to place them.
+      const { precision: gotPrecision, align, ...gotMap } = got.map as Record<string, unknown>;
+      expect(align).toBe("left");
+      const { precision: wantPrecision, ...wantMap } = want.map as Record<string, unknown>;
+      expect(gotMap).toEqual(wantMap);
+      if ((c.config.db ?? true) === true) expect(gotPrecision).toBe(wantPrecision);
       // Colors agree to one unit per channel: R interpolates viridisLite's
       // maps in Lab with a spline, the builder its 256 colors in RGB.
       expect(got.colors).toHaveLength(want.colors.length);
@@ -80,9 +87,24 @@ describe("buildSpectrogramOption", () => {
     const option = buildSpectrogramOption(data, { db: false, colorbar_title: "Energy" });
     const formatter = (option.tooltip as { formatter: (p: unknown) => string }).formatter;
     expect(formatter({ value: [1, 0, 2] })).toBe(
-      "Time (s): 1.000<br/>Frequency (Hz): 0.0<br/>Energy: 2.000",
+      "Time (s): 1.000<br/>Frequency (Hz): 0.0<br/>Energy: 2.0",
     );
     expect(formatter({ value: [1, 0, null] })).toBe("N/A");
+  });
+
+  it("rounds values other than dB to a decimal past the scale's nice interval", () => {
+    const option = buildSpectrogramOption(
+      {
+        time: [0, 1],
+        frequency: [1, 2],
+        values: [
+          [-36.2, 44.1],
+          [0, 1],
+        ],
+      },
+      { db: false },
+    );
+    expect((option.visualMap as { precision: number }).precision).toBe(1);
   });
 
   it("stops on mismatched values, empty ranges, and an unknown colormap", () => {

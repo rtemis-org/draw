@@ -57,6 +57,12 @@ describe("buildHeatmapOption against rtemis.draw's heatmap_option()", () => {
       );
       delete option.visualMap.inRange;
       delete expected.visualMap.inRange;
+      // A vertical scale's labels sit right of its bar, where R left ECharts
+      // to place them.
+      expect(option.visualMap.align).toBe(
+        option.visualMap.orient === "vertical" ? "left" : undefined,
+      );
+      delete option.visualMap.align;
       // The builder's heatmap series turns animation and hover emphasis off,
       // which R's option left at ECharts' defaults.
       const heatmap = [option.series].flat().find((s: any) => s.type === "heatmap");

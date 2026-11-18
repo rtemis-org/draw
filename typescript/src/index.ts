@@ -244,8 +244,10 @@ export type { KeyContext, KeyPlacement, KeyReserve, SizeKeySpec } from "./layout
 export {
   fitKeys,
   fitLegend,
+  KEY_GAP,
   keyPlacement,
   keyState,
+  placeColorScale,
   SIZE_KEY_ID,
   sizeKeyValues,
 } from "./layout/keys.ts";
