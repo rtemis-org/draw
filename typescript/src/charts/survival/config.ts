@@ -147,11 +147,10 @@ export function survivalMedian(curve: Pick<SurvivalCurve, "time" | "survival">):
   return ((t[i] as number) + end) / 2;
 }
 
-// The strip's text: one row per curve, below the time axis and its name.
-const RISK_FONT = 12;
-const RISK_LINE = Math.round(RISK_FONT * 1.6);
-const RISK_PAD = 14;
-const RISK_AXIS = 56;
+// The strip's space: a gap under the time axis name, rows 1.6 times the
+// axis label font, and a pad at the canvas bottom.
+const RISK_GAP = 12;
+const RISK_PAD = 10;
 
 /**
  * The ECharts option of a Kaplan–Meier chart from host-recorded curves:
@@ -383,7 +382,7 @@ export function buildSurvivalOption(
     left: 70,
     right: 30,
     top: config.title ? 50 : 25,
-    bottom: risk ? RISK_AXIS + curves.length * RISK_LINE + RISK_PAD : 60,
+    bottom: 60,
     containLabel: false,
   };
   if (risk) {
@@ -393,14 +392,16 @@ export function buildSurvivalOption(
     ) {
       throw new Error("Supply one risk count per curve and risk time.");
     }
+    // `layoutSurvivalRisk()` sets the offset, row height, and font size from
+    // the time axis below.
     const base = {
-      bottom: RISK_PAD,
-      lineHeight: RISK_LINE,
+      offset: 0,
+      lineHeight: 0,
       rows: curves.length,
-      fontSize: RISK_FONT,
+      fontSize: 0,
       caption: "At risk",
       // Where the y axis name sits: its gap left of the grid.
-      captionX: grid.left - 45 + Math.round(RISK_FONT / 3),
+      captionX: grid.left - 45 + 4,
       textColor:
         appearance.textColor ?? (appearance.dark ? darkThemeTokens() : lightThemeTokens()).fg_color,
     };
@@ -439,7 +440,7 @@ export function buildSurvivalOption(
 
   const legendShown = (config.legend ?? true) && !(curves.length === 1 && curves[0]?.name == null);
   const riskTimes = risk ? [...risk.time] : null;
-  return {
+  return layoutSurvivalRisk({
     ...(config.title ? { title: { text: config.title, left: "center", textAlign: "center" } } : {}),
     grid,
     xAxis: {
@@ -471,5 +472,53 @@ export function buildSurvivalOption(
     },
     tooltip: { trigger: "item", confine: true },
     series,
+  });
+}
+
+/**
+ * Places the number-at-risk strip of a built survival option under its time
+ * axis name, at the axis label font size: each row is 1.6 times that size,
+ * the strip starts 12 pixels below the name (`nameGap`, the name's font
+ * size, and any `textMargin` above and below it),
+ * and the grid's bottom margin holds the axis band and the rows. A host that
+ * restyles the time axis after the build calls it again. Mutates and returns
+ * `option`; an option without the strip is returned as it is.
+ */
+export function layoutSurvivalRisk<T extends Record<string, unknown>>(option: T): T {
+  const series = Array.isArray(option.series) ? (option.series as Record<string, unknown>[]) : [];
+  const strips = series.filter((s) => s?.renderItem === SURVIVAL_RISK);
+  if (strips.length === 0) return option;
+  const x = (Array.isArray(option.xAxis) ? option.xAxis[0] : option.xAxis) as
+    | Record<string, unknown>
+    | undefined;
+  const size = (style: unknown) => {
+    const v = (style as { fontSize?: unknown } | undefined)?.fontSize;
+    return typeof v === "number" ? v : 12;
   };
+  const nameGap = typeof x?.nameGap === "number" ? x.nameGap : 30;
+  const fontSize = size(x?.axisLabel);
+  // A host's text margin around the axis name, [top, right, bottom, left] or
+  // one number, widens the name's band.
+  const margin = (x?.nameTextStyle as { textMargin?: unknown } | undefined)?.textMargin;
+  const [above, below] = Array.isArray(margin)
+    ? [Number(margin[0]) || 0, Number(margin[2] ?? margin[0]) || 0]
+    : typeof margin === "number"
+      ? [margin, margin]
+      : [0, 0];
+  const offset = nameGap + above + Math.ceil(size(x?.nameTextStyle) * 1.3) + below + RISK_GAP;
+  const lineHeight = Math.round(fontSize * 1.6);
+  let rows = 0;
+  for (const s of strips) {
+    const payload = s.itemPayload as RiskPayload;
+    rows = payload.rows;
+    s.itemPayload = { ...payload, offset, lineHeight, fontSize };
+  }
+  // Each risk time is a labeled column, the first and last included, whatever
+  // a host's restyling hides at the axis ends.
+  if (x) x.axisLabel = { ...(x.axisLabel as object), showMinLabel: true, showMaxLabel: true };
+  const grid = (Array.isArray(option.grid) ? option.grid[0] : option.grid) as
+    | Record<string, unknown>
+    | undefined;
+  if (grid) grid.bottom = offset + rows * lineHeight + RISK_PAD;
+  return option;
 }

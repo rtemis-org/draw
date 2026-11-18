@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   buildSurvivalOption,
+  layoutSurvivalRisk,
   type SurvivalData,
   survivalMedian,
 } from "../src/charts/survival/config.ts";
@@ -98,7 +99,10 @@ describe("buildSurvivalOption", () => {
     expect(rows[1]?.itemPayload?.labels).toEqual(["9", "7", "2.5"]);
     expect(rows[2]?.data).toEqual([[0, -1]]);
     expect(option.xAxis).toMatchObject({ axisLabel: { customValues: [0, 1, 5] } });
-    expect((option.grid as { bottom: number }).bottom).toBeGreaterThan(60);
+    // Under the axis name (gap 30, 12 px), rows of 1.6 × the 12 px labels.
+    const offset = 30 + Math.ceil(12 * 1.3) + 12;
+    expect(rows[0]?.itemPayload).toMatchObject({ offset, lineHeight: 19, fontSize: 12 });
+    expect((option.grid as { bottom: number }).bottom).toBe(offset + 2 * 19 + 10);
     expect(() => buildSurvivalOption(data, { risk_table: true })).toThrow("risk records");
   });
 
@@ -111,7 +115,7 @@ describe("buildSurvivalOption", () => {
 
 describe("the risk strip renderer", () => {
   const payload = {
-    bottom: 14,
+    offset: 54,
     lineHeight: 19,
     rows: 2,
     fontSize: 12,
@@ -121,9 +125,8 @@ describe("the risk strip renderer", () => {
     textColor: "#333333",
   };
   const api = (time: number, row: number) => ({
-    coord: ([t]: number[]) => [100 + 10 * (t as number), 0],
+    coord: ([t]: number[]) => [100 + 10 * (t as number), 300],
     value: (d: number) => (d === 0 ? time : row),
-    getHeight: () => 400,
     visual: () => "#ff0000",
   });
   const render = survivalRenderers["rtemis.survival_risk.v1"] as (
@@ -138,7 +141,7 @@ describe("the risk strip renderer", () => {
     const el = render({ itemPayload: payload, dataIndex: 1 }, api(5, 1));
     expect(el.style).toMatchObject({
       x: 150,
-      y: 400 - 14 - 38 + 1.5 * 19,
+      y: 300 + 54 + 1.5 * 19,
       text: "8",
       fill: "#ff0000",
     });
@@ -147,5 +150,23 @@ describe("the risk strip renderer", () => {
     const el = render({ itemPayload: payload, dataIndex: 0 }, api(0, -1));
     expect(el).toMatchObject({ x: 29, rotation: Math.PI / 2 });
     expect(el.style).toMatchObject({ text: "At risk", fill: "#333333" });
+  });
+});
+
+describe("layoutSurvivalRisk", () => {
+  it("follows a restyled time axis", () => {
+    const option = buildSurvivalOption(
+      { curves: [curve], risk: { time: [0, 5], counts: [[10, 1]] } },
+      { risk_table: true },
+    );
+    const x = option.xAxis as Record<string, unknown>;
+    x.nameGap = 40;
+    x.nameTextStyle = { fontSize: 16, textMargin: [10, 3, 10, 3] };
+    x.axisLabel = { ...(x.axisLabel as object), fontSize: 15 };
+    const rows = seriesOf(layoutSurvivalRisk(option)).filter((s) => s.renderItem);
+    const offset = 40 + 10 + Math.ceil(16 * 1.3) + 10 + 12;
+    expect(rows[0]?.itemPayload).toMatchObject({ offset, lineHeight: 24, fontSize: 15 });
+    expect((option.grid as { bottom: number }).bottom).toBe(offset + 24 + 10);
+    expect(option.xAxis).toMatchObject({ axisLabel: { showMinLabel: true, showMaxLabel: true } });
   });
 });

@@ -8,7 +8,6 @@
 interface Api {
   coord(value: number[]): number[];
   value(dimension: number): number;
-  getHeight(): number;
   visual(name: string): string;
 }
 interface Params {
@@ -18,8 +17,8 @@ interface Params {
 
 /** What the strip series carries for its renderer. */
 export interface RiskPayload {
-  /** Pixels from the canvas bottom to the strip's last row. */
-  readonly bottom: number;
+  /** Pixels from the plot's bottom edge (survival 0) to the strip's first row. */
+  readonly offset: number;
   /** Height of one row in pixels. */
   readonly lineHeight: number;
   /** Rows: one per curve. */
@@ -41,10 +40,12 @@ export const survivalRenderers: Readonly<Record<string, (params: Params, api: Ap
   // Data: [time, row]; row -1 is the caption. A row's series is its curve's,
   // and its text takes the curve's color. The counts sit under the time
   // axis's own coordinate of each time, so they stay aligned with its ticks
-  // through resizing; the rows are measured from the canvas bottom.
+  // through resizing; the rows start `offset` pixels below the plot's bottom
+  // edge, the coordinate of survival 0.
   [SURVIVAL_RISK]: (params, api) => {
     const p = params.itemPayload;
-    const top = api.getHeight() - p.bottom - p.rows * p.lineHeight;
+    const [x, edge] = api.coord([api.value(0), 0]) as [number, number];
+    const top = edge + p.offset;
     const row = api.value(1);
     if (row < 0) {
       return {
@@ -64,7 +65,7 @@ export const survivalRenderers: Readonly<Record<string, (params: Params, api: Ap
     return {
       type: "text",
       style: {
-        x: api.coord([api.value(0), 0])[0],
+        x,
         y: top + (row + 0.5) * p.lineHeight,
         text: p.labels[params.dataIndex] ?? "",
         align: "center",

@@ -87,6 +87,7 @@ var RtemisDraw = (() => {
     kernelDensity: () => kernelDensity,
     keyPlacement: () => keyPlacement,
     keyState: () => keyState,
+    layoutSurvivalRisk: () => layoutSurvivalRisk,
     lightThemeTokens: () => lightThemeTokens,
     lineAspect: () => lineAspect,
     pretty: () => pretty,
@@ -4941,10 +4942,12 @@ ${rate(r.balancedAccuracy)}`, summary) }
     // Data: [time, row]; row -1 is the caption. A row's series is its curve's,
     // and its text takes the curve's color. The counts sit under the time
     // axis's own coordinate of each time, so they stay aligned with its ticks
-    // through resizing; the rows are measured from the canvas bottom.
+    // through resizing; the rows start `offset` pixels below the plot's bottom
+    // edge, the coordinate of survival 0.
     [SURVIVAL_RISK]: (params, api) => {
       const p = params.itemPayload;
-      const top = api.getHeight() - p.bottom - p.rows * p.lineHeight;
+      const [x, edge] = api.coord([api.value(0), 0]);
+      const top = edge + p.offset;
       const row = api.value(1);
       if (row < 0) {
         return {
@@ -4964,7 +4967,7 @@ ${rate(r.balancedAccuracy)}`, summary) }
       return {
         type: "text",
         style: {
-          x: api.coord([api.value(0), 0])[0],
+          x,
           y: top + (row + 0.5) * p.lineHeight,
           text: p.labels[params.dataIndex] ?? "",
           align: "center",
@@ -5020,10 +5023,8 @@ ${rate(r.balancedAccuracy)}`, summary) }
     }
     return (t[i] + end) / 2;
   }
-  var RISK_FONT = 12;
-  var RISK_LINE = Math.round(RISK_FONT * 1.6);
-  var RISK_PAD = 14;
-  var RISK_AXIS = 56;
+  var RISK_GAP = 12;
+  var RISK_PAD = 10;
   function buildSurvivalOption(data, config, appearance = {}) {
     const curves = data.curves.filter((c) => c.time.length > 0);
     if (curves.length === 0) throw new Error("A survival chart needs at least one recorded curve.");
@@ -5226,7 +5227,7 @@ ${rate(r.balancedAccuracy)}`, summary) }
       left: 70,
       right: 30,
       top: config.title ? 50 : 25,
-      bottom: risk ? RISK_AXIS + curves.length * RISK_LINE + RISK_PAD : 60,
+      bottom: 60,
       containLabel: false
     };
     if (risk) {
@@ -5234,13 +5235,13 @@ ${rate(r.balancedAccuracy)}`, summary) }
         throw new Error("Supply one risk count per curve and risk time.");
       }
       const base = {
-        bottom: RISK_PAD,
-        lineHeight: RISK_LINE,
+        offset: 0,
+        lineHeight: 0,
         rows: curves.length,
-        fontSize: RISK_FONT,
+        fontSize: 0,
         caption: "At risk",
         // Where the y axis name sits: its gap left of the grid.
-        captionX: grid.left - 45 + Math.round(RISK_FONT / 3),
+        captionX: grid.left - 45 + 4,
         textColor: appearance.textColor ?? (appearance.dark ? darkThemeTokens() : lightThemeTokens()).fg_color
       };
       curves.forEach((_, i) => {
@@ -5275,7 +5276,7 @@ ${rate(r.balancedAccuracy)}`, summary) }
     }
     const legendShown = (config.legend ?? true) && !(curves.length === 1 && curves[0]?.name == null);
     const riskTimes = risk ? [...risk.time] : null;
-    return {
+    return layoutSurvivalRisk({
       ...config.title ? { title: { text: config.title, left: "center", textAlign: "center" } } : {},
       grid,
       xAxis: {
@@ -5305,7 +5306,33 @@ ${rate(r.balancedAccuracy)}`, summary) }
       },
       tooltip: { trigger: "item", confine: true },
       series
+    });
+  }
+  function layoutSurvivalRisk(option) {
+    const series = Array.isArray(option.series) ? option.series : [];
+    const strips = series.filter((s) => s?.renderItem === SURVIVAL_RISK);
+    if (strips.length === 0) return option;
+    const x = Array.isArray(option.xAxis) ? option.xAxis[0] : option.xAxis;
+    const size = (style) => {
+      const v = style?.fontSize;
+      return typeof v === "number" ? v : 12;
     };
+    const nameGap = typeof x?.nameGap === "number" ? x.nameGap : 30;
+    const fontSize = size(x?.axisLabel);
+    const margin = x?.nameTextStyle?.textMargin;
+    const [above, below] = Array.isArray(margin) ? [Number(margin[0]) || 0, Number(margin[2] ?? margin[0]) || 0] : typeof margin === "number" ? [margin, margin] : [0, 0];
+    const offset = nameGap + above + Math.ceil(size(x?.nameTextStyle) * 1.3) + below + RISK_GAP;
+    const lineHeight = Math.round(fontSize * 1.6);
+    let rows = 0;
+    for (const s of strips) {
+      const payload = s.itemPayload;
+      rows = payload.rows;
+      s.itemPayload = { ...payload, offset, lineHeight, fontSize };
+    }
+    if (x) x.axisLabel = { ...x.axisLabel, showMinLabel: true, showMaxLabel: true };
+    const grid = Array.isArray(option.grid) ? option.grid[0] : option.grid;
+    if (grid) grid.bottom = offset + rows * lineHeight + RISK_PAD;
+    return option;
   }
 
   // src/shared/labels.ts

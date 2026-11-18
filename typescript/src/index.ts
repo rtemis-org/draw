@@ -157,6 +157,7 @@ export type {
 } from "./charts/survival/index.ts";
 export {
   buildSurvivalOption,
+  layoutSurvivalRisk,
   SURVIVAL_CHART_CONFIG_MEMBERS,
   survivalMedian,
 } from "./charts/survival/index.ts";
