@@ -6,6 +6,7 @@
 \usage{
 draw_map(
   model,
+  aggregate = "none",
   classification = "quantile",
   colormap = "blues",
   num_classes = 5,
@@ -25,6 +26,11 @@ draw_map(
 }
 \arguments{
 \item{model}{\link{MapModel} or named list: The choropleth data to render.}
+
+\item{aggregate}{Character \{"none", "sum", "mean", "median"\}: How the
+values of rows naming one region combine into the region's value. A region
+takes one value, so with \code{"none"} two such rows are an error. Missing values
+are left out of each summary.}
 
 \item{classification}{Character \{"quantile", "equal", "jenks"\}: Class-break
 method. \code{"quantile"} (equal counts), \code{"equal"} (equal intervals), or
@@ -61,8 +67,8 @@ light/dark auto-detection (matching \code{\link[=draw]{draw()}}).}
 
 \item{element_id}{Optional Character: Explicit element ID.}
 
-\item{filename}{Optional Character: Static export of map widgets is not yet
-supported. Supplying a path raises an error.}
+\item{filename}{Optional Character: If provided, save the widget to this file
+via \code{\link[=save_drawing]{save_drawing()}}.}
 }
 \value{
 htmlwidget.

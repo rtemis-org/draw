@@ -84,8 +84,8 @@ light/dark auto-detection (matching \code{\link[=draw]{draw()}}).}
 
 \item{element_id}{Optional Character: Explicit element ID.}
 
-\item{filename}{Optional Character: Static export of network widgets is not yet
-supported. Supplying a path raises an error.}
+\item{filename}{Optional Character: If provided, save the widget to this file
+via \code{\link[=save_drawing]{save_drawing()}}.}
 }
 \value{
 htmlwidget.

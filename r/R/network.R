@@ -680,8 +680,8 @@ graph_option <- function(
 #' @param width Optional Character or Numeric: Widget width.
 #' @param height Optional Character or Numeric: Widget height.
 #' @param element_id Optional Character: Explicit element ID.
-#' @param filename Optional Character: Static export of network widgets is not yet
-#'   supported. Supplying a path raises an error.
+#' @param filename Optional Character: If provided, save the widget to this file
+#'   via [save_drawing()].
 #' @return htmlwidget.
 #' @export
 #'

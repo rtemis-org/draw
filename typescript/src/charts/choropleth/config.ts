@@ -4,6 +4,9 @@ import { type MapResolution, normalizeLocation } from "./locations.ts";
 /** A corner of the map an overlay is anchored to. */
 export type MapCorner = "top-left" | "top-right" | "bottom-left" | "bottom-right";
 
+/** How the values of several rows naming one region combine. */
+export type MapAggregate = "none" | "sum" | "mean" | "median";
+
 /** How values are binned into classes: equal counts, equal intervals, or Jenks natural breaks. */
 export type MapClassification = "quantile" | "equal" | "jenks";
 
@@ -37,6 +40,12 @@ export interface ChoroplethChartConfig {
   readonly tooltip?: string | null;
   /** Default `"country"`. */
   readonly resolution?: MapResolution;
+  /**
+   * How the values of rows naming one region combine into the region's value.
+   * A region takes one value, so with `"none"` two such rows are an error.
+   * Default `"none"`.
+   */
+  readonly aggregate?: MapAggregate;
   /** Default `"quantile"`. */
   readonly classification?: MapClassification;
   /** Number of classes, rounded to a whole number within [2, 12]. Default 5. */
@@ -67,6 +76,7 @@ export const CHOROPLETH_CHART_CONFIG_MEMBERS = Object.freeze([
   "value",
   "tooltip",
   "resolution",
+  "aggregate",
   "classification",
   "num_classes",
   "colormap",
@@ -167,7 +177,11 @@ export interface ChoroplethJoin {
   readonly values: ReadonlyMap<string, number>;
   /** The tooltip fields of each region, in `tooltipFields` order. */
   readonly extras: ReadonlyMap<string, readonly MapTooltipField[]>;
+  /** The number of rows naming each region. */
+  readonly rows: ReadonlyMap<string, number>;
+  /** Rows naming a region. */
   readonly matched: number;
+  /** Rows naming no region. */
   readonly unmatched: number;
   /** The first 12 location keys without a region. */
   readonly unmatchedKeys: readonly string[];
@@ -175,19 +189,35 @@ export interface ChoroplethJoin {
 
 const fieldText = (v: string | number) => (typeof v === "number" ? String(formatNumber(v)) : v);
 
+/** The combination of a region's finite values by `aggregate`. */
+function combine(values: readonly number[], aggregate: Exclude<MapAggregate, "none">): number {
+  if (aggregate === "sum") return values.reduce((a, b) => a + b, 0);
+  if (aggregate === "mean") return values.reduce((a, b) => a + b, 0) / values.length;
+  const sorted = [...values].sort((a, b) => a - b);
+  const mid = Math.floor(sorted.length / 2);
+  return sorted.length % 2 === 1
+    ? (sorted[mid] as number)
+    : ((sorted[mid - 1] as number) + (sorted[mid] as number)) / 2;
+}
+
 /**
- * The rows of a model joined to the regions by {@link normalizeLocation}: a
- * row whose key names a region sets that region's value and tooltip fields,
- * a row with a missing or non-finite value leaving the region without one;
- * other rows count as unmatched. Two rows naming one region stop with an
- * error naming both rows. Numeric tooltip fields take {@link formatNumber}.
+ * The rows of a model joined to the regions by {@link normalizeLocation}.
+ * Rows naming no region count as unmatched. A region's value combines the
+ * finite values of its rows by `aggregate` (default `"none"`); a region with
+ * no finite value has none. With `"none"`, two rows naming one region stop
+ * with an error naming both rows and the `aggregate` member. A region keeps
+ * each tooltip field on which its rows agree, numbers in
+ * {@link formatNumber}, and a region of several rows adds a "Rows" field
+ * with their number.
  */
-export function joinChoropleth(model: MapModel, ids: ReadonlySet<string>): ChoroplethJoin {
+export function joinChoropleth(
+  model: MapModel,
+  ids: ReadonlySet<string>,
+  aggregate: MapAggregate = "none",
+): ChoroplethJoin {
   const resolution = model.resolution ?? "country";
   const fields = model.tooltipFields ?? [];
-  const values = new Map<string, number>();
-  const extras = new Map<string, MapTooltipField[]>();
-  const rowOf = new Map<string, number>();
+  const members = new Map<string, number[]>();
   const unmatchedKeys: string[] = [];
   let unmatched = 0;
   model.rows.forEach((row, i) => {
@@ -197,22 +227,45 @@ export function joinChoropleth(model: MapModel, ids: ReadonlySet<string>): Choro
       if (unmatchedKeys.length < 12) unmatchedKeys.push(row.location);
       return;
     }
-    const first = rowOf.get(id);
-    if (first !== undefined) {
+    const rows = members.get(id);
+    if (!rows) {
+      members.set(id, [i]);
+      return;
+    }
+    if (aggregate === "none") {
+      const first = rows[0] as number;
       throw new Error(
-        `A region takes one value; rows ${first + 1} and ${i + 1} both name region '${id}' ('${model.rows[first]?.location}', '${row.location}').`,
+        `A region takes one value; rows ${first + 1} and ${i + 1} both name region '${id}' ('${model.rows[first]?.location}', '${row.location}'). Set \`aggregate\` to sum, mean, or median to combine them.`,
       );
     }
-    rowOf.set(id, i);
-    if (typeof row.value === "number" && Number.isFinite(row.value)) values.set(id, row.value);
+    rows.push(i);
+  });
+  const values = new Map<string, number>();
+  const extras = new Map<string, MapTooltipField[]>();
+  const counts = new Map<string, number>();
+  let matched = 0;
+  for (const [id, indices] of members) {
+    const rows = indices.map((i) => model.rows[i] as MapRow);
+    matched += rows.length;
+    counts.set(id, rows.length);
+    const finite = rows
+      .map((r) => r.value)
+      .filter((v): v is number => typeof v === "number" && Number.isFinite(v));
+    if (finite.length > 0) {
+      values.set(id, aggregate === "none" ? (finite[0] as number) : combine(finite, aggregate));
+    }
     const lines: MapTooltipField[] = [];
     for (const f of fields) {
-      const v = row.extras?.[f];
-      if (v !== null && v !== undefined) lines.push({ label: f, value: fieldText(v) });
+      const shown = new Set(rows.map((r) => r.extras?.[f] ?? null));
+      const [v] = shown;
+      if (shown.size === 1 && v !== null && v !== undefined) {
+        lines.push({ label: f, value: fieldText(v) });
+      }
     }
+    if (rows.length > 1) lines.push({ label: "Rows", value: String(rows.length) });
     if (lines.length > 0) extras.set(id, lines);
-  });
-  return { values, extras, matched: rowOf.size, unmatched, unmatchedKeys };
+  }
+  return { values, extras, rows: counts, matched, unmatched, unmatchedKeys };
 }
 
 /** A color interpolator over [0, 1]. */

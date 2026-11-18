@@ -28,7 +28,9 @@
 
 * `draw_heatmap()` and `draw()` on a `HeatmapConfig` build the chart with the `@rtemis/draw` heatmap builder; `compile()` on a `HeatmapConfig` returns a `BuildRequest`. R validates the matrix, masks the triangle, and clusters; the color scale derived from the theme follows the light or dark scheme the widget draws in.
 
-* The choropleth widget and its SVG export join, classify, and color the map with the `@rtemis/draw` choropleth functions, the ones rtemislive uses. Two rows naming one region stop the map with an error; the classes cover the values of the regions the rows name; legend bounds take three significant digits.
+* The choropleth widget and its SVG export join, classify, and color the map with the `@rtemis/draw` choropleth functions, the ones rtemislive uses. `draw_choropleth()`, `draw_map()`, `MapLibreOption`, and `ChoroplethConfig` gain `aggregate` (`"none"`, `"sum"`, `"mean"`, `"median"`), which combines the rows naming one region; with `"none"`, two such rows stop the map with an error. The classes cover the values of the regions the rows name; legend bounds take three significant digits.
+
+* A network node outside the hovered node's neighborhood keeps its own color at 30% opacity.
 
 * The network widget and its SVG export lay out and style the graph with the `@rtemis/draw` network functions, the ones rtemislive uses. `draw_network()`, `draw_graph()`, `SigmaOption`, and `NetworkConfig` gain `seed`; the force layout starts from seeded random positions, so its arrangement differs from earlier versions.
 

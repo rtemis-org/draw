@@ -310,3 +310,34 @@ test_that("a choropleth with two rows for one region stops its export", {
     class = "rtemis_export_error"
   )
 })
+
+test_that("aggregate combines the rows of a region in the payload and the export", {
+  skip_if_no_node()
+  path <- tempfile(fileext = ".svg")
+  on.exit(unlink(path), add = TRUE)
+  counties <- data.frame(
+    st = c("CA", "CA", "TX", "California"),
+    v = c(1, 4, 2, NA)
+  )
+  w <- draw_choropleth(
+    counties,
+    location = "st",
+    value = "v",
+    resolution = "state",
+    aggregate = "mean"
+  )
+  expect_equal(w$x$config$aggregate, "mean")
+  save_drawing(w, path, width = 600, height = 400)
+  svg <- paste(readLines(path, warn = FALSE), collapse = "")
+  expect_match(svg, 'data-region-id="06"', fixed = TRUE)
+  expect_equal(
+    setup_ChoroplethConfig(
+      location = "st",
+      value = "v",
+      aggregate = "sum"
+    )@aggregate,
+    "sum"
+  )
+  expect_error(setup_ChoroplethConfig(aggregate = "max"))
+  expect_error(draw_choropleth(counties, "st", "v", aggregate = "max"))
+})

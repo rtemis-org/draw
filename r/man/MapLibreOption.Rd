@@ -6,6 +6,7 @@
 \usage{
 MapLibreOption(
   model = NULL,
+  aggregate = "none",
   classification = "quantile",
   colormap = "blues",
   num_classes = 5,
@@ -21,6 +22,11 @@ MapLibreOption(
 \arguments{
 \item{model}{\link{MapModel} or named list: The choropleth data (a list must
 contain a \code{rows} element).}
+
+\item{aggregate}{Character \{"none", "sum", "mean", "median"\}: How the
+values of rows naming one region combine into the region's value. A region
+takes one value, so with \code{"none"} two such rows are an error. Missing values
+are left out of each summary.}
 
 \item{classification}{Character \{"quantile", "equal", "jenks"\}: Class-break
 method. \code{"quantile"} (equal counts), \code{"equal"} (equal intervals), or

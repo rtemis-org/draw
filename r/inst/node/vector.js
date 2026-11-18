@@ -91,7 +91,7 @@ function mapSVG(x) {
   const t=themeUtils.resolve(x.theme), s=x.config || {}, model=x.model || {};
   const resolution=model.resolution || s.resolution || 'country';
   const regions=builders.mapFeatures(JSON.parse((x.geo || {}).topojson), resolution, mapDeps.topojsonFeature);
-  const joined=builders.joinChoropleth({...model, resolution}, regions.ids);
+  const joined=builders.joinChoropleth({...model, resolution}, regions.ids, s.aggregate);
   const scale=builders.buildChoroplethScale(joined.values.values(), s, {scheme: t.dark ? 'dark' : 'light'}, mapDeps.chromatic);
   const camera=mapCamera(x);
   const {world,cx,cy}=camera;

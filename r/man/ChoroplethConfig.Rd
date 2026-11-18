@@ -13,6 +13,7 @@ ChoroplethConfig(
   value = NULL,
   tooltip = NULL,
   resolution = "country",
+  aggregate = "none",
   classification = "quantile",
   num_classes = 5,
   colormap = "blues",
@@ -48,6 +49,11 @@ authored config; written by the interface that resolved it.}
 
 \item{resolution}{Character \{"country", "state", "county"\}: Which boundary
 set the locations refer to.}
+
+\item{aggregate}{Character \{"none", "sum", "mean", "median"\}: How the
+values of rows naming one region combine into the region's value. A region
+takes one value, so with \code{"none"} two such rows are an error. Missing values
+are left out of each summary.}
 
 \item{classification}{Character \{"quantile", "equal", "jenks"\}: How values
 are binned into classes.}

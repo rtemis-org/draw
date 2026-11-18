@@ -125,7 +125,7 @@ HTMLWidgets.widget({
       let regions, joined;
       try {
         regions = draw.mapFeatures(JSON.parse(geo.topojson), resolution, topojsonFeature);
-        joined = draw.joinChoropleth({ ...model, resolution }, regions.ids);
+        joined = draw.joinChoropleth({ ...model, resolution }, regions.ids, s.aggregate);
       } catch (err) {
         container.textContent = "rtemis-map: " + err.message;
         throw err;

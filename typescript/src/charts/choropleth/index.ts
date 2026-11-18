@@ -6,6 +6,7 @@ export type {
   ChoroplethJoin,
   ChoroplethScale,
   ColorInterpolator,
+  MapAggregate,
   MapClassification,
   MapCorner,
   MapFeature,

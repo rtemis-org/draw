@@ -159,7 +159,7 @@ describe("networkReducers", () => {
     expect(own.nodeReducer("a", {}).labelColor).toBe("#123456");
   });
 
-  it("fades what lies outside the hovered node's neighborhood", () => {
+  it("fades what lies outside the hovered node's neighborhood to 30% of its color", () => {
     const path: GraphModel = {
       nodes: [{ id: "a" }, { id: "b" }, { id: "c" }],
       edges: [
@@ -177,9 +177,12 @@ describe("networkReducers", () => {
     expect(r.nodeReducer("b", { label: "b" })).toMatchObject({ label: "b", opacity: 0.95 });
     expect(r.nodeReducer("c", { label: "c" })).toMatchObject({
       label: "",
-      opacity: 0.15,
-      color: `${RTEMIS_PALETTE[0]}28`,
+      opacity: 77 / 255,
+      color: `${RTEMIS_PALETTE[0]}4d`,
     });
+    const groups = networkReducers(g, { color_by_group: true });
+    const hovered = networkReducers(g, { color_by_group: true }, {}, () => "a");
+    expect(hovered.nodeReducer("c", {}).color).toBe(`${groups.nodeReducer("c", {}).color}4d`);
     expect(r.edgeReducer("0", {}).opacity).toBe(0.5);
     expect(r.edgeReducer("1", {}).opacity).toBe(0.06);
   });

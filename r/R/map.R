@@ -34,6 +34,7 @@ map_color_schemes <- c(
   "brbg"
 )
 map_resolutions <- c("country", "state", "county")
+map_aggregates <- c("none", "sum", "mean", "median")
 map_corners <- c("top-left", "top-right", "bottom-left", "bottom-right")
 
 # -- MapRow ---------------------------------------------------------------------
@@ -199,6 +200,10 @@ S7::method(to_list, MapModel) <- function(x, ...) {
 #'
 #' @param model [MapModel] or named list: The choropleth data (a list must
 #'   contain a `rows` element).
+#' @param aggregate Character \{"none", "sum", "mean", "median"\}: How the
+#'   values of rows naming one region combine into the region's value. A region
+#'   takes one value, so with `"none"` two such rows are an error. Missing values
+#'   are left out of each summary.
 #' @param classification Character \{"quantile", "equal", "jenks"\}: Class-break
 #'   method. `"quantile"` (equal counts), `"equal"` (equal intervals), or
 #'   `"jenks"` (natural breaks).
@@ -243,6 +248,7 @@ MapLibreOption <- S7::new_class(
         "must be a MapModel or a list with a `rows` element"
       }
     ),
+    aggregate = map_enum_default(map_aggregates, "none"),
     classification = map_enum_default(map_classifications, "quantile"),
     colormap = map_enum_default(map_color_schemes, "blues"),
     num_classes = S7::new_property(
@@ -274,6 +280,7 @@ S7::method(to_list, MapLibreOption) <- function(x, ...) {
     # spec: draw/shared-builders#choropleth
     config = list(
       resolution = model_list[["resolution"]] %||% "country",
+      aggregate = x@aggregate,
       classification = x@classification,
       colormap = x@colormap,
       num_classes = x@num_classes,
@@ -496,6 +503,7 @@ map_from_data_frame <- function(
 #' @noRd
 map_option <- function(
   model,
+  aggregate = "none",
   classification = "quantile",
   colormap = "blues",
   num_classes = 5,
@@ -507,6 +515,7 @@ map_option <- function(
   tooltip_position = "top-right",
   title = NULL
 ) {
+  aggregate <- match.arg(aggregate, map_aggregates)
   classification <- match.arg(classification, map_classifications)
   colormap <- match.arg(colormap, map_color_schemes)
   legend_position <- match.arg(legend_position, map_corners)
@@ -514,6 +523,7 @@ map_option <- function(
 
   option <- MapLibreOption(
     model = model,
+    aggregate = aggregate,
     classification = classification,
     colormap = colormap,
     num_classes = num_classes,
@@ -543,8 +553,8 @@ map_option <- function(
 #' @param width Optional Character or Numeric: Widget width.
 #' @param height Optional Character or Numeric: Widget height.
 #' @param element_id Optional Character: Explicit element ID.
-#' @param filename Optional Character: Static export of map widgets is not yet
-#'   supported. Supplying a path raises an error.
+#' @param filename Optional Character: If provided, save the widget to this file
+#'   via [save_drawing()].
 #' @return htmlwidget.
 #' @export
 #'
@@ -558,6 +568,7 @@ map_option <- function(
 #' draw_map(model)
 draw_map <- function(
   model,
+  aggregate = "none",
   classification = "quantile",
   colormap = "blues",
   num_classes = 5,
@@ -576,6 +587,7 @@ draw_map <- function(
 ) {
   option <- map_option(
     model = model,
+    aggregate = aggregate,
     classification = classification,
     colormap = colormap,
     num_classes = num_classes,
@@ -653,6 +665,7 @@ draw_choropleth <- function(
   resolution = c("country", "state", "county"),
   tooltip = NULL,
   value_label = NULL,
+  aggregate = "none",
   classification = "quantile",
   colormap = "blues",
   num_classes = 5,
@@ -682,6 +695,7 @@ draw_choropleth <- function(
 
   draw_map(
     model,
+    aggregate = aggregate,
     classification = classification,
     colormap = colormap,
     num_classes = num_classes,

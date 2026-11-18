@@ -150,11 +150,43 @@ describe("joinChoropleth", () => {
     expect([join.matched, join.unmatched, join.unmatchedKeys]).toEqual([3, 1, ["Atlantis"]]);
   });
 
-  it("stops on two rows naming one region", () => {
+  it("stops on two rows naming one region without an aggregate", () => {
     const twice = { ...model, rows: [...model.rows, { location: "California", value: 9 }] };
     expect(() => joinChoropleth(twice, ids)).toThrow(
-      "A region takes one value; rows 1 and 5 both name region '06' ('CA', 'California').",
+      "A region takes one value; rows 1 and 5 both name region '06' ('CA', 'California'). Set `aggregate` to sum, mean, or median to combine them.",
     );
+  });
+
+  it("combines the rows of a region by the aggregate", () => {
+    const counties: MapModel = {
+      rows: [
+        { location: "CA", value: 1, extras: { state: "California", county: "Alameda" } },
+        { location: "CA", value: 4, extras: { state: "California", county: "Butte" } },
+        { location: "CA", value: null, extras: { state: "California", county: "Colusa" } },
+        { location: "CA", value: 10, extras: { state: "California", county: "Del Norte" } },
+        { location: "TX", value: 2 },
+        { location: "NY", value: null },
+        { location: "NY", value: Number.NaN },
+      ],
+      resolution: "state",
+      tooltipFields: ["state", "county"],
+    };
+    const value = (aggregate: "sum" | "mean" | "median") =>
+      joinChoropleth(counties, ids, aggregate).values.get("06");
+    expect([value("sum"), value("mean"), value("median")]).toEqual([15, 5, 4]);
+    const join = joinChoropleth(counties, ids, "mean");
+    expect(join.values.get("48")).toBe(2);
+    expect(join.values.has("36")).toBe(false);
+    expect(join.extras.get("06")).toEqual([
+      { label: "state", value: "California" },
+      { label: "Rows", value: "4" },
+    ]);
+    expect([...join.rows]).toEqual([
+      ["06", 4],
+      ["48", 1],
+      ["36", 2],
+    ]);
+    expect([join.matched, join.unmatched]).toEqual([7, 0]);
   });
 });
 

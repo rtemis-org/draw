@@ -302,6 +302,9 @@ export interface NetworkAppearance {
   readonly scheme?: "light" | "dark";
 }
 
+/** Alpha channel, of 255, of a node outside the hovered node's neighborhood: 30% of its color. */
+const FADED_ALPHA = 77;
+
 /** Color of an edge of neither sign. */
 export const NEUTRAL_EDGE_COLOR = "#9aa0a6";
 
@@ -339,8 +342,9 @@ export interface NetworkReducers {
  * graph's center. An edge's width is its normalized weight times
  * `edge_scale`, at least 0.5 pixels; its color is the mean of its nodes'
  * colors when `blend_edges` is set, else its sign's color. While `hovered()`
- * names a node, the node shows its label on a backdrop and every node and
- * edge outside its neighborhood fades.
+ * names a node, the node shows its label on a backdrop, every node outside
+ * its neighborhood keeps 30% of its color without a label, and every edge
+ * not touching it fades.
  * spec: draw/shared-builders#network
  */
 export function networkReducers(
@@ -399,8 +403,8 @@ export function networkReducers(
         out.backdropShadowColor = "transparent";
         out.backdropShadowBlur = 0;
       } else if (over && !graph.areNeighbors(over, node)) {
-        out.color = withAlpha(nodeColor, 40);
-        out.opacity = 0.15;
+        out.color = withAlpha(out.color as string, FADED_ALPHA);
+        out.opacity = FADED_ALPHA / 255;
         out.label = "";
       }
       return out;

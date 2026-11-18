@@ -9896,6 +9896,7 @@ ${rate(r.balancedAccuracy)}`, summary) }
     "value",
     "tooltip",
     "resolution",
+    "aggregate",
     "classification",
     "num_classes",
     "colormap",
@@ -9926,12 +9927,17 @@ ${rate(r.balancedAccuracy)}`, summary) }
     return { features: collection, ids };
   }
   var fieldText = (v) => typeof v === "number" ? String(formatNumber(v)) : v;
-  function joinChoropleth(model, ids) {
+  function combine(values, aggregate) {
+    if (aggregate === "sum") return values.reduce((a, b) => a + b, 0);
+    if (aggregate === "mean") return values.reduce((a, b) => a + b, 0) / values.length;
+    const sorted = [...values].sort((a, b) => a - b);
+    const mid = Math.floor(sorted.length / 2);
+    return sorted.length % 2 === 1 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
+  }
+  function joinChoropleth(model, ids, aggregate = "none") {
     const resolution = model.resolution ?? "country";
     const fields = model.tooltipFields ?? [];
-    const values = /* @__PURE__ */ new Map();
-    const extras = /* @__PURE__ */ new Map();
-    const rowOf = /* @__PURE__ */ new Map();
+    const members = /* @__PURE__ */ new Map();
     const unmatchedKeys = [];
     let unmatched = 0;
     model.rows.forEach((row, i) => {
@@ -9941,22 +9947,43 @@ ${rate(r.balancedAccuracy)}`, summary) }
         if (unmatchedKeys.length < 12) unmatchedKeys.push(row.location);
         return;
       }
-      const first = rowOf.get(id);
-      if (first !== void 0) {
+      const rows = members.get(id);
+      if (!rows) {
+        members.set(id, [i]);
+        return;
+      }
+      if (aggregate === "none") {
+        const first = rows[0];
         throw new Error(
-          `A region takes one value; rows ${first + 1} and ${i + 1} both name region '${id}' ('${model.rows[first]?.location}', '${row.location}').`
+          `A region takes one value; rows ${first + 1} and ${i + 1} both name region '${id}' ('${model.rows[first]?.location}', '${row.location}'). Set \`aggregate\` to sum, mean, or median to combine them.`
         );
       }
-      rowOf.set(id, i);
-      if (typeof row.value === "number" && Number.isFinite(row.value)) values.set(id, row.value);
+      rows.push(i);
+    });
+    const values = /* @__PURE__ */ new Map();
+    const extras = /* @__PURE__ */ new Map();
+    const counts = /* @__PURE__ */ new Map();
+    let matched = 0;
+    for (const [id, indices] of members) {
+      const rows = indices.map((i) => model.rows[i]);
+      matched += rows.length;
+      counts.set(id, rows.length);
+      const finite2 = rows.map((r) => r.value).filter((v) => typeof v === "number" && Number.isFinite(v));
+      if (finite2.length > 0) {
+        values.set(id, aggregate === "none" ? finite2[0] : combine(finite2, aggregate));
+      }
       const lines = [];
       for (const f of fields) {
-        const v = row.extras?.[f];
-        if (v !== null && v !== void 0) lines.push({ label: f, value: fieldText(v) });
+        const shown = new Set(rows.map((r) => r.extras?.[f] ?? null));
+        const [v] = shown;
+        if (shown.size === 1 && v !== null && v !== void 0) {
+          lines.push({ label: f, value: fieldText(v) });
+        }
       }
+      if (rows.length > 1) lines.push({ label: "Rows", value: String(rows.length) });
       if (lines.length > 0) extras.set(id, lines);
-    });
-    return { values, extras, matched: rowOf.size, unmatched, unmatchedKeys };
+    }
+    return { values, extras, rows: counts, matched, unmatched, unmatchedKeys };
   }
   var INTERPOLATOR = {
     blues: "interpolateBlues",
@@ -10194,6 +10221,7 @@ ${rate(r.balancedAccuracy)}`, summary) }
   }
   var nodeAttributes = (graph, id) => graph.getNodeAttributes(id);
   var edgeAttributes = (graph, id) => graph.getEdgeAttributes(id);
+  var FADED_ALPHA = 77;
   var NEUTRAL_EDGE_COLOR = "#9aa0a6";
   var HEX6 = /^#[0-9a-f]{6}$/i;
   function withAlpha3(color, alpha) {
@@ -10253,8 +10281,8 @@ ${rate(r.balancedAccuracy)}`, summary) }
           out.backdropShadowColor = "transparent";
           out.backdropShadowBlur = 0;
         } else if (over && !graph.areNeighbors(over, node)) {
-          out.color = withAlpha3(nodeColor, 40);
-          out.opacity = 0.15;
+          out.color = withAlpha3(out.color, FADED_ALPHA);
+          out.opacity = FADED_ALPHA / 255;
           out.label = "";
         }
         return out;

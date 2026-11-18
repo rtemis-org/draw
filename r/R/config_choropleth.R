@@ -2,10 +2,9 @@
 # ::rtemis.draw::
 # 2026- EDG rtemis.org
 
-# The choropleth map's config. Column-bound like scatter, but compiling to a
-# MapLibre option rather than an ECharts one -- which is the point of `compile()`
-# being a generic: the backend is a fact about the chart type, not about the
-# config layer.
+# The choropleth map's config, compiling to a MapLibre option whose `config`
+# member @rtemis/draw's choropleth functions read
+# (spec: draw/shared-builders#choropleth).
 #
 # There is no separate `MapConfig`. `draw_map()` takes an already-built
 # `MapModel`, which is the rendering IR; the *chart type* is the choropleth, and
@@ -22,6 +21,10 @@
 #' @param tooltip Optional Character: Column holding per-region tooltip text.
 #' @param resolution Character \{"country", "state", "county"\}: Which boundary
 #'   set the locations refer to.
+#' @param aggregate Character \{"none", "sum", "mean", "median"\}: How the
+#'   values of rows naming one region combine into the region's value. A region
+#'   takes one value, so with `"none"` two such rows are an error. Missing values
+#'   are left out of each summary.
 #' @param classification Character \{"quantile", "equal", "jenks"\}: How values
 #'   are binned into classes.
 #' @param num_classes Numeric `[2, 12]`: Number of color classes.
@@ -69,6 +72,14 @@ ChoroplethConfig <- new_class(
       "country",
       enum = c("country", "state", "county"),
       description = "Which boundary set the locations refer to."
+    ),
+    aggregate = prop_string(
+      "none",
+      enum = map_aggregates,
+      description = paste(
+        "How the values of rows naming one region combine into the region's",
+        "value: none requires one row per region."
+      )
     ),
     classification = prop_string(
       "quantile",
@@ -158,6 +169,7 @@ setup_ChoroplethConfig <- function(
   value = NULL,
   tooltip = NULL,
   resolution = "country",
+  aggregate = "none",
   classification = "quantile",
   num_classes = 5,
   colormap = "blues",
@@ -179,6 +191,7 @@ setup_ChoroplethConfig <- function(
     value = value,
     tooltip = tooltip,
     resolution = resolution,
+    aggregate = aggregate,
     classification = classification,
     num_classes = num_classes,
     colormap = colormap,
@@ -230,6 +243,7 @@ method(compile, ChoroplethConfig) <- function(
   )
   map_option(
     model = model,
+    aggregate = config@aggregate,
     classification = config@classification,
     colormap = config@colormap,
     num_classes = config@num_classes,
