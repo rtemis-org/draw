@@ -46,8 +46,7 @@ schemes \code{"rdbu"}, \code{"rdylgn"}, \code{"spectral"}, \code{"brbg"}.}
 \item{tooltip_position}{Character \{"top-left", "top-right", "bottom-left",
 "bottom-right"\}: Hover tooltip corner.}
 
-\item{title}{Optional Character: Title (currently surfaced via the value
-label; reserved for future use).}
+\item{title}{Optional Character: Title drawn at the map's top left.}
 }
 \value{
 \code{MapLibreOption} object.
@@ -65,9 +64,10 @@ Most users never touch this directly -- \code{\link[=draw_choropleth]{draw_choro
 build it -- but power users can construct it for full control:
 \code{draw(MapLibreOption(model = MapModel(...), colormap = "viridis"))}.
 
-Its \code{\link[=to_list]{to_list()}} produces the \verb{\{ model, style, title \}} payload consumed by
-the \code{rtemis-map} htmlwidget binding (the geometry is added by the \code{\link[=draw]{draw()}}
-method, since it depends only on the model's resolution).
+Its \code{\link[=to_list]{to_list()}} produces the \verb{\{ model, config, title \}} payload consumed by
+the \code{rtemis-map} htmlwidget binding, \code{config} holding the
+\code{chart/choropleth/v1} members that \verb{@rtemis/draw}'s choropleth functions
+read. The \code{\link[=draw]{draw()}} method adds the geometry of the model's resolution.
 }
 \examples{
 model <- MapModel(

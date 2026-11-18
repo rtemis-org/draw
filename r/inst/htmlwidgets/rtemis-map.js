@@ -1,21 +1,16 @@
 // rtemis-map htmlwidget binding.
 //
-// MapLibre GL renderer for the choropleth map plot type. This is the third
-// rendering surface in rtemis.draw (after ECharts and Sigma.js); it consumes a
-// renderer-agnostic map model ({ rows, resolution, valueLabel, tooltipFields })
-// plus an embedded TopoJSON geometry -- not an EChartsOption -- and manages the
-// MapLibre instance lifecycle.
+// MapLibre GL renderer for the choropleth map. The payload carries a map model
+// ({ rows, resolution, valueLabel, tooltipFields }), its chart/choropleth/v1
+// config, and the TopoJSON geometry of its resolution. @rtemis/draw
+// (window.RtemisDraw) decodes the regions, joins the rows, and builds the
+// classes and the fill expression, as for rtemislive's MapCanvas; this binding
+// owns the MapLibre instance, the legend, tooltip, and title overlays, and
+// theme changes. No basemap tiles: boundaries render on the theme background.
+// spec: draw/shared-builders#choropleth
 //
-// It is a vanilla-JS port of rtemislive's MapCanvas.tsx
-// together with the scale
-// (choroplethScale.ts) and location-resolver (locationResolver.ts) logic that
-// in rtemislive live in separate modules. No basemap tiles: admin boundaries
-// render on the themed app background, exactly like rtemislive.
-//
-// maplibregl + topojson-client + d3-scale-chromatic come from the vendored
-// bundle (window.RtemisMap), built from r/tools/map-bundle. Styling options
-// arrive once on the payload (no live sliders, unlike the React app) under
-// payload.style.
+// maplibregl, topojson-client, and d3-scale-chromatic come from the vendored
+// bundle (window.RtemisMap), built from r/tools/map-bundle.
 
 HTMLWidgets.widget({
   name: "rtemis-map",
@@ -32,20 +27,16 @@ HTMLWidgets.widget({
     const LINE_LAYER = "regions-outline";
     const BG_LAYER = "bg";
 
-    // Theme colors (mirror MapCanvas.tsx). Used when the rtemis theme does not
-    // supply an explicit background.
-    const OUTLINE_LIGHT = "#cbd5e1"; // slate-300
-    const OUTLINE_DARK = "#3f3f46"; // zinc-700
 
     // The payload last rendered, and the color scheme it was rendered in, so a
     // theme change can re-render it (see the watcher below).
     let currentPayload = null;
     let renderedDark = null;
 
-    // Resolve the active theme (echarts-shaped list) -> the few colors the map
-    // needs. For an explicit theme we infer dark/light from the background
-    // luminance; for auto mode we detect it from the host with the detection
-    // shared by all bindings (lib/draw/theme_watch.js).
+    // Resolves the active theme (an ECharts theme list) to the colors the map
+    // reads. An explicit theme is dark or light by its background luminance; in
+    // auto mode the host's scheme decides, by the detection every binding shares
+    // (lib/draw/theme_watch.js).
     const resolveTheme = (x) => {
       renderedDark = window.RtemisThemeWatch.isDark();
       return window.RtemisVectorTheme.resolve(
@@ -53,7 +44,6 @@ HTMLWidgets.widget({
       );
     };
 
-    const {normalizeKey, fillColorExpression} = window.RtemisMapScene;
 
     // ── Overlays ─────────────────────────────────────────────────────────────
     el.style.position = "relative";
@@ -106,9 +96,10 @@ HTMLWidgets.widget({
     // the same map in a new theme; a new payload starts from its own view.
     const renderMap = (x, view = null) => {
       currentPayload = x;
-      if (!maplibregl || !topojsonFeature || !chromatic) {
+      const draw = window.RtemisDraw;
+      if (!maplibregl || !topojsonFeature || !chromatic || !draw) {
         container.innerHTML =
-          '<div style="padding:1rem;color:#b00">rtemis-map bundle failed to load (window.RtemisMap missing).</div>';
+          '<div style="padding:1rem;color:#b00">rtemis-map bundles failed to load (window.RtemisMap or window.RtemisDraw missing).</div>';
         return;
       }
       if (map) {
@@ -120,21 +111,31 @@ HTMLWidgets.widget({
       titleEl.style.display = "none";
 
       const model = x.model || {};
-      const s = x.style || {};
+      const s = x.config || {};
       const geo = x.geo || {};
-      const rows = model.rows || [];
-      const resolution = model.resolution || "country";
+      const resolution = model.resolution || s.resolution || "country";
       const theme = resolveTheme(x);
       const oc = overlayColors(theme);
+      const valueLabel = s.value_label || model.valueLabel;
 
       el.style.backgroundColor = theme.bg;
       el.style.fontFamily = theme.fontFamily;
 
-      let scene;
-      try { scene = window.RtemisMapScene.create(x, theme.dark); }
-      catch (err) { container.textContent = "rtemis-map: failed to parse geometry."; throw err; }
-      const fc = scene.fc, idSet = scene.ids;
-
+      // A geometry or join error replaces the map with its message.
+      let regions, joined;
+      try {
+        regions = draw.mapFeatures(JSON.parse(geo.topojson), resolution, topojsonFeature);
+        joined = draw.joinChoropleth({ ...model, resolution }, regions.ids);
+      } catch (err) {
+        container.textContent = "rtemis-map: " + err.message;
+        throw err;
+      }
+      const scale = draw.buildChoroplethScale(
+        joined.values.values(), s, { scheme: theme.dark ? "dark" : "light" }, chromatic
+      );
+      valueById = joined.values;
+      extrasById = joined.extras;
+      const outline = draw.CHOROPLETH_COLORS.outline[theme.dark ? "dark" : "light"];
 
       map = new maplibregl.Map({
         container: container,
@@ -159,74 +160,35 @@ HTMLWidgets.widget({
       map.on("load", () => {
         map.addSource(SOURCE_ID, {
           type: "geojson",
-          data: fc,
+          data: regions.features,
           promoteId: "joinId",
         });
         map.addLayer({
           id: FILL_LAYER,
           type: "fill",
           source: SOURCE_ID,
-          paint: { "fill-color": "#ccc", "fill-opacity": s.opacity != null ? s.opacity : 1 },
+          paint: {
+            "fill-color": draw.choroplethFillExpression(scale),
+            "fill-opacity": s.opacity != null ? s.opacity : 1,
+          },
         });
         map.addLayer({
           id: LINE_LAYER,
           type: "line",
           source: SOURCE_ID,
           paint: {
-            "line-color": theme.dark ? OUTLINE_DARK : OUTLINE_LIGHT,
-            "line-width": s.outlineWidth != null ? s.outlineWidth : 0.2,
+            "line-color": outline,
+            "line-width": s.outline_width != null ? s.outline_width : 0.2,
           },
+          layout: { visibility: s.show_boundaries === false ? "none" : "visible" },
         });
-
-        const scale = scene.scale;
-        map.removeFeatureState({ source: SOURCE_ID });
-        valueById = scene.values;
-        extrasById = new Map();
-        const tooltipFields = model.tooltipFields || [];
-        let matched = 0;
-        let unmatched = 0;
-        const unmatchedKeys = [];
-        for (const row of rows) {
-          const id = normalizeKey(row.location, resolution);
-          if (id && idSet.has(id)) {
-            valueById.set(id, row.value);
-            if (tooltipFields.length > 0 && row.extras) {
-              extrasById.set(
-                id,
-                tooltipFields
-                  .filter((f) => row.extras[f] != null)
-                  .map((f) => {
-                    const v = row.extras[f];
-                    return {
-                      label: f,
-                      value:
-                        typeof v === "number" ? v.toLocaleString() : String(v),
-                    };
-                  }),
-              );
-            }
-            matched++;
-          } else {
-            unmatched++;
-            if (unmatchedKeys.length < 12) unmatchedKeys.push(row.location);
-          }
-        }
         for (const [id, v] of valueById) {
           map.setFeatureState({ source: SOURCE_ID, id: id }, { v: v });
         }
 
-        // Paint.
-        map.setPaintProperty(FILL_LAYER, "fill-color", fillColorExpression(scale));
-        map.setPaintProperty(FILL_LAYER, "fill-opacity", s.opacity != null ? s.opacity : 1);
-        map.setLayoutProperty(
-          LINE_LAYER,
-          "visibility",
-          s.showBoundaries === false ? "none" : "visible",
-        );
-
-        renderLegend(x, scale, oc);
+        renderLegend(s, valueLabel, scale, oc);
         // Processing diagnostics belong in the console, not on the figure.
-        if (unmatched) console.warn("rtemis-map: unmatched locations:", unmatchedKeys);
+        if (joined.unmatched) console.warn("rtemis-map: unmatched locations:", joined.unmatchedKeys);
         if (x.title) { titleEl.textContent = x.title; titleEl.style.color = theme.fg; titleEl.style.display = "block"; }
       });
 
@@ -240,8 +202,8 @@ HTMLWidgets.widget({
         const value = valueById.has(id) ? valueById.get(id) : null;
         const extras = extrasById.get(id) || [];
         let html = '<div style="font-weight:500">' + escapeHtml(name) + "</div>";
-        const vlabel = model.valueLabel
-          ? '<span style="color:' + oc.muted + '">' + escapeHtml(model.valueLabel) + ": </span>"
+        const vlabel = valueLabel
+          ? '<span style="color:' + oc.muted + '">' + escapeHtml(valueLabel) + ": </span>"
           : "";
         html +=
           '<div style="color:' +
@@ -251,7 +213,7 @@ HTMLWidgets.widget({
           '<span style="font-variant-numeric:tabular-nums;color:' +
           oc.fg +
           '">' +
-          (value == null ? "no data" : value.toLocaleString()) +
+          (value == null ? "no data" : escapeHtml(String(draw.formatNumber(value)))) +
           "</span></div>";
         for (const ex of extras) {
           html +=
@@ -267,7 +229,7 @@ HTMLWidgets.widget({
         }
         tooltipEl.style.cssText =
           tooltipEl.style.cssText.replace(/top:[^;]*;|bottom:[^;]*;|left:[^;]*;|right:[^;]*;/g, "") +
-          cornerStyle(s.tooltipPosition || "top-right");
+          cornerStyle(s.tooltip_position || "top-right");
         tooltipEl.style.backgroundColor = oc.bg;
         tooltipEl.style.color = oc.fg;
         tooltipEl.innerHTML = html;
@@ -285,18 +247,16 @@ HTMLWidgets.widget({
       resizeObserver.observe(container);
     };
 
-    const renderLegend = (x, scale, oc) => {
-      const s = x.style || {};
-      const model = x.model || {};
-      if (s.showLegend === false || !scale.legend || scale.legend.length === 0) {
+    const renderLegend = (s, valueLabel, scale, oc) => {
+      if (s.show_legend === false || !scale.legend || scale.legend.length === 0) {
         legendEl.style.display = "none";
         return;
       }
       let html = "";
-      if (model.valueLabel) {
+      if (valueLabel) {
         html +=
           '<div style="font-weight:500;margin-bottom:4px">' +
-          escapeHtml(model.valueLabel) +
+          escapeHtml(valueLabel) +
           "</div>";
       }
       const swatch = (color) =>
@@ -321,7 +281,7 @@ HTMLWidgets.widget({
         "<span>No data</span></div>";
       legendEl.style.cssText =
         legendEl.style.cssText.replace(/top:[^;]*;|bottom:[^;]*;|left:[^;]*;|right:[^;]*;/g, "") +
-        cornerStyle(s.legendPosition || "bottom-right");
+        cornerStyle(s.legend_position || "bottom-right");
       legendEl.style.backgroundColor = oc.bg;
       legendEl.style.color = oc.fg;
       legendEl.innerHTML = html;

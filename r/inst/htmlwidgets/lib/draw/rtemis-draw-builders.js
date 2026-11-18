@@ -25,6 +25,10 @@ var RtemisDraw = (() => {
     BAR_CHART_CONFIG_MEMBERS: () => BAR_CHART_CONFIG_MEMBERS,
     BOXPLOT_CHART_CONFIG_MEMBERS: () => BOXPLOT_CHART_CONFIG_MEMBERS,
     CALIBRATION_CHART_CONFIG_MEMBERS: () => CALIBRATION_CHART_CONFIG_MEMBERS,
+    CHOROPLETH_CHART_CONFIG_MEMBERS: () => CHOROPLETH_CHART_CONFIG_MEMBERS,
+    CHOROPLETH_COLORMAPS: () => CHOROPLETH_COLORMAPS,
+    CHOROPLETH_COLORS: () => CHOROPLETH_COLORS,
+    CHOROPLETH_GEOMETRY: () => CHOROPLETH_GEOMETRY,
     COLORMAPS: () => COLORMAPS,
     CONFUSION_CHART_CONFIG_MEMBERS: () => CONFUSION_CHART_CONFIG_MEMBERS,
     DEFAULT_FONT_FAMILY: () => DEFAULT_FONT_FAMILY,
@@ -73,6 +77,7 @@ var RtemisDraw = (() => {
     buildBarOption: () => buildBarOption,
     buildBoxplotOption: () => buildBoxplotOption,
     buildCalibrationOption: () => buildCalibrationOption,
+    buildChoroplethScale: () => buildChoroplethScale,
     buildConfusionOption: () => buildConfusionOption,
     buildDensityOption: () => buildDensityOption,
     buildGanttOption: () => buildGanttOption,
@@ -93,6 +98,8 @@ var RtemisDraw = (() => {
     builders: () => builders,
     calcLimits: () => calcLimits,
     calcLimitsFromZero: () => calcLimitsFromZero,
+    choroplethColor: () => choroplethColor,
+    choroplethFillExpression: () => choroplethFillExpression,
     classCount: () => classCount,
     colorRamp: () => colorRamp,
     confusionHeight: () => confusionHeight,
@@ -119,13 +126,16 @@ var RtemisDraw = (() => {
     heatmapMargins: () => heatmapMargins,
     histogramEdges: () => histogramEdges,
     histogramValueLabel: () => histogramValueLabel,
+    joinChoropleth: () => joinChoropleth,
     kernelDensity: () => kernelDensity,
     keyPlacement: () => keyPlacement,
     keyState: () => keyState,
     layoutSurvivalRisk: () => layoutSurvivalRisk,
     lightThemeTokens: () => lightThemeTokens,
     lineAspect: () => lineAspect,
+    mapFeatures: () => mapFeatures,
     networkReducers: () => networkReducers,
+    normalizeLocation: () => normalizeLocation,
     pieSlices: () => pieSlices,
     placeColorScale: () => placeColorScale,
     placeZoomSlider: () => placeZoomSlider,
@@ -9552,6 +9562,531 @@ ${rate(r.balancedAccuracy)}`, summary) }
       return `${row.marker}${escapeHtml3(name)}&nbsp;&nbsp;<b>${value(row.raw)}</b>${summary}`;
     });
     return [escapeHtml3(list[0]?.axisValueLabel ?? ""), ...lines].join("<br/>");
+  }
+
+  // src/charts/choropleth/locations.ts
+  var STATE_ABBR_TO_FIPS = {
+    AL: "01",
+    AK: "02",
+    AZ: "04",
+    AR: "05",
+    CA: "06",
+    CO: "08",
+    CT: "09",
+    DE: "10",
+    DC: "11",
+    FL: "12",
+    GA: "13",
+    HI: "15",
+    ID: "16",
+    IL: "17",
+    IN: "18",
+    IA: "19",
+    KS: "20",
+    KY: "21",
+    LA: "22",
+    ME: "23",
+    MD: "24",
+    MA: "25",
+    MI: "26",
+    MN: "27",
+    MS: "28",
+    MO: "29",
+    MT: "30",
+    NE: "31",
+    NV: "32",
+    NH: "33",
+    NJ: "34",
+    NM: "35",
+    NY: "36",
+    NC: "37",
+    ND: "38",
+    OH: "39",
+    OK: "40",
+    OR: "41",
+    PA: "42",
+    RI: "44",
+    SC: "45",
+    SD: "46",
+    TN: "47",
+    TX: "48",
+    UT: "49",
+    VT: "50",
+    VA: "51",
+    WA: "53",
+    WV: "54",
+    WI: "55",
+    WY: "56",
+    PR: "72",
+    VI: "78",
+    GU: "66",
+    AS: "60",
+    MP: "69"
+  };
+  var STATE_NAME_TO_FIPS = {
+    alabama: "01",
+    alaska: "02",
+    "american samoa": "60",
+    arizona: "04",
+    arkansas: "05",
+    california: "06",
+    colorado: "08",
+    "commonwealth of the northern mariana islands": "69",
+    connecticut: "09",
+    delaware: "10",
+    "district of columbia": "11",
+    florida: "12",
+    georgia: "13",
+    guam: "66",
+    hawaii: "15",
+    idaho: "16",
+    illinois: "17",
+    indiana: "18",
+    iowa: "19",
+    kansas: "20",
+    kentucky: "21",
+    louisiana: "22",
+    maine: "23",
+    maryland: "24",
+    massachusetts: "25",
+    michigan: "26",
+    minnesota: "27",
+    mississippi: "28",
+    missouri: "29",
+    montana: "30",
+    nebraska: "31",
+    nevada: "32",
+    "new hampshire": "33",
+    "new jersey": "34",
+    "new mexico": "35",
+    "new york": "36",
+    "north carolina": "37",
+    "north dakota": "38",
+    ohio: "39",
+    oklahoma: "40",
+    oregon: "41",
+    pennsylvania: "42",
+    "puerto rico": "72",
+    "rhode island": "44",
+    "south carolina": "45",
+    "south dakota": "46",
+    tennessee: "47",
+    texas: "48",
+    "united states virgin islands": "78",
+    utah: "49",
+    vermont: "50",
+    virginia: "51",
+    washington: "53",
+    "west virginia": "54",
+    wisconsin: "55",
+    wyoming: "56"
+  };
+  var ISO2_TO_ISO3 = {
+    AE: "ARE",
+    AF: "AFG",
+    AL: "ALB",
+    AM: "ARM",
+    AO: "AGO",
+    AQ: "ATA",
+    AR: "ARG",
+    AT: "AUT",
+    AU: "AUS",
+    AZ: "AZE",
+    BA: "BIH",
+    BD: "BGD",
+    BE: "BEL",
+    BF: "BFA",
+    BG: "BGR",
+    BI: "BDI",
+    BJ: "BEN",
+    BN: "BRN",
+    BO: "BOL",
+    BR: "BRA",
+    BS: "BHS",
+    BT: "BTN",
+    BW: "BWA",
+    BY: "BLR",
+    BZ: "BLZ",
+    CA: "CAN",
+    CD: "COD",
+    CF: "CAF",
+    CG: "COG",
+    CH: "CHE",
+    CI: "CIV",
+    CL: "CHL",
+    CM: "CMR",
+    CN: "CHN",
+    CO: "COL",
+    CR: "CRI",
+    CU: "CUB",
+    CY: "CYP",
+    CZ: "CZE",
+    DE: "DEU",
+    DJ: "DJI",
+    DK: "DNK",
+    DO: "DOM",
+    DZ: "DZA",
+    EC: "ECU",
+    EE: "EST",
+    EG: "EGY",
+    EH: "ESH",
+    ER: "ERI",
+    ES: "ESP",
+    ET: "ETH",
+    FI: "FIN",
+    FJ: "FJI",
+    FK: "FLK",
+    FR: "FRA",
+    GA: "GAB",
+    GB: "GBR",
+    GE: "GEO",
+    GH: "GHA",
+    GL: "GRL",
+    GM: "GMB",
+    GN: "GIN",
+    GQ: "GNQ",
+    GR: "GRC",
+    GT: "GTM",
+    GW: "GNB",
+    GY: "GUY",
+    HN: "HND",
+    HR: "HRV",
+    HT: "HTI",
+    HU: "HUN",
+    ID: "IDN",
+    IE: "IRL",
+    IL: "ISR",
+    IN: "IND",
+    IQ: "IRQ",
+    IR: "IRN",
+    IS: "ISL",
+    IT: "ITA",
+    JM: "JAM",
+    JO: "JOR",
+    JP: "JPN",
+    KE: "KEN",
+    KG: "KGZ",
+    KH: "KHM",
+    KP: "PRK",
+    KR: "KOR",
+    KW: "KWT",
+    KZ: "KAZ",
+    LA: "LAO",
+    LB: "LBN",
+    LK: "LKA",
+    LR: "LBR",
+    LS: "LSO",
+    LT: "LTU",
+    LU: "LUX",
+    LV: "LVA",
+    LY: "LBY",
+    MA: "MAR",
+    MD: "MDA",
+    ME: "MNE",
+    MG: "MDG",
+    MK: "MKD",
+    ML: "MLI",
+    MM: "MMR",
+    MN: "MNG",
+    MR: "MRT",
+    MW: "MWI",
+    MX: "MEX",
+    MY: "MYS",
+    MZ: "MOZ",
+    NA: "NAM",
+    NC: "NCL",
+    NE: "NER",
+    NG: "NGA",
+    NI: "NIC",
+    NL: "NLD",
+    NO: "NOR",
+    NP: "NPL",
+    NZ: "NZL",
+    OM: "OMN",
+    PA: "PAN",
+    PE: "PER",
+    PG: "PNG",
+    PH: "PHL",
+    PK: "PAK",
+    PL: "POL",
+    PR: "PRI",
+    PS: "PSE",
+    PT: "PRT",
+    PY: "PRY",
+    QA: "QAT",
+    RO: "ROU",
+    RS: "SRB",
+    RU: "RUS",
+    RW: "RWA",
+    SA: "SAU",
+    SB: "SLB",
+    SD: "SDN",
+    SE: "SWE",
+    SI: "SVN",
+    SK: "SVK",
+    SL: "SLE",
+    SN: "SEN",
+    SO: "SOM",
+    SR: "SUR",
+    SS: "SSD",
+    SV: "SLV",
+    SY: "SYR",
+    SZ: "SWZ",
+    TD: "TCD",
+    TF: "ATF",
+    TG: "TGO",
+    TH: "THA",
+    TJ: "TJK",
+    TL: "TLS",
+    TM: "TKM",
+    TN: "TUN",
+    TR: "TUR",
+    TT: "TTO",
+    TW: "TWN",
+    TZ: "TZA",
+    UA: "UKR",
+    UG: "UGA",
+    US: "USA",
+    UY: "URY",
+    UZ: "UZB",
+    VE: "VEN",
+    VN: "VNM",
+    VU: "VUT",
+    YE: "YEM",
+    ZA: "ZAF",
+    ZM: "ZMB",
+    ZW: "ZWE"
+  };
+  var digitsOf = (s) => s.replace(/[^0-9]/g, "");
+  function normalizeLocation(raw, resolution) {
+    if (raw === null || raw === void 0) return null;
+    const s = String(raw).trim();
+    if (!s) return null;
+    if (resolution === "county") {
+      const d = digitsOf(s);
+      return d && d.length <= 5 ? d.padStart(5, "0") : null;
+    }
+    if (resolution === "state") {
+      const d = digitsOf(s);
+      if (d) return d.length <= 2 ? d.padStart(2, "0") : null;
+      return STATE_ABBR_TO_FIPS[s.toUpperCase()] ?? STATE_NAME_TO_FIPS[s.toLowerCase()] ?? null;
+    }
+    const up = s.toUpperCase();
+    if (up.length === 3) return up;
+    if (up.length === 2) return ISO2_TO_ISO3[up] ?? null;
+    return null;
+  }
+
+  // src/charts/choropleth/config.ts
+  var CHOROPLETH_COLORMAPS = Object.freeze([
+    "blues",
+    "viridis",
+    "ylorrd",
+    "greens",
+    "magma",
+    "rdbu",
+    "rdylgn",
+    "spectral",
+    "brbg"
+  ]);
+  var CHOROPLETH_CHART_CONFIG_MEMBERS = Object.freeze([
+    "type",
+    "title",
+    "location",
+    "value",
+    "tooltip",
+    "resolution",
+    "classification",
+    "num_classes",
+    "colormap",
+    "opacity",
+    "show_boundaries",
+    "outline_width",
+    "show_legend",
+    "legend_position",
+    "tooltip_position",
+    "value_label"
+  ]);
+  var CHOROPLETH_GEOMETRY = Object.freeze({
+    country: { object: "countries", center: [0, 20], zoom: 0.4 },
+    state: { object: "states", center: [-96, 38], zoom: 2.6 },
+    county: { object: "counties", center: [-96, 38], zoom: 2.6 }
+  });
+  function mapFeatures(topology, resolution, feature) {
+    const name = CHOROPLETH_GEOMETRY[resolution].object;
+    const object = topology.objects[name];
+    if (!object) throw new Error(`The map geometry has no object '${name}'.`);
+    const collection = feature(topology, object);
+    const ids = /* @__PURE__ */ new Set();
+    for (const f of collection.features) {
+      const id = f.id === void 0 || f.id === null ? "" : String(f.id);
+      f.properties = { ...f.properties ?? {}, joinId: id };
+      if (id) ids.add(id);
+    }
+    return { features: collection, ids };
+  }
+  var fieldText = (v) => typeof v === "number" ? String(formatNumber(v)) : v;
+  function joinChoropleth(model, ids) {
+    const resolution = model.resolution ?? "country";
+    const fields = model.tooltipFields ?? [];
+    const values = /* @__PURE__ */ new Map();
+    const extras = /* @__PURE__ */ new Map();
+    const rowOf = /* @__PURE__ */ new Map();
+    const unmatchedKeys = [];
+    let unmatched = 0;
+    model.rows.forEach((row, i) => {
+      const id = normalizeLocation(row.location, resolution);
+      if (!id || !ids.has(id)) {
+        unmatched++;
+        if (unmatchedKeys.length < 12) unmatchedKeys.push(row.location);
+        return;
+      }
+      const first = rowOf.get(id);
+      if (first !== void 0) {
+        throw new Error(
+          `A region takes one value; rows ${first + 1} and ${i + 1} both name region '${id}' ('${model.rows[first]?.location}', '${row.location}').`
+        );
+      }
+      rowOf.set(id, i);
+      if (typeof row.value === "number" && Number.isFinite(row.value)) values.set(id, row.value);
+      const lines = [];
+      for (const f of fields) {
+        const v = row.extras?.[f];
+        if (v !== null && v !== void 0) lines.push({ label: f, value: fieldText(v) });
+      }
+      if (lines.length > 0) extras.set(id, lines);
+    });
+    return { values, extras, matched: rowOf.size, unmatched, unmatchedKeys };
+  }
+  var INTERPOLATOR = {
+    blues: "interpolateBlues",
+    viridis: "interpolateViridis",
+    ylorrd: "interpolateYlOrRd",
+    greens: "interpolateGreens",
+    magma: "interpolateMagma",
+    rdbu: "interpolateRdBu",
+    rdylgn: "interpolateRdYlGn",
+    spectral: "interpolateSpectral",
+    brbg: "interpolateBrBG"
+  };
+  var DIVERGING = /* @__PURE__ */ new Set(["rdbu", "rdylgn", "spectral", "brbg"]);
+  var CHOROPLETH_COLORS = Object.freeze({
+    missing: Object.freeze({ light: "#e4e4e7", dark: "#3f3f46" }),
+    outline: Object.freeze({ light: "#cbd5e1", dark: "#3f3f46" })
+  });
+  function rampColors(interp, n, dark, diverging) {
+    const t0 = diverging ? 0 : dark ? 0.3 : 0.12;
+    const t1 = diverging ? 1 : dark ? 1 : 0.95;
+    return Array.from({ length: n }, (_, i) => interp(t0 + (t1 - t0) * i / (n - 1)));
+  }
+  function quantileBreaks(sorted, classes) {
+    const breaks = [];
+    for (let i = 1; i < classes; i++) {
+      const q = (sorted.length - 1) * (i / classes);
+      const lo = sorted[Math.floor(q)];
+      const hi = sorted[Math.ceil(q)];
+      breaks.push(lo + (hi - lo) * (q - Math.floor(q)));
+    }
+    return breaks;
+  }
+  function equalBreaks(min, max, classes) {
+    const step = (max - min) / classes;
+    return Array.from({ length: classes - 1 }, (_, i) => min + step * (i + 1));
+  }
+  var JENKS_CAP = 1500;
+  function jenksBreaks(values, classes) {
+    let data = values;
+    if (data.length > JENKS_CAP) {
+      const step = data.length / JENKS_CAP;
+      data = Array.from({ length: JENKS_CAP }, (_, i) => values[Math.floor(i * step)]);
+    }
+    const n = data.length;
+    if (n <= classes) return quantileBreaks(values, classes);
+    const lower = Array.from({ length: n + 1 }, () => new Array(classes + 1).fill(0));
+    const cost = Array.from({ length: n + 1 }, () => new Array(classes + 1).fill(0));
+    for (let j = 1; j <= classes; j++) {
+      lower[1][j] = 1;
+      for (let i = 2; i <= n; i++) cost[i][j] = Number.POSITIVE_INFINITY;
+    }
+    for (let l = 2; l <= n; l++) {
+      const lowerL = lower[l];
+      const costL = cost[l];
+      let s1 = 0;
+      let s2 = 0;
+      for (let m = 1; m <= l; m++) {
+        const i3 = l - m + 1;
+        const val = data[i3 - 1];
+        s1 += val;
+        s2 += val * val;
+        const variance = s2 - s1 * s1 / m;
+        const i4 = i3 - 1;
+        if (i4 === 0) continue;
+        const costI4 = cost[i4];
+        for (let j = 2; j <= classes; j++) {
+          const candidate = variance + costI4[j - 1];
+          if (costL[j] >= candidate) {
+            lowerL[j] = i3;
+            costL[j] = candidate;
+          }
+        }
+      }
+      lowerL[1] = 1;
+      costL[1] = s2 - s1 * s1 / l;
+    }
+    const breaks = [];
+    let k = n;
+    for (let j = classes; j >= 2 && k >= 1; j--) {
+      const start = lower[k][j] - 1;
+      breaks.push(data[start]);
+      k = start;
+    }
+    return breaks.reverse();
+  }
+  var boundText = (v) => String(formatNumber(v));
+  function buildChoroplethScale(values, config, appearance, interpolators) {
+    const dark = appearance.scheme === "dark";
+    const missingColor = CHOROPLETH_COLORS.missing[dark ? "dark" : "light"];
+    const colormap = config.colormap ?? "blues";
+    const interp = interpolators[INTERPOLATOR[colormap] ?? "interpolateBlues"];
+    const classes = Math.max(2, Math.min(12, Math.round(config.num_classes ?? 5)));
+    const colors = rampColors(interp, classes, dark, DIVERGING.has(colormap));
+    const sorted = [...values].filter((v) => typeof v === "number" && Number.isFinite(v)).sort((a, b) => a - b);
+    if (sorted.length === 0) {
+      return { thresholds: [], colors: colors.slice(0, 1), missingColor, min: 0, max: 0, legend: [] };
+    }
+    const min = sorted[0];
+    const max = sorted[sorted.length - 1];
+    const method = config.classification ?? "quantile";
+    const raw = min === max ? [] : method === "equal" ? equalBreaks(min, max, classes) : method === "jenks" ? jenksBreaks(sorted, classes) : quantileBreaks(sorted, classes);
+    const thresholds = raw.filter((t, i, a) => i === 0 || t > a[i - 1]).filter((t) => t > min && t < max);
+    const bounds = [min, ...thresholds, max];
+    const used = colors.slice(0, thresholds.length + 1);
+    return {
+      thresholds,
+      colors: used,
+      missingColor,
+      min,
+      max,
+      legend: used.map((color, i) => ({
+        color,
+        label: `${boundText(bounds[i])} \u2013 ${boundText(bounds[i + 1])}`
+      }))
+    };
+  }
+  function choroplethColor(scale, value) {
+    if (typeof value !== "number" || !Number.isFinite(value)) return scale.missingColor;
+    let i = 0;
+    while (i < scale.thresholds.length && value >= scale.thresholds[i]) i++;
+    return scale.colors[Math.min(i, scale.colors.length - 1)] ?? scale.missingColor;
+  }
+  function choroplethFillExpression(scale) {
+    const matched = scale.thresholds.length === 0 ? scale.colors[0] ?? scale.missingColor : [
+      "step",
+      ["to-number", ["feature-state", "v"]],
+      scale.colors[0],
+      ...scale.thresholds.flatMap((t, i) => [t, scale.colors[i + 1]])
+    ];
+    return ["case", ["!=", ["feature-state", "v"], null], matched, scale.missingColor];
   }
 
   // src/charts/network/config.ts

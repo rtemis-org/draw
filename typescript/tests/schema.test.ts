@@ -5,6 +5,7 @@ import { A3_CHART_CONFIG_MEMBERS } from "../src/charts/a3/config.ts";
 import { BAR_CHART_CONFIG_MEMBERS } from "../src/charts/bar/config.ts";
 import { BOXPLOT_CHART_CONFIG_MEMBERS } from "../src/charts/boxplot/config.ts";
 import { CALIBRATION_CHART_CONFIG_MEMBERS } from "../src/charts/calibration/config.ts";
+import { CHOROPLETH_CHART_CONFIG_MEMBERS } from "../src/charts/choropleth/config.ts";
 import { CONFUSION_CHART_CONFIG_MEMBERS } from "../src/charts/confusion/config.ts";
 import { PR_CHART_CONFIG_MEMBERS, ROC_CHART_CONFIG_MEMBERS } from "../src/charts/curves/config.ts";
 import { DENSITY_CHART_CONFIG_MEMBERS } from "../src/charts/density/config.ts";
@@ -35,6 +36,7 @@ describe.skipIf(!schemaDir)("config types against the generated schemas", () => 
     ["bar", BAR_CHART_CONFIG_MEMBERS],
     ["boxplot", BOXPLOT_CHART_CONFIG_MEMBERS],
     ["calibration", CALIBRATION_CHART_CONFIG_MEMBERS],
+    ["choropleth", CHOROPLETH_CHART_CONFIG_MEMBERS],
     ["confusion", CONFUSION_CHART_CONFIG_MEMBERS],
     ["density", DENSITY_CHART_CONFIG_MEMBERS],
     ["gantt", GANTT_CHART_CONFIG_MEMBERS],

@@ -103,7 +103,6 @@ manifest[["assets"]] <- tools::md5sum(system.file(
     "htmlwidgets/rtemis-graph.js",
     "htmlwidgets/rtemis-map.js",
     "htmlwidgets/lib/draw/rtemis-draw-builders.js",
-    "htmlwidgets/lib/draw/map_scene.js",
     "htmlwidgets/lib/draw/vector_theme.js",
     "htmlwidgets/lib/draw/theme_watch.js",
     "node/vector.js",

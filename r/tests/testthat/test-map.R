@@ -70,7 +70,7 @@ test_that("MapLibreOption applies sensible style defaults", {
   expect_equal(opt@legend_position, "bottom-right")
 })
 
-test_that("MapLibreOption to_list produces the {model, style} payload shape", {
+test_that("MapLibreOption to_list produces the {model, config} payload shape", {
   m <- MapModel(rows = list(MapRow(location = "USA", value = 1)))
   out <- to_list(MapLibreOption(
     model = m,
@@ -78,18 +78,20 @@ test_that("MapLibreOption to_list produces the {model, style} payload shape", {
     colormap = "viridis",
     num_classes = 7
   ))
-  expect_named(out, c("model", "style"))
-  expect_equal(out[["style"]][["classification"]], "jenks")
-  expect_equal(out[["style"]][["colorScheme"]], "viridis")
-  expect_equal(out[["style"]][["numClasses"]], 7)
+  expect_named(out, c("model", "config"))
+  # config members take the chart/choropleth/v1 names
+  expect_equal(out[["config"]][["classification"]], "jenks")
+  expect_equal(out[["config"]][["colormap"]], "viridis")
+  expect_equal(out[["config"]][["num_classes"]], 7)
+  expect_equal(out[["config"]][["resolution"]], "country")
   expect_true(all(
     c(
-      "showBoundaries",
-      "outlineWidth",
-      "legendPosition",
-      "tooltipPosition"
+      "show_boundaries",
+      "outline_width",
+      "legend_position",
+      "tooltip_position"
     ) %in%
-      names(out[["style"]])
+      names(out[["config"]])
   ))
   expect_false("title" %in% names(out))
 })
@@ -182,9 +184,9 @@ test_that("draw() dispatches a MapLibreOption to the rtemis-map backend", {
   w <- draw(MapLibreOption(model = m))
   expect_s3_class(w, "htmlwidget")
   expect_equal(attr(w, "package"), "rtemis.draw")
-  # Map payload shape: model/style/geo, not the ECharts shape (option)
+  # Map payload shape: model/config/geo, not the ECharts shape (option)
   expect_false(is.null(w$x$model))
-  expect_false(is.null(w$x$style))
+  expect_false(is.null(w$x$config))
   expect_false(is.null(w$x$geo))
   expect_null(w$x$option)
   # geometry embedded for the model's resolution
@@ -211,8 +213,8 @@ test_that("draw_choropleth returns a configured htmlwidget", {
   )
   expect_s3_class(w, "htmlwidget")
   expect_length(w$x$model$rows, 5L)
-  expect_equal(w$x$style$colorScheme, "viridis")
-  expect_equal(w$x$style$classification, "jenks")
+  expect_equal(w$x$config$colormap, "viridis")
+  expect_equal(w$x$config$classification, "jenks")
   expect_equal(w$x$model$tooltipFields[[1L]], "region")
 })
 
@@ -289,5 +291,22 @@ test_that("map builders validate column arguments and preserve factor tooltips",
     load_map_geometry("district"),
     "Unknown map resolution",
     class = "rtemis_value_error"
+  )
+})
+
+test_that("a choropleth with two rows for one region stops its export", {
+  skip_if_no_node()
+  path <- tempfile(fileext = ".svg")
+  on.exit(unlink(path), add = TRUE)
+  w <- draw_choropleth(
+    data.frame(st = c("CA", "TX", "California"), v = c(1, 2, 3)),
+    location = "st",
+    value = "v",
+    resolution = "state"
+  )
+  expect_error(
+    save_drawing(w, path),
+    "rows 1 and 3 both name region '06'",
+    class = "rtemis_export_error"
   )
 })

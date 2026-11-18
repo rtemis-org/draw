@@ -1,11 +1,11 @@
 # map.R
 # Choropleth maps rendered with MapLibre GL (not ECharts).
 #
-# This is the third rendering backend in rtemis.draw, after ECharts and
-# Sigma.js. It mirrors rtemislive's MapCanvas (~/Code/live/src/components/chart/
-# MapCanvas.tsx) together with its scale (choroplethScale.ts) and location
-# resolver (locationResolver.ts). The S7 classes below are the R analog of the
-# TypeScript interfaces MapRow / MapModel in ~/Code/live/src/lib/types.ts.
+# The third rendering backend in rtemis.draw, after ECharts and Sigma.js. The
+# widget and the SVG export join, classify, and color the map with
+# @rtemis/draw's choropleth functions, which rtemislive's MapCanvas also uses
+# (spec: draw/shared-builders#choropleth). The S7 classes below are the R
+# analog of the package's MapRow and MapModel interfaces.
 #
 # Pipeline:
 #   draw_choropleth(x, location, value)      # data frame -> MapModel (S7)
@@ -17,8 +17,8 @@
 # Geometry: admin boundaries are vendored as TopoJSON in
 # inst/htmlwidgets/lib/geo/ and embedded into the widget payload at render time
 # (htmlwidgets has no runtime fetch endpoint). The location -> geometry join,
-# classification scale, and FIPS/ISO key normalization all live in the JS
-# binding, where the geometry's id set is available.
+# classification scale, and FIPS/ISO key normalization run in JavaScript,
+# where the geometry's id set is available.
 
 # Enumerations shared by the constructors and the Tier 1 builder.
 map_classifications <- c("quantile", "equal", "jenks")
@@ -192,9 +192,10 @@ S7::method(to_list, MapModel) <- function(x, ...) {
 #' build it -- but power users can construct it for full control:
 #' `draw(MapLibreOption(model = MapModel(...), colormap = "viridis"))`.
 #'
-#' Its [to_list()] produces the `{ model, style, title }` payload consumed by
-#' the `rtemis-map` htmlwidget binding (the geometry is added by the [draw()]
-#' method, since it depends only on the model's resolution).
+#' Its [to_list()] produces the `{ model, config, title }` payload consumed by
+#' the `rtemis-map` htmlwidget binding, `config` holding the
+#' `chart/choropleth/v1` members that `@rtemis/draw`'s choropleth functions
+#' read. The [draw()] method adds the geometry of the model's resolution.
 #'
 #' @param model [MapModel] or named list: The choropleth data (a list must
 #'   contain a `rows` element).
@@ -213,8 +214,7 @@ S7::method(to_list, MapModel) <- function(x, ...) {
 #'   "bottom-right"\}: Legend corner.
 #' @param tooltip_position Character \{"top-left", "top-right", "bottom-left",
 #'   "bottom-right"\}: Hover tooltip corner.
-#' @param title Optional Character: Title (currently surfaced via the value
-#'   label; reserved for future use).
+#' @param title Optional Character: Title drawn at the map's top left.
 #'
 #' @return `MapLibreOption` object.
 #'
@@ -270,16 +270,19 @@ S7::method(to_list, MapLibreOption) <- function(x, ...) {
   model_list <- if (S7::S7_inherits(model)) to_list(model) else model
   out <- list(
     model = model_list,
-    style = list(
+    # The chart/choropleth/v1 members @rtemis/draw's choropleth functions read.
+    # spec: draw/shared-builders#choropleth
+    config = list(
+      resolution = model_list[["resolution"]] %||% "country",
       classification = x@classification,
-      colorScheme = x@colormap,
-      numClasses = x@num_classes,
+      colormap = x@colormap,
+      num_classes = x@num_classes,
       opacity = x@opacity,
-      showBoundaries = x@show_boundaries,
-      outlineWidth = x@outline_width,
-      showLegend = x@show_legend,
-      legendPosition = x@legend_position,
-      tooltipPosition = x@tooltip_position
+      show_boundaries = x@show_boundaries,
+      outline_width = x@outline_width,
+      show_legend = x@show_legend,
+      legend_position = x@legend_position,
+      tooltip_position = x@tooltip_position
     )
   )
   if (!is.null(x@title)) {

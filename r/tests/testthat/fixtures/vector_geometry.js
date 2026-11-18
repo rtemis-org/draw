@@ -5,7 +5,7 @@ const root = process.argv[2];
 const v = require(path.join(root, 'node/vector.js'));
 const builders = require(path.join(root, 'htmlwidgets/lib/draw/rtemis-draw-builders.js'));
 const graphDeps = require(path.join(root, 'node/graph-deps.js'));
-const map = require(path.join(root, 'htmlwidgets/lib/draw/map_scene.js'))(require(path.join(root, 'node/map-deps.js')));
+const mapDeps = require(path.join(root, 'node/map-deps.js'));
 const theme = require(path.join(root, 'htmlwidgets/lib/draw/vector_theme.js'));
 assert.equal(theme.isDark('#181818'), true);
 assert.equal(theme.isDark('#fff'), false);
@@ -24,18 +24,18 @@ for (const layout of ['force','circular','circlepack','random']) {
 }
 const loop = v.graphSVG({model:{nodes:[{id:'A'}],edges:[{source:'A',target:'A'}]},config:{},width:800,height:600});
 assert.match(loop, /d="M[^"]+C/);
-for (const [raw,res,id] of [['CA','state','06'],['California','state','06'],[1001,'county','01001'],['US','country','USA']]) assert.equal(map.normalizeKey(raw,res),id);
+for (const [raw,res,id] of [['CA','state','06'],['California','state','06'],[1001,'county','01001'],['US','country','USA']]) assert.equal(builders.normalizeLocation(raw,res),id);
 for (const classification of ['quantile','equal','jenks']) {
-  const scale=map.buildScale([1,2,3,4,5,6,7,8,9,10,null],{classification,scheme:'viridis',classes:3,dark:false});
-  assert.equal(map.color(scale,null),scale.missingColor);
-  scale.thresholds.forEach((t,i)=>assert.equal(map.color(scale,t),scale.colors[i+1]));
+  const scale=builders.buildChoroplethScale([1,2,3,4,5,6,7,8,9,10,null],{classification,colormap:'viridis',num_classes:3},{},mapDeps.chromatic);
+  assert.equal(builders.choroplethColor(scale,null),scale.missingColor);
+  scale.thresholds.forEach((t,i)=>assert.equal(builders.choroplethColor(scale,t),scale.colors[i+1]));
 }
 for (const [resolution,file,object] of [['country','countries.topo.json','countries'],['state','us-10m.topo.json','states'],['county','us-10m.topo.json','counties']]) {
   const geo={topojson:fs.readFileSync(path.join(root,'htmlwidgets/lib/geo',file),'utf8'),object,center:[0,20],zoom:0.4};
-  const x={geo,model:{resolution,rows:[{location:resolution==='country'?'US':resolution==='state'?'CA':'01001',value:2}],valueLabel:'Rate'},style:{},width:800,height:600};
-  const scene=map.create(x,false);
-  assert.equal(scene.report.matched,1);
-  assert(scene.fc.features.length>40);
+  const x={geo,model:{resolution,rows:[{location:resolution==='country'?'US':resolution==='state'?'CA':'01001',value:2}],valueLabel:'Rate'},config:{},width:800,height:600};
+  const regions=builders.mapFeatures(JSON.parse(geo.topojson),resolution,mapDeps.topojsonFeature);
+  assert.equal(builders.joinChoropleth(x.model,regions.ids).matched,1);
+  assert(regions.features.features.length>40);
   const svg=v.mapSVG(x);
   assert(svg.includes('data-region-id=')); assert(!/<image|NaN|Infinity/.test(svg));
 }

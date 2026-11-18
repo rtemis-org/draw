@@ -7,10 +7,10 @@ dependencies:
     version: 1.0.0
     src: htmlwidgets/lib/draw
     script: vector_theme.js
-  - name: rtemis-map-scene
-    version: 1.0.0
+  - name: rtemis-draw-builders
+    version: 0.9.0
     src: htmlwidgets/lib/draw
-    script: map_scene.js
+    script: rtemis-draw-builders.js
   - name: rtemis-theme-watch
     version: 1.0.0
     src: htmlwidgets/lib/draw

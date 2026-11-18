@@ -2,7 +2,9 @@
  * ECharts option builders shared by rtemis.draw and rtemislive. Each builder
  * takes a chart's data and its `chart/<type>/v1` config and returns the
  * ECharts option. The network functions lay out and style a Sigma graph
- * with the Graphology libraries the host passes in.
+ * with the Graphology libraries the host passes in, and the choropleth
+ * functions join, classify, and color a MapLibre map with the
+ * d3-scale-chromatic interpolators and topojson-client decoder it passes in.
  *
  * spec: draw/shared-builders#package
  *
@@ -65,6 +67,35 @@ export {
   buildCalibrationOption,
   CALIBRATION_CHART_CONFIG_MEMBERS,
 } from "./charts/calibration/index.ts";
+export type {
+  ChoroplethAppearance,
+  ChoroplethChartConfig,
+  ChoroplethColormap,
+  ChoroplethInterpolators,
+  ChoroplethJoin,
+  ChoroplethScale,
+  ColorInterpolator,
+  MapClassification,
+  MapCorner,
+  MapFeature,
+  MapFeatures,
+  MapModel,
+  MapResolution,
+  MapRow,
+  MapTooltipField,
+} from "./charts/choropleth/index.ts";
+export {
+  buildChoroplethScale,
+  CHOROPLETH_CHART_CONFIG_MEMBERS,
+  CHOROPLETH_COLORMAPS,
+  CHOROPLETH_COLORS,
+  CHOROPLETH_GEOMETRY,
+  choroplethColor,
+  choroplethFillExpression,
+  joinChoropleth,
+  mapFeatures,
+  normalizeLocation,
+} from "./charts/choropleth/index.ts";
 export type {
   ConfusionAppearance,
   ConfusionChartConfig,

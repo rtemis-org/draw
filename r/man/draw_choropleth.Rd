@@ -69,8 +69,7 @@ schemes \code{"rdbu"}, \code{"rdylgn"}, \code{"spectral"}, \code{"brbg"}.}
 \item{tooltip_position}{Character \{"top-left", "top-right", "bottom-left",
 "bottom-right"\}: Hover tooltip corner.}
 
-\item{title}{Optional Character: Title (currently surfaced via the value
-label; reserved for future use).}
+\item{title}{Optional Character: Title drawn at the map's top left.}
 
 \item{theme}{Optional \link{Theme}, list, or \code{NA}: Theme override. \code{NULL} enables
 light/dark auto-detection (matching \code{\link[=draw]{draw()}}).}

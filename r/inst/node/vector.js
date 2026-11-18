@@ -1,13 +1,12 @@
 // SVG geometry for the initial declarative network/map view. This module never
 // starts a browser and never embeds a raster snapshot. @rtemis/draw's network
-// functions and the map scene module own the graph layout and styling and the
-// map's data joins, as in the interactive widgets.
+// and choropleth functions own the graph layout and styling and the map's
+// joins and classes, as in the interactive widgets.
 const themeUtils = require('../htmlwidgets/lib/draw/vector_theme.js');
 const esc = themeUtils.escape;
 const graphDeps = require('./graph-deps.js');
 const builders = require('../htmlwidgets/lib/draw/rtemis-draw-builders.js');
 const mapDeps = require('./map-deps.js');
-const mapScene = require('../htmlwidgets/lib/draw/map_scene.js')(mapDeps);
 const echarts = require('../htmlwidgets/lib/echarts/echarts.min.js');
 const number = n => {
   if (!Number.isFinite(n)) throw new Error('Non-finite vector geometry.');
@@ -87,9 +86,14 @@ function mapCamera(x) {
   const cy=(180-180/Math.PI*Math.log(Math.tan(Math.PI/4+lat*Math.PI/360)))/360;
   return {world, cx:(center[0]+180)/360, cy:Math.max(x.height/2/world,Math.min(1-x.height/2/world,cy))};
 }
+// spec: draw/shared-builders#choropleth
 function mapSVG(x) {
-  const t=themeUtils.resolve(x.theme), s=x.style || {};
-  const scene=mapScene.create(x,t.dark), camera=mapCamera(x);
+  const t=themeUtils.resolve(x.theme), s=x.config || {}, model=x.model || {};
+  const resolution=model.resolution || s.resolution || 'country';
+  const regions=builders.mapFeatures(JSON.parse((x.geo || {}).topojson), resolution, mapDeps.topojsonFeature);
+  const joined=builders.joinChoropleth({...model, resolution}, regions.ids);
+  const scale=builders.buildChoroplethScale(joined.values.values(), s, {scheme: t.dark ? 'dark' : 'light'}, mapDeps.chromatic);
+  const camera=mapCamera(x);
   const {world,cx,cy}=camera;
   // d3-geo's spherical winding convention is the reverse of GeoJSON. Reverse
   // entire polygons (including holes) only when the exterior covers > half
@@ -98,7 +102,7 @@ function mapSVG(x) {
     const polygon={type:'Polygon',coordinates};
     return mapDeps.geoArea(polygon)>2*Math.PI ? coordinates.map(r=>[...r].reverse()) : coordinates;
   };
-  const features=scene.fc.features.map(f=>({...f,geometry:{...f.geometry,coordinates:
+  const features=regions.features.features.map(f=>({...f,geometry:{...f.geometry,coordinates:
     f.geometry.type==='MultiPolygon' ? f.geometry.coordinates.map(orient) : orient(f.geometry.coordinates)}}));
   let content='<defs><clipPath id="map-viewport"><rect width="'+x.width+'" height="'+x.height+'"/></clipPath></defs><g clip-path="url(#map-viewport)">';
   // Geographic preclipping handles dateline crossings and holes before the
@@ -110,17 +114,17 @@ function mapSVG(x) {
     const path=mapDeps.geoPath(projection).digits(4);
     for (const f of features) {
       const d=path(f); if (!d) continue;
-      const id=f.properties.joinId, color=mapScene.color(scene.scale,scene.values.get(id));
-      content+=`<path data-region-id="${esc(id)}" d="${d}" fill="${esc(color)}" fill-opacity="${s.opacity ?? 1}" fill-rule="evenodd" stroke="${s.showBoundaries===false?'none':(t.dark?'#3f3f46':'#cbd5e1')}" stroke-width="${s.outlineWidth ?? 0.2}"/>`;
+      const id=f.properties.joinId, color=builders.choroplethColor(scale,joined.values.get(id));
+      content+=`<path data-region-id="${esc(id)}" d="${d}" fill="${esc(color)}" fill-opacity="${s.opacity ?? 1}" fill-rule="evenodd" stroke="${s.show_boundaries===false?'none':builders.CHOROPLETH_COLORS.outline[t.dark?'dark':'light']}" stroke-width="${s.outline_width ?? 0.2}"/>`;
     }
   }
   content+='</g>';
-  if (s.showLegend!==false && scene.scale.legend.length) {
-    const label=x.model?.valueLabel;
-    const entries=[...scene.scale.legend,{label:'No data',color:scene.scale.missingColor}];
+  if (s.show_legend!==false && scale.legend.length) {
+    const label=s.value_label || model.valueLabel;
+    const entries=[...scale.legend,{label:'No data',color:scale.missingColor}];
     const width=Math.min(x.width-24,Math.max(label?textWidth(label,`500 12px ${t.fontFamily}`):0,...entries.map(e=>textWidth(e.label,`12px ${t.fontFamily}`)+20))+20);
     const height=12+entries.length*16.8+(label?20.8:0)+4;
-    const corner=s.legendPosition || 'bottom-right';
+    const corner=s.legend_position || 'bottom-right';
     const left=corner.includes('left')?12:x.width-width-12;
     const top=corner.startsWith('top')?12:x.height-height-12;
     content+=`<g transform="translate(${number(left)},${number(top)})"><rect width="${number(width)}" height="${number(height)}" rx="6" fill="${t.dark?'#282828':'#ffffff'}" opacity="0.85"/>`;

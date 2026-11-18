@@ -45,13 +45,17 @@
   "devDependencies": {
     "@biomejs/biome": "^2.5.7",
     "@rtemis/a3": "^0.3.2",
+    "@types/d3-scale-chromatic": "^3.1.0",
     "@types/node": "^25.9.5",
+    "@types/topojson-client": "^3.1.5",
+    "d3-scale-chromatic": "3.1.0",
     "esbuild": "^0.25.0",
     "graphology": "0.26.0",
     "graphology-communities-louvain": "2.0.2",
     "graphology-layout": "0.6.1",
     "graphology-layout-forceatlas2": "0.10.1",
     "graphology-types": "0.24.8",
+    "topojson-client": "3.1.0",
     "typescript": "^6.0.3",
     "vitest": "^4.1.10"
   }
