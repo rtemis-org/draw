@@ -9,19 +9,23 @@ import { CHOROPLETH_CHART_CONFIG_MEMBERS } from "../src/charts/choropleth/config
 import { CONFUSION_CHART_CONFIG_MEMBERS } from "../src/charts/confusion/config.ts";
 import { PR_CHART_CONFIG_MEMBERS, ROC_CHART_CONFIG_MEMBERS } from "../src/charts/curves/config.ts";
 import { DENSITY_CHART_CONFIG_MEMBERS } from "../src/charts/density/config.ts";
+import { FUNNEL_CHART_CONFIG_MEMBERS } from "../src/charts/funnel/config.ts";
 import { GANTT_CHART_CONFIG_MEMBERS } from "../src/charts/gantt/config.ts";
 import { HEATMAP_CHART_CONFIG_MEMBERS } from "../src/charts/heatmap/config.ts";
 import { HISTOGRAM_CHART_CONFIG_MEMBERS } from "../src/charts/histogram/config.ts";
 import { LINE_CHART_CONFIG_MEMBERS } from "../src/charts/line/config.ts";
 import { NETWORK_CHART_CONFIG_MEMBERS } from "../src/charts/network/config.ts";
 import { PIE_CHART_CONFIG_MEMBERS } from "../src/charts/pie/config.ts";
+import { RADAR_CHART_CONFIG_MEMBERS } from "../src/charts/radar/config.ts";
 import { SANKEY_CHART_CONFIG_MEMBERS } from "../src/charts/sankey/config.ts";
 import { SCATTER_CHART_CONFIG_MEMBERS } from "../src/charts/scatter/config.ts";
 import { SCATTER3D_CHART_CONFIG_MEMBERS } from "../src/charts/scatter3d/config.ts";
 import { SIGNIFICANCE_CHART_CONFIG_MEMBERS } from "../src/charts/significance/config.ts";
 import { SPECTROGRAM_CHART_CONFIG_MEMBERS } from "../src/charts/spectrogram/config.ts";
+import { SUNBURST_CHART_CONFIG_MEMBERS } from "../src/charts/sunburst/config.ts";
 import { SURVIVAL_CHART_CONFIG_MEMBERS } from "../src/charts/survival/config.ts";
 import { TIMESERIES_CHART_CONFIG_MEMBERS } from "../src/charts/timeseries/config.ts";
+import { TREEMAP_CHART_CONFIG_MEMBERS } from "../src/charts/treemap/config.ts";
 
 // `just ts-schema-check` generates the chart schemas from the R classes into a
 // temporary directory and sets RTEMIS_DRAW_SCHEMA_DIR; without it the check is
@@ -39,6 +43,7 @@ describe.skipIf(!schemaDir)("config types against the generated schemas", () => 
     ["choropleth", CHOROPLETH_CHART_CONFIG_MEMBERS],
     ["confusion", CONFUSION_CHART_CONFIG_MEMBERS],
     ["density", DENSITY_CHART_CONFIG_MEMBERS],
+    ["funnel", FUNNEL_CHART_CONFIG_MEMBERS],
     ["gantt", GANTT_CHART_CONFIG_MEMBERS],
     ["heatmap", HEATMAP_CHART_CONFIG_MEMBERS],
     ["histogram", HISTOGRAM_CHART_CONFIG_MEMBERS],
@@ -46,14 +51,17 @@ describe.skipIf(!schemaDir)("config types against the generated schemas", () => 
     ["network", NETWORK_CHART_CONFIG_MEMBERS],
     ["pie", PIE_CHART_CONFIG_MEMBERS],
     ["pr", PR_CHART_CONFIG_MEMBERS],
+    ["radar", RADAR_CHART_CONFIG_MEMBERS],
     ["roc", ROC_CHART_CONFIG_MEMBERS],
     ["sankey", SANKEY_CHART_CONFIG_MEMBERS],
     ["scatter", SCATTER_CHART_CONFIG_MEMBERS],
     ["scatter3d", SCATTER3D_CHART_CONFIG_MEMBERS],
     ["significance", SIGNIFICANCE_CHART_CONFIG_MEMBERS],
     ["spectrogram", SPECTROGRAM_CHART_CONFIG_MEMBERS],
+    ["sunburst", SUNBURST_CHART_CONFIG_MEMBERS],
     ["survival", SURVIVAL_CHART_CONFIG_MEMBERS],
     ["timeseries", TIMESERIES_CHART_CONFIG_MEMBERS],
+    ["treemap", TREEMAP_CHART_CONFIG_MEMBERS],
   ];
   for (const [type, members] of cases) {
     it(`the ${type} config type has every chart/${type}/v1 property and no other`, () => {

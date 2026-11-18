@@ -92,17 +92,27 @@ const LABEL_TEMPLATES = {
 const isMissing = (v: unknown) =>
   v === null || v === undefined || (typeof v === "number" && Number.isNaN(v));
 
-/**
- * The slices of a pie: one per label, its value the sum of the label's rows,
- * in the label column's level order, otherwise in order of first appearance.
- * A missing label, a value that is missing, not finite, or negative, and a
- * total of zero stop with an error naming the cause.
- */
+/** The slices of a pie: {@link labeledSums} of its labels and values. */
 export function pieSlices(data: TabularData, config: PieChartConfig): PieSlice[] {
+  return labeledSums(data, config, "A pie chart");
+}
+
+/**
+ * The sum of the values of each label, for a chart of labeled parts (a pie or
+ * a funnel): one entry per label in the label column's level order, otherwise
+ * in order of first appearance. A missing label, a value that is missing, not
+ * finite, or negative, and a total of zero stop with an error naming the
+ * cause; `chart` begins the errors that name the chart ("A pie chart").
+ */
+export function labeledSums(
+  data: TabularData,
+  config: { readonly values?: string | null; readonly labels?: string | null },
+  chart: string,
+): PieSlice[] {
   const valueName = config.values;
   const labelName = config.labels;
   if (!valueName || !labelName) {
-    throw new Error("A pie chart needs the config members 'values' and 'labels' set.");
+    throw new Error(`${chart} needs the config members 'values' and 'labels' set.`);
   }
   const raw = column(data.columns, labelName, "labels");
   const labels = textColumn(data, labelName, "labels");
@@ -125,7 +135,7 @@ export function pieSlices(data: TabularData, config: PieChartConfig): PieSlice[]
   const names = distinct([...sums.keys()], data.levels?.[labelName]);
   const slices = names.map((name) => ({ name, value: sums.get(name) as number }));
   if (!slices.some((s) => s.value > 0)) {
-    throw new Error(`A pie chart needs a positive total; column '${valueName}' sums to 0.`);
+    throw new Error(`${chart} needs a positive total; column '${valueName}' sums to 0.`);
   }
   return slices;
 }

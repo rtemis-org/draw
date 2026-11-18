@@ -43,7 +43,10 @@ function build(panel) {
   const builder = builders.builders[request.type];
   if (!builder) throw new Error(`No @rtemis/draw builder for chart type '${request.type}'.`);
   const data = typeof request.data === "string" ? JSON.parse(request.data) : request.data;
-  const appearance = {...request.appearance, dark: false};
+  // The background of the export's theme, which a treemap's and a sunburst's
+  // borders take.
+  const background = typeof panel.theme?.backgroundColor === "string" ? panel.theme.backgroundColor : undefined;
+  const appearance = {...request.appearance, dark: false, ...(background ? {background} : {})};
   const option = {...builder(data, request.config, appearance)};
   // The builders leave the background to the host; export paints the theme's.
   delete option.backgroundColor;

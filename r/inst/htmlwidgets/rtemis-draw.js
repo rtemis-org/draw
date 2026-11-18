@@ -56,7 +56,11 @@ function rtemisDrawBuild(x, dark) {
   const builder = RtemisDraw.builders[request.type];
   if (!builder) throw new Error(`No @rtemis/draw builder for chart type '${request.type}'.`);
   const data = typeof request.data === 'string' ? JSON.parse(request.data) : request.data;
-  const appearance = {...request.appearance, dark};
+  // The background of the theme the widget applies, which a treemap's and a
+  // sunburst's borders take.
+  const theme = x.autoTheme && dark ? x.themeDark : x.theme;
+  const background = theme && typeof theme.backgroundColor === 'string' ? theme.backgroundColor : undefined;
+  const appearance = {...request.appearance, dark, ...(background ? {background} : {})};
   const option = {...builder(data, request.config, appearance)};
   // The builders leave the background to the host; the widget paints the theme's.
   delete option.backgroundColor;

@@ -63,8 +63,24 @@ chart_descriptions <- c(
     ""
   ),
   pie = paste0(
-    "Pie chart: one slice per row, sized by a value column and named by a ",
-    "label column, optionally drawn as a Nightingale rose."
+    "Pie chart: one slice per label, sized by the sum of the value column over ",
+    "the label's rows, optionally drawn as a donut or a Nightingale rose."
+  ),
+  funnel = paste0(
+    "Funnel chart: one stage per label, sized by the sum of the value column ",
+    "over the label's rows, ordered by value or by the data."
+  ),
+  radar = paste0(
+    "Radar chart: one axis per numeric indicator column and one polygon per ",
+    "level of a grouping column, the rows of a polygon combined by an aggregate."
+  ),
+  treemap = paste0(
+    "Treemap: a table's rows nested by level columns into a tree of tiles, ",
+    "each sized by the sum of the value column over its rows."
+  ),
+  sunburst = paste0(
+    "Sunburst chart: a table's rows nested by level columns into rings, one ",
+    "per level, each sector sized by the sum of the value column over its rows."
   ),
   boxplot = paste0(
     "Boxplot: one box per bound column, optionally split into one box per ",

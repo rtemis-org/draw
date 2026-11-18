@@ -38,6 +38,7 @@ var RtemisDraw = (() => {
     DENSITY_CHART_CONFIG_MEMBERS: () => DENSITY_CHART_CONFIG_MEMBERS,
     DENSITY_VALUE_LABEL: () => DENSITY_VALUE_LABEL,
     FIT_MEMBERS: () => FIT_MEMBERS,
+    FUNNEL_CHART_CONFIG_MEMBERS: () => FUNNEL_CHART_CONFIG_MEMBERS,
     GANTT_CHART_CONFIG_MEMBERS: () => GANTT_CHART_CONFIG_MEMBERS,
     GANTT_ROW_PX: () => GANTT_ROW_PX,
     HEATMAP_CHART_CONFIG_MEMBERS: () => HEATMAP_CHART_CONFIG_MEMBERS,
@@ -50,6 +51,8 @@ var RtemisDraw = (() => {
     OBSERVATIONS: () => OBSERVATIONS,
     PIE_CHART_CONFIG_MEMBERS: () => PIE_CHART_CONFIG_MEMBERS,
     PR_CHART_CONFIG_MEMBERS: () => PR_CHART_CONFIG_MEMBERS,
+    RADAR_ALL_ROWS: () => RADAR_ALL_ROWS,
+    RADAR_CHART_CONFIG_MEMBERS: () => RADAR_CHART_CONFIG_MEMBERS,
     RENDERER_NAMES: () => RENDERER_NAMES,
     ROC_CHART_CONFIG_MEMBERS: () => ROC_CHART_CONFIG_MEMBERS,
     RTEMIS_PALETTE: () => RTEMIS_PALETTE,
@@ -62,8 +65,10 @@ var RtemisDraw = (() => {
     SIGN_COLORS: () => SIGN_COLORS,
     SIZE_KEY_ID: () => SIZE_KEY_ID,
     SPECTROGRAM_CHART_CONFIG_MEMBERS: () => SPECTROGRAM_CHART_CONFIG_MEMBERS,
+    SUNBURST_CHART_CONFIG_MEMBERS: () => SUNBURST_CHART_CONFIG_MEMBERS,
     SURVIVAL_CHART_CONFIG_MEMBERS: () => SURVIVAL_CHART_CONFIG_MEMBERS,
     TIMESERIES_CHART_CONFIG_MEMBERS: () => TIMESERIES_CHART_CONFIG_MEMBERS,
+    TREEMAP_CHART_CONFIG_MEMBERS: () => TREEMAP_CHART_CONFIG_MEMBERS,
     ZOOM_SLIDER_ID: () => ZOOM_SLIDER_ID,
     a3SurfaceHints: () => a3SurfaceHints,
     appendLayers: () => appendLayers,
@@ -80,6 +85,7 @@ var RtemisDraw = (() => {
     buildChoroplethScale: () => buildChoroplethScale,
     buildConfusionOption: () => buildConfusionOption,
     buildDensityOption: () => buildDensityOption,
+    buildFunnelOption: () => buildFunnelOption,
     buildGanttOption: () => buildGanttOption,
     buildHeatmapOption: () => buildHeatmapOption,
     buildHistogramOption: () => buildHistogramOption,
@@ -87,14 +93,17 @@ var RtemisDraw = (() => {
     buildNetworkGraph: () => buildNetworkGraph,
     buildPieOption: () => buildPieOption,
     buildPrOption: () => buildPrOption,
+    buildRadarOption: () => buildRadarOption,
     buildRocOption: () => buildRocOption,
     buildSankeyOption: () => buildSankeyOption,
     buildScatter3DOption: () => buildScatter3DOption,
     buildScatterOption: () => buildScatterOption,
     buildSignificanceOption: () => buildSignificanceOption,
     buildSpectrogramOption: () => buildSpectrogramOption,
+    buildSunburstOption: () => buildSunburstOption,
     buildSurvivalOption: () => buildSurvivalOption,
     buildTimeSeriesOption: () => buildTimeSeriesOption,
+    buildTreemapOption: () => buildTreemapOption,
     builders: () => builders,
     calcLimits: () => calcLimits,
     calcLimitsFromZero: () => calcLimitsFromZero,
@@ -120,16 +129,23 @@ var RtemisDraw = (() => {
     fitSurfaceAxes: () => fitSurfaceAxes,
     fontStack: () => fontStack,
     formatNumber: () => formatNumber,
+    funnelStages: () => funnelStages,
     ganttHeight: () => ganttHeight,
     hcl: () => hcl,
     heatmapHints: () => heatmapHints,
     heatmapMargins: () => heatmapMargins,
+    hierarchyBorder: () => hierarchyBorder,
+    hierarchyDepth: () => hierarchyDepth,
+    hierarchyFromTable: () => hierarchyFromTable,
+    hierarchyOf: () => hierarchyOf,
+    hierarchyPalette: () => hierarchyPalette,
     histogramEdges: () => histogramEdges,
     histogramValueLabel: () => histogramValueLabel,
     joinChoropleth: () => joinChoropleth,
     kernelDensity: () => kernelDensity,
     keyPlacement: () => keyPlacement,
     keyState: () => keyState,
+    labeledSums: () => labeledSums,
     layoutSurvivalRisk: () => layoutSurvivalRisk,
     lightThemeTokens: () => lightThemeTokens,
     lineAspect: () => lineAspect,
@@ -140,6 +156,7 @@ var RtemisDraw = (() => {
     placeColorScale: () => placeColorScale,
     placeZoomSlider: () => placeZoomSlider,
     pretty: () => pretty,
+    radarSeries: () => radarSeries,
     radicalInverse: () => radicalInverse,
     registerRenderers: () => registerRenderers,
     repelLabels: () => repelLabels,
@@ -2470,7 +2487,7 @@ var RtemisDraw = (() => {
     const correctColor = config.correct_color ?? sign.negative;
     const incorrectColor = config.incorrect_color ?? sign.positive;
     const low = config.low_color ?? "#FFFFFF";
-    const summary = config.summary_color ?? "#EFEFEF";
+    const summary2 = config.summary_color ?? "#EFEFEF";
     const xlab = config.xlab === void 0 ? "Predicted" : config.xlab;
     const ylab = config.ylab === void 0 ? "Reference" : config.ylab;
     const rate = (v) => ddSci(v, digits);
@@ -2614,17 +2631,17 @@ var RtemisDraw = (() => {
         const bottom = [];
         for (let j = 0; j < k; j++) {
           [r.sensitivity, r.specificity].forEach((values, m) => {
-            right.push({ value: [m, j, 0], label: label(rate(values[j] ?? null), summary) });
+            right.push({ value: [m, j, 0], label: label(rate(values[j] ?? null), summary2) });
           });
           [r.ppv, r.npv].forEach((values, m) => {
-            bottom.push({ value: [j, m, 0], label: label(rate(values[j] ?? null), summary) });
+            bottom.push({ value: [j, m, 0], label: label(rate(values[j] ?? null), summary2) });
           });
         }
         const overall = [
           { value: [0, 0, 0], label: label(`Accuracy
-${rate(r.accuracy)}`, summary) },
+${rate(r.accuracy)}`, summary2) },
           { value: [0, 1, 0], label: label(`BA
-${rate(r.balancedAccuracy)}`, summary) }
+${rate(r.balancedAccuracy)}`, summary2) }
         ];
         [right, bottom, overall].forEach((strip, j) => {
           maps.push({
@@ -2632,7 +2649,7 @@ ${rate(r.balancedAccuracy)}`, summary) }
             show: false,
             min: 0,
             max: 1,
-            inRange: { color: [summary, summary] },
+            inRange: { color: [summary2, summary2] },
             dimension: 2,
             seriesIndex: series.length
           });
@@ -2782,7 +2799,7 @@ ${rate(r.balancedAccuracy)}`, summary) }
     const fg = option.textStyle?.color || theme?.textStyle?.color || contrast2(echarts, bg);
     const low = meta.lowColor || bg;
     const neutral = contrast2(echarts, bg);
-    const summary = meta.summaryColor || blend(echarts, bg, neutral, 0.05);
+    const summary2 = meta.summaryColor || blend(echarts, bg, neutral, 0.05);
     const overall = meta.summaryColor || blend(echarts, bg, neutral, 0.025);
     const muted = blend(echarts, bg, fg, 0.72);
     const panelWidth = width / d.cols;
@@ -2851,7 +2868,7 @@ ${rate(r.balancedAccuracy)}`, summary) }
         const index = i * seriesStep + j;
         const series = option.series[index];
         const map = option.visualMap[index];
-        const high = j < 2 ? map.inRange.color[1] : j === 4 ? overall : summary;
+        const high = j < 2 ? map.inRange.color[1] : j === 4 ? overall : summary2;
         map.inRange.color = j < 2 ? [low, high] : [high, high];
         Object.assign(series.itemStyle, { borderColor: bg, borderWidth: 1 });
         for (const point of series.data) {
@@ -2949,13 +2966,13 @@ ${rate(r.balancedAccuracy)}`, summary) }
       parts.push(capitalize(group.split));
     }
     if (parts.length === 0) parts.push(group.class);
-    const summary = context.perResample ? `${fmt(group.mean)} (${fmt(group.sd)})` : fmt(group.mean);
-    return `${parts.join(" \xB7 ")} ${summary}`;
+    const summary2 = context.perResample ? `${fmt(group.mean)} (${fmt(group.sd)})` : fmt(group.mean);
+    return `${parts.join(" \xB7 ")} ${summary2}`;
   }
   function curveLegendTitle(type, config) {
     if (config.legend_title) return config.legend_title;
-    const summary = type === "roc" ? ROC.summary : PR.summary;
-    return (config.variant ?? "aggregate") === "per_resample" ? `${summary}: mean (SD)` : summary;
+    const summary2 = type === "roc" ? ROC.summary : PR.summary;
+    return (config.variant ?? "aggregate") === "per_resample" ? `${summary2}: mean (SD)` : summary2;
   }
   function buildCurveOption(kind, data, config, appearance, before, baselines) {
     const { groups, curves } = data;
@@ -3283,13 +3300,13 @@ ${rate(r.balancedAccuracy)}`, summary) }
   }
 
   // src/charts/density/kde.ts
-  function ruleBandwidth(summary, rule = "nrd0") {
-    const sd = summary.sd ?? 0;
-    const iqr = ((summary.q3 ?? 0) - (summary.q1 ?? 0)) / 1.34;
-    const scale = summary.n ** -0.2;
+  function ruleBandwidth(summary2, rule = "nrd0") {
+    const sd = summary2.sd ?? 0;
+    const iqr = ((summary2.q3 ?? 0) - (summary2.q1 ?? 0)) / 1.34;
+    const scale = summary2.n ** -0.2;
     switch (rule) {
       case "nrd0": {
-        const lo = Math.min(sd, iqr) || sd || Math.abs(summary.min) || 1;
+        const lo = Math.min(sd, iqr) || sd || Math.abs(summary2.min) || 1;
         return 0.9 * lo * scale;
       }
       case "nrd":
@@ -3331,11 +3348,11 @@ ${rate(r.balancedAccuracy)}`, summary) }
       }
     }
   }
-  function kernelDensity(summary, counts, options = {}) {
-    const { n: size, min, max } = summary;
+  function kernelDensity(summary2, counts, options = {}) {
+    const { n: size, min, max } = summary2;
     const explicit = options.bandwidth ?? null;
     if (!(size > 0) || explicit === null && (size < 2 || max === min)) return null;
-    const bw = (explicit ?? ruleBandwidth(summary, options.bw)) * (options.adjust ?? 1);
+    const bw = (explicit ?? ruleBandwidth(summary2, options.bw)) * (options.adjust ?? 1);
     if (!(bw > 0) || !Number.isFinite(bw)) return null;
     const kernel = options.kernel ?? "gaussian";
     const points = options.n ?? 512;
@@ -3358,6 +3375,150 @@ ${rate(r.balancedAccuracy)}`, summary) }
       return sum / size;
     });
     return { x, y, bw };
+  }
+
+  // src/charts/pie/config.ts
+  var PIE_CHART_CONFIG_MEMBERS = Object.freeze([
+    "type",
+    "title",
+    "values",
+    "labels",
+    "label_format",
+    "percent_digits",
+    "show_labels",
+    "rose_type",
+    "radius",
+    "inner_radius",
+    "palette",
+    "legend_position",
+    "legend_placement",
+    "legend_title"
+  ]);
+  var LABEL_TEMPLATES = {
+    name: "{b}",
+    value: (p) => String(formatNumber(p.value)),
+    percent: "{d}%",
+    name_value: (p) => `${p.name ?? ""}: ${formatNumber(p.value)}`,
+    name_percent: "{b}: {d}%"
+  };
+  var isMissing = (v) => v === null || v === void 0 || typeof v === "number" && Number.isNaN(v);
+  function pieSlices(data, config) {
+    return labeledSums(data, config, "A pie chart");
+  }
+  function labeledSums(data, config, chart) {
+    const valueName = config.values;
+    const labelName = config.labels;
+    if (!valueName || !labelName) {
+      throw new Error(`${chart} needs the config members 'values' and 'labels' set.`);
+    }
+    const raw = column(data.columns, labelName, "labels");
+    const labels = textColumn(data, labelName, "labels");
+    const values = column(data.columns, valueName, "values");
+    const sums = /* @__PURE__ */ new Map();
+    labels.forEach((label, i) => {
+      if (isMissing(raw[i])) {
+        throw new Error(
+          `Column '${labelName}' (config member 'labels') must hold a label in every row; row ${i + 1} is missing.`
+        );
+      }
+      const v = values[i];
+      if (typeof v !== "number" || !Number.isFinite(v) || v < 0) {
+        throw new Error(
+          `Column '${valueName}' (config member 'values') must hold a finite, nonnegative number in every row; row ${i + 1} holds '${String(v)}'.`
+        );
+      }
+      sums.set(label, (sums.get(label) ?? 0) + v);
+    });
+    const names = distinct([...sums.keys()], data.levels?.[labelName]);
+    const slices = names.map((name) => ({ name, value: sums.get(name) }));
+    if (!slices.some((s) => s.value > 0)) {
+      throw new Error(`${chart} needs a positive total; column '${valueName}' sums to 0.`);
+    }
+    return slices;
+  }
+  function buildPieOption(data, config, appearance = {}) {
+    const slices = pieSlices(data, config);
+    const memberPalette = asArray(config.palette);
+    const palette = memberPalette.length > 0 ? memberPalette : appearance.palette ?? [];
+    const items = slices.map(
+      (slice, i) => palette.length > 0 ? { ...slice, itemStyle: { color: palette[i % palette.length] } } : { ...slice }
+    );
+    const outer = config.radius ?? "75%";
+    return {
+      ...config.title ? { title: { text: config.title, left: "center" } } : {},
+      tooltip: { trigger: "item", valueFormatter: tooltipValue },
+      ...slices.length > 1 ? { legend: { data: slices.map((s) => s.name) } } : {},
+      series: [
+        {
+          type: "pie",
+          data: items,
+          radius: config.inner_radius ? [config.inner_radius, outer] : outer,
+          ...config.rose_type ? { roseType: config.rose_type } : {},
+          percentPrecision: config.percent_digits ?? 1,
+          avoidLabelOverlap: true,
+          // Edge alignment keeps outside labels within the chart at narrow widths.
+          label: {
+            show: config.show_labels !== false,
+            alignTo: "edge",
+            edgeDistance: 8,
+            formatter: LABEL_TEMPLATES[config.label_format ?? "name"]
+          }
+        }
+      ]
+    };
+  }
+
+  // src/charts/funnel/config.ts
+  var FUNNEL_CHART_CONFIG_MEMBERS = Object.freeze([
+    "type",
+    "title",
+    "values",
+    "labels",
+    "sort",
+    "show_labels",
+    "label_format",
+    "palette",
+    "legend_position",
+    "legend_placement",
+    "legend_title"
+  ]);
+  var LABEL_TEMPLATES2 = {
+    name: "{b}",
+    value: (p) => String(formatNumber(p.value)),
+    name_value: (p) => `${p.name ?? ""}: ${formatNumber(p.value)}`
+  };
+  function funnelStages(data, config) {
+    return labeledSums(data, config, "A funnel");
+  }
+  function buildFunnelOption(data, config, appearance = {}) {
+    const stages = funnelStages(data, config);
+    const own = asArray(config.palette);
+    const palette = own.length > 0 ? own : appearance.palette ?? [];
+    return {
+      ...config.title ? { title: { text: config.title, left: "center" } } : {},
+      tooltip: { trigger: "item", valueFormatter: tooltipValue },
+      ...stages.length > 1 ? { legend: { data: stages.map((s) => s.name) } } : {},
+      series: [
+        {
+          type: "funnel",
+          sort: config.sort ?? "descending",
+          left: "10%",
+          width: "80%",
+          top: config.title ? 70 : 50,
+          bottom: 20,
+          minSize: "0%",
+          maxSize: "100%",
+          label: {
+            show: config.show_labels !== false,
+            position: "inside",
+            formatter: LABEL_TEMPLATES2[config.label_format ?? "name"]
+          },
+          data: stages.map(
+            (s, i) => palette.length > 0 ? { ...s, itemStyle: { color: palette[i % palette.length] } } : { ...s }
+          )
+        }
+      ]
+    };
   }
 
   // src/charts/gantt/renderers.ts
@@ -4408,19 +4569,19 @@ ${rate(r.balancedAccuracy)}`, summary) }
 
   // src/charts/histogram/edges.ts
   var MAX_CLASSES = 1e6;
-  function classCount(summary, breaks) {
-    const { n } = summary;
-    const range3 = summary.max - summary.min;
+  function classCount(summary2, breaks) {
+    const { n } = summary2;
+    const range3 = summary2.max - summary2.min;
     switch (breaks) {
       case "Sturges":
         return Math.ceil(Math.log2(n) + 1);
       case "Scott": {
-        const h = 3.5 * (summary.sd ?? 0) * n ** (-1 / 3);
+        const h = 3.5 * (summary2.sd ?? 0) * n ** (-1 / 3);
         return h > 0 ? Math.max(1, Math.ceil(range3 / h)) : 1;
       }
       case "FD":
       case "Freedman-Diaconis": {
-        const iqr = (summary.q3 ?? 0) - (summary.q1 ?? 0);
+        const iqr = (summary2.q3 ?? 0) - (summary2.q1 ?? 0);
         const h = 2 * iqr * n ** (-1 / 3);
         return h > 0 ? Math.max(1, Math.ceil(range3 / h)) : 1;
       }
@@ -4486,18 +4647,18 @@ ${rate(r.balancedAccuracy)}`, summary) }
       return Math.abs(v) < 1e-14 * by ? 0 : v;
     });
   }
-  function histogramEdges(summary, options = {}) {
-    if (!(summary.n > 0) || !Number.isFinite(summary.min) || !Number.isFinite(summary.max)) {
+  function histogramEdges(summary2, options = {}) {
+    if (!(summary2.n > 0) || !Number.isFinite(summary2.min) || !Number.isFinite(summary2.max)) {
       throw new Error("A histogram needs at least one finite value to bin.");
     }
     const count = Math.min(
-      options.bins ?? classCount(summary, options.breaks ?? "Sturges"),
+      options.bins ?? classCount(summary2, options.breaks ?? "Sturges"),
       MAX_CLASSES
     );
     if (!(count >= 1)) {
       throw new Error(`\`bins\` must be at least 1; it is ${count}.`);
     }
-    return pretty(summary.min, summary.max, count, 1);
+    return pretty(summary2.min, summary2.max, count, 1);
   }
 
   // src/shared/fit.ts
@@ -4955,89 +5116,99 @@ ${rate(r.balancedAccuracy)}`, summary) }
     };
   }
 
-  // src/charts/pie/config.ts
-  var PIE_CHART_CONFIG_MEMBERS = Object.freeze([
+  // src/charts/radar/config.ts
+  var RADAR_CHART_CONFIG_MEMBERS = Object.freeze([
     "type",
     "title",
-    "values",
-    "labels",
-    "label_format",
-    "percent_digits",
-    "show_labels",
-    "rose_type",
-    "radius",
-    "inner_radius",
+    "indicators",
+    "group",
+    "aggregate",
+    "area_opacity",
+    "line_width",
     "palette",
     "legend_position",
     "legend_placement",
     "legend_title"
   ]);
-  var LABEL_TEMPLATES = {
-    name: "{b}",
-    value: (p) => String(formatNumber(p.value)),
-    percent: "{d}%",
-    name_value: (p) => `${p.name ?? ""}: ${formatNumber(p.value)}`,
-    name_percent: "{b}: {d}%"
+  var RADAR_ALL_ROWS = "All rows";
+  var summary = (values, how) => {
+    if (how === "sum") return values.reduce((a, b) => a + b, 0);
+    if (how === "mean") return values.reduce((a, b) => a + b, 0) / values.length;
+    const sorted = [...values].sort((a, b) => a - b);
+    const mid = Math.floor(sorted.length / 2);
+    return sorted.length % 2 === 1 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
   };
-  var isMissing = (v) => v === null || v === void 0 || typeof v === "number" && Number.isNaN(v);
-  function pieSlices(data, config) {
-    const valueName = config.values;
-    const labelName = config.labels;
-    if (!valueName || !labelName) {
-      throw new Error("A pie chart needs the config members 'values' and 'labels' set.");
+  function radarSeries(data, config) {
+    const indicators = asArray(config.indicators);
+    if (indicators.length < 2) {
+      throw new Error("A radar chart needs at least two columns in the config member 'indicators'.");
     }
-    const raw = column(data.columns, labelName, "labels");
-    const labels = textColumn(data, labelName, "labels");
-    const values = column(data.columns, valueName, "values");
-    const sums = /* @__PURE__ */ new Map();
-    labels.forEach((label, i) => {
-      if (isMissing(raw[i])) {
+    const columns = indicators.map((name) => column(data.columns, name, "indicators"));
+    const n = columns[0]?.length ?? 0;
+    const groupName = config.group;
+    const groups = groupName ? textColumn(data, groupName, "group") : null;
+    const names = groups ? distinct(groups, data.levels?.[groupName]) : n > 0 ? [RADAR_ALL_ROWS] : [];
+    const rowsOf = new Map(names.map((name) => [name, []]));
+    for (let i = 0; i < n; i++) rowsOf.get(groups ? groups[i] : RADAR_ALL_ROWS)?.push(i);
+    const aggregate = config.aggregate ?? "none";
+    return names.map((name) => {
+      const rows = rowsOf.get(name);
+      if (aggregate === "none" && rows.length > 1) {
         throw new Error(
-          `Column '${labelName}' (config member 'labels') must hold a label in every row; row ${i + 1} is missing.`
+          `Rows ${rows[0] + 1} and ${rows[1] + 1} both belong to series '${name}', which is one polygon. Set the config member 'aggregate' to sum, mean, or median to combine them${groupName ? "" : ", or set 'group'"}.`
         );
       }
-      const v = values[i];
-      if (typeof v !== "number" || !Number.isFinite(v) || v < 0) {
-        throw new Error(
-          `Column '${valueName}' (config member 'values') must hold a finite, nonnegative number in every row; row ${i + 1} holds '${String(v)}'.`
-        );
-      }
-      sums.set(label, (sums.get(label) ?? 0) + v);
+      const values = indicators.map((indicator, j) => {
+        const finite2 = [];
+        for (const i of rows) {
+          const v = columns[j][i];
+          if (typeof v === "number" && Number.isFinite(v)) finite2.push(v);
+          else if (aggregate === "none") {
+            throw new Error(
+              `Column '${indicator}' (config member 'indicators') must hold a finite number; row ${i + 1} holds '${String(v)}'.`
+            );
+          }
+        }
+        if (finite2.length === 0) {
+          throw new Error(
+            `Series '${name}' has no finite value in column '${indicator}' (config member 'indicators').`
+          );
+        }
+        return aggregate === "none" ? finite2[0] : summary(finite2, aggregate);
+      });
+      return { name, values };
     });
-    const names = distinct([...sums.keys()], data.levels?.[labelName]);
-    const slices = names.map((name) => ({ name, value: sums.get(name) }));
-    if (!slices.some((s) => s.value > 0)) {
-      throw new Error(`A pie chart needs a positive total; column '${valueName}' sums to 0.`);
-    }
-    return slices;
   }
-  function buildPieOption(data, config, appearance = {}) {
-    const slices = pieSlices(data, config);
-    const memberPalette = asArray(config.palette);
-    const palette = memberPalette.length > 0 ? memberPalette : appearance.palette ?? [];
-    const items = slices.map(
-      (slice, i) => palette.length > 0 ? { ...slice, itemStyle: { color: palette[i % palette.length] } } : { ...slice }
-    );
-    const outer = config.radius ?? "75%";
+  function buildRadarOption(data, config, appearance = {}) {
+    const series = radarSeries(data, config);
+    const indicators = asArray(config.indicators);
+    const own = asArray(config.palette);
+    const palette = own.length > 0 ? own : appearance.palette ?? [];
+    const color = (i) => palette.length > 0 ? palette[i % palette.length] : void 0;
+    const indicator = indicators.map((name, j) => {
+      const values = series.map((s) => s.values[j]);
+      const max = Math.max(...values);
+      const min = Math.min(...values);
+      return { name, max: max > 0 ? max : 1, ...min < 0 ? { min } : { min: 0 } };
+    });
     return {
       ...config.title ? { title: { text: config.title, left: "center" } } : {},
       tooltip: { trigger: "item", valueFormatter: tooltipValue },
-      ...slices.length > 1 ? { legend: { data: slices.map((s) => s.name) } } : {},
+      ...series.length > 1 ? { legend: { data: series.map((s) => s.name) } } : {},
+      radar: { radius: "68%", indicator, splitArea: { areaStyle: { opacity: 0.25 } } },
       series: [
         {
-          type: "pie",
-          data: items,
-          radius: config.inner_radius ? [config.inner_radius, outer] : outer,
-          ...config.rose_type ? { roseType: config.rose_type } : {},
-          percentPrecision: config.percent_digits ?? 1,
-          avoidLabelOverlap: true,
-          // Edge alignment keeps outside labels within the chart at narrow widths.
-          label: {
-            show: config.show_labels !== false,
-            alignTo: "edge",
-            edgeDistance: 8,
-            formatter: LABEL_TEMPLATES[config.label_format ?? "name"]
-          }
+          type: "radar",
+          data: series.map((s, i) => {
+            const c = color(i);
+            return {
+              name: s.name,
+              value: [...s.values],
+              areaStyle: { opacity: config.area_opacity ?? 0.12 },
+              lineStyle: { ...c ? { color: c } : {}, width: config.line_width ?? 2 },
+              ...c ? { itemStyle: { color: c } } : {}
+            };
+          })
         }
       ]
     };
@@ -8820,6 +8991,173 @@ ${rate(r.balancedAccuracy)}`, summary) }
     };
   }
 
+  // src/shared/hierarchy.ts
+  var isMissing3 = (v) => v === null || v === void 0 || v === "" || typeof v === "number" && Number.isNaN(v);
+  function hierarchyFromTable(data, members, chart) {
+    const levels = typeof members.levels === "string" ? [members.levels] : [...members.levels ?? []];
+    if (levels.length === 0) throw new Error(`${chart} needs the config member 'levels' set.`);
+    const raw = levels.map((name) => column(data.columns, name, "levels"));
+    const text = levels.map((name) => textColumn(data, name, "levels"));
+    const valueName = members.value;
+    const values = valueName ? column(data.columns, valueName, "value") : null;
+    const n = raw[0]?.length ?? 0;
+    const root = { name: "", value: 0, rows: [], children: /* @__PURE__ */ new Map() };
+    let total = 0;
+    for (let i = 0; i < n; i++) {
+      if (isMissing3(raw[0]?.[i])) {
+        throw new Error(
+          `Column '${levels[0]}' (config member 'levels') must name a node in every row; row ${i + 1} is missing.`
+        );
+      }
+      const v = values ? values[i] : 1;
+      if (typeof v !== "number" || !Number.isFinite(v) || v < 0) {
+        throw new Error(
+          `Column '${valueName}' (config member 'value') must hold a finite, nonnegative number in every row; row ${i + 1} holds '${String(v)}'.`
+        );
+      }
+      let node = root;
+      for (let d = 0; d < levels.length && !isMissing3(raw[d]?.[i]); d++) {
+        const name = text[d]?.[i];
+        let child = node.children.get(name);
+        if (!child) {
+          child = { name, value: 0, rows: [], children: /* @__PURE__ */ new Map() };
+          node.children.set(name, child);
+        }
+        node = child;
+      }
+      node.value += v;
+      node.rows.push(i + 1);
+      total += v;
+    }
+    if (!(total > 0)) {
+      throw new Error(
+        valueName ? `${chart} needs a positive total; column '${valueName}' sums to 0.` : `${chart} needs at least one row.`
+      );
+    }
+    const finish = (node, depth, path) => {
+      const level = levels[depth];
+      const names = distinct([...node.children.keys()], data.levels?.[level]);
+      return names.map((name) => {
+        const child = node.children.get(name);
+        const at = [...path, name];
+        if (child.children.size === 0) return { name, value: child.value };
+        if (child.rows.length > 0) {
+          throw new Error(
+            `Node '${at.join(" / ")}' has children, which give its value; row ${child.rows[0]} ends at it. Give the row its deeper levels, or leave it out.`
+          );
+        }
+        return { name, children: finish(child, depth + 1, at) };
+      });
+    };
+    return finish(root, 0, []);
+  }
+  function hierarchyOf(data, members, chart) {
+    return "tree" in data ? data.tree : hierarchyFromTable(data, members, chart);
+  }
+  function hierarchyDepth(nodes) {
+    let depth = 0;
+    for (const node of nodes) {
+      depth = Math.max(depth, 1 + (node.children ? hierarchyDepth(node.children) : 0));
+    }
+    return depth;
+  }
+
+  // src/charts/treemap/config.ts
+  var TREEMAP_CHART_CONFIG_MEMBERS = Object.freeze([
+    "type",
+    "title",
+    "levels",
+    "value",
+    "show_labels",
+    "border_width",
+    "palette"
+  ]);
+  function hierarchyBorder(appearance) {
+    return appearance.background ?? (appearance.dark ? darkThemeTokens().bg_color : lightThemeTokens().bg_color);
+  }
+  function hierarchyPalette(config, appearance) {
+    const own = asArray(config.palette);
+    return own.length > 0 ? own : appearance.palette ?? [];
+  }
+  function buildTreemapOption(data, config, appearance = {}) {
+    const tree = hierarchyOf(data, config, "A treemap");
+    const palette = hierarchyPalette(config, appearance);
+    return {
+      ...config.title ? { title: { text: config.title, left: "center" } } : {},
+      ...palette.length > 0 ? { color: [...palette] } : {},
+      tooltip: { trigger: "item", valueFormatter: tooltipValue },
+      series: [
+        {
+          type: "treemap",
+          // ECharts reserves room below the tiles for a breadcrumb, which the
+          // treemap does not draw.
+          top: config.title ? 40 : 8,
+          bottom: 8,
+          left: 8,
+          right: 8,
+          roam: false,
+          nodeClick: false,
+          breadcrumb: { show: false },
+          label: { show: config.show_labels !== false, formatter: "{b}" },
+          upperLabel: { show: false },
+          // The border alone separates siblings; a gap would add a second band
+          // in the parent's color.
+          itemStyle: {
+            borderColor: hierarchyBorder(appearance),
+            borderWidth: config.border_width ?? 1,
+            gapWidth: 0
+          },
+          data: tree
+        }
+      ]
+    };
+  }
+
+  // src/charts/sunburst/config.ts
+  var SUNBURST_CHART_CONFIG_MEMBERS = Object.freeze([
+    "type",
+    "title",
+    "levels",
+    "value",
+    "label_depth",
+    "min_angle",
+    "label_rotate",
+    "radius",
+    "inner_radius",
+    "border_width",
+    "palette"
+  ]);
+  function buildSunburstOption(data, config, appearance = {}) {
+    const tree = hierarchyOf(data, config, "A sunburst");
+    const palette = hierarchyPalette(config, appearance);
+    const labelDepth = config.label_depth ?? 2;
+    const minAngle = config.min_angle ?? 0;
+    const rotate = config.label_rotate === "horizontal" ? 0 : config.label_rotate ?? "radial";
+    const levels = Array.from({ length: hierarchyDepth(tree) + 1 }, (_, i) => ({
+      label: { show: i > 0 && i <= labelDepth, rotate, minAngle }
+    }));
+    return {
+      ...config.title ? { title: { text: config.title, left: "center" } } : {},
+      ...palette.length > 0 ? { color: [...palette] } : {},
+      tooltip: { trigger: "item", valueFormatter: tooltipValue },
+      series: [
+        {
+          type: "sunburst",
+          radius: [config.inner_radius ?? "18%", config.radius ?? "85%"],
+          ...config.title ? { center: ["50%", "54%"] } : {},
+          nodeClick: false,
+          data: tree,
+          label: { rotate, minAngle },
+          itemStyle: {
+            borderColor: hierarchyBorder(appearance),
+            borderWidth: config.border_width ?? 1
+          },
+          levels
+        }
+      ]
+    };
+  }
+
   // src/charts/survival/renderers.ts
   var SURVIVAL_RISK = "rtemis.survival_risk.v1";
   var survivalRenderers = {
@@ -9558,8 +9896,8 @@ ${rate(r.balancedAccuracy)}`, summary) }
     }
     const value = (v) => v === void 0 ? "\u2013" : String(tooltipValue(v));
     const lines = [...rows].map(([name, row]) => {
-      const summary = row.roll === void 0 ? "" : ` <span style="opacity:0.7">${rolling} ${value(row.roll)}</span>`;
-      return `${row.marker}${escapeHtml3(name)}&nbsp;&nbsp;<b>${value(row.raw)}</b>${summary}`;
+      const summary2 = row.roll === void 0 ? "" : ` <span style="opacity:0.7">${rolling} ${value(row.roll)}</span>`;
+      return `${row.marker}${escapeHtml3(name)}&nbsp;&nbsp;<b>${value(row.raw)}</b>${summary2}`;
     });
     return [escapeHtml3(list[0]?.axisValueLabel ?? ""), ...lines].join("<br/>");
   }
@@ -10437,20 +10775,24 @@ ${rate(r.balancedAccuracy)}`, summary) }
     calibration: buildCalibrationOption,
     confusion: buildConfusionOption,
     density: buildDensityOption,
+    funnel: buildFunnelOption,
     gantt: buildGanttOption,
     heatmap: buildHeatmapOption,
     histogram: buildHistogramOption,
     line: buildLineOption,
     pie: buildPieOption,
     pr: buildPrOption,
+    radar: buildRadarOption,
     roc: buildRocOption,
     sankey: buildSankeyOption,
     scatter: buildScatterOption,
     scatter3d: buildScatter3DOption,
     significance: buildSignificanceOption,
     spectrogram: buildSpectrogramOption,
+    sunburst: buildSunburstOption,
     survival: buildSurvivalOption,
-    timeseries: buildTimeSeriesOption
+    timeseries: buildTimeSeriesOption,
+    treemap: buildTreemapOption
   });
   var aspectHints = Object.freeze({
     calibration: curveAspect,

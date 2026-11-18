@@ -17,20 +17,24 @@ BUILDER_TYPES <- c(
   "calibration",
   "confusion",
   "density",
+  "funnel",
   "gantt",
   "heatmap",
   "histogram",
   "line",
   "pie",
   "pr",
+  "radar",
   "roc",
   "sankey",
   "scatter",
   "scatter3d",
   "significance",
   "spectrogram",
+  "sunburst",
   "survival",
-  "timeseries"
+  "timeseries",
+  "treemap"
 )
 
 

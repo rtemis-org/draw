@@ -104,11 +104,11 @@ Code, RStudio, or the browser's \code{prefers-color-scheme}), \code{NA} for no t
 
 Supported \link{ChartConfig} subclasses are \link{A3Config}, \link{BarConfig},
 \link{BoxplotConfig}, \link{CalibrationConfig}, \link{ChoroplethConfig}, \link{ConfusionConfig},
-\link{DensityConfig}, \link{GanttConfig}, \link{HeatmapConfig}, \link{HistogramConfig},
-\link{LineConfig}, \link{MermaidConfig}, \link{NetworkConfig}, \link{PieConfig}, \link{PRConfig},
-\link{ROCConfig}, \link{SankeyConfig},
+\link{DensityConfig}, \link{FunnelConfig}, \link{GanttConfig}, \link{HeatmapConfig},
+\link{HistogramConfig}, \link{LineConfig}, \link{MermaidConfig}, \link{NetworkConfig},
+\link{PieConfig}, \link{PRConfig}, \link{RadarConfig}, \link{ROCConfig}, \link{SankeyConfig},
 \link{ScatterConfig}, \link{Scatter3DConfig}, \link{SignificanceConfig}, \link{SpectrogramConfig},
-\link{SurvivalConfig}, and \link{TimeSeriesConfig}. Use their \verb{setup_*()} functions to
+\link{SunburstConfig}, \link{SurvivalConfig}, \link{TimeSeriesConfig}, and \link{TreemapConfig}. Use their \verb{setup_*()} functions to
 create configurations, then pass the data to \code{draw()} with \verb{data =} or set
 \code{dat_path} on the configuration. See \code{\link[=compile]{compile()}} to obtain the backend option
 without rendering it.

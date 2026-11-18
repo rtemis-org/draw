@@ -18,18 +18,22 @@ import { buildCalibrationOption } from "./charts/calibration/index.ts";
 import { buildConfusionOption } from "./charts/confusion/index.ts";
 import { buildPrOption, buildRocOption, curveAspect } from "./charts/curves/index.ts";
 import { buildDensityOption } from "./charts/density/index.ts";
+import { buildFunnelOption } from "./charts/funnel/index.ts";
 import { buildGanttOption } from "./charts/gantt/index.ts";
 import { buildHeatmapOption } from "./charts/heatmap/index.ts";
 import { buildHistogramOption } from "./charts/histogram/index.ts";
 import { buildLineOption, lineAspect } from "./charts/line/index.ts";
 import { buildPieOption } from "./charts/pie/index.ts";
+import { buildRadarOption } from "./charts/radar/index.ts";
 import { buildSankeyOption } from "./charts/sankey/index.ts";
 import { buildScatterOption, scatterAspect } from "./charts/scatter/index.ts";
 import { buildScatter3DOption } from "./charts/scatter3d/index.ts";
 import { buildSignificanceOption } from "./charts/significance/index.ts";
 import { buildSpectrogramOption } from "./charts/spectrogram/index.ts";
+import { buildSunburstOption } from "./charts/sunburst/index.ts";
 import { buildSurvivalOption } from "./charts/survival/index.ts";
 import { buildTimeSeriesOption } from "./charts/timeseries/index.ts";
+import { buildTreemapOption } from "./charts/treemap/index.ts";
 
 export type {
   A3Appearance,
@@ -148,6 +152,12 @@ export {
   kernelDensity,
   ruleBandwidth,
 } from "./charts/density/index.ts";
+export type { FunnelAppearance, FunnelChartConfig } from "./charts/funnel/index.ts";
+export {
+  buildFunnelOption,
+  FUNNEL_CHART_CONFIG_MEMBERS,
+  funnelStages,
+} from "./charts/funnel/index.ts";
 export type { GanttAppearance, GanttChartConfig } from "./charts/gantt/index.ts";
 export {
   buildGanttOption,
@@ -221,7 +231,19 @@ export {
   networkReducers,
 } from "./charts/network/index.ts";
 export type { PieAppearance, PieChartConfig, PieSlice } from "./charts/pie/index.ts";
-export { buildPieOption, PIE_CHART_CONFIG_MEMBERS, pieSlices } from "./charts/pie/index.ts";
+export {
+  buildPieOption,
+  labeledSums,
+  PIE_CHART_CONFIG_MEMBERS,
+  pieSlices,
+} from "./charts/pie/index.ts";
+export type { RadarAppearance, RadarChartConfig, RadarSeries } from "./charts/radar/index.ts";
+export {
+  buildRadarOption,
+  RADAR_ALL_ROWS,
+  RADAR_CHART_CONFIG_MEMBERS,
+  radarSeries,
+} from "./charts/radar/index.ts";
 export type { SankeyAppearance, SankeyChartConfig, SankeyLink } from "./charts/sankey/index.ts";
 export {
   buildSankeyOption,
@@ -272,6 +294,8 @@ export {
   SPECTROGRAM_CHART_CONFIG_MEMBERS,
   spectrogramColors,
 } from "./charts/spectrogram/index.ts";
+export type { SunburstChartConfig } from "./charts/sunburst/index.ts";
+export { buildSunburstOption, SUNBURST_CHART_CONFIG_MEMBERS } from "./charts/sunburst/index.ts";
 export type {
   SurvivalAppearance,
   SurvivalChartConfig,
@@ -292,6 +316,13 @@ export {
   rollingValues,
   TIMESERIES_CHART_CONFIG_MEMBERS,
 } from "./charts/timeseries/index.ts";
+export type { HierarchyAppearance, TreemapChartConfig } from "./charts/treemap/index.ts";
+export {
+  buildTreemapOption,
+  hierarchyBorder,
+  hierarchyPalette,
+  TREEMAP_CHART_CONFIG_MEMBERS,
+} from "./charts/treemap/index.ts";
 export type { KeyContext, KeyPlacement, KeyReserve, SizeKeySpec } from "./layout/keys.ts";
 export {
   fitKeys,
@@ -309,6 +340,8 @@ export { COLORMAPS } from "./shared/colormaps.ts";
 export type { FitCurve, FitMembers } from "./shared/fit.ts";
 export { FIT_MEMBERS, fitLabel } from "./shared/fit.ts";
 export { ddSci, formatNumber, SIGNIFICANT_DIGITS } from "./shared/format.ts";
+export type { HierarchyData, HierarchyMembers, HierarchyNode } from "./shared/hierarchy.ts";
+export { hierarchyDepth, hierarchyFromTable, hierarchyOf } from "./shared/hierarchy.ts";
 export type { MeasureMembers } from "./shared/labels.ts";
 export { valueLabel } from "./shared/labels.ts";
 export type { Layer } from "./shared/layers.ts";
@@ -345,20 +378,24 @@ export const builders = Object.freeze({
   calibration: buildCalibrationOption,
   confusion: buildConfusionOption,
   density: buildDensityOption,
+  funnel: buildFunnelOption,
   gantt: buildGanttOption,
   heatmap: buildHeatmapOption,
   histogram: buildHistogramOption,
   line: buildLineOption,
   pie: buildPieOption,
   pr: buildPrOption,
+  radar: buildRadarOption,
   roc: buildRocOption,
   sankey: buildSankeyOption,
   scatter: buildScatterOption,
   scatter3d: buildScatter3DOption,
   significance: buildSignificanceOption,
   spectrogram: buildSpectrogramOption,
+  sunburst: buildSunburstOption,
   survival: buildSurvivalOption,
   timeseries: buildTimeSeriesOption,
+  treemap: buildTreemapOption,
 });
 
 /**

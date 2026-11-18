@@ -362,11 +362,11 @@ render_widget <- function(
 #' @section Chart configurations:
 #' Supported [ChartConfig] subclasses are [A3Config], [BarConfig],
 #' [BoxplotConfig], [CalibrationConfig], [ChoroplethConfig], [ConfusionConfig],
-#' [DensityConfig], [GanttConfig], [HeatmapConfig], [HistogramConfig],
-#' [LineConfig], [MermaidConfig], [NetworkConfig], [PieConfig], [PRConfig],
-#' [ROCConfig], [SankeyConfig],
+#' [DensityConfig], [FunnelConfig], [GanttConfig], [HeatmapConfig],
+#' [HistogramConfig], [LineConfig], [MermaidConfig], [NetworkConfig],
+#' [PieConfig], [PRConfig], [RadarConfig], [ROCConfig], [SankeyConfig],
 #' [ScatterConfig], [Scatter3DConfig], [SignificanceConfig], [SpectrogramConfig],
-#' [SurvivalConfig], and [TimeSeriesConfig]. Use their `setup_*()` functions to
+#' [SunburstConfig], [SurvivalConfig], [TimeSeriesConfig], and [TreemapConfig]. Use their `setup_*()` functions to
 #' create configurations, then pass the data to `draw()` with `data =` or set
 #' `dat_path` on the configuration. See [compile()] to obtain the backend option
 #' without rendering it.
@@ -2258,7 +2258,7 @@ method(pie_input, class_any) <- function(values, labels = NULL) {
       anyNA(labels)
   ) {
     abort(
-      "Supply finite nonnegative slice values with a positive total and matching labels.",
+      "Supply finite nonnegative values with a positive total and one label per value.",
       class = c("rtemis_value_error", "rtemis_input_error")
     )
   }
