@@ -36,9 +36,12 @@ export type {
   BoxplotComparison,
   BoxplotData,
   BoxplotObservation,
+  BoxplotStats,
+  BoxplotStatsOptions,
 } from "./charts/boxplot/index.ts";
 export {
   BOXPLOT_CHART_CONFIG_MEMBERS,
+  boxplotStats,
   buildBoxplotOption,
   radicalInverse,
 } from "./charts/boxplot/index.ts";

@@ -27,6 +27,7 @@ export const BOXPLOT_POINTS = "rtemis.boxplot_points.v1";
 export const BOXPLOT_VIOLIN = "rtemis.violin.v1";
 export const BOXPLOT_PAIRS = "rtemis.boxplot_pairs.v1";
 export const BOXPLOT_BRACKETS = "rtemis.boxplot_brackets.v1";
+export const BOXPLOT_MEAN = "rtemis.boxplot_mean.v1";
 
 interface BoxSettings {
   readonly horizontal: boolean;
@@ -154,6 +155,29 @@ export const boxplotRenderers: Readonly<Record<string, Renderer>> = {
         opacity: settings.alpha,
         lineWidth: settings.width,
       },
+    };
+  },
+  // Data: [category, mean]. A diamond at the box's center line.
+  [BOXPLOT_MEAN]: (params, api) => {
+    const settings = params.itemPayload as unknown as BoxSettings & {
+      boxIndex: number;
+      size: number;
+    };
+    const layout = boxPoint(settings, api, settings.boxIndex, api.value(0), api.value(1), 0);
+    if (!layout) return;
+    const [x, y] = layout.point as [number, number];
+    const r = settings.size / 2;
+    return {
+      type: "polygon",
+      shape: {
+        points: [
+          [x, y - r],
+          [x + r, y],
+          [x, y + r],
+          [x - r, y],
+        ],
+      },
+      style: { fill: api.visual("color") },
     };
   },
   // Data: [from category, to category, value position, from series, to series, label].

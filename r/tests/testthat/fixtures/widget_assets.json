@@ -476,7 +476,15 @@
       "rtemis-draw-builders.js"
     ],
     "md5": [
-      "27536ace86ad7cff30cd49de6d76704e"
+      "1d2aca1753fa0bd36bc6c964e21911d4"
+    ]
+  },
+  "rtemis-draw-builders-0.7.0": {
+    "scripts": [
+      "rtemis-draw-builders.js"
+    ],
+    "md5": [
+      "8fe332338be07f9025d95559c05426d7"
     ]
   },
   "rtemis-panel-layout-1.0.12": {

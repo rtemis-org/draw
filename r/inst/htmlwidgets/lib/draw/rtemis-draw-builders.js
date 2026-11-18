@@ -50,6 +50,7 @@ var RtemisDraw = (() => {
     applyRepelLabels: () => applyRepelLabels,
     aspectHints: () => aspectHints,
     autoAlpha: () => autoAlpha,
+    boxplotStats: () => boxplotStats,
     buildA3Option: () => buildA3Option,
     buildBarOption: () => buildBarOption,
     buildBoxplotOption: () => buildBoxplotOption,
@@ -1523,6 +1524,7 @@ var RtemisDraw = (() => {
   var BOXPLOT_VIOLIN = "rtemis.violin.v1";
   var BOXPLOT_PAIRS = "rtemis.boxplot_pairs.v1";
   var BOXPLOT_BRACKETS = "rtemis.boxplot_brackets.v1";
+  var BOXPLOT_MEAN = "rtemis.boxplot_mean.v1";
   function boxPoint(settings, api, boxIndex, category, value, jitter) {
     const active = api.currentSeriesIndices();
     const boxes = settings.boxSeries.filter((i) => active.includes(i));
@@ -1621,6 +1623,26 @@ var RtemisDraw = (() => {
         }
       };
     },
+    // Data: [category, mean]. A diamond at the box's center line.
+    [BOXPLOT_MEAN]: (params, api) => {
+      const settings = params.itemPayload;
+      const layout = boxPoint(settings, api, settings.boxIndex, api.value(0), api.value(1), 0);
+      if (!layout) return;
+      const [x, y] = layout.point;
+      const r = settings.size / 2;
+      return {
+        type: "polygon",
+        shape: {
+          points: [
+            [x, y - r],
+            [x + r, y],
+            [x, y + r],
+            [x - r, y]
+          ]
+        },
+        style: { fill: api.visual("color") }
+      };
+    },
     // Data: [from category, to category, value position, from series, to series, label].
     [BOXPLOT_BRACKETS]: (params, api) => {
       const settings = params.itemPayload;
@@ -1690,6 +1712,7 @@ var RtemisDraw = (() => {
     "point_size",
     "point_alpha",
     "point_spread",
+    "mean_marker",
     "horizontal",
     "zoom",
     "na_rm",
@@ -1821,6 +1844,25 @@ var RtemisDraw = (() => {
         data: points
       });
     });
+    if (config.mean_marker) {
+      series.forEach((s, si) => {
+        const means = s.cells.flatMap(
+          (c, j) => typeof c?.mean === "number" ? [{ value: [j, c.mean], itemStyle: { color: colorOf(si, j) } }] : []
+        );
+        if (means.length === 0) return;
+        overlays.push({
+          type: "custom",
+          ...s.name === null ? {} : { name: s.name },
+          renderItem: BOXPLOT_MEAN,
+          clip: true,
+          z: 4,
+          dimensions: ["Category", "Mean"],
+          encode: { ...encodeOne, tooltip: [1] },
+          itemPayload: { horizontal, boxSeries, boxIndex: si, size: 9 },
+          data: means
+        });
+      });
+    }
     const layers = [];
     const rangeOf = (c) => c?.range ?? null;
     series.forEach((s, si) => {
@@ -2014,6 +2056,44 @@ var RtemisDraw = (() => {
       0
     );
     return { records, limits: extended ?? limits };
+  }
+
+  // src/charts/boxplot/stats.ts
+  function boxplotStats(values, options = {}) {
+    const finite2 = values.filter((v) => Number.isFinite(v));
+    if (finite2.length === 0) return null;
+    const sorted = [...finite2].sort((a, b) => a - b);
+    const [q1, q2, q3] = (options.quartiles ?? "linear") === "hinges" ? hinges(sorted) : linear(sorted);
+    const whisker = options.whisker ?? 1.5;
+    const iqr = q3 - q1;
+    const inside = (v) => whisker === 0 || v >= q1 - whisker * iqr && v <= q3 + whisker * iqr;
+    let low = Math.min(q1, q3);
+    let high = Math.max(q1, q3);
+    for (const v of finite2) {
+      if (!inside(v)) continue;
+      if (v < low) low = v;
+      if (v > high) high = v;
+    }
+    return {
+      stats: [low, q1, q2, q3, high],
+      outlier: values.map((v) => Number.isFinite(v) && !inside(v))
+    };
+  }
+  function linear(sorted) {
+    const at = (p) => {
+      const h = (sorted.length - 1) * p;
+      const lo = Math.floor(h);
+      const a = sorted[lo];
+      const b = sorted[Math.min(lo + 1, sorted.length - 1)];
+      return a + (h - lo) * (b - a);
+    };
+    return [at(0.25), at(0.5), at(0.75)];
+  }
+  function hinges(sorted) {
+    const n = sorted.length;
+    const n4 = Math.floor((n + 3) / 2) / 2;
+    const at = (d) => 0.5 * (sorted[Math.floor(d) - 1] + sorted[Math.ceil(d) - 1]);
+    return [at(n4), at((n + 1) / 2), at(n + 1 - n4)];
   }
 
   // src/charts/confusion/config.ts

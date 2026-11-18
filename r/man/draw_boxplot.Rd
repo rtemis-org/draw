@@ -29,6 +29,7 @@ draw_boxplot(
   point_size = 5,
   point_alpha = 0.6,
   point_spread = 0.5,
+  mean_marker = FALSE,
   legend_position = "top",
   legend_placement = "outside",
   legend_title = NULL,
@@ -109,6 +110,8 @@ zero uses full-range whiskers.}
 \item{point_alpha}{Numeric \verb{[0, 1]}: Point opacity.}
 
 \item{point_spread}{Numeric \verb{[0, 1]}: Fraction of box width occupied by offsets.}
+
+\item{mean_marker}{Logical: Mark each box's mean with a diamond.}
 
 \item{legend_position}{Character \{"top", "bottom", "left", "right",
 "top-left", "top-right", "bottom-left", "bottom-right"\}: Legend anchor.

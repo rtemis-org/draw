@@ -90,6 +90,27 @@ describe("buildBoxplotOption", () => {
     expect((option.yAxis as { max: number }).max).toBeGreaterThan(20);
   });
 
+  it("marks each box's mean on request, under its series' name", () => {
+    const withMeans: BoxplotData = {
+      ...grouped,
+      cells: grouped.cells.map((c, i) => ({ ...c, mean: c.stats ? 2.5 + i : null })),
+    };
+    expect(seriesOf(buildBoxplotOption(withMeans, {})).map((s) => s.renderItem)).not.toContain(
+      "rtemis.boxplot_mean.v1",
+    );
+    const means = seriesOf(buildBoxplotOption(withMeans, { mean_marker: true })).filter(
+      (s) => s.renderItem === "rtemis.boxplot_mean.v1",
+    );
+    expect(means.map((s) => s.name)).toEqual(["a", "b"]);
+    expect(means[0]?.data).toEqual([
+      { value: [0, 2.5], itemStyle: { color: "#6CA3A0" } },
+      { value: [1, 4.5], itemStyle: { color: "#6CA3A0" } },
+    ]);
+    // An empty box has no mean.
+    expect(means[1]?.data).toHaveLength(1);
+    expect(means[0]?.itemPayload).toMatchObject({ boxIndex: 0, size: 9 });
+  });
+
   it("lists horizontal categories top to bottom and honors ylim", () => {
     const option = buildBoxplotOption(grouped, { horizontal: true, ylim: [0, 10] });
     expect(option.yAxis).toMatchObject({ type: "category", inverse: true });
@@ -127,5 +148,6 @@ describe("registerRenderers", () => {
     registerRenderers({ registerCustomSeries: (name: string) => void names.push(name) });
     expect(names).toEqual([...RENDERER_NAMES]);
     expect(names).toContain("rtemis.violin.v1");
+    expect(names).toContain("rtemis.boxplot_mean.v1");
   });
 });

@@ -75,7 +75,8 @@ FALSE selects and displays the smallest ranks first.}
 
 \item{...}{Additional settings for \code{\link[=setup_BarConfig]{setup_BarConfig()}} or
 \code{\link[=setup_BoxplotConfig]{setup_BoxplotConfig()}}, according to \code{type}. Boxplots accept \code{boxpoints},
-\code{quartiles}, \code{whisker}, and point styling; unset \code{boxpoints} shows all scores.
+\code{quartiles}, \code{whisker}, \code{mean_marker}, and point styling; unset
+\code{boxpoints} shows all scores, and unset \code{mean_marker} marks the means.
 Data bindings, labels, and orientation are set here.}
 
 \item{legend_position}{Character \{"top", "bottom", "left", "right",
@@ -130,11 +131,12 @@ chart labels retain only the variable and measure names. The input is never
 modified.
 
 Boxplots require fold-level records. Every available score is overlaid by
-default, with its fold ID in the tooltip.
+default, with its fold ID in the tooltip, and a diamond marks each
+variable's mean.
 Missing values remain missing in the materialized table and are reported in
 the console. Boxes describe resample variability, not a confidence interval.
 See \code{\link[=draw_boxplot]{draw_boxplot()}} for quartiles, whiskers, and point placement. Use
-\code{whisker = 0} for full-range whiskers, as in the current live importance view.
+\code{whisker = 0} for full-range whiskers.
 
 For portable rendering, materialize the selected, summarized \code{label}
 and \code{importance} columns in display order and bind them using

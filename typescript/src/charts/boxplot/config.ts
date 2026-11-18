@@ -4,7 +4,13 @@ import type { LegendMembers } from "../../shared/legend.ts";
 import { type AxisLimits, calcLimits } from "../../shared/limits.ts";
 import { asArray, type ColumnNames } from "../../shared/source.ts";
 import { RTEMIS_PALETTE } from "../../theme/tokens.ts";
-import { BOXPLOT_BRACKETS, BOXPLOT_PAIRS, BOXPLOT_POINTS, BOXPLOT_VIOLIN } from "./renderers.ts";
+import {
+  BOXPLOT_BRACKETS,
+  BOXPLOT_MEAN,
+  BOXPLOT_PAIRS,
+  BOXPLOT_POINTS,
+  BOXPLOT_VIOLIN,
+} from "./renderers.ts";
 
 /**
  * An instance of the `chart/boxplot/v1` schema, written by rtemis.draw's
@@ -54,6 +60,8 @@ export interface BoxplotChartConfig extends MarginMembers, LegendMembers {
   readonly point_alpha?: number;
   /** Fraction of the box width point offsets occupy, `[0, 1]`. Default `0.5`. */
   readonly point_spread?: number;
+  /** Mark each box's mean with a diamond, from the host's `mean`. Default `false`. */
+  readonly mean_marker?: boolean;
   /** Draw the boxes horizontally. Default `false`. */
   readonly horizontal?: boolean;
   /** A slider, Shift+wheel zoom, and drag panning on the category axis. Default `false`. */
@@ -106,6 +114,7 @@ export const BOXPLOT_CHART_CONFIG_MEMBERS = Object.freeze([
   "point_size",
   "point_alpha",
   "point_spread",
+  "mean_marker",
   "horizontal",
   "zoom",
   "na_rm",
@@ -153,6 +162,8 @@ export interface BoxplotCell {
   readonly n: number;
   /** Smallest and largest value; `null` without values. */
   readonly range?: readonly [number, number] | null;
+  /** Mean of the values, for `mean_marker`; `null` without values. */
+  readonly mean?: number | null;
   /** The values drawn as points (`boxpoints` all or outliers). */
   readonly points?: readonly BoxplotObservation[];
   /** Every value with its identifier, for `paired`. */
@@ -204,9 +215,9 @@ interface BoxSeries {
  * `chart/boxplot/v1` config. Without `group`, the columns are the categories
  * of one series. With `group`, `group_layout` places the levels: on the
  * category axis with one series per column, or in the legend with one series
- * per level over the columns. Points, violins, paired lines, and comparison
- * brackets are custom series drawn by the renderers {@link registerRenderers}
- * registers.
+ * per level over the columns. Points, mean markers, violins, paired lines,
+ * and comparison brackets are custom series drawn by the renderers
+ * {@link registerRenderers} registers.
  */
 export function buildBoxplotOption(
   data: BoxplotData,
@@ -337,6 +348,28 @@ export function buildBoxplotOption(
       data: points,
     });
   });
+
+  if (config.mean_marker) {
+    series.forEach((s, si) => {
+      const means = s.cells.flatMap((c, j) =>
+        typeof c?.mean === "number"
+          ? [{ value: [j, c.mean], itemStyle: { color: colorOf(si, j) } }]
+          : [],
+      );
+      if (means.length === 0) return;
+      overlays.push({
+        type: "custom",
+        ...(s.name === null ? {} : { name: s.name }),
+        renderItem: BOXPLOT_MEAN,
+        clip: true,
+        z: 4,
+        dimensions: ["Category", "Mean"],
+        encode: { ...encodeOne, tooltip: [1] },
+        itemPayload: { horizontal, boxSeries, boxIndex: si, size: 9 },
+        data: means,
+      });
+    });
+  }
 
   const layers: Record<string, unknown>[] = [];
   const rangeOf = (c: BoxplotCell | null) => c?.range ?? null;

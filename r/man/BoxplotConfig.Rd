@@ -31,6 +31,7 @@ BoxplotConfig(
   point_size = 5,
   point_alpha = 0.6,
   point_spread = 0.5,
+  mean_marker = FALSE,
   horizontal = FALSE,
   zoom = FALSE,
   na_rm = TRUE,
@@ -118,6 +119,8 @@ zero uses full-range whiskers.}
 \item{point_alpha}{Numeric \verb{[0, 1]}: Point opacity.}
 
 \item{point_spread}{Numeric \verb{[0, 1]}: Fraction of box width occupied by offsets.}
+
+\item{mean_marker}{Logical: Mark each box's mean with a diamond.}
 
 \item{horizontal}{Logical: Draw the boxes horizontally.}
 

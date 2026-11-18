@@ -109,6 +109,7 @@ method(boxplot_option, class_any) <- function(
   point_size = 5,
   point_alpha = .6,
   point_spread = .5,
+  mean_marker = FALSE,
   geometry = "box",
   bandwidth = NULL,
   adjust = 1,
@@ -267,6 +268,9 @@ method(boxplot_option, class_any) <- function(
         range = if (length(at)) range(values[at]),
         points = observations(take)
       )
+      if (mean_marker && length(at)) {
+        cell[["mean"]] <- jsonlite::unbox(mean(values[at]))
+      }
       if (paired) {
         cell[["observations"]] <- observations(seq_along(at))
       }
@@ -330,6 +334,7 @@ method(boxplot_option, class_any) <- function(
     point_size = point_size,
     point_alpha = point_alpha,
     point_spread = point_spread,
+    mean_marker = mean_marker,
     zoom = zoom,
     group_layout = group_layout,
     color_by_group = color_by_group,
@@ -439,6 +444,7 @@ method(boxplot_option, class_any) <- function(
 #' @param point_size Numeric `(0, Inf)`: Finite point diameter in pixels.
 #' @param point_alpha Numeric `[0, 1]`: Point opacity.
 #' @param point_spread Numeric `[0, 1]`: Fraction of box width occupied by offsets.
+#' @param mean_marker Logical: Mark each box's mean with a diamond.
 #' @param na_rm Logical: Remove missing values. FALSE rejects missing input.
 #' @param palette Optional Character: Box colors, recycled across boxes or groups.
 #' @param fill_alpha Numeric `[0, 1]`: Box fill opacity.
@@ -496,6 +502,7 @@ draw_boxplot <- function(
   point_size = 5,
   point_alpha = .6,
   point_spread = .5,
+  mean_marker = FALSE,
   legend_position = "top",
   legend_placement = "outside",
   legend_title = NULL,
@@ -543,6 +550,7 @@ draw_boxplot <- function(
     point_size = point_size,
     point_alpha = point_alpha,
     point_spread = point_spread,
+    mean_marker = mean_marker,
     comparisons = comparisons,
     zoom = zoom,
     group_layout = group_layout,

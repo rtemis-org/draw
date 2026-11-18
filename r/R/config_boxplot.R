@@ -157,6 +157,10 @@ BoxplotConfig <- new_class(
         max = 1,
         description = "Fraction of box width occupied by deterministic point offsets."
       ),
+      mean_marker = prop_boolean(
+        FALSE,
+        description = "Mark each box's mean with a diamond."
+      ),
       # -- semantics ---------------------------------------------------------
       horizontal = prop_boolean(
         FALSE,
@@ -302,6 +306,7 @@ setup_BoxplotConfig <- function(
   point_size = 5,
   point_alpha = 0.6,
   point_spread = 0.5,
+  mean_marker = FALSE,
   palette = NULL,
   fill_alpha = 0.25,
   xlab = NULL,
@@ -357,6 +362,7 @@ setup_BoxplotConfig <- function(
     point_size = point_size,
     point_alpha = point_alpha,
     point_spread = point_spread,
+    mean_marker = mean_marker,
     # A named color vector, such as a subset of `rtemis_colors`, is a palette.
     palette = if (!is.null(palette)) unname(palette),
     fill_alpha = fill_alpha,
@@ -432,6 +438,7 @@ method(compile, BoxplotConfig) <- function(
     point_size = config@point_size,
     point_alpha = config@point_alpha,
     point_spread = config@point_spread,
+    mean_marker = config@mean_marker,
     xlab = config@xlab,
     ylab = config@ylab,
     title = config@title,

@@ -111,11 +111,25 @@ test_that("summary ranks distributions without replacing fold scores", {
       if (summary == "mean") c(0, 0, 0, 4.5, 9) else rep(2, 5)
     )
     expect_length(opt[["series"]][[2]][["data"]], 3)
+    # A diamond marks the mean, the value the mean summary ranks by.
+    mean_marks <- opt[["series"]][[3]]
+    expect_identical(mean_marks[["renderItem"]], "rtemis.boxplot_mean.v1")
+    expect_equal(
+      mean_marks[["data"]][[1]][["value"]][[2]],
+      if (summary == "mean") 3 else 2
+    )
   }
   all <- raw_option(draw_varimp(data, type = "boxplot", top_n = NULL))
   expect_equal(unlist(all[["yAxis"]][["data"]]), c("a", "b", "zero"))
   none <- raw_option(draw_varimp(data, type = "boxplot", boxpoints = "none"))
-  expect_length(none[["series"]], 1)
+  expect_length(none[["series"]], 2)
+  bare <- raw_option(draw_varimp(
+    data,
+    type = "boxplot",
+    boxpoints = "none",
+    mean_marker = FALSE
+  ))
+  expect_length(bare[["series"]], 1)
   outliers <- data.frame(
     variable = "x",
     fold = as.character(1:5),
@@ -143,6 +157,7 @@ test_that("portable distribution data and config round trips reproduce the view"
     observation = records[["observation"]],
     horizontal = TRUE,
     boxpoints = "all",
+    mean_marker = TRUE,
     labels = selected[["variable"]],
     xlab = "Score",
     ylab = "Variable"
