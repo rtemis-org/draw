@@ -1,9 +1,11 @@
-// Assert the actual ECharts vector geometry, not just the serialized options.
+// Assert the rendered ECharts vector geometry as well as the serialized options.
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const input = JSON.parse(fs.readFileSync(process.argv[2], 'utf8'));
 const echarts = require(input.echarts);
 const layout = require(input.layout);
+// The number-at-risk strip is a custom series drawn by the bundle's renderer.
+require(input.builders).registerRenderers(echarts);
 const close = (actual, expected, label) => {
   assert.equal(actual.length, expected.length, label);
   actual.forEach((v, i) => assert.ok(Math.abs(v - expected[i]) < .02, `${label}: ${v} != ${expected[i]}`));
@@ -36,17 +38,17 @@ for (const payload of input.charts) {
       }
       // Risk counts are text marks aligned to their time coordinates below the
       // time axis, including a literal NA rather than a blank or invented zero.
-      const data = models[7].getData();
+      const data = models[8].getData();
       for (let i = 0; i < data.count(); i++) {
-        const el = data.getItemGraphicEl(i).getSymbolPath().getTextContent();
+        const el = data.getItemGraphicEl(i);
         const rect = el.getBoundingRect().clone(); rect.applyTransform(el.getComputedTransform());
         const x = curve.coordinateSystem.dataToPoint([[0,0],[1,0],[5,0]][i])[0];
         assert.ok(Math.abs(rect.x + rect.width/2 - x) < .1, 'risk column alignment');
-        assert.ok(rect.y > chart.getModel().getComponent('grid').coordinateSystem.getRect().y + chart.getModel().getComponent('grid').coordinateSystem.getRect().height + 60, 'risk below axis');
+        assert.ok(rect.y > chart.getModel().getComponent('grid').coordinateSystem.getRect().y + chart.getModel().getComponent('grid').coordinateSystem.getRect().height + 48, 'risk below the axis name');
         assert.ok(rect.y + rect.height < height, 'risk text inside export');
       }
       assert.ok(!svg.includes('<image'), 'no raster marks');
-      for (const text of ['At risk: A', 't=1', '>NA<', '>1.000<', '>0.600<']) assert.ok(svg.includes(text), `SVG label ${text}`);
+      for (const text of ['>At risk<', '>NA<', '>100%<', '>60%<', '>Median 5<']) assert.ok(svg.includes(text), `SVG label ${text}`);
       chart.dispatchAction({type: 'legendUnSelect', name: 'A'});
       for (const s of models.filter(s => s.name === 'A')) assert.ok(chart.getModel().isSeriesFiltered(s), 'all group layers hidden');
       chart.dispatchAction({type: 'legendSelect', name: 'A'});

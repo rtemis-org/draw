@@ -109,7 +109,11 @@ test_that("native legends reserve space across families, anchors, and resizes", 
   skip_if_no_node()
   charts <- list(
     survival = draw_survival(
-      data.frame(time = c(0, 1, 2), survival = c(1, .8, .4)),
+      data.frame(
+        time = c(0, 1, 2),
+        survival = c(1, .8, .4),
+        group = "Survival"
+      ),
       title = "Survival"
     ),
     calibration = draw_calibration(

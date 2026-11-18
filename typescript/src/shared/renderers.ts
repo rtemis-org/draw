@@ -7,11 +7,13 @@
 import { boxplotRenderers } from "../charts/boxplot/renderers.ts";
 import { histogramRenderers } from "../charts/histogram/renderers.ts";
 import { scatterRenderers } from "../charts/scatter/renderers.ts";
+import { survivalRenderers } from "../charts/survival/renderers.ts";
 
 const renderers: Readonly<Record<string, unknown>> = Object.freeze({
   ...boxplotRenderers,
   ...histogramRenderers,
   ...scatterRenderers,
+  ...survivalRenderers,
 });
 
 /** Names of the custom-series renderers this package registers. */

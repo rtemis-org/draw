@@ -18,10 +18,11 @@ test_that("survival records sort by time without inventing origins or changing p
     expect_error(survival_data(cfg, bad))
   }
   expect_no_error(draw_survival(data.frame(time = 2, survival = .7)))
-  s <- draw_survival(data.frame(time = 2, survival = .7))[["x"]][["option"]][[
-    "series"
-  ]][[1L]]
-  expect_equal(s[["itemStyle"]][["opacity"]], 1)
+  o <- raw_option(draw_survival(data.frame(time = 2, survival = .7)))
+  expect_equal(o[["series"]][[1L]][["itemStyle"]][["opacity"]], 1)
+  # One unnamed curve draws no legend.
+  expect_false(o[["legend"]][["show"]])
+  expect_true(raw_option(draw(cfg, data = d))[["legend"]][["show"]])
 })
 
 test_that("median survival matches crossings and midpoints without extrapolation", {
@@ -58,24 +59,36 @@ test_that("confidence, censor and annotation layers preserve their records", {
     n_censor = c(0, 2.5, 0),
     n_risk = c(4, 4, 1)
   )
-  widget <- draw_survival(d, show_median = TRUE, landmarks = c(-1, 1, 2, 9))
-  s <- widget[["x"]][["option"]][["series"]]
-  expect_length(s, 6L)
+  widget <- draw_survival(d, landmarks = c(-1, 1, 2, 9))
+  s <- raw_option(widget)[["series"]]
+  # The curve, two band layers, censor ticks, the median dropline and its
+  # label, the landmarks, and the landmark reference lines.
+  expect_length(s, 8L)
   expect_identical(s[[1L]][["step"]], "end")
   expect_identical(s[[2L]][["step"]], "end")
   expect_equal(s[[3L]][["data"]][[2L]], list(1, .4))
   expect_equal(s[[3L]][["data"]][[3L]], list(3, .4))
   expect_null(s[[3L]][["data"]][[4L]][[2L]])
   expect_equal(s[[4L]][["data"]][[1L]][[7L]], "2.5")
-  expect_equal(s[[5L]][["data"]], list(c(0, .5), c(3, .5), c(3, 0)))
+  expect_equal(s[[5L]][["data"]], list(list(0, .5), list(3, .5), list(3, 0)))
+  expect_identical(s[[6L]][["data"]][[1L]][["name"]], "Median 3")
   expect_equal(
-    lapply(s[[6L]][["data"]], `[[`, "value"),
-    list(c(1, .75), c(2, .75))
+    lapply(s[[7L]][["data"]], `[[`, "value"),
+    list(list(1, .75), list(2, .75))
+  )
+  # Landmarks read as percents; references stay within the time range.
+  expect_identical(s[[7L]][["data"]][[1L]][["name"]], "75%")
+  expect_equal(
+    lapply(s[[8L]][["markLine"]][["data"]], `[[`, "xAxis"),
+    list(1, 2)
   )
   expect_length(
-    draw_survival(d, show_ci = FALSE, show_censors = FALSE)[["x"]][["option"]][[
-      "series"
-    ]],
+    raw_option(draw_survival(
+      d,
+      show_ci = FALSE,
+      show_censors = FALSE,
+      show_median = FALSE
+    ))[["series"]],
     1L
   )
   expect_error(draw_survival(transform(d, lower = c(1, .8, .2))), "enclose")
@@ -94,11 +107,18 @@ test_that("risk records are explicit and share the curve groups", {
     n_risk = c(4, NA, 1.5)
   )
   w <- draw_survival(list(curves = d, risk = risk), risk_table = TRUE)
-  s <- w[["x"]][["option"]][["series"]]
-  expect_length(s, 4L)
-  expect_identical(s[[3L]][["data"]][[2L]][["name"]], "NA")
-  expect_identical(s[[3L]][["data"]][[3L]][["name"]], "1.5")
-  expect_identical(s[[2L]][["name"]], s[[1L]][["name"]])
+  o <- raw_option(w)
+  rows <- Filter(
+    function(x) identical(x[["renderItem"]], "rtemis.survival_risk.v1"),
+    o[["series"]]
+  )
+  # One row per curve under its name, and the caption.
+  expect_length(rows, 2L)
+  expect_identical(rows[[1L]][["name"]], o[["series"]][[1L]][["name"]])
+  expect_equal(rows[[1L]][["itemPayload"]][["labels"]], list("4", "NA", "1.5"))
+  expect_identical(rows[[2L]][["itemPayload"]][["caption"]], "At risk")
+  # The time axis labels exactly the risk times.
+  expect_equal(o[["xAxis"]][["axisLabel"]][["customValues"]], list(0, 2, 3))
   expect_error(draw_survival(d, risk_table = TRUE), "explicit")
   for (bad in list(
     transform(risk, time = c(0, 2, Inf)),
@@ -123,13 +143,12 @@ test_that("survival SVG retains correct step, band, censor, landmark and risk ge
   )
   risk <- data.frame(time = c(0, 1, 5), group = "A", n_risk = c(10, NA, 1))
   charts <- lapply(list(theme_light(), theme_dark()), function(theme) {
-    draw_survival(
+    built_payload(draw_survival(
       list(curves = d, risk = risk),
-      show_median = TRUE,
       landmarks = c(1, 4),
       risk_table = TRUE,
       theme = theme
-    )[["x"]]
+    ))
   })
   path <- tempfile(fileext = ".json")
   on.exit(unlink(path), add = TRUE)
@@ -142,6 +161,10 @@ test_that("survival SVG retains correct step, band, censor, landmark and risk ge
       ),
       layout = system.file(
         "htmlwidgets/lib/draw/panels.js",
+        package = "rtemis.draw"
+      ),
+      builders = system.file(
+        "htmlwidgets/lib/draw/rtemis-draw-builders.js",
         package = "rtemis.draw"
       )
     ),

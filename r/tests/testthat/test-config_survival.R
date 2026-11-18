@@ -35,7 +35,10 @@ test_that("survival configuration validates and round trips portable settings", 
     path <- tempfile(fileext = ".json")
     write_chart_config(cfg, path, complete = complete)
     back <- read_chart_config(path)
-    expect_identical(to_list(compile(back, d)), to_list(compile(cfg, d)))
+    expect_identical(
+      raw_option(draw(back, data = d)),
+      raw_option(draw(cfg, data = d))
+    )
     expect_identical(back@origin, cfg@origin)
     unlink(path)
   }

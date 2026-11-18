@@ -4,8 +4,10 @@
 #' Survival Curve Configuration
 #'
 #' Draw precomputed survival estimates, without fitting a model in the renderer.
-#' Corresponds to `LineSeriesOption` in `src/chart/line/LineSeries.ts` and
-#' `ScatterSeriesOption` in `src/chart/scatter/ScatterSeries.ts`.
+#' The bundled `@rtemis/draw` builds the chart; [compile()] returns a
+#' [BuildRequest]. It draws `LineSeriesOption` in `src/chart/line/LineSeries.ts`,
+#' `ScatterSeriesOption` in `src/chart/scatter/ScatterSeries.ts`, and a custom
+#' series for the number-at-risk strip.
 #' ECharts docs: <https://echarts.apache.org/en/option.html#series-line.step>
 #'
 #' @section Records and statistical semantics:
@@ -40,9 +42,13 @@
 #' @param n_risk Optional Character: Risk count column at recorded times.
 #' @param show_ci Logical: Draw available pointwise confidence bands.
 #' @param show_censors Logical: Draw censor ticks.
-#' @param show_median Logical: Draw median survival droplines when estimable.
-#' @param landmarks Optional Numeric vector: Finite times for survival labels.
-#' @param risk_table Logical: Draw supplied risk records beneath the curves.
+#' @param show_median Logical: Draw each curve's median survival dropline, from
+#'   S = 0.5 to the median and down to the time axis, labeled with the median,
+#'   when estimable.
+#' @param landmarks Optional Numeric vector: Finite times at which each curve's
+#'   survival is marked and labeled as a percent, with a dashed line at each time.
+#' @param risk_table Logical: Draw supplied risk records beneath the curves, one
+#'   row per group in its color; the time axis then labels the risk times.
 #' @param ci_opacity Numeric `[0, 1]`: Confidence band opacity.
 #' @param censor_size Numeric `(0, Inf)`: Censor tick height in pixels.
 #' @inheritParams ROCConfig
@@ -102,8 +108,8 @@ SurvivalConfig <- new_class(
         description = "Draw ticks at recorded censoring times."
       ),
       show_median = prop_boolean(
-        FALSE,
-        description = "Draw the median survival dropline when estimable."
+        TRUE,
+        description = "Draw each curve's median survival dropline, labeled, when estimable."
       ),
       landmarks = prop_float(
         NULL,
@@ -202,7 +208,7 @@ setup_SurvivalConfig <- function(
   n_risk = NULL,
   show_ci = TRUE,
   show_censors = TRUE,
-  show_median = FALSE,
+  show_median = TRUE,
   landmarks = NULL,
   risk_table = FALSE,
   ci_opacity = .15,
@@ -262,5 +268,5 @@ method(compile, SurvivalConfig) <- function(
   ...
 ) {
   check_dots_empty(...)
-  survival_option(config, data)
+  survival_request(config, data)
 }

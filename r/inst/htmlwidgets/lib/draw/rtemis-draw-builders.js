@@ -44,6 +44,7 @@ var RtemisDraw = (() => {
     SIGNIFICANT_DIGITS: () => SIGNIFICANT_DIGITS,
     SIGN_COLORS: () => SIGN_COLORS,
     SIZE_KEY_ID: () => SIZE_KEY_ID,
+    SURVIVAL_CHART_CONFIG_MEMBERS: () => SURVIVAL_CHART_CONFIG_MEMBERS,
     ZOOM_SLIDER_ID: () => ZOOM_SLIDER_ID,
     a3SurfaceHints: () => a3SurfaceHints,
     appendLayers: () => appendLayers,
@@ -62,6 +63,7 @@ var RtemisDraw = (() => {
     buildRocOption: () => buildRocOption,
     buildScatterOption: () => buildScatterOption,
     buildSignificanceOption: () => buildSignificanceOption,
+    buildSurvivalOption: () => buildSurvivalOption,
     builders: () => builders,
     calcLimits: () => calcLimits,
     calcLimitsFromZero: () => calcLimitsFromZero,
@@ -96,6 +98,7 @@ var RtemisDraw = (() => {
     significanceAxisNames: () => significanceAxisNames,
     significanceGroupNames: () => significanceGroupNames,
     sizeKeyValues: () => sizeKeyValues,
+    survivalMedian: () => survivalMedian,
     themeFontSizes: () => themeFontSizes,
     themeOption: () => themeOption,
     timeLabel: () => timeLabel,
@@ -4932,6 +4935,379 @@ ${rate(r.balancedAccuracy)}`, summary) }
     };
   }
 
+  // src/charts/survival/renderers.ts
+  var SURVIVAL_RISK = "rtemis.survival_risk.v1";
+  var survivalRenderers = {
+    // Data: [time, row]; row -1 is the caption. A row's series is its curve's,
+    // and its text takes the curve's color. The counts sit under the time
+    // axis's own coordinate of each time, so they stay aligned with its ticks
+    // through resizing; the rows are measured from the canvas bottom.
+    [SURVIVAL_RISK]: (params, api) => {
+      const p = params.itemPayload;
+      const top = api.getHeight() - p.bottom - p.rows * p.lineHeight;
+      const row = api.value(1);
+      if (row < 0) {
+        return {
+          type: "text",
+          x: p.captionX,
+          y: top + p.rows * p.lineHeight / 2,
+          rotation: Math.PI / 2,
+          style: {
+            text: p.caption,
+            align: "center",
+            verticalAlign: "middle",
+            fontSize: p.fontSize,
+            fill: p.textColor
+          }
+        };
+      }
+      return {
+        type: "text",
+        style: {
+          x: api.coord([api.value(0), 0])[0],
+          y: top + (row + 0.5) * p.lineHeight,
+          text: p.labels[params.dataIndex] ?? "",
+          align: "center",
+          verticalAlign: "middle",
+          fontSize: p.fontSize,
+          fill: api.visual("color")
+        }
+      };
+    }
+  };
+
+  // src/charts/survival/config.ts
+  var SURVIVAL_CHART_CONFIG_MEMBERS = Object.freeze([
+    "type",
+    "title",
+    "legend_position",
+    "legend_placement",
+    "legend_title",
+    "time",
+    "survival",
+    "group",
+    "lower",
+    "upper",
+    "n_censor",
+    "n_risk",
+    "show_ci",
+    "show_censors",
+    "show_median",
+    "landmarks",
+    "risk_table",
+    "ci_opacity",
+    "line_width",
+    "censor_size",
+    "digits",
+    "palette",
+    "legend",
+    "xlab",
+    "ylab"
+  ]);
+  function survivalMedian(curve) {
+    const tol = Math.sqrt(Number.EPSILON);
+    const s = curve.survival;
+    const t = curve.time;
+    const i = s.findIndex((v) => v <= 0.5 + tol);
+    if (i < 0) return null;
+    if (Math.abs(s[i] - 0.5) > tol) return t[i];
+    let end = t[t.length - 1];
+    for (let k = i + 1; k < s.length; k++) {
+      if (s[k] < 0.5 - tol) {
+        end = t[k];
+        break;
+      }
+    }
+    return (t[i] + end) / 2;
+  }
+  var RISK_FONT = 12;
+  var RISK_LINE = Math.round(RISK_FONT * 1.6);
+  var RISK_PAD = 14;
+  var RISK_AXIS = 56;
+  function buildSurvivalOption(data, config, appearance = {}) {
+    const curves = data.curves.filter((c) => c.time.length > 0);
+    if (curves.length === 0) throw new Error("A survival chart needs at least one recorded curve.");
+    for (const c of curves) {
+      if (c.survival.length !== c.time.length) {
+        throw new Error("A survival curve needs one survival value per time.");
+      }
+    }
+    const digits = config.digits ?? 3;
+    const fmt = (v) => ddSci(v, digits);
+    const count = (v) => typeof v === "number" && Number.isFinite(v) ? String(v) : "NA";
+    const palette = asArray(config.palette);
+    const colors = palette.length > 0 ? palette : appearance.palette ?? [];
+    const colorOf = (i) => colors.length > 0 ? colors[i % colors.length] : void 0;
+    const styled = (color) => color ? { color } : {};
+    const names = curves.map((c, i) => c.name ?? (curves.length > 1 ? `Curve ${i + 1}` : "Survival"));
+    let lo = Number.POSITIVE_INFINITY;
+    let hi = Number.NEGATIVE_INFINITY;
+    for (const c of curves) {
+      lo = Math.min(lo, c.time[0]);
+      hi = Math.max(hi, c.time[c.time.length - 1]);
+    }
+    const domain = hi > lo ? [lo, hi] : [lo - 0.5, hi + 0.5];
+    const dimensions2 = [
+      "time",
+      "survival",
+      ...["Survival", "Lower", "Upper", "At risk", "Censored"].map((name) => ({
+        name,
+        type: "ordinal"
+      }))
+    ];
+    const encode = { x: 0, y: 1, tooltip: [0, 2, 3, 4, 5, 6] };
+    const series = [];
+    const showMedian = config.show_median ?? true;
+    const landmarks = [...new Set(asArray(config.landmarks))].sort((a, b) => a - b);
+    curves.forEach((c, i) => {
+      const name = names[i];
+      const color = colorOf(i);
+      const values = c.time.map((t, j) => [
+        t,
+        c.survival[j],
+        fmt(c.survival[j]),
+        fmt(c.lower?.[j]),
+        fmt(c.upper?.[j]),
+        count(c.n_risk?.[j]),
+        count(c.n_censor?.[j])
+      ]);
+      series.push({
+        type: "line",
+        name,
+        data: values,
+        step: "end",
+        smooth: false,
+        showSymbol: true,
+        symbol: "circle",
+        symbolSize: 6,
+        clip: false,
+        lineStyle: { ...styled(color), width: config.line_width ?? 2 },
+        // Transparent symbols are the hover targets of each step.
+        itemStyle: { ...styled(color), opacity: c.time.length === 1 ? 1 : 0 },
+        emphasis: { itemStyle: { opacity: 1 } },
+        dimensions: dimensions2,
+        encode,
+        z: 3
+      });
+      if ((config.show_ci ?? true) && c.lower && c.upper) {
+        const lower = c.lower;
+        const upper = c.upper;
+        const known = c.time.map((_, j) => lower[j] != null && upper[j] != null);
+        for (const band of ["lower", "width"]) {
+          const at = (j) => band === "lower" ? lower[j] : upper[j] - lower[j];
+          const points = [];
+          c.time.forEach((t, j) => {
+            if (j > 0 && known[j - 1] && !known[j]) points.push([t, at(j - 1)]);
+            points.push([t, known[j] ? at(j) : null]);
+          });
+          series.push({
+            type: "line",
+            name,
+            step: "end",
+            stack: `ci-${i}`,
+            stackStrategy: "all",
+            data: points,
+            showSymbol: false,
+            connectNulls: false,
+            silent: true,
+            legendHoverLink: false,
+            itemStyle: styled(color),
+            lineStyle: { opacity: 0 },
+            areaStyle: {
+              ...styled(color),
+              opacity: band === "lower" ? 0 : config.ci_opacity ?? 0.15
+            },
+            z: 1
+          });
+        }
+      }
+      if ((config.show_censors ?? true) && c.n_censor) {
+        const censored = values.filter((_, j) => (c.n_censor?.[j] ?? 0) > 0);
+        if (censored.length > 0) {
+          series.push({
+            type: "scatter",
+            name,
+            data: censored,
+            symbol: "rect",
+            symbolSize: [1.5, config.censor_size ?? 8],
+            clip: false,
+            itemStyle: styled(color),
+            dimensions: dimensions2,
+            encode,
+            z: 4
+          });
+        }
+      }
+      const median = showMedian ? survivalMedian(c) : null;
+      if (median !== null) {
+        series.push({
+          type: "line",
+          name,
+          data: [
+            [domain[0], 0.5],
+            [median, 0.5],
+            [median, 0]
+          ],
+          showSymbol: false,
+          silent: true,
+          legendHoverLink: false,
+          itemStyle: styled(color),
+          lineStyle: { ...styled(color), type: "dashed", opacity: 0.7 },
+          z: 2
+        });
+        series.push({
+          type: "scatter",
+          name,
+          data: [{ value: [median, 0], name: `Median ${formatNumber(median)}` }],
+          symbolSize: 0,
+          silent: true,
+          legendHoverLink: false,
+          clip: false,
+          itemStyle: styled(color),
+          // Upright beside the vertical dropline, rising from the time axis, so
+          // the labels of different medians stay apart.
+          label: {
+            show: true,
+            position: "top",
+            distance: 4,
+            rotate: 90,
+            align: "left",
+            verticalAlign: "bottom",
+            formatter: "{b}",
+            color: "inherit",
+            fontSize: 11
+          },
+          z: 5
+        });
+      }
+      const shown = landmarks.filter(
+        (t) => t >= c.time[0] && t <= c.time[c.time.length - 1]
+      );
+      if (shown.length > 0) {
+        series.push({
+          type: "scatter",
+          name,
+          data: shown.map((t) => {
+            let s = c.survival[0];
+            c.time.forEach((u, j) => {
+              if (u <= t) s = c.survival[j];
+            });
+            return { value: [t, s], name: `${Math.round(s * 100)}%` };
+          }),
+          symbolSize: 6,
+          clip: false,
+          itemStyle: styled(color),
+          label: { show: true, position: "top", formatter: "{b}", color: "inherit" },
+          z: 5
+        });
+      }
+    });
+    const references = landmarks.filter((t) => t >= domain[0] && t <= domain[1]);
+    if (references.length > 0) {
+      series.push({
+        type: "line",
+        data: [],
+        silent: true,
+        markLine: {
+          silent: true,
+          animation: false,
+          symbol: "none",
+          lineStyle: { color: "#888888", type: "dashed", width: 1, opacity: 0.7 },
+          label: { show: false },
+          data: references.map((t) => ({ xAxis: t }))
+        }
+      });
+    }
+    const risk = config.risk_table ? data.risk : null;
+    if (config.risk_table && !risk) {
+      throw new Error("Supply risk records to draw the number-at-risk table.");
+    }
+    const grid = {
+      left: 70,
+      right: 30,
+      top: config.title ? 50 : 25,
+      bottom: risk ? RISK_AXIS + curves.length * RISK_LINE + RISK_PAD : 60,
+      containLabel: false
+    };
+    if (risk) {
+      if (risk.counts.length !== curves.length || risk.counts.some((r) => r.length !== risk.time.length)) {
+        throw new Error("Supply one risk count per curve and risk time.");
+      }
+      const base = {
+        bottom: RISK_PAD,
+        lineHeight: RISK_LINE,
+        rows: curves.length,
+        fontSize: RISK_FONT,
+        caption: "At risk",
+        // Where the y axis name sits: its gap left of the grid.
+        captionX: grid.left - 45 + Math.round(RISK_FONT / 3),
+        textColor: appearance.textColor ?? (appearance.dark ? darkThemeTokens() : lightThemeTokens()).fg_color
+      };
+      curves.forEach((_, i) => {
+        const payload = {
+          ...base,
+          labels: risk.time.map((_2, k) => count(risk.counts[i]?.[k]))
+        };
+        series.push({
+          type: "custom",
+          name: names[i],
+          renderItem: SURVIVAL_RISK,
+          clip: false,
+          silent: true,
+          legendHoverLink: false,
+          tooltip: { show: false },
+          itemStyle: styled(colorOf(i)),
+          itemPayload: payload,
+          data: risk.time.map((t) => [t, i]),
+          z: 5
+        });
+      });
+      series.push({
+        type: "custom",
+        renderItem: SURVIVAL_RISK,
+        clip: false,
+        silent: true,
+        tooltip: { show: false },
+        itemPayload: { ...base, labels: [] },
+        data: [[domain[0], -1]],
+        z: 5
+      });
+    }
+    const legendShown = (config.legend ?? true) && !(curves.length === 1 && curves[0]?.name == null);
+    const riskTimes = risk ? [...risk.time] : null;
+    return {
+      ...config.title ? { title: { text: config.title, left: "center", textAlign: "center" } } : {},
+      grid,
+      xAxis: {
+        type: "value",
+        min: domain[0],
+        max: domain[1],
+        name: config.xlab ?? "Time",
+        nameLocation: "middle",
+        nameGap: 30,
+        // With the strip, the axis labels exactly the risk times.
+        ...riskTimes ? { axisLabel: { customValues: riskTimes }, axisTick: { customValues: riskTimes } } : {}
+      },
+      yAxis: {
+        type: "value",
+        min: 0,
+        max: 1,
+        name: config.ylab ?? "Survival probability",
+        nameLocation: "middle",
+        nameGap: 45
+      },
+      legend: {
+        show: legendShown,
+        data: names,
+        padding: 0,
+        itemStyle: { opacity: 1 },
+        textStyle: { fontSize: 12, lineHeight: 14 }
+      },
+      tooltip: { trigger: "item", confine: true },
+      series
+    };
+  }
+
   // src/shared/labels.ts
   function valueLabel(config, name = (column2) => column2) {
     const ys = asArray(config.y);
@@ -4969,7 +5345,8 @@ ${rate(r.balancedAccuracy)}`, summary) }
   var renderers = Object.freeze({
     ...boxplotRenderers,
     ...histogramRenderers,
-    ...scatterRenderers
+    ...scatterRenderers,
+    ...survivalRenderers
   });
   var RENDERER_NAMES = Object.freeze(Object.keys(renderers));
   function registerRenderers(echarts) {
@@ -5058,7 +5435,8 @@ ${rate(r.balancedAccuracy)}`, summary) }
     pr: buildPrOption,
     roc: buildRocOption,
     scatter: buildScatterOption,
-    significance: buildSignificanceOption
+    significance: buildSignificanceOption,
+    survival: buildSurvivalOption
   });
   var aspectHints = Object.freeze({
     line: lineAspect,

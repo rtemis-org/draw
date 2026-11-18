@@ -18,6 +18,7 @@ import { buildHistogramOption } from "./charts/histogram/index.ts";
 import { buildLineOption, lineAspect } from "./charts/line/index.ts";
 import { buildScatterOption, scatterAspect } from "./charts/scatter/index.ts";
 import { buildSignificanceOption } from "./charts/significance/index.ts";
+import { buildSurvivalOption } from "./charts/survival/index.ts";
 
 export type {
   A3Appearance,
@@ -147,6 +148,18 @@ export {
   significanceAxisNames,
   significanceGroupNames,
 } from "./charts/significance/index.ts";
+export type {
+  SurvivalAppearance,
+  SurvivalChartConfig,
+  SurvivalCurve,
+  SurvivalData,
+  SurvivalRisk,
+} from "./charts/survival/index.ts";
+export {
+  buildSurvivalOption,
+  SURVIVAL_CHART_CONFIG_MEMBERS,
+  survivalMedian,
+} from "./charts/survival/index.ts";
 export type { KeyContext, KeyPlacement, KeyReserve, SizeKeySpec } from "./layout/keys.ts";
 export {
   fitKeys,
@@ -198,6 +211,7 @@ export const builders = Object.freeze({
   roc: buildRocOption,
   scatter: buildScatterOption,
   significance: buildSignificanceOption,
+  survival: buildSurvivalOption,
 });
 
 /**

@@ -18,6 +18,8 @@
 
 * `draw_histogram()` and `draw()` on a `HistogramConfig` build the chart with the `@rtemis/draw` histogram builder, the one rtemislive uses; `compile()` on a `HistogramConfig` returns a `BuildRequest`. `draw_histogram()` takes `zoom` as `TRUE` or `FALSE` and `margins` in pixels. The y axis is named after a bar's height unless `ylab` is given: the normalization ("Count", "Percent", ...) or the bin statistic of the column ("Mean X").
 
+* `draw_survival()`, `draw_survfit()`, and `draw()` on a `SurvivalConfig` build the chart with the `@rtemis/draw` survival builder, the one rtemislive uses; `compile()` on a `SurvivalConfig` returns a `BuildRequest`. `show_median` defaults to `TRUE` and labels the median; landmarks read as percents; the risk table draws one row per group in its color under a time axis that labels the risk times; one ungrouped curve draws no legend.
+
 * `draw_fit()` names the x axis "Observed" by default.
 
 * `draw_boxplot()` and `BoxplotConfig` gain `mean_marker`, a diamond at each box's mean; `draw_varimp(type = "boxplot")` sets it.

@@ -21,7 +21,8 @@ BUILDER_TYPES <- c(
   "pr",
   "roc",
   "scatter",
-  "significance"
+  "significance",
+  "survival"
 )
 
 
@@ -35,7 +36,7 @@ BUILDER_TYPES <- c(
 #'
 #' @param type Character \{"a3", "bar", "boxplot", "confusion", "density",
 #'   "histogram", "line", "pr", "roc", "scatter",
-#'   "significance"\}: Chart type.
+#'   "significance", "survival"\}: Chart type.
 #' @param data Character: The chart data as JSON text.
 #' @param config Named list: The chart config, an instance of the
 #'   `chart/<type>/v1` schema.

@@ -280,7 +280,7 @@ test_that("3D scatter, Gantt, significance, calibration, and survival follow fac
   )
   survival <- draw_survival(curves)
   expect_identical(
-    unlist(survival[["x"]][["option"]][["legend"]][["data"]]),
+    unlist(raw_option(survival)[["legend"]][["data"]]),
     c("a", "b")
   )
 })

@@ -14,7 +14,7 @@ setup_SurvivalConfig(
   n_risk = NULL,
   show_ci = TRUE,
   show_censors = TRUE,
-  show_median = FALSE,
+  show_median = TRUE,
   landmarks = NULL,
   risk_table = FALSE,
   ci_opacity = 0.15,
@@ -51,11 +51,15 @@ setup_SurvivalConfig(
 
 \item{show_censors}{Logical: Draw censor ticks.}
 
-\item{show_median}{Logical: Draw median survival droplines when estimable.}
+\item{show_median}{Logical: Draw each curve's median survival dropline, from
+S = 0.5 to the median and down to the time axis, labeled with the median,
+when estimable.}
 
-\item{landmarks}{Optional Numeric vector: Finite times for survival labels.}
+\item{landmarks}{Optional Numeric vector: Finite times at which each curve's
+survival is marked and labeled as a percent, with a dashed line at each time.}
 
-\item{risk_table}{Logical: Draw supplied risk records beneath the curves.}
+\item{risk_table}{Logical: Draw supplied risk records beneath the curves, one
+row per group in its color; the time axis then labels the risk times.}
 
 \item{ci_opacity}{Numeric \verb{[0, 1]}: Confidence band opacity.}
 
