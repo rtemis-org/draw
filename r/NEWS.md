@@ -22,6 +22,10 @@
 
 * `draw_gantt()` and `draw()` on a `GanttConfig` build the chart with the `@rtemis/draw` Gantt builder, the one rtemislive's execution timeline uses; `compile()` on a `GanttConfig` returns a `BuildRequest`. With `height` unset, the chart takes 20 pixels per task row plus 96, at least 220, and every row is labeled.
 
+* `draw_sankey()` and `draw()` on a `SankeyConfig` build the chart with the `@rtemis/draw` Sankey builder, the one rtemislive uses; `compile()` on a `SankeyConfig` returns a `BuildRequest`. Links default to a source-to-target gradient (`link_color = "gradient"`, `link_opacity = 0.2`) and highlight a node's links on hover; rows with the same source and target are summed; a missing, infinite, or negative value, or a cycle, stops with an error. `SankeyConfig` gains `link_color`, `link_opacity`, `label_font_size`, and the four `margin_*` members.
+
+* `draw_ts()`, `draw_xt()`, and `draw()` on a `TimeSeriesConfig` build the chart with the `@rtemis/draw` time series builder, the one rtemislive's Time series chart uses; `compile()` on a `TimeSeriesConfig` returns a `BuildRequest`. Shading from `shade_bin` spans each run's first and last observation.
+
 * `draw_fit()` names the x axis "Observed" by default.
 
 * `draw_boxplot()` and `BoxplotConfig` gain `mean_marker`, a diamond at each box's mean; `draw_varimp(type = "boxplot")` sets it.

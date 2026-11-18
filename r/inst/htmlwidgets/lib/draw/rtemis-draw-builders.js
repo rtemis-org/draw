@@ -41,12 +41,14 @@ var RtemisDraw = (() => {
     RENDERER_NAMES: () => RENDERER_NAMES,
     ROC_CHART_CONFIG_MEMBERS: () => ROC_CHART_CONFIG_MEMBERS,
     RTEMIS_PALETTE: () => RTEMIS_PALETTE,
+    SANKEY_CHART_CONFIG_MEMBERS: () => SANKEY_CHART_CONFIG_MEMBERS,
     SCATTER_CHART_CONFIG_MEMBERS: () => SCATTER_CHART_CONFIG_MEMBERS,
     SIGNIFICANCE_CHART_CONFIG_MEMBERS: () => SIGNIFICANCE_CHART_CONFIG_MEMBERS,
     SIGNIFICANT_DIGITS: () => SIGNIFICANT_DIGITS,
     SIGN_COLORS: () => SIGN_COLORS,
     SIZE_KEY_ID: () => SIZE_KEY_ID,
     SURVIVAL_CHART_CONFIG_MEMBERS: () => SURVIVAL_CHART_CONFIG_MEMBERS,
+    TIMESERIES_CHART_CONFIG_MEMBERS: () => TIMESERIES_CHART_CONFIG_MEMBERS,
     ZOOM_SLIDER_ID: () => ZOOM_SLIDER_ID,
     a3SurfaceHints: () => a3SurfaceHints,
     appendLayers: () => appendLayers,
@@ -64,9 +66,11 @@ var RtemisDraw = (() => {
     buildLineOption: () => buildLineOption,
     buildPrOption: () => buildPrOption,
     buildRocOption: () => buildRocOption,
+    buildSankeyOption: () => buildSankeyOption,
     buildScatterOption: () => buildScatterOption,
     buildSignificanceOption: () => buildSignificanceOption,
     buildSurvivalOption: () => buildSurvivalOption,
+    buildTimeSeriesOption: () => buildTimeSeriesOption,
     builders: () => builders,
     calcLimits: () => calcLimits,
     calcLimitsFromZero: () => calcLimitsFromZero,
@@ -98,7 +102,9 @@ var RtemisDraw = (() => {
     radicalInverse: () => radicalInverse,
     registerRenderers: () => registerRenderers,
     repelLabels: () => repelLabels,
+    rollingValues: () => rollingValues,
     ruleBandwidth: () => ruleBandwidth,
+    sankeyLinks: () => sankeyLinks,
     scatterAspect: () => lineAspect,
     significanceAxisNames: () => significanceAxisNames,
     significanceGroupNames: () => significanceGroupNames,
@@ -2942,25 +2948,25 @@ ${rate(r.balancedAccuracy)}`, summary) }
   ]);
   var DENSITY_VALUE_LABEL = "Density";
   function buildDensityOption(data, config, appearance = {}) {
-    const samples = data.samples;
-    if (samples.length === 0) {
+    const samples2 = data.samples;
+    if (samples2.length === 0) {
       throw new Error("A density chart needs `x` set to one or more columns to draw.");
     }
-    for (const s of samples) {
+    for (const s of samples2) {
       if (s.x.length !== s.y.length) {
         throw new Error(`Sample '${s.name ?? "x"}' needs one density per evaluation point.`);
       }
     }
-    const names = samples.map((s, i) => s.name ?? `Series ${i + 1}`);
-    const series = samples.map((s, i) => ({
+    const names = samples2.map((s, i) => s.name ?? `Series ${i + 1}`);
+    const series = samples2.map((s, i) => ({
       type: "line",
       name: names[i],
       showSymbol: false,
       areaStyle: { opacity: config.fill_alpha ?? 0.25 },
       data: s.x.map((x, j) => [x, s.y[j]])
     }));
-    const xs = samples.flatMap((s) => s.x);
-    const ys = samples.flatMap((s) => s.y);
+    const xs = samples2.flatMap((s) => s.x);
+    const ys = samples2.flatMap((s) => s.y);
     const palette = asArray(config.palette);
     const colors = palette.length > 0 ? palette : appearance.palette;
     const xlab = config.xlab || null;
@@ -2971,7 +2977,7 @@ ${rate(r.balancedAccuracy)}`, summary) }
       ...colors && colors.length > 0 ? { color: [...colors] } : {},
       ...appearance.animation === void 0 ? {} : { animation: appearance.animation }
     };
-    if ((config.mode ?? "overlap") === "ridge" && samples.length > 1) {
+    if ((config.mode ?? "overlap") === "ridge" && samples2.length > 1) {
       return ridgeOption({
         common,
         series,
@@ -2996,7 +3002,7 @@ ${rate(r.balancedAccuracy)}`, summary) }
     const dataZoom = config.zoom ? axisZoom("x", grid, { filterMode: "none" }) : void 0;
     return {
       ...common,
-      ...samples.length > 1 ? { legend: { data: names } } : {},
+      ...samples2.length > 1 ? { legend: { data: names } } : {},
       xAxis,
       yAxis,
       grid,
@@ -3378,12 +3384,12 @@ ${rate(r.balancedAccuracy)}`, summary) }
     if (edges.length < 2 || edges.some((e, i) => i > 0 && !(e > edges[i - 1]))) {
       throw new Error("Histogram `edges` must be at least two strictly increasing values.");
     }
-    const samples = data.samples;
-    if (samples.length === 0) {
+    const samples2 = data.samples;
+    if (samples2.length === 0) {
       throw new Error("A histogram needs `x` set to one or more columns to draw.");
     }
     const nBins = edges.length - 1;
-    for (const s of samples) {
+    for (const s of samples2) {
       if (s.counts.length !== nBins || s.values && s.values.length !== nBins) {
         throw new Error(
           `Each sample needs one count per bin (${nBins}); '${s.name ?? "x"}' has ${s.counts.length}.`
@@ -3409,17 +3415,17 @@ ${rate(r.balancedAccuracy)}`, summary) }
     if (binStat === "count" && !equalWidth && normalization !== "density" && normalization !== "count_density") {
       throw new Error('Use `normalization = "density"` or `"count_density"` for unequal-width bins.');
     }
-    const names = samples.map((s, i) => s.name ?? `Series ${i + 1}`);
-    const nonempty = samples.filter((s) => s.n > 0).length;
+    const names = samples2.map((s, i) => s.name ?? `Series ${i + 1}`);
+    const nonempty = samples2.filter((s) => s.n > 0).length;
     const fillAlpha = config.fill_alpha ?? (barMode === "overlay" && !ridge && nonempty > 1 ? 0.5 : 0.75);
     const borderAlpha = config.border_alpha ?? 1;
     const height = heightName(config);
-    const heights = samples.map(
+    const heights = samples2.map(
       (s) => binStat === "count" ? normalize(s.counts, widths, s.n, normalization) : [...s.values ?? []]
     );
     const series = [];
     const barIndices = [];
-    samples.forEach((s, i) => {
+    samples2.forEach((s, i) => {
       const name = names[i];
       barIndices.push(series.length);
       series.push({
@@ -3483,7 +3489,7 @@ ${rate(r.balancedAccuracy)}`, summary) }
       ...colors && colors.length > 0 ? { color: [...colors] } : {},
       ...appearance.animation === void 0 ? {} : { animation: appearance.animation }
     };
-    if (ridge && samples.length > 1) {
+    if (ridge && samples2.length > 1) {
       const curveX = series.filter((s) => s.type === "line").flatMap((s) => s.data.map((d) => d[0]));
       return ridgeOption({
         common,
@@ -3513,7 +3519,7 @@ ${rate(r.balancedAccuracy)}`, summary) }
     const dataZoom = config.zoom ? axisZoom("x", grid, { filterMode: "none" }) : void 0;
     return {
       ...common,
-      ...samples.length > 1 ? { legend: { data: names, itemStyle: { opacity: 1 } } } : {},
+      ...samples2.length > 1 ? { legend: { data: names, itemStyle: { opacity: 1 } } } : {},
       xAxis,
       yAxis,
       grid,
@@ -4065,6 +4071,130 @@ ${rate(r.balancedAccuracy)}`, summary) }
       rightPx: px("right"),
       topPx: px("top"),
       botPx: px("bottom")
+    };
+  }
+
+  // src/charts/sankey/config.ts
+  var SANKEY_CHART_CONFIG_MEMBERS = Object.freeze([
+    "type",
+    "title",
+    "source",
+    "target",
+    "value",
+    "orient",
+    "node_align",
+    "node_width",
+    "node_gap",
+    "palette",
+    "link_color",
+    "link_opacity",
+    "label_font_size",
+    "margin_top",
+    "margin_right",
+    "margin_bottom",
+    "margin_left"
+  ]);
+  function sankeyLinks(data, config) {
+    const sourceName = config.source ?? "source";
+    const valueName = config.value ?? "value";
+    const sources = textColumn(data, sourceName, "source");
+    const targets = textColumn(data, config.target ?? "target", "target");
+    const values = column(data.columns, valueName, "value");
+    const sums = /* @__PURE__ */ new Map();
+    sources.forEach((source, i) => {
+      const target = targets[i];
+      const v = values[i];
+      if (typeof v !== "number" || !Number.isFinite(v) || v < 0) {
+        throw new Error(
+          `Column '${valueName}' (config member 'value') must hold a finite, nonnegative number in every row; row ${i + 1} holds '${String(v)}'.`
+        );
+      }
+      const key = JSON.stringify([source, target]);
+      const link = sums.get(key);
+      sums.set(key, { source, target, value: (link?.value ?? 0) + v });
+    });
+    const links = [...sums.values()];
+    const cycle = findCycle(links);
+    if (cycle) {
+      throw new Error(`A Sankey diagram's links must not form a cycle; ${cycle.join(" \u2192 ")} is one.`);
+    }
+    return links;
+  }
+  function findCycle(links) {
+    const next = /* @__PURE__ */ new Map();
+    for (const { source, target } of links) next.set(source, [...next.get(source) ?? [], target]);
+    const state = /* @__PURE__ */ new Map();
+    const path = [];
+    const visit = (node) => {
+      state.set(node, "open");
+      path.push(node);
+      for (const to of next.get(node) ?? []) {
+        if (state.get(to) === "open") return [...path.slice(path.indexOf(to)), to];
+        if (!state.has(to)) {
+          const found = visit(to);
+          if (found) return found;
+        }
+      }
+      path.pop();
+      state.set(node, "done");
+      return null;
+    };
+    for (const node of next.keys()) {
+      if (!state.has(node)) {
+        const found = visit(node);
+        if (found) return found;
+      }
+    }
+    return null;
+  }
+  function buildSankeyOption(data, config, appearance = {}) {
+    const links = sankeyLinks(data, config);
+    if (links.length === 0) throw new Error("A Sankey diagram needs at least one link.");
+    const names = [.../* @__PURE__ */ new Set([...links.map((l) => l.source), ...links.map((l) => l.target)])];
+    const memberPalette = asArray(config.palette);
+    const palette = memberPalette.length > 0 ? memberPalette : appearance.palette ?? RTEMIS_PALETTE;
+    const fontSize = config.label_font_size ?? 12;
+    const vertical = config.orient === "vertical";
+    const nodes = names.map((name, i) => ({
+      name,
+      itemStyle: { color: palette[i % palette.length] }
+    }));
+    const sources = new Set(links.map((l) => l.source));
+    const longest = Math.max(0, ...names.filter((n) => !sources.has(n)).map((n) => n.length));
+    const auto = vertical ? { left: 12, right: 12, top: 48, bottom: 24 } : {
+      left: 12,
+      right: Math.max(24, Math.min(Math.ceil(longest * 0.52 * fontSize) + 24, 540)),
+      top: 48,
+      bottom: 24
+    };
+    const box = Object.fromEntries(
+      ["top", "right", "bottom", "left"].map((side) => {
+        const set = config[`margin_${side}`];
+        return [side, typeof set === "number" ? set : auto[side]];
+      })
+    );
+    return {
+      ...config.title ? { title: { text: config.title, left: "center" } } : {},
+      tooltip: { trigger: "item" },
+      series: [
+        {
+          type: "sankey",
+          data: nodes,
+          links,
+          orient: vertical ? "vertical" : "horizontal",
+          ...config.node_align ? { nodeAlign: config.node_align } : {},
+          ...typeof config.node_width === "number" ? { nodeWidth: config.node_width } : {},
+          ...typeof config.node_gap === "number" ? { nodeGap: config.node_gap } : {},
+          emphasis: { focus: "adjacency" },
+          lineStyle: {
+            color: config.link_color ?? "gradient",
+            opacity: config.link_opacity ?? 0.2,
+            curveness: 0.5
+          },
+          label: { fontSize },
+          ...box
+        }
+      ]
     };
   }
 
@@ -5494,6 +5624,313 @@ ${rate(r.balancedAccuracy)}`, summary) }
     return option;
   }
 
+  // src/charts/timeseries/renderers.ts
+  var AXIS_LABELS = "rtemis.axis_labels.v1";
+  var timeSeriesRenderers = {
+    // Data: [time, text]. Each label sits 10 pixels below the plot under its
+    // time's coordinate, so irregular spacing stays true through zoom and
+    // resizing; a time outside the plot draws nothing.
+    [AXIS_LABELS]: (params, api) => {
+      const [x] = api.coord([api.value(0), 0]);
+      const box = params.coordSys;
+      if (x < box.x - 1 || x > box.x + box.width + 1) return void 0;
+      return {
+        type: "text",
+        style: {
+          x,
+          y: box.y + box.height + 10,
+          text: String(api.value(1)),
+          align: "center",
+          verticalAlign: "top",
+          fill: "#888888",
+          font: api.font({ fontSize: 12 })
+        }
+      };
+    }
+  };
+
+  // src/charts/timeseries/config.ts
+  var TIMESERIES_CHART_CONFIG_MEMBERS = Object.freeze([
+    "type",
+    "title",
+    "legend_position",
+    "legend_placement",
+    "legend_title",
+    "x",
+    "y",
+    "group",
+    "xlab",
+    "ylab",
+    "palette",
+    "zoom",
+    "x2",
+    "zt",
+    "shade_bin",
+    "show_zt_every",
+    "y2",
+    "y2lab",
+    "window",
+    "roll_fn",
+    "align",
+    "min_obs",
+    "roll_width",
+    "roll_color",
+    "raw_opacity",
+    "points"
+  ]);
+  var SUMMARIES = {
+    mean: (v) => v.reduce((a, b) => a + b, 0) / v.length,
+    median: (v) => {
+      const s = [...v].sort((a, b) => a - b);
+      const m = s.length >> 1;
+      return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2;
+    },
+    min: (v) => Math.min(...v),
+    max: (v) => Math.max(...v),
+    sum: (v) => v.reduce((a, b) => a + b, 0)
+  };
+  function rollingValues(values, config) {
+    const fn = config.roll_fn ?? "none";
+    if (fn === "none") return values.map(() => null);
+    const width = config.window ?? 7;
+    const required = config.min_obs ?? (fn === "sum" ? width : Math.floor(width / 2) + 1);
+    const align = config.align ?? "center";
+    const offset = align === "right" ? width - 1 : align === "left" ? 0 : Math.floor((width - 1) / 2);
+    return values.map((_, i) => {
+      const start = Math.max(i - offset, 0);
+      const end = Math.min(i - offset + width - 1, values.length - 1);
+      const present2 = [];
+      for (let k = start; k <= end; k++) {
+        const v = values[k];
+        if (typeof v === "number") present2.push(v);
+      }
+      return present2.length < required ? null : SUMMARIES[fn](present2);
+    });
+  }
+  function samples(data, config) {
+    const x = config.x;
+    const yColumns = asArray(config.y);
+    if (!x || yColumns.length === 0) {
+      throw new Error("A time series chart needs both `x` and `y` set to draw.");
+    }
+    if (config.group && yColumns.length > 1) {
+      throw new Error("`group` splits one `y` column: bind one `y` column, or unset `group`.");
+    }
+    const times = (name, member) => {
+      const time = isTime(data, name);
+      const values = column(data.columns, name, member).map((v, i) => {
+        const t = time ? timeMs(v) : typeof v === "number" && !Number.isNaN(v) ? v : null;
+        if (t !== null && !Number.isFinite(t)) {
+          throw new Error(
+            `Column '${name}' (config member '${member}') must hold finite times; row ${i + 1} holds '${String(v)}'.`
+          );
+        }
+        return t;
+      });
+      return { time, values };
+    };
+    const numbers = (name, member) => column(data.columns, name, member).map((v, i) => {
+      if (v === null || v === void 0 || typeof v === "number" && Number.isNaN(v)) return null;
+      if (typeof v !== "number" || !Number.isFinite(v)) {
+        throw new Error(
+          `Column '${name}' (config member '${member}') must hold finite numbers or missing values; row ${i + 1} holds '${String(v)}'.`
+        );
+      }
+      return v;
+    });
+    const sample = (name, axis, xs, ys, keep) => {
+      const rows = xs.flatMap((t, i) => t !== null && keep(i) ? [i] : []);
+      rows.sort((a, b) => xs[a] - xs[b]);
+      return { name, axis, x: rows.map((i) => xs[i]), y: rows.map((i) => ys[i] ?? null) };
+    };
+    const primaryX = times(x, "x");
+    let primary;
+    if (config.group) {
+      const groups = textColumn(data, config.group, "group");
+      const raw = column(data.columns, config.group, "group");
+      const present2 = (i) => raw[i] !== null && raw[i] !== void 0;
+      const levels = distinct(
+        groups.filter((_, i) => present2(i)),
+        data.levels?.[config.group]
+      );
+      const ys = numbers(yColumns[0], "y");
+      primary = levels.map(
+        (level) => sample(level, 0, primaryX.values, ys, (i) => present2(i) && groups[i] === level)
+      );
+    } else {
+      primary = yColumns.map(
+        (name) => sample(name, 0, primaryX.values, numbers(name, "y"), () => true)
+      );
+    }
+    const y2Columns = asArray(config.y2);
+    if (config.x2 && y2Columns.length === 0) {
+      throw new Error("Supply `y2` with `x2`, or unset both.");
+    }
+    const secondaryX = config.x2 ? times(config.x2, "x2") : primaryX;
+    if (secondaryX.time !== primaryX.time) {
+      throw new Error("Use numeric time throughout, or dates and date-times throughout.");
+    }
+    const taken = new Set(primary.map((s) => s.name));
+    const secondary = y2Columns.map(
+      (name) => sample(
+        taken.has(name) ? `${name} (right)` : name,
+        1,
+        secondaryX.values,
+        numbers(name, "y2"),
+        () => true
+      )
+    );
+    if (![...primary, ...secondary].some((s) => s.y.some((v) => v !== null))) {
+      throw new Error("A time series chart needs at least one time with a value.");
+    }
+    return { primary, secondary, time: primaryX.time };
+  }
+  function sortedRows(xs) {
+    const rows = xs.flatMap((t, i) => t === null ? [] : [i]);
+    return rows.sort((a, b) => xs[a] - xs[b]);
+  }
+  function buildTimeSeriesOption(data, config) {
+    const { primary, secondary, time } = samples(data, config);
+    const points = config.points ?? true;
+    const rawOpacity = config.raw_opacity ?? 0.5;
+    const pair = (xs2, ys) => xs2.map((t, i) => [t, ys[i] ?? null]);
+    const series = [];
+    for (const s of [...primary, ...secondary]) {
+      const raw = {
+        type: "line",
+        name: s.name,
+        data: pair(s.x, s.y),
+        showSymbol: points,
+        symbolSize: 5,
+        lineStyle: { width: points ? 0 : 1, opacity: rawOpacity },
+        itemStyle: { opacity: rawOpacity },
+        yAxisIndex: s.axis
+      };
+      series.push(raw);
+      if ((config.roll_fn ?? "none") !== "none") {
+        const rolled = rollingValues(s.y, config);
+        if (rolled.some((v) => v !== null && !Number.isFinite(v))) {
+          throw new Error("Rescale values to keep rolling summaries finite.");
+        }
+        series.push({
+          ...raw,
+          data: pair(s.x, rolled),
+          showSymbol: false,
+          lineStyle: {
+            width: config.roll_width ?? 2,
+            ...config.roll_color ? { color: config.roll_color } : {}
+          },
+          itemStyle: { opacity: 1 }
+        });
+      }
+    }
+    const xAxis = {
+      type: time ? "time" : "value",
+      scale: true,
+      ...config.xlab ? { name: config.xlab, nameLocation: "middle" } : {}
+    };
+    if (config.zt || config.shade_bin) {
+      if (config.x2) {
+        throw new Error("Zeitgeber labels and shading follow `x`: unset `x2`.");
+      }
+    }
+    const xs = time ? column(data.columns, config.x, "x").map(timeMs) : column(data.columns, config.x, "x").map(
+      (v) => typeof v === "number" && Number.isFinite(v) ? v : null
+    );
+    const order2 = sortedRows(xs);
+    if (config.zt) {
+      const every = config.show_zt_every ?? 1;
+      const labels = column(data.columns, config.zt, "zt");
+      labels.forEach((v, i) => {
+        if (typeof v !== "number" || !Number.isFinite(v)) {
+          throw new Error(
+            `Column '${config.zt}' (config member 'zt') must hold a finite number in every row; row ${i + 1} holds '${String(v)}'.`
+          );
+        }
+      });
+      const keep = order2.filter((row, k) => k % every === 0 || labels[row] === 0);
+      xAxis.axisLabel = { show: false };
+      series.push({
+        type: "custom",
+        name: "",
+        renderItem: AXIS_LABELS,
+        silent: true,
+        clip: false,
+        dimensions: [
+          { name: "time", type: "float" },
+          { name: "text", type: "ordinal" }
+        ],
+        encode: { x: 0, y: -1, tooltip: -1 },
+        data: keep.map((row) => [xs[row], String(labels[row])])
+      });
+    }
+    if (config.shade_bin) {
+      const flags = column(data.columns, config.shade_bin, "shade_bin");
+      flags.forEach((v, i) => {
+        if (v !== 0 && v !== 1) {
+          throw new Error(
+            `Column '${config.shade_bin}' (config member 'shade_bin') must hold 0 or 1 in every row; row ${i + 1} holds '${String(v)}'.`
+          );
+        }
+      });
+      const runs = [];
+      order2.forEach((row, k) => {
+        const on = flags[row] === 1;
+        if (runs[runs.length - 1]?.on !== on) runs.push({ on, start: k });
+      });
+      const area = runs.flatMap((run, r) => {
+        if (!run.on) return [];
+        const next = runs[r + 1];
+        const end = next ? next.start - 1 : order2.length - 1;
+        return [
+          [
+            { xAxis: xs[order2[run.start]], itemStyle: { color: "#888888", opacity: 0.15 } },
+            { xAxis: xs[order2[end]] }
+          ]
+        ];
+      });
+      if (area.length > 0 && series[0]) {
+        series[0].markArea = { silent: true, label: { show: false }, data: area };
+      }
+    }
+    const yAxis = [
+      {
+        type: "value",
+        scale: true,
+        ...config.ylab ? { name: config.ylab, nameLocation: "middle" } : {}
+      }
+    ];
+    if (secondary.length > 0) {
+      yAxis.push({
+        type: "value",
+        scale: true,
+        position: "right",
+        ...config.y2lab ? { name: config.y2lab, nameLocation: "middle" } : {},
+        splitLine: { show: false }
+      });
+    }
+    const grid = cartesianGrid({}, Boolean(config.xlab || config.ylab || config.y2lab));
+    const dataZoom = config.zoom ? axisZoom("x", grid) : void 0;
+    const palette = asArray(config.palette);
+    return {
+      ...config.title ? { title: { text: config.title } } : {},
+      ...time ? { useUTC: true } : {},
+      ...palette.length > 0 ? { color: [...palette] } : {},
+      tooltip: { trigger: "axis", valueFormatter: formatNumber },
+      legend: {
+        data: [...primary, ...secondary].map((s) => s.name),
+        itemStyle: { opacity: 1 }
+      },
+      grid,
+      ...dataZoom ? { dataZoom } : {},
+      xAxis,
+      // One left axis is an object, as in the other builders; with `y2`, the
+      // two axes are an array.
+      yAxis: yAxis.length === 1 ? yAxis[0] : yAxis,
+      series
+    };
+  }
+
   // src/shared/labels.ts
   function valueLabel(config, name = (column2) => column2) {
     const ys = asArray(config.y);
@@ -5533,7 +5970,8 @@ ${rate(r.balancedAccuracy)}`, summary) }
     ...ganttRenderers,
     ...histogramRenderers,
     ...scatterRenderers,
-    ...survivalRenderers
+    ...survivalRenderers,
+    ...timeSeriesRenderers
   });
   var RENDERER_NAMES = Object.freeze(Object.keys(renderers));
   function registerRenderers(echarts) {
@@ -5622,9 +6060,11 @@ ${rate(r.balancedAccuracy)}`, summary) }
     line: buildLineOption,
     pr: buildPrOption,
     roc: buildRocOption,
+    sankey: buildSankeyOption,
     scatter: buildScatterOption,
     significance: buildSignificanceOption,
-    survival: buildSurvivalOption
+    survival: buildSurvivalOption,
+    timeseries: buildTimeSeriesOption
   });
   var aspectHints = Object.freeze({
     line: lineAspect,

@@ -9,6 +9,7 @@ import { ganttRenderers } from "../charts/gantt/renderers.ts";
 import { histogramRenderers } from "../charts/histogram/renderers.ts";
 import { scatterRenderers } from "../charts/scatter/renderers.ts";
 import { survivalRenderers } from "../charts/survival/renderers.ts";
+import { timeSeriesRenderers } from "../charts/timeseries/renderers.ts";
 
 const renderers: Readonly<Record<string, unknown>> = Object.freeze({
   ...boxplotRenderers,
@@ -16,6 +17,7 @@ const renderers: Readonly<Record<string, unknown>> = Object.freeze({
   ...histogramRenderers,
   ...scatterRenderers,
   ...survivalRenderers,
+  ...timeSeriesRenderers,
 });
 
 /** Names of the custom-series renderers this package registers. */

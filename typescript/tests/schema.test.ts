@@ -10,9 +10,11 @@ import { DENSITY_CHART_CONFIG_MEMBERS } from "../src/charts/density/config.ts";
 import { GANTT_CHART_CONFIG_MEMBERS } from "../src/charts/gantt/config.ts";
 import { HISTOGRAM_CHART_CONFIG_MEMBERS } from "../src/charts/histogram/config.ts";
 import { LINE_CHART_CONFIG_MEMBERS } from "../src/charts/line/config.ts";
+import { SANKEY_CHART_CONFIG_MEMBERS } from "../src/charts/sankey/config.ts";
 import { SCATTER_CHART_CONFIG_MEMBERS } from "../src/charts/scatter/config.ts";
 import { SIGNIFICANCE_CHART_CONFIG_MEMBERS } from "../src/charts/significance/config.ts";
 import { SURVIVAL_CHART_CONFIG_MEMBERS } from "../src/charts/survival/config.ts";
+import { TIMESERIES_CHART_CONFIG_MEMBERS } from "../src/charts/timeseries/config.ts";
 
 // `just ts-schema-check` generates the chart schemas from the R classes into a
 // temporary directory and sets RTEMIS_DRAW_SCHEMA_DIR; without it the check is
@@ -33,9 +35,11 @@ describe.skipIf(!schemaDir)("config types against the generated schemas", () => 
     ["line", LINE_CHART_CONFIG_MEMBERS],
     ["pr", PR_CHART_CONFIG_MEMBERS],
     ["roc", ROC_CHART_CONFIG_MEMBERS],
+    ["sankey", SANKEY_CHART_CONFIG_MEMBERS],
     ["scatter", SCATTER_CHART_CONFIG_MEMBERS],
     ["significance", SIGNIFICANCE_CHART_CONFIG_MEMBERS],
     ["survival", SURVIVAL_CHART_CONFIG_MEMBERS],
+    ["timeseries", TIMESERIES_CHART_CONFIG_MEMBERS],
   ];
   for (const [type, members] of cases) {
     it(`the ${type} config type has every chart/${type}/v1 property and no other`, () => {

@@ -194,7 +194,8 @@ CARTESIAN_BUILDER_TYPES <- c(
   "roc",
   "scatter",
   "significance",
-  "survival"
+  "survival",
+  "timeseries"
 )
 
 

@@ -17,15 +17,15 @@ test_that("Sankey edges serialize adjacency focus and series line styles", {
   )
 })
 
-test_that("Sankey margins preserve unspecified sides and validate names", {
+test_that("Sankey margins keep unspecified sides derived", {
   links <- data.frame(source = "A", target = "B", value = 1)
-  expected <- .sankey_margins(links)
-  expected[["left"]] <- 30
-  expect_identical(.sankey_margins(links, margins = c(left = 30)), expected)
-  expect_error(
-    .sankey_margins(links, margins = list(other = 20)),
-    "names must be among"
-  )
+  series <- raw_option(draw_sankey(links, margins = c(left = 30)))[["series"]][[
+    1L
+  ]]
+  expect_equal(series[["left"]], 30)
+  expect_equal(series[["right"]], ceiling(0.52 * 12) + 24)
+  expect_equal(series[["top"]], 48)
+  expect_error(draw_sankey(links, margins = list(other = 20)), "other")
 })
 
 # -- SankeyNodeItem -------------------------------------------------------------
@@ -261,28 +261,57 @@ test_that("SankeySeries NULL fields are dropped", {
 
 # -- draw_sankey ----------------------------------------------------------------
 
-test_that("draw_sankey returns an htmlwidget", {
+sankey_series <- function(widget) raw_option(widget)[["series"]][[1L]]
+
+test_that("draw_sankey sends a Sankey build request", {
   links <- data.frame(
     source = c("A", "A", "B"),
     target = c("B", "C", "C"),
-    value = c(5, 3, 4),
-    stringsAsFactors = FALSE
+    value = c(5, 3, 4)
   )
-  w <- draw_sankey(links)
+  w <- draw_sankey(links, link_opacity = 0.45)
   expect_true(inherits(w, "htmlwidget"))
+  expect_identical(w[["x"]][["build"]][["type"]], "sankey")
+  expect_identical(w[["x"]][["build"]][["config"]][["link_opacity"]], 0.45)
+  expect_identical(
+    w[["x"]],
+    draw(setup_SankeyConfig(link_opacity = 0.45), data = links)[["x"]]
+  )
 })
 
-test_that("draw_sankey derives nodes from links automatically", {
+test_that("draw_sankey derives nodes from links, sources first", {
   links <- data.frame(
     source = c("X", "Y"),
     target = c("Y", "Z"),
-    value = c(10, 6),
-    stringsAsFactors = FALSE
+    value = c(10, 6)
   )
-  w <- draw_sankey(links)
-  opt <- w[["x"]][["option"]]
-  node_names <- vapply(opt[["series"]][[1L]][["data"]], `[[`, "", "name")
-  expect_setequal(node_names, c("X", "Y", "Z"))
+  series <- sankey_series(draw_sankey(links))
+  node_names <- vapply(series[["data"]], `[[`, "", "name")
+  expect_identical(node_names, c("X", "Y", "Z"))
+  expect_identical(series[["lineStyle"]][["color"]], "gradient")
+  expect_identical(series[["emphasis"]][["focus"]], "adjacency")
+})
+
+test_that("draw_sankey sums repeated links and stops on bad values and cycles", {
+  links <- data.frame(
+    source = c("A", "A"),
+    target = c("B", "B"),
+    value = c(2, 3)
+  )
+  expect_equal(sankey_series(draw_sankey(links))[["links"]][[1L]][["value"]], 5)
+  skip_if_no_node()
+  expect_error(
+    built_option(draw_sankey(transform(links, value = c(2, NA)))),
+    "row 2"
+  )
+  expect_error(
+    built_option(draw_sankey(data.frame(
+      source = c("A", "B"),
+      target = c("B", "A"),
+      value = 1
+    ))),
+    "cycle"
+  )
 })
 
 test_that("draw_sankey rejects non-tabular links", {
@@ -290,7 +319,7 @@ test_that("draw_sankey rejects non-tabular links", {
 })
 
 test_that("draw_sankey rejects links missing required columns", {
-  bad <- data.frame(from = "A", to = "B", stringsAsFactors = FALSE)
+  bad <- data.frame(from = "A", to = "B")
   expect_error(draw_sankey(bad), regexp = "source")
 })
 
@@ -300,23 +329,21 @@ test_that("draw_sankey handles factor source/target columns", {
     target = factor(c("B", "C"), levels = c("B", "C")),
     value = c(5, 3)
   )
-  w <- draw_sankey(links)
-  opt <- w[["x"]][["option"]]
-  node_names <- vapply(opt[["series"]][[1L]][["data"]], `[[`, "", "name")
-  expect_setequal(node_names, c("A", "B", "C"))
-  expect_type(node_names, "character")
+  node_names <- vapply(
+    sankey_series(draw_sankey(links))[["data"]],
+    `[[`,
+    "",
+    "name"
+  )
+  expect_identical(node_names, c("A", "B", "C"))
 })
 
 test_that("draw_sankey respects orient argument", {
-  links <- data.frame(
-    source = "A",
-    target = "B",
-    value = 1,
-    stringsAsFactors = FALSE
+  links <- data.frame(source = "A", target = "B", value = 1)
+  expect_identical(
+    sankey_series(draw_sankey(links, orient = "vertical"))[["orient"]],
+    "vertical"
   )
-  w <- draw_sankey(links, orient = "vertical")
-  series <- w[["x"]][["option"]][["series"]][[1L]]
-  expect_equal(series[["orient"]], "vertical")
 })
 
 test_that("vertical Sankey labels fit native nodes in browser and SVG geometry", {
@@ -337,12 +364,13 @@ test_that("vertical Sankey labels fit native nodes in browser and SVG geometry",
     value = c(80, 20, 40, 40)
   )
   widget <- draw_sankey(links, orient = "vertical", label_font_size = 14)
-  expect_equal(widget$x$option$series[[1]]$right, 12)
+  payload <- built_payload(widget)
+  expect_equal(payload$option$series[[1]]$right, 12)
   path <- tempfile(fileext = ".json")
   on.exit(unlink(path), add = TRUE)
   jsonlite::write_json(
     list(
-      payload = widget$x,
+      payload = payload,
       light = to_list(theme_light()),
       dark = to_list(theme_dark()),
       echarts = system.file(

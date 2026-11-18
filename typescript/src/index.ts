@@ -17,9 +17,11 @@ import { buildDensityOption } from "./charts/density/index.ts";
 import { buildGanttOption } from "./charts/gantt/index.ts";
 import { buildHistogramOption } from "./charts/histogram/index.ts";
 import { buildLineOption, lineAspect } from "./charts/line/index.ts";
+import { buildSankeyOption } from "./charts/sankey/index.ts";
 import { buildScatterOption, scatterAspect } from "./charts/scatter/index.ts";
 import { buildSignificanceOption } from "./charts/significance/index.ts";
 import { buildSurvivalOption } from "./charts/survival/index.ts";
+import { buildTimeSeriesOption } from "./charts/timeseries/index.ts";
 
 export type {
   A3Appearance,
@@ -135,6 +137,12 @@ export {
   LINE_CHART_CONFIG_MEMBERS,
   lineAspect,
 } from "./charts/line/index.ts";
+export type { SankeyAppearance, SankeyChartConfig, SankeyLink } from "./charts/sankey/index.ts";
+export {
+  buildSankeyOption,
+  SANKEY_CHART_CONFIG_MEMBERS,
+  sankeyLinks,
+} from "./charts/sankey/index.ts";
 export type { ScatterAppearance, ScatterChartConfig, ScatterData } from "./charts/scatter/index.ts";
 export {
   autoAlpha,
@@ -169,6 +177,12 @@ export {
   SURVIVAL_CHART_CONFIG_MEMBERS,
   survivalMedian,
 } from "./charts/survival/index.ts";
+export type { RollFn, RollingMembers, TimeSeriesChartConfig } from "./charts/timeseries/index.ts";
+export {
+  buildTimeSeriesOption,
+  rollingValues,
+  TIMESERIES_CHART_CONFIG_MEMBERS,
+} from "./charts/timeseries/index.ts";
 export type { KeyContext, KeyPlacement, KeyReserve, SizeKeySpec } from "./layout/keys.ts";
 export {
   fitKeys,
@@ -219,9 +233,11 @@ export const builders = Object.freeze({
   line: buildLineOption,
   pr: buildPrOption,
   roc: buildRocOption,
+  sankey: buildSankeyOption,
   scatter: buildScatterOption,
   significance: buildSignificanceOption,
   survival: buildSurvivalOption,
+  timeseries: buildTimeSeriesOption,
 });
 
 /**

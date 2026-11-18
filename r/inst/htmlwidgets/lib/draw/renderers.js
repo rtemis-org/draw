@@ -1,8 +1,9 @@
 // Shared custom-series renderers for browser widgets and Node SVG export.
 // renderItem names and itemPayload remain plain JSON in the compiled option.
-// The boxplot's, the Gantt chart's, the histogram's, the scatter rug's, and
-// the survival risk strip's renderers are @rtemis/draw's: in Node this module
-// registers them too, and in a browser the binding does.
+// The boxplot's, the Gantt chart's, the histogram's, the scatter rug's, the
+// survival risk strip's, and the time series zeitgeber labels' renderers are
+// @rtemis/draw's: in Node this module registers them too, and in a browser the
+// binding does.
 // See CustomSeriesOption / CustomSeriesRenderItemParams in ECharts
 // src/chart/custom/CustomSeries.ts and name lookup in CustomView.ts.
 (function (root, register) {
@@ -24,15 +25,6 @@
     "rtemis.ribbon.v1": function(params, api) {
       return { type: "polygon", shape: {points:params.itemPayload.vertices.map(p=>api.coord(p))},
         style: {fill:api.visual("color"), opacity:params.itemPayload.opacity} };
-    },
-    // Materialized labels preserve real time spacing and remain vector text.
-    "rtemis.axis_labels.v1": function (params, api) {
-      const point = api.coord([api.value(0), 0]);
-      const box = params.coordSys;
-      if (point[0] < box.x - 1 || point[0] > box.x + box.width + 1) return;
-      return { type: "text", style: { x: point[0], y: box.y + box.height + 10,
-        text: String(api.value(1)), align: "center", verticalAlign: "top",
-        fill: "#888888", font: api.font({ fontSize: 12 }) } };
     },
     // Data: [left position, right position, left height, right height,
     // merge height]. Each merge contributes one three-segment U shape.

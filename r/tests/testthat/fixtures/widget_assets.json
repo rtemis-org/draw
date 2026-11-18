@@ -467,7 +467,7 @@
       "scatter3d.js"
     ],
     "md5": [
-      "65ac746e6430a5a36b3806b2f18ed54a",
+      "c50017708323f0c4fdfb046eb74d0b2e",
       "63cb6341255715ba101b1b78d613c839"
     ]
   },
@@ -492,7 +492,15 @@
       "rtemis-draw-builders.js"
     ],
     "md5": [
-      "10bf4faabf3641a5ddf7c97fa471dcd4"
+      "294f49c71d04acaa81cafb44bdc92acc"
+    ]
+  },
+"rtemis-draw-builders-0.9.0": {
+    "scripts": [
+      "rtemis-draw-builders.js"
+    ],
+    "md5": [
+      "da5bd628df2c8a6bc0a44ea4af6f4988"
     ]
   },
   "rtemis-panel-layout-1.0.12": {

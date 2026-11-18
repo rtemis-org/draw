@@ -1,45 +1,31 @@
-test_that("rolling windows summarize the values present when a majority is there", {
-  # Window 4 needs 3 values; positions beyond the ends count as missing.
-  for (align in c("left", "right", "center")) {
-    config <- setup_TimeSeriesConfig(
-      window = 4L,
-      roll_fn = "mean",
-      align = align
-    )
-    got <- rolling_values(1:8, config)
-    expected <- switch(
-      align,
-      left = c(2.5, 3.5, 4.5, 5.5, 6.5, 7, NA, NA),
-      right = c(NA, NA, 2, 2.5, 3.5, 4.5, 5.5, 6.5),
-      center = c(2, 2.5, 3.5, 4.5, 5.5, 6.5, 7, NA)
-    )
-    expect_equal(got, expected, info = align)
-  }
-  # Window 3 needs 2 values, and a sum the complete window.
-  for (fn in c("mean", "median", "min", "max", "sum")) {
-    config <- setup_TimeSeriesConfig(window = 3L, roll_fn = fn, align = "right")
-    f <- switch(fn, mean = mean, median = stats::median, min = min, max = max)
-    if (fn == "sum") {
-      expect_equal(rolling_values(c(1, 2, 6), config), c(NA, NA, 9))
-      expect_true(all(is.na(rolling_values(c(1, NA, 6), config))))
-    } else {
-      expect_equal(
-        rolling_values(c(1, 2, 6), config),
-        c(NA, f(c(1, 2)), f(c(1, 2, 6)))
-      )
-      expect_equal(rolling_values(c(1, NA, 6), config), c(NA, NA, f(c(1, 6))))
-    }
-  }
-  # min_obs sets the requirement, up to the window.
-  strict <- setup_TimeSeriesConfig(window = 3L, roll_fn = "mean", min_obs = 3L)
-  expect_true(all(is.na(rolling_values(c(1, NA, 6, 7), strict)[1:3])))
-  lenient <- setup_TimeSeriesConfig(
-    window = 3L,
+test_that("rolling summaries come from the builder, as configured", {
+  skip_if_no_node()
+  o <- raw_option(draw_ts(
+    1:8,
+    1:8,
+    window = 4L,
     roll_fn = "mean",
-    min_obs = 1L,
-    align = "right"
+    align = "left"
+  ))
+  rolled <- vapply(
+    o[["series"]][[2L]][["data"]],
+    function(p) p[[2L]] %||% NA_real_,
+    0
   )
-  expect_equal(rolling_values(c(1, NA, NA), lenient), c(1, 1, 1))
+  expect_equal(rolled, c(2.5, 3.5, 4.5, 5.5, 6.5, 7, NA, NA))
+  o <- raw_option(draw_ts(
+    c(1, 2, 6),
+    1:3,
+    window = 3L,
+    roll_fn = "sum",
+    align = "right"
+  ))
+  rolled <- vapply(
+    o[["series"]][[2L]][["data"]],
+    function(p) p[[2L]] %||% NA_real_,
+    0
+  )
+  expect_equal(rolled, c(NA, NA, 9))
   expect_error(
     setup_TimeSeriesConfig(window = 3L, min_obs = 4L),
     "cannot exceed"
@@ -50,56 +36,77 @@ test_that("rolling windows summarize the values present when a majority is there
   expect_error(setup_TimeSeriesConfig(raw_opacity = 2))
 })
 
-test_that("independent time samples sort pairs without interpolating missing records", {
-  samples <- timeseries_samples(
+test_that("independent time samples stack into one table without interpolating", {
+  table <- timeseries_table(
     list(c(3, 1, 2), c(2, 1)),
     list(A = c(30, 10, NA), B = c(8, 7))
   )
-  expect_equal(samples[["A"]][["x"]], 1:3)
-  expect_equal(samples[["A"]][["y"]], c(10, NA, 30))
-  expect_equal(samples[["B"]][["y"]], c(7, 8))
-  grouped <- timeseries_samples(c(3, 1, 2), c(6, 2, 4), c("B", "A", "B"))
-  expect_named(grouped, c("B", "A"))
-  expect_equal(grouped[["B"]][["y"]], c(4, 6))
-  expect_error(timeseries_samples(1:2, 1:3))
-  expect_error(timeseries_samples(c(1, Inf), 1:2))
-  expect_error(timeseries_samples(1:2, c(NA_real_, NA_real_)))
-  expect_error(timeseries_samples(
+  expect_identical(
+    table[["bindings"]],
+    list(x = ".x", y = ".y", group = ".series")
+  )
+  expect_equal(table[["data"]][[".y"]], c(30, 10, NA, 8, 7))
+  expect_identical(levels(table[["data"]][[".series"]]), c("A", "B"))
+  grouped <- timeseries_table(c(3, 1, 2), c(6, 2, 4), c("B", "A", "B"))
+  expect_identical(grouped[["bindings"]][["group"]], ".group")
+  expect_error(timeseries_table(1:2, 1:3))
+  expect_error(timeseries_table(c(1, Inf), 1:2))
+  expect_error(timeseries_table(
     1:2,
     list(A = 1:2, B = 2:3),
     group = c("a", "b")
   ))
+  skip_if_no_node()
+  o <- raw_option(draw_ts(
+    list(A = c(30, 10, NA), B = c(8, 7)),
+    list(c(3, 1, 2), c(2, 1)),
+    roll_fn = "none"
+  ))
+  expect_identical(vapply(o[["series"]], `[[`, "", "name"), c("A", "B"))
+  expect_equal(
+    o[["series"]][[1L]][["data"]],
+    list(list(1, 10), list(2, NULL), list(3, 30))
+  )
+  expect_error(
+    built_option(draw_ts(c(NA_real_, NA_real_), 1:2)),
+    "at least one time"
+  )
 })
 
 test_that("native time series share legends but preserve independent axes and scales", {
-  widget <- draw_ts(
+  skip_if_no_node()
+  option <- raw_option(draw_ts(
     list(A = c(3, 1, 2), B = c(6, 2, 4)),
     c(3, 1, 2),
     window = 3L,
     roll_fn = "sum",
     zoom = TRUE
-  )
-  option <- widget[["x"]][["option"]]
+  ))
   expect_equal(option[["series"]][[2]][["data"]][[2]], list(2, 6))
   expect_equal(option[["series"]][[4]][["data"]][[2]], list(2, 12))
   expect_equal(
     option[["series"]][[1]][["name"]],
     option[["series"]][[2]][["name"]]
   )
-  expect_null(option[["yAxis"]][[1]][["max"]])
+  expect_null(option[["yAxis"]][["max"]])
   expect_length(option[["dataZoom"]], 2)
-  dual <- draw_xt(1:3, c(2, 4, 6), x2 = c(.5, 2.5), y2 = c(100, 200))[["x"]][[
-    "option"
-  ]]
+  dual <- raw_option(draw_xt(
+    1:3,
+    c(2, 4, 6),
+    x2 = c(.5, 2.5),
+    y2 = c(100, 200)
+  ))
   expect_length(dual[["yAxis"]], 2)
   expect_equal(dual[["series"]][[2]][["yAxisIndex"]], 1L)
   expect_equal(dual[["series"]][[2]][["data"]][[1]], list(.5, 100))
-  temporal <- draw_ts(1:3, as.Date("2020-01-01") + 0:2, roll_fn = "none")[[
-    "x"
-  ]][["option"]]
+  temporal <- raw_option(draw_ts(
+    1:3,
+    as.Date("2020-01-01") + 0:2,
+    roll_fn = "none"
+  ))
   expect_equal(temporal[["xAxis"]][["type"]], "time")
   expect_equal(
-    diff(vapply(temporal[["series"]][[1]][["data"]], `[[`, 0, 1)),
+    diff(vapply(temporal[["series"]][[1]][["data"]], function(p) p[[1L]], 0)),
     rep(86400000, 2)
   )
   expect_error(
@@ -115,10 +122,8 @@ test_that("native time series share legends but preserve independent axes and sc
   path <- tempfile(fileext = ".json")
   on.exit(unlink(path))
   write_chart_config(cfg, path)
-  expect_equal(
-    to_list(compile(read_chart_config(path), BOD)),
-    to_list(compile(cfg, BOD))
-  )
+  expect_identical(compile(read_chart_config(path), BOD), compile(cfg, BOD))
+  expect_identical(compile(cfg, BOD)@type, "timeseries")
 })
 
 test_that("p-value bar convenience selects one-minus transformation", {
@@ -137,19 +142,25 @@ test_that("p-value bar convenience selects one-minus transformation", {
 })
 
 test_that("zeitgeber labels preserve irregular time spacing and shading alignment", {
-  opt <- draw_xt(
+  skip_if_no_node()
+  opt <- raw_option(draw_xt(
     c(0, 2, 8, 24),
     c(1, 3, 2, 4),
     zt = c(0, 2, 8, 0),
     show_zt_every = 3L,
     shade_bin = c(0, 1, 1, 0)
-  )[["x"]][["option"]]
+  ))
   labels <- tail(opt[["series"]], 1)[[1]]
   expect_equal(labels[["renderItem"]], "rtemis.axis_labels.v1")
   expect_equal(labels[["data"]], list(list(0, "0"), list(24, "0")))
   expect_false(opt[["xAxis"]][["axisLabel"]][["show"]])
+  area <- opt[["series"]][[1L]][["markArea"]][["data"]][[1L]]
+  expect_equal(c(area[[1L]][["xAxis"]], area[[2L]][["xAxis"]]), c(2, 8))
   expect_error(draw_xt(1:3, 1:3, zt = 1:2))
-  expect_error(draw_xt(1:3, 1:3, shade_bin = c(0, 2, 0)))
+  expect_error(
+    built_option(draw_xt(1:3, 1:3, shade_bin = c(0, 2, 0))),
+    "0 or 1"
+  )
   expect_error(draw_xt(
     1:3,
     1:3,
@@ -159,6 +170,7 @@ test_that("zeitgeber labels preserve irregular time spacing and shading alignmen
 })
 
 test_that("time annotations use the same data-binding and functional path", {
+  skip_if_no_node()
   data <- data.frame(
     time = 1:6,
     value = 2:7,
@@ -172,36 +184,37 @@ test_that("time annotations use the same data-binding and functional path", {
     shade_bin = "night",
     show_zt_every = 2L
   )
-  compiled <- to_list(compile(cfg, data))
-  direct <- draw_xt(
+  compiled <- built_option(compile(cfg, data), simplify = FALSE)
+  direct <- raw_option(draw_xt(
     data[["time"]],
     list(value = data[["value"]]),
     zt = data[["phase"]],
     shade_bin = data[["night"]],
     show_zt_every = 2L
-  )[["x"]][["option"]]
+  ))
   expect_equal(compiled[["series"]], direct[["series"]])
-  expect_equal(
-    to_list(compile(
+  expect_identical(
+    compile(
       read_chart_config(write_chart_config(cfg, tempfile(fileext = ".json"))),
       data
-    )),
-    compiled
+    ),
+    compile(cfg, data)
   )
   expect_false(compiled[["xAxis"]][["axisLabel"]][["show"]])
 })
+
 test_that("time series validate names, time-vector counts and secondary inputs", {
   expect_error(
-    timeseries_samples(1:2, list()),
+    timeseries_table(1:2, list()),
     "one time vector",
     class = "rtemis_length_error"
   )
   expect_error(
-    timeseries_samples(list(1:2), list(A = 1:2, B = 3:4)),
+    timeseries_table(list(1:2), list(A = 1:2, B = 3:4)),
     "one time vector"
   )
   expect_error(
-    timeseries_samples(1:2, list(A = 1:2, A = 3:4)),
+    timeseries_table(1:2, list(A = 1:2, A = 3:4)),
     "distinct nonempty"
   )
   expect_error(draw_xt(1:2, 1:2, x2 = 1:2), "Supply y2")
@@ -210,12 +223,14 @@ test_that("time series validate names, time-vector counts and secondary inputs",
     compile(setup_TimeSeriesConfig(x = "Time"), BOD),
     "Bind at least one"
   )
-  expect_identical(
-    rolling_values(1:3, setup_TimeSeriesConfig(roll_fn = "none")),
-    rep(NA_real_, 3L)
-  )
+  skip_if_no_node()
   expect_error(
-    draw_ts(rep(1e308, 3), time = 1:3, roll_fn = "sum", window = 2L),
+    built_option(draw_ts(
+      rep(1e308, 3),
+      time = 1:3,
+      roll_fn = "sum",
+      window = 2L
+    )),
     "rolling summaries finite"
   )
 })
@@ -233,9 +248,6 @@ test_that("time-series bindings preserve secondary axes and explicit intervals",
     y2 = "secondary",
     roll_fn = "none"
   )
-  option <- to_list(compile(config, data))
-  expect_identical(option[["series"]][[2L]][["name"]], "secondary")
-  expect_equal(option[["series"]][[2L]][["yAxisIndex"]], 1L)
   invalid <- setup_TimeSeriesConfig(
     x = "time",
     y = "value",
@@ -244,7 +256,11 @@ test_that("time-series bindings preserve secondary axes and explicit intervals",
     zt = "phase"
   )
   expect_error(compile(invalid, data), "shared x binding")
-  shaded <- draw_xt(1:3, 2:4, shade_interval = list(c(1, 2)))[["x"]][["option"]]
+  skip_if_no_node()
+  option <- built_option(compile(config, data), simplify = FALSE)
+  expect_identical(option[["series"]][[2L]][["name"]], "secondary")
+  expect_equal(option[["series"]][[2L]][["yAxisIndex"]], 1L)
+  shaded <- raw_option(draw_xt(1:3, 2:4, shade_interval = list(c(1, 2))))
   expect_true(length(shaded[["series"]]) > 1L)
   expect_equal(
     tail(shaded[["series"]], 1L)[[1L]][["markArea"]][["data"]][[1L]][[1L]][[

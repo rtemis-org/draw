@@ -114,11 +114,11 @@ test_that("boxplot compiles to the same option as the vector path", {
 })
 
 test_that("sankey and gantt compile to the same options as the vector path", {
-  expect_identical(
-    compile(setup_SankeyConfig(), data = links_df()),
-    sankey_option(links = links_df())
-  )
   skip_if_no_node()
+  expect_identical(
+    built_option(compile(setup_SankeyConfig(), data = links_df())),
+    node_option(draw_sankey(links_df()))
+  )
   expect_identical(
     built_option(compile(
       setup_GanttConfig(group = "kind"),
@@ -140,12 +140,13 @@ test_that("a table-bound config binds columns that are not conventionally named"
     n = c(1, 2),
     stringsAsFactors = FALSE
   )
+  skip_if_no_node()
   expect_identical(
-    compile(
+    built_option(compile(
       setup_SankeyConfig(source = "from", target = "to", value = "n"),
       data = renamed
-    ),
-    sankey_option(links = links_df())
+    )),
+    built_option(compile(setup_SankeyConfig(), data = links_df()))
   )
 })
 

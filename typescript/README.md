@@ -55,6 +55,10 @@ Kaplan–Meier curves (`buildSurvivalOption()`) take curves the host recorded, e
 
 Gantt charts (`buildGanttOption()`) take a task table: one bar per row from its start to its end on the row of its label, colored by an optional group, with flagged bars outlined and each bar's tooltip text. The bars are a custom series whose renderer `registerRenderers()` registers; `ganttHeight()` gives the chart's height from its number of rows.
 
+Sankey diagrams (`buildSankeyOption()`) take a link table. Rows with the same source and target sum into one link (`sankeyLinks()`); a missing or negative value, or a cycle, stops with an error naming it. Nodes take the palette in order of first appearance, and links run in a gradient from source to target.
+
+Time series (`buildTimeSeriesOption()`) take a time column and value columns, sort each series by time, and draw its observations with an optional rolling summary (`rollingValues()`: mean, median, minimum, maximum, or sum over a window of observations), values on a right axis, zeitgeber labels, and shading of flagged runs. The zeitgeber labels are a custom series whose renderer `registerRenderers()` registers.
+
 `boxplotStats(values, options)` computes one box's statistics as rtemis.draw does (type-7 quartiles or Tukey's hinges, whiskers to the last value within `whisker` IQR), for a host that summarizes values in memory; with `mean_marker`, the boxplot builder marks each cell's `mean` with a diamond.
 
 Volcano plots and categorical Manhattan bars (`buildSignificanceOption()`) take a family of hypotheses the host adjusted: per hypothesis its label, estimate, and raw and adjusted p-values. The builder transforms the adjusted p-values, draws a zero p-value at a marked cap, colors significant negative and positive results with the theme's sign colors, labels the most significant points of each side, and draws the threshold lines; `significanceAxisNames()` names the axes. The labels carry `rtemisRepelLabels`: `applyRepelLabels(option)` installs `repelLabels()`, a label layout that keeps them clear of each other and of the labeled points, before `setOption()`.

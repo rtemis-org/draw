@@ -130,7 +130,7 @@ test_that("fits, rugs, references and phase labels retain vector geometry", {
       theme = theme
     )
     charts[[length(charts) + 1L]] <- list(
-      option = strip_js(plot[["x"]][["option"]]),
+      option = strip_js(built_payload(plot)[["option"]]),
       theme = to_list(theme),
       labels = list("Activity", "18")
     )

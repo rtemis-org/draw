@@ -13,6 +13,13 @@ setup_SankeyConfig(
   node_width = NULL,
   node_gap = NULL,
   palette = NULL,
+  link_color = "gradient",
+  link_opacity = 0.2,
+  label_font_size = 12,
+  margin_top = NULL,
+  margin_right = NULL,
+  margin_bottom = NULL,
+  margin_left = NULL,
   title = NULL,
   dat_path = NULL,
   origin = NULL,
@@ -37,6 +44,16 @@ are aligned along the flow.}
 
 \item{palette}{Optional Character: Node colors, overriding the theme palette
 for this chart. \code{NULL} uses the theme's.}
+
+\item{link_color}{Character: Link color, \code{"gradient"} from the source node's
+color to the target's, \code{"source"}, \code{"target"}, or a color.}
+
+\item{link_opacity}{Numeric \verb{[0, 1]}: Link opacity.}
+
+\item{label_font_size}{Numeric \verb{(0, Inf)}: Node label font size in pixels.}
+
+\item{margin_top, margin_right, margin_bottom, margin_left}{Optional Integer
+\verb{[0, Inf)}: Space around the diagram in pixels. Unset sides are derived.}
 
 \item{title}{Optional Character: Chart title. Declared here because it is the
 one property every chart type has; \code{palette} is not (four take a \code{colormap}

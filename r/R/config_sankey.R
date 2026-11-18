@@ -2,14 +2,9 @@
 # ::rtemis.draw::
 # 2026- EDG rtemis.org
 
-# The Sankey diagram's config. The first **table-bound** chart: it binds a table
-# of links rather than one column per role, so the properties name the columns
-# *within* that table.
-#
-# `sankey_option()` requires the columns to be called `source`, `target` and
-# `value`. The config names them instead, defaulting to those, so a table that
-# calls them something else can be bound without being renamed first -- which is
-# the point of a binding layer.
+# The Sankey diagram's config. Table-bound: it binds a table of links rather
+# than one column per role, so the properties name the columns within that
+# table, defaulting to `source`, `target`, and `value`.
 
 # %% SankeyConfig ----
 #' Sankey Diagram Configuration
@@ -30,6 +25,12 @@
 #' @param node_gap Optional Numeric `[0, Inf)`: Gap between nodes in pixels.
 #' @param palette Optional Character: Node colors, overriding the theme palette
 #'   for this chart. `NULL` uses the theme's.
+#' @param link_color Character: Link color, `"gradient"` from the source node's
+#'   color to the target's, `"source"`, `"target"`, or a color.
+#' @param link_opacity Numeric `[0, 1]`: Link opacity.
+#' @param label_font_size Numeric `(0, Inf)`: Node label font size in pixels.
+#' @param margin_top,margin_right,margin_bottom,margin_left Optional Integer
+#'   `[0, Inf)`: Space around the diagram in pixels. Unset sides are derived.
 #' @inheritParams ChartConfig
 #'
 #' @return `SankeyConfig` object.
@@ -91,6 +92,48 @@ SankeyConfig <- new_class(
       nullable = TRUE,
       vector = TRUE,
       description = "Node colors, overriding the theme palette. Unset uses the theme's."
+    ),
+    link_color = prop_string(
+      "gradient",
+      description = paste(
+        "Link color: 'gradient' from the source node's color to the",
+        "target's, 'source', 'target', or a color."
+      )
+    ),
+    link_opacity = prop_float(
+      0.2,
+      min = 0,
+      max = 1,
+      description = "Link opacity."
+    ),
+    label_font_size = prop_float(
+      12,
+      exclusive_min = 0,
+      description = "Node label font size in pixels."
+    ),
+    margin_top = prop_integer(
+      NULL,
+      min = 0L,
+      nullable = TRUE,
+      description = "Top margin in pixels."
+    ),
+    margin_right = prop_integer(
+      NULL,
+      min = 0L,
+      nullable = TRUE,
+      description = "Right margin in pixels."
+    ),
+    margin_bottom = prop_integer(
+      NULL,
+      min = 0L,
+      nullable = TRUE,
+      description = "Bottom margin in pixels."
+    ),
+    margin_left = prop_integer(
+      NULL,
+      min = 0L,
+      nullable = TRUE,
+      description = "Left margin in pixels."
     )
   )
 ) # /rtemis.draw::SankeyConfig
@@ -137,6 +180,13 @@ setup_SankeyConfig <- function(
   node_width = NULL,
   node_gap = NULL,
   palette = NULL,
+  link_color = "gradient",
+  link_opacity = 0.2,
+  label_font_size = 12,
+  margin_top = NULL,
+  margin_right = NULL,
+  margin_bottom = NULL,
+  margin_left = NULL,
   title = NULL,
   dat_path = NULL,
   origin = NULL,
@@ -152,6 +202,13 @@ setup_SankeyConfig <- function(
     node_width = node_width,
     node_gap = node_gap,
     palette = palette,
+    link_color = link_color,
+    link_opacity = link_opacity,
+    label_font_size = label_font_size,
+    margin_top = margin_top,
+    margin_right = margin_right,
+    margin_bottom = margin_bottom,
+    margin_left = margin_left,
     title = title,
     dat_path = dat_path,
     origin = origin,
@@ -169,28 +226,24 @@ method(resolve, SankeyConfig) <- function(config, data = NULL, ...) {
 
 
 # %% compile.SankeyConfig ----
-# The builder expects the conventional column names, so the bound columns are
-# renamed into them here. That is what lets a table calling them anything else
-# be plotted without the caller reshaping it first.
+# The option is built in JavaScript by @rtemis/draw, so compiling a Sankey
+# config gives the request the widget and SVG export pass to
+# `RtemisDraw.builders.sankey`: the bound link columns and the config.
+# spec: draw/shared-builders#sankey
 method(compile, SankeyConfig) <- function(
   config,
   data = NULL,
   theme = NULL,
   ...
 ) {
-  links <- data.frame(
-    source = config_column(data, config@source, "source"),
-    target = config_column(data, config@target, "target"),
-    value = config_column(data, config@value, "value"),
-    stringsAsFactors = FALSE
-  )
-  sankey_option(
-    links = links,
-    orient = config@orient,
-    node_width = config@node_width,
-    node_gap = config@node_gap,
-    node_align = config@node_align,
-    title = config@title,
-    palette = config@palette
+  columns <- c(config@source, config@target, config@value)
+  for (role in c("source", "target", "value")) {
+    config_column(data, prop(config, role), role)
+  }
+  BuildRequest(
+    type = "sankey",
+    data = tabular_json(data, unique(columns)),
+    config = config_members(config),
+    appearance = list()
   )
 }

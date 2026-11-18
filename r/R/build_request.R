@@ -21,9 +21,11 @@ BUILDER_TYPES <- c(
   "line",
   "pr",
   "roc",
+  "sankey",
   "scatter",
   "significance",
-  "survival"
+  "survival",
+  "timeseries"
 )
 
 

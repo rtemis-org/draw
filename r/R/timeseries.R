@@ -4,8 +4,10 @@
 #' Time Series Configuration
 #'
 #' Numeric or date-time observations with optional rolling summaries and a
-#' secondary value axis. Uses LineSeriesOption and CartesianAxisOption from
-#' ECharts src/chart/line and src/coord/cartesian. Rolling windows count sorted
+#' secondary value axis. The option is built by @rtemis/draw's time series
+#' builder, which rtemislive's Time series chart also uses, from
+#' LineSeriesOption and CartesianAxisOption in ECharts src/chart/line and
+#' src/coord/cartesian. Rolling windows count sorted
 #' observations, not elapsed time. A window summarizes the values present in
 #' it when they number at least `min_obs`; a position beyond either end of the
 #' series counts as missing. Even centered windows favor following values,
@@ -161,92 +163,52 @@ setup_TimeSeriesConfig <- function(
   )
 }
 
-#' Materialize an observation-window statistic
-#' @param x Numeric: Ordered values, with missing slots preserved.
-#' @param config TimeSeriesConfig: Window and alignment settings.
-#' @return Numeric: A summary of the values present in each window, or `NA`
-#'   where they number fewer than `min_obs` (by default a majority of the
-#'   window, and the complete window for a sum).
+# %% timeseries_table ----
+#' The table of a time series drawn from vectors
+#'
+#' Validates the vector inputs of [draw_ts()] and [draw_xt()] and writes them
+#' as one table the time series builder binds: with one shared time vector,
+#' one row per time and one column per series; with a time vector per series,
+#' the series stacked, named in a `.series` column, which the config groups
+#' by. Secondary series with their own times take rows of their own, with
+#' `.x2` as their time.
+#'
+#' @param x Numeric or temporal vector, or list of them: Times.
+#' @param y Numeric vector or named list: Values.
+#' @param group Optional vector: Groups of one value vector.
+#' @param x2,y2 Optional: Secondary times and values.
+#' @param zt,shade_bin Optional Numeric: Labels and flags aligned with `x`.
+#'
+#' @return Named list: `data` (data frame) and `bindings` (named list of
+#'   config members naming its columns).
+#'
+#' @author EDG
 #' @keywords internal
 #' @noRd
-rolling_values <- new_generic("rolling_values", "x")
-method(rolling_values, class_numeric) <- function(x, config) {
-  if (config@roll_fn == "none") {
-    return(rep(NA_real_, length(x)))
-  }
-  width <- config@window
-  required <- config@min_obs %||%
-    if (config@roll_fn == "sum") width else width %/% 2L + 1L
-  offset <- switch(
-    config@align,
-    right = width - 1L,
-    left = 0L,
-    center = floor((width - 1L) / 2)
-  )
-  summarize <- switch(
-    config@roll_fn,
-    mean = mean,
-    median = stats::median,
-    min = min,
-    max = max,
-    sum = sum
-  )
-  vapply(
-    seq_along(x),
-    function(i) {
-      start <- i - offset
-      end <- start + width - 1L
-      values <- x[seq.int(max(start, 1L), min(end, length(x)))]
-      values <- values[!is.na(values)]
-      if (length(values) < required) NA_real_ else summarize(values)
-    },
-    numeric(1)
-  )
-}
-
-#' Validate and sort independent time/value samples
-#' @param x Numeric, Date, POSIXct, or list: Time coordinates.
-#' @param y Numeric or list: Corresponding value vectors.
-#' @param group Optional vector: Group identities for one value vector.
-#' @return List: Named records with sorted x/y and time-axis identity.
-#' @keywords internal
-#' @noRd
-timeseries_samples <- new_generic("timeseries_samples", "x")
-method(timeseries_samples, class_any) <- function(x, y, group = NULL) {
-  if (!is.list(y)) {
-    y <- list(y)
-  }
-  if (!is.list(x)) {
-    x <- rep(list(x), length(y))
-  }
-  if (!length(y) || length(x) != length(y)) {
-    abort(
-      "Supply one time vector per value vector, or one shared time vector.",
-      class = c("rtemis_length_error", "rtemis_input_error")
-    )
-  }
-  labels <- names(y) %||% paste("Series", seq_along(y))
-  if (anyNA(labels) || any(!nzchar(labels)) || anyDuplicated(labels)) {
-    abort(
-      "Supply distinct nonempty time-series names.",
-      class = c("rtemis_value_error", "rtemis_input_error")
-    )
-  }
-  records <- list()
-  if (!is.null(group)) {
-    if (length(y) != 1L) {
+timeseries_table <- function(
+  x,
+  y,
+  group = NULL,
+  x2 = NULL,
+  y2 = NULL,
+  zt = NULL,
+  shade_bin = NULL
+) {
+  series_list <- function(values, prefix = "Series") {
+    if (!is.list(values)) {
+      values <- list(values)
+    }
+    labels <- names(values) %||% paste(prefix, seq_along(values))
+    if (anyNA(labels) || any(!nzchar(labels)) || anyDuplicated(labels)) {
       abort(
-        "Group one value vector, or supply named independent series.",
+        "Supply distinct nonempty time-series names.",
         class = c("rtemis_value_error", "rtemis_input_error")
       )
     }
-    group <- group_values(group, length(y[[1]]))
+    stats::setNames(values, labels)
   }
-  for (i in seq_along(y)) {
-    tx <- x[[i]]
-    ty <- y[[i]]
-    temporal <- is_time_axis(tx)
-    if (temporal) {
+  check_pairs <- function(tx, ty) {
+    if (is_time_axis(tx)) {
       tx <- time_axis_ms(tx)
     }
     if (
@@ -265,165 +227,177 @@ method(timeseries_samples, class_any) <- function(x, y, group = NULL) {
         class = c("rtemis_type_error", "rtemis_input_error")
       )
     }
-    groups <- if (is.null(group)) {
-      labels[[i]]
-    } else {
-      group_levels(group)
-    }
-    for (label in groups) {
-      keep <- which(
-        !is.na(tx) &
-          if (is.null(group)) {
-            TRUE
-          } else {
-            !is.na(group) & as.character(group) == label
-          }
-      )
-      index <- keep[order(tx[keep])]
-      records[[label]] <- list(
-        x = tx[index],
-        y = ty[index],
-        temporal = temporal
-      )
-    }
   }
-  if (
-    !length(records) ||
-      !any(vapply(records, function(r) any(!is.na(r[["y"]])), logical(1)))
-  ) {
+  if (!length(y) || (is.list(x) && length(x) != length(y))) {
     abort(
-      "Supply at least one available time/value pair.",
-      class = c("rtemis_null_input", "rtemis_input_error")
+      "Supply one time vector per value vector, or one shared time vector.",
+      class = c("rtemis_length_error", "rtemis_input_error")
     )
   }
-  records
-}
-
-#' Build native time-series layers and optional independent secondary axis
-#' @param x,y,x2,y2 See [draw_xt()].
-#' @param group See [draw_ts()].
-#' @param config TimeSeriesConfig: Validated settings.
-#' @return EChartsOption: Materialized raw and rolling records.
-#' @keywords internal
-#' @noRd
-timeseries_option <- new_generic("timeseries_option", "x")
-method(timeseries_option, class_any) <- function(
-  x,
-  y,
-  config,
-  group = NULL,
-  x2 = NULL,
-  y2 = NULL
-) {
-  records <- timeseries_samples(x, y, group)
-  nprimary <- length(records)
+  y <- series_list(y)
+  if (!is.null(group) && length(y) != 1L) {
+    abort(
+      "Group one value vector, or supply named independent series.",
+      class = c("rtemis_value_error", "rtemis_input_error")
+    )
+  }
   if (!is.null(y2)) {
-    secondary <- timeseries_samples(x2 %||% x, y2)
-    if (any(names(secondary) %in% names(records))) {
-      names(secondary) <- paste0(names(secondary), " (right)")
-    }
-    records <- c(records, secondary)
+    y2 <- series_list(y2)
+    clash <- names(y2) %in% names(y)
+    names(y2)[clash] <- paste0(names(y2)[clash], " (right)")
   } else if (!is.null(x2)) {
     abort(
       "Supply y2 with x2, or omit both secondary inputs.",
       class = c("rtemis_value_error", "rtemis_input_error")
     )
   }
-  temporal <- vapply(records, `[[`, logical(1), "temporal")
+  times <- c(if (is.list(x)) x else list(x), if (!is.null(x2)) list(x2))
+  temporal <- vapply(times, is_time_axis, logical(1))
   if (length(unique(temporal)) != 1L) {
     abort(
       "Use numeric time throughout, or Date/POSIXct time throughout.",
       class = c("rtemis_type_error", "rtemis_input_error")
     )
   }
-  series <- list()
-  for (i in seq_along(records)) {
-    record <- records[[i]]
-    raw <- to_list(LineSeries(
-      name = names(records)[[i]],
-      data = Map(
-        function(a, b) list(a, if (is.na(b)) NULL else b),
-        record[["x"]],
-        record[["y"]]
-      ),
-      show_symbol = config@points,
-      symbol_size = 5,
-      line_style = LineStyle(
-        width = if (config@points) 0 else 1,
-        opacity = config@raw_opacity
-      ),
-      item_style = ItemStyle(opacity = config@raw_opacity),
-      y_axis_index = as.integer(i > nprimary)
-    ))
-    series[[length(series) + 1L]] <- raw
-    if (config@roll_fn != "none") {
-      rolled <- rolling_values(record[["y"]], config)
-      if (any(!is.finite(rolled) & !is.na(rolled))) {
-        abort(
-          "Rescale values to keep rolling summaries finite.",
-          class = c("rtemis_value_error", "rtemis_input_error")
-        )
-      }
-      curve <- raw
-      curve[["data"]] <- Map(
-        function(a, b) list(a, if (is.na(b)) NULL else b),
-        record[["x"]],
-        rolled
-      )
-      curve[["showSymbol"]] <- FALSE
-      curve[["lineStyle"]] <- to_list(LineStyle(
-        width = config@roll_width,
-        color = config@roll_color
-      ))
-      curve[["itemStyle"]] <- list(opacity = 1)
-      series[[length(series) + 1L]] <- curve
-    }
-  }
-  zoomed <- zoom_layout(
-    config@zoom,
-    axis = "x",
-    grid = resolve_margins(DEFAULT_MARGINS)
-  )
-  axes <- list(Axis(
-    type = "value",
-    scale = TRUE,
-    name = axis_title(config@ylab),
-    name_location = if (!is.null(axis_title(config@ylab))) "middle"
-  ))
-  if (!is.null(y2)) {
-    axes[[2L]] <- Axis(
-      type = "value",
-      scale = TRUE,
-      position = "right",
-      name = config@y2lab,
-      name_location = "middle",
-      split_line = SplitLine(show = FALSE)
+  if ((!is.null(zt) || !is.null(shade_bin)) && (is.list(x) || !is.null(x2))) {
+    abort(
+      "Use one shared x vector for shading flags or zeitgeber labels.",
+      class = c("rtemis_value_error", "rtemis_input_error")
     )
   }
-  EChartsOption(
-    series = series,
-    use_utc = if (temporal[[1]]) TRUE else NULL,
-    x_axis = Axis(
-      type = if (temporal[[1]]) "time" else "value",
-      scale = TRUE,
-      name = axis_title(config@xlab),
-      name_location = if (!is.null(axis_title(config@xlab))) "middle"
-    ),
-    y_axis = axes,
-    legend = Legend(
-      data = as.list(names(records)),
-      item_style = ItemStyle(opacity = 1)
-    ),
-    tooltip = Tooltip(
-      trigger = "axis",
-      value_formatter = number_value_formatter()
-    ),
-    grid = zoomed[["grid"]],
-    data_zoom = zoomed[["data_zoom"]],
-    color = config@palette,
-    title = if (!is.null(config@title)) Title(text = config@title) else NULL
+  # A column of a time type keeps its type when stacked.
+  stack_times <- function(parts) {
+    out <- do.call(c, unname(parts))
+    if (inherits(parts[[1L]], "POSIXct")) {
+      attr(out, "tzone") <- attr(parts[[1L]], "tzone")
+    }
+    out
+  }
+  missing_like <- function(v, n) rep(v[NA_integer_], n)
+
+  if (is.list(x)) {
+    for (i in seq_along(y)) {
+      check_pairs(x[[i]], y[[i]])
+    }
+    sizes <- lengths(y)
+    data <- data.frame(
+      .x = stack_times(x),
+      .y = unlist(y, use.names = FALSE),
+      .series = factor(rep(names(y), sizes), levels = names(y)),
+      check.names = FALSE
+    )
+    bindings <- list(x = ".x", y = ".y", group = ".series")
+  } else {
+    for (v in y) {
+      check_pairs(x, v)
+    }
+    data <- data.frame(.x = x, check.names = FALSE)
+    for (name in names(y)) {
+      data[[name]] <- y[[name]]
+    }
+    bindings <- list(x = ".x", y = names(y))
+    if (!is.null(group)) {
+      group <- group_values(group, length(y[[1L]]))
+      data[[".group"]] <- group
+      bindings[["group"]] <- ".group"
+    }
+    if (!is.null(zt)) {
+      data[[".zt"]] <- zt
+      bindings[["zt"]] <- ".zt"
+    }
+    if (!is.null(shade_bin)) {
+      data[[".shade_bin"]] <- shade_bin
+      bindings[["shade_bin"]] <- ".shade_bin"
+    }
+  }
+  if (is.null(y2)) {
+    return(list(data = data, bindings = bindings))
+  }
+  shared <- is.null(x2) && !is.list(x) && all(lengths(y2) == nrow(data))
+  if (shared) {
+    for (v in y2) {
+      check_pairs(x, v)
+    }
+    for (name in names(y2)) {
+      data[[name]] <- y2[[name]]
+    }
+  } else {
+    tx2 <- x2 %||% x
+    if (is.list(tx2)) {
+      abort(
+        "Supply one shared time vector for the secondary series.",
+        class = c("rtemis_length_error", "rtemis_input_error")
+      )
+    }
+    for (v in y2) {
+      check_pairs(tx2, v)
+    }
+    n1 <- nrow(data)
+    n2 <- length(tx2)
+    extra <- as.data.frame(
+      lapply(data, function(col) missing_like(col, n2)),
+      check.names = FALSE
+    )
+    data <- rbind(data, extra)
+    data[[".x2"]] <- stack_times(list(missing_like(tx2, n1), tx2))
+    for (name in names(y2)) {
+      data[[name]] <- c(rep(NA_real_, n1), y2[[name]])
+    }
+    bindings[["x2"]] <- ".x2"
+  }
+  bindings[["y2"]] <- names(y2)
+  list(data = data, bindings = bindings)
+} # /rtemis.draw::timeseries_table
+
+
+# %% timeseries_request ----
+#' The build request of a time series config and its data
+#'
+#' @param config [TimeSeriesConfig]: The chart configuration.
+#' @param data Data frame: The data its columns name.
+#'
+#' @return [BuildRequest] of type `timeseries`.
+#'
+#' @author EDG
+#' @keywords internal
+#' @noRd
+timeseries_request <- function(config, data) {
+  if (!length(config@y)) {
+    abort(
+      "Bind at least one value column in y.",
+      class = c("rtemis_null_input", "rtemis_input_error")
+    )
+  }
+  if (
+    (!is.null(config@zt) || !is.null(config@shade_bin)) && !is.null(config@x2)
+  ) {
+    abort(
+      "Use one shared x binding with zeitgeber labels or shading flags.",
+      class = c("rtemis_value_error", "rtemis_input_error")
+    )
+  }
+  if (!is.null(config@x2) && !length(config@y2)) {
+    abort(
+      "Supply y2 with x2, or omit both secondary bindings.",
+      class = c("rtemis_value_error", "rtemis_input_error")
+    )
+  }
+  roles <- c("x", "y", "group", "x2", "y2", "zt", "shade_bin")
+  columns <- character(0)
+  for (role in roles) {
+    for (name in prop(config, role)) {
+      config_column(data, name, role)
+      columns <- c(columns, name)
+    }
+  }
+  BuildRequest(
+    type = "timeseries",
+    data = tabular_json(data, unique(columns)),
+    config = config_members(config),
+    appearance = list()
   )
-}
+} # /rtemis.draw::timeseries_request
+
 
 method(resolve, TimeSeriesConfig) <- function(config, data = NULL, ...) {
   config_derive(
@@ -436,51 +410,17 @@ method(resolve, TimeSeriesConfig) <- function(config, data = NULL, ...) {
   )
 }
 
+# The option is built in JavaScript by @rtemis/draw, so compiling a time
+# series config gives the request the widget and SVG export pass to
+# `RtemisDraw.builders.timeseries`: the bound columns and the config.
+# spec: draw/shared-builders#time-series
 method(compile, TimeSeriesConfig) <- function(
   config,
   data = NULL,
   theme = NULL,
   ...
 ) {
-  values <- lapply(config@y, function(name) config_column(data, name, "y"))
-  names(values) <- config@y
-  if (!length(values)) {
-    abort(
-      "Bind at least one value column in y.",
-      class = c("rtemis_null_input", "rtemis_input_error")
-    )
-  }
-  secondary <- if (length(config@y2)) {
-    setNames(
-      lapply(config@y2, function(name) config_column(data, name, "y2")),
-      config@y2
-    )
-  } else {
-    NULL
-  }
-  option <- timeseries_option(
-    config_column(data, config@x, "x"),
-    values,
-    config,
-    group = config_column(data, config@group, "group"),
-    x2 = config_column(data, config@x2, "x2"),
-    y2 = secondary
-  )
-  if (
-    (!is.null(config@zt) || !is.null(config@shade_bin)) && !is.null(config@x2)
-  ) {
-    abort(
-      "Use one shared x binding with zeitgeber labels or shading flags.",
-      class = c("rtemis_value_error", "rtemis_input_error")
-    )
-  }
-  timeseries_layers(
-    option,
-    config_column(data, config@x, "x"),
-    zt = config_column(data, config@zt, "zt"),
-    shade_bin = config_column(data, config@shade_bin, "shade_bin"),
-    every = config@show_zt_every
-  )
+  timeseries_request(config, data)
 }
 
 #' Draw Time Series with Rolling Summaries
@@ -515,8 +455,12 @@ draw_ts <- function(
     align = align,
     ...
   )
+  table <- timeseries_table(time, x, group = group)
   draw(
-    timeseries_option(time, x, config, group),
+    timeseries_request(
+      bound_config(config, table[["bindings"]]),
+      table[["data"]]
+    ),
     theme = theme,
     width = width,
     height = height,
@@ -569,21 +513,19 @@ draw_xt <- function(
       class = c("rtemis_value_error", "rtemis_input_error")
     )
   }
-  if ((!is.null(zt) || !is.null(shade_bin)) && (is.list(x) || !is.null(x2))) {
-    abort(
-      "Use one shared x vector for shading flags or zeitgeber labels.",
-      class = c("rtemis_value_error", "rtemis_input_error")
-    )
-  }
-  config <- setup_TimeSeriesConfig(...)
+  config <- setup_TimeSeriesConfig(show_zt_every = show_zt_every, ...)
+  table <- timeseries_table(
+    x,
+    y,
+    x2 = x2,
+    y2 = y2,
+    zt = zt,
+    shade_bin = shade_bin
+  )
   plot <- draw(
-    timeseries_layers(
-      timeseries_option(x, y, config, x2 = x2, y2 = y2),
-      x,
-      zt = zt,
-      shade_bin = shade_bin,
-      intervals = shade_interval,
-      every = show_zt_every
+    timeseries_request(
+      bound_config(config, table[["bindings"]]),
+      table[["data"]]
     ),
     theme = theme,
     width = width,
@@ -595,120 +537,35 @@ draw_xt <- function(
       config@legend_title
     )
   )
+  if (length(shade_interval)) {
+    plot <- add_cartesian_layer(
+      plot,
+      list(to_list(AnnotationLayer(bands = shade_interval))),
+      legend = NULL,
+      x_axis = 0L,
+      y_axis = 0L
+    )
+  }
   if (!is.null(filename)) {
     save_drawing(plot, filename)
   }
   plot
 }
 
-
-#' Materialize nonuniform x-axis labels without changing time coordinates
-#' @param x List: ECharts option.
-#' @param time Numeric, Date, or POSIXct: Original time positions.
-#' @param labels Numeric: Zeitgeber phases corresponding to time.
-#' @param every Integer: Label stride, retaining zero phase positions.
-#' @return List: Option with native custom vector text at time coordinates.
+# %% bound_config ----
+#' A time series config with its column bindings set
+#'
+#' @param config [TimeSeriesConfig]: The chart configuration.
+#' @param bindings Named list: Members naming columns.
+#'
+#' @return [TimeSeriesConfig].
+#'
+#' @author EDG
 #' @keywords internal
 #' @noRd
-timeseries_tick_labels <- new_generic("timeseries_tick_labels", "x")
-method(timeseries_tick_labels, class_list) <- function(x, time, labels, every) {
-  check_integer_scalar(every)
-  if (
-    every < 1L ||
-      !is.numeric(labels) ||
-      length(labels) != length(time) ||
-      any(!is.finite(labels))
-  ) {
-    abort(
-      "Supply finite zeitgeber labels aligned with time and a positive integer label stride.",
-      class = c("rtemis_value_error", "rtemis_input_error")
-    )
+bound_config <- function(config, bindings) {
+  for (name in names(bindings)) {
+    prop(config, name) <- bindings[[name]]
   }
-  tx <- if (is_time_axis(time)) time_axis_ms(time) else time
-  index <- which(!is.na(tx))[order(tx[!is.na(tx)])]
-  keep <- index[(seq_along(index) - 1L) %% every == 0L | labels[index] == 0]
-  x[["xAxis"]][["axisLabel"]] <- list(show = FALSE)
-  x[["series"]] <- c(
-    x[["series"]],
-    list(list(
-      type = "custom",
-      name = "",
-      renderItem = "rtemis.axis_labels.v1",
-      silent = TRUE,
-      clip = FALSE,
-      dimensions = list(
-        list(name = "time", type = "float"),
-        list(name = "text", type = "ordinal")
-      ),
-      encode = list(x = 0L, y = -1L, tooltip = -1L),
-      data = Map(
-        function(a, b) list(a, as.character(b)),
-        tx[keep],
-        labels[keep]
-      )
-    ))
-  )
-  x
-}
-
-#' Apply shared time-series annotations before rendering
-#' @param x EChartsOption: Compiled time-series geometry.
-#' @param time Numeric or temporal: Shared observation coordinates.
-#' @param zt,shade_bin Optional Numeric: Phase labels or binary shading flags.
-#' @param intervals List: Explicit shading intervals.
-#' @param every Integer: Phase-label stride.
-#' @return EChartsOption: Geometry with portable annotation layers.
-#' @keywords internal
-#' @noRd
-timeseries_layers <- new_generic("timeseries_layers", "x")
-method(timeseries_layers, EChartsOption) <- function(
-  x,
-  time,
-  zt = NULL,
-  shade_bin = NULL,
-  intervals = list(),
-  every = 1L
-) {
-  if (!is.null(zt)) {
-    option <- timeseries_tick_labels(to_list(x), time, zt, every)
-    x@series <- option[["series"]]
-    x@x_axis@axis_label <- AxisLabel(show = FALSE)
-  }
-  if (!is.null(shade_bin)) {
-    if (
-      !is.numeric(shade_bin) ||
-        length(shade_bin) != length(time) ||
-        anyNA(shade_bin) ||
-        any(!shade_bin %in% c(0, 1))
-    ) {
-      abort(
-        "Supply one zero/one shading flag per time value.",
-        class = c("rtemis_value_error", "rtemis_input_error")
-      )
-    }
-    tx <- if (is_time_axis(time)) time_axis_ms(time) else time
-    index <- which(!is.na(tx))[order(tx[!is.na(tx)])]
-    mark <- build_block_mark_area(
-      tx[index],
-      shade_bin[index],
-      c("0" = "transparent", "1" = "#888888"),
-      .15
-    )
-    series <- to_list(x)[["series"]]
-    series[[1]][["markArea"]] <- if (!is.null(mark)) {
-      area <- to_list(mark)
-      area[["label"]] <- list(show = FALSE)
-      area
-    } else {
-      NULL
-    }
-    x@series <- series
-  }
-  if (length(intervals)) {
-    x@series <- c(
-      to_list(x)[["series"]],
-      list(to_list(AnnotationLayer(bands = intervals)))
-    )
-  }
-  x
-}
+  config
+} # /rtemis.draw::bound_config

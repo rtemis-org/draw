@@ -12,8 +12,8 @@ draw_sankey(
   node_align = NULL,
   title = NULL,
   palette = NULL,
-  link_color = "source",
-  link_opacity = 0.45,
+  link_color = "gradient",
+  link_opacity = 0.2,
   margins = NULL,
   label_font_size = 12,
   theme = NULL,
@@ -25,7 +25,7 @@ draw_sankey(
 }
 \arguments{
 \item{links}{data.frame: Directed links with columns \code{source} (Character),
-\code{target} (Character), and \code{value} (Numeric).}
+\code{target} (Character), and \code{value} (Numeric, nonnegative).}
 
 \item{orient}{Optional Character \{"horizontal", "vertical"\}: Flow direction.}
 
@@ -41,23 +41,20 @@ alignment within each column.}
 \item{palette}{Optional Character: Node color palette — a single color string or
 a character vector that overrides the theme palette for this chart.}
 
-\item{link_color}{Character \{"source", "target", "gradient"\} or a color:
-How ribbons are colored. \code{"source"}, the default, gives each ribbon the
-color of the node it leaves, which is what lets a reader follow one source
-across the diagram.}
+\item{link_color}{Character \{"gradient", "source", "target"\} or a color:
+How ribbons are colored. \code{"gradient"}, the default, runs from the color of
+the node a ribbon leaves to the color of the node it enters.}
 
 \item{link_opacity}{Numeric \verb{[0, 1]}: Ribbon opacity. Below 1 so that
 crossing ribbons blend rather than hide one another.}
 
 \item{margins}{Optional named list or numeric: Space around the plotting box,
-as any of \code{left}, \code{right}, \code{top}, \code{bottom} in pixels or as a CSS width.
-Sides left unnamed are derived from the labels: a node's label is drawn to
-its right, so the last column needs room or its labels are clipped. Set
-them explicitly when preparing a static export, where the exact canvas is
-known.}
+as any of \code{left}, \code{right}, \code{top}, \code{bottom} in pixels. Sides left unnamed
+are derived: a node's label is drawn to its right, so a horizontal
+diagram's right margin holds the longest label of the last column.}
 
 \item{label_font_size}{Numeric: Node label font size in pixels. Also what the
-derived margins are estimated from.}
+derived right margin is estimated from.}
 
 \item{theme}{Optional \link{Theme}: Theme override.}
 
@@ -76,8 +73,11 @@ htmlwidget: Widget object.
 }
 \description{
 Sankey diagram from a data frame of directed links. Node names are derived
-automatically from the unique values in the \code{source} and \code{target} columns;
-no separate node list is required.
+from the unique values in the \code{source} and \code{target} columns; no separate
+node list is required. The option is built by @rtemis/draw's Sankey
+builder, which rtemislive also uses. Rows with the same source and target
+are summed into one link. A missing, infinite, or negative value, or links
+that form a cycle, stop with an error.
 }
 \examples{
 links <- data.frame(

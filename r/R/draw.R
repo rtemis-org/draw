@@ -3039,182 +3039,17 @@ draw_heatmap <- function(
 
 # -- draw_sankey ----------------------------------------------------------------
 
-# %% .sankey_margins() ----
-#' Space a Sankey needs around its plotting box so no label is cut off
-#'
-#' A node's label is drawn to the right of it, so the labels of the last column
-#' run past the edge of the chart and are clipped. There is no way to measure
-#' text before the browser has it, so the width is estimated from the longest
-#' label: a proportional face averages a little over half its point size per
-#' character.
-#'
-#' The estimate is capped, because a label long enough to need most of the
-#' canvas would leave no canvas for the diagram. Pass `margins` to set any side
-#' exactly, which is what a static export wants.
-#'
-#' @param links data.frame: Links, with `source` and `target`.
-#' @param margins Optional named list or numeric: Any of `left`, `right`, `top`,
-#'   `bottom`, in pixels or as a CSS width. Sides not named are derived.
-#' @param font_size Numeric: Label font size in pixels.
-#' @param width Optional Numeric: Chart width, used to cap the estimate.
-#'
-#' @return Named list of `left`, `right`, `top`, `bottom`.
-#'
-#' @author EDG
-#' @keywords internal
-#' @noRd
-.sankey_margins <- function(
-  links,
-  margins = NULL,
-  font_size = 12,
-  width = NULL
-) {
-  src <- as.character(links[["source"]])
-  tgt <- as.character(links[["target"]])
-  terminal <- setdiff(tgt, src)
-  longest <- if (length(terminal)) max(nchar(terminal)) else 0L
-  canvas <- if (is.numeric(width) && length(width) == 1L) width else 1200
-  # 0.52 em per character is close for the system UI faces these charts use,
-  # and erring wide costs plot area while erring narrow costs the label.
-  estimate <- ceiling(longest * 0.52 * font_size) + 24
-  auto <- list(
-    left = 12,
-    right = max(24, min(estimate, floor(canvas * 0.45))),
-    top = 48,
-    bottom = 24
-  )
-  if (is.null(margins)) {
-    return(auto)
-  }
-  if (!is.list(margins)) {
-    margins <- as.list(margins)
-  }
-  unknown <- setdiff(names(margins), names(auto))
-  if (length(unknown) > 0L) {
-    abort(
-      "`margins` names must be among left, right, top, bottom. Got: ",
-      paste(unknown, collapse = ", "),
-      ".",
-      class = c("rtemis_value_error", "rtemis_input_error")
-    )
-  }
-  utils::modifyList(auto, margins)
-}
-
-#' Build the ECharts option for a Sankey diagram
-#'
-#' The single implementation shared by [draw_sankey()], which resolves its arguments
-#' from vectors, and `compile()` on the corresponding [ChartConfig], which
-#' resolves them from a data frame. The render targets stay with the caller.
-#'
-#' @inheritParams draw_sankey
-#'
-#' @return [EChartsOption]: The option object.
-#'
-#' @author EDG
-#' @keywords internal
-#' @noRd
-sankey_option <- function(
-  links,
-  orient = "horizontal",
-  node_width = NULL,
-  node_gap = NULL,
-  node_align = NULL,
-  title = NULL,
-  palette = NULL,
-  link_color = "source",
-  link_opacity = 0.45,
-  margins = NULL,
-  label_font_size = 12,
-  width = NULL
-) {
-  rtemis.core::check_tabular(links)
-  required_cols <- c("source", "target", "value")
-  missing_cols <- setdiff(required_cols, names(links))
-  if (length(missing_cols) > 0L) {
-    abort(
-      "`links` must have columns ",
-      paste(required_cols, collapse = ", "),
-      "; missing: ",
-      paste(missing_cols, collapse = ", "),
-      ".",
-      class = c("rtemis_value_error", "rtemis_input_error")
-    )
-  }
-
-  # Coerce to character: factor columns with different levels produce an
-  # integer vector when concatenated with c().
-  node_names <- unique(
-    c(as.character(links[["source"]]), as.character(links[["target"]]))
-  )
-  # Convert links data.frame rows to a list of named lists
-  edge_list <- lapply(seq_len(nrow(links)), function(i) {
-    list(
-      source = as.character(links[["source"]][[i]]),
-      target = as.character(links[["target"]][[i]]),
-      value = links[["value"]][[i]]
-    )
-  })
-
-  # ECharts ignores a palette longer than the node count; trim (or cycle) to
-  # exactly one entry per node. unname() prevents named vectors from
-  # serializing as a JSON object instead of an array.
-  palette <- unname(rep_len(palette %||% rtemis_colors, length(node_names)))
-  box <- .sankey_margins(links, margins, label_font_size, width)
-  if (identical(orient, "vertical")) {
-    # Vertical flows need space above/below nodes; the shared renderer measures
-    # wrapped labels against native node widths for browser and SVG surfaces.
-    box <- utils::modifyList(
-      list(left = 12, right = 12, top = 48, bottom = 24),
-      if (is.null(margins)) list() else as.list(margins)
-    )
-  }
-
-  # The color is carried on each node rather than left to the chart-level
-  # `color` array: a theme's series itemStyle takes precedence over that array,
-  # which paints every node one color and leaves the palette showing only on the
-  # links. A per-datum itemStyle wins over both, as in draw_gantt().
-  nodes <- lapply(seq_along(node_names), function(i) {
-    list(
-      name = node_names[[i]],
-      itemStyle = list(color = palette[[i]])
-    )
-  })
-  opt <- EChartsOption(
-    title = if (!is.null(title)) Title(text = title, left = "center") else NULL,
-    tooltip = Tooltip(trigger = "item"),
-    color = palette,
-    series = SankeySeries(
-      data = nodes,
-      links = edge_list,
-      orient = orient,
-      node_width = node_width,
-      node_gap = node_gap,
-      node_align = node_align,
-      # Links take the color of the node they leave, which is what lets a
-      # reader follow one source across a diagram. Without it the theme's own
-      # link color applies and the palette shows only on the nodes.
-      line_style = list(color = link_color, opacity = link_opacity),
-      label = LabelOption(text_style = TextStyle(font_size = label_font_size)),
-      left = box[["left"]],
-      right = box[["right"]],
-      top = box[["top"]],
-      bottom = box[["bottom"]]
-    )
-  )
-
-  opt
-} # /rtemis.draw::sankey_option
-
-
 #' Draw a Sankey Diagram
 #'
 #' Sankey diagram from a data frame of directed links. Node names are derived
-#' automatically from the unique values in the `source` and `target` columns;
-#' no separate node list is required.
+#' from the unique values in the `source` and `target` columns; no separate
+#' node list is required. The option is built by @rtemis/draw's Sankey
+#' builder, which rtemislive also uses. Rows with the same source and target
+#' are summed into one link. A missing, infinite, or negative value, or links
+#' that form a cycle, stop with an error.
 #'
 #' @param links data.frame: Directed links with columns `source` (Character),
-#'   `target` (Character), and `value` (Numeric).
+#'   `target` (Character), and `value` (Numeric, nonnegative).
 #' @param orient Optional Character \{"horizontal", "vertical"\}: Flow direction.
 #' @param node_width Optional Numeric `[0, Inf)`: Node rectangle width in pixels.
 #' @param node_gap Optional Numeric `[0, Inf)`: Vertical gap between nodes in pixels.
@@ -3223,20 +3058,17 @@ sankey_option <- function(
 #' @param title Optional Character: Chart title.
 #' @param palette Optional Character: Node color palette — a single color string or
 #'   a character vector that overrides the theme palette for this chart.
-#' @param link_color Character \{"source", "target", "gradient"\} or a color:
-#'   How ribbons are colored. `"source"`, the default, gives each ribbon the
-#'   color of the node it leaves, which is what lets a reader follow one source
-#'   across the diagram.
+#' @param link_color Character \{"gradient", "source", "target"\} or a color:
+#'   How ribbons are colored. `"gradient"`, the default, runs from the color of
+#'   the node a ribbon leaves to the color of the node it enters.
 #' @param link_opacity Numeric `[0, 1]`: Ribbon opacity. Below 1 so that
 #'   crossing ribbons blend rather than hide one another.
 #' @param margins Optional named list or numeric: Space around the plotting box,
-#'   as any of `left`, `right`, `top`, `bottom` in pixels or as a CSS width.
-#'   Sides left unnamed are derived from the labels: a node's label is drawn to
-#'   its right, so the last column needs room or its labels are clipped. Set
-#'   them explicitly when preparing a static export, where the exact canvas is
-#'   known.
+#'   as any of `left`, `right`, `top`, `bottom` in pixels. Sides left unnamed
+#'   are derived: a node's label is drawn to its right, so a horizontal
+#'   diagram's right margin holds the longest label of the last column.
 #' @param label_font_size Numeric: Node label font size in pixels. Also what the
-#'   derived margins are estimated from.
+#'   derived right margin is estimated from.
 #' @param theme Optional [Theme]: Theme override.
 #' @param width Optional Character or Numeric: Widget width.
 #' @param height Optional Character or Numeric: Widget height.
@@ -3261,8 +3093,8 @@ draw_sankey <- function(
   node_align = NULL,
   title = NULL,
   palette = NULL,
-  link_color = "source",
-  link_opacity = 0.45,
+  link_color = "gradient",
+  link_opacity = 0.2,
   margins = NULL,
   label_font_size = 12,
   theme = NULL,
@@ -3271,30 +3103,33 @@ draw_sankey <- function(
   element_id = NULL,
   filename = NULL
 ) {
-  opt <- sankey_option(
-    links = links,
+  rtemis.core::check_tabular(links)
+  margin <- pixel_margins(margins)
+  config <- setup_SankeyConfig(
     orient = orient,
+    node_align = node_align,
     node_width = node_width,
     node_gap = node_gap,
-    node_align = node_align,
-    title = title,
     palette = palette,
     link_color = link_color,
     link_opacity = link_opacity,
-    margins = margins,
     label_font_size = label_font_size,
-    width = width
+    margin_top = margin[["top"]],
+    margin_right = margin[["right"]],
+    margin_bottom = margin[["bottom"]],
+    margin_left = margin[["left"]],
+    title = title
   )
-
   draw(
-    opt,
+    config,
+    data = links,
     theme = theme,
     width = width,
     height = height,
     element_id = element_id,
     filename = filename
   )
-}
+} # /rtemis.draw::draw_sankey
 
 
 #' Normalize bar table/vector input and stable category ordering

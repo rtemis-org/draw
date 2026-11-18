@@ -78,13 +78,16 @@ test_that("each schema accepts an empty label: no minLength", {
 test_that("an empty label draws no axis name", {
   d <- label_data()
   configs <- blank_configs()
-  ts <- compile(
-    setup_TimeSeriesConfig(x = "u", y = "v", xlab = "", ylab = ""),
-    data = d
-  )
-  expect_null(ts@x_axis@name)
-  expect_null(ts@y_axis[[1]]@name)
   skip_if_no_node()
+  ts <- built_option(
+    compile(
+      setup_TimeSeriesConfig(x = "u", y = "v", xlab = "", ylab = ""),
+      data = d
+    ),
+    simplify = FALSE
+  )
+  expect_null(ts[["xAxis"]][["name"]])
+  expect_null(ts[["yAxis"]][["name"]])
   for (type in c("scatter", "line", "bar", "histogram", "density")) {
     option <- built_option(compile(configs[[type]], data = d))
     expect_null(option[["xAxis"]][["name"]])

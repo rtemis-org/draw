@@ -110,8 +110,10 @@ TimeSeriesConfig: Validated portable settings.
 }
 \description{
 Numeric or date-time observations with optional rolling summaries and a
-secondary value axis. Uses LineSeriesOption and CartesianAxisOption from
-ECharts src/chart/line and src/coord/cartesian. Rolling windows count sorted
+secondary value axis. The option is built by @rtemis/draw's time series
+builder, which rtemislive's Time series chart also uses, from
+LineSeriesOption and CartesianAxisOption in ECharts src/chart/line and
+src/coord/cartesian. Rolling windows count sorted
 observations, not elapsed time. A window summarizes the values present in
 it when they number at least \code{min_obs}; a position beyond either end of the
 series counts as missing. Even centered windows favor following values,
