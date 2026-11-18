@@ -93,8 +93,8 @@ e.g. \code{c(20, 8000)}. Applied after STFT computation.}
 
 \item{time_unit}{Character \{"s", "ms"\}: Unit for the time axis.}
 
-\item{colormap}{Character: Color palette. Accepts a \pkg{viridisLite} colormap
-name (\code{"magma"} (default), \code{"inferno"}, \code{"plasma"},
+\item{colormap}{Character: Color palette. Accepts the name of a colormap of
+\pkg{viridisLite} (\code{"magma"} (default), \code{"inferno"}, \code{"plasma"},
 \code{"viridis"}, \code{"cividis"}, \code{"mako"}, \code{"rocket"}, \code{"turbo"}), \code{"diverging"}
 for a negative-background-positive scale in the theme's sign colors
 (suitable for signed data such as EEG/MEG amplitudes), or a character vector of >= 2 hex colors for a
@@ -124,8 +124,9 @@ or \code{"Frequency (kHz)"} depending on \code{freq_unit}.}
 \item{theme}{Optional \link{Theme}, list, or \code{NA}: Theme override passed to
 \code{\link[=draw]{draw()}}.}
 
-\item{margins}{Optional Named numeric or character vector / list: Plot
-margins in pixels. Valid names: \code{"top"}, \code{"right"}, \code{"bottom"}, \code{"left"}.}
+\item{margins}{Optional Named numeric vector or list: Plot margins in
+pixels. Valid names: \code{"top"}, \code{"right"}, \code{"bottom"}, \code{"left"}. Unset
+margins are 36 pixels, 90 at the right, and 50 at the top with a title.}
 
 \item{width}{Optional Numeric or Character: Widget width.}
 
@@ -161,6 +162,8 @@ htmlwidget
 Renders an interactive time-frequency spectrogram as an ECharts heatmap
 widget. Accepts either a raw signal vector (STFT is computed internally via
 \code{\link[signal:specgram]{signal::specgram()}}) or a pre-computed spectrogram matrix (freq x time).
+R computes the spectrum; the \verb{@rtemis/draw} spectrogram builder applies the
+frequency scale, ranges, units, and color scale, and draws it.
 }
 \details{
 Corresponds to \code{HeatmapSeriesOption} in \code{src/chart/heatmap/HeatmapSeries.ts}.

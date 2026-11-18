@@ -206,170 +206,32 @@ method(calibration_data, CalibrationConfig) <- function(config, data) {
   })
 }
 
-#' Compile calibration observations into native lines, points, and rugs
-#' @inheritParams calibration_data
-#' @return An [EChartsOption] with fixed probability axes and native vector marks.
+#' The calibration builder's data as JSON
+#'
+#' @param groups List: The groups of `calibration_data()`.
+#'
+#' @return Character: JSON text of `{groups}`, each group's name, bins (one
+#'   array per column), probabilities, Brier score, and omitted pairs.
+#'
+#' @author EDG
 #' @keywords internal
 #' @noRd
-calibration_option <- new_generic("calibration_option", "config")
-method(calibration_option, CalibrationConfig) <- function(config, data) {
-  groups <- calibration_data(config, data)
-  fmt <- function(x) {
-    ddSci(as.numeric(x), config@digits)
-  }
-  labels <- vapply(
-    groups,
-    function(g) {
-      paste0(
-        g[["name"]],
-        if (config@show_brier) paste0(" (Brier ", fmt(g[["brier"]]), ")")
-      )
-    },
-    character(1)
-  )
-  series <- list()
-  if (config@diagonal) {
-    series[[1L]] <- LineSeries(
-      data = list(c(0, 0), c(1, 1)),
-      show_symbol = FALSE,
-      silent = TRUE,
-      legend_hover_link = FALSE,
-      # Background references must not consume a group palette color.
-      item_style = ItemStyle(color = config@diagonal_color),
-      line_style = LineStyle(
-        color = config@diagonal_color,
-        width = 1,
-        type = "dashed"
-      ),
-      z = 1
-    )
-  }
-  for (i in seq_along(groups)) {
-    g <- groups[[i]]
-    bins <- g[["bins"]]
-    color <- if (!is.null(config@palette)) {
-      config@palette[[(i - 1L) %% length(config@palette) + 1L]]
-    } else {
-      NULL
-    }
-    # Ordinal display dimensions retain controlled tooltip precision without
-    # changing the numeric geometry or sending executable formatter code.
-    points <- lapply(seq_len(nrow(bins)), function(j) {
-      list(
-        bins[["probability"]][[j]],
-        bins[["observed"]][[j]],
-        bins[["n"]][[j]],
-        fmt(bins[["probability"]][[j]]),
-        fmt(bins[["observed"]][[j]]),
-        fmt(bins[["lower"]][[j]]),
-        fmt(bins[["upper"]][[j]]),
-        fmt(g[["brier"]]),
-        g[["omitted"]]
-      )
-    })
-    curve <- to_list(LineSeries(
-      name = labels[[i]],
-      data = points,
-      smooth = FALSE,
-      show_symbol = TRUE,
-      symbol = "circle",
-      symbol_size = config@point_size,
-      clip = FALSE,
-      connect_nulls = FALSE,
-      line_style = LineStyle(
-        color = color,
-        width = config@line_width,
-        opacity = if (config@mode == "markers") 0 else 1
-      ),
-      item_style = ItemStyle(
-        color = color,
-        opacity = if (config@mode == "lines" && nrow(bins) > 1L) 0 else 1
-      ),
-      z = 3
-    ))
-    curve[["emphasis"]] <- list(itemStyle = list(opacity = 1))
-    curve[["dimensions"]] <- c(
-      as.list(c("probability", "observed", "Count")),
-      lapply(
-        c(
-          "Mean probability",
-          "Observed proportion",
-          "Bin lower",
-          "Bin upper",
-          "Brier"
-        ),
-        function(label) {
-          list(name = label, displayName = label, type = "ordinal")
-        }
-      ),
-      list("Missing pairs")
-    )
-    curve[["encode"]] <- list(
-      x = 0L,
-      y = 1L,
-      tooltip = as.list(c(3L, 4L, 2L, 5L, 6L, 7L, 8L))
-    )
-    series[[length(series) + 1L]] <- curve
-    if (config@rug) {
-      # Symbol offsets are pixels: ticks stay inside the bottom edge under
-      # resize and SVG export, without extending the probability-axis range.
-      rug <- to_list(ScatterSeries(
-        name = labels[[i]],
-        data = lapply(g[["probability"]], function(p) list(p, 0, fmt(p))),
-        symbol = "rect",
-        symbol_size = c(1, config@rug_size),
-        symbol_offset = c(0, -config@rug_size / 2),
-        clip = FALSE,
-        item_style = ItemStyle(color = color, opacity = config@rug_opacity),
-        z = 2
-      ))
-      rug[["dimensions"]] <- list(
-        "probability",
-        "baseline",
-        list(name = "Probability", type = "ordinal")
-      )
-      rug[["encode"]] <- list(x = 0L, y = 1L, tooltip = list(2L))
-      series[[length(series) + 1L]] <- rug
-    }
-  }
-  grid <- to_list(Grid(
-    left = 70,
-    right = 24,
-    top = if (is.null(config@title)) 25 else 50,
-    bottom = 65,
-    contain_label = FALSE
+calibration_json <- function(groups) {
+  as.character(jsonlite::toJSON(
+    list(
+      groups = lapply(groups, function(g) {
+        list(
+          name = jsonlite::unbox(g[["name"]]),
+          bins = as.list(g[["bins"]]),
+          probability = g[["probability"]],
+          brier = jsonlite::unbox(g[["brier"]]),
+          omitted = jsonlite::unbox(g[["omitted"]])
+        )
+      })
+    ),
+    auto_unbox = FALSE,
+    digits = NA
   ))
-  grid[["outerBoundsMode"]] <- "none"
-  EChartsOption(
-    title = Title(text = config@title, left = "center", text_align = "center"),
-    grid = grid,
-    x_axis = Axis(
-      type = "value",
-      min = 0,
-      max = 1,
-      name = config@xlab,
-      name_location = "middle",
-      name_gap = 30
-    ),
-    y_axis = Axis(
-      type = "value",
-      min = 0,
-      max = 1,
-      name = config@ylab,
-      name_location = "middle",
-      name_gap = 45
-    ),
-    legend = Legend(
-      show = config@legend,
-      orient = "horizontal",
-      padding = 0,
-      data = as.list(labels),
-      item_style = ItemStyle(opacity = 1),
-      text_style = TextStyle(font_size = 12, line_height = 14)
-    ),
-    tooltip = Tooltip(trigger = "item", confine = TRUE),
-    series = series
-  )
 }
 
 #' Draw Binary Probability Calibration

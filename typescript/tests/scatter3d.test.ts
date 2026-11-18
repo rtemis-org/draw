@@ -115,6 +115,38 @@ describe("buildScatter3DOption", () => {
   });
 });
 
+describe("surfaces", () => {
+  it("lists a surface not named after a group in the legend", () => {
+    const surface = {
+      name: "Fit",
+      x: [0, 1],
+      y: [0, 1],
+      z: [
+        [0, 1],
+        [1, 2],
+      ],
+    };
+    const option = buildScatter3DOption(
+      { columns: { x: [0, 1], y: [0, 1], z: [0, 1], g: ["a", "b"] }, surfaces: [surface] },
+      { x: "x", y: "y", z: "z", group: "g", fit_alpha: 0.2 },
+    );
+    expect(option.legend).toEqual({ data: ["a", "b", "Fit"] });
+    const series = seriesOf(option).at(-1) as Series;
+    expect(series).toMatchObject({
+      type: "surface",
+      dataShape: [2, 2],
+      itemStyle: { opacity: 0.2 },
+    });
+    expect(series.data).toEqual([
+      [0, 0, 0],
+      [1, 0, 1],
+      [0, 1, 1],
+      [1, 1, 2],
+    ]);
+    expect(option.zAxis3D).toMatchObject({ min: 0, max: 2 });
+  });
+});
+
 describe("surface layers", () => {
   const option = buildScatter3DOption(
     { columns: { x: [0, 1], y: [0, 1], z: [0, 1] } },

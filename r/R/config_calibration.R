@@ -253,6 +253,9 @@ setup_CalibrationConfig <- function(
 
 method(resolve, CalibrationConfig) <- function(config, data = NULL, ...) config
 method(to_list, CalibrationConfig) <- function(x) chart_config_to_list(x)
+# The request for the calibration builder (spec: draw/shared-builders#calibration):
+# R bins the probabilities, and the builder draws the bins. The builder's
+# aspect hint keeps the plotting area square.
 method(compile, CalibrationConfig) <- function(
   config,
   data = NULL,
@@ -260,6 +263,10 @@ method(compile, CalibrationConfig) <- function(
   ...
 ) {
   check_dots_empty(...)
-  calibration_option(config, data)
+  BuildRequest(
+    type = "calibration",
+    data = calibration_json(calibration_data(config, data)),
+    config = config_members(config),
+    appearance = list()
+  )
 }
-method(render_meta, CalibrationConfig) <- square_render_meta

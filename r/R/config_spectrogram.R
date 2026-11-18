@@ -4,9 +4,7 @@
 
 # The spectrogram's config. Bound data is a structure -- either a raw signal
 # vector or a precomputed frequency-by-time matrix -- so it declares no column
-# names. Its render hints are the two theme-matched color arrays the browser
-# picks between by dark mode, which is the interface's business and never
-# serialized.
+# names.
 
 # %% SpectrogramConfig ----
 #' Spectrogram Configuration
@@ -101,8 +99,16 @@ SpectrogramConfig <- new_class(
         description = "Time axis limits."
       ),
       # -- appearance --------------------------------------------------------
-      freq_unit = prop_string("Hz", description = "Frequency axis unit."),
-      time_unit = prop_string("s", description = "Time axis unit."),
+      freq_unit = prop_string(
+        "Hz",
+        enum = c("Hz", "kHz"),
+        description = "Frequency axis unit."
+      ),
+      time_unit = prop_string(
+        "s",
+        enum = c("s", "ms"),
+        description = "Time axis unit."
+      ),
       colormap = prop_string(
         "magma",
         vector = TRUE,
@@ -271,95 +277,25 @@ method(resolve, SpectrogramConfig) <- function(config, data = NULL, ...) {
 }
 
 
-# %% spectrogram_built ----
-#' Build a spectrogram's option and render hints together
-#'
-#' Reached two ways: through `compile()`, which has already materialized the
-#' data and resolved the config, and directly from the `draw()` method, which
-#' has not. So it does both itself. Neither is wasted work the first way round:
-#' `config_data()` returns data it is handed, and `resolve()` is idempotent.
-#'
-#' @param config [SpectrogramConfig]: The chart configuration.
-#' @param data Optional Numeric or Matrix: Signal or spectrogram matrix.
-#' @param theme Optional [Theme], list, or `NA`: Supplies the diverging
-#'   colormap's sign colors and backgrounds.
-#'
-#' @return Named list: `option` and `render`.
-#'
-#' @author EDG
-#' @keywords internal
-#' @noRd
-spectrogram_built <- function(config, data = NULL, theme = NULL) {
-  bound <- config_data(config, data)
-  config <- resolve(config, data = bound)
-  spectrogram_option(
-    x = bound,
-    sample_rate = config@sample_rate,
-    n_fft = config@n_fft,
-    window = config@window,
-    overlap = config@overlap,
-    power = config@power,
-    db = config@db,
-    db_range = config@db_range,
-    freq_scale = config@freq_scale,
-    freq_range = config@freq_range,
-    freq_unit = config@freq_unit,
-    time_range = config@time_range,
-    time_unit = config@time_unit,
-    colormap = config@colormap,
-    colormap_reverse = config@colormap_reverse,
-    n_colors = config@n_colors,
-    zlim = config@zlim,
-    show_colorbar = config@show_colorbar,
-    colorbar_title = config@colorbar_title,
-    title = config@title,
-    xlab = config@xlab,
-    ylab = config@ylab,
-    margins = config_margins(config),
-    theme = theme
-  )
-} # /rtemis.draw::spectrogram_built
-
-
 # %% compile.SpectrogramConfig ----
+# The request for the spectrogram builder (spec: draw/shared-builders#spectrogram):
+# R computes the spectrum, and the builder draws it.
 method(compile, SpectrogramConfig) <- function(
   config,
   data = NULL,
   theme = NULL,
   ...
 ) {
-  spectrogram_built(config, data, theme = theme)[["option"]]
+  spectrogram_request(config, data, theme = theme)
 }
 
 
-# %% draw.SpectrogramConfig ----
-# Overrides the generic method so the two theme-matched color arrays reach the
-# browser, which picks between them by dark mode.
-method(draw, SpectrogramConfig) <- function(
-  option,
-  theme = NULL,
-  width = NULL,
-  height = NULL,
-  element_id = NULL,
-  filename = NULL,
-  animation = NULL,
-  ...,
-  data = NULL
-) {
-  built <- spectrogram_built(option, data, theme = theme)
-  draw(
-    built[["option"]],
-    theme = theme,
-    width = width,
-    height = height,
-    element_id = element_id,
-    filename = filename,
-    animation = animation,
-    meta = c(
-      render_meta(option, built[["option"]]),
-      built[["render"]][["meta"]],
-      list(legendTarget = "visualMap")
-    ),
-    ...
+# %% render_meta.SpectrogramConfig ----
+# The widget places the color scale as the legend, and reserves 54 pixels for
+# it at the right when no margin is set.
+method(render_meta, SpectrogramConfig) <- function(config, option) {
+  list(
+    legendTarget = "visualMap",
+    legendReserveRight = if (is.null(config_margins(config))) 54 else 0
   )
 }

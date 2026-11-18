@@ -380,7 +380,7 @@ fit_surface <- function(x, y, z, name, config) {
   }
   grid_x <- seq(min(x), max(x), length.out = config@n_fit)
   grid_y <- seq(min(y), max(y), length.out = config@n_fit)
-  # expand.grid varies x fastest, which fills the matrix one column per y.
+  # expand.grid varies x first, so the predictions fill one column per y.
   pred <- fit_model_values(
     data.frame(x = x, y = y),
     z,

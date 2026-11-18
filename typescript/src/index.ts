@@ -11,6 +11,7 @@
 import { buildA3Option } from "./charts/a3/index.ts";
 import { buildBarOption } from "./charts/bar/index.ts";
 import { buildBoxplotOption } from "./charts/boxplot/index.ts";
+import { buildCalibrationOption } from "./charts/calibration/index.ts";
 import { buildConfusionOption } from "./charts/confusion/index.ts";
 import { buildPrOption, buildRocOption, curveAspect } from "./charts/curves/index.ts";
 import { buildDensityOption } from "./charts/density/index.ts";
@@ -23,6 +24,7 @@ import { buildSankeyOption } from "./charts/sankey/index.ts";
 import { buildScatterOption, scatterAspect } from "./charts/scatter/index.ts";
 import { buildScatter3DOption } from "./charts/scatter3d/index.ts";
 import { buildSignificanceOption } from "./charts/significance/index.ts";
+import { buildSpectrogramOption } from "./charts/spectrogram/index.ts";
 import { buildSurvivalOption } from "./charts/survival/index.ts";
 import { buildTimeSeriesOption } from "./charts/timeseries/index.ts";
 
@@ -52,6 +54,16 @@ export {
   buildBoxplotOption,
   radicalInverse,
 } from "./charts/boxplot/index.ts";
+export type {
+  CalibrationBins,
+  CalibrationChartConfig,
+  CalibrationData,
+  CalibrationGroup,
+} from "./charts/calibration/index.ts";
+export {
+  buildCalibrationOption,
+  CALIBRATION_CHART_CONFIG_MEMBERS,
+} from "./charts/calibration/index.ts";
 export type {
   ConfusionAppearance,
   ConfusionChartConfig,
@@ -199,6 +211,16 @@ export {
   significanceGroupNames,
 } from "./charts/significance/index.ts";
 export type {
+  SpectrogramAppearance,
+  SpectrogramChartConfig,
+  SpectrogramData,
+} from "./charts/spectrogram/index.ts";
+export {
+  buildSpectrogramOption,
+  SPECTROGRAM_CHART_CONFIG_MEMBERS,
+  spectrogramColors,
+} from "./charts/spectrogram/index.ts";
+export type {
   SurvivalAppearance,
   SurvivalChartConfig,
   SurvivalCurve,
@@ -228,6 +250,8 @@ export {
   sizeKeyValues,
 } from "./layout/keys.ts";
 export { colorRamp, dark3, divergingRamp, hcl } from "./shared/color.ts";
+export type { ColormapName } from "./shared/colormaps.ts";
+export { COLORMAPS } from "./shared/colormaps.ts";
 export type { FitCurve, FitMembers } from "./shared/fit.ts";
 export { FIT_MEMBERS, fitLabel } from "./shared/fit.ts";
 export { ddSci, formatNumber, SIGNIFICANT_DIGITS } from "./shared/format.ts";
@@ -264,6 +288,7 @@ export const builders = Object.freeze({
   a3: buildA3Option,
   bar: buildBarOption,
   boxplot: buildBoxplotOption,
+  calibration: buildCalibrationOption,
   confusion: buildConfusionOption,
   density: buildDensityOption,
   gantt: buildGanttOption,
@@ -277,6 +302,7 @@ export const builders = Object.freeze({
   scatter: buildScatterOption,
   scatter3d: buildScatter3DOption,
   significance: buildSignificanceOption,
+  spectrogram: buildSpectrogramOption,
   survival: buildSurvivalOption,
   timeseries: buildTimeSeriesOption,
 });
@@ -286,6 +312,7 @@ export const builders = Object.freeze({
  * that sizes its surface before drawing.
  */
 export const aspectHints = Object.freeze({
+  calibration: curveAspect,
   line: lineAspect,
   pr: curveAspect,
   roc: curveAspect,

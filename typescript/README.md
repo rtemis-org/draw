@@ -61,6 +61,12 @@ Pie charts (`buildPieOption()`) take a table of labels and values. Rows with the
 
 Time series (`buildTimeSeriesOption()`) take a time column and value columns, sort each series by time, and draw its observations with an optional rolling summary (`rollingValues()`: mean, median, minimum, maximum, or sum over a window of observations), values on a right axis, zeitgeber labels, and shading of flagged runs. The zeitgeber labels are a custom series whose renderer `registerRenderers()` registers.
 
+3D scatters (`buildScatter3DOption()`) take numeric x, y, and z columns and draw ECharts-GL points, paths through consecutive rows of each group, or both, with the surfaces the host fitted (`surfaces`); `appendLayers()` widens the 3D axes to a surface layer. The option needs the echarts-gl extension.
+
+Spectrograms (`buildSpectrogramOption()`) take a spectrum matrix with its times and frequencies, the transform computed by the host, and apply the log frequency scale, ranges, units, and a color scale from the stored viridisLite schemes (`COLORMAPS`), a diverging scale, or given colors.
+
+Calibration charts (`buildCalibrationOption()`) take the bins the host computed per group and draw each group's curve, named with its Brier score, its probability rug, and the diagonal on a square plotting area.
+
 Heatmaps (`buildHeatmapOption()`) take a matrix the host prepared, with its labels, the trees the host computed in R's `hclust` form, cell notes, and color tracks. The builder orders the cells by the trees and draws them on a continuous color scale, with dendrogram panels, branch colors by cluster (`branchColors()`), and color tracks, whose renderers `registerRenderers()` registers. `heatmapHints()` gives the cells' layout for a host that fits square cells. `colorRamp()`, `divergingRamp()`, and `dark3()` reproduce R's `colorRampPalette()`, rtemis.draw's diverging scale, and `hcl.colors(n, "Dark 3")`.
 
 `boxplotStats(values, options)` computes one box's statistics as rtemis.draw does (type-7 quartiles or Tukey's hinges, whiskers to the last value within `whisker` IQR), for a host that summarizes values in memory; with `mean_marker`, the boxplot builder marks each cell's `mean` with a diamond.

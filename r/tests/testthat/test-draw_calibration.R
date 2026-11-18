@@ -47,7 +47,7 @@ test_that("quantile calibration merges tied boundaries and handles constant scor
     expect_equal(g[["bins"]][["upper"]], score)
     widget <- draw_calibration(d, mode = "lines")
     expect_equal(
-      widget[["x"]][["option"]][["series"]][[2L]][["itemStyle"]][["opacity"]],
+      raw_option(widget)[["series"]][[2L]][["itemStyle"]][["opacity"]],
       1
     )
   }
@@ -128,7 +128,7 @@ test_that("calibration direct and config paths share native lines, rugs, and ful
   cfg <- setup_CalibrationConfig(n_bins = 2L, digits = 2L, palette = "#123456")
   direct <- draw_calibration(d, n_bins = 2L, digits = 2L, palette = "#123456")
   expect_identical(direct[["x"]], draw(cfg, data = d)[["x"]])
-  option <- direct[["x"]][["option"]]
+  option <- raw_option(direct)
   expect_length(option[["series"]], 3L)
   expect_equal(option[["series"]][[2L]][["data"]][[1L]][[1L]], .123456789)
   expect_identical(option[["series"]][[2L]][["data"]][[1L]][[4L]], "0.12")
@@ -145,14 +145,14 @@ test_that("calibration direct and config paths share native lines, rugs, and ful
     "#123456"
   )
   expect_length(
-    draw_calibration(d, diagonal = FALSE, rug = FALSE)[["x"]][["option"]][[
-      "series"
-    ]],
+    raw_option(draw_calibration(d, diagonal = FALSE, rug = FALSE))[["series"]],
     1L
   )
-  marker <- draw_calibration(d, mode = "markers", show_brier = FALSE)[["x"]][[
-    "option"
-  ]]
+  marker <- raw_option(draw_calibration(
+    d,
+    mode = "markers",
+    show_brier = FALSE
+  ))
   expect_equal(marker[["series"]][[2L]][["lineStyle"]][["opacity"]], 0)
   expect_identical(marker[["legend"]][["data"]], list("Sample"))
   wire <- widget_payload_json(direct)
@@ -172,7 +172,7 @@ test_that("calibration observation tables support explicit group bindings and po
   )
   names(d)[[3L]] <- "group"
   expect_length(
-    draw_calibration(d)[["x"]][["option"]][["legend"]][["data"]],
+    raw_option(draw_calibration(d))[["legend"]][["data"]],
     2L
   )
   expect_identical(
@@ -198,8 +198,8 @@ test_that("calibration SVG retains actual curve and rug marks", {
     expect_match(svg, "Brier", fixed = TRUE)
     expect_match(svg, "#123456", fixed = TRUE)
     expect_false(grepl("<image|NaN|Infinity", svg))
-    # Compare with the native rug-free scene: the additional paths must be
-    # actual marks, not just a nonempty SVG or retained legend text.
+    # Compare with the rug-free scene: the rug adds one path per
+    # probability.
     with_rug <- lengths(regmatches(svg, gregexpr("<path", svg, fixed = TRUE)))
     save_drawing(
       draw_calibration(d, n_bins = 2L, rug = FALSE, theme = theme),

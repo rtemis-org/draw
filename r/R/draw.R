@@ -1822,31 +1822,6 @@ draw_histogram <- function(
   )
 }
 
-# Build a diverging color palette where the midpoint color falls exactly at
-# value 0, even when zlim is asymmetric (e.g. c(-0.74, 1.0)).
-# Stops are allocated proportionally: abs(zlim[1])/span of the stops cover the
-# negative side, the rest cover the positive side.
-#
-# @param neg_color Character: Color at zlim[1].
-# @param mid_color Character: Color at 0.
-# @param pos_color Character: Color at zlim[2].
-# @param zlim Numeric: Length-2 vector c(min, max) with zlim[1] < 0 < zlim[2].
-# @param n Integer: Total number of color stops (odd is conventional).
-# @return Character vector of hex colors of length n.
-# @keywords internal
-# @noRd
-diverging_palette <- function(neg_color, mid_color, pos_color, zlim, n = 101L) {
-  span <- zlim[[2L]] - zlim[[1L]]
-  n_neg <- round(abs(zlim[[1L]]) / span * (n - 1L)) + 1L
-  n_neg <- max(2L, min(n - 1L, n_neg))
-  n_pos <- n - n_neg + 1L
-  n_pos <- max(2L, n_pos)
-  neg_ramp <- grDevices::colorRampPalette(c(neg_color, mid_color))(n_neg)
-  pos_ramp <- grDevices::colorRampPalette(c(mid_color, pos_color))(n_pos)
-  # Remove the duplicated midpoint that both ramps share
-  c(neg_ramp, pos_ramp[-1L])
-}
-
 # -- draw_heatmap ---------------------------------------------------------------
 
 #' Draw a Heatmap

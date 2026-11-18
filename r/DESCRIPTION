@@ -39,8 +39,7 @@ Imports:
     signal,
     stats,
     tools,
-    utils,
-    viridisLite
+    utils
 Suggests:
     data.table,
     jsonvalidate (>= 1.5.0),

@@ -26,78 +26,6 @@ test_that(".specgram_window errors when custom vector length mismatches n", {
 })
 
 # ---------------------------------------------------------------------------
-# .spectrogram_palette
-# ---------------------------------------------------------------------------
-
-test_that(".spectrogram_palette returns correct length for viridis names", {
-  for (nm in c(
-    "magma",
-    "inferno",
-    "plasma",
-    "viridis",
-    "cividis",
-    "mako",
-    "rocket",
-    "turbo"
-  )) {
-    pal <- rtemis.draw:::.spectrogram_palette(nm, 128L, FALSE, c(0, 1))
-    expect_length(pal, 128L)
-    expect_true(all(grepl("^#", pal)))
-  }
-})
-
-test_that(".spectrogram_palette respects reverse flag", {
-  fwd <- rtemis.draw:::.spectrogram_palette("magma", 64L, FALSE, c(0, 1))
-  rev_pal <- rtemis.draw:::.spectrogram_palette("magma", 64L, TRUE, c(0, 1))
-  expect_identical(fwd, rev(rev_pal))
-})
-
-test_that(".spectrogram_palette diverging returns dark_variant attribute", {
-  pal <- rtemis.draw:::.spectrogram_palette("diverging", 64L, FALSE, c(-1, 1))
-  expect_length(pal, 64L)
-  dark <- attr(pal, "dark_variant")
-  expect_length(dark, 64L)
-  # Light and dark variants share the same endpoint colours but differ at the
-  # midpoint (white vs dark background), so compare middle elements.
-  mid <- as.integer(ceiling(length(pal) / 2L))
-  expect_false(identical(pal[[mid]], dark[[mid]]))
-})
-
-test_that(".spectrogram_palette diverging symmetrises zlim around 0", {
-  # c(-1.5, 2) is asymmetric but both endpoints have |max| = 2, so after
-  # symmetrization both calls produce the same palette as c(-2, 2).
-  sym <- rtemis.draw:::.spectrogram_palette("diverging", 101L, FALSE, c(-2, 2))
-  asym <- rtemis.draw:::.spectrogram_palette(
-    "diverging",
-    101L,
-    FALSE,
-    c(-1.5, 2)
-  )
-  expect_identical(sym, asym)
-  expect_identical(
-    attr(sym, "dark_variant"),
-    attr(asym, "dark_variant")
-  )
-})
-
-test_that(".spectrogram_palette accepts custom hex vector", {
-  pal <- rtemis.draw:::.spectrogram_palette(
-    c("#000000", "#ffffff"),
-    50L,
-    FALSE,
-    c(0, 1)
-  )
-  expect_length(pal, 50L)
-})
-
-test_that(".spectrogram_palette errors on unknown name", {
-  expect_error(
-    rtemis.draw:::.spectrogram_palette("unknown_pal", 64L, FALSE, c(0, 1)),
-    class = "rtemis_error"
-  )
-})
-
-# ---------------------------------------------------------------------------
 # draw_spectrogram — input validation
 # ---------------------------------------------------------------------------
 
@@ -221,22 +149,23 @@ test_that("draw_spectrogram uses category axes and integer-indexed data", {
   skip_if_not_installed("signal")
   sig <- signal::chirp(seq(0, 0.5, by = 1 / 4000), 100, 0.5, 500)
   w <- draw_spectrogram(sig, sample_rate = 4000)
-  opt <- w[["x"]][["option"]]
+  expect_identical(w[["x"]][["build"]][["type"]], "spectrogram")
+  opt <- raw_option(w)
 
   expect_identical(opt[["xAxis"]][["type"]], "category")
   expect_identical(opt[["yAxis"]][["type"]], "category")
 
   # First data point: [0, 0, value] — both indices are 0
   first <- opt[["series"]][[1L]][["data"]][[1L]]
-  expect_identical(first[[1L]], 0L)
-  expect_identical(first[[2L]], 0L)
+  expect_equal(first[[1L]], 0)
+  expect_equal(first[[2L]], 0)
 })
 
 test_that("draw_spectrogram category axis label count matches matrix dims", {
   skip_if_not_installed("signal")
   sig <- signal::chirp(seq(0, 0.5, by = 1 / 4000), 100, 0.5, 500)
   w <- draw_spectrogram(sig, sample_rate = 4000, n_fft = 64L)
-  opt <- w[["x"]][["option"]]
+  opt <- raw_option(w)
 
   n_time <- length(opt[["xAxis"]][["data"]])
   n_freq <- length(opt[["yAxis"]][["data"]])
@@ -326,35 +255,51 @@ test_that("draw_spectrogram accepts a complex matrix (raw STFT)", {
   w <- draw_spectrogram(sg[["S"]], time = sg[["t"]], frequency = sg[["f"]])
   expect_s3_class(w, "htmlwidget")
 })
-test_that("custom and diverging palettes reverse both theme variants", {
-  custom <- c("#000000", "#ffffff")
+test_that("the diverging scale centers on the theme background and reverses", {
+  values <- matrix(c(-2, -1, 0, 1, 2, 2), 2L)
+  colors <- function(widget) {
+    unlist(raw_option(widget)[["visualMap"]][["inRange"]][["color"]])
+  }
+  forward <- draw_spectrogram(
+    values,
+    db = FALSE,
+    colormap = "diverging",
+    n_colors = 5L,
+    theme = theme_light()
+  )
+  backward <- draw_spectrogram(
+    values,
+    db = FALSE,
+    colormap = "diverging",
+    n_colors = 5L,
+    colormap_reverse = TRUE,
+    theme = theme_light()
+  )
+  expect_identical(colors(backward), rev(colors(forward)))
   expect_identical(
-    .spectrogram_palette(custom, 3L, TRUE, c(0, 1)),
+    toupper(colors(forward)[[3L]]),
+    toupper(theme_light()@background_color)
+  )
+  expect_identical(
+    unlist(raw_option(draw_spectrogram(
+      values,
+      db = FALSE,
+      colormap = c("#000000", "#ffffff"),
+      n_colors = 3L,
+      colormap_reverse = TRUE
+    ))[["visualMap"]][["inRange"]][["color"]]),
     c("#FFFFFF", "#7F7F7F", "#000000")
   )
-  for (limits in list(NULL, c(0, 2))) {
-    forward <- .spectrogram_palette("diverging", 5L, FALSE, limits)
-    backward <- .spectrogram_palette("diverging", 5L, TRUE, limits)
-    expect_identical(as.vector(backward), rev(as.vector(forward)))
-    expect_identical(
-      attr(backward, "dark_variant"),
-      rev(attr(forward, "dark_variant"))
-    )
-  }
-  expect_error(
-    .spectrogram_palette(1:3, 3L, FALSE, c(0, 1)),
-    "colormap",
-    class = "rtemis_type_error"
-  )
+  expect_error(draw_spectrogram(values, colormap = "jet"), "colormap")
 })
 
-test_that("spectrogram option validates scalar controls and matrix dimensions", {
+test_that("spectrogram data validates scalar controls and matrix dimensions", {
   values <- matrix(1:6, 2L)
-  for (name in c("power", "db", "colormap_reverse", "show_colorbar")) {
+  for (name in c("power", "db")) {
     for (bad in list(1, c(TRUE, FALSE))) {
       expect_error(
         do.call(
-          spectrogram_option,
+          spectrogram_data,
           c(list(x = values), setNames(list(bad), name))
         ),
         name,
@@ -362,63 +307,94 @@ test_that("spectrogram option validates scalar controls and matrix dimensions", 
       )
     }
   }
-  expect_error(spectrogram_option(values, n_colors = 1), "n_colors")
-  expect_error(spectrogram_option(values, time = c(1, NA, 3)), "time")
+  for (name in c("colormap_reverse", "show_colorbar")) {
+    expect_error(do.call(
+      draw_spectrogram,
+      c(list(x = values), setNames(list(1), name))
+    ))
+  }
+  expect_error(spectrogram_data(values, n_colors = 1), "n_colors")
+  expect_error(spectrogram_data(values, time = c(1, NA, 3)), "time")
   expect_error(
-    spectrogram_option(array(1:8, c(2L, 2L, 2L))),
+    spectrogram_data(array(1:8, c(2L, 2L, 2L))),
     "matrix",
     class = "rtemis_type_error"
   )
   expect_error(
-    spectrogram_option(values, freq_scale = "log", frequency = c(-1, 0)),
-    "positive-frequency"
+    spectrogram_data(values, freq_scale = "log", frequency = c(-1, 0)),
+    "above 0 Hz"
   )
   expect_error(
-    spectrogram_option(values, time_range = c(10, 20)),
+    spectrogram_data(values, time_range = c(10, 20)),
     "No time frames"
   )
   expect_error(
-    spectrogram_option(matrix(NA_real_, 2L, 3L), db = FALSE),
+    spectrogram_data(matrix(NA_real_, 2L, 3L), db = FALSE),
     "no finite values"
   )
 })
 
-test_that("spectrogram option validates raw-signal sampling and window controls", {
+test_that("spectrogram data validates raw-signal sampling and window controls", {
   signal <- sin(seq(0, 4 * pi, length.out = 32L))
-  expect_error(spectrogram_option(signal, sample_rate = 0), "sample_rate")
+  expect_error(spectrogram_data(signal, sample_rate = 0), "sample_rate")
   for (bad in list("eight", NA_real_, c(4, 8))) {
     expect_error(
-      spectrogram_option(signal, sample_rate = 32, n_fft = bad),
+      spectrogram_data(signal, sample_rate = 32, n_fft = bad),
       "n_fft"
     )
   }
   expect_error(
-    spectrogram_option(signal, sample_rate = 32, n_fft = 1),
+    spectrogram_data(signal, sample_rate = 32, n_fft = 1),
     "n_fft",
     class = "rtemis_range_error"
   )
   for (bad in list("half", NA_real_, c(1, 2))) {
     expect_error(
-      spectrogram_option(signal, sample_rate = 32, n_fft = 8, overlap = bad),
+      spectrogram_data(signal, sample_rate = 32, n_fft = 8, overlap = bad),
       "overlap"
     )
   }
 })
 
 test_that("spectrogram titles reserve top space and time filtering preserves cells", {
-  result <- spectrogram_option(
+  option <- raw_option(draw_spectrogram(
     matrix(1:6, 2L),
     db = FALSE,
     title = "Spectrum",
     time = c(0, 1, 2),
     time_range = c(.5, 2)
-  )
-  option <- to_list(result[["option"]])
-  expect_identical(option[["grid"]][["top"]], "50")
+  ))
+  expect_equal(option[["grid"]][["top"]], 50)
   expect_identical(option[["title"]][["text"]], "Spectrum")
   expect_length(option[["xAxis"]][["data"]], 2L)
   expect_equal(
     vapply(option[["series"]][[1L]][["data"]], `[[`, numeric(1), 3L),
     c(3, 4, 5, 6)
+  )
+})
+
+test_that("a config's fractional overlap reaches the transform in samples", {
+  skip_if_not_installed("signal")
+  sig <- sin(seq(0, 40 * pi, length.out = 512L))
+  config <- setup_SpectrogramConfig(
+    sample_rate = 512,
+    n_fft = 64L,
+    overlap = .75
+  )
+  data <- jsonlite::fromJSON(compile(config, sig)@data)
+  expect_length(
+    data[["time"]],
+    length(signal::specgram(
+      sig,
+      n = 64L,
+      Fs = 512,
+      overlap = 48L
+    )[["t"]])
+  )
+  expect_equal(
+    draw_spectrogram(sig, sample_rate = 512, n_fft = 64L, overlap = 48L)[[
+      "x"
+    ]][["build"]][["data"]],
+    compile(config, sig)@data
   )
 })

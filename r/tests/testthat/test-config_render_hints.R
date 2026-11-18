@@ -56,8 +56,8 @@ test_that("compile returns the option, matching the vector path", {
     draw_heatmap(hm())[["x"]][["build"]]
   )
   expect_identical(
-    compile(setup_SpectrogramConfig(), data = spec_m()),
-    spectrogram_option(x = spec_m())[["option"]]
+    build_payload(compile(setup_SpectrogramConfig(), data = spec_m())),
+    draw_spectrogram(spec_m())[["x"]][["build"]]
   )
 })
 

@@ -14,6 +14,7 @@ BUILDER_TYPES <- c(
   "a3",
   "bar",
   "boxplot",
+  "calibration",
   "confusion",
   "density",
   "gantt",
@@ -27,6 +28,7 @@ BUILDER_TYPES <- c(
   "scatter",
   "scatter3d",
   "significance",
+  "spectrogram",
   "survival",
   "timeseries"
 )

@@ -186,6 +186,7 @@ draw_annotate <- function(
 CARTESIAN_BUILDER_TYPES <- c(
   "bar",
   "boxplot",
+  "calibration",
   "density",
   "gantt",
   "histogram",

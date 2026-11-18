@@ -35,7 +35,7 @@ test_that("calibration configuration validates and round-trips its portable cont
     path <- tempfile(fileext = ".json")
     write_chart_config(cfg, path, complete = complete)
     back <- read_chart_config(path)
-    expect_identical(to_list(compile(back, data)), to_list(compile(cfg, data)))
+    expect_identical(compile(back, data), compile(cfg, data))
     expect_identical(back@origin, cfg@origin)
     unlink(path)
   }
@@ -62,9 +62,17 @@ test_that("calibration configuration validates and round-trips its portable cont
     "calibration",
     structural = "type"
   ))
-  expect_identical(draw(cfg, data = data)[["x"]][["aspect"]][["ratio"]], 1)
-  expect_null(draw(
-    setup_CalibrationConfig(square = FALSE),
-    data = data.frame(observed = 1, probability = .8)
-  )[["x"]][["aspect"]])
+  # The builder's aspect hint keeps the plotting area square.
+  skip_if_no_node()
+  expect_identical(
+    built_option(draw(cfg, data = data), what = "aspect")[["ratio"]],
+    1L
+  )
+  expect_null(built_option(
+    draw(
+      setup_CalibrationConfig(square = FALSE),
+      data = data.frame(observed = 1, probability = .8)
+    ),
+    what = "aspect"
+  ))
 })

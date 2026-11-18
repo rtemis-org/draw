@@ -216,23 +216,29 @@ test_that("heatmap and spectrogram scales fade to the theme's background", {
     expect_identical(midpoint(scale(w, TRUE)), "#202830")
   }
 
-  pal <- toupper(.spectrogram_palette("diverging", 11L, FALSE, c(-1, 1)))
-  expect_identical(pal[[1L]], SIGN_COLORS[["negative"]])
-  expect_identical(pal[[11L]], SIGN_COLORS[["positive"]])
-  pal <- .spectrogram_palette(
-    "diverging",
-    11L,
-    FALSE,
-    c(-1, 1),
-    theme = custom_theme(background_color = "#202830")
-  )
-  expect_identical(
-    toupper(c(pal[[1L]], pal[[6L]], pal[[11L]])),
-    toupper(unname(c(
-      custom_sign[["negative"]],
-      "#202830",
-      custom_sign[["positive"]]
-    )))
-  )
-  expect_identical(toupper(attr(pal, "dark_variant")[[6L]]), "#202830")
+  if (node_tests_enabled()) {
+    pal <- toupper(scale(
+      draw_spectrogram(m, db = FALSE, colormap = "diverging", n_colors = 11L),
+      FALSE
+    ))
+    expect_identical(pal[[1L]], SIGN_COLORS[["negative"]])
+    expect_identical(pal[[11L]], SIGN_COLORS[["positive"]])
+    w <- draw_spectrogram(
+      m,
+      db = FALSE,
+      colormap = "diverging",
+      n_colors = 11L,
+      theme = custom_theme(background_color = "#202830")
+    )
+    pal <- scale(w, FALSE)
+    expect_identical(
+      toupper(c(pal[[1L]], pal[[6L]], pal[[11L]])),
+      toupper(unname(c(
+        custom_sign[["negative"]],
+        "#202830",
+        custom_sign[["positive"]]
+      )))
+    )
+    expect_identical(toupper(scale(w, TRUE)[[6L]]), "#202830")
+  }
 })

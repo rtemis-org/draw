@@ -39,7 +39,7 @@ values remove every adjacent rectangle; they are not interpolated.
 \details{
 Coordinates are sorted together with the prediction matrix. SVG export uses
 the configured perspective or orthographic camera and splits intersecting polygons to order
-visible surfaces, paths and points. Dense or highly intersecting surfaces
+visible surfaces, paths, and points. Dense or highly intersecting surfaces
 may require a coarser prediction grid for practical vector output.
 }
 \examples{

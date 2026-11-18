@@ -41,131 +41,40 @@
   fn(n)
 }
 
-# Build a color vector for the ECharts visualMap component.
-#
-# Returns a character vector of hex colors.  For the "diverging" colormap an
-# additional "dark_variant" attribute carries the dark-theme version so the JS
-# binding can switch midpoint color on the fly (consistent with draw_heatmap).
-#
-# @param colormap Character(1) or Character(n>=2): colormap name or hex vector.
-# @param n_colors Integer: number of colors to generate.
-# @param reverse Logical: reverse colormap direction.
-# @param zlim Numeric[2]: data range (needed to split diverging colormap).
-# @param theme Optional Theme, list, or NA: supplies the diverging colormap's
-#   sign colors and backgrounds.
-# @return Character vector of hex colors.
-# @keywords internal
-# @noRd
-.spectrogram_palette <- function(
-  colormap,
-  n_colors,
-  reverse,
-  zlim,
-  theme = NULL
-) {
-  # viridisLite option letters (viridis() `option` parameter)
-  viridis_opts <- c(
-    magma = "A",
-    inferno = "B",
-    plasma = "C",
-    viridis = "D",
-    cividis = "E",
-    rocket = "F",
-    mako = "G",
-    turbo = "H"
-  )
+# Named color schemes of the spectrogram builder (@rtemis/draw's COLORMAPS),
+# and the diverging scale in the theme's sign colors.
+SPECTROGRAM_COLORMAPS <- c(
+  "magma",
+  "inferno",
+  "plasma",
+  "viridis",
+  "cividis",
+  "rocket",
+  "mako",
+  "turbo",
+  "diverging"
+)
 
-  if (is.character(colormap) && length(colormap) == 1L) {
-    # Named viridisLite colormap
-    if (colormap %in% names(viridis_opts)) {
-      return(viridisLite::viridis(
-        n_colors,
-        option = viridis_opts[[colormap]],
-        direction = if (reverse) -1L else 1L
-      ))
-    }
+# -- spectrogram_data ----------------------------------------------------------
 
-    # Diverging (theme-aware, like draw_heatmap)
-    if (identical(colormap, "diverging")) {
-      # Symmetrize zlim around 0 when data spans both signs so the midpoint
-      # color maps exactly to 0.
-      zlim_sym <- if (!is.null(zlim) && zlim[[1L]] < 0 && zlim[[2L]] > 0) {
-        m <- max(abs(zlim))
-        c(-m, m)
-      } else {
-        zlim %||% c(-1, 1)
-      }
-      sign <- theme_sign_colors(theme)
-      bg <- theme_backgrounds(theme)
-      cols_light <- diverging_palette(
-        sign[["negative"]],
-        bg[["light"]],
-        sign[["positive"]],
-        zlim_sym,
-        n = n_colors
-      )
-      cols_dark <- diverging_palette(
-        sign[["negative"]],
-        bg[["dark"]],
-        sign[["positive"]],
-        zlim_sym,
-        n = n_colors
-      )
-      if (reverse) {
-        cols_light <- rev(cols_light)
-        cols_dark <- rev(cols_dark)
-      }
-      attr(cols_light, "dark_variant") <- cols_dark
-      return(cols_light)
-    }
-
-    abort(
-      "`colormap` '",
-      colormap,
-      "' is not recognized. Named options: ",
-      paste(names(viridis_opts), collapse = ", "),
-      ", diverging. Or supply a character vector of >= 2 hex colors.",
-      class = c("rtemis_value_error", "rtemis_input_error")
-    )
-  }
-
-  # Custom color ramp (>= 2 hex strings supplied directly)
-  if (is.character(colormap) && length(colormap) >= 2L) {
-    cols <- grDevices::colorRampPalette(colormap)(n_colors)
-    if (reverse) {
-      cols <- rev(cols)
-    }
-    return(cols)
-  }
-
-  abort(
-    "`colormap` must be a named colormap string or a character vector ",
-    "of >= 2 hex colors.",
-    class = c("rtemis_type_error", "rtemis_input_error")
-  )
-}
-
-# -- draw_spectrogram -----------------------------------------------------------
-
-#' Build the render option and hints for a spectrogram
+#' The spectrogram builder's data from a signal or a spectrum matrix
 #'
-#' The single implementation shared by [draw_spectrogram()] and `compile()` on the
-#' corresponding [ChartConfig].
-#'
-#' Returns both the option and a `render` list, because this chart derives
-#' hints about the *display surface* from its own content. Those are the
-#' interface's business: they are handed to `draw()` and are never written
-#' into a config document, since a height or a container geometry computed
-#' for one surface is wrong on another.
+#' Validates the arguments, computes the short-time Fourier transform of a raw
+#' signal ([signal::specgram()]), takes the magnitude or power of a complex
+#' spectrum, and converts to decibels with the `db_range` floor. The builder
+#' applies the frequency scale, the ranges, the units, and the color scale;
+#' the ranges are checked here so that an empty range stops where the chart is
+#' set up.
 #'
 #' @inheritParams draw_spectrogram
 #'
-#' @return Named list: `option` (the [EChartsOption]) and `render` (hints for the caller).
+#' @return Named list: `time` (seconds), `frequency` (Hz), and `values`, the
+#'   matrix with one row per frequency, non-finite values as `NA`.
 #'
 #' @author EDG
 #' @keywords internal
 #' @noRd
-spectrogram_option <- function(
+spectrogram_data <- function(
   x,
   sample_rate = NULL,
   time = NULL,
@@ -178,23 +87,12 @@ spectrogram_option <- function(
   db_range = 80,
   freq_scale = "linear",
   freq_range = NULL,
-  freq_unit = "Hz",
   time_range = NULL,
-  time_unit = "s",
   colormap = "magma",
-  colormap_reverse = FALSE,
   n_colors = 256L,
   zlim = NULL,
-  show_colorbar = TRUE,
-  colorbar_title = NULL,
-  title = NULL,
-  xlab = NULL,
-  ylab = NULL,
-  margins = NULL,
-  verbosity = 1L,
-  theme = NULL
+  verbosity = 1L
 ) {
-  # -- 1. Validate scalar arguments ---------------------------------------------
   if (!is.numeric(x) && !is.complex(x)) {
     abort(
       "`x` must be a numeric or complex matrix (freq x time) ",
@@ -202,7 +100,6 @@ spectrogram_option <- function(
       class = c("rtemis_type_error", "rtemis_input_error")
     )
   }
-
   if (is.complex(x) && !is.matrix(x)) {
     abort(
       "`x` is a complex vector, which is not a valid raw signal. ",
@@ -211,36 +108,18 @@ spectrogram_option <- function(
       class = c("rtemis_type_error", "rtemis_input_error")
     )
   }
-
   is_raw_signal <- is.numeric(x) && is.vector(x) && !is.matrix(x)
-
   freq_scale <- match.arg(freq_scale, c("linear", "log"))
-  freq_unit <- match.arg(freq_unit, c("Hz", "kHz"))
-  time_unit <- match.arg(time_unit, c("s", "ms"))
-
-  if (!is.logical(power) || length(power) != 1L) {
-    abort(
-      "`power` must be a single logical value (TRUE or FALSE).",
-      class = c("rtemis_type_error", "rtemis_input_error")
-    )
-  }
-  if (!is.logical(db) || length(db) != 1L) {
-    abort(
-      "`db` must be a single logical value (TRUE or FALSE).",
-      class = c("rtemis_type_error", "rtemis_input_error")
-    )
-  }
-  if (!is.logical(colormap_reverse) || length(colormap_reverse) != 1L) {
-    abort(
-      "`colormap_reverse` must be a single logical value (TRUE or FALSE).",
-      class = c("rtemis_type_error", "rtemis_input_error")
-    )
-  }
-  if (!is.logical(show_colorbar) || length(show_colorbar) != 1L) {
-    abort(
-      "`show_colorbar` must be a single logical value (TRUE or FALSE).",
-      class = c("rtemis_type_error", "rtemis_input_error")
-    )
+  for (arg in c("power", "db")) {
+    v <- get(arg)
+    if (!is.logical(v) || length(v) != 1L || is.na(v)) {
+      abort(
+        "`",
+        arg,
+        "` must be a single logical value (TRUE or FALSE).",
+        class = c("rtemis_type_error", "rtemis_input_error")
+      )
+    }
   }
   if (
     !is.numeric(db_range) ||
@@ -266,9 +145,17 @@ spectrogram_option <- function(
       class = c("rtemis_value_error", "rtemis_input_error")
     )
   }
-  n_colors <- as.integer(n_colors)
-
-  # Validate freq_range / time_range / zlim (all must be length-2 increasing)
+  if (
+    !is.character(colormap) ||
+      (length(colormap) == 1L && !colormap %in% SPECTROGRAM_COLORMAPS)
+  ) {
+    abort(
+      "`colormap` must be one of ",
+      paste(SPECTROGRAM_COLORMAPS, collapse = ", "),
+      ", or a character vector of >= 2 hex colors.",
+      class = c("rtemis_value_error", "rtemis_input_error")
+    )
+  }
   validate_range <- function(r, arg) {
     if (is.null(r)) {
       return(invisible(NULL))
@@ -292,35 +179,17 @@ spectrogram_option <- function(
   validate_range(time_range, "time_range")
   validate_range(zlim, "zlim")
 
-  legend_reserve_right <- if (is.null(margins)) 54 else 0
-  # Auto margins if title is set
-  if (is.null(margins)) {
-    margins <- DEFAULT_MARGINS
-    margins[["right"]] <- "90"
-    if (!is.null(title)) {
-      margins[["top"]] <- "50"
-    }
-  }
-
-  # -- 2. STFT (raw signal) or matrix input ------------------------------------
   if (is_raw_signal) {
-    if (is.null(sample_rate)) {
-      abort(
-        "`sample_rate` is required when `x` is a raw signal vector. ",
-        "Provide the sampling rate in Hz, e.g. `sample_rate = 44100`.",
-        class = c("rtemis_value_error", "rtemis_input_error")
-      )
-    }
     if (
-      !is.numeric(sample_rate) ||
+      is.null(sample_rate) ||
+        !is.numeric(sample_rate) ||
         length(sample_rate) != 1L ||
         is.na(sample_rate) ||
         sample_rate <= 0
     ) {
       abort(
-        "`sample_rate` must be a single positive number (Hz). Got ",
-        paste(sample_rate, collapse = ", "),
-        ".",
+        "`sample_rate` is required when `x` is a raw signal vector, as one ",
+        "positive number in Hz, e.g. `sample_rate = 44100`.",
         class = c("rtemis_value_error", "rtemis_input_error")
       )
     }
@@ -351,7 +220,6 @@ spectrogram_option <- function(
         class = c("rtemis_range_error", "rtemis_input_error")
       )
     }
-
     win_vec <- .specgram_window(window, n_fft)
     if (
       !is.null(overlap) &&
@@ -375,7 +243,6 @@ spectrogram_option <- function(
         class = c("rtemis_range_error", "rtemis_input_error")
       )
     }
-
     sg <- signal::specgram(
       x,
       n = n_fft,
@@ -387,7 +254,6 @@ spectrogram_option <- function(
     freq_hz <- sg[["f"]]
     time_s <- sg[["t"]]
   } else {
-    # Pre-computed matrix (real or complex)
     if (!is.matrix(x)) {
       abort(
         "`x` must be a numeric or complex matrix (freq x time) ",
@@ -396,53 +262,41 @@ spectrogram_option <- function(
       )
     }
     S <- x
-    n_freq <- nrow(S)
-    n_time <- ncol(S)
-
     if (!is.null(time)) {
-      if (!is.numeric(time) || length(time) != n_time || anyNA(time)) {
+      if (!is.numeric(time) || length(time) != ncol(S) || anyNA(time)) {
         abort(
           "`time` must be a numeric vector of length ",
-          n_time,
+          ncol(S),
           " (= ncol(x)) with no NAs.",
           class = c("rtemis_value_error", "rtemis_input_error")
         )
       }
-      time_s <- time
-    } else {
-      time_s <- seq_len(n_time) - 1L
     }
-
     if (!is.null(frequency)) {
       if (
         !is.numeric(frequency) ||
-          length(frequency) != n_freq ||
+          length(frequency) != nrow(S) ||
           anyNA(frequency)
       ) {
         abort(
           "`frequency` must be a numeric vector of length ",
-          n_freq,
+          nrow(S),
           " (= nrow(x)) with no NAs.",
           class = c("rtemis_value_error", "rtemis_input_error")
         )
       }
-      freq_hz <- frequency
-    } else {
-      freq_hz <- seq_len(n_freq) - 1L
     }
+    time_s <- time %||% (seq_len(ncol(S)) - 1L)
+    freq_hz <- frequency %||% (seq_len(nrow(S)) - 1L)
   }
 
-  # -- 3. Magnitude / power spectrum -------------------------------------------
-  # For complex input (raw STFT), apply |S| or |S|^2.
-  # For a real matrix passed directly, treat as already computed and skip.
+  # A complex spectrum takes |S| or |S|^2; a real matrix is drawn as given.
   if (is.complex(S)) {
     amp <- Mod(S)
     spec <- if (power) amp^2 else amp
   } else {
     spec <- S
   }
-
-  # -- 4. dB conversion --------------------------------------------------------
   if (db) {
     if (!is.complex(S) && any(spec < 0, na.rm = TRUE)) {
       warn(
@@ -455,29 +309,27 @@ spectrogram_option <- function(
     eps <- .Machine[["double.eps"]]
     # 10*log10 for power, 20*log10 for amplitude - see @param power docs.
     spec <- if (power) 10 * log10(spec + eps) else 20 * log10(spec + eps)
-
     peak <- max(spec, na.rm = TRUE)
     spec <- pmax(spec, peak - db_range)
   }
+  spec[!is.finite(spec)] <- NA_real_
 
-  # -- 5. Log-frequency: drop DC (0 Hz, undefined in log scale) ---------------
-  if (freq_scale == "log") {
-    keep_f <- freq_hz > 0
-    if (!any(keep_f)) {
-      abort(
-        "No positive-frequency bins found for `freq_scale = 'log'`. ",
-        "This should not happen; please check the signal or frequency vector.",
-        class = c("rtemis_value_error", "rtemis_input_error")
-      )
-    }
-    spec <- spec[keep_f, , drop = FALSE]
-    freq_hz <- freq_hz[keep_f]
+  shown_f <- if (freq_scale == "log") {
+    freq_hz > 0
+  } else {
+    rep(TRUE, length(freq_hz))
   }
-
-  # -- 6. Range filtering ------------------------------------------------------
+  if (!any(shown_f)) {
+    abort(
+      "`freq_scale = 'log'` needs a frequency above 0 Hz.",
+      class = c("rtemis_value_error", "rtemis_input_error")
+    )
+  }
   if (!is.null(freq_range)) {
-    keep_f <- freq_hz >= freq_range[[1L]] & freq_hz <= freq_range[[2L]]
-    if (!any(keep_f)) {
+    shown_f <- shown_f &
+      freq_hz >= freq_range[[1L]] &
+      freq_hz <= freq_range[[2L]]
+    if (!any(shown_f)) {
       abort(
         "No frequency bins fall within `freq_range` [",
         freq_range[[1L]],
@@ -489,12 +341,9 @@ spectrogram_option <- function(
         class = c("rtemis_range_error", "rtemis_input_error")
       )
     }
-    spec <- spec[keep_f, , drop = FALSE]
-    freq_hz <- freq_hz[keep_f]
   }
   if (!is.null(time_range)) {
-    keep_t <- time_s >= time_range[[1L]] & time_s <= time_range[[2L]]
-    if (!any(keep_t)) {
+    if (!any(time_s >= time_range[[1L]] & time_s <= time_range[[2L]])) {
       abort(
         "No time frames fall within `time_range` [",
         time_range[[1L]],
@@ -506,75 +355,22 @@ spectrogram_option <- function(
         class = c("rtemis_range_error", "rtemis_input_error")
       )
     }
-    spec <- spec[, keep_t, drop = FALSE]
-    time_s <- time_s[keep_t]
   }
-
-  # -- 7. Log-frequency resampling ---------------------------------------------
-  # ECharts heatmap sizing is driven by getBandWidth(), which for category axes
-  # divides canvas pixels by the number of categories - giving correctly sized
-  # cells.  For value axes it divides by the axis value range, producing cells
-  # orders of magnitude too large or too small.  We therefore always use
-  # category axes (integer-indexed data), matching draw_heatmap's approach.
-  #
-  # For freq_scale = "log", we resample the spectrum matrix onto logarithmically
-  # spaced frequency bins (same count as the original) so the rendered rows are
-  # visually equidistant on a log scale.
-  if (freq_scale == "log") {
-    n_log_bins <- length(freq_hz)
-    freq_log <- exp(
-      seq(
-        log(freq_hz[[1L]]),
-        log(freq_hz[[n_log_bins]]),
-        length.out = n_log_bins
-      )
+  if (is.null(zlim) && !any(is.finite(spec))) {
+    abort(
+      "Cannot determine color-scale limits: spectrogram contains no finite values. ",
+      "Check the input signal, or supply `zlim` explicitly.",
+      class = c("rtemis_value_error", "rtemis_input_error")
     )
-    spec <- matrix(
-      apply(spec, 2L, function(col) {
-        approx(freq_hz, col, xout = freq_log, rule = 2L)[["y"]]
-      }),
-      nrow = n_log_bins
-    )
-    freq_hz <- freq_log
   }
-
-  # -- 8. Unit conversion (display axes) ----------------------------------------
-  time_disp <- if (time_unit == "ms") time_s * 1000 else time_s
-  freq_disp <- if (freq_unit == "kHz") freq_hz / 1000 else freq_hz
-
-  # -- 9. Color-scale limits --------------------------------------------------
-  if (is.null(zlim)) {
-    if (!any(is.finite(spec))) {
-      abort(
-        "Cannot determine color-scale limits: spectrogram contains no finite values. ",
-        "Check the input signal, or supply `zlim` explicitly.",
-        class = c("rtemis_value_error", "rtemis_input_error")
-      )
-    }
-    zlim <- range(spec, na.rm = TRUE)
-  }
-
-  # -- 10. Palette --------------------------------------------------------------
-  pal <- .spectrogram_palette(
-    colormap,
-    n_colors,
-    colormap_reverse,
-    zlim,
-    theme = theme
-  )
-  dark_pal <- attr(pal, "dark_variant")
-
-  # -- 11. Performance warning for very large spectrograms ---------------------
-  n_freq_disp <- nrow(spec)
-  n_time_disp <- ncol(spec)
-  n_cells <- n_freq_disp * n_time_disp
+  n_cells <- length(spec)
   if (n_cells > 500000L && verbosity > 0L) {
     warn(
       "Spectrogram has ",
       n_cells,
       " cells; browser rendering may be slow."
     )
-    # `n_fft`/signal length only apply when we computed the STFT ourselves; a
+    # `n_fft`/signal length only apply when the STFT is computed here; a
     # pre-computed matrix must be shrunk by the caller before plotting.
     if (is_raw_signal) {
       info(
@@ -589,117 +385,95 @@ spectrogram_option <- function(
       )
     }
   }
-
-  # -- 12. Axis label defaults and formatted label vectors ---------------------
-  time_digits <- if (time_unit == "ms") 1L else 3L
-  freq_digits <- if (freq_unit == "kHz") 3L else 1L
-  val_digits <- if (db) 1L else 3L
-
-  xlab <- xlab %||% paste0("Time (", time_unit, ")")
-  ylab <- ylab %||% paste0("Frequency (", freq_unit, ")")
-  colorbar_title <- colorbar_title %||%
-    if (db) {
-      "dB"
-    } else if (power) {
-      "Power"
-    } else {
-      "Amplitude"
-    }
-
-  # String label vectors for category axis data and tooltip lookup.
-  time_fmt <- formatC(time_disp, digits = time_digits, format = "f")
-  freq_fmt <- formatC(freq_disp, digits = freq_digits, format = "f")
-
-  # -- 13. Flatten to [col_idx, row_idx, value] triples -----------------------
-  # Category-axis convention: x = time column index (0-based),
-  #                           y = frequency row index (0-based).
-  # Low frequencies (row 0) map to category 0, which ECharts places at the
-  # bottom of a category y-axis - the conventional spectrogram orientation.
-  col_idx <- rep(seq_len(n_time_disp) - 1L, each = n_freq_disp)
-  row_idx <- rep(seq_len(n_freq_disp) - 1L, times = n_time_disp)
-  vals <- as.vector(spec)
-  vals[!is.finite(vals)] <- NA_real_
-  data_list <- mapply(
-    function(ci, ri, v) list(ci, ri, if (is.na(v)) NULL else v),
-    col_idx,
-    row_idx,
-    vals,
-    SIMPLIFY = FALSE
+  list(
+    time = as.numeric(time_s),
+    frequency = as.numeric(freq_hz),
+    values = spec
   )
+} # /rtemis.draw::spectrogram_data
 
-  # -- 14. Tooltip formatter ---------------------------------------------------
-  # Embed label arrays so the formatter can look up display values by index.
-  time_json <- jsonlite::toJSON(time_fmt, auto_unbox = FALSE)
-  freq_json <- jsonlite::toJSON(freq_fmt, auto_unbox = FALSE)
 
-  tooltip_fmt <- htmlwidgets::JS(paste0(
-    "(function(){",
-    "var t=",
-    time_json,
-    ";var f=",
-    freq_json,
-    ";",
-    "return function(p){",
-    "if(!p.value||p.value[2]===null||p.value[2]===undefined)return'N/A';",
-    "return 'Time:\\u00A0'+t[p.value[0]]+'\\u00A0",
-    time_unit,
-    "<br/>Freq:\\u00A0'+f[p.value[1]]+'\\u00A0",
-    freq_unit,
-    "<br/>'+p.value[2].toFixed(",
-    val_digits,
-    ")+'\\u00A0",
-    colorbar_title,
-    "';",
-    "}})()"
-  ))
+# -- spectrogram_request -------------------------------------------------------
 
-  # -- 15. Assemble ECharts option ---------------------------------------------
-  opt <- EChartsOption(
-    title = if (!is.null(title)) Title(text = title) else NULL,
-    tooltip = Tooltip(trigger = "item", formatter = tooltip_fmt),
-    grid = resolve_margins(margins),
-    x_axis = Axis(
-      type = "category",
-      data = as.list(time_fmt),
-      name = xlab,
-      name_location = if (!is.null(xlab)) "middle" else NULL,
-      boundary_gap = TRUE,
-      split_area = SplitArea(show = FALSE),
-      axis_line = AxisLine(show = FALSE)
-    ),
-    y_axis = Axis(
-      type = "category",
-      data = as.list(freq_fmt),
-      name = ylab,
-      name_location = if (!is.null(ylab)) "middle" else NULL,
-      boundary_gap = TRUE,
-      split_area = SplitArea(show = FALSE),
-      axis_line = AxisLine(show = FALSE)
-    ),
-    visual_map = VisualMap(
-      type = "continuous",
-      min = zlim[[1L]],
-      max = zlim[[2L]],
-      precision = val_digits,
-      calculable = TRUE,
-      show = show_colorbar,
-      orient = "vertical",
-      right = "right",
-      top = "middle",
-      in_range = list(color = as.list(pal))
-    ),
-    series = list(HeatmapSeries(data = data_list))
-  )
-
-  # Pass diverging dark-theme colormap variant to JS (mirrors draw_heatmap)
-  meta <- list(legendReserveRight = legend_reserve_right)
-  if (!is.null(dark_pal)) {
-    meta[["colorLight"]] <- as.list(pal)
-    meta[["colorDark"]] <- as.list(dark_pal)
+#' The build request of a spectrogram
+#'
+#' The data of `spectrogram_data()` for `config`, and, with a [Theme], the
+#' sign colors and background of the diverging color scheme.
+#'
+#' @param config [SpectrogramConfig].
+#' @param x Numeric vector, or numeric or complex matrix: The signal or the
+#'   spectrum.
+#' @param time,frequency Optional Numeric: Axis values of a matrix.
+#' @param window Character or Numeric: Window name or vector.
+#' @param overlap Optional Integer: Overlap in samples; unset converts the
+#'   config's fraction of `n_fft`.
+#' @param verbosity Integer: Verbosity level.
+#' @param theme Optional [Theme].
+#' @param data Optional List: The output of `spectrogram_data()`, computed
+#'   from `x` when unset.
+#'
+#' @return [BuildRequest] of type `spectrogram`.
+#'
+#' @author EDG
+#' @keywords internal
+#' @noRd
+spectrogram_request <- function(
+  config,
+  x,
+  time = NULL,
+  frequency = NULL,
+  window = config@window,
+  overlap = NULL,
+  verbosity = 1L,
+  theme = NULL,
+  data = NULL
+) {
+  data <- data %||%
+    spectrogram_data(
+      x,
+      sample_rate = config@sample_rate,
+      time = time,
+      frequency = frequency,
+      n_fft = config@n_fft,
+      window = window,
+      overlap = overlap %||%
+        if (!is.null(config@overlap)) round(config@overlap * config@n_fft),
+      power = config@power,
+      db = config@db,
+      db_range = config@db_range,
+      freq_scale = config@freq_scale,
+      freq_range = config@freq_range,
+      time_range = config@time_range,
+      colormap = config@colormap,
+      n_colors = config@n_colors,
+      zlim = config@zlim,
+      verbosity = verbosity
+    )
+  appearance <- list()
+  if (S7::S7_inherits(theme, Theme)) {
+    sign <- theme_sign_colors(theme)
+    appearance[["signColors"]] <- list(
+      negative = sign[["negative"]],
+      positive = sign[["positive"]]
+    )
+    appearance[["background"]] <- theme@background_color
   }
-
-  list(option = opt, render = list(meta = meta))
-} # /rtemis.draw::spectrogram_option
+  BuildRequest(
+    type = "spectrogram",
+    data = as.character(jsonlite::toJSON(
+      list(
+        time = data[["time"]],
+        frequency = data[["frequency"]],
+        values = data[["values"]]
+      ),
+      auto_unbox = FALSE,
+      na = "null",
+      digits = NA
+    )),
+    config = config_members(config),
+    appearance = appearance
+  )
+} # /rtemis.draw::spectrogram_request
 
 
 #' Draw a Spectrogram
@@ -707,6 +481,8 @@ spectrogram_option <- function(
 #' Renders an interactive time-frequency spectrogram as an ECharts heatmap
 #' widget. Accepts either a raw signal vector (STFT is computed internally via
 #' [signal::specgram()]) or a pre-computed spectrogram matrix (freq x time).
+#' R computes the spectrum; the `@rtemis/draw` spectrogram builder applies the
+#' frequency scale, ranges, units, and color scale, and draws it.
 #'
 #' Corresponds to `HeatmapSeriesOption` in `src/chart/heatmap/HeatmapSeries.ts`.
 #' ECharts docs: \url{https://echarts.apache.org/en/option.html#series-heatmap}
@@ -747,8 +523,8 @@ spectrogram_option <- function(
 #' @param freq_unit Character \{"Hz", "kHz"\}: Unit for the frequency axis.
 #' @param time_range Optional Numeric\[2\]: Time range to display in seconds.
 #' @param time_unit Character \{"s", "ms"\}: Unit for the time axis.
-#' @param colormap Character: Color palette. Accepts a \pkg{viridisLite} colormap
-#'   name (`"magma"` (default), `"inferno"`, `"plasma"`,
+#' @param colormap Character: Color palette. Accepts the name of a colormap of
+#'   \pkg{viridisLite} (`"magma"` (default), `"inferno"`, `"plasma"`,
 #'   `"viridis"`, `"cividis"`, `"mako"`, `"rocket"`, `"turbo"`), `"diverging"`
 #'   for a negative-background-positive scale in the theme's sign colors
 #'   (suitable for signed data such as EEG/MEG amplitudes), or a character vector of >= 2 hex colors for a
@@ -768,8 +544,9 @@ spectrogram_option <- function(
 #'   or `"Frequency (kHz)"` depending on `freq_unit`.
 #' @param theme Optional [Theme], list, or `NA`: Theme override passed to
 #'   [draw()].
-#' @param margins Optional Named numeric or character vector / list: Plot
-#'   margins in pixels. Valid names: `"top"`, `"right"`, `"bottom"`, `"left"`.
+#' @param margins Optional Named numeric vector or list: Plot margins in
+#'   pixels. Valid names: `"top"`, `"right"`, `"bottom"`, `"left"`. Unset
+#'   margins are 36 pixels, 90 at the right, and 50 at the top with a title.
 #' @param width Optional Numeric or Character: Widget width.
 #' @param height Optional Numeric or Character: Widget height.
 #' @param element_id Optional Character: Explicit DOM element ID for the widget
@@ -823,8 +600,11 @@ draw_spectrogram <- function(
   legend_placement = "outside",
   legend_title = NULL
 ) {
-  built <- spectrogram_option(
-    x = x,
+  margins <- pixel_margins(margins)
+  # The arguments are checked, and the spectrum computed, before the config
+  # takes them.
+  data <- spectrogram_data(
+    x,
     sample_rate = sample_rate,
     time = time,
     frequency = frequency,
@@ -836,8 +616,24 @@ draw_spectrogram <- function(
     db_range = db_range,
     freq_scale = freq_scale,
     freq_range = freq_range,
-    freq_unit = freq_unit,
     time_range = time_range,
+    colormap = colormap,
+    n_colors = n_colors,
+    zlim = zlim,
+    verbosity = verbosity
+  )
+  config <- setup_SpectrogramConfig(
+    sample_rate = sample_rate,
+    n_fft = n_fft,
+    window = if (is.character(window)) window else "hanning",
+    overlap = if (!is.null(overlap) && is.numeric(n_fft)) overlap / n_fft,
+    power = power,
+    db = db,
+    db_range = db_range,
+    freq_scale = freq_scale,
+    freq_range = freq_range,
+    time_range = time_range,
+    freq_unit = freq_unit,
     time_unit = time_unit,
     colormap = colormap,
     colormap_reverse = colormap_reverse,
@@ -845,25 +641,24 @@ draw_spectrogram <- function(
     zlim = zlim,
     show_colorbar = show_colorbar,
     colorbar_title = colorbar_title,
-    title = title,
     xlab = xlab,
     ylab = ylab,
-    margins = margins,
-    verbosity = verbosity,
-    theme = theme
+    title = title,
+    margin_top = margins[["top"]],
+    margin_right = margins[["right"]],
+    margin_bottom = margins[["bottom"]],
+    margin_left = margins[["left"]],
+    legend_position = legend_position,
+    legend_placement = legend_placement,
+    legend_title = legend_title
   )
-
   draw(
-    built[["option"]],
+    spectrogram_request(config, x, theme = theme, data = data),
     theme = theme,
     width = width,
     height = height,
     element_id = element_id,
     filename = filename,
-    meta = c(
-      legend_meta(legend_position, legend_placement, legend_title),
-      built[["render"]][["meta"]],
-      list(legendTarget = "visualMap")
-    )
+    meta = render_meta(config, NULL)
   )
 }

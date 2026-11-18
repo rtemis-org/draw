@@ -4,6 +4,7 @@ import { describe, expect, it } from "vitest";
 import { A3_CHART_CONFIG_MEMBERS } from "../src/charts/a3/config.ts";
 import { BAR_CHART_CONFIG_MEMBERS } from "../src/charts/bar/config.ts";
 import { BOXPLOT_CHART_CONFIG_MEMBERS } from "../src/charts/boxplot/config.ts";
+import { CALIBRATION_CHART_CONFIG_MEMBERS } from "../src/charts/calibration/config.ts";
 import { CONFUSION_CHART_CONFIG_MEMBERS } from "../src/charts/confusion/config.ts";
 import { PR_CHART_CONFIG_MEMBERS, ROC_CHART_CONFIG_MEMBERS } from "../src/charts/curves/config.ts";
 import { DENSITY_CHART_CONFIG_MEMBERS } from "../src/charts/density/config.ts";
@@ -16,6 +17,7 @@ import { SANKEY_CHART_CONFIG_MEMBERS } from "../src/charts/sankey/config.ts";
 import { SCATTER_CHART_CONFIG_MEMBERS } from "../src/charts/scatter/config.ts";
 import { SCATTER3D_CHART_CONFIG_MEMBERS } from "../src/charts/scatter3d/config.ts";
 import { SIGNIFICANCE_CHART_CONFIG_MEMBERS } from "../src/charts/significance/config.ts";
+import { SPECTROGRAM_CHART_CONFIG_MEMBERS } from "../src/charts/spectrogram/config.ts";
 import { SURVIVAL_CHART_CONFIG_MEMBERS } from "../src/charts/survival/config.ts";
 import { TIMESERIES_CHART_CONFIG_MEMBERS } from "../src/charts/timeseries/config.ts";
 
@@ -31,6 +33,7 @@ describe.skipIf(!schemaDir)("config types against the generated schemas", () => 
     ["a3", A3_CHART_CONFIG_MEMBERS],
     ["bar", BAR_CHART_CONFIG_MEMBERS],
     ["boxplot", BOXPLOT_CHART_CONFIG_MEMBERS],
+    ["calibration", CALIBRATION_CHART_CONFIG_MEMBERS],
     ["confusion", CONFUSION_CHART_CONFIG_MEMBERS],
     ["density", DENSITY_CHART_CONFIG_MEMBERS],
     ["gantt", GANTT_CHART_CONFIG_MEMBERS],
@@ -44,6 +47,7 @@ describe.skipIf(!schemaDir)("config types against the generated schemas", () => 
     ["scatter", SCATTER_CHART_CONFIG_MEMBERS],
     ["scatter3d", SCATTER3D_CHART_CONFIG_MEMBERS],
     ["significance", SIGNIFICANCE_CHART_CONFIG_MEMBERS],
+    ["spectrogram", SPECTROGRAM_CHART_CONFIG_MEMBERS],
     ["survival", SURVIVAL_CHART_CONFIG_MEMBERS],
     ["timeseries", TIMESERIES_CHART_CONFIG_MEMBERS],
   ];

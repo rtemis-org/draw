@@ -201,7 +201,8 @@ function axisRange(values: readonly number[]): [number, number] {
  * spanning the complete observations and the surfaces, each with four
  * intervals; a 100-unit box under the configured camera. Groups follow the
  * group column's level order, otherwise first appearance; rows missing a
- * coordinate or the group are left out, and break paths.
+ * coordinate or the group are left out, and break paths. The legend lists
+ * the groups and the surfaces not named after one, when there are two or more.
  * spec: draw/shared-builders#scatter3d
  */
 export function buildScatter3DOption(
@@ -277,6 +278,8 @@ export function buildScatter3DOption(
     throw new Error("A 3D path needs at least two consecutive complete observations in a group.");
   }
   const surfaces = data.surfaces ?? [];
+  // A surface named after a group shares its entry; any other adds one.
+  const legendNames = [...new Set([...groups, ...surfaces.map((surface) => surface.name)])];
   for (const surface of surfaces) series.push(surfaceSeries(surface, config.fit_alpha ?? 0.35));
   const finite = (v: unknown): v is number => typeof v === "number" && Number.isFinite(v);
   const values = [xs, ys, zs].map((col, d) => [
@@ -308,7 +311,7 @@ export function buildScatter3DOption(
     ...(config.title ? { title: { text: config.title } } : {}),
     ...(palette && palette.length > 0 ? { color: [...palette] } : {}),
     tooltip: { trigger: "item" },
-    legend: groups.length > 1 ? { data: groups } : { show: false },
+    legend: legendNames.length > 1 ? { data: legendNames } : { show: false },
     ...Object.fromEntries(AXIS_KEYS.map((key, d) => [key, axes[d]])),
     grid3D: {
       boxWidth: 100,
