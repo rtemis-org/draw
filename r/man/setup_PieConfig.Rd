@@ -8,9 +8,11 @@ setup_PieConfig(
   values = NULL,
   labels = NULL,
   radius = "75\%",
+  inner_radius = NULL,
   rose_type = NULL,
   label_format = "name",
   percent_digits = 1L,
+  show_labels = TRUE,
   palette = NULL,
   title = NULL,
   dat_path = NULL,
@@ -28,6 +30,9 @@ setup_PieConfig(
 
 \item{radius}{Character: Outer radius, as a CSS length or percentage.}
 
+\item{inner_radius}{Optional Character: Inner radius of a donut, as a CSS
+length or percentage. \code{NULL} draws a full pie.}
+
 \item{rose_type}{Optional Character \{"radius", "area"\}: Draw as a
 Nightingale rose chart, sizing slices by radius or by area. \code{NULL} draws a
 plain pie.}
@@ -35,6 +40,8 @@ plain pie.}
 \item{label_format}{Character \verb{\{"name", "value", "percent", "name_value", "name_percent"\}}: Slice label content.}
 
 \item{percent_digits}{Integer \verb{[0, 6]}: Percentage precision.}
+
+\item{show_labels}{Logical: Whether each slice carries its label.}
 
 \item{palette}{Optional Character: Slice colors, overriding the theme
 palette for this chart. \code{NULL} uses the theme's.}

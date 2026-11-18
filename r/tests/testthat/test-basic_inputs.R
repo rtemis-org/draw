@@ -27,10 +27,10 @@ test_that("bar matrices, tables and sorting preserve category-series identity", 
 test_that("pie tables and label choices preserve actual slice values", {
   tab <- data.frame(label = c("A", "B"), value = c(2, 3))
   w <- draw_pie(tab, label_format = "name_percent", percent_digits = 2L)
-  s <- w[["x"]][["option"]][["series"]][[1]]
+  s <- raw_option(w)[["series"]][[1]]
   expect_equal(
     s[["data"]],
-    list(list(value = 2, name = "A"), list(value = 3, name = "B"))
+    list(list(name = "A", value = 2), list(name = "B", value = 3))
   )
   expect_equal(s[["label"]][["formatter"]], "{b}: {d}%")
   expect_equal(s[["percentPrecision"]], 2L)

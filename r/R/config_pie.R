@@ -2,9 +2,8 @@
 # ::rtemis.draw::
 # 2026- EDG rtemis.org
 
-# The pie chart's config. The first non-cartesian one: no axes, so no axis
-# labels and no margins -- which is why those live on the leaves rather than on
-# `ChartConfig`.
+# The pie chart's config: no axes, so no axis labels and no margins. The
+# @rtemis/draw pie builder draws it (spec: draw/shared-builders#pie).
 
 # %% PieConfig ----
 #' Pie Chart Configuration
@@ -16,6 +15,9 @@
 #' @param labels Optional Character: Column holding the slice labels.
 #' @inheritParams draw_pie label_format percent_digits
 #' @param radius Character: Outer radius, as a CSS length or percentage.
+#' @param inner_radius Optional Character: Inner radius of a donut, as a CSS
+#'   length or percentage. `NULL` draws a full pie.
+#' @param show_labels Logical: Whether each slice carries its label.
 #' @param rose_type Optional Character \{"radius", "area"\}: Draw as a
 #'   Nightingale rose chart, sizing slices by radius or by area. `NULL` draws a
 #'   plain pie.
@@ -55,6 +57,10 @@ PieConfig <- new_class(
         enum = c("name", "value", "percent", "name_value", "name_percent")
       ),
       percent_digits = prop_integer(1L, min = 0L, max = 6L),
+      show_labels = prop_boolean(
+        TRUE,
+        description = "Whether each slice carries its label."
+      ),
       # -- semantics ---------------------------------------------------------
       rose_type = prop_string(
         NULL,
@@ -66,6 +72,11 @@ PieConfig <- new_class(
       radius = prop_string(
         "75%",
         description = "Outer radius, as a CSS length or percentage."
+      ),
+      inner_radius = prop_string(
+        NULL,
+        nullable = TRUE,
+        description = "Inner radius of a donut, as a CSS length or percentage. Unset draws a full pie."
       ),
       palette = prop_string(
         NULL,
@@ -110,9 +121,11 @@ setup_PieConfig <- function(
   values = NULL,
   labels = NULL,
   radius = "75%",
+  inner_radius = NULL,
   rose_type = NULL,
   label_format = "name",
   percent_digits = 1L,
+  show_labels = TRUE,
   palette = NULL,
   title = NULL,
   dat_path = NULL,
@@ -127,9 +140,11 @@ setup_PieConfig <- function(
     values = values,
     labels = labels,
     radius = radius,
+    inner_radius = inner_radius,
     rose_type = rose_type,
     label_format = label_format,
     percent_digits = clean_int(percent_digits),
+    show_labels = show_labels,
     palette = palette,
     title = title,
     dat_path = dat_path,
@@ -152,23 +167,21 @@ method(resolve, PieConfig) <- function(config, data = NULL, ...) {
 
 
 # %% compile.PieConfig ----
+# The request for the pie builder, which sums the rows of each label and checks
+# the values.
 method(compile, PieConfig) <- function(config, data = NULL, theme = NULL, ...) {
-  values <- config_column(data, config@values, "values")
-  labels <- config_column(data, config@labels, "labels")
-  if (is.null(values) || is.null(labels)) {
+  if (is.null(config@values) || is.null(config@labels)) {
     abort(
       "A PieConfig needs both `values` and `labels` set to draw.",
       class = c("rtemis_null_input", "rtemis_input_error")
     )
   }
-  pie_option(
-    values = values,
-    labels = labels,
-    radius = config@radius,
-    rose_type = config@rose_type,
-    label_format = config@label_format,
-    percent_digits = config@percent_digits,
-    palette = config@palette,
-    title = config@title
+  config_column(data, config@values, "values")
+  config_column(data, config@labels, "labels")
+  BuildRequest(
+    type = "pie",
+    data = tabular_json(data, unique(c(config@labels, config@values))),
+    config = config_members(config),
+    appearance = list()
   )
 }

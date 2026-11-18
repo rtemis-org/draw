@@ -678,8 +678,11 @@ test_that("draw_pie creates widget", {
     labels = c("A", "B", "C")
   )
   expect_s3_class(w, "htmlwidget")
-  expect_equal(w$x$option$series[[1]]$type, "pie")
-  expect_equal(length(w$x$option$series[[1]]$data), 3L)
+  expect_identical(w$x$build$type, "pie")
+  s <- raw_option(w)$series[[1]]
+  expect_equal(s$type, "pie")
+  expect_equal(length(s$data), 3L)
+  expect_equal(s$radius, "75%")
 })
 
 test_that("draw_pie donut", {
@@ -688,7 +691,21 @@ test_that("draw_pie donut", {
     labels = c("A", "B"),
     radius = c("40%", "70%")
   )
-  expect_equal(w$x$option$series[[1]]$radius, c("40%", "70%"))
+  expect_equal(raw_option(w)$series[[1]]$radius, list("40%", "70%"))
+  expect_error(draw_pie(1:2, c("A", "B"), radius = 1:3), "radius")
+})
+
+test_that("draw_pie sums the values of a repeated label", {
+  w <- draw_pie(c(1, 2, 3), c("A", "B", "A"))
+  expect_equal(
+    raw_option(w)$series[[1]]$data,
+    list(list(name = "A", value = 4), list(name = "B", value = 2))
+  )
+  w <- draw_pie(c(1, 2, 3), factor(c("A", "B", "A"), levels = c("B", "A")))
+  expect_equal(
+    vapply(raw_option(w)$series[[1]]$data, `[[`, "", "name"),
+    c("B", "A")
+  )
 })
 
 # -- draw_boxplot ---------------------------------------------------------------

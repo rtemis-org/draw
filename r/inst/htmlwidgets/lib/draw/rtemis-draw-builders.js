@@ -38,6 +38,7 @@ var RtemisDraw = (() => {
     HISTOGRAM_CHART_CONFIG_MEMBERS: () => HISTOGRAM_CHART_CONFIG_MEMBERS,
     LINE_CHART_CONFIG_MEMBERS: () => LINE_CHART_CONFIG_MEMBERS,
     MAX_SYMBOL_SIZE: () => MAX_SYMBOL_SIZE,
+    PIE_CHART_CONFIG_MEMBERS: () => PIE_CHART_CONFIG_MEMBERS,
     PR_CHART_CONFIG_MEMBERS: () => PR_CHART_CONFIG_MEMBERS,
     RENDERER_NAMES: () => RENDERER_NAMES,
     ROC_CHART_CONFIG_MEMBERS: () => ROC_CHART_CONFIG_MEMBERS,
@@ -69,6 +70,7 @@ var RtemisDraw = (() => {
     buildHeatmapOption: () => buildHeatmapOption,
     buildHistogramOption: () => buildHistogramOption,
     buildLineOption: () => buildLineOption,
+    buildPieOption: () => buildPieOption,
     buildPrOption: () => buildPrOption,
     buildRocOption: () => buildRocOption,
     buildSankeyOption: () => buildSankeyOption,
@@ -110,6 +112,7 @@ var RtemisDraw = (() => {
     layoutSurvivalRisk: () => layoutSurvivalRisk,
     lightThemeTokens: () => lightThemeTokens,
     lineAspect: () => lineAspect,
+    pieSlices: () => pieSlices,
     placeZoomSlider: () => placeZoomSlider,
     pretty: () => pretty,
     radicalInverse: () => radicalInverse,
@@ -4720,6 +4723,94 @@ ${rate(r.balancedAccuracy)}`, summary) }
     };
   }
 
+  // src/charts/pie/config.ts
+  var PIE_CHART_CONFIG_MEMBERS = Object.freeze([
+    "type",
+    "title",
+    "values",
+    "labels",
+    "label_format",
+    "percent_digits",
+    "show_labels",
+    "rose_type",
+    "radius",
+    "inner_radius",
+    "palette",
+    "legend_position",
+    "legend_placement",
+    "legend_title"
+  ]);
+  var LABEL_TEMPLATES = {
+    name: "{b}",
+    value: "{c}",
+    percent: "{d}%",
+    name_value: "{b}: {c}",
+    name_percent: "{b}: {d}%"
+  };
+  var isMissing = (v) => v === null || v === void 0 || typeof v === "number" && Number.isNaN(v);
+  function pieSlices(data, config) {
+    const valueName = config.values;
+    const labelName = config.labels;
+    if (!valueName || !labelName) {
+      throw new Error("A pie chart needs the config members 'values' and 'labels' set.");
+    }
+    const raw = column(data.columns, labelName, "labels");
+    const labels = textColumn(data, labelName, "labels");
+    const values = column(data.columns, valueName, "values");
+    const sums = /* @__PURE__ */ new Map();
+    labels.forEach((label, i) => {
+      if (isMissing(raw[i])) {
+        throw new Error(
+          `Column '${labelName}' (config member 'labels') must hold a label in every row; row ${i + 1} is missing.`
+        );
+      }
+      const v = values[i];
+      if (typeof v !== "number" || !Number.isFinite(v) || v < 0) {
+        throw new Error(
+          `Column '${valueName}' (config member 'values') must hold a finite, nonnegative number in every row; row ${i + 1} holds '${String(v)}'.`
+        );
+      }
+      sums.set(label, (sums.get(label) ?? 0) + v);
+    });
+    const names = distinct([...sums.keys()], data.levels?.[labelName]);
+    const slices = names.map((name) => ({ name, value: sums.get(name) }));
+    if (!slices.some((s) => s.value > 0)) {
+      throw new Error(`A pie chart needs a positive total; column '${valueName}' sums to 0.`);
+    }
+    return slices;
+  }
+  function buildPieOption(data, config, appearance = {}) {
+    const slices = pieSlices(data, config);
+    const memberPalette = asArray(config.palette);
+    const palette = memberPalette.length > 0 ? memberPalette : appearance.palette ?? [];
+    const items = slices.map(
+      (slice, i) => palette.length > 0 ? { ...slice, itemStyle: { color: palette[i % palette.length] } } : { ...slice }
+    );
+    const outer = config.radius ?? "75%";
+    return {
+      ...config.title ? { title: { text: config.title, left: "center" } } : {},
+      tooltip: { trigger: "item", valueFormatter: tooltipValue },
+      ...slices.length > 1 ? { legend: { data: slices.map((s) => s.name) } } : {},
+      series: [
+        {
+          type: "pie",
+          data: items,
+          radius: config.inner_radius ? [config.inner_radius, outer] : outer,
+          ...config.rose_type ? { roseType: config.rose_type } : {},
+          percentPrecision: config.percent_digits ?? 1,
+          avoidLabelOverlap: true,
+          // Edge alignment keeps outside labels within the chart at narrow widths.
+          label: {
+            show: config.show_labels !== false,
+            alignTo: "edge",
+            edgeDistance: 8,
+            formatter: LABEL_TEMPLATES[config.label_format ?? "name"]
+          }
+        }
+      ]
+    };
+  }
+
   // src/charts/sankey/config.ts
   var SANKEY_CHART_CONFIG_MEMBERS = Object.freeze([
     "type",
@@ -6745,6 +6836,7 @@ ${rate(r.balancedAccuracy)}`, summary) }
     heatmap: buildHeatmapOption,
     histogram: buildHistogramOption,
     line: buildLineOption,
+    pie: buildPieOption,
     pr: buildPrOption,
     roc: buildRocOption,
     sankey: buildSankeyOption,

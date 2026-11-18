@@ -1463,96 +1463,26 @@ draw_bar <- function(
 }
 
 
-#' Build the ECharts option for a pie chart
-#'
-#' The single implementation shared by [draw_pie()], which resolves its arguments
-#' from vectors, and `compile()` on the corresponding [ChartConfig], which
-#' resolves them from a data frame. The render targets stay with the caller.
-#'
-#' @inheritParams draw_pie
-#'
-#' @return [EChartsOption]: The option object.
-#'
-#' @author EDG
-#' @keywords internal
-#' @noRd
-pie_option <- function(
-  values,
-  labels = NULL,
-  radius = "75%",
-  rose_type = NULL,
-  palette = NULL,
-  title = NULL,
-  label_format = "name",
-  percent_digits = 1L
-) {
-  input <- pie_input(values, labels)
-  values <- input[["values"]]
-  labels <- input[["labels"]]
-  config <- setup_PieConfig(
-    label_format = label_format,
-    percent_digits = percent_digits
-  )
-  formatter <- switch(
-    config@label_format,
-    name = "{b}",
-    value = "{c}",
-    percent = "{d}%",
-    name_value = "{b}: {c}",
-    name_percent = "{b}: {d}%"
-  )
-  data_items <- mapply(
-    function(v, n) list(value = v, name = n),
-    values,
-    labels,
-    SIMPLIFY = FALSE,
-    USE.NAMES = FALSE
-  )
-
-  opt <- EChartsOption(
-    title = if (!is.null(title)) Title(text = title, left = "center") else NULL,
-    tooltip = Tooltip(trigger = "item"),
-    legend = Legend(orient = "vertical", left = "left"),
-    color = palette,
-    series = PieSeries(
-      data = data_items,
-      radius = radius,
-      rose_type = rose_type,
-      # Edge alignment keeps outside labels on the page at narrow widths.
-      label = PieLabelOption(
-        align_to = "edge",
-        edge_distance = 8,
-        formatter = formatter
-      ),
-      avoid_label_overlap = TRUE
-    )
-  )
-
-  series <- to_list(opt@series)
-  series[["percentPrecision"]] <- config@percent_digits
-  opt@series <- list(series)
-  opt
-} # /rtemis.draw::pie_option
-
-
 #' Draw a Pie Chart
 #'
-#' Pie chart from values and labels.
+#' Pie chart from values and labels, drawn by the `@rtemis/draw` pie builder.
+#' Values that share a label sum into one slice, in the factor level order of
+#' `labels`, otherwise in order of first appearance.
 #'
 #' @param values Numeric or data frame: Slice values, or a two-column table
 #'   containing labels followed by values. Values must be finite and nonnegative
 #'   with a positive total.
 #' @param label_format Character `{"name", "value", "percent", "name_value", "name_percent"}`: Slice label content.
 #' @param percent_digits Integer `[0, 6]`: Percentage precision.
+#' @param show_labels Logical: Whether each slice carries its label.
 #' @param labels Optional Character: Slice labels; names(values) when omitted.
-#' @param radius Numeric or Character: Pie radius.
+#' @param radius Numeric or Character: Outer radius, or the inner and outer
+#'   radius of a donut, in pixels or as a CSS percentage.
 #' @param rose_type Optional Character \{"radius", "area"\}: Nightingale chart type.
-#' @param palette Optional Character: Series color palette — a single color string or
-#'   character vector that overrides the theme palette for this chart.
-#'   `color` takes precedence over the theme palette (it sets `option.color`).
+#' @param palette Optional Character: Slice colors, in slice order, overriding
+#'   the theme palette for this chart.
 #' @param title Optional Character: Chart title.
-#' @param theme Optional [Theme]: Theme override. The palette inside the theme can be
-#'   overridden per-chart with the `color` argument.
+#' @param theme Optional [Theme]: Theme override.
 #' @param width Optional Character or Numeric: Widget width.
 #' @param height Optional Character or Numeric: Widget height.
 #' @param element_id Optional Character: Explicit DOM element ID for the widget
@@ -1584,29 +1514,50 @@ draw_pie <- function(
   legend_placement = "outside",
   legend_title = NULL,
   label_format = "name",
-  percent_digits = 1L
+  percent_digits = 1L,
+  show_labels = TRUE
 ) {
-  opt <- pie_option(
-    values = values,
-    labels = labels,
-    radius = radius,
+  input <- pie_input(values, labels)
+  if (
+    !(is.character(radius) || is.numeric(radius)) ||
+      !length(radius) %in% 1:2 ||
+      anyNA(radius)
+  ) {
+    abort(
+      "Supply `radius` as one outer radius, or an inner and an outer radius.",
+      class = c("rtemis_value_error", "rtemis_input_error")
+    )
+  }
+  radius <- as.character(radius)
+  config <- setup_PieConfig(
+    values = ".value",
+    labels = ".label",
+    radius = radius[[length(radius)]],
+    inner_radius = if (length(radius) == 2L) radius[[1L]],
     rose_type = rose_type,
+    label_format = label_format,
+    percent_digits = percent_digits,
+    show_labels = show_labels,
     palette = palette,
     title = title,
-    label_format = label_format,
-    percent_digits = percent_digits
+    legend_position = legend_position,
+    legend_placement = legend_placement,
+    legend_title = legend_title
   )
-
   draw(
-    opt,
+    config,
+    data = data.frame(
+      .label = input[["labels"]],
+      .value = input[["values"]],
+      check.names = FALSE
+    ),
     theme = theme,
     width = width,
     height = height,
     element_id = element_id,
-    filename = filename,
-    meta = legend_meta(legend_position, legend_placement, legend_title)
+    filename = filename
   )
-}
+} # /rtemis.draw::draw_pie
 
 #' Draw a Density Plot
 #'
@@ -2312,7 +2263,8 @@ method(bar_input, class_any) <- function(x, y = NULL, order = "input") {
 
 #' Normalize and validate pie slices without recycling labels
 #' @inheritParams draw_pie
-#' @return List: Numeric values and literal labels.
+#' @return List: Numeric values, and labels as a factor, which keeps its level
+#'   order, or as text.
 #' @keywords internal
 #' @noRd
 pie_input <- new_generic("pie_input", "values")
@@ -2338,13 +2290,15 @@ method(pie_input, class_any) <- function(values, labels = NULL) {
       !is.finite(sum(values)) ||
       sum(values) <= 0 ||
       length(labels) != length(values) ||
-      anyNA(labels) ||
-      anyDuplicated(as.character(labels))
+      anyNA(labels)
   ) {
     abort(
-      "Supply finite nonnegative slice values with a positive total and distinct, matching labels.",
+      "Supply finite nonnegative slice values with a positive total and matching labels.",
       class = c("rtemis_value_error", "rtemis_input_error")
     )
   }
-  list(values = unname(values), labels = as.character(labels))
+  list(
+    values = unname(values),
+    labels = if (is.factor(labels)) labels else as.character(labels)
+  )
 }

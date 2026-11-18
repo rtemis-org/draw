@@ -20,7 +20,8 @@ draw_pie(
   legend_placement = "outside",
   legend_title = NULL,
   label_format = "name",
-  percent_digits = 1L
+  percent_digits = 1L,
+  show_labels = TRUE
 )
 }
 \arguments{
@@ -30,18 +31,17 @@ with a positive total.}
 
 \item{labels}{Optional Character: Slice labels; names(values) when omitted.}
 
-\item{radius}{Numeric or Character: Pie radius.}
+\item{radius}{Numeric or Character: Outer radius, or the inner and outer
+radius of a donut, in pixels or as a CSS percentage.}
 
 \item{rose_type}{Optional Character \{"radius", "area"\}: Nightingale chart type.}
 
-\item{palette}{Optional Character: Series color palette — a single color string or
-character vector that overrides the theme palette for this chart.
-\code{color} takes precedence over the theme palette (it sets \code{option.color}).}
+\item{palette}{Optional Character: Slice colors, in slice order, overriding
+the theme palette for this chart.}
 
 \item{title}{Optional Character: Chart title.}
 
-\item{theme}{Optional \link{Theme}: Theme override. The palette inside the theme can be
-overridden per-chart with the \code{color} argument.}
+\item{theme}{Optional \link{Theme}: Theme override.}
 
 \item{width}{Optional Character or Numeric: Widget width.}
 
@@ -70,12 +70,16 @@ title. A title does not add a missing legend.}
 \item{label_format}{Character \verb{\{"name", "value", "percent", "name_value", "name_percent"\}}: Slice label content.}
 
 \item{percent_digits}{Integer \verb{[0, 6]}: Percentage precision.}
+
+\item{show_labels}{Logical: Whether each slice carries its label.}
 }
 \value{
 htmlwidget: Widget object.
 }
 \description{
-Pie chart from values and labels.
+Pie chart from values and labels, drawn by the \verb{@rtemis/draw} pie builder.
+Values that share a label sum into one slice, in the factor level order of
+\code{labels}, otherwise in order of first appearance.
 }
 \examples{
 draw_pie(

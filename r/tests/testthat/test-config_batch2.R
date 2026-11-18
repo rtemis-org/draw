@@ -98,11 +98,23 @@ test_that("line compiles to the same option as the vector path", {
   )
 })
 
-test_that("pie compiles to the same option as the vector path", {
+test_that("pie compiles to a request the vector path draws alike", {
   counts <- data.frame(kind = c("a", "b", "c"), n = c(3, 5, 2))
-  expect_identical(
-    compile(setup_PieConfig(values = "n", labels = "kind"), data = counts),
-    pie_option(values = counts[["n"]], labels = counts[["kind"]])
+  request <- compile(
+    setup_PieConfig(values = "n", labels = "kind"),
+    data = counts
+  )
+  expect_true(S7::S7_inherits(request, BuildRequest))
+  expect_identical(request@type, "pie")
+  expect_identical(request@config[["show_labels"]], TRUE)
+  expect_identical(request@config[["inner_radius"]], NA)
+  expect_equal(
+    built_option(request)[["series"]],
+    built_option(draw_pie(counts[["n"]], counts[["kind"]]))[["series"]]
+  )
+  expect_error(
+    compile(setup_PieConfig(values = "n"), data = counts),
+    "both `values` and `labels`"
   )
 })
 

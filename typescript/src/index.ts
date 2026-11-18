@@ -18,6 +18,7 @@ import { buildGanttOption } from "./charts/gantt/index.ts";
 import { buildHeatmapOption } from "./charts/heatmap/index.ts";
 import { buildHistogramOption } from "./charts/histogram/index.ts";
 import { buildLineOption, lineAspect } from "./charts/line/index.ts";
+import { buildPieOption } from "./charts/pie/index.ts";
 import { buildSankeyOption } from "./charts/sankey/index.ts";
 import { buildScatterOption, scatterAspect } from "./charts/scatter/index.ts";
 import { buildSignificanceOption } from "./charts/significance/index.ts";
@@ -154,6 +155,8 @@ export {
   LINE_CHART_CONFIG_MEMBERS,
   lineAspect,
 } from "./charts/line/index.ts";
+export type { PieAppearance, PieChartConfig, PieSlice } from "./charts/pie/index.ts";
+export { buildPieOption, PIE_CHART_CONFIG_MEMBERS, pieSlices } from "./charts/pie/index.ts";
 export type { SankeyAppearance, SankeyChartConfig, SankeyLink } from "./charts/sankey/index.ts";
 export {
   buildSankeyOption,
@@ -253,6 +256,7 @@ export const builders = Object.freeze({
   heatmap: buildHeatmapOption,
   histogram: buildHistogramOption,
   line: buildLineOption,
+  pie: buildPieOption,
   pr: buildPrOption,
   roc: buildRocOption,
   sankey: buildSankeyOption,

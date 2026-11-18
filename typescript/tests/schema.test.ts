@@ -11,6 +11,7 @@ import { GANTT_CHART_CONFIG_MEMBERS } from "../src/charts/gantt/config.ts";
 import { HEATMAP_CHART_CONFIG_MEMBERS } from "../src/charts/heatmap/config.ts";
 import { HISTOGRAM_CHART_CONFIG_MEMBERS } from "../src/charts/histogram/config.ts";
 import { LINE_CHART_CONFIG_MEMBERS } from "../src/charts/line/config.ts";
+import { PIE_CHART_CONFIG_MEMBERS } from "../src/charts/pie/config.ts";
 import { SANKEY_CHART_CONFIG_MEMBERS } from "../src/charts/sankey/config.ts";
 import { SCATTER_CHART_CONFIG_MEMBERS } from "../src/charts/scatter/config.ts";
 import { SIGNIFICANCE_CHART_CONFIG_MEMBERS } from "../src/charts/significance/config.ts";
@@ -35,6 +36,7 @@ describe.skipIf(!schemaDir)("config types against the generated schemas", () => 
     ["heatmap", HEATMAP_CHART_CONFIG_MEMBERS],
     ["histogram", HISTOGRAM_CHART_CONFIG_MEMBERS],
     ["line", LINE_CHART_CONFIG_MEMBERS],
+    ["pie", PIE_CHART_CONFIG_MEMBERS],
     ["pr", PR_CHART_CONFIG_MEMBERS],
     ["roc", ROC_CHART_CONFIG_MEMBERS],
     ["sankey", SANKEY_CHART_CONFIG_MEMBERS],

@@ -21,7 +21,7 @@ test_that("pie label options inherit validated common labels and serialize", {
   expect_equal(to_list(PieSeries(label = label))[["label"]], value)
   widget <- draw_pie(c(3, 5, 7), c("Adelie", "Chinstrap", "Gentoo"))
   expect_equal(
-    widget[["x"]][["option"]][["series"]][[1L]][["label"]][["alignTo"]],
+    built_option(widget)[["series"]][[1L]][["label"]][["alignTo"]],
     "edge"
   )
 })

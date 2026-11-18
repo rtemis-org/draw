@@ -20,6 +20,7 @@ BUILDER_TYPES <- c(
   "heatmap",
   "histogram",
   "line",
+  "pie",
   "pr",
   "roc",
   "sankey",
