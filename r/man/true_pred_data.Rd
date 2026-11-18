@@ -7,7 +7,7 @@
 true_pred_data(x, y, group = NULL)
 }
 \arguments{
-\item{x}{Numeric vector, single-column matrix, or list: True observations.}
+\item{x}{Numeric vector, single-column matrix, or list: Observed values.}
 
 \item{y}{Numeric vector, single-column matrix, or list: Predicted values.}
 

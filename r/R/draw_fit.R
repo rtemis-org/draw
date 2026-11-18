@@ -9,7 +9,7 @@
 #' Each pair is checked before concatenation, so unequal split or fold lengths
 #' cannot silently shift observations. Missing pairs are removed together.
 #'
-#' @param x Numeric vector, single-column matrix, or list: True observations.
+#' @param x Numeric vector, single-column matrix, or list: Observed values.
 #' @param y Numeric vector, single-column matrix, or list: Predicted values.
 #' @param group Optional Atomic vector or single-column data frame: Groups for
 #'   vector inputs.
@@ -148,7 +148,7 @@ method(true_pred_data, list(class_any, class_any)) <- function(
 
 
 # %% draw_fit ----
-#' Draw True Versus Predicted Values
+#' Draw Observed Versus Predicted Values
 #'
 #' Draw paired observations with a fitted line, standard-error band, and an
 #' identity line. The plotting box is square and both axes share an interval.
@@ -163,11 +163,11 @@ method(true_pred_data, list(class_any, class_any)) <- function(
 #' unnamed lists are paired by position.
 #' Paired `NULL` entries in lists represent unavailable sets and are omitted.
 #'
-#' The equivalent portable configuration is a [ScatterConfig] binding true,
+#' The equivalent portable configuration is a [ScatterConfig] binding observed,
 #' predicted, and sample columns, with `fit`, `se`, `rsq`, `diagonal`, `square`,
 #' and `equal_axes` set explicitly. Model objects are not needed to render it.
 #'
-#' @param x Numeric vector, single-column matrix, or list: True values.
+#' @param x Numeric vector, single-column matrix, or list: Observed values.
 #' @param y Numeric vector, single-column matrix, or list: Predicted values.
 #' @inheritParams draw_scatter
 #' @param ... Additional arguments to [draw_scatter()], including `theme`,
@@ -194,7 +194,7 @@ draw_fit <- function(
   diagonal_color = NULL,
   square = TRUE,
   equal_axes = TRUE,
-  xlab = "True",
+  xlab = "Observed",
   ylab = "Predicted",
   ...,
   legend_position = "top",

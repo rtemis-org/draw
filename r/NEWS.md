@@ -18,6 +18,8 @@
 
 * `draw_histogram()` and `draw()` on a `HistogramConfig` build the chart with the `@rtemis/draw` histogram builder, the one rtemislive uses; `compile()` on a `HistogramConfig` returns a `BuildRequest`. `draw_histogram()` takes `zoom` as `TRUE` or `FALSE` and `margins` in pixels. The y axis is named after a bar's height unless `ylab` is given: the normalization ("Count", "Percent", ...) or the bin statistic of the column ("Mean X").
 
+* `draw_fit()` names the x axis "Observed" by default.
+
 * `draw_boxplot()` and `BoxplotConfig` gain `mean_marker`, a diamond at each box's mean; `draw_varimp(type = "boxplot")` sets it.
 
 * `draw_volcano()`, `draw_manhattan()`, `draw_pvals()`, and `draw()` on a `SignificanceConfig` build the chart with the `@rtemis/draw` significance builder, the one rtemislive uses; `compile()` on a `SignificanceConfig` returns a `BuildRequest`. The middle group reads "Not significant", a significant estimate equal to `x_thresh` is positive, the y axis reads "-log10(Holm-adjusted p)", hover shows the estimate and p-values to three significant digits, and a Manhattan plot of more than 40 outcomes leaves the outcome axis unlabeled.

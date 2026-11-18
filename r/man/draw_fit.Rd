@@ -2,7 +2,7 @@
 % Please edit documentation in R/draw_fit.R
 \name{draw_fit}
 \alias{draw_fit}
-\title{Draw True Versus Predicted Values}
+\title{Draw Observed Versus Predicted Values}
 \usage{
 draw_fit(
   x,
@@ -16,7 +16,7 @@ draw_fit(
   diagonal_color = NULL,
   square = TRUE,
   equal_axes = TRUE,
-  xlab = "True",
+  xlab = "Observed",
   ylab = "Predicted",
   ...,
   legend_position = "top",
@@ -25,7 +25,7 @@ draw_fit(
 )
 }
 \arguments{
-\item{x}{Numeric vector, single-column matrix, or list: True values.}
+\item{x}{Numeric vector, single-column matrix, or list: Observed values.}
 
 \item{y}{Numeric vector, single-column matrix, or list: Predicted values.}
 
@@ -95,7 +95,7 @@ response columns are rejected. List names are matched before drawing;
 unnamed lists are paired by position.
 Paired \code{NULL} entries in lists represent unavailable sets and are omitted.
 
-The equivalent portable configuration is a \link{ScatterConfig} binding true,
+The equivalent portable configuration is a \link{ScatterConfig} binding observed,
 predicted, and sample columns, with \code{fit}, \code{se}, \code{rsq}, \code{diagonal}, \code{square},
 and \code{equal_axes} set explicitly. Model objects are not needed to render it.
 }

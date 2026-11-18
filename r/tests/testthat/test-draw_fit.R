@@ -46,7 +46,7 @@ test_that("draw_fit supplies true/predicted defaults and a clipped identity line
   w <- draw_fit(1:5, c(1.2, 1.8, 3.3, 3.8, 5.2))
   expect_s3_class(w, "htmlwidget")
   o <- fit_option(w)
-  expect_identical(o[["xAxis"]][["name"]], "True")
+  expect_identical(o[["xAxis"]][["name"]], "Observed")
   expect_identical(o[["yAxis"]][["name"]], "Predicted")
   expect_equal(o[["xAxis"]][["min"]], o[["yAxis"]][["min"]])
   expect_equal(o[["xAxis"]][["max"]], o[["yAxis"]][["max"]])
@@ -165,7 +165,7 @@ test_that("fit options validate and survive portable config round trips", {
     diagonal_color = "#123456",
     square = TRUE,
     equal_axes = TRUE,
-    xlab = "True",
+    xlab = "Observed",
     ylab = "Predicted"
   )
   data <- true_pred_data(
