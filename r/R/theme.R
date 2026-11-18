@@ -33,6 +33,7 @@
 #'   camelCase fields from `SliderDataZoomOption` in
 #'   `src/component/dataZoom/SliderZoomModel.ts`.
 #' @param line Optional Named list: Line-series defaults.
+#' @param radar Optional Named list: Radar-series defaults.
 #' @param bar Optional Named list: Bar-series defaults.
 #' @param pie Optional Named list: Pie-series defaults.
 #' @param scatter Optional Named list: Scatter-series defaults.
@@ -68,6 +69,7 @@ Theme <- S7::new_class(
     ),
     # Series defaults (plain lists)
     line = S7::new_property(class = S7::class_any, default = NULL),
+    radar = S7::new_property(class = S7::class_any, default = NULL),
     bar = S7::new_property(class = S7::class_any, default = NULL),
     pie = S7::new_property(class = S7::class_any, default = NULL),
     scatter = S7::new_property(class = S7::class_any, default = NULL),
@@ -99,6 +101,7 @@ S7::method(to_list, Theme) <- function(x, ...) {
     tooltip = "tooltip",
     data_zoom = "dataZoom",
     line = "line",
+    radar = "radar",
     bar = "bar",
     pie = "pie",
     scatter = "scatter",
@@ -377,7 +380,10 @@ build_theme <- function(
     } else {
       NULL
     },
-    line = list(symbol = "circle")
+    # Filled symbols, where ECharts' default `emptyCircle` fills with the
+    # canvas background; `SERIES_THEME` in @rtemis/draw.
+    line = list(symbol = "circle"),
+    radar = list(symbol = "circle")
   )
 }
 

@@ -39,7 +39,9 @@ setup_TimeSeriesConfig(
 \item{x, y}{Optional Character: Time and value column bindings. Multiple y
 columns share x; group splits a single y column.}
 
-\item{group}{Optional Character: Group column binding.}
+\item{group}{Optional Character: Group column binding. It splits every \code{y}
+and \code{y2} column; with several columns bound, a series is named
+"column / level".}
 
 \item{x2, y2}{Optional Character: Secondary time/value bindings. Unset x2 uses x.}
 

@@ -1,4 +1,4 @@
-import { formatNumber } from "../../shared/format.ts";
+import { tooltipValue } from "../../shared/format.ts";
 import { axisZoom, cartesianGrid, type MarginMembers } from "../../shared/layout.ts";
 import type { LegendMembers } from "../../shared/legend.ts";
 import { ridgeOption } from "../../shared/ridge.ts";
@@ -370,7 +370,7 @@ export function buildHistogramOption(
   const ylab = config.ylab || null;
   const common = {
     ...(config.title ? { title: { text: config.title } } : {}),
-    tooltip: { trigger: "item", valueFormatter: formatNumber },
+    tooltip: { trigger: "item", valueFormatter: tooltipValue },
     // A custom bar hovered during an update transition leaves the y axis at
     // an intermediate scale (ECharts 6.1.0), so updates apply at once.
     animationDurationUpdate: 0,

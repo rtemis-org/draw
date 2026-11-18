@@ -24,6 +24,7 @@ describe("buildLineOption", () => {
     expect(seriesOf(option)).toEqual([
       {
         type: "line",
+        symbol: "circle",
         showSymbol: false,
         data: [
           [1, 2],

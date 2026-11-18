@@ -310,7 +310,7 @@ test_that("missing heatmap cells remain missing with materialized value labels",
     value_digits = 3L,
     show_colorbar = FALSE
   )
-  data <- w[["x"]][["option"]][["series"]][[1L]][["data"]]
+  data <- raw_option(w)[["series"]][[1L]][["data"]]
   expect_identical(data[[1L]][["label"]][["formatter"]], "1.235")
   expect_length(data[[3L]][["value"]], 3L)
   expect_null(data[[3L]][["value"]][[3L]])

@@ -717,7 +717,7 @@ echarts_option <- function(x, dark = FALSE, simplify = TRUE) {
 #' @param build Named list: A build request payload (`build_payload()`).
 #' @param dark Logical: Build in the dark color scheme.
 #' @param simplify Logical: As in [echarts_option()].
-#' @param what Character \{"option", "aspect"\}: The option, or the
+#' @param what Character \{"option", "aspect", "hints"\}: The option, the
 #'   fixed-aspect box hint the widget derives from it.
 #'
 #' @return Named list, or `NULL` for an absent aspect hint.

@@ -13,66 +13,12 @@ make_mat <- function(n = 6L) {
   m
 }
 
-# -- hclust_to_dendro_data() ---------------------------------------------------
-
-test_that("hclust_to_dendro_data returns n-1 segments and correct max_height", {
-  m <- make_mat()
-  h <- stats::hclust(stats::dist(m))
-  out <- hclust_to_dendro_data(h)
-
-  n <- nrow(m)
-  expect_named(out, c("data", "min_height", "max_height"))
-  expect_length(out[["data"]], n - 1L)
-  expect_equal(out[["max_height"]], h[["height"]][n - 1L])
-})
-
-test_that("hclust_to_dendro_data produces numeric 5-tuples", {
-  m <- make_mat()
-  h <- stats::hclust(stats::dist(m))
-  out <- hclust_to_dendro_data(h)
-  for (seg in out[["data"]]) {
-    expect_length(seg, 5L)
-    expect_true(all(vapply(seg, is.numeric, logical(1L))))
-  }
-})
-
-test_that("hclust_to_dendro_data leaf positions cover 0 .. n-1", {
-  # Leaf positions (values 0 and 1 in 5-tuples) span 0 .. n-1.
-  m <- make_mat(5L)
-  h <- stats::hclust(stats::dist(m))
-  out <- hclust_to_dendro_data(h)
-  # Leaf positions: left_pos values from segments where left_h == 0 (leaf on left),
-  # and right_pos values from segments where right_h == 0 (leaf on right).
-  left_leaf_pos <- vapply(
-    out[["data"]][vapply(
-      out[["data"]],
-      function(seg) seg[[3L]] == 0,
-      logical(1L)
-    )],
-    `[[`,
-    numeric(1L),
-    1L
-  )
-  right_leaf_pos <- vapply(
-    out[["data"]][vapply(
-      out[["data"]],
-      function(seg) seg[[4L]] == 0,
-      logical(1L)
-    )],
-    `[[`,
-    numeric(1L),
-    2L
-  )
-  leaf_pos <- unique(c(left_leaf_pos, right_leaf_pos))
-  expect_setequal(leaf_pos, seq(0, nrow(m) - 1L))
-})
-
 # -- draw_heatmap(): no clustering (baseline) ----------------------------------
 
 test_that("draw_heatmap with no clustering returns a single grid and single axes", {
   m <- make_mat()
   w <- draw_heatmap(m)
-  opt <- w$x$option
+  opt <- raw_option(w)
 
   # Single grid object (not a list)
   expect_false(is.list(opt$grid) && is.list(opt$grid[[1]]))
@@ -86,7 +32,7 @@ test_that("draw_heatmap with no clustering returns a single grid and single axes
 test_that("draw_heatmap with cluster_rows adds a row dendrogram panel", {
   m <- make_mat()
   w <- draw_heatmap(m, cluster_rows = TRUE)
-  opt <- w$x$option
+  opt <- raw_option(w)
 
   # Two grids: row dendro (index 0) + heatmap (index 1)
   expect_length(opt$grid, 2L)
@@ -115,7 +61,7 @@ test_that("draw_heatmap with cluster_rows adds a row dendrogram panel", {
 test_that("draw_heatmap with cluster_cols adds a col dendrogram panel", {
   m <- make_mat()
   w <- draw_heatmap(m, cluster_cols = TRUE)
-  opt <- w$x$option
+  opt <- raw_option(w)
 
   expect_length(opt$grid, 2L)
   # Col dendro grid must have a fixed height (not bottom margin)
@@ -133,7 +79,7 @@ test_that("draw_heatmap with cluster_cols adds a col dendrogram panel", {
 test_that("draw_heatmap with cluster_rows and cluster_cols produces 3 grids", {
   m <- make_mat()
   w <- draw_heatmap(m, cluster_rows = TRUE, cluster_cols = TRUE)
-  opt <- w$x$option
+  opt <- raw_option(w)
 
   # Three grids, axes, and series
   expect_length(opt$grid, 3L)
@@ -153,7 +99,7 @@ test_that("draw_heatmap with cluster_rows and cluster_cols produces 3 grids", {
 test_that("show_row_dendro=FALSE reorders rows but does not add a dendro panel", {
   m <- make_mat()
   w0 <- draw_heatmap(m, cluster_rows = TRUE, show_row_dendro = FALSE)
-  opt <- w0$x$option
+  opt <- raw_option(w0)
 
   # Single grid: no extra panel
   expect_false(is.list(opt$grid) && is.list(opt$grid[[1]]))
@@ -173,8 +119,11 @@ test_that("square_cells meta leftPx includes dendro_row_width when cluster_rows"
   w_dendro <- draw_heatmap(m, cluster_rows = TRUE, square_cells = TRUE)
 
   # With row dendro on the right (default), rightPx is larger by dendro_row_width
-  expect_true(w_dendro$x$rightPx > w_plain$x$rightPx)
-  expect_equal(w_dendro$x$rightPx - w_plain$x$rightPx, 60L)
+  skip_if_no_node()
+  plain <- built_option(w_plain, what = "hints")
+  dendro <- built_option(w_dendro, what = "hints")
+  expect_true(dendro$rightPx > plain$rightPx)
+  expect_equal(dendro$rightPx - plain$rightPx, 60L)
 })
 
 # -- draw_heatmap(): triangle masking + clustering ----------------------------
@@ -197,7 +146,7 @@ test_that("triangle masking with cluster_rows does not error", {
 test_that("dendro_color and orientation are plain renderer parameters", {
   m <- make_mat()
   w <- draw_heatmap(m, cluster_rows = TRUE, dendro_color = "#ff0000")
-  series <- w[["x"]][["option"]][["series"]][[1L]]
+  series <- raw_option(w)[["series"]][[1L]]
   expect_identical(series[["renderItem"]], "rtemis.dendrogram.v1")
   expect_identical(
     series[["itemPayload"]],
@@ -232,7 +181,7 @@ test_that("draw_heatmap with 1 row does not add dendro panel", {
   # n_rows = 1: clustering is skipped (need > 1 row), so no extra grid is added
   m <- matrix(1:3, nrow = 1L, dimnames = list("A", c("X", "Y", "Z")))
   w <- draw_heatmap(m, cluster_rows = TRUE)
-  opt <- w$x$option
+  opt <- raw_option(w)
   # Single grid: opt$grid is a named list; its first element is a scalar, not a list
   expect_false(is.list(opt$grid[[1]]))
   expect_s3_class(w, "htmlwidget")
@@ -241,36 +190,29 @@ test_that("draw_heatmap with 1 row does not add dendro panel", {
 
 test_that("heatmap labels default to two decimals without rounding source values", {
   m <- matrix(c(.5951098244376296, 1, -.2350528703555328, NA), 2L)
-  defaults <- draw_heatmap(m, show_values = TRUE)[["x"]][["option"]]
+  defaults <- raw_option(draw_heatmap(m, show_values = TRUE))
   items <- defaults[["series"]][[1L]][["data"]]
   expect_identical(
     vapply(items, function(p) p[["label"]][["formatter"]], ""),
     c("0.60", "-0.24", "1.00", "")
   )
-  expect_identical(items[[1L]][["value"]][[3L]], m[1L, 1L])
+  expect_equal(items[[1L]][["value"]][[3L]], m[1L, 1L])
   expect_identical(HeatmapConfig()@value_digits, 2L)
   cfg <- setup_HeatmapConfig(show_values = TRUE, value_digits = 3L)
-  explicit <- draw(cfg, data = m)[["x"]][["option"]]
+  explicit <- raw_option(draw(cfg, data = m))
   expect_identical(
     explicit,
-    draw_heatmap(m, show_values = TRUE, value_digits = 3L)[["x"]][["option"]]
+    raw_option(draw_heatmap(m, show_values = TRUE, value_digits = 3L))
   )
   expect_identical(
     explicit[["series"]][[1L]][["data"]][[1L]][["label"]][["formatter"]],
     "0.595"
   )
   # A nonzero value that rounds to zero reads in scientific notation.
-  small <- draw_heatmap(matrix(c(.004, 1), 1L), show_values = TRUE)
+  small <- raw_option(draw_heatmap(matrix(c(.004, 1), 1L), show_values = TRUE))
   expect_identical(
-    small[["x"]][["option"]][["series"]][[1L]][["data"]][[1L]][["label"]][[
-      "formatter"
-    ]],
+    small[["series"]][[1L]][["data"]][[1L]][["label"]][["formatter"]],
     "4e-03"
-  )
-  expect_match(
-    small[["x"]][["option"]][["tooltip"]][["formatter"]],
-    "RtemisDraw.ddSci(p.value[2],2)",
-    fixed = TRUE
   )
 })
 
@@ -299,7 +241,7 @@ test_that("vertical heatmap colorbars stay centered on the plotted data", {
   on.exit(unlink(path), add = TRUE)
   jsonlite::write_json(
     list(
-      charts = lapply(charts, function(w) strip_js(w[["x"]])),
+      charts = lapply(charts, built_payload),
       echarts = system.file(
         "htmlwidgets/lib/echarts/echarts.min.js",
         package = "rtemis.draw"
@@ -356,7 +298,7 @@ test_that("square heatmaps keep their geometry in bounded panels and after resiz
             args
           )
         )
-        strip_js(w[["x"]])
+        w[["x"]]
       })
     }),
     recursive = FALSE
@@ -396,6 +338,7 @@ test_that("square heatmaps keep their geometry in bounded panels and after resiz
   expect_match(paste(output, collapse = "\n"), "passed")
 })
 test_that("heatmap trees retain supplied column order and alternate dendrogram sides", {
+  skip_if_no_node()
   values <- matrix(
     c(1, 4, 2, 5, 9, 6, 3, 8, 7),
     3L,
@@ -403,16 +346,15 @@ test_that("heatmap trees retain supplied column order and alternate dendrogram s
   )
   tree <- stats::hclust(stats::dist(t(values)))
   palette <- c("#000000", "#ffffff")
-  built <- heatmap_option(
-    x = values,
+  option <- raw_option(draw_heatmap(
+    values,
     col_tree = tree,
     cluster_rows = TRUE,
     dendro_row_side = "left",
     dendro_col_side = "bottom",
     colormap = palette,
     margins = c(left = 30, right = 40, top = 50, bottom = 60)
-  )
-  option <- to_list(built[["option"]])
+  ))
   # Dendrogram grids precede the heatmap grid.
   expect_equal(option[["grid"]][[1L]][["left"]], 0)
   expect_equal(option[["grid"]][[2L]][["bottom"]], 0)
@@ -424,7 +366,7 @@ test_that("heatmap trees retain supplied column order and alternate dendrogram s
   expect_identical(option[["xAxis"]][[3L]][["position"]], "top")
   expect_equal(option[["visualMap"]][["inRange"]][["color"]], as.list(palette))
   expect_error(
-    heatmap_option(x = matrix(c(1, NA, NA, 1), 2L), triangle = "lower"),
+    draw_heatmap(matrix(c(1, NA, NA, 1), 2L), triangle = "lower"),
     "off-diagonal"
   )
 })

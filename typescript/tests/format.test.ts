@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { ddSci } from "../src/shared/format.ts";
+import { ddSci, tooltipValue } from "../src/shared/format.ts";
 
 // Expected text is rtemis.core::ddSci()'s for the same values and decimals.
 const values = [
@@ -41,5 +41,13 @@ describe("ddSci", () => {
       "NA",
       "NA",
     ]);
+  });
+});
+
+describe("tooltipValue", () => {
+  it("ignores the data index ECharts passes as its second argument", () => {
+    const format = tooltipValue as (value: unknown, dataIndex: number) => unknown;
+    expect(format(1.23456, 181)).toBe("1.23");
+    expect(format(7, 500)).toBe("7");
   });
 });

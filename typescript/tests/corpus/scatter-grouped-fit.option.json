@@ -1456,6 +1456,7 @@
     },
     {
       "type": "line",
+      "symbol": "circle",
       "name": "Adelie (R² = 0.153)",
       "data": [
         [
@@ -1636,6 +1637,7 @@
     },
     {
       "type": "line",
+      "symbol": "circle",
       "name": "Adelie (R² = 0.153)",
       "data": [
         [
@@ -1730,6 +1732,7 @@
     },
     {
       "type": "line",
+      "symbol": "circle",
       "name": "Chinstrap (R² = 0.427)",
       "data": [
         [
@@ -1910,6 +1913,7 @@
     },
     {
       "type": "line",
+      "symbol": "circle",
       "name": "Chinstrap (R² = 0.427)",
       "data": [
         [
@@ -2004,6 +2008,7 @@
     },
     {
       "type": "line",
+      "symbol": "circle",
       "name": "Gentoo (R² = 0.414)",
       "data": [
         [
@@ -2184,6 +2189,7 @@
     },
     {
       "type": "line",
+      "symbol": "circle",
       "name": "Gentoo (R² = 0.414)",
       "data": [
         [

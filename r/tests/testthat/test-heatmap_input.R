@@ -26,7 +26,12 @@ test_that("supplied trees align identities, notes and tracks through one permuta
   plain <- unclass(tree)
   expect_equal(heatmap_tree(plain, rownames(x))[["order"]], expected_order)
   config <- setup_HeatmapConfig(show_notes = TRUE, row_cut = 2L)
-  opt <- to_list(compile(config, data = record))
+  path <- tempfile(fileext = ".json")
+  on.exit(unlink(path))
+  write_chart_config(config, path)
+  expect_equal(read_chart_config(path)@row_cut, 2L)
+  skip_if_no_node()
+  opt <- built_option(compile(config, data = record), simplify = FALSE)
   expect_equal(
     opt[["yAxis"]][[2]][["data"]],
     as.list(rownames(x)[expected_order])
@@ -47,15 +52,8 @@ test_that("supplied trees align identities, notes and tracks through one permuta
     lapply(expected_order, function(i) list(normalized[["row_colors"]][i, 1]))
   )
   expect_equal(opt[["visualMap"]][["seriesIndex"]], 1L)
-  expect_equal(strip_js(opt)[["series"]], opt[["series"]])
-  path <- tempfile(fileext = ".json")
-  on.exit(unlink(path))
-  write_chart_config(config, path)
-  expect_equal(read_chart_config(path)@row_cut, 2L)
   # Supplied trees take precedence over the clustering switch.
-  other <- to_list(heatmap_option(x = x, row_tree = tree, cluster_rows = TRUE)[[
-    "option"
-  ]])
+  other <- raw_option(draw_heatmap(x, row_tree = tree, cluster_rows = TRUE))
   expect_equal(other[["yAxis"]][[2]][["data"]], opt[["yAxis"]][[2]][["data"]])
 })
 
@@ -108,34 +106,35 @@ test_that("heatmap annotation validation rejects ambiguity and malformed trees",
     ),
     "valid"
   )
-  expect_error(heatmap_option(x = x, show_notes = TRUE), "show_notes")
+  expect_error(draw_heatmap(x, show_notes = TRUE), "show_notes")
   expect_error(
-    heatmap_option(
-      x = x,
+    draw_heatmap(
+      x,
       show_values = TRUE,
       show_notes = TRUE,
       cell_notes = matrix("a", 4, 3)
     ),
     "choose"
   )
-  expect_error(heatmap_option(x = x, row_cut = 2), "tree cut")
-  expect_error(heatmap_option(x = x, row_tree = tree, row_cut = 5), "tree cut")
   expect_error(
-    heatmap_option(x = x, row_tree = tree, triangle = "lower"),
+    draw_heatmap(x, row_tree = tree, triangle = "lower"),
     "full matrix"
   )
-  expect_error(heatmap_option(x = x, row_names = "A"), "display label")
+  expect_error(draw_heatmap(x, row_names = "A"), "display label")
   expect_error(setup_HeatmapConfig(row_cut = 0))
   expect_error(setup_HeatmapConfig(show_notes = NA))
+  skip_if_no_node()
+  expect_error(built_option(draw_heatmap(x, row_cut = 2L)), "row tree")
+  expect_error(
+    built_option(draw_heatmap(x, row_tree = tree, row_cut = 5L)),
+    "tree cut"
+  )
 })
 
 test_that("empty-row slots and column slots remain aligned with dendrogram leaves", {
   x <- matrix(c(1, NA, 9, 3, 2, NA, 8, 4, NA, NA, NA, NA), 4)
-  built <- to_list(heatmap_option(
-    x = x,
-    cluster_rows = TRUE,
-    cluster_cols = TRUE
-  )[["option"]])
+  skip_if_no_node()
+  built <- raw_option(draw_heatmap(x, cluster_rows = TRUE, cluster_cols = TRUE))
   segments <- built[["series"]][[1]][["data"]]
   leaves <- unlist(lapply(segments, function(seg) {
     c(if (seg[[3]] == 0) seg[[1]], if (seg[[4]] == 0) seg[[2]])
@@ -147,28 +146,16 @@ test_that("empty-row slots and column slots remain aligned with dendrogram leave
   # Triangle masking subsets annotations before clustering and preserves cells.
   square <- matrix(1:16, 4)
   notes <- matrix(paste0("n", 1:16), 4)
-  opt <- to_list(heatmap_option(
-    x = square,
+  opt <- raw_option(draw_heatmap(
+    square,
     triangle = "lower",
     cell_notes = notes,
     row_colors = rep("red", 4),
     col_colors = rep("blue", 4)
-  )[["option"]])
+  ))
   expect_equal(opt[["series"]][[1]][["data"]][[1]][["note"]], "n2")
   expect_length(opt[["series"]][[2]][["data"]], 3L)
   expect_length(opt[["series"]][[3]][["data"]], 3L)
-})
-
-test_that("branch colors are stable in displayed cluster order and respect cuts", {
-  tree <- hclust(dist(c(0, 1, 9, 10)))
-  colors <- heatmap_branch_colors(tree, 2L, "gray")
-  expect_length(unique(unlist(colors)), 3L)
-  expect_equal(colors[[3]], "gray")
-  expect_equal(heatmap_branch_colors(tree, 4L, "gray"), rep(list("gray"), 3))
-  expect_length(unique(unlist(heatmap_branch_colors(tree, 1L, "gray"))), 1L)
-  expect_error(heatmap_branch_colors(tree, 1.5, "gray"), "tree cut")
-  zero <- hclust(dist(rep(1, 3)))
-  expect_gt(hclust_to_dendro_data(zero)[["max_height"]], 0)
 })
 
 test_that("annotated heatmaps preserve native vector geometry after resizing", {
@@ -192,7 +179,7 @@ test_that("annotated heatmaps preserve native vector geometry after resizing", {
         theme = theme
       )
       charts[[length(charts) + 1L]] <- list(
-        option = strip_js(w[["x"]][["option"]]),
+        option = built_option(w, simplify = FALSE),
         theme = to_list(theme)
       )
     }

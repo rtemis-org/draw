@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { buildTimeSeriesOption, rollingValues } from "../src/charts/timeseries/config.ts";
+import {
+  axisTooltip,
+  buildTimeSeriesOption,
+  rollingValues,
+} from "../src/charts/timeseries/config.ts";
 import { AXIS_LABELS, timeSeriesRenderers } from "../src/charts/timeseries/renderers.ts";
+import { placeZoomSlider, ZOOM_SLIDER_ID } from "../src/shared/layout.ts";
 import type { TabularData } from "../src/shared/source.ts";
 
 type Series = Record<string, unknown> & { name: string; data: unknown[] };
@@ -102,6 +107,31 @@ describe("buildTimeSeriesOption", () => {
     expect(series[0]?.data).toEqual([
       [2, 4],
       [3, 6],
+    ]);
+    expect(series[0]?.symbol).toBe("circle");
+  });
+
+  it("splits every y and y2 column by group, named column / level", () => {
+    const grouped = {
+      columns: { t: [1, 2, 3, 4], v: [1, 2, 3, 4], w: [5, 6, 7, 8], g: ["F", "M", "F", "M"] },
+    };
+    const option = buildTimeSeriesOption(grouped, { x: "t", y: "v", y2: "w", group: "g" });
+    const series = seriesOf(option);
+    expect(series.map((s) => [s.name, s.yAxisIndex])).toEqual([
+      ["v / F", 0],
+      ["v / M", 0],
+      ["w / F", 1],
+      ["w / M", 1],
+    ]);
+    expect(series[3]?.data).toEqual([
+      [2, 6],
+      [4, 8],
+    ]);
+    expect((option.legend as { data: string[] }).data).toEqual([
+      "v / F",
+      "v / M",
+      "w / F",
+      "w / M",
     ]);
   });
 
@@ -206,5 +236,45 @@ describe("the zeitgeber label renderer", () => {
     const params = { coordSys: { x: 10, y: 0, width: 100, height: 50 } };
     expect(render(params, api(40))?.style).toMatchObject({ x: 40, y: 60, text: "6" });
     expect(render(params, api(200))).toBeUndefined();
+  });
+});
+
+describe("axisTooltip", () => {
+  it("writes each series' observation and rolling summary on one row", () => {
+    const html = axisTooltip(
+      [
+        {
+          seriesName: "F",
+          seriesIndex: 0,
+          value: [1, 0.51111],
+          marker: "<i></i>",
+          axisValueLabel: "2012-05-11",
+        },
+        { seriesName: "F", seriesIndex: 1, value: [1, 0.5124], marker: "<i></i>" },
+        { seriesName: "<b>", seriesIndex: 2, value: [1, null], marker: "" },
+        { seriesName: "<b>", seriesIndex: 3, value: [1, 2], marker: "" },
+      ],
+      new Set([1, 3]),
+      "mean",
+    );
+    expect(html).toBe(
+      '2012-05-11<br/><i></i>F&nbsp;&nbsp;<b>0.511</b> <span style="opacity:0.7">mean 0.512</span><br/>&#60;b&#62;&nbsp;&nbsp;<b>–</b> <span style="opacity:0.7">mean 2</span>',
+    );
+  });
+});
+
+describe("placeZoomSlider", () => {
+  it("places the slider above a margin the host set after the build", () => {
+    const option = buildTimeSeriesOption(
+      { columns: { t: [1, 2, 3], v: [1, 2, 3] } },
+      { x: "t", y: "v", zoom: true },
+    );
+    (option.grid as Record<string, unknown>).bottom = 60;
+    placeZoomSlider(option);
+    const slider = (option.dataZoom as Record<string, unknown>[]).find(
+      (z) => z.id === ZOOM_SLIDER_ID,
+    );
+    expect(slider?.bottom).toBe(67);
+    expect((option.grid as Record<string, unknown>).bottom).toBe(60 + 7 + 30 + 8);
   });
 });

@@ -16,6 +16,7 @@ Theme(
   tooltip = NULL,
   data_zoom = NULL,
   line = NULL,
+  radar = NULL,
   bar = NULL,
   pie = NULL,
   scatter = NULL,
@@ -48,6 +49,8 @@ camelCase fields from \code{SliderDataZoomOption} in
 \code{src/component/dataZoom/SliderZoomModel.ts}.}
 
 \item{line}{Optional Named list: Line-series defaults.}
+
+\item{radar}{Optional Named list: Radar-series defaults.}
 
 \item{bar}{Optional Named list: Bar-series defaults.}
 

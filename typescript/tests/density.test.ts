@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { buildDensityOption, type DensityData } from "../src/charts/density/config.ts";
-import { formatNumber } from "../src/shared/format.ts";
+import { tooltipValue } from "../src/shared/format.ts";
 
 type Series = {
   type: string;
@@ -32,7 +32,7 @@ describe("buildDensityOption", () => {
     ]);
     expect(option.xAxis).toMatchObject({ type: "value", scale: true });
     expect(option.yAxis).toMatchObject({ type: "value", min: 0 });
-    expect(option.tooltip).toEqual({ trigger: "axis", valueFormatter: formatNumber });
+    expect(option.tooltip).toEqual({ trigger: "axis", valueFormatter: tooltipValue });
     expect(option.legend).toBeUndefined();
   });
 

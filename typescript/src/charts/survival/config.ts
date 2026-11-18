@@ -256,6 +256,7 @@ export function buildSurvivalOption(
         });
         series.push({
           type: "line",
+          symbol: "circle",
           name,
           step: "end",
           stack: `ci-${i}`,
@@ -296,6 +297,7 @@ export function buildSurvivalOption(
     if (median !== null) {
       series.push({
         type: "line",
+        symbol: "circle",
         name,
         data: [
           [domain[0], 0.5],

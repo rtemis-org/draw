@@ -1,4 +1,4 @@
-import { formatNumber } from "../../shared/format.ts";
+import { tooltipValue } from "../../shared/format.ts";
 import { axisZoom, cartesianGrid, type MarginMembers } from "../../shared/layout.ts";
 import type { LegendMembers } from "../../shared/legend.ts";
 import { ridgeOption } from "../../shared/ridge.ts";
@@ -138,6 +138,7 @@ export function buildDensityOption(
   const names = samples.map((s, i) => s.name ?? `Series ${i + 1}`);
   const series = samples.map((s, i) => ({
     type: "line",
+    symbol: "circle",
     name: names[i],
     showSymbol: false,
     areaStyle: { opacity: config.fill_alpha ?? 0.25 },
@@ -151,7 +152,7 @@ export function buildDensityOption(
   const ylab = config.ylab || null;
   const common = {
     ...(config.title ? { title: { text: config.title } } : {}),
-    tooltip: { trigger: "axis", valueFormatter: formatNumber },
+    tooltip: { trigger: "axis", valueFormatter: tooltipValue },
     ...(colors && colors.length > 0 ? { color: [...colors] } : {}),
     ...(appearance.animation === undefined ? {} : { animation: appearance.animation }),
   };

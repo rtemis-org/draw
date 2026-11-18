@@ -152,6 +152,7 @@ export function createA3EChartsOption(
 
     series.push({
       type: "line",
+      symbol: "circle",
       name,
       z: 15,
       // Purely visual: ignore pointer events so hovering the band falls through

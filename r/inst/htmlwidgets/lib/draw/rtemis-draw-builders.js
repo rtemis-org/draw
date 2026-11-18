@@ -34,6 +34,7 @@ var RtemisDraw = (() => {
     FIT_MEMBERS: () => FIT_MEMBERS,
     GANTT_CHART_CONFIG_MEMBERS: () => GANTT_CHART_CONFIG_MEMBERS,
     GANTT_ROW_PX: () => GANTT_ROW_PX,
+    HEATMAP_CHART_CONFIG_MEMBERS: () => HEATMAP_CHART_CONFIG_MEMBERS,
     HISTOGRAM_CHART_CONFIG_MEMBERS: () => HISTOGRAM_CHART_CONFIG_MEMBERS,
     LINE_CHART_CONFIG_MEMBERS: () => LINE_CHART_CONFIG_MEMBERS,
     MAX_SYMBOL_SIZE: () => MAX_SYMBOL_SIZE,
@@ -43,6 +44,7 @@ var RtemisDraw = (() => {
     RTEMIS_PALETTE: () => RTEMIS_PALETTE,
     SANKEY_CHART_CONFIG_MEMBERS: () => SANKEY_CHART_CONFIG_MEMBERS,
     SCATTER_CHART_CONFIG_MEMBERS: () => SCATTER_CHART_CONFIG_MEMBERS,
+    SERIES_THEME: () => SERIES_THEME,
     SIGNIFICANCE_CHART_CONFIG_MEMBERS: () => SIGNIFICANCE_CHART_CONFIG_MEMBERS,
     SIGNIFICANT_DIGITS: () => SIGNIFICANT_DIGITS,
     SIGN_COLORS: () => SIGN_COLORS,
@@ -55,13 +57,16 @@ var RtemisDraw = (() => {
     applyRepelLabels: () => applyRepelLabels,
     aspectHints: () => aspectHints,
     autoAlpha: () => autoAlpha,
+    axisTooltip: () => axisTooltip,
     boxplotStats: () => boxplotStats,
+    branchColors: () => branchColors,
     buildA3Option: () => buildA3Option,
     buildBarOption: () => buildBarOption,
     buildBoxplotOption: () => buildBoxplotOption,
     buildConfusionOption: () => buildConfusionOption,
     buildDensityOption: () => buildDensityOption,
     buildGanttOption: () => buildGanttOption,
+    buildHeatmapOption: () => buildHeatmapOption,
     buildHistogramOption: () => buildHistogramOption,
     buildLineOption: () => buildLineOption,
     buildPrOption: () => buildPrOption,
@@ -75,21 +80,28 @@ var RtemisDraw = (() => {
     calcLimits: () => calcLimits,
     calcLimitsFromZero: () => calcLimitsFromZero,
     classCount: () => classCount,
+    colorRamp: () => colorRamp,
     confusionHeight: () => confusionHeight,
     confusionLayout: () => confusionLayout,
     confusionRates: () => confusionRates,
     curveAspect: () => curveAspect,
     curveLabel: () => curveLabel,
     curveLegendTitle: () => curveLegendTitle,
+    dark3: () => dark3,
     darkThemeTokens: () => darkThemeTokens,
     ddSci: () => ddSci,
+    divergingRamp: () => divergingRamp,
     fitConfusion: () => fitConfusion,
+    fitHeatmap: () => fitHeatmap,
     fitKeys: () => fitKeys,
     fitLabel: () => fitLabel,
     fitLegend: () => fitLegend,
     fontStack: () => fontStack,
     formatNumber: () => formatNumber,
     ganttHeight: () => ganttHeight,
+    hcl: () => hcl,
+    heatmapHints: () => heatmapHints,
+    heatmapMargins: () => heatmapMargins,
     histogramEdges: () => histogramEdges,
     histogramValueLabel: () => histogramValueLabel,
     kernelDensity: () => kernelDensity,
@@ -98,6 +110,7 @@ var RtemisDraw = (() => {
     layoutSurvivalRisk: () => layoutSurvivalRisk,
     lightThemeTokens: () => lightThemeTokens,
     lineAspect: () => lineAspect,
+    placeZoomSlider: () => placeZoomSlider,
     pretty: () => pretty,
     radicalInverse: () => radicalInverse,
     registerRenderers: () => registerRenderers,
@@ -114,7 +127,8 @@ var RtemisDraw = (() => {
     themeOption: () => themeOption,
     timeLabel: () => timeLabel,
     timeMs: () => timeMs,
-    valueLabel: () => valueLabel
+    valueLabel: () => valueLabel,
+    zoomSliderStyle: () => zoomSliderStyle
   });
 
   // src/charts/a3/layout.ts
@@ -498,6 +512,7 @@ var RtemisDraw = (() => {
       }
       series.push({
         type: "line",
+        symbol: "circle",
         name,
         z: 15,
         // Purely visual: ignore pointer events so hovering the band falls through
@@ -1032,6 +1047,9 @@ var RtemisDraw = (() => {
     const decimals = Math.max(0, digits - 1 - Math.floor(Math.log10(Math.abs(rounded))));
     return rounded.toFixed(decimals);
   }
+  function tooltipValue(value) {
+    return formatNumber(value);
+  }
   function ddSci(value, decimals = 2, hi = 1e6) {
     if (value === null || value === void 0 || !Number.isFinite(value)) return "NA";
     if (value === 0) return 0 .toFixed(decimals);
@@ -1084,6 +1102,17 @@ var RtemisDraw = (() => {
       },
       { type: "inside", ...index, ...options, zoomOnMouseWheel: "shift", moveOnMouseMove: true }
     ];
+  }
+  function placeZoomSlider(option) {
+    const zooms = [option.dataZoom ?? []].flat();
+    const slider = zooms.find((z) => z?.id === ZOOM_SLIDER_ID);
+    const grid = [option.grid ?? []].flat()[0];
+    if (!slider || !grid) return;
+    const side = slider.yAxisIndex !== void 0 ? "right" : "bottom";
+    const current = grid[side];
+    const margin = typeof current === "number" ? current : side === "bottom" ? 80 : 15;
+    slider[side] = margin + SLIDER_HANDLE;
+    grid[side] = margin + SLIDER_HANDLE + SLIDER_SIZE + SLIDER_GAP;
   }
   function xyZoom(boxZoom) {
     const inside = (index) => ({
@@ -1286,7 +1315,7 @@ var RtemisDraw = (() => {
     const dataZoom = config.zoom ? axisZoom(horizontal ? "y" : "x", grid) : void 0;
     return {
       ...config.title ? { title: { text: config.title } } : {},
-      tooltip: { trigger: "axis", valueFormatter: formatNumber },
+      tooltip: { trigger: "axis", valueFormatter: tooltipValue },
       ...series.length > 1 ? { legend: { data: series.map((s) => s.name) } } : {},
       xAxis,
       yAxis,
@@ -1466,6 +1495,35 @@ var RtemisDraw = (() => {
       Object.entries(entries).filter(([, v]) => v !== void 0 && v !== null)
     );
   }
+  function zoomSliderStyle(dark) {
+    return {
+      backgroundColor: "rgba(128,128,128,0.06)",
+      borderColor: dark ? "#606060" : "#b0b0b0",
+      fillerColor: "rgba(128,128,128,0.18)",
+      dataBackground: {
+        lineStyle: { color: "#808080" },
+        areaStyle: { color: "#808080", opacity: 0.12 }
+      },
+      selectedDataBackground: {
+        lineStyle: { color: dark ? "#b0b0b0" : "#707070" },
+        areaStyle: { color: "#808080", opacity: 0.25 }
+      },
+      handleStyle: {
+        color: dark ? "#303030" : "#ffffff",
+        borderColor: dark ? "#909090" : "#808080"
+      },
+      moveHandleStyle: { color: "#909090", opacity: 0.6 },
+      brushStyle: { color: "#808080", opacity: 0.3 },
+      emphasis: {
+        handleStyle: { borderColor: dark ? "#cccccc" : "#505050" },
+        moveHandleStyle: { color: dark ? "#b0b0b0" : "#707070" }
+      }
+    };
+  }
+  var SERIES_THEME = Object.freeze({
+    line: Object.freeze({ symbol: "circle" }),
+    radar: Object.freeze({ symbol: "circle" })
+  });
   function themeOption(tokens) {
     const sizes = themeFontSizes(tokens);
     const dark = tokens.scheme === "dark";
@@ -1501,31 +1559,8 @@ var RtemisDraw = (() => {
       // Neutral controls leave the palette to encode data; every accent-bearing
       // slider state is set so ECharts' blue defaults cannot show.
       // spec: draw/visual-qa-docs#neutral-data-zoom-sliders
-      dataZoom: {
-        backgroundColor: "rgba(128,128,128,0.06)",
-        borderColor: dark ? "#606060" : "#b0b0b0",
-        fillerColor: "rgba(128,128,128,0.18)",
-        dataBackground: {
-          lineStyle: { color: "#808080" },
-          areaStyle: { color: "#808080", opacity: 0.12 }
-        },
-        selectedDataBackground: {
-          lineStyle: { color: dark ? "#b0b0b0" : "#707070" },
-          areaStyle: { color: "#808080", opacity: 0.25 }
-        },
-        handleStyle: {
-          color: dark ? "#303030" : "#ffffff",
-          borderColor: dark ? "#909090" : "#808080"
-        },
-        moveHandleStyle: { color: "#909090", opacity: 0.6 },
-        brushStyle: { color: "#808080", opacity: 0.3 },
-        textStyle: axisLabel,
-        emphasis: {
-          handleStyle: { borderColor: dark ? "#cccccc" : "#505050" },
-          moveHandleStyle: { color: dark ? "#b0b0b0" : "#707070" }
-        }
-      },
-      line: { symbol: "circle" },
+      dataZoom: { ...zoomSliderStyle(dark), textStyle: axisLabel },
+      ...SERIES_THEME,
       categoryAxis: present({ axisLabel, axisLine, axisTick, splitLine: { show: false } }),
       valueAxis,
       logAxis: valueAxis,
@@ -1560,7 +1595,7 @@ var RtemisDraw = (() => {
     // Data: [category, value, observation, offset].
     [BOXPLOT_POINTS]: (params, api) => {
       const settings = params.itemPayload;
-      const layout = boxPoint(
+      const layout2 = boxPoint(
         settings,
         api,
         settings.boxIndex,
@@ -1568,10 +1603,10 @@ var RtemisDraw = (() => {
         api.value(1),
         api.value(3)
       );
-      if (!layout) return;
+      if (!layout2) return;
       return {
         type: "circle",
-        shape: { cx: layout.point[0], cy: layout.point[1], r: settings.pointSize / 2 },
+        shape: { cx: layout2.point[0], cy: layout2.point[1], r: settings.pointSize / 2 },
         style: { fill: api.visual("color"), opacity: settings.pointAlpha }
       };
     },
@@ -1585,7 +1620,7 @@ var RtemisDraw = (() => {
       const left = [];
       const right = [];
       for (let i = 0; i < profile.position.length; i++) {
-        const layout = boxPoint(
+        const layout2 = boxPoint(
           settings,
           api,
           settings.boxIndex,
@@ -1593,10 +1628,10 @@ var RtemisDraw = (() => {
           profile.position[i],
           0
         );
-        if (!layout) return;
-        const half = profile.width[i] * layout.width / 2;
-        const a = layout.point.slice();
-        const b = layout.point.slice();
+        if (!layout2) return;
+        const half = profile.width[i] * layout2.width / 2;
+        const a = layout2.point.slice();
+        const b = layout2.point.slice();
         a[dim] = a[dim] - half;
         b[dim] = b[dim] + half;
         left.push(a);
@@ -1640,9 +1675,9 @@ var RtemisDraw = (() => {
     // Data: [category, mean]. A diamond at the box's center line.
     [BOXPLOT_MEAN]: (params, api) => {
       const settings = params.itemPayload;
-      const layout = boxPoint(settings, api, settings.boxIndex, api.value(0), api.value(1), 0);
-      if (!layout) return;
-      const [x, y] = layout.point;
+      const layout2 = boxPoint(settings, api, settings.boxIndex, api.value(0), api.value(1), 0);
+      if (!layout2) return;
+      const [x, y] = layout2.point;
       const r = settings.size / 2;
       return {
         type: "polygon",
@@ -1760,14 +1795,14 @@ var RtemisDraw = (() => {
     }
     const name = (variable) => labels[variables.indexOf(variable)] ?? variable;
     const levels = data.levels && data.levels.length > 0 ? data.levels : null;
-    const layout = !levels ? "none" : (config.group_layout ?? "auto") === "auto" ? variables.length === 1 ? "x-axis" : "legend" : config.group_layout;
+    const layout2 = !levels ? "none" : (config.group_layout ?? "auto") === "auto" ? variables.length === 1 ? "x-axis" : "legend" : config.group_layout;
     const cell = (variable, level) => data.cells.find((c) => c.variable === variable && (c.level ?? null) === level) ?? null;
     let categories;
     let series;
     if (!levels) {
       categories = variables.map(name);
       series = [{ name: null, cells: variables.map((v) => cell(v, null)) }];
-    } else if (layout === "x-axis") {
+    } else if (layout2 === "x-axis") {
       categories = [...levels];
       series = variables.map((v) => ({
         name: variables.length > 1 ? name(v) : null,
@@ -2001,7 +2036,7 @@ var RtemisDraw = (() => {
     const named = series.filter((s) => s.name !== null);
     return {
       ...config.title ? { title: { text: config.title } } : {},
-      tooltip: { trigger: "item", valueFormatter: formatNumber },
+      tooltip: { trigger: "item", valueFormatter: tooltipValue },
       ...named.length > 0 ? {
         legend: {
           data: named.map((s) => s.name),
@@ -2773,6 +2808,7 @@ ${rate(r.balancedAccuracy)}`, summary) }
         const color = colorOf(g);
         series.push({
           type: "line",
+          symbol: "circle",
           name: labels[id],
           data: [
             [0, level],
@@ -2837,6 +2873,7 @@ ${rate(r.balancedAccuracy)}`, summary) }
     const diagonal = config.diagonal ?? true ? [
       {
         type: "line",
+        symbol: "circle",
         data: [
           [0, 0],
           [1, 1]
@@ -2960,6 +2997,7 @@ ${rate(r.balancedAccuracy)}`, summary) }
     const names = samples2.map((s, i) => s.name ?? `Series ${i + 1}`);
     const series = samples2.map((s, i) => ({
       type: "line",
+      symbol: "circle",
       name: names[i],
       showSymbol: false,
       areaStyle: { opacity: config.fill_alpha ?? 0.25 },
@@ -2973,7 +3011,7 @@ ${rate(r.balancedAccuracy)}`, summary) }
     const ylab = config.ylab || null;
     const common = {
       ...config.title ? { title: { text: config.title } } : {},
-      tooltip: { trigger: "axis", valueFormatter: formatNumber },
+      tooltip: { trigger: "axis", valueFormatter: tooltipValue },
       ...colors && colors.length > 0 ? { color: [...colors] } : {},
       ...appearance.animation === void 0 ? {} : { animation: appearance.animation }
     };
@@ -3244,6 +3282,611 @@ ${rate(r.balancedAccuracy)}`, summary) }
     };
   }
 
+  // src/shared/color.ts
+  function rgbOf(hex) {
+    const m = /^#([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})(?:[0-9a-f]{2})?$/i.exec(hex);
+    if (!m) throw new Error(`'${hex}' is not a #rrggbb color.`);
+    return [
+      Number.parseInt(m[1], 16),
+      Number.parseInt(m[2], 16),
+      Number.parseInt(m[3], 16)
+    ];
+  }
+  var hex2 = (v, round = Math.round) => round(Math.min(255, Math.max(0, v))).toString(16).padStart(2, "0").toUpperCase();
+  function colorRamp(colors, n) {
+    const stops = colors.map(rgbOf);
+    if (stops.length === 0) throw new Error("A color ramp needs at least one color.");
+    if (stops.length === 1 || n === 1) {
+      const [r, g, b] = stops[0];
+      return Array.from({ length: n }, () => `#${hex2(r)}${hex2(g)}${hex2(b)}`);
+    }
+    const k = stops.length;
+    const at = (i, m) => i * (1 / (m - 1));
+    return Array.from({ length: n }, (_, i) => {
+      const x = at(i, n);
+      let j = 0;
+      while (j < k - 2 && x > at(j + 1, k)) j++;
+      const x0 = at(j, k);
+      const x1 = at(j + 1, k);
+      const a = stops[j];
+      const b = stops[j + 1];
+      const channel = (c) => {
+        const y0 = a[c] / 255;
+        const y1 = b[c] / 255;
+        const y = y0 + (y1 - y0) * ((x - x0) / (x1 - x0));
+        return Math.min(1, Math.max(0, y)) * 255;
+      };
+      return `#${[0, 1, 2].map((c) => hex2(channel(c), Math.trunc)).join("")}`;
+    });
+  }
+  function divergingRamp(negative, mid, positive, zlim, n = 101) {
+    const span = zlim[1] - zlim[0];
+    const nNeg = Math.max(2, Math.min(n - 1, Math.round(Math.abs(zlim[0]) / span * (n - 1)) + 1));
+    const nPos = Math.max(2, n - nNeg + 1);
+    return [...colorRamp([negative, mid], nNeg), ...colorRamp([mid, positive], nPos).slice(1)];
+  }
+  var WHITE = [95.047, 100, 108.883];
+  function hcl(h, c, l) {
+    const rad = h * Math.PI / 180;
+    const u = c * Math.cos(rad);
+    const v = c * Math.sin(rad);
+    const [xn, yn, zn] = WHITE;
+    const y = l > 7.999592 ? yn * ((l + 16) / 116) ** 3 : yn * l / 903.3;
+    const t = xn + 15 * yn + 3 * zn;
+    const un = 4 * xn / t;
+    const vn = 9 * yn / t;
+    const uu = u / (13 * l) + un;
+    const vv = v / (13 * l) + vn;
+    const x = 9 * y * uu / (4 * vv);
+    const z = -x / 3 - 5 * y + 3 * y / vv;
+    const lin = [
+      (3.240479 * x - 1.53715 * y - 0.498535 * z) / yn,
+      (-0.969256 * x + 1.875992 * y + 0.041556 * z) / yn,
+      (0.055648 * x - 0.204043 * y + 1.057311 * z) / yn
+    ];
+    const gamma = (u2) => u2 > 304e-5 ? 1.055 * u2 ** (1 / 2.4) - 0.055 : 12.92 * u2;
+    return `#${lin.map((ch) => hex2(255 * Math.min(1, Math.max(0, gamma(ch))))).join("")}`;
+  }
+  function dark3(n) {
+    return Array.from({ length: n }, (_, i) => hcl(360 * i / n, 80, 60));
+  }
+
+  // src/charts/heatmap/renderers.ts
+  var DENDROGRAM = "rtemis.dendrogram.v1";
+  var HEATMAP_TRACKS = "rtemis.heatmap_tracks.v1";
+  var TRACK_SIZE = 10;
+  var TRACK_STEP = 12;
+  var heatmapRenderers = {
+    // Data: [left position, right position, left height, right height, merge
+    // height]. Each merge draws one three-segment U shape, in its branch color
+    // when the payload has one per merge.
+    [DENDROGRAM]: (params, api) => {
+      const p = params.itemPayload;
+      const [lp, rp, lh, rh, mh] = [0, 1, 2, 3, 4].map((d) => api.value(d));
+      const points = p.orientation === "row" ? [
+        [lh, lp],
+        [mh, lp],
+        [mh, rp],
+        [rh, rp]
+      ] : [
+        [lp, lh],
+        [lp, mh],
+        [rp, mh],
+        [rp, rh]
+      ];
+      return {
+        type: "polyline",
+        shape: { points: points.map((point) => api.coord(point)) },
+        style: { stroke: p.colors ? p.colors[params.dataIndex] : p.color, lineWidth: 1, fill: null }
+      };
+    },
+    // Data: [index]. Each row (or column) draws one rectangle per track, left
+    // of the cells (below them, or above when the column labels are on top).
+    [HEATMAP_TRACKS]: (params, api) => {
+      const p = params.itemPayload;
+      const index = api.value(0);
+      const row = p.orientation === "row";
+      const rect = params.coordSys;
+      const center = api.coord(row ? [0, index] : [index, 0]);
+      const raw = api.size([1, 1]);
+      const size = Array.isArray(raw) ? raw : [raw, raw];
+      const w = Math.abs(size[0]);
+      const h = Math.abs(size[1]);
+      return {
+        type: "group",
+        children: (p.colors[index] ?? []).map((color, track) => ({
+          type: "rect",
+          shape: row ? {
+            x: rect.x - 4 - (track + 1) * TRACK_STEP,
+            y: center[1] - h / 2,
+            width: TRACK_SIZE,
+            height: h
+          } : {
+            x: center[0] - w / 2,
+            y: p.top ? rect.y - 4 - (track + 1) * TRACK_STEP : rect.y + rect.height + 4 + track * TRACK_STEP,
+            width: w,
+            height: TRACK_SIZE
+          },
+          style: { fill: color }
+        }))
+      };
+    }
+  };
+
+  // src/charts/heatmap/config.ts
+  var HEATMAP_CHART_CONFIG_MEMBERS = Object.freeze([
+    "type",
+    "title",
+    "legend_position",
+    "legend_placement",
+    "legend_title",
+    "row_names",
+    "col_names",
+    "triangle",
+    "cluster_rows",
+    "cluster_cols",
+    "dist_method",
+    "hclust_method",
+    "square_cells",
+    "show_row_dendro",
+    "show_col_dendro",
+    "dendro_row_width",
+    "dendro_col_height",
+    "dendro_color",
+    "dendro_uniform",
+    "dendro_row_side",
+    "dendro_col_side",
+    "colormap",
+    "zlim",
+    "show_notes",
+    "row_cut",
+    "col_cut",
+    "show_values",
+    "value_digits",
+    "show_colorbar",
+    "colorbar_orient",
+    "margin_top",
+    "margin_right",
+    "margin_bottom",
+    "margin_left"
+  ]);
+  function axisOrder(n, tree, axis) {
+    const order2 = Array.from({ length: n }, (_, i) => i);
+    if (!tree) return { order: order2, tree: null, positions: [] };
+    const leaves = tree.leaves ?? Array.from({ length: n }, (_, i) => i);
+    const m = tree.order.length;
+    if (tree.merge.length !== m - 1 || tree.height.length !== m - 1 || leaves.length !== m) {
+      throw new Error(
+        `The ${axis} tree needs one merge and height per joined pair, and one leaf per ${axis}.`
+      );
+    }
+    const positions = [...leaves].sort((a, b) => a - b);
+    tree.order.forEach((leaf, k) => {
+      order2[positions[k]] = leaves[leaf - 1];
+    });
+    return { order: order2, tree, positions };
+  }
+  function dendrogramData(a, uniform) {
+    const tree = a.tree;
+    const n = tree.order.length;
+    const leafPos = new Array(n).fill(0);
+    tree.order.forEach((leaf, p) => {
+      leafPos[leaf - 1] = a.positions[p];
+    });
+    const heights = uniform ? tree.merge.map((_, k) => k + 1) : [...tree.height];
+    const nodePos = [];
+    const pos = (j) => j < 0 ? leafPos[-j - 1] : nodePos[j - 1];
+    const hgt = (j) => j < 0 ? 0 : heights[j - 1];
+    const data = tree.merge.map(([l, r], k) => {
+      nodePos[k] = (pos(l) + pos(r)) / 2;
+      return [pos(l), pos(r), hgt(l), hgt(r), heights[k]];
+    });
+    return {
+      data,
+      min: Math.min(...heights),
+      max: Math.max(...heights, Number.EPSILON)
+    };
+  }
+  function dendroAxisMin(min, max, stub = 0.1) {
+    return min >= max ? min * (1 - stub) : (min - stub * max) / (1 - stub);
+  }
+  function branchColors(tree, k, color) {
+    if (k === null || k === void 0) return null;
+    const n = tree.order.length;
+    if (!Number.isInteger(k) || k < 1 || k > n) {
+      throw new Error(`A tree cut needs a whole number of clusters between 1 and ${n}; it is ${k}.`);
+    }
+    const cluster = Array.from({ length: n }, (_, i) => i);
+    const find = (i) => {
+      if (cluster[i] === i) return i;
+      const root = find(cluster[i]);
+      cluster[i] = root;
+      return root;
+    };
+    const rep = [];
+    tree.merge.forEach(([l, r], step) => {
+      const a = l < 0 ? -l - 1 : rep[l - 1];
+      const b = r < 0 ? -r - 1 : rep[r - 1];
+      rep[step] = a;
+      if (step < n - k) cluster[find(b)] = find(a);
+    });
+    const label = /* @__PURE__ */ new Map();
+    for (const leaf of tree.order) {
+      const root = find(leaf - 1);
+      if (!label.has(root)) label.set(root, label.size + 1);
+    }
+    const palette = dark3(k);
+    const group = [];
+    return tree.merge.map(([l, r], step) => {
+      const g = (j) => j < 0 ? label.get(find(-j - 1)) : group[j - 1];
+      const [gl, gr] = [g(l), g(r)];
+      group[step] = gl !== 0 && gl === gr ? gl : 0;
+      return group[step] ? palette[group[step] - 1] : color;
+    });
+  }
+  var BRANCH_GRAY = "#99999988";
+  function layout(data, config) {
+    const values = data.values;
+    const nRows = values.length;
+    const nCols = values[0]?.length ?? 0;
+    if (nRows === 0 || nCols === 0)
+      throw new Error("A heatmap needs at least one row and one column.");
+    for (const row of values) {
+      if (row.length !== nCols) throw new Error("Every heatmap row needs one value per column.");
+    }
+    const labels = (given, member, n, axis) => {
+      const names = given ?? (asArray(member).length > 0 ? asArray(member) : Array.from({ length: n }, (_, i) => String(i + 1)));
+      if (names.length !== n) {
+        throw new Error(
+          `Supply one ${axis} label per matrix ${axis}; there are ${n}, and ${names.length} labels.`
+        );
+      }
+      return [...names];
+    };
+    const rowNames = labels(data.row_names, config.row_names, nRows, "row");
+    const colNames = labels(data.col_names, config.col_names, nCols, "column");
+    const longest = (names) => Math.max(0, ...names.map((s) => s.length));
+    const rotate = longest(colNames) > 4 ? 45 : 0;
+    const vertical = (config.colorbar_orient ?? "vertical") === "vertical";
+    const showBar = config.show_colorbar ?? true;
+    const set = (side, auto) => {
+      const v = config[`margin_${side}`];
+      return typeof v === "number" ? v : auto;
+    };
+    const rowTracks = data.row_colors?.[0]?.length ?? 0;
+    const colTracks = data.col_colors?.[0]?.length ?? 0;
+    const rowTrackPx = rowTracks > 0 ? TRACK_STEP * rowTracks + 4 : 0;
+    const colTrackPx = colTracks > 0 ? TRACK_STEP * colTracks + 4 : 0;
+    const left = set("left", Math.min(20 + longest(rowNames) * 8, 200)) + rowTrackPx;
+    const right = set("right", showBar && vertical ? 90 : 20);
+    const top = set("top", config.title ? 40 : 10);
+    const bottom = set("bottom", rotate > 0 ? Math.min(20 + longest(colNames) * 5, 140) : 36) + colTrackPx;
+    const rows = axisOrder(nRows, data.row_tree, "row");
+    const cols = axisOrder(nCols, data.col_tree, "column");
+    const rowDendro = rows.tree !== null && (config.show_row_dendro ?? true);
+    const colDendro = cols.tree !== null && (config.show_col_dendro ?? true);
+    const rowSide = config.dendro_row_side ?? "right";
+    const colSide = config.dendro_col_side ?? "top";
+    const rowWidth = config.dendro_row_width ?? 60;
+    const colHeight = config.dendro_col_height ?? 60;
+    const labelsTop = colDendro && colSide === "bottom";
+    const hm = {
+      left: left + (rowDendro && rowSide === "left" ? rowWidth : 0),
+      right: right + (rowDendro && rowSide === "right" ? rowWidth : 0),
+      top: top + (colDendro && colSide === "top" ? colHeight : 0) + (labelsTop ? bottom : 0),
+      bottom: labelsTop ? colHeight : bottom + (colDendro && colSide === "bottom" ? colHeight : 0)
+    };
+    return {
+      nRows,
+      nCols,
+      rowNames,
+      colNames,
+      rotate,
+      margins: { left, right, top, bottom },
+      rowTrackPx,
+      colTrackPx,
+      rows,
+      cols,
+      rowDendro,
+      colDendro,
+      rowSide,
+      colSide,
+      rowWidth,
+      colHeight,
+      labelsTop,
+      hm,
+      square: config.square_cells ?? nRows === nCols
+    };
+  }
+  function heatmapHints(data, config) {
+    const l = layout(data, config);
+    const vertical = (config.colorbar_orient ?? "vertical") === "vertical";
+    return {
+      legendReserveRight: (config.show_colorbar ?? true) && vertical && typeof config.margin_right !== "number" ? 70 : 0,
+      squareCells: l.square,
+      nRows: l.nRows,
+      nCols: l.nCols,
+      leftPx: l.hm.left,
+      rightPx: l.hm.right,
+      topPx: l.hm.top,
+      botPx: l.hm.bottom
+    };
+  }
+  function heatmapMargins(data, config) {
+    const l = layout(data, config);
+    return {
+      left: l.margins.left - l.rowTrackPx,
+      right: l.margins.right,
+      top: l.margins.top,
+      bottom: l.margins.bottom - l.colTrackPx
+    };
+  }
+  function fitHeatmap(chart, option, hints) {
+    if (!hints.squareCells) return;
+    const { nRows, nCols, leftPx, rightPx, topPx, botPx } = hints;
+    const width = chart.getWidth() - leftPx - rightPx;
+    const height = chart.getHeight() - topPx - botPx;
+    const cell = Math.min(width / nCols, height / nRows);
+    if (!(cell > 0)) return;
+    const dx = (width - nCols * cell) / 2;
+    const dy = (height - nRows * cell) / 2;
+    const list = (v) => [v ?? []].flat();
+    const update = {
+      grid: list(option.grid).map((grid) => {
+        const fitted = {
+          ...grid,
+          containLabel: false,
+          outerBoundsMode: "none"
+        };
+        for (const side of ["left", "right", "top", "bottom"]) {
+          const v = grid[side];
+          if (typeof v === "number")
+            fitted[side] = v + (side === "left" || side === "right" ? dx : dy);
+        }
+        return fitted;
+      })
+    };
+    const maps = list(option.visualMap);
+    if (maps.length > 0) {
+      update.visualMap = maps.map((map) => {
+        const side = map.orient === "horizontal" ? "bottom" : "right";
+        const anchor = map[side] === side ? 0 : map[side];
+        return typeof anchor === "number" ? { [side]: anchor + (side === "right" ? dx : dy) } : {};
+      });
+    }
+    const titles = list(option.title);
+    if (titles.length > 0) {
+      update.title = titles.map(
+        (title) => typeof title.left === "number" ? { left: title.left + dx } : {}
+      );
+    }
+    chart.setOption(update);
+  }
+  var escapeHtml2 = (text) => text.replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
+  function buildHeatmapOption(data, config, appearance = {}) {
+    const l = layout(data, config);
+    const digits = config.value_digits ?? 2;
+    const showValues = config.show_values ?? false;
+    const showNotes = config.show_notes ?? false;
+    const notes = data.cell_notes ?? null;
+    if (showNotes && (!notes || showValues)) {
+      throw new Error(
+        "`show_notes` writes the cell notes the data supplies, in place of the values: supply cell notes, and unset `show_values`."
+      );
+    }
+    const rowOrder = l.rows.order;
+    const colOrder = l.cols.order;
+    const cell = (i, j) => data.values[rowOrder[i]]?.[colOrder[j]] ?? null;
+    let lo = Number.POSITIVE_INFINITY;
+    let hi = Number.NEGATIVE_INFINITY;
+    for (let i = 0; i < l.nRows; i++) {
+      for (let j = 0; j < l.nCols; j++) {
+        const v = cell(i, j);
+        if (typeof v === "number" && Number.isFinite(v)) {
+          if (v < lo) lo = v;
+          if (v > hi) hi = v;
+        }
+      }
+    }
+    if (lo > hi) throw new Error("A heatmap needs at least one finite value.");
+    const zlim = config.zlim && config.zlim.length === 2 ? [config.zlim[0], config.zlim[1]] : [lo, hi];
+    const memberColors = asArray(config.colormap);
+    let colormap;
+    if (memberColors.length > 0) {
+      colormap = [...memberColors];
+    } else {
+      const sign = appearance.signColors ?? SIGN_COLORS;
+      const bg = appearance.background ?? (appearance.dark ? darkThemeTokens() : lightThemeTokens()).bg_color;
+      colormap = zlim[0] < 0 && zlim[1] > 0 ? divergingRamp(sign.negative, bg, sign.positive, zlim) : zlim[1] <= 0 ? colorRamp([sign.negative, bg], 101) : colorRamp([bg, sign.positive], 101);
+    }
+    const labelled = showValues || notes !== null;
+    const cells = [];
+    for (let i = 0; i < l.nRows; i++) {
+      for (let j = 0; j < l.nCols; j++) {
+        const v = cell(i, j);
+        const value = [j, i, v];
+        if (!labelled) {
+          cells.push(value);
+          continue;
+        }
+        const note = notes ? notes[rowOrder[i]]?.[colOrder[j]] ?? "" : "";
+        cells.push({
+          value,
+          name: note,
+          note,
+          label: { formatter: showNotes ? "{b}" : v === null ? "" : ddSci(v, digits) }
+        });
+      }
+    }
+    const branch = config.dendro_color ?? BRANCH_GRAY;
+    const colAxis = {
+      type: "category",
+      data: colOrder.map((j) => l.colNames[j]),
+      splitArea: { show: false },
+      axisLine: { show: false },
+      axisLabel: { rotate: l.rotate, margin: 8 + l.colTrackPx },
+      boundaryGap: true,
+      ...l.labelsTop ? { position: "top" } : {}
+    };
+    const rowAxis = {
+      type: "category",
+      data: rowOrder.map((i) => l.rowNames[i]),
+      inverse: true,
+      splitArea: { show: false },
+      axisLine: { show: false },
+      axisLabel: { margin: 8 + l.rowTrackPx },
+      boundaryGap: true
+    };
+    const grids = [];
+    const xAxes = [];
+    const yAxes = [];
+    const series = [];
+    const m = l.margins;
+    if (l.rowDendro) {
+      const d = dendrogramData(l.rows, config.dendro_uniform ?? false);
+      const index = grids.length;
+      grids.push(
+        l.rowSide === "right" ? { right: m.right, width: l.rowWidth, top: l.hm.top, bottom: l.hm.bottom } : { left: 0, width: l.rowWidth, top: l.hm.top, bottom: l.hm.bottom }
+      );
+      xAxes.push({
+        type: "value",
+        inverse: l.rowSide === "left",
+        show: false,
+        min: dendroAxisMin(d.min, d.max),
+        max: d.max,
+        gridIndex: index
+      });
+      yAxes.push({
+        type: "value",
+        min: -0.5,
+        max: l.nRows - 0.5,
+        inverse: true,
+        show: false,
+        gridIndex: index
+      });
+      const colors = branchColors(l.rows.tree, config.row_cut, branch);
+      series.push(dendrogramSeries(index, d.data, "row", branch, colors));
+    } else if (config.row_cut !== null && config.row_cut !== void 0) {
+      throw new Error(
+        "`row_cut` colors the branches of the row tree: cluster the rows, or supply a row tree."
+      );
+    }
+    if (l.colDendro) {
+      const d = dendrogramData(l.cols, config.dendro_uniform ?? false);
+      const index = grids.length;
+      grids.push(
+        l.colSide === "top" ? { left: l.hm.left, right: l.hm.right, top: m.top, height: l.colHeight } : { left: l.hm.left, right: l.hm.right, bottom: 0, height: l.colHeight }
+      );
+      xAxes.push({ type: "value", min: -0.5, max: l.nCols - 0.5, show: false, gridIndex: index });
+      yAxes.push({
+        type: "value",
+        show: false,
+        inverse: l.colSide === "bottom",
+        min: dendroAxisMin(d.min, d.max),
+        max: d.max,
+        gridIndex: index
+      });
+      const colors = branchColors(l.cols.tree, config.col_cut, branch);
+      series.push(dendrogramSeries(index, d.data, "column", branch, colors));
+    } else if (config.col_cut !== null && config.col_cut !== void 0) {
+      throw new Error(
+        "`col_cut` colors the branches of the column tree: cluster the columns, or supply a column tree."
+      );
+    }
+    const hmIndex = grids.length;
+    const dendro = l.rowDendro || l.colDendro;
+    grids.push(
+      dendro ? {
+        left: l.hm.left,
+        right: l.hm.right,
+        top: l.hm.top,
+        bottom: l.hm.bottom,
+        containLabel: false
+      } : { left: m.left, right: m.right, top: m.top, bottom: m.bottom, containLabel: false }
+    );
+    xAxes.push(dendro ? { ...colAxis, gridIndex: hmIndex } : colAxis);
+    yAxes.push(dendro ? { ...rowAxis, gridIndex: hmIndex } : rowAxis);
+    const heatmapIndex = series.length;
+    series.push({
+      type: "heatmap",
+      // Without animation and hover emphasis, a large matrix neither tweens
+      // every cell on redraw nor recomputes a highlight on each pointer move.
+      animation: false,
+      emphasis: { disabled: true },
+      data: cells,
+      ...showValues || showNotes ? { label: { show: true } } : {},
+      ...dendro ? { xAxisIndex: hmIndex, yAxisIndex: hmIndex } : {},
+      ...showNotes ? { rtemisCellNotes: true } : {}
+    });
+    for (const [orientation, tracks, order2] of [
+      ["row", data.row_colors, rowOrder],
+      ["column", data.col_colors, colOrder]
+    ]) {
+      if (!tracks) continue;
+      series.push({
+        type: "custom",
+        renderItem: HEATMAP_TRACKS,
+        ...dendro ? { xAxisIndex: hmIndex, yAxisIndex: hmIndex } : {},
+        data: order2.map((_, k) => [k]),
+        silent: true,
+        clip: false,
+        animation: false,
+        itemPayload: {
+          orientation,
+          top: l.labelsTop,
+          colors: order2.map((index) => [...tracks[index] ?? []])
+        }
+      });
+    }
+    const rowLabels = rowAxis.data;
+    const colLabels = colAxis.data;
+    const vertical = (config.colorbar_orient ?? "vertical") === "vertical";
+    const single = grids.length === 1;
+    return {
+      ...config.title ? { title: { text: config.title, left: dendro ? l.hm.left : m.left } } : {},
+      tooltip: {
+        trigger: "item",
+        formatter: (p) => {
+          if (!Array.isArray(p.value)) return "";
+          const v = p.value[2];
+          let text = typeof v === "number" ? ddSci(v, digits) : "NA";
+          if (showValues && p.data?.label?.formatter) text = p.data.label.formatter;
+          const note = p.data?.note ? `<br>${escapeHtml2(p.data.note)}` : "";
+          return `${escapeHtml2(String(rowLabels[p.value[1]]))} \xD7 ${escapeHtml2(String(colLabels[p.value[0]]))}: ${escapeHtml2(text)}${note}`;
+        }
+      },
+      grid: single ? grids[0] : grids,
+      xAxis: single ? xAxes[0] : xAxes,
+      yAxis: single ? yAxes[0] : yAxes,
+      visualMap: {
+        type: "continuous",
+        min: zlim[0],
+        max: zlim[1],
+        precision: digits,
+        calculable: true,
+        show: config.show_colorbar ?? true,
+        orient: vertical ? "vertical" : "horizontal",
+        inRange: { color: colormap },
+        ...vertical ? { right: "right", top: "middle" } : { left: "center", bottom: "bottom" },
+        seriesIndex: heatmapIndex
+      },
+      series
+    };
+  }
+  function dendrogramSeries(index, data, orientation, color, colors) {
+    return {
+      type: "custom",
+      xAxisIndex: index,
+      yAxisIndex: index,
+      data,
+      silent: true,
+      clip: true,
+      animation: false,
+      renderItem: DENDROGRAM,
+      itemPayload: { orientation, color, ...colors ? { colors } : {} }
+    };
+  }
+
   // src/charts/histogram/renderers.ts
   var HISTOGRAM = "rtemis.histogram.v1";
   var histogramRenderers = {
@@ -3482,7 +4125,7 @@ ${rate(r.balancedAccuracy)}`, summary) }
     const ylab = config.ylab || null;
     const common = {
       ...config.title ? { title: { text: config.title } } : {},
-      tooltip: { trigger: "item", valueFormatter: formatNumber },
+      tooltip: { trigger: "item", valueFormatter: tooltipValue },
       // A custom bar hovered during an update transition leaves the y axis at
       // an intermediate scale (ECharts 6.1.0), so updates apply at once.
       animationDurationUpdate: 0,
@@ -3688,6 +4331,7 @@ ${rate(r.balancedAccuracy)}`, summary) }
         const lower = curve.x.map((x, i) => [x, curve.lower?.[i] ?? null]).reverse();
         series.push({
           type: "line",
+          symbol: "circle",
           ...named,
           data: [...upper, ...lower],
           showSymbol: false,
@@ -3702,6 +4346,7 @@ ${rate(r.balancedAccuracy)}`, summary) }
       }
       series.push({
         type: "line",
+        symbol: "circle",
         ...named,
         data: curve.x.map((x, i) => [x, curve.fitted[i] ?? null]),
         showSymbol: false,
@@ -3843,6 +4488,7 @@ ${rate(r.balancedAccuracy)}`, summary) }
       const name = fits?.names.get(targets[i]) ?? (series.length === 1 ? null : s.name);
       return {
         type: "line",
+        symbol: "circle",
         ...name === null ? {} : { name },
         data: values,
         ...config.smooth ? { smooth: true } : {},
@@ -3884,7 +4530,7 @@ ${rate(r.balancedAccuracy)}`, summary) }
     ];
     return {
       ...config.title ? { title: { text: config.title } } : {},
-      tooltip: { trigger: "axis", valueFormatter: formatNumber },
+      tooltip: { trigger: "axis", valueFormatter: tooltipValue },
       ...legendNames.length > 0 ? { legend: { data: legendNames } } : {},
       xAxis,
       yAxis,
@@ -4860,6 +5506,7 @@ ${rate(r.balancedAccuracy)}`, summary) }
     return [
       {
         type: "line",
+        symbol: "circle",
         data: [
           [lo, lo],
           [hi, hi]
@@ -5392,6 +6039,7 @@ ${rate(r.balancedAccuracy)}`, summary) }
           });
           series.push({
             type: "line",
+            symbol: "circle",
             name,
             step: "end",
             stack: `ci-${i}`,
@@ -5432,6 +6080,7 @@ ${rate(r.balancedAccuracy)}`, summary) }
       if (median !== null) {
         series.push({
           type: "line",
+          symbol: "circle",
           name,
           data: [
             [domain[0], 0.5],
@@ -5713,9 +6362,6 @@ ${rate(r.balancedAccuracy)}`, summary) }
     if (!x || yColumns.length === 0) {
       throw new Error("A time series chart needs both `x` and `y` set to draw.");
     }
-    if (config.group && yColumns.length > 1) {
-      throw new Error("`group` splits one `y` column: bind one `y` column, or unset `group`.");
-    }
     const times = (name, member) => {
       const time = isTime(data, name);
       const values = column(data.columns, name, member).map((v, i) => {
@@ -5744,24 +6390,6 @@ ${rate(r.balancedAccuracy)}`, summary) }
       return { name, axis, x: rows.map((i) => xs[i]), y: rows.map((i) => ys[i] ?? null) };
     };
     const primaryX = times(x, "x");
-    let primary;
-    if (config.group) {
-      const groups = textColumn(data, config.group, "group");
-      const raw = column(data.columns, config.group, "group");
-      const present2 = (i) => raw[i] !== null && raw[i] !== void 0;
-      const levels = distinct(
-        groups.filter((_, i) => present2(i)),
-        data.levels?.[config.group]
-      );
-      const ys = numbers(yColumns[0], "y");
-      primary = levels.map(
-        (level) => sample(level, 0, primaryX.values, ys, (i) => present2(i) && groups[i] === level)
-      );
-    } else {
-      primary = yColumns.map(
-        (name) => sample(name, 0, primaryX.values, numbers(name, "y"), () => true)
-      );
-    }
     const y2Columns = asArray(config.y2);
     if (config.x2 && y2Columns.length === 0) {
       throw new Error("Supply `y2` with `x2`, or unset both.");
@@ -5770,16 +6398,43 @@ ${rate(r.balancedAccuracy)}`, summary) }
     if (secondaryX.time !== primaryX.time) {
       throw new Error("Use numeric time throughout, or dates and date-times throughout.");
     }
-    const taken = new Set(primary.map((s) => s.name));
-    const secondary = y2Columns.map(
-      (name) => sample(
-        taken.has(name) ? `${name} (right)` : name,
-        1,
-        secondaryX.values,
-        numbers(name, "y2"),
-        () => true
-      )
-    );
+    const bound = [
+      ...yColumns.map((name) => ({ name, label: name, axis: 0, member: "y" })),
+      ...y2Columns.map((name) => ({
+        name,
+        label: yColumns.includes(name) ? `${name} (right)` : name,
+        axis: 1,
+        member: "y2"
+      }))
+    ];
+    const split = (axis) => {
+      const xs = axis === 0 ? primaryX.values : secondaryX.values;
+      const parts = bound.filter((b) => b.axis === axis);
+      if (!config.group) {
+        return parts.map((b) => sample(b.label, axis, xs, numbers(b.name, b.member), () => true));
+      }
+      const groups = textColumn(data, config.group, "group");
+      const raw = column(data.columns, config.group, "group");
+      const present2 = (i) => raw[i] !== null && raw[i] !== void 0;
+      const levels = distinct(
+        groups.filter((_, i) => present2(i)),
+        data.levels?.[config.group]
+      );
+      return parts.flatMap((b) => {
+        const ys = numbers(b.name, b.member);
+        return levels.map(
+          (level) => sample(
+            bound.length === 1 ? level : `${b.label} / ${level}`,
+            axis,
+            xs,
+            ys,
+            (i) => present2(i) && groups[i] === level
+          )
+        );
+      });
+    };
+    const primary = split(0);
+    const secondary = split(1);
     if (![...primary, ...secondary].some((s) => s.y.some((v) => v !== null))) {
       throw new Error("A time series chart needs at least one time with a value.");
     }
@@ -5795,23 +6450,29 @@ ${rate(r.balancedAccuracy)}`, summary) }
     const rawOpacity = config.raw_opacity ?? 0.5;
     const pair = (xs2, ys) => xs2.map((t, i) => [t, ys[i] ?? null]);
     const series = [];
+    const rolling = config.roll_fn ?? "none";
+    const rolledIndices = /* @__PURE__ */ new Set();
     for (const s of [...primary, ...secondary]) {
       const raw = {
         type: "line",
         name: s.name,
         data: pair(s.x, s.y),
         showSymbol: points,
+        // Filled, where ECharts' default `emptyCircle` fills with the canvas
+        // background.
+        symbol: "circle",
         symbolSize: 5,
         lineStyle: { width: points ? 0 : 1, opacity: rawOpacity },
         itemStyle: { opacity: rawOpacity },
         yAxisIndex: s.axis
       };
       series.push(raw);
-      if ((config.roll_fn ?? "none") !== "none") {
+      if (rolling !== "none") {
         const rolled = rollingValues(s.y, config);
         if (rolled.some((v) => v !== null && !Number.isFinite(v))) {
           throw new Error("Rescale values to keep rolling summaries finite.");
         }
+        rolledIndices.add(series.length);
         series.push({
           ...raw,
           data: pair(s.x, rolled),
@@ -5916,7 +6577,10 @@ ${rate(r.balancedAccuracy)}`, summary) }
       ...config.title ? { title: { text: config.title } } : {},
       ...time ? { useUTC: true } : {},
       ...palette.length > 0 ? { color: [...palette] } : {},
-      tooltip: { trigger: "axis", valueFormatter: formatNumber },
+      tooltip: {
+        trigger: "axis",
+        formatter: (params) => axisTooltip(params, rolledIndices, rolling)
+      },
       legend: {
         data: [...primary, ...secondary].map((s) => s.name),
         itemStyle: { opacity: 1 }
@@ -5929,6 +6593,27 @@ ${rate(r.balancedAccuracy)}`, summary) }
       yAxis: yAxis.length === 1 ? yAxis[0] : yAxis,
       series
     };
+  }
+  var escapeHtml3 = (text) => text.replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
+  function axisTooltip(params, rolledIndices, rolling) {
+    const list = [params].flat();
+    if (list.length === 0) return "";
+    const rows = /* @__PURE__ */ new Map();
+    for (const p of list) {
+      const y = Array.isArray(p.value) ? p.value[1] : p.value;
+      if (typeof y !== "number" || !Number.isFinite(y)) continue;
+      const name = p.seriesName ?? "";
+      const row = rows.get(name) ?? { marker: p.marker ?? "" };
+      if (rolledIndices.has(p.seriesIndex ?? -1)) row.roll = y;
+      else row.raw = y;
+      rows.set(name, row);
+    }
+    const value = (v) => v === void 0 ? "\u2013" : String(tooltipValue(v));
+    const lines = [...rows].map(([name, row]) => {
+      const summary = row.roll === void 0 ? "" : ` <span style="opacity:0.7">${rolling} ${value(row.roll)}</span>`;
+      return `${row.marker}${escapeHtml3(name)}&nbsp;&nbsp;<b>${value(row.raw)}</b>${summary}`;
+    });
+    return [escapeHtml3(list[0]?.axisValueLabel ?? ""), ...lines].join("<br/>");
   }
 
   // src/shared/labels.ts
@@ -5968,6 +6653,7 @@ ${rate(r.balancedAccuracy)}`, summary) }
   var renderers = Object.freeze({
     ...boxplotRenderers,
     ...ganttRenderers,
+    ...heatmapRenderers,
     ...histogramRenderers,
     ...scatterRenderers,
     ...survivalRenderers,
@@ -6056,6 +6742,7 @@ ${rate(r.balancedAccuracy)}`, summary) }
     confusion: buildConfusionOption,
     density: buildDensityOption,
     gantt: buildGanttOption,
+    heatmap: buildHeatmapOption,
     histogram: buildHistogramOption,
     line: buildLineOption,
     pr: buildPrOption,

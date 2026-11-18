@@ -460,6 +460,7 @@ function diagonalSeries(
   return [
     {
       type: "line",
+      symbol: "circle",
       data: [
         [lo, lo],
         [hi, hi],

@@ -1,9 +1,9 @@
 // Shared custom-series renderers for browser widgets and Node SVG export.
 // renderItem names and itemPayload remain plain JSON in the compiled option.
-// The boxplot's, the Gantt chart's, the histogram's, the scatter rug's, the
-// survival risk strip's, and the time series zeitgeber labels' renderers are
-// @rtemis/draw's: in Node this module registers them too, and in a browser the
-// binding does.
+// The boxplot's, the Gantt chart's, the heatmap's, the histogram's, the
+// scatter rug's, the survival risk strip's, and the time series zeitgeber
+// labels' renderers are @rtemis/draw's: in Node this module registers them
+// too, and in a browser the binding does.
 // See CustomSeriesOption / CustomSeriesRenderItemParams in ECharts
 // src/chart/custom/CustomSeries.ts and name lookup in CustomView.ts.
 (function (root, register) {
@@ -25,35 +25,6 @@
     "rtemis.ribbon.v1": function(params, api) {
       return { type: "polygon", shape: {points:params.itemPayload.vertices.map(p=>api.coord(p))},
         style: {fill:api.visual("color"), opacity:params.itemPayload.opacity} };
-    },
-    // Data: [left position, right position, left height, right height,
-    // merge height]. Each merge contributes one three-segment U shape.
-    "rtemis.heatmap_tracks.v1": function(params, api) {
-      const settings = params.itemPayload, index = api.value(0);
-      const row = settings.orientation === "row", rect = params.coordSys;
-      const center = api.coord(row ? [0, index] : [index, 0]);
-      const size = api.size([1, 1]);
-      return { type: "group", children: settings.colors[index].map(function(color, track) {
-        return { type: "rect", shape: row
-          ? { x: rect.x - 4 - (track + 1) * 12, y: center[1] - Math.abs(size[1])/2,
-              width: 10, height: Math.abs(size[1]) }
-          : { x: center[0] - Math.abs(size[0])/2,
-              y: settings.top ? rect.y - 4 - (track + 1) * 12 : rect.y + rect.height + 4 + track * 12,
-              width: Math.abs(size[0]), height: 10 }, style: { fill: color } };
-      }) };
-    },
-    "rtemis.dendrogram.v1": function (params, api) {
-      const settings = params.itemPayload;
-      const lp = api.value(0), rp = api.value(1);
-      const lh = api.value(2), rh = api.value(3), mh = api.value(4);
-      const points = settings.orientation === "row"
-        ? [[lh, lp], [mh, lp], [mh, rp], [rh, rp]]
-        : [[lp, lh], [lp, mh], [rp, mh], [rp, rh]];
-      return {
-        type: "polyline",
-        shape: { points: points.map(function (point) { return api.coord(point); }) },
-        style: { stroke: settings.colors ? settings.colors[params.dataIndex] : settings.color, lineWidth: 1, fill: null },
-      };
     },
   };
 

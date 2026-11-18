@@ -24,6 +24,16 @@ export function formatNumber(value: unknown, digits = SIGNIFICANT_DIGITS): unkno
 }
 
 /**
+ * A tooltip's `valueFormatter`: {@link formatNumber} at
+ * {@link SIGNIFICANT_DIGITS}. ECharts passes the data index as the second
+ * argument (`CommonTooltipOption.valueFormatter` in src/util/types.ts), so
+ * `formatNumber` itself would read the index as the number of digits.
+ */
+export function tooltipValue(value: unknown): unknown {
+  return formatNumber(value);
+}
+
+/**
  * A number as text with `decimals` decimal places, as rtemis.core's `ddSci()`
  * writes it: exact zero with `decimals` zeros; a magnitude from `hi` in
  * scientific notation with up to `decimals` significant digits; a nonzero

@@ -15,6 +15,7 @@ import { buildConfusionOption } from "./charts/confusion/index.ts";
 import { buildPrOption, buildRocOption, curveAspect } from "./charts/curves/index.ts";
 import { buildDensityOption } from "./charts/density/index.ts";
 import { buildGanttOption } from "./charts/gantt/index.ts";
+import { buildHeatmapOption } from "./charts/heatmap/index.ts";
 import { buildHistogramOption } from "./charts/histogram/index.ts";
 import { buildLineOption, lineAspect } from "./charts/line/index.ts";
 import { buildSankeyOption } from "./charts/sankey/index.ts";
@@ -108,6 +109,22 @@ export {
   ganttHeight,
 } from "./charts/gantt/index.ts";
 export type {
+  HeatmapAppearance,
+  HeatmapChart,
+  HeatmapChartConfig,
+  HeatmapData,
+  HeatmapHints,
+  HeatmapTree,
+} from "./charts/heatmap/index.ts";
+export {
+  branchColors,
+  buildHeatmapOption,
+  fitHeatmap,
+  HEATMAP_CHART_CONFIG_MEMBERS,
+  heatmapHints,
+  heatmapMargins,
+} from "./charts/heatmap/index.ts";
+export type {
   BreaksRule,
   HistogramAppearance,
   HistogramBinStat,
@@ -179,6 +196,7 @@ export {
 } from "./charts/survival/index.ts";
 export type { RollFn, RollingMembers, TimeSeriesChartConfig } from "./charts/timeseries/index.ts";
 export {
+  axisTooltip,
   buildTimeSeriesOption,
   rollingValues,
   TIMESERIES_CHART_CONFIG_MEMBERS,
@@ -192,6 +210,7 @@ export {
   SIZE_KEY_ID,
   sizeKeyValues,
 } from "./layout/keys.ts";
+export { colorRamp, dark3, divergingRamp, hcl } from "./shared/color.ts";
 export type { FitCurve, FitMembers } from "./shared/fit.ts";
 export { FIT_MEMBERS, fitLabel } from "./shared/fit.ts";
 export { ddSci, formatNumber, SIGNIFICANT_DIGITS } from "./shared/format.ts";
@@ -200,7 +219,7 @@ export { valueLabel } from "./shared/labels.ts";
 export type { Layer } from "./shared/layers.ts";
 export { appendLayers } from "./shared/layers.ts";
 export type { MarginMembers } from "./shared/layout.ts";
-export { DEFAULT_MARGIN, ZOOM_SLIDER_ID } from "./shared/layout.ts";
+export { DEFAULT_MARGIN, placeZoomSlider, ZOOM_SLIDER_ID } from "./shared/layout.ts";
 export type { LegendMembers } from "./shared/legend.ts";
 export type { AxisLimits } from "./shared/limits.ts";
 export { calcLimits, calcLimitsFromZero, DEFAULT_PAD } from "./shared/limits.ts";
@@ -216,9 +235,11 @@ export {
   fontStack,
   lightThemeTokens,
   RTEMIS_PALETTE,
+  SERIES_THEME,
   SIGN_COLORS,
   themeFontSizes,
   themeOption,
+  zoomSliderStyle,
 } from "./theme/tokens.ts";
 
 /** The builder of each chart type, by `chart/<type>/v1` type name. */
@@ -229,6 +250,7 @@ export const builders = Object.freeze({
   confusion: buildConfusionOption,
   density: buildDensityOption,
   gantt: buildGanttOption,
+  heatmap: buildHeatmapOption,
   histogram: buildHistogramOption,
   line: buildLineOption,
   pr: buildPrOption,

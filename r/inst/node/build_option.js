@@ -2,10 +2,11 @@
 // Builds the ECharts option of a payload's build request with the bundled
 // @rtemis/draw, as the widget does, and writes it to stdout as JSON, which
 // drops formatter functions. With `what: "aspect"`, writes the fixed-aspect
-// box hint the widget derives from the option instead.
+// box hint the widget derives from the option instead; with `what: "hints"`,
+// the heatmap's cell layout (`heatmapHints()`), or null for another chart.
 //
 // Invoked by R's echarts_option() via system2() with the path of a JSON file:
-//   { "build": <build request>, "dark": <logical>, "what": "option" | "aspect" }
+//   { "build": <build request>, "dark": <logical>, "what": "option" | "aspect" | "hints" }
 
 const fs = require("node:fs");
 const path = require("node:path");
@@ -30,7 +31,9 @@ const appearance = { ...request.appearance, dark: input.dark === true };
 try {
 	const option = builders.appendLayers(builder(data, request.config, appearance), request.layers);
 	const aspect = builders.aspectHints[request.type]?.(option, request.config) ?? null;
-	process.stdout.write(JSON.stringify(input.what === "aspect" ? aspect : option));
+	const hints = request.type === "heatmap" ? builders.heatmapHints(data, request.config) : null;
+	const out = input.what === "aspect" ? aspect : input.what === "hints" ? hints : option;
+	process.stdout.write(JSON.stringify(out));
 } catch (e) {
 	process.stderr.write(`${e.message}\n`);
 	process.exitCode = 1;

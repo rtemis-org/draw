@@ -247,6 +247,7 @@
     },
     {
       "type": "line",
+      "symbol": "circle",
       "data": [
         [
           1,
@@ -426,6 +427,7 @@
     },
     {
       "type": "line",
+      "symbol": "circle",
       "data": [
         [
           1,
@@ -519,6 +521,7 @@
     },
     {
       "type": "line",
+      "symbol": "circle",
       "data": [
         [
           0.18523999999999996,

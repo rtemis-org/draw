@@ -68,6 +68,8 @@ function build(panel) {
   if (aspect) panel.aspect = aspect;
   // The package places the scatter chart's color scale and size key.
   if (request.type === "scatter") panel.fitKeys = true;
+  // The package lays out the heatmap's cells; export fits them square.
+  if (request.type === "heatmap") Object.assign(panel, builders.heatmapHints(data, request.config));
   delete panel.build;
 }
 

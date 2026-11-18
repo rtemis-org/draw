@@ -145,8 +145,13 @@ test_that("network edges take config, then theme, then SIGN_COLORS", {
 
 
 test_that("heatmap scales put the theme's sign colors at the same ends", {
-  ends <- function(widget, which = "colorLight") {
-    colors <- toupper(unlist(widget[["x"]][[which]]))
+  skip_if_no_node()
+  ends <- function(widget, dark = FALSE) {
+    colors <- toupper(unlist(
+      built_option(widget, dark = dark, simplify = FALSE)[["visualMap"]][[
+        "inRange"
+      ]][["color"]]
+    ))
     c(colors[[1L]], colors[[length(colors)]])
   }
   m <- matrix(c(-2, -1, 1, 2), 2L)
@@ -181,25 +186,35 @@ test_that("heatmap scales put the theme's sign colors at the same ends", {
 test_that("heatmap and spectrogram scales fade to the theme's background", {
   midpoint <- function(colors) toupper(colors[[(length(colors) + 1L) / 2L]])
   m <- matrix(c(-1, -0.5, 0.5, 1), 2L)
-  meta <- draw_heatmap(
-    m,
-    cluster_rows = FALSE,
-    cluster_cols = FALSE,
-    zlim = c(-1, 1)
-  )[["x"]]
-  expect_identical(midpoint(unlist(meta[["colorLight"]])), "#FFFFFF")
-  expect_identical(midpoint(unlist(meta[["colorDark"]])), "#181818")
-  # A theme's own background is the midpoint in both variants, so the browser's
-  # light/dark choice cannot pick a ramp built for a different background.
-  meta <- draw_heatmap(
-    m,
-    cluster_rows = FALSE,
-    cluster_cols = FALSE,
-    zlim = c(-1, 1),
-    theme = Theme(background_color = "#202830")
-  )[["x"]]
-  expect_identical(midpoint(unlist(meta[["colorLight"]])), "#202830")
-  expect_identical(midpoint(unlist(meta[["colorDark"]])), "#202830")
+  if (node_tests_enabled()) {
+    scale <- function(widget, dark) {
+      unlist(built_option(widget, dark = dark, simplify = FALSE)[[
+        "visualMap"
+      ]][[
+        "inRange"
+      ]][["color"]])
+    }
+    w <- draw_heatmap(
+      m,
+      cluster_rows = FALSE,
+      cluster_cols = FALSE,
+      zlim = c(-1, 1)
+    )
+    expect_identical(midpoint(scale(w, FALSE)), "#FFFFFF")
+    expect_identical(midpoint(scale(w, TRUE)), "#181818")
+    # A theme's own background is the midpoint in both variants, so the
+    # browser's light/dark choice cannot pick a ramp built for a different
+    # background.
+    w <- draw_heatmap(
+      m,
+      cluster_rows = FALSE,
+      cluster_cols = FALSE,
+      zlim = c(-1, 1),
+      theme = Theme(background_color = "#202830")
+    )
+    expect_identical(midpoint(scale(w, FALSE)), "#202830")
+    expect_identical(midpoint(scale(w, TRUE)), "#202830")
+  }
 
   pal <- toupper(.spectrogram_palette("diverging", 11L, FALSE, c(-1, 1)))
   expect_identical(pal[[1L]], SIGN_COLORS[["negative"]])

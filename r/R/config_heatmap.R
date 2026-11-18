@@ -2,13 +2,11 @@
 # ::rtemis.draw::
 # 2026- EDG rtemis.org
 
-# The heatmap's config. Like the network, its bound data is a **structure** -- a
-# numeric matrix -- rather than columns in a table, so it declares no column
-# names.
-#
-# It is also the first config whose `compile()` produces render hints as well as
-# an option: the browser needs the cell counts and pixel offsets to size its
-# container for square cells. Those go to `draw()` and are never serialized.
+# The heatmap's config. Like the network, its bound data is a structure -- a
+# numeric matrix, or a heatmap record of the matrix and its annotations --
+# rather than columns in a table, so it declares no column names. R validates
+# the matrix, applies `triangle`, and clusters (`heatmap_data()`); the builder
+# draws the rest, and the widget fits square cells from `heatmapHints()`.
 
 # %% HeatmapConfig ----
 #' Heatmap Configuration
@@ -343,122 +341,206 @@ method(resolve, HeatmapConfig) <- function(config, data = NULL, ...) {
 
 
 # %% compile.HeatmapConfig ----
-# Returns the option only, which is `compile()`'s contract. The render hints the
-# builder also produces are recomputed by `draw()` -- see the method below.
+# The option is built in JavaScript by @rtemis/draw, so compiling a heatmap
+# config gives the request the widget and SVG export pass to
+# `RtemisDraw.builders.heatmap`: the prepared matrix, trees, notes, and
+# tracks, and the config. spec: draw/shared-builders#heatmap
 method(compile, HeatmapConfig) <- function(
   config,
   data = NULL,
   theme = NULL,
   ...
 ) {
-  heatmap_built(config, data, theme = theme)[["option"]]
+  heatmap_request(config, data, theme = theme)
 }
 
 
-# %% heatmap_built ----
-#' Build a heatmap's option and render hints together
+# %% render_meta.HeatmapConfig ----
+# The legend members place the color scale, the heatmap's legend.
+method(render_meta, HeatmapConfig) <- function(config, option) {
+  list(legendTarget = "visualMap")
+}
+
+
+# %% heatmap_data ----
+#' The heatmap builder's data from a matrix or heatmap record
 #'
-#' `compile()` returns an option; a heatmap also derives hints the browser needs
-#' to size its container for square cells. Both come from one call, so this
-#' shared helper runs it and the two callers take what they need.
-#'
-#' Reached two ways: through `compile()`, which has already materialized the
-#' data and resolved the config, and directly from the `draw()` method, which
-#' has not. So it does both itself. Neither is wasted work the first way round:
-#' `config_data()` returns data it is handed, and `resolve()` is idempotent.
+#' Validates the input (`heatmap_input()`), applies the config's `triangle`
+#' and clustering, and writes the matrix, its labels, the trees, the cell
+#' notes, and the color tracks as @rtemis/draw's `HeatmapData` takes them.
+#' `triangle` masks the other triangle and the diagonal and drops rows and
+#' columns left empty. Clustering covers the rows (columns) with at least one
+#' value, which swap among their positions; a tree's `leaves` name those rows.
 #'
 #' @param config [HeatmapConfig]: The chart configuration.
-#' @param data Optional Matrix: The matrix to plot.
-#' @param width,height Optional Numeric or Character: Requested widget size,
-#'   which square-cell sizing solves against.
-#' @param theme Optional [Theme], list, or `NA`: Supplies the sign colors and
-#'   backgrounds the default color scale is built from.
+#' @param x Numeric matrix or named list: The matrix, or a heatmap record.
+#' @param row_tree,col_tree,cell_notes,row_colors,col_colors Optional:
+#'   Annotations, as [draw_heatmap()] takes them.
 #'
-#' @return Named list: `option` and `render`.
+#' @return Named list for `jsonlite::toJSON(auto_unbox = TRUE)`.
 #'
 #' @author EDG
 #' @keywords internal
 #' @noRd
-heatmap_built <- function(
+heatmap_data <- function(
   config,
-  data = NULL,
-  width = NULL,
-  height = NULL,
-  theme = NULL
+  x,
+  row_tree = NULL,
+  col_tree = NULL,
+  cell_notes = NULL,
+  row_colors = NULL,
+  col_colors = NULL
 ) {
-  bound <- config_data(config, data)
-  config <- resolve(config, data = bound)
-  heatmap_option(
-    width = width,
-    height = height,
-    x = bound,
-    row_names = config@row_names,
-    col_names = config@col_names,
-    triangle = config@triangle,
-    cluster_rows = config@cluster_rows,
-    cluster_cols = config@cluster_cols,
-    dist_method = config@dist_method,
-    hclust_method = config@hclust_method,
-    show_row_dendro = config@show_row_dendro,
-    show_col_dendro = config@show_col_dendro,
-    dendro_row_width = config@dendro_row_width,
-    dendro_col_height = config@dendro_col_height,
-    dendro_color = config@dendro_color,
-    dendro_uniform = config@dendro_uniform,
-    dendro_row_side = config@dendro_row_side,
-    dendro_col_side = config@dendro_col_side,
-    square_cells = config@square_cells,
-    colormap = config@colormap,
-    zlim = config@zlim,
-    show_notes = config@show_notes,
-    row_cut = config@row_cut,
-    col_cut = config@col_cut,
-    show_values = config@show_values,
-    value_digits = config@value_digits,
-    show_colorbar = config@show_colorbar,
-    colorbar_orient = config@colorbar_orient,
-    title = config@title,
-    margins = config_margins(config),
-    theme = theme
+  input <- heatmap_input(
+    x,
+    row_tree,
+    col_tree,
+    cell_notes,
+    row_colors,
+    col_colors
   )
-} # /rtemis.draw::heatmap_built
+  x <- input[["values"]]
+  row_h <- input[["row_tree"]]
+  col_h <- input[["col_tree"]]
+  notes <- input[["cell_notes"]]
+  row_colors <- input[["row_colors"]]
+  col_colors <- input[["col_colors"]]
+  if (config@show_notes && (is.null(notes) || config@show_values)) {
+    abort(
+      "Use show_notes with supplied cell_notes, and choose either notes or numeric value labels.",
+      class = c("rtemis_value_error", "rtemis_input_error")
+    )
+  }
+  triangle <- config@triangle
+  if (!is.null(triangle) && (!is.null(row_h) || !is.null(col_h))) {
+    abort(
+      "Use a full matrix with supplied trees; triangle masking removes leaves.",
+      class = c("rtemis_value_error", "rtemis_input_error")
+    )
+  }
+  rn <- config@row_names %||% rownames(x) %||% as.character(seq_len(nrow(x)))
+  cn <- config@col_names %||% colnames(x) %||% as.character(seq_len(ncol(x)))
+  if (
+    length(rn) != nrow(x) || length(cn) != ncol(x) || anyNA(rn) || anyNA(cn)
+  ) {
+    abort(
+      "Supply one nonmissing display label per matrix row and column.",
+      class = c("rtemis_value_error", "rtemis_input_error")
+    )
+  }
+  if (!is.null(triangle)) {
+    mask <- if (triangle == "upper") lower.tri(x) else upper.tri(x)
+    x[mask] <- NA
+    diag(x) <- NA
+    rows_keep <- apply(x, 1L, function(r) any(!is.na(r)))
+    cols_keep <- apply(x, 2L, function(c) any(!is.na(c)))
+    if (!any(rows_keep) || !any(cols_keep)) {
+      abort(
+        "Choose a triangle containing at least one finite off-diagonal value.",
+        class = c("rtemis_value_error", "rtemis_input_error")
+      )
+    }
+    x <- x[rows_keep, cols_keep, drop = FALSE]
+    if (!is.null(notes)) {
+      notes <- notes[rows_keep, cols_keep, drop = FALSE]
+    }
+    if (!is.null(row_colors)) {
+      row_colors <- row_colors[rows_keep, , drop = FALSE]
+    }
+    if (!is.null(col_colors)) {
+      col_colors <- col_colors[cols_keep, , drop = FALSE]
+    }
+    rn <- rn[rows_keep]
+    cn <- cn[cols_keep]
+  }
+  # A computed tree covers the rows (columns) with a value, by data index.
+  cluster <- function(m, cluster_it) {
+    if (!cluster_it || nrow(m) < 2L) {
+      return(NULL)
+    }
+    complete <- rowSums(!is.na(m)) > 0L
+    if (sum(complete) < 2L) {
+      return(NULL)
+    }
+    d <- stats::dist(m[complete, , drop = FALSE], method = config@dist_method)
+    h <- stats::hclust(d, method = config@hclust_method)
+    list(
+      merge = h[["merge"]],
+      height = h[["height"]],
+      order = h[["order"]],
+      leaves = which(complete) - 1L
+    )
+  }
+  tree_json <- function(h) {
+    if (is.null(h)) {
+      return(NULL)
+    }
+    # Lists keep one-element vectors as JSON arrays.
+    list(
+      merge = lapply(seq_len(nrow(h[["merge"]])), function(i) {
+        as.list(as.integer(h[["merge"]][i, ]))
+      }),
+      height = as.list(as.numeric(h[["height"]])),
+      order = as.list(as.integer(h[["order"]])),
+      leaves = if (!is.null(h[["leaves"]])) as.list(as.integer(h[["leaves"]]))
+    )
+  }
+  row_h <- row_h %||% cluster(x, config@cluster_rows)
+  col_h <- col_h %||% cluster(t(x), config@cluster_cols)
+  by_row <- function(m) {
+    if (is.null(m)) {
+      return(NULL)
+    }
+    lapply(seq_len(nrow(m)), function(i) as.list(unname(m[i, ])))
+  }
+  list(
+    values = lapply(seq_len(nrow(x)), function(i) {
+      lapply(unname(x[i, ]), function(v) if (is.na(v)) NULL else v)
+    }),
+    row_names = as.list(rn),
+    col_names = as.list(cn),
+    row_tree = tree_json(row_h),
+    col_tree = tree_json(col_h),
+    cell_notes = by_row(notes),
+    row_colors = by_row(row_colors),
+    col_colors = by_row(col_colors)
+  )
+} # /rtemis.draw::heatmap_data
 
 
-# %% draw.HeatmapConfig ----
-# Overrides the generic `ChartConfig` method because a heatmap's render hints
-# are derived from its content and must reach `draw()`. They are computed here
-# and passed on; they are never written into a document.
-method(draw, HeatmapConfig) <- function(
-  option,
-  theme = NULL,
-  width = NULL,
-  height = NULL,
-  element_id = NULL,
-  filename = NULL,
-  animation = NULL,
-  ...,
-  data = NULL
-) {
-  built <- heatmap_built(
-    option,
-    data,
-    width = width,
-    height = height,
-    theme = theme
+# %% heatmap_request ----
+#' The build request of a heatmap config and its data
+#'
+#' @inheritParams heatmap_data
+#' @param theme Optional [Theme]: Theme whose sign colors and background the
+#'   derived color scale takes.
+#'
+#' @return [BuildRequest] of type `heatmap`.
+#'
+#' @author EDG
+#' @keywords internal
+#' @noRd
+heatmap_request <- function(config, x, ..., theme = NULL) {
+  data <- heatmap_data(config, x, ...)
+  appearance <- list()
+  if (S7::S7_inherits(theme, Theme)) {
+    sign <- theme_sign_colors(theme)
+    appearance[["signColors"]] <- list(
+      negative = sign[["negative"]],
+      positive = sign[["positive"]]
+    )
+    appearance[["background"]] <- theme@background_color
+  }
+  BuildRequest(
+    type = "heatmap",
+    data = as.character(jsonlite::toJSON(
+      Filter(Negate(is.null), data),
+      auto_unbox = TRUE,
+      null = "null",
+      na = "null",
+      digits = NA
+    )),
+    config = config_members(config),
+    appearance = appearance
   )
-  draw(
-    built[["option"]],
-    theme = theme,
-    width = width,
-    height = height,
-    element_id = element_id,
-    filename = filename,
-    animation = animation,
-    meta = c(
-      render_meta(option, built[["option"]]),
-      built[["render"]][["meta"]],
-      list(legendTarget = "visualMap")
-    ),
-    ...
-  )
-}
+} # /rtemis.draw::heatmap_request

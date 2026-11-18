@@ -178,6 +178,49 @@ function present(entries: Record<string, unknown>): Json {
 }
 
 /**
+ * Neutral gray styling of a zoom slider in a light or dark theme, every
+ * accent-bearing state included (preview, brush, and hover), so the chart
+ * palette alone encodes data. Part of {@link themeOption}; a host that draws
+ * without the theme merges it into each slider. Component options still win.
+ */
+export function zoomSliderStyle(dark: boolean): Record<string, unknown> {
+  return {
+    backgroundColor: "rgba(128,128,128,0.06)",
+    borderColor: dark ? "#606060" : "#b0b0b0",
+    fillerColor: "rgba(128,128,128,0.18)",
+    dataBackground: {
+      lineStyle: { color: "#808080" },
+      areaStyle: { color: "#808080", opacity: 0.12 },
+    },
+    selectedDataBackground: {
+      lineStyle: { color: dark ? "#b0b0b0" : "#707070" },
+      areaStyle: { color: "#808080", opacity: 0.25 },
+    },
+    handleStyle: {
+      color: dark ? "#303030" : "#ffffff",
+      borderColor: dark ? "#909090" : "#808080",
+    },
+    moveHandleStyle: { color: "#909090", opacity: 0.6 },
+    brushStyle: { color: "#808080", opacity: 0.3 },
+    emphasis: {
+      handleStyle: { borderColor: dark ? "#cccccc" : "#505050" },
+      moveHandleStyle: { color: dark ? "#b0b0b0" : "#707070" },
+    },
+  };
+}
+
+/**
+ * Series defaults of every rtemis chart: filled circle symbols on line and
+ * radar series, where ECharts' default `emptyCircle` fills with the canvas
+ * background. Part of {@link themeOption}; a host that draws without the
+ * theme passes it to `echarts.init()` as the theme.
+ */
+export const SERIES_THEME = Object.freeze({
+  line: Object.freeze({ symbol: "circle" }),
+  radar: Object.freeze({ symbol: "circle" }),
+});
+
+/**
  * The ECharts theme object of a theme's tokens, for `echarts.registerTheme()`
  * or `chart.setTheme()`. Every component with its own default text size takes
  * the global text style, since a global `textStyle` does not reach them; log
@@ -218,31 +261,8 @@ export function themeOption(tokens: ThemeTokens): Json {
     // Neutral controls leave the palette to encode data; every accent-bearing
     // slider state is set so ECharts' blue defaults cannot show.
     // spec: draw/visual-qa-docs#neutral-data-zoom-sliders
-    dataZoom: {
-      backgroundColor: "rgba(128,128,128,0.06)",
-      borderColor: dark ? "#606060" : "#b0b0b0",
-      fillerColor: "rgba(128,128,128,0.18)",
-      dataBackground: {
-        lineStyle: { color: "#808080" },
-        areaStyle: { color: "#808080", opacity: 0.12 },
-      },
-      selectedDataBackground: {
-        lineStyle: { color: dark ? "#b0b0b0" : "#707070" },
-        areaStyle: { color: "#808080", opacity: 0.25 },
-      },
-      handleStyle: {
-        color: dark ? "#303030" : "#ffffff",
-        borderColor: dark ? "#909090" : "#808080",
-      },
-      moveHandleStyle: { color: "#909090", opacity: 0.6 },
-      brushStyle: { color: "#808080", opacity: 0.3 },
-      textStyle: axisLabel,
-      emphasis: {
-        handleStyle: { borderColor: dark ? "#cccccc" : "#505050" },
-        moveHandleStyle: { color: dark ? "#b0b0b0" : "#707070" },
-      },
-    },
-    line: { symbol: "circle" },
+    dataZoom: { ...zoomSliderStyle(dark), textStyle: axisLabel },
+    ...SERIES_THEME,
     categoryAxis: present({ axisLabel, axisLine, axisTick, splitLine: { show: false } }),
     valueAxis,
     logAxis: valueAxis,

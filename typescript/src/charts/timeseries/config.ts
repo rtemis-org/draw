@@ -1,4 +1,4 @@
-import { formatNumber } from "../../shared/format.ts";
+import { tooltipValue } from "../../shared/format.ts";
 import { axisZoom, cartesianGrid } from "../../shared/layout.ts";
 import type { LegendMembers } from "../../shared/legend.ts";
 import {
@@ -28,7 +28,7 @@ export interface TimeSeriesChartConfig extends LegendMembers {
   readonly x?: string | null;
   /** Value columns; each is one series on the left axis. */
   readonly y?: ColumnNames | null;
-  /** Column splitting the one `y` column into one series per value. */
+  /** Column splitting every `y` and `y2` column into one series per value. */
   readonly group?: string | null;
   /** Time column of the right-axis series; unset uses `x`. */
   readonly x2?: string | null;
@@ -161,11 +161,13 @@ interface Sample {
 }
 
 /**
- * The time series chart's samples: per `y` column, or per level of `group`
- * for one `y` column, the rows with a time, sorted by time, then per `y2`
- * column the rows with an `x2` time (unset: `x`), named after the column, a
- * name already taken followed by " (right)". A missing value stays missing,
- * a gap in the series.
+ * The time series chart's samples: per `y` column, then per `y2` column, the
+ * rows with a time (`x`, or `x2` for `y2` when set), sorted by time; with
+ * `group`, one sample per column and level, in level order. A sample is named
+ * after its column, a `y2` column that is also a `y` column followed by
+ * " (right)"; with `group`, after its level when only one column is bound, and
+ * "column / level" otherwise. A missing value stays missing, a gap in the
+ * series.
  */
 function samples(
   data: TabularData,
@@ -179,9 +181,6 @@ function samples(
   const yColumns = asArray(config.y);
   if (!x || yColumns.length === 0) {
     throw new Error("A time series chart needs both `x` and `y` set to draw.");
-  }
-  if (config.group && yColumns.length > 1) {
-    throw new Error("`group` splits one `y` column: bind one `y` column, or unset `group`.");
   }
   const times = (name: string, member: string) => {
     const time = isTime(data, name);
@@ -219,24 +218,6 @@ function samples(
   };
 
   const primaryX = times(x, "x");
-  let primary: Sample[];
-  if (config.group) {
-    const groups = textColumn(data, config.group, "group");
-    const raw = column(data.columns, config.group, "group");
-    const present = (i: number) => raw[i] !== null && raw[i] !== undefined;
-    const levels = distinct(
-      groups.filter((_, i) => present(i)),
-      data.levels?.[config.group],
-    );
-    const ys = numbers(yColumns[0] as string, "y");
-    primary = levels.map((level) =>
-      sample(level, 0, primaryX.values, ys, (i) => present(i) && groups[i] === level),
-    );
-  } else {
-    primary = yColumns.map((name) =>
-      sample(name, 0, primaryX.values, numbers(name, "y"), () => true),
-    );
-  }
   const y2Columns = asArray(config.y2);
   if (config.x2 && y2Columns.length === 0) {
     throw new Error("Supply `y2` with `x2`, or unset both.");
@@ -245,16 +226,43 @@ function samples(
   if (secondaryX.time !== primaryX.time) {
     throw new Error("Use numeric time throughout, or dates and date-times throughout.");
   }
-  const taken = new Set(primary.map((s) => s.name));
-  const secondary = y2Columns.map((name) =>
-    sample(
-      taken.has(name) ? `${name} (right)` : name,
-      1,
-      secondaryX.values,
-      numbers(name, "y2"),
-      () => true,
-    ),
-  );
+  const bound = [
+    ...yColumns.map((name) => ({ name, label: name, axis: 0 as const, member: "y" })),
+    ...y2Columns.map((name) => ({
+      name,
+      label: yColumns.includes(name) ? `${name} (right)` : name,
+      axis: 1 as const,
+      member: "y2",
+    })),
+  ];
+  const split = (axis: 0 | 1) => {
+    const xs = axis === 0 ? primaryX.values : secondaryX.values;
+    const parts = bound.filter((b) => b.axis === axis);
+    if (!config.group) {
+      return parts.map((b) => sample(b.label, axis, xs, numbers(b.name, b.member), () => true));
+    }
+    const groups = textColumn(data, config.group, "group");
+    const raw = column(data.columns, config.group, "group");
+    const present = (i: number) => raw[i] !== null && raw[i] !== undefined;
+    const levels = distinct(
+      groups.filter((_, i) => present(i)),
+      data.levels?.[config.group],
+    );
+    return parts.flatMap((b) => {
+      const ys = numbers(b.name, b.member);
+      return levels.map((level) =>
+        sample(
+          bound.length === 1 ? level : `${b.label} / ${level}`,
+          axis,
+          xs,
+          ys,
+          (i) => present(i) && groups[i] === level,
+        ),
+      );
+    });
+  };
+  const primary = split(0);
+  const secondary = split(1);
   if (![...primary, ...secondary].some((s) => s.y.some((v) => v !== null))) {
     throw new Error("A time series chart needs at least one time with a value.");
   }
@@ -271,7 +279,9 @@ function sortedRows(xs: readonly (number | null)[]): number[] {
  * The ECharts option of a time series chart: per series, its raw
  * observations (points, or lines with `points` false) at `raw_opacity`, and
  * with `roll_fn` its rolling summary as a line under the same name, so one
- * legend entry toggles both; `y2` series on a right axis. Zeitgeber labels
+ * legend entry toggles both; `y2` series on a right axis; with `group`, every
+ * value column splits by group. The axis tooltip writes each series'
+ * observation and summary on one row. Zeitgeber labels
  * (`zt`) replace the time axis labels at their own times, every
  * `show_zt_every`-th and every phase zero; `shade_bin` shades each run of
  * ones. The time axis is a time axis, in UTC, when `x` is a time column.
@@ -287,23 +297,31 @@ export function buildTimeSeriesOption(
   const pair = (xs: readonly number[], ys: readonly (number | null)[]) =>
     xs.map((t, i) => [t, ys[i] ?? null]);
   const series: Record<string, unknown>[] = [];
+  const rolling = config.roll_fn ?? "none";
+  // Series indices of the rolling lines, which the tooltip writes beside
+  // their observations.
+  const rolledIndices = new Set<number>();
   for (const s of [...primary, ...secondary]) {
     const raw = {
       type: "line",
       name: s.name,
       data: pair(s.x, s.y),
       showSymbol: points,
+      // Filled, where ECharts' default `emptyCircle` fills with the canvas
+      // background.
+      symbol: "circle",
       symbolSize: 5,
       lineStyle: { width: points ? 0 : 1, opacity: rawOpacity },
       itemStyle: { opacity: rawOpacity },
       yAxisIndex: s.axis,
     };
     series.push(raw);
-    if ((config.roll_fn ?? "none") !== "none") {
+    if (rolling !== "none") {
       const rolled = rollingValues(s.y, config);
       if (rolled.some((v) => v !== null && !Number.isFinite(v))) {
         throw new Error("Rescale values to keep rolling summaries finite.");
       }
+      rolledIndices.add(series.length);
       series.push({
         ...raw,
         data: pair(s.x, rolled),
@@ -413,7 +431,10 @@ export function buildTimeSeriesOption(
     ...(config.title ? { title: { text: config.title } } : {}),
     ...(time ? { useUTC: true } : {}),
     ...(palette.length > 0 ? { color: [...palette] } : {}),
-    tooltip: { trigger: "axis", valueFormatter: formatNumber },
+    tooltip: {
+      trigger: "axis",
+      formatter: (params: unknown) => axisTooltip(params, rolledIndices, rolling),
+    },
     legend: {
       data: [...primary, ...secondary].map((s) => s.name),
       itemStyle: { opacity: 1 },
@@ -426,4 +447,48 @@ export function buildTimeSeriesOption(
     yAxis: yAxis.length === 1 ? yAxis[0] : yAxis,
     series,
   };
+}
+
+/** One series' entry in an axis tooltip, as ECharts passes it. */
+interface TooltipParam {
+  readonly seriesName?: string;
+  readonly seriesIndex?: number;
+  readonly value?: unknown;
+  readonly marker?: string;
+  readonly axisValueLabel?: string;
+}
+
+const escapeHtml = (text: string) => text.replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
+
+/**
+ * The axis tooltip of a time series chart: the time, then one row per series
+ * name with its observation and, with a rolling summary, the summary beside
+ * it ("mean 0.512"), so a series and its rolling line read as one row.
+ */
+export function axisTooltip(
+  params: unknown,
+  rolledIndices: ReadonlySet<number>,
+  rolling: RollFn,
+): string {
+  const list = [params].flat() as TooltipParam[];
+  if (list.length === 0) return "";
+  const rows = new Map<string, { marker: string; raw?: number; roll?: number }>();
+  for (const p of list) {
+    const y = Array.isArray(p.value) ? p.value[1] : p.value;
+    if (typeof y !== "number" || !Number.isFinite(y)) continue;
+    const name = p.seriesName ?? "";
+    const row = rows.get(name) ?? { marker: p.marker ?? "" };
+    if (rolledIndices.has(p.seriesIndex ?? -1)) row.roll = y;
+    else row.raw = y;
+    rows.set(name, row);
+  }
+  const value = (v: number | undefined) => (v === undefined ? "–" : String(tooltipValue(v)));
+  const lines = [...rows].map(([name, row]) => {
+    const summary =
+      row.roll === undefined
+        ? ""
+        : ` <span style="opacity:0.7">${rolling} ${value(row.roll)}</span>`;
+    return `${row.marker}${escapeHtml(name)}&nbsp;&nbsp;<b>${value(row.raw)}</b>${summary}`;
+  });
+  return [escapeHtml(list[0]?.axisValueLabel ?? ""), ...lines].join("<br/>");
 }

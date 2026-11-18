@@ -5,7 +5,7 @@ import {
   histogramValueLabel,
 } from "../src/charts/histogram/config.ts";
 import { HISTOGRAM, histogramRenderers } from "../src/charts/histogram/renderers.ts";
-import { formatNumber } from "../src/shared/format.ts";
+import { tooltipValue } from "../src/shared/format.ts";
 import { RENDERER_NAMES } from "../src/shared/renderers.ts";
 
 type Series = {
@@ -48,7 +48,7 @@ describe("buildHistogramOption", () => {
     expect(option.yAxis).toMatchObject({ type: "value", min: 0 });
     expect(option.legend).toBeUndefined();
     expect(option.animationDurationUpdate).toBe(0);
-    expect(option.tooltip).toEqual({ trigger: "item", valueFormatter: formatNumber });
+    expect(option.tooltip).toEqual({ trigger: "item", valueFormatter: tooltipValue });
     expect(RENDERER_NAMES).toContain(HISTOGRAM);
   });
 

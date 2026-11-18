@@ -5,7 +5,7 @@ import {
   type FitTarget,
   fitSeries,
 } from "../../shared/fit.ts";
-import { formatNumber } from "../../shared/format.ts";
+import { tooltipValue } from "../../shared/format.ts";
 import { axisZoom, cartesianGrid, type MarginMembers } from "../../shared/layout.ts";
 import type { LegendMembers } from "../../shared/legend.ts";
 import {
@@ -287,6 +287,7 @@ export function buildLineOption(
     const name = fits?.names.get(targets[i] as FitTarget) ?? (series.length === 1 ? null : s.name);
     return {
       type: "line",
+      symbol: "circle",
       ...(name === null ? {} : { name }),
       data: values,
       ...(config.smooth ? { smooth: true } : {}),
@@ -334,7 +335,7 @@ export function buildLineOption(
 
   return {
     ...(config.title ? { title: { text: config.title } } : {}),
-    tooltip: { trigger: "axis", valueFormatter: formatNumber },
+    tooltip: { trigger: "axis", valueFormatter: tooltipValue },
     ...(legendNames.length > 0 ? { legend: { data: legendNames } } : {}),
     xAxis,
     yAxis,

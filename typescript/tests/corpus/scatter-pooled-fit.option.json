@@ -1453,6 +1453,7 @@
     },
     {
       "type": "line",
+      "symbol": "circle",
       "name": "Linear",
       "data": [
         [
@@ -1633,6 +1634,7 @@
     },
     {
       "type": "line",
+      "symbol": "circle",
       "name": "Linear",
       "data": [
         [

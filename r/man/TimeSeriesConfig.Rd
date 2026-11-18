@@ -67,7 +67,9 @@ title. A title does not add a missing legend.}
 \item{x, y}{Optional Character: Time and value column bindings. Multiple y
 columns share x; group splits a single y column.}
 
-\item{group}{Optional Character: Group column binding.}
+\item{group}{Optional Character: Group column binding. It splits every \code{y}
+and \code{y2} column; with several columns bound, a series is named
+"column / level".}
 
 \item{xlab, ylab}{Optional Character: Axis labels. \code{NULL} derives them from
 the data, and \code{""} draws no label.}

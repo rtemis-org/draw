@@ -2,7 +2,7 @@
 # Matrix annotations are data, and share every subset and permutation of values.
 
 #' Validate and align a supplied hierarchical tree
-#' @param tree Optional hclust, dendrogram or List: Merge, height, order and labels.
+#' @param tree Optional hclust, dendrogram, or List: Merge, height, order, and labels.
 #' @param labels Character: Original matrix identities on the clustered axis.
 #' @return Optional hclust: Tree with leaf indices aligned to matrix identities.
 #' @keywords internal
@@ -100,7 +100,7 @@ method(heatmap_tree, class_any) <- function(tree, labels) {
 
 #' Normalize a heatmap matrix and aligned annotations
 #' @inheritParams draw_heatmap
-#' @return List: Matrix, trees, notes and color-track matrices in input order.
+#' @return List: Matrix, trees, notes, and color-track matrices in input order.
 #' @keywords internal
 #' @noRd
 heatmap_input <- new_generic("heatmap_input", "x")
@@ -243,52 +243,4 @@ method(heatmap_input, class_any) <- function(
     row_colors = colors[[1L]],
     col_colors = colors[[2L]]
   )
-}
-
-#' Materialize colors for branches below a tree cut
-#' @param tree Optional hclust: Computed or supplied tree.
-#' @param k Optional Integer: Number of clusters.
-#' @param color Character: Color for branches connecting different clusters.
-#' @return Optional List: One color per merge.
-#' @keywords internal
-#' @noRd
-heatmap_branch_colors <- new_generic("heatmap_branch_colors", "tree")
-method(heatmap_branch_colors, class_any) <- function(tree, k, color) {
-  if (is.null(k)) {
-    return(NULL)
-  }
-  if (
-    is.null(tree) ||
-      length(k) != 1L ||
-      !is.numeric(k) ||
-      is.na(k) ||
-      k < 1 ||
-      k > length(tree[["order"]]) ||
-      k != trunc(k)
-  ) {
-    abort(
-      "Supply a tree cut between one and the number of clustered leaves, with clustering or a supplied tree.",
-      class = c("rtemis_value_error", "rtemis_input_error")
-    )
-  }
-  clusters <- stats::cutree(tree, k = k)
-  # Assign colors by displayed cluster order, independent of input permutation.
-  clusters <- match(clusters, unique(clusters[tree[["order"]]]))
-  palette <- grDevices::hcl.colors(k, palette = "Dark 3")
-  groups <- integer(nrow(tree[["merge"]]))
-  colors <- rep(color, length(groups))
-  for (i in seq_along(groups)) {
-    children <- vapply(
-      tree[["merge"]][i, ],
-      function(j) {
-        if (j < 0L) clusters[[-j]] else groups[[j]]
-      },
-      integer(1L)
-    )
-    if (children[[1L]] != 0L && children[[1L]] == children[[2L]]) {
-      groups[[i]] <- children[[1L]]
-      colors[[i]] <- palette[[groups[[i]]]]
-    }
-  }
-  as.list(colors)
 }

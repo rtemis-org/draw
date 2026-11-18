@@ -26,6 +26,8 @@
 
 * `draw_ts()`, `draw_xt()`, and `draw()` on a `TimeSeriesConfig` build the chart with the `@rtemis/draw` time series builder, the one rtemislive's Time series chart uses; `compile()` on a `TimeSeriesConfig` returns a `BuildRequest`. Shading from `shade_bin` spans each run's first and last observation.
 
+* `draw_heatmap()` and `draw()` on a `HeatmapConfig` build the chart with the `@rtemis/draw` heatmap builder; `compile()` on a `HeatmapConfig` returns a `BuildRequest`. R validates the matrix, masks the triangle, and clusters; the color scale derived from the theme follows the light or dark scheme the widget draws in.
+
 * `draw_fit()` names the x axis "Observed" by default.
 
 * `draw_boxplot()` and `BoxplotConfig` gain `mean_marker`, a diamond at each box's mean; `draw_varimp(type = "boxplot")` sets it.

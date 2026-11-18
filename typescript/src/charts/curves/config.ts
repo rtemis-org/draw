@@ -350,6 +350,7 @@ function buildCurveOption(
       // The baseline takes its group's name, so it toggles with the curves.
       series.push({
         type: "line",
+        symbol: "circle",
         name: labels[id],
         data: [
           [0, level],
@@ -427,6 +428,7 @@ export function buildRocOption(
       ? [
           {
             type: "line",
+            symbol: "circle",
             data: [
               [0, 0],
               [1, 1],

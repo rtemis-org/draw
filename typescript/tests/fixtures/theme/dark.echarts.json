@@ -101,6 +101,9 @@
   "line": {
     "symbol": "circle"
   },
+  "radar": {
+    "symbol": "circle"
+  },
   "categoryAxis": {
     "axisLabel": {
       "fontSize": 12,

@@ -45,6 +45,7 @@
   "series": [
     {
       "type": "line",
+      "symbol": "circle",
       "data": [
         [
           1,

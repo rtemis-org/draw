@@ -1,0 +1,2222 @@
+[
+  {
+    "name": "plain",
+    "data": {
+      "values": [
+        [-0.626, 0.487, -0.621, 0.821, 0.62],
+        [0.184, 0.738, null, 0.594, -0.056],
+        [-0.836, 0.576, 1.125, 0.919, -0.156],
+        [1.595, -0.305, -0.045, 0.782, -1.471],
+        [0.33, 1.512, -0.016, 0.075, -0.478],
+        [-0.82, 0.39, 0.944, -1.989, 0.418]
+      ],
+      "row_names": ["row1", "row2", "row3", "row4", "row5", "row6"],
+      "col_names": ["column1", "column2", "column3", "column4", "column5"]
+    },
+    "config": {
+      "type": "heatmap",
+      "title": null,
+      "legend_position": "right",
+      "legend_placement": "outside",
+      "legend_title": null,
+      "row_names": null,
+      "col_names": null,
+      "triangle": null,
+      "cluster_rows": false,
+      "cluster_cols": false,
+      "dist_method": "euclidean",
+      "hclust_method": "complete",
+      "square_cells": null,
+      "show_row_dendro": true,
+      "show_col_dendro": true,
+      "dendro_row_width": 60,
+      "dendro_col_height": 60,
+      "dendro_color": null,
+      "dendro_uniform": false,
+      "dendro_row_side": "right",
+      "dendro_col_side": "top",
+      "colormap": null,
+      "zlim": null,
+      "show_notes": false,
+      "row_cut": null,
+      "col_cut": null,
+      "show_values": false,
+      "value_digits": 2,
+      "show_colorbar": true,
+      "colorbar_orient": "vertical",
+      "margin_top": null,
+      "margin_right": null,
+      "margin_bottom": null,
+      "margin_left": null
+    },
+    "option": {
+      "grid": {
+        "left": 52,
+        "right": 90,
+        "top": 10,
+        "bottom": 55,
+        "containLabel": false
+      },
+      "xAxis": {
+        "type": "category",
+        "boundaryGap": true,
+        "data": ["column1", "column2", "column3", "column4", "column5"],
+        "axisLine": {
+          "show": false
+        },
+        "axisLabel": {
+          "rotate": 45,
+          "margin": 8
+        },
+        "splitArea": {
+          "show": false
+        }
+      },
+      "yAxis": {
+        "type": "category",
+        "inverse": true,
+        "boundaryGap": true,
+        "data": ["row1", "row2", "row3", "row4", "row5", "row6"],
+        "axisLine": {
+          "show": false
+        },
+        "axisLabel": {
+          "margin": 8
+        },
+        "splitArea": {
+          "show": false
+        }
+      },
+      "visualMap": {
+        "type": "continuous",
+        "min": -1.989,
+        "max": 1.595,
+        "precision": 2,
+        "calculable": true,
+        "show": true,
+        "orient": "vertical",
+        "inRange": {
+          "color": [
+            "#2D83D3",
+            "#3085D3",
+            "#3487D4",
+            "#3889D5",
+            "#3C8CD6",
+            "#408ED7",
+            "#4390D7",
+            "#4792D8",
+            "#4B95D9",
+            "#4F97DA",
+            "#5399DB",
+            "#579BDB",
+            "#5A9EDC",
+            "#5EA0DD",
+            "#62A2DE",
+            "#66A4DF",
+            "#6AA7DF",
+            "#6DA9E0",
+            "#71ABE1",
+            "#75ADE2",
+            "#79B0E3",
+            "#7DB2E3",
+            "#81B4E4",
+            "#84B6E5",
+            "#88B9E6",
+            "#8CBBE7",
+            "#90BDE7",
+            "#94BFE8",
+            "#97C2E9",
+            "#9BC4EA",
+            "#9FC6EB",
+            "#A3C8EB",
+            "#A7CBEC",
+            "#ABCDED",
+            "#AECFEE",
+            "#B2D1EF",
+            "#B6D4EF",
+            "#BAD6F0",
+            "#BED8F1",
+            "#C1DAF2",
+            "#C5DDF3",
+            "#C9DFF3",
+            "#CDE1F4",
+            "#D1E3F5",
+            "#D4E6F6",
+            "#D8E8F7",
+            "#DCEAF7",
+            "#E0ECF8",
+            "#E4EFF9",
+            "#E8F1FA",
+            "#EBF3FB",
+            "#EFF5FB",
+            "#F3F8FC",
+            "#F7FAFD",
+            "#FBFCFE",
+            "#FFFFFF",
+            "#FDFBFA",
+            "#FCF7F5",
+            "#FBF4F0",
+            "#F9F0EB",
+            "#F8EDE7",
+            "#F7E9E2",
+            "#F5E5DD",
+            "#F4E2D8",
+            "#F3DED4",
+            "#F2DBCF",
+            "#F0D7CA",
+            "#EFD4C5",
+            "#EED0C0",
+            "#ECCCBC",
+            "#EBC9B7",
+            "#EAC5B2",
+            "#E9C2AD",
+            "#E7BEA9",
+            "#E6BBA4",
+            "#E5B79F",
+            "#E3B39A",
+            "#E2B095",
+            "#E1AC91",
+            "#E0A98C",
+            "#DEA587",
+            "#DDA182",
+            "#DC9E7E",
+            "#DA9A79",
+            "#D99774",
+            "#D8936F",
+            "#D7906A",
+            "#D58C66",
+            "#D48861",
+            "#D3855C",
+            "#D18157",
+            "#D07E52",
+            "#CF7A4E",
+            "#CE7749",
+            "#CC7344",
+            "#CB6F3F",
+            "#CA6C3B",
+            "#C86836",
+            "#C76531",
+            "#C6612C",
+            "#C55E28"
+          ]
+        },
+        "right": "right",
+        "top": "middle",
+        "seriesIndex": 0
+      },
+      "series": [
+        {
+          "data": [
+            [0, 0, -0.626],
+            [1, 0, 0.487],
+            [2, 0, -0.621],
+            [3, 0, 0.821],
+            [4, 0, 0.62],
+            [0, 1, 0.184],
+            [1, 1, 0.738],
+            [2, 1, null],
+            [3, 1, 0.594],
+            [4, 1, -0.056],
+            [0, 2, -0.836],
+            [1, 2, 0.576],
+            [2, 2, 1.125],
+            [3, 2, 0.919],
+            [4, 2, -0.156],
+            [0, 3, 1.595],
+            [1, 3, -0.305],
+            [2, 3, -0.045],
+            [3, 3, 0.782],
+            [4, 3, -1.471],
+            [0, 4, 0.33],
+            [1, 4, 1.512],
+            [2, 4, -0.016],
+            [3, 4, 0.075],
+            [4, 4, -0.478],
+            [0, 5, -0.82],
+            [1, 5, 0.39],
+            [2, 5, 0.944],
+            [3, 5, -1.989],
+            [4, 5, 0.418]
+          ],
+          "type": "heatmap"
+        }
+      ]
+    },
+    "hints": {
+      "legendReserveRight": 70
+    }
+  },
+  {
+    "name": "values",
+    "data": {
+      "values": [
+        [-0.626, 0.487, -0.621, 0.821, 0.62],
+        [0.184, 0.738, null, 0.594, -0.056],
+        [-0.836, 0.576, 1.125, 0.919, -0.156],
+        [1.595, -0.305, -0.045, 0.782, -1.471],
+        [0.33, 1.512, -0.016, 0.075, -0.478],
+        [-0.82, 0.39, 0.944, -1.989, 0.418]
+      ],
+      "row_names": ["row1", "row2", "row3", "row4", "row5", "row6"],
+      "col_names": ["column1", "column2", "column3", "column4", "column5"]
+    },
+    "config": {
+      "type": "heatmap",
+      "title": "T",
+      "legend_position": "right",
+      "legend_placement": "outside",
+      "legend_title": null,
+      "row_names": null,
+      "col_names": null,
+      "triangle": null,
+      "cluster_rows": false,
+      "cluster_cols": false,
+      "dist_method": "euclidean",
+      "hclust_method": "complete",
+      "square_cells": null,
+      "show_row_dendro": true,
+      "show_col_dendro": true,
+      "dendro_row_width": 60,
+      "dendro_col_height": 60,
+      "dendro_color": null,
+      "dendro_uniform": false,
+      "dendro_row_side": "right",
+      "dendro_col_side": "top",
+      "colormap": null,
+      "zlim": null,
+      "show_notes": false,
+      "row_cut": null,
+      "col_cut": null,
+      "show_values": true,
+      "value_digits": 3,
+      "show_colorbar": true,
+      "colorbar_orient": "vertical",
+      "margin_top": null,
+      "margin_right": null,
+      "margin_bottom": null,
+      "margin_left": null
+    },
+    "option": {
+      "grid": {
+        "left": 52,
+        "right": 90,
+        "top": 40,
+        "bottom": 55,
+        "containLabel": false
+      },
+      "xAxis": {
+        "type": "category",
+        "boundaryGap": true,
+        "data": ["column1", "column2", "column3", "column4", "column5"],
+        "axisLine": {
+          "show": false
+        },
+        "axisLabel": {
+          "rotate": 45,
+          "margin": 8
+        },
+        "splitArea": {
+          "show": false
+        }
+      },
+      "yAxis": {
+        "type": "category",
+        "inverse": true,
+        "boundaryGap": true,
+        "data": ["row1", "row2", "row3", "row4", "row5", "row6"],
+        "axisLine": {
+          "show": false
+        },
+        "axisLabel": {
+          "margin": 8
+        },
+        "splitArea": {
+          "show": false
+        }
+      },
+      "visualMap": {
+        "type": "continuous",
+        "min": -1.989,
+        "max": 1.595,
+        "precision": 3,
+        "calculable": true,
+        "show": true,
+        "orient": "vertical",
+        "inRange": {
+          "color": [
+            "#2D83D3",
+            "#3085D3",
+            "#3487D4",
+            "#3889D5",
+            "#3C8CD6",
+            "#408ED7",
+            "#4390D7",
+            "#4792D8",
+            "#4B95D9",
+            "#4F97DA",
+            "#5399DB",
+            "#579BDB",
+            "#5A9EDC",
+            "#5EA0DD",
+            "#62A2DE",
+            "#66A4DF",
+            "#6AA7DF",
+            "#6DA9E0",
+            "#71ABE1",
+            "#75ADE2",
+            "#79B0E3",
+            "#7DB2E3",
+            "#81B4E4",
+            "#84B6E5",
+            "#88B9E6",
+            "#8CBBE7",
+            "#90BDE7",
+            "#94BFE8",
+            "#97C2E9",
+            "#9BC4EA",
+            "#9FC6EB",
+            "#A3C8EB",
+            "#A7CBEC",
+            "#ABCDED",
+            "#AECFEE",
+            "#B2D1EF",
+            "#B6D4EF",
+            "#BAD6F0",
+            "#BED8F1",
+            "#C1DAF2",
+            "#C5DDF3",
+            "#C9DFF3",
+            "#CDE1F4",
+            "#D1E3F5",
+            "#D4E6F6",
+            "#D8E8F7",
+            "#DCEAF7",
+            "#E0ECF8",
+            "#E4EFF9",
+            "#E8F1FA",
+            "#EBF3FB",
+            "#EFF5FB",
+            "#F3F8FC",
+            "#F7FAFD",
+            "#FBFCFE",
+            "#FFFFFF",
+            "#FDFBFA",
+            "#FCF7F5",
+            "#FBF4F0",
+            "#F9F0EB",
+            "#F8EDE7",
+            "#F7E9E2",
+            "#F5E5DD",
+            "#F4E2D8",
+            "#F3DED4",
+            "#F2DBCF",
+            "#F0D7CA",
+            "#EFD4C5",
+            "#EED0C0",
+            "#ECCCBC",
+            "#EBC9B7",
+            "#EAC5B2",
+            "#E9C2AD",
+            "#E7BEA9",
+            "#E6BBA4",
+            "#E5B79F",
+            "#E3B39A",
+            "#E2B095",
+            "#E1AC91",
+            "#E0A98C",
+            "#DEA587",
+            "#DDA182",
+            "#DC9E7E",
+            "#DA9A79",
+            "#D99774",
+            "#D8936F",
+            "#D7906A",
+            "#D58C66",
+            "#D48861",
+            "#D3855C",
+            "#D18157",
+            "#D07E52",
+            "#CF7A4E",
+            "#CE7749",
+            "#CC7344",
+            "#CB6F3F",
+            "#CA6C3B",
+            "#C86836",
+            "#C76531",
+            "#C6612C",
+            "#C55E28"
+          ]
+        },
+        "right": "right",
+        "top": "middle",
+        "seriesIndex": 0
+      },
+      "series": [
+        {
+          "data": [
+            {
+              "value": [0, 0, -0.626],
+              "name": "",
+              "note": "",
+              "label": {
+                "formatter": "-0.626"
+              }
+            },
+            {
+              "value": [1, 0, 0.487],
+              "name": "",
+              "note": "",
+              "label": {
+                "formatter": "0.487"
+              }
+            },
+            {
+              "value": [2, 0, -0.621],
+              "name": "",
+              "note": "",
+              "label": {
+                "formatter": "-0.621"
+              }
+            },
+            {
+              "value": [3, 0, 0.821],
+              "name": "",
+              "note": "",
+              "label": {
+                "formatter": "0.821"
+              }
+            },
+            {
+              "value": [4, 0, 0.62],
+              "name": "",
+              "note": "",
+              "label": {
+                "formatter": "0.620"
+              }
+            },
+            {
+              "value": [0, 1, 0.184],
+              "name": "",
+              "note": "",
+              "label": {
+                "formatter": "0.184"
+              }
+            },
+            {
+              "value": [1, 1, 0.738],
+              "name": "",
+              "note": "",
+              "label": {
+                "formatter": "0.738"
+              }
+            },
+            {
+              "value": [2, 1, null],
+              "name": "",
+              "note": "",
+              "label": {
+                "formatter": ""
+              }
+            },
+            {
+              "value": [3, 1, 0.594],
+              "name": "",
+              "note": "",
+              "label": {
+                "formatter": "0.594"
+              }
+            },
+            {
+              "value": [4, 1, -0.056],
+              "name": "",
+              "note": "",
+              "label": {
+                "formatter": "-0.056"
+              }
+            },
+            {
+              "value": [0, 2, -0.836],
+              "name": "",
+              "note": "",
+              "label": {
+                "formatter": "-0.836"
+              }
+            },
+            {
+              "value": [1, 2, 0.576],
+              "name": "",
+              "note": "",
+              "label": {
+                "formatter": "0.576"
+              }
+            },
+            {
+              "value": [2, 2, 1.125],
+              "name": "",
+              "note": "",
+              "label": {
+                "formatter": "1.125"
+              }
+            },
+            {
+              "value": [3, 2, 0.919],
+              "name": "",
+              "note": "",
+              "label": {
+                "formatter": "0.919"
+              }
+            },
+            {
+              "value": [4, 2, -0.156],
+              "name": "",
+              "note": "",
+              "label": {
+                "formatter": "-0.156"
+              }
+            },
+            {
+              "value": [0, 3, 1.595],
+              "name": "",
+              "note": "",
+              "label": {
+                "formatter": "1.595"
+              }
+            },
+            {
+              "value": [1, 3, -0.305],
+              "name": "",
+              "note": "",
+              "label": {
+                "formatter": "-0.305"
+              }
+            },
+            {
+              "value": [2, 3, -0.045],
+              "name": "",
+              "note": "",
+              "label": {
+                "formatter": "-0.045"
+              }
+            },
+            {
+              "value": [3, 3, 0.782],
+              "name": "",
+              "note": "",
+              "label": {
+                "formatter": "0.782"
+              }
+            },
+            {
+              "value": [4, 3, -1.471],
+              "name": "",
+              "note": "",
+              "label": {
+                "formatter": "-1.471"
+              }
+            },
+            {
+              "value": [0, 4, 0.33],
+              "name": "",
+              "note": "",
+              "label": {
+                "formatter": "0.330"
+              }
+            },
+            {
+              "value": [1, 4, 1.512],
+              "name": "",
+              "note": "",
+              "label": {
+                "formatter": "1.512"
+              }
+            },
+            {
+              "value": [2, 4, -0.016],
+              "name": "",
+              "note": "",
+              "label": {
+                "formatter": "-0.016"
+              }
+            },
+            {
+              "value": [3, 4, 0.075],
+              "name": "",
+              "note": "",
+              "label": {
+                "formatter": "0.075"
+              }
+            },
+            {
+              "value": [4, 4, -0.478],
+              "name": "",
+              "note": "",
+              "label": {
+                "formatter": "-0.478"
+              }
+            },
+            {
+              "value": [0, 5, -0.82],
+              "name": "",
+              "note": "",
+              "label": {
+                "formatter": "-0.820"
+              }
+            },
+            {
+              "value": [1, 5, 0.39],
+              "name": "",
+              "note": "",
+              "label": {
+                "formatter": "0.390"
+              }
+            },
+            {
+              "value": [2, 5, 0.944],
+              "name": "",
+              "note": "",
+              "label": {
+                "formatter": "0.944"
+              }
+            },
+            {
+              "value": [3, 5, -1.989],
+              "name": "",
+              "note": "",
+              "label": {
+                "formatter": "-1.989"
+              }
+            },
+            {
+              "value": [4, 5, 0.418],
+              "name": "",
+              "note": "",
+              "label": {
+                "formatter": "0.418"
+              }
+            }
+          ],
+          "label": {
+            "show": true
+          },
+          "type": "heatmap"
+        }
+      ],
+      "title": {
+        "text": "T",
+        "left": 52
+      }
+    },
+    "hints": {
+      "legendReserveRight": 70
+    }
+  },
+  {
+    "name": "tri",
+    "data": {
+      "values": [
+        [-0.852161959426613, null, null, null, null],
+        [-0.847551379262479, 0.902032872146999, null, null, null],
+        [-0.776168371826586, 0.83244745272182, 0.790948586369806, null, null],
+        [0.681171907806749, -0.69993811382877, -0.71021392716927, -0.44875911687292, null],
+        [
+          -0.867659376517228, 0.782495794463241, 0.887979922058138, 0.658747887344759,
+          -0.712440646697372
+        ]
+      ],
+      "row_names": ["cyl", "disp", "hp", "drat", "wt"],
+      "col_names": ["mpg", "cyl", "disp", "hp", "drat"]
+    },
+    "config": {
+      "type": "heatmap",
+      "title": null,
+      "legend_position": "right",
+      "legend_placement": "outside",
+      "legend_title": null,
+      "row_names": null,
+      "col_names": null,
+      "triangle": "lower",
+      "cluster_rows": false,
+      "cluster_cols": false,
+      "dist_method": "euclidean",
+      "hclust_method": "complete",
+      "square_cells": null,
+      "show_row_dendro": true,
+      "show_col_dendro": true,
+      "dendro_row_width": 60,
+      "dendro_col_height": 60,
+      "dendro_color": null,
+      "dendro_uniform": false,
+      "dendro_row_side": "right",
+      "dendro_col_side": "top",
+      "colormap": null,
+      "zlim": null,
+      "show_notes": false,
+      "row_cut": null,
+      "col_cut": null,
+      "show_values": false,
+      "value_digits": 2,
+      "show_colorbar": true,
+      "colorbar_orient": "vertical",
+      "margin_top": null,
+      "margin_right": null,
+      "margin_bottom": null,
+      "margin_left": null
+    },
+    "option": {
+      "grid": {
+        "left": 52,
+        "right": 90,
+        "top": 10,
+        "bottom": 36,
+        "containLabel": false
+      },
+      "xAxis": {
+        "type": "category",
+        "boundaryGap": true,
+        "data": ["mpg", "cyl", "disp", "hp", "drat"],
+        "axisLine": {
+          "show": false
+        },
+        "axisLabel": {
+          "rotate": 0,
+          "margin": 8
+        },
+        "splitArea": {
+          "show": false
+        }
+      },
+      "yAxis": {
+        "type": "category",
+        "inverse": true,
+        "boundaryGap": true,
+        "data": ["cyl", "disp", "hp", "drat", "wt"],
+        "axisLine": {
+          "show": false
+        },
+        "axisLabel": {
+          "margin": 8
+        },
+        "splitArea": {
+          "show": false
+        }
+      },
+      "visualMap": {
+        "type": "continuous",
+        "min": -0.867659376517228,
+        "max": 0.902032872146999,
+        "precision": 2,
+        "calculable": true,
+        "show": true,
+        "orient": "vertical",
+        "inRange": {
+          "color": [
+            "#2D83D3",
+            "#3185D3",
+            "#3588D4",
+            "#398AD5",
+            "#3E8DD6",
+            "#428FD7",
+            "#4692D8",
+            "#4B94D9",
+            "#4F97DA",
+            "#5399DB",
+            "#579CDB",
+            "#5C9EDC",
+            "#60A1DD",
+            "#64A3DE",
+            "#69A6DF",
+            "#6DA8E0",
+            "#71ABE1",
+            "#75AEE2",
+            "#7AB0E3",
+            "#7EB3E4",
+            "#82B5E4",
+            "#87B8E5",
+            "#8BBAE6",
+            "#8FBDE7",
+            "#93BFE8",
+            "#98C2E9",
+            "#9CC4EA",
+            "#A0C7EB",
+            "#A4C9EC",
+            "#A9CCED",
+            "#ADCEED",
+            "#B1D1EE",
+            "#B6D3EF",
+            "#BAD6F0",
+            "#BED9F1",
+            "#C3DBF2",
+            "#C7DEF3",
+            "#CBE0F4",
+            "#CFE3F5",
+            "#D4E5F6",
+            "#D8E8F6",
+            "#DCEAF7",
+            "#E1EDF8",
+            "#E5EFF9",
+            "#E9F2FA",
+            "#EDF4FB",
+            "#F2F7FC",
+            "#F6F9FD",
+            "#FAFCFE",
+            "#FFFFFF",
+            "#FDFBFA",
+            "#FCF8F6",
+            "#FBF5F2",
+            "#FAF2EE",
+            "#F9EFE9",
+            "#F8ECE5",
+            "#F7E8E1",
+            "#F5E5DD",
+            "#F4E2D9",
+            "#F3DFD4",
+            "#F2DCD0",
+            "#F1D9CC",
+            "#F0D5C8",
+            "#EFD2C3",
+            "#EDCFBF",
+            "#ECCCBB",
+            "#EBC9B7",
+            "#EAC6B3",
+            "#E9C3AE",
+            "#E8BFAA",
+            "#E7BCA6",
+            "#E5B9A2",
+            "#E4B69E",
+            "#E3B399",
+            "#E2B095",
+            "#E1AC91",
+            "#E0A98D",
+            "#DFA688",
+            "#DEA384",
+            "#DCA080",
+            "#DB9D7C",
+            "#DA9978",
+            "#D99673",
+            "#D8936F",
+            "#D7906B",
+            "#D68D67",
+            "#D48A63",
+            "#D3875E",
+            "#D2835A",
+            "#D18056",
+            "#D07D52",
+            "#CF7A4D",
+            "#CE7749",
+            "#CC7445",
+            "#CB7041",
+            "#CA6D3D",
+            "#C96A38",
+            "#C86734",
+            "#C76430",
+            "#C6612C",
+            "#C55E28"
+          ]
+        },
+        "right": "right",
+        "top": "middle",
+        "seriesIndex": 0
+      },
+      "series": [
+        {
+          "data": [
+            [0, 0, -0.852161959426613],
+            [1, 0, null],
+            [2, 0, null],
+            [3, 0, null],
+            [4, 0, null],
+            [0, 1, -0.847551379262479],
+            [1, 1, 0.902032872146999],
+            [2, 1, null],
+            [3, 1, null],
+            [4, 1, null],
+            [0, 2, -0.776168371826586],
+            [1, 2, 0.83244745272182],
+            [2, 2, 0.790948586369806],
+            [3, 2, null],
+            [4, 2, null],
+            [0, 3, 0.681171907806749],
+            [1, 3, -0.69993811382877],
+            [2, 3, -0.71021392716927],
+            [3, 3, -0.44875911687292],
+            [4, 3, null],
+            [0, 4, -0.867659376517228],
+            [1, 4, 0.782495794463241],
+            [2, 4, 0.887979922058138],
+            [3, 4, 0.658747887344759],
+            [4, 4, -0.712440646697372]
+          ],
+          "type": "heatmap"
+        }
+      ]
+    },
+    "hints": {
+      "legendReserveRight": 70,
+      "squareCells": true,
+      "nRows": 5,
+      "nCols": 5,
+      "leftPx": 52,
+      "rightPx": 90,
+      "topPx": 10,
+      "botPx": 36
+    }
+  },
+  {
+    "name": "clustered",
+    "data": {
+      "values": [
+        [-0.626, 0.487, -0.621, 0.821, 0.62],
+        [0.184, 0.738, null, 0.594, -0.056],
+        [-0.836, 0.576, 1.125, 0.919, -0.156],
+        [1.595, -0.305, -0.045, 0.782, -1.471],
+        [0.33, 1.512, -0.016, 0.075, -0.478],
+        [-0.82, 0.39, 0.944, -1.989, 0.418]
+      ],
+      "row_names": ["row1", "row2", "row3", "row4", "row5", "row6"],
+      "col_names": ["column1", "column2", "column3", "column4", "column5"],
+      "row_tree": {
+        "merge": [[-2, -5], [-1, -3], [1, 2], [-4, 3], [-6, 4]],
+        "height": [
+          1.15533382621647, 1.92673739777895, 2.08651695416069, 3.20401045566334, 4.30582547254298
+        ],
+        "order": [6, 4, 2, 5, 1, 3],
+        "leaves": [0, 1, 2, 3, 4, 5]
+      },
+      "col_tree": {
+        "merge": [[-2, -3], [-5, 1], [-1, -4], [2, 3]],
+        "height": [2.25522460078813, 2.61640317993997, 2.72662593694111, 3.70132392530024],
+        "order": [5, 2, 3, 1, 4],
+        "leaves": [0, 1, 2, 3, 4]
+      }
+    },
+    "config": {
+      "type": "heatmap",
+      "title": null,
+      "legend_position": "right",
+      "legend_placement": "outside",
+      "legend_title": null,
+      "row_names": null,
+      "col_names": null,
+      "triangle": null,
+      "cluster_rows": true,
+      "cluster_cols": true,
+      "dist_method": "euclidean",
+      "hclust_method": "complete",
+      "square_cells": null,
+      "show_row_dendro": true,
+      "show_col_dendro": true,
+      "dendro_row_width": 60,
+      "dendro_col_height": 60,
+      "dendro_color": null,
+      "dendro_uniform": false,
+      "dendro_row_side": "right",
+      "dendro_col_side": "top",
+      "colormap": null,
+      "zlim": null,
+      "show_notes": false,
+      "row_cut": 2,
+      "col_cut": 3,
+      "show_values": false,
+      "value_digits": 2,
+      "show_colorbar": true,
+      "colorbar_orient": "vertical",
+      "margin_top": null,
+      "margin_right": null,
+      "margin_bottom": null,
+      "margin_left": null
+    },
+    "option": {
+      "grid": [
+        {
+          "right": 90,
+          "top": 70,
+          "bottom": 55,
+          "width": 60
+        },
+        {
+          "left": 52,
+          "right": 150,
+          "top": 10,
+          "height": 60
+        },
+        {
+          "left": 52,
+          "right": 150,
+          "top": 70,
+          "bottom": 55,
+          "containLabel": false
+        }
+      ],
+      "xAxis": [
+        {
+          "type": "value",
+          "show": false,
+          "inverse": false,
+          "min": 0.805279198846863,
+          "max": 4.30582547254298,
+          "gridIndex": 0
+        },
+        {
+          "type": "value",
+          "show": false,
+          "min": -0.5,
+          "max": 4.5,
+          "gridIndex": 1
+        },
+        {
+          "type": "category",
+          "boundaryGap": true,
+          "data": ["column5", "column2", "column3", "column1", "column4"],
+          "axisLine": {
+            "show": false
+          },
+          "axisLabel": {
+            "rotate": 45,
+            "margin": 8
+          },
+          "splitArea": {
+            "show": false
+          },
+          "gridIndex": 2
+        }
+      ],
+      "yAxis": [
+        {
+          "type": "value",
+          "show": false,
+          "inverse": true,
+          "min": -0.5,
+          "max": 5.5,
+          "gridIndex": 0
+        },
+        {
+          "type": "value",
+          "show": false,
+          "inverse": false,
+          "min": 2.09454689806457,
+          "max": 3.70132392530024,
+          "gridIndex": 1
+        },
+        {
+          "type": "category",
+          "inverse": true,
+          "boundaryGap": true,
+          "data": ["row6", "row4", "row2", "row5", "row1", "row3"],
+          "axisLine": {
+            "show": false
+          },
+          "axisLabel": {
+            "margin": 8
+          },
+          "splitArea": {
+            "show": false
+          },
+          "gridIndex": 2
+        }
+      ],
+      "visualMap": {
+        "type": "continuous",
+        "min": -1.989,
+        "max": 1.595,
+        "precision": 2,
+        "calculable": true,
+        "show": true,
+        "orient": "vertical",
+        "inRange": {
+          "color": [
+            "#2D83D3",
+            "#3085D3",
+            "#3487D4",
+            "#3889D5",
+            "#3C8CD6",
+            "#408ED7",
+            "#4390D7",
+            "#4792D8",
+            "#4B95D9",
+            "#4F97DA",
+            "#5399DB",
+            "#579BDB",
+            "#5A9EDC",
+            "#5EA0DD",
+            "#62A2DE",
+            "#66A4DF",
+            "#6AA7DF",
+            "#6DA9E0",
+            "#71ABE1",
+            "#75ADE2",
+            "#79B0E3",
+            "#7DB2E3",
+            "#81B4E4",
+            "#84B6E5",
+            "#88B9E6",
+            "#8CBBE7",
+            "#90BDE7",
+            "#94BFE8",
+            "#97C2E9",
+            "#9BC4EA",
+            "#9FC6EB",
+            "#A3C8EB",
+            "#A7CBEC",
+            "#ABCDED",
+            "#AECFEE",
+            "#B2D1EF",
+            "#B6D4EF",
+            "#BAD6F0",
+            "#BED8F1",
+            "#C1DAF2",
+            "#C5DDF3",
+            "#C9DFF3",
+            "#CDE1F4",
+            "#D1E3F5",
+            "#D4E6F6",
+            "#D8E8F7",
+            "#DCEAF7",
+            "#E0ECF8",
+            "#E4EFF9",
+            "#E8F1FA",
+            "#EBF3FB",
+            "#EFF5FB",
+            "#F3F8FC",
+            "#F7FAFD",
+            "#FBFCFE",
+            "#FFFFFF",
+            "#FDFBFA",
+            "#FCF7F5",
+            "#FBF4F0",
+            "#F9F0EB",
+            "#F8EDE7",
+            "#F7E9E2",
+            "#F5E5DD",
+            "#F4E2D8",
+            "#F3DED4",
+            "#F2DBCF",
+            "#F0D7CA",
+            "#EFD4C5",
+            "#EED0C0",
+            "#ECCCBC",
+            "#EBC9B7",
+            "#EAC5B2",
+            "#E9C2AD",
+            "#E7BEA9",
+            "#E6BBA4",
+            "#E5B79F",
+            "#E3B39A",
+            "#E2B095",
+            "#E1AC91",
+            "#E0A98C",
+            "#DEA587",
+            "#DDA182",
+            "#DC9E7E",
+            "#DA9A79",
+            "#D99774",
+            "#D8936F",
+            "#D7906A",
+            "#D58C66",
+            "#D48861",
+            "#D3855C",
+            "#D18157",
+            "#D07E52",
+            "#CF7A4E",
+            "#CE7749",
+            "#CC7344",
+            "#CB6F3F",
+            "#CA6C3B",
+            "#C86836",
+            "#C76531",
+            "#C6612C",
+            "#C55E28"
+          ]
+        },
+        "right": "right",
+        "top": "middle",
+        "seriesIndex": 2
+      },
+      "series": [
+        {
+          "type": "custom",
+          "xAxisIndex": 0,
+          "yAxisIndex": 0,
+          "data": [
+            [2, 3, 0, 0, 1.15533382621647],
+            [4, 5, 0, 0, 1.92673739777895],
+            [2.5, 4.5, 1.15533382621647, 1.92673739777895, 2.08651695416069],
+            [1, 3.5, 0, 2.08651695416069, 3.20401045566334],
+            [0, 2.25, 0, 3.20401045566334, 4.30582547254298]
+          ],
+          "silent": true,
+          "clip": true,
+          "animation": false,
+          "renderItem": "rtemis.dendrogram.v1",
+          "itemPayload": {
+            "orientation": "row",
+            "color": "#99999988",
+            "colors": ["#00AD9A", "#00AD9A", "#00AD9A", "#00AD9A", "#99999988"]
+          }
+        },
+        {
+          "type": "custom",
+          "xAxisIndex": 1,
+          "yAxisIndex": 1,
+          "data": [
+            [1, 2, 0, 0, 2.25522460078813],
+            [0, 1.5, 0, 2.25522460078813, 2.61640317993997],
+            [3, 4, 0, 0, 2.72662593694111],
+            [0.75, 3.5, 2.61640317993997, 2.72662593694111, 3.70132392530024]
+          ],
+          "silent": true,
+          "clip": true,
+          "animation": false,
+          "renderItem": "rtemis.dendrogram.v1",
+          "itemPayload": {
+            "orientation": "column",
+            "color": "#99999988",
+            "colors": ["#E16A86", "#E16A86", "#99999988", "#99999988"]
+          }
+        },
+        {
+          "data": [
+            [0, 0, 0.418],
+            [1, 0, 0.39],
+            [2, 0, 0.944],
+            [3, 0, -0.82],
+            [4, 0, -1.989],
+            [0, 1, -1.471],
+            [1, 1, -0.305],
+            [2, 1, -0.045],
+            [3, 1, 1.595],
+            [4, 1, 0.782],
+            [0, 2, -0.056],
+            [1, 2, 0.738],
+            [2, 2, null],
+            [3, 2, 0.184],
+            [4, 2, 0.594],
+            [0, 3, -0.478],
+            [1, 3, 1.512],
+            [2, 3, -0.016],
+            [3, 3, 0.33],
+            [4, 3, 0.075],
+            [0, 4, 0.62],
+            [1, 4, 0.487],
+            [2, 4, -0.621],
+            [3, 4, -0.626],
+            [4, 4, 0.821],
+            [0, 5, -0.156],
+            [1, 5, 0.576],
+            [2, 5, 1.125],
+            [3, 5, -0.836],
+            [4, 5, 0.919]
+          ],
+          "xAxisIndex": 2,
+          "yAxisIndex": 2,
+          "type": "heatmap"
+        }
+      ]
+    },
+    "hints": {
+      "legendReserveRight": 70
+    }
+  },
+  {
+    "name": "sides",
+    "data": {
+      "values": [
+        [-0.626, 0.487, -0.621, 0.821, 0.62],
+        [0.184, 0.738, null, 0.594, -0.056],
+        [-0.836, 0.576, 1.125, 0.919, -0.156],
+        [1.595, -0.305, -0.045, 0.782, -1.471],
+        [0.33, 1.512, -0.016, 0.075, -0.478],
+        [-0.82, 0.39, 0.944, -1.989, 0.418]
+      ],
+      "row_names": ["row1", "row2", "row3", "row4", "row5", "row6"],
+      "col_names": ["column1", "column2", "column3", "column4", "column5"],
+      "row_tree": {
+        "merge": [[-2, -5], [-1, -3], [1, 2], [-4, 3], [-6, 4]],
+        "height": [
+          1.15533382621647, 1.92673739777895, 2.08651695416069, 3.20401045566334, 4.30582547254298
+        ],
+        "order": [6, 4, 2, 5, 1, 3],
+        "leaves": [0, 1, 2, 3, 4, 5]
+      },
+      "col_tree": {
+        "merge": [[-2, -3], [-5, 1], [-1, -4], [2, 3]],
+        "height": [2.25522460078813, 2.61640317993997, 2.72662593694111, 3.70132392530024],
+        "order": [5, 2, 3, 1, 4],
+        "leaves": [0, 1, 2, 3, 4]
+      }
+    },
+    "config": {
+      "type": "heatmap",
+      "title": null,
+      "legend_position": "right",
+      "legend_placement": "outside",
+      "legend_title": null,
+      "row_names": null,
+      "col_names": null,
+      "triangle": null,
+      "cluster_rows": true,
+      "cluster_cols": true,
+      "dist_method": "euclidean",
+      "hclust_method": "complete",
+      "square_cells": null,
+      "show_row_dendro": true,
+      "show_col_dendro": true,
+      "dendro_row_width": 60,
+      "dendro_col_height": 60,
+      "dendro_color": null,
+      "dendro_uniform": true,
+      "dendro_row_side": "left",
+      "dendro_col_side": "bottom",
+      "colormap": null,
+      "zlim": null,
+      "show_notes": false,
+      "row_cut": null,
+      "col_cut": null,
+      "show_values": false,
+      "value_digits": 2,
+      "show_colorbar": true,
+      "colorbar_orient": "vertical",
+      "margin_top": null,
+      "margin_right": null,
+      "margin_bottom": null,
+      "margin_left": null
+    },
+    "option": {
+      "grid": [
+        {
+          "left": 0,
+          "top": 65,
+          "bottom": 60,
+          "width": 60
+        },
+        {
+          "left": 112,
+          "right": 90,
+          "bottom": 0,
+          "height": 60
+        },
+        {
+          "left": 112,
+          "right": 90,
+          "top": 65,
+          "bottom": 60,
+          "containLabel": false
+        }
+      ],
+      "xAxis": [
+        {
+          "type": "value",
+          "show": false,
+          "inverse": true,
+          "min": 0.555555555555556,
+          "max": 5,
+          "gridIndex": 0
+        },
+        {
+          "type": "value",
+          "show": false,
+          "min": -0.5,
+          "max": 4.5,
+          "gridIndex": 1
+        },
+        {
+          "type": "category",
+          "boundaryGap": true,
+          "data": ["column5", "column2", "column3", "column1", "column4"],
+          "axisLine": {
+            "show": false
+          },
+          "axisLabel": {
+            "rotate": 45,
+            "margin": 8
+          },
+          "splitArea": {
+            "show": false
+          },
+          "position": "top",
+          "gridIndex": 2
+        }
+      ],
+      "yAxis": [
+        {
+          "type": "value",
+          "show": false,
+          "inverse": true,
+          "min": -0.5,
+          "max": 5.5,
+          "gridIndex": 0
+        },
+        {
+          "type": "value",
+          "show": false,
+          "inverse": true,
+          "min": 0.666666666666667,
+          "max": 4,
+          "gridIndex": 1
+        },
+        {
+          "type": "category",
+          "inverse": true,
+          "boundaryGap": true,
+          "data": ["row6", "row4", "row2", "row5", "row1", "row3"],
+          "axisLine": {
+            "show": false
+          },
+          "axisLabel": {
+            "margin": 8
+          },
+          "splitArea": {
+            "show": false
+          },
+          "gridIndex": 2
+        }
+      ],
+      "visualMap": {
+        "type": "continuous",
+        "min": -1.989,
+        "max": 1.595,
+        "precision": 2,
+        "calculable": true,
+        "show": true,
+        "orient": "vertical",
+        "inRange": {
+          "color": [
+            "#2D83D3",
+            "#3085D3",
+            "#3487D4",
+            "#3889D5",
+            "#3C8CD6",
+            "#408ED7",
+            "#4390D7",
+            "#4792D8",
+            "#4B95D9",
+            "#4F97DA",
+            "#5399DB",
+            "#579BDB",
+            "#5A9EDC",
+            "#5EA0DD",
+            "#62A2DE",
+            "#66A4DF",
+            "#6AA7DF",
+            "#6DA9E0",
+            "#71ABE1",
+            "#75ADE2",
+            "#79B0E3",
+            "#7DB2E3",
+            "#81B4E4",
+            "#84B6E5",
+            "#88B9E6",
+            "#8CBBE7",
+            "#90BDE7",
+            "#94BFE8",
+            "#97C2E9",
+            "#9BC4EA",
+            "#9FC6EB",
+            "#A3C8EB",
+            "#A7CBEC",
+            "#ABCDED",
+            "#AECFEE",
+            "#B2D1EF",
+            "#B6D4EF",
+            "#BAD6F0",
+            "#BED8F1",
+            "#C1DAF2",
+            "#C5DDF3",
+            "#C9DFF3",
+            "#CDE1F4",
+            "#D1E3F5",
+            "#D4E6F6",
+            "#D8E8F7",
+            "#DCEAF7",
+            "#E0ECF8",
+            "#E4EFF9",
+            "#E8F1FA",
+            "#EBF3FB",
+            "#EFF5FB",
+            "#F3F8FC",
+            "#F7FAFD",
+            "#FBFCFE",
+            "#FFFFFF",
+            "#FDFBFA",
+            "#FCF7F5",
+            "#FBF4F0",
+            "#F9F0EB",
+            "#F8EDE7",
+            "#F7E9E2",
+            "#F5E5DD",
+            "#F4E2D8",
+            "#F3DED4",
+            "#F2DBCF",
+            "#F0D7CA",
+            "#EFD4C5",
+            "#EED0C0",
+            "#ECCCBC",
+            "#EBC9B7",
+            "#EAC5B2",
+            "#E9C2AD",
+            "#E7BEA9",
+            "#E6BBA4",
+            "#E5B79F",
+            "#E3B39A",
+            "#E2B095",
+            "#E1AC91",
+            "#E0A98C",
+            "#DEA587",
+            "#DDA182",
+            "#DC9E7E",
+            "#DA9A79",
+            "#D99774",
+            "#D8936F",
+            "#D7906A",
+            "#D58C66",
+            "#D48861",
+            "#D3855C",
+            "#D18157",
+            "#D07E52",
+            "#CF7A4E",
+            "#CE7749",
+            "#CC7344",
+            "#CB6F3F",
+            "#CA6C3B",
+            "#C86836",
+            "#C76531",
+            "#C6612C",
+            "#C55E28"
+          ]
+        },
+        "right": "right",
+        "top": "middle",
+        "seriesIndex": 2
+      },
+      "series": [
+        {
+          "type": "custom",
+          "xAxisIndex": 0,
+          "yAxisIndex": 0,
+          "data": [
+            [2, 3, 0, 0, 1],
+            [4, 5, 0, 0, 2],
+            [2.5, 4.5, 1, 2, 3],
+            [1, 3.5, 0, 3, 4],
+            [0, 2.25, 0, 4, 5]
+          ],
+          "silent": true,
+          "clip": true,
+          "animation": false,
+          "renderItem": "rtemis.dendrogram.v1",
+          "itemPayload": {
+            "orientation": "row",
+            "color": "#99999988"
+          }
+        },
+        {
+          "type": "custom",
+          "xAxisIndex": 1,
+          "yAxisIndex": 1,
+          "data": [[1, 2, 0, 0, 1], [0, 1.5, 0, 1, 2], [3, 4, 0, 0, 3], [0.75, 3.5, 2, 3, 4]],
+          "silent": true,
+          "clip": true,
+          "animation": false,
+          "renderItem": "rtemis.dendrogram.v1",
+          "itemPayload": {
+            "orientation": "column",
+            "color": "#99999988"
+          }
+        },
+        {
+          "data": [
+            [0, 0, 0.418],
+            [1, 0, 0.39],
+            [2, 0, 0.944],
+            [3, 0, -0.82],
+            [4, 0, -1.989],
+            [0, 1, -1.471],
+            [1, 1, -0.305],
+            [2, 1, -0.045],
+            [3, 1, 1.595],
+            [4, 1, 0.782],
+            [0, 2, -0.056],
+            [1, 2, 0.738],
+            [2, 2, null],
+            [3, 2, 0.184],
+            [4, 2, 0.594],
+            [0, 3, -0.478],
+            [1, 3, 1.512],
+            [2, 3, -0.016],
+            [3, 3, 0.33],
+            [4, 3, 0.075],
+            [0, 4, 0.62],
+            [1, 4, 0.487],
+            [2, 4, -0.621],
+            [3, 4, -0.626],
+            [4, 4, 0.821],
+            [0, 5, -0.156],
+            [1, 5, 0.576],
+            [2, 5, 1.125],
+            [3, 5, -0.836],
+            [4, 5, 0.919]
+          ],
+          "xAxisIndex": 2,
+          "yAxisIndex": 2,
+          "type": "heatmap"
+        }
+      ]
+    },
+    "hints": {
+      "legendReserveRight": 70
+    }
+  },
+  {
+    "name": "rowsonly",
+    "data": {
+      "values": [
+        [-0.626, 0.487, -0.621, 0.821, 0.62],
+        [0.184, 0.738, null, 0.594, -0.056],
+        [-0.836, 0.576, 1.125, 0.919, -0.156],
+        [1.595, -0.305, -0.045, 0.782, -1.471],
+        [0.33, 1.512, -0.016, 0.075, -0.478],
+        [-0.82, 0.39, 0.944, -1.989, 0.418]
+      ],
+      "row_names": ["row1", "row2", "row3", "row4", "row5", "row6"],
+      "col_names": ["column1", "column2", "column3", "column4", "column5"],
+      "row_tree": {
+        "merge": [[-2, -5], [-1, -3], [1, 2], [-4, 3], [-6, 4]],
+        "height": [
+          1.15533382621647, 1.92673739777895, 2.08651695416069, 3.20401045566334, 4.30582547254298
+        ],
+        "order": [6, 4, 2, 5, 1, 3],
+        "leaves": [0, 1, 2, 3, 4, 5]
+      }
+    },
+    "config": {
+      "type": "heatmap",
+      "title": null,
+      "legend_position": "right",
+      "legend_placement": "outside",
+      "legend_title": null,
+      "row_names": null,
+      "col_names": null,
+      "triangle": null,
+      "cluster_rows": true,
+      "cluster_cols": false,
+      "dist_method": "euclidean",
+      "hclust_method": "complete",
+      "square_cells": null,
+      "show_row_dendro": true,
+      "show_col_dendro": true,
+      "dendro_row_width": 60,
+      "dendro_col_height": 60,
+      "dendro_color": null,
+      "dendro_uniform": false,
+      "dendro_row_side": "right",
+      "dendro_col_side": "top",
+      "colormap": null,
+      "zlim": null,
+      "show_notes": false,
+      "row_cut": null,
+      "col_cut": null,
+      "show_values": false,
+      "value_digits": 2,
+      "show_colorbar": true,
+      "colorbar_orient": "vertical",
+      "margin_top": null,
+      "margin_right": null,
+      "margin_bottom": null,
+      "margin_left": null
+    },
+    "option": {
+      "grid": [
+        {
+          "right": 90,
+          "top": 10,
+          "bottom": 55,
+          "width": 60
+        },
+        {
+          "left": 52,
+          "right": 150,
+          "top": 10,
+          "bottom": 55,
+          "containLabel": false
+        }
+      ],
+      "xAxis": [
+        {
+          "type": "value",
+          "show": false,
+          "inverse": false,
+          "min": 0.805279198846863,
+          "max": 4.30582547254298,
+          "gridIndex": 0
+        },
+        {
+          "type": "category",
+          "boundaryGap": true,
+          "data": ["column1", "column2", "column3", "column4", "column5"],
+          "axisLine": {
+            "show": false
+          },
+          "axisLabel": {
+            "rotate": 45,
+            "margin": 8
+          },
+          "splitArea": {
+            "show": false
+          },
+          "gridIndex": 1
+        }
+      ],
+      "yAxis": [
+        {
+          "type": "value",
+          "show": false,
+          "inverse": true,
+          "min": -0.5,
+          "max": 5.5,
+          "gridIndex": 0
+        },
+        {
+          "type": "category",
+          "inverse": true,
+          "boundaryGap": true,
+          "data": ["row6", "row4", "row2", "row5", "row1", "row3"],
+          "axisLine": {
+            "show": false
+          },
+          "axisLabel": {
+            "margin": 8
+          },
+          "splitArea": {
+            "show": false
+          },
+          "gridIndex": 1
+        }
+      ],
+      "visualMap": {
+        "type": "continuous",
+        "min": -1.989,
+        "max": 1.595,
+        "precision": 2,
+        "calculable": true,
+        "show": true,
+        "orient": "vertical",
+        "inRange": {
+          "color": [
+            "#2D83D3",
+            "#3085D3",
+            "#3487D4",
+            "#3889D5",
+            "#3C8CD6",
+            "#408ED7",
+            "#4390D7",
+            "#4792D8",
+            "#4B95D9",
+            "#4F97DA",
+            "#5399DB",
+            "#579BDB",
+            "#5A9EDC",
+            "#5EA0DD",
+            "#62A2DE",
+            "#66A4DF",
+            "#6AA7DF",
+            "#6DA9E0",
+            "#71ABE1",
+            "#75ADE2",
+            "#79B0E3",
+            "#7DB2E3",
+            "#81B4E4",
+            "#84B6E5",
+            "#88B9E6",
+            "#8CBBE7",
+            "#90BDE7",
+            "#94BFE8",
+            "#97C2E9",
+            "#9BC4EA",
+            "#9FC6EB",
+            "#A3C8EB",
+            "#A7CBEC",
+            "#ABCDED",
+            "#AECFEE",
+            "#B2D1EF",
+            "#B6D4EF",
+            "#BAD6F0",
+            "#BED8F1",
+            "#C1DAF2",
+            "#C5DDF3",
+            "#C9DFF3",
+            "#CDE1F4",
+            "#D1E3F5",
+            "#D4E6F6",
+            "#D8E8F7",
+            "#DCEAF7",
+            "#E0ECF8",
+            "#E4EFF9",
+            "#E8F1FA",
+            "#EBF3FB",
+            "#EFF5FB",
+            "#F3F8FC",
+            "#F7FAFD",
+            "#FBFCFE",
+            "#FFFFFF",
+            "#FDFBFA",
+            "#FCF7F5",
+            "#FBF4F0",
+            "#F9F0EB",
+            "#F8EDE7",
+            "#F7E9E2",
+            "#F5E5DD",
+            "#F4E2D8",
+            "#F3DED4",
+            "#F2DBCF",
+            "#F0D7CA",
+            "#EFD4C5",
+            "#EED0C0",
+            "#ECCCBC",
+            "#EBC9B7",
+            "#EAC5B2",
+            "#E9C2AD",
+            "#E7BEA9",
+            "#E6BBA4",
+            "#E5B79F",
+            "#E3B39A",
+            "#E2B095",
+            "#E1AC91",
+            "#E0A98C",
+            "#DEA587",
+            "#DDA182",
+            "#DC9E7E",
+            "#DA9A79",
+            "#D99774",
+            "#D8936F",
+            "#D7906A",
+            "#D58C66",
+            "#D48861",
+            "#D3855C",
+            "#D18157",
+            "#D07E52",
+            "#CF7A4E",
+            "#CE7749",
+            "#CC7344",
+            "#CB6F3F",
+            "#CA6C3B",
+            "#C86836",
+            "#C76531",
+            "#C6612C",
+            "#C55E28"
+          ]
+        },
+        "right": "right",
+        "top": "middle",
+        "seriesIndex": 1
+      },
+      "series": [
+        {
+          "type": "custom",
+          "xAxisIndex": 0,
+          "yAxisIndex": 0,
+          "data": [
+            [2, 3, 0, 0, 1.15533382621647],
+            [4, 5, 0, 0, 1.92673739777895],
+            [2.5, 4.5, 1.15533382621647, 1.92673739777895, 2.08651695416069],
+            [1, 3.5, 0, 2.08651695416069, 3.20401045566334],
+            [0, 2.25, 0, 3.20401045566334, 4.30582547254298]
+          ],
+          "silent": true,
+          "clip": true,
+          "animation": false,
+          "renderItem": "rtemis.dendrogram.v1",
+          "itemPayload": {
+            "orientation": "row",
+            "color": "#99999988"
+          }
+        },
+        {
+          "data": [
+            [0, 0, -0.82],
+            [1, 0, 0.39],
+            [2, 0, 0.944],
+            [3, 0, -1.989],
+            [4, 0, 0.418],
+            [0, 1, 1.595],
+            [1, 1, -0.305],
+            [2, 1, -0.045],
+            [3, 1, 0.782],
+            [4, 1, -1.471],
+            [0, 2, 0.184],
+            [1, 2, 0.738],
+            [2, 2, null],
+            [3, 2, 0.594],
+            [4, 2, -0.056],
+            [0, 3, 0.33],
+            [1, 3, 1.512],
+            [2, 3, -0.016],
+            [3, 3, 0.075],
+            [4, 3, -0.478],
+            [0, 4, -0.626],
+            [1, 4, 0.487],
+            [2, 4, -0.621],
+            [3, 4, 0.821],
+            [4, 4, 0.62],
+            [0, 5, -0.836],
+            [1, 5, 0.576],
+            [2, 5, 1.125],
+            [3, 5, 0.919],
+            [4, 5, -0.156]
+          ],
+          "xAxisIndex": 1,
+          "yAxisIndex": 1,
+          "type": "heatmap"
+        }
+      ]
+    },
+    "hints": {
+      "legendReserveRight": 70
+    }
+  },
+  {
+    "name": "positive",
+    "data": {
+      "values": [
+        [0.626, 0.487, 0.621, 0.821, 0.62],
+        [0.184, 0.738, null, 0.594, 0.056],
+        [0.836, 0.576, 1.125, 0.919, 0.156],
+        [1.595, 0.305, 0.045, 0.782, 1.471],
+        [0.33, 1.512, 0.016, 0.075, 0.478],
+        [0.82, 0.39, 0.944, 1.989, 0.418]
+      ],
+      "row_names": ["row1", "row2", "row3", "row4", "row5", "row6"],
+      "col_names": ["column1", "column2", "column3", "column4", "column5"]
+    },
+    "config": {
+      "type": "heatmap",
+      "title": null,
+      "legend_position": "bottom",
+      "legend_placement": "outside",
+      "legend_title": null,
+      "row_names": null,
+      "col_names": null,
+      "triangle": null,
+      "cluster_rows": false,
+      "cluster_cols": false,
+      "dist_method": "euclidean",
+      "hclust_method": "complete",
+      "square_cells": null,
+      "show_row_dendro": true,
+      "show_col_dendro": true,
+      "dendro_row_width": 60,
+      "dendro_col_height": 60,
+      "dendro_color": null,
+      "dendro_uniform": false,
+      "dendro_row_side": "right",
+      "dendro_col_side": "top",
+      "colormap": null,
+      "zlim": null,
+      "show_notes": false,
+      "row_cut": null,
+      "col_cut": null,
+      "show_values": false,
+      "value_digits": 2,
+      "show_colorbar": true,
+      "colorbar_orient": "horizontal",
+      "margin_top": null,
+      "margin_right": null,
+      "margin_bottom": null,
+      "margin_left": 50
+    },
+    "option": {
+      "grid": {
+        "left": 50,
+        "right": 20,
+        "top": 10,
+        "bottom": 55,
+        "containLabel": false
+      },
+      "xAxis": {
+        "type": "category",
+        "boundaryGap": true,
+        "data": ["column1", "column2", "column3", "column4", "column5"],
+        "axisLine": {
+          "show": false
+        },
+        "axisLabel": {
+          "rotate": 45,
+          "margin": 8
+        },
+        "splitArea": {
+          "show": false
+        }
+      },
+      "yAxis": {
+        "type": "category",
+        "inverse": true,
+        "boundaryGap": true,
+        "data": ["row1", "row2", "row3", "row4", "row5", "row6"],
+        "axisLine": {
+          "show": false
+        },
+        "axisLabel": {
+          "margin": 8
+        },
+        "splitArea": {
+          "show": false
+        }
+      },
+      "visualMap": {
+        "type": "continuous",
+        "min": 0.016,
+        "max": 1.989,
+        "precision": 2,
+        "calculable": true,
+        "show": true,
+        "orient": "horizontal",
+        "inRange": {
+          "color": [
+            "#FFFFFF",
+            "#FEFDFC",
+            "#FDFBFA",
+            "#FDFAF8",
+            "#FCF8F6",
+            "#FCF6F4",
+            "#FBF5F2",
+            "#FAF3EF",
+            "#FAF2ED",
+            "#F9F0EB",
+            "#F9EEE9",
+            "#F8EDE7",
+            "#F8EBE5",
+            "#F7EAE3",
+            "#F6E8E0",
+            "#F6E6DE",
+            "#F5E5DC",
+            "#F5E3DA",
+            "#F4E2D8",
+            "#F3E0D6",
+            "#F3DED4",
+            "#F2DDD1",
+            "#F2DBCF",
+            "#F1D9CD",
+            "#F1D8CB",
+            "#F0D6C9",
+            "#EFD5C7",
+            "#EFD3C4",
+            "#EED1C2",
+            "#EED0C0",
+            "#EDCEBE",
+            "#EDCDBC",
+            "#ECCBBA",
+            "#EBC9B8",
+            "#EBC8B5",
+            "#EAC6B3",
+            "#EAC5B1",
+            "#E9C3AF",
+            "#E8C1AD",
+            "#E8C0AB",
+            "#E7BEA9",
+            "#E7BCA6",
+            "#E6BBA4",
+            "#E6B9A2",
+            "#E5B8A0",
+            "#E4B69E",
+            "#E4B49C",
+            "#E3B399",
+            "#E3B197",
+            "#E2B095",
+            "#E2AE93",
+            "#E1AC91",
+            "#E0AB8F",
+            "#E0A98D",
+            "#DFA88A",
+            "#DFA688",
+            "#DEA486",
+            "#DDA384",
+            "#DDA182",
+            "#DCA080",
+            "#DC9E7E",
+            "#DB9C7B",
+            "#DB9B79",
+            "#DA9977",
+            "#D99775",
+            "#D99673",
+            "#D89471",
+            "#D8936E",
+            "#D7916C",
+            "#D68F6A",
+            "#D68E68",
+            "#D58C66",
+            "#D58B64",
+            "#D48962",
+            "#D4875F",
+            "#D3865D",
+            "#D2845B",
+            "#D28359",
+            "#D18157",
+            "#D17F55",
+            "#D07E52",
+            "#D07C50",
+            "#CF7A4E",
+            "#CE794C",
+            "#CE774A",
+            "#CD7648",
+            "#CD7446",
+            "#CC7243",
+            "#CB7141",
+            "#CB6F3F",
+            "#CA6E3D",
+            "#CA6C3B",
+            "#C96A39",
+            "#C96937",
+            "#C86734",
+            "#C76632",
+            "#C76430",
+            "#C6622E",
+            "#C6612C",
+            "#C55F2A",
+            "#C55E28"
+          ]
+        },
+        "left": "center",
+        "bottom": "bottom",
+        "seriesIndex": 0
+      },
+      "series": [
+        {
+          "data": [
+            [0, 0, 0.626],
+            [1, 0, 0.487],
+            [2, 0, 0.621],
+            [3, 0, 0.821],
+            [4, 0, 0.62],
+            [0, 1, 0.184],
+            [1, 1, 0.738],
+            [2, 1, null],
+            [3, 1, 0.594],
+            [4, 1, 0.056],
+            [0, 2, 0.836],
+            [1, 2, 0.576],
+            [2, 2, 1.125],
+            [3, 2, 0.919],
+            [4, 2, 0.156],
+            [0, 3, 1.595],
+            [1, 3, 0.305],
+            [2, 3, 0.045],
+            [3, 3, 0.782],
+            [4, 3, 1.471],
+            [0, 4, 0.33],
+            [1, 4, 1.512],
+            [2, 4, 0.016],
+            [3, 4, 0.075],
+            [4, 4, 0.478],
+            [0, 5, 0.82],
+            [1, 5, 0.39],
+            [2, 5, 0.944],
+            [3, 5, 1.989],
+            [4, 5, 0.418]
+          ],
+          "type": "heatmap"
+        }
+      ]
+    },
+    "hints": {
+      "legendReserveRight": 0
+    }
+  }
+]

@@ -4173,6 +4173,7 @@
     },
     {
       "type": "line",
+      "symbol": "circle",
       "name": "R1",
       "z": 15,
       "silent": true,
@@ -4320,6 +4321,7 @@
     },
     {
       "type": "line",
+      "symbol": "circle",
       "name": "R2",
       "z": 15,
       "silent": true,
@@ -4467,6 +4469,7 @@
     },
     {
       "type": "line",
+      "symbol": "circle",
       "name": "R3",
       "z": 15,
       "silent": true,
@@ -4614,6 +4617,7 @@
     },
     {
       "type": "line",
+      "symbol": "circle",
       "name": "R4",
       "z": 15,
       "silent": true,
@@ -4765,6 +4769,7 @@
     },
     {
       "type": "line",
+      "symbol": "circle",
       "name": "Disordered",
       "z": 15,
       "silent": true,
@@ -5896,6 +5901,7 @@
     },
     {
       "type": "line",
+      "symbol": "circle",
       "name": "N-terminal inserts",
       "z": 15,
       "silent": true,

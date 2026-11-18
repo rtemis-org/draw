@@ -169,6 +169,7 @@ export function fitSeries(
       const lower = curve.x.map((x, i) => [x, curve.lower?.[i] ?? null]).reverse();
       series.push({
         type: "line",
+        symbol: "circle",
         ...named,
         data: [...upper, ...lower],
         showSymbol: false,
@@ -183,6 +184,7 @@ export function fitSeries(
     }
     series.push({
       type: "line",
+      symbol: "circle",
       ...named,
       data: curve.x.map((x, i) => [x, curve.fitted[i] ?? null]),
       showSymbol: false,

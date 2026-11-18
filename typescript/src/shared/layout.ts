@@ -78,6 +78,26 @@ export function axisZoom(
 }
 
 /**
+ * Places the slider of a built option's zoom preset ({@link axisZoom}, id
+ * {@link ZOOM_SLIDER_ID}) against the grid's current margin on the slider's
+ * side, and grows that margin to hold it, as `axisZoom()` does at build time.
+ * A host that sets its own grid margins after the build calls it once
+ * afterwards. Mutates the option's first grid and the slider; an option
+ * without the slider is left as it is.
+ */
+export function placeZoomSlider(option: Record<string, unknown>): void {
+  const zooms = [option.dataZoom ?? []].flat() as Record<string, unknown>[];
+  const slider = zooms.find((z) => z?.id === ZOOM_SLIDER_ID);
+  const grid = [option.grid ?? []].flat()[0] as Record<string, unknown> | undefined;
+  if (!slider || !grid) return;
+  const side: Side = slider.yAxisIndex !== undefined ? "right" : "bottom";
+  const current = grid[side];
+  const margin = typeof current === "number" ? current : side === "bottom" ? 80 : 15;
+  slider[side] = margin + SLIDER_HANDLE;
+  grid[side] = margin + SLIDER_HANDLE + SLIDER_SIZE + SLIDER_GAP;
+}
+
+/**
  * The zoom preset on both axes of a scatter chart: an inside zoom per axis on
  * Shift+wheel with drag panning, and a toolbox with box zoom, undo, and reset.
  * Wheel zoom and panning scale both axes by one factor; box zoom sets each

@@ -14,7 +14,9 @@
 #' matching data.table's centered alignment used by rtemis.
 #' @param x,y Optional Character: Time and value column bindings. Multiple y
 #'   columns share x; group splits a single y column.
-#' @param group Optional Character: Group column binding.
+#' @param group Optional Character: Group column binding. It splits every `y`
+#'   and `y2` column; with several columns bound, a series is named
+#'   "column / level".
 #' @param x2,y2 Optional Character: Secondary time/value bindings. Unset x2 uses x.
 #' @param window Integer `[1, Inf)`: Number of observations per rolling window.
 #' @param roll_fn Character `{"none", "mean", "median", "min", "max", "sum"}`: Summary.

@@ -8,6 +8,7 @@ import { CONFUSION_CHART_CONFIG_MEMBERS } from "../src/charts/confusion/config.t
 import { PR_CHART_CONFIG_MEMBERS, ROC_CHART_CONFIG_MEMBERS } from "../src/charts/curves/config.ts";
 import { DENSITY_CHART_CONFIG_MEMBERS } from "../src/charts/density/config.ts";
 import { GANTT_CHART_CONFIG_MEMBERS } from "../src/charts/gantt/config.ts";
+import { HEATMAP_CHART_CONFIG_MEMBERS } from "../src/charts/heatmap/config.ts";
 import { HISTOGRAM_CHART_CONFIG_MEMBERS } from "../src/charts/histogram/config.ts";
 import { LINE_CHART_CONFIG_MEMBERS } from "../src/charts/line/config.ts";
 import { SANKEY_CHART_CONFIG_MEMBERS } from "../src/charts/sankey/config.ts";
@@ -31,6 +32,7 @@ describe.skipIf(!schemaDir)("config types against the generated schemas", () => 
     ["confusion", CONFUSION_CHART_CONFIG_MEMBERS],
     ["density", DENSITY_CHART_CONFIG_MEMBERS],
     ["gantt", GANTT_CHART_CONFIG_MEMBERS],
+    ["heatmap", HEATMAP_CHART_CONFIG_MEMBERS],
     ["histogram", HISTOGRAM_CHART_CONFIG_MEMBERS],
     ["line", LINE_CHART_CONFIG_MEMBERS],
     ["pr", PR_CHART_CONFIG_MEMBERS],

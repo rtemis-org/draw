@@ -17,6 +17,7 @@ BUILDER_TYPES <- c(
   "confusion",
   "density",
   "gantt",
+  "heatmap",
   "histogram",
   "line",
   "pr",

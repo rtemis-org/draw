@@ -1158,24 +1158,25 @@ test_that("draw_heatmap margins override auto-computed left gutter", {
   rownames(m) <- c("r1", "r2", "r3", "r4")
   colnames(m) <- c("c1", "c2", "c3", "c4")
 
-  w_default <- draw_heatmap(m)
-  w_wide <- draw_heatmap(m, margins = c(left = 180))
+  default <- raw_option(draw_heatmap(m))[["grid"]]
+  wide <- raw_option(draw_heatmap(m, margins = c(left = 180)))[["grid"]]
 
   # Default: left = 20 + 2*8 = 36
-  expect_equal(w_default$x$option$grid$left, 36)
+  expect_equal(default$left, 36)
   # User override: 180
-  expect_equal(w_wide$x$option$grid$left, 180)
+  expect_equal(wide$left, 180)
   # Other sides unchanged between the two
-  expect_equal(w_wide$x$option$grid$right, w_default$x$option$grid$right)
-  expect_equal(w_wide$x$option$grid$top, w_default$x$option$grid$top)
+  expect_equal(wide$right, default$right)
+  expect_equal(wide$top, default$top)
 })
 
 test_that("draw_heatmap margins cascade to square-cell meta", {
   m <- matrix(1:16, 4, 4)
   rownames(m) <- c("r1", "r2", "r3", "r4")
   colnames(m) <- c("c1", "c2", "c3", "c4")
+  skip_if_no_node()
   w <- draw_heatmap(m, margins = c(left = 180), square_cells = TRUE)
-  expect_equal(w$x$leftPx, 180)
+  expect_equal(built_option(w, what = "hints")$leftPx, 180)
 })
 
 test_that("meta reaches the widget payload verbatim", {

@@ -57,6 +57,7 @@
   "series": [
     {
       "type": "line",
+      "symbol": "circle",
       "name": "Solar",
       "data": [
         [
@@ -114,6 +115,7 @@
     },
     {
       "type": "line",
+      "symbol": "circle",
       "name": "Wind",
       "data": [
         [
@@ -171,6 +173,7 @@
     },
     {
       "type": "line",
+      "symbol": "circle",
       "name": "Hydro",
       "data": [
         [

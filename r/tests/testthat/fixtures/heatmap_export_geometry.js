@@ -12,6 +12,7 @@ require(path.join(directory, 'renderers.js'))(echarts);
 const body = {style: {}, classList: {contains: () => false}};
 const context = {
   document: {body}, window: {}, HTMLWidgets: {widget() {}},
+  RtemisDraw: require(path.join(directory, 'rtemis-draw-builders.js')),
   rtemisA3: require(path.join(directory, 'a3.js')),
   rtemisPanels: layout,
   echarts: {...echarts, init: (_, theme, options) =>
@@ -23,12 +24,13 @@ vm.runInContext(fs.readFileSync(path.join(directory, 'theme_watch.js'), 'utf8'),
 vm.runInContext(fs.readFileSync(input.binding, 'utf8'), context);
 const near = (actual, expected) => assert.ok(Math.abs(actual - expected) < 1e-6, `${actual} != ${expected}`);
 for (const payload of input.charts) {
-  payload.option.animation = false;
-  const original = JSON.stringify(payload.option.grid);
   const element = {style: {}, parentElement: body};
   const widget = context.rtemisDrawFactory(element, 800, 450, true);
   try {
+    // The binding builds the option from the request and lays out the cells.
     widget.renderValue(payload);
+    payload.option.animation = false;
+    const original = JSON.stringify(payload.option.grid);
     for (const [width, height] of [[800,450], [480,620], [900,400], [800,450]]) {
       widget.resize(width, height);
       const chart = widget.getChart();
@@ -59,8 +61,10 @@ for (const payload of input.charts) {
       layout.fitHeatmap(chart, payload);
       assert.deepEqual(visualMap.getSelected(), selected);
       assert.equal(JSON.stringify(payload.option.grid), original, 'Layout mutated its source margins');
+      // The derived scale runs through the theme's background at zero, the
+      // midpoint of a range symmetric about it.
       const colors = visualMap.get('inRange').color;
-      assert.deepEqual(Array.from(colors), payload.theme.backgroundColor === '#181818' ? payload.colorDark : payload.colorLight);
+      assert.equal(colors[50].toLowerCase(), payload.theme.backgroundColor.toLowerCase());
     }
   } finally {widget.dispose();}
 }

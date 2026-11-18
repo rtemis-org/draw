@@ -69,6 +69,8 @@ function rtemisDrawBuild(x, dark) {
   }
   // The package places the scatter chart's color scale and size key.
   if (request.type === 'scatter') x.fitKeys = true;
+  // The package lays out the heatmap's cells; the widget fits them square.
+  if (request.type === 'heatmap') Object.assign(x, RtemisDraw.heatmapHints(data, request.config));
   const aspect = RtemisDraw.aspectHints[request.type]?.(option, request.config);
   if (aspect) x.aspect = aspect;
 }
@@ -326,9 +328,12 @@ function rtemisDrawFactory(el, width, height, bounded = false, onBackground = ()
     return {
       renderValue: (x) => {
         currentPayload = x;
+        // A build request yields the option and, for a heatmap, the cell
+        // layout the square-cell sizing below reads.
+        if (x.build) rtemisDrawBuild(x, rtemisDrawIsDarkMode());
 
         // Square-cell heatmaps: enforce the correct height by deriving it
-        // from the actual container width and the layout margins passed from R.
+        // from the actual container width and the heatmap's layout margins.
         // This overrides whatever height htmlwidgets allocated for the container,
         // ensuring cells are always square regardless of viewer window dimensions.
         if (x.squareCells && !hostOwnsHeight) {
@@ -337,7 +342,6 @@ function rtemisDrawFactory(el, width, height, bounded = false, onBackground = ()
           currentHeight = newHeight;
         }
 
-        if (x.build) rtemisDrawBuild(x, rtemisDrawIsDarkMode());
         const aspectHeight = applyAspect(x, currentWidth);
         if (aspectHeight !== null) currentHeight = aspectHeight;
 

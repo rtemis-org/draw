@@ -1,4 +1,4 @@
-import { formatNumber } from "../../shared/format.ts";
+import { tooltipValue } from "../../shared/format.ts";
 import { axisZoom, cartesianGrid, type MarginMembers } from "../../shared/layout.ts";
 import type { LegendMembers } from "../../shared/legend.ts";
 import { type AxisLimits, calcLimits } from "../../shared/limits.ts";
@@ -502,7 +502,7 @@ export function buildBoxplotOption(
 
   return {
     ...(config.title ? { title: { text: config.title } } : {}),
-    tooltip: { trigger: "item", valueFormatter: formatNumber },
+    tooltip: { trigger: "item", valueFormatter: tooltipValue },
     ...(named.length > 0
       ? {
           legend: {

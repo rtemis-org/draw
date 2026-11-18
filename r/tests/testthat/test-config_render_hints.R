@@ -2,7 +2,7 @@
 # ::rtemis.draw::
 # 2026- EDG rtemis.org
 
-# HeatmapConfig, SpectrogramConfig and A3Config -- the three charts that derive
+# HeatmapConfig, SpectrogramConfig, and A3Config -- the three charts that derive
 # *render hints* from their own content.
 #
 # Their builders return `list(option =, render =)`. The option is the chart and
@@ -52,8 +52,8 @@ test_that("enums are declared, so a bad value fails where it is set", {
 
 test_that("compile returns the option, matching the vector path", {
   expect_identical(
-    compile(setup_HeatmapConfig(), data = hm()),
-    heatmap_option(x = hm())[["option"]]
+    build_payload(compile(setup_HeatmapConfig(), data = hm())),
+    draw_heatmap(hm())[["x"]][["build"]]
   )
   expect_identical(
     compile(setup_SpectrogramConfig(), data = spec_m()),
@@ -76,10 +76,13 @@ test_that("the whole widget matches the vector path", {
 # %% render hints reach draw() but never a document ----
 
 test_that("heatmap render hints reach the widget", {
-  # The browser needs the cell counts and pixel offsets to size its container.
+  # The browser needs the cell counts and pixel offsets to size its container;
+  # the widget takes them from the builder's heatmapHints().
+  skip_if_no_node()
   w <- draw(setup_HeatmapConfig(square_cells = TRUE), data = hm())
-  expect_true(isTRUE(w[["x"]][["squareCells"]]))
-  expect_true(all(c("nRows", "nCols", "leftPx") %in% names(w[["x"]])))
+  hints <- built_option(w, what = "hints")
+  expect_true(isTRUE(hints[["squareCells"]]))
+  expect_true(all(c("nRows", "nCols", "leftPx") %in% names(hints)))
 })
 
 test_that("render hints are absent from a written config", {

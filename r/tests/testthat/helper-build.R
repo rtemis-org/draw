@@ -2,13 +2,13 @@
 # @rtemis/draw builds, in Node with the bundled builders, as the widget does.
 # Requires Node.js; callers skip with skip_if_no_node().
 # `what = "aspect"` returns the fixed-aspect box hint the widget derives from
-# the built option instead.
+# the built option instead, and `what = "hints"` a heatmap's cell layout.
 # `simplify = FALSE` keeps every JSON array a list, as R option lists are,
 # where a record mixes numbers and text.
 built_option <- function(
   widget,
   dark = FALSE,
-  what = c("option", "aspect"),
+  what = c("option", "aspect", "hints"),
   simplify = TRUE
 ) {
   what <- match.arg(what)
@@ -46,6 +46,9 @@ built_payload <- function(widget) {
   if (!is.null(x[["build"]])) {
     x[["option"]] <- built_option(widget, simplify = FALSE)
     x[["aspect"]] <- built_option(widget, what = "aspect")
+    if (identical(x[["build"]][["type"]], "heatmap")) {
+      x <- utils::modifyList(x, built_option(widget, what = "hints"))
+    }
     x[["build"]] <- NULL
   }
   x
