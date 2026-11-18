@@ -1,6 +1,6 @@
 import { colorRamp, divergingRamp } from "../../shared/color.ts";
 import { COLORMAPS, type ColormapName } from "../../shared/colormaps.ts";
-import { ddSci } from "../../shared/format.ts";
+import { ddSci, tickLabel } from "../../shared/format.ts";
 import type { MarginMembers } from "../../shared/layout.ts";
 import type { LegendMembers } from "../../shared/legend.ts";
 import { niceAxis } from "../../shared/limits.ts";
@@ -187,6 +187,60 @@ const range2 = (r: readonly number[] | null | undefined): [number, number] | nul
   r && r.length >= 2 ? [r[0] as number, r[1] as number] : null;
 
 /**
+ * The bins of an increasing category axis that carry a label, each with its
+ * text: per nice value, the bin nearest it, when within half a bin's width.
+ * A linear axis takes the nice values of `niceAxis()`, written at its
+ * interval's decimals; a log axis takes 1, 2, and 5 times the powers of ten.
+ */
+export function niceBinTicks(values: readonly number[], log: boolean): Map<number, string> {
+  const ticks = new Map<number, string>();
+  const n = values.length;
+  if (n === 0) return ticks;
+  const at = (i: number) => values[Math.min(Math.max(i, 0), n - 1)] as number;
+  const scale = (v: number) => (log ? Math.log10(v) : v);
+  // Half the spacing of the bins around bin i, on the axis's scale.
+  const halfBin = (i: number) => {
+    const lo = Math.max(i - 1, 0);
+    const hi = Math.min(i + 1, n - 1);
+    return hi > lo ? Math.abs(scale(at(hi)) - scale(at(lo))) / (hi - lo) / 2 : Infinity;
+  };
+  const first = at(0);
+  const last = at(n - 1);
+  const candidates: [number, string][] = [];
+  if (log) {
+    if (first > 0) {
+      for (let e = Math.floor(Math.log10(first)); e <= Math.ceil(Math.log10(last)); e++) {
+        for (const m of [1, 2, 5]) {
+          const v = Number((m * 10 ** e).toPrecision(12));
+          candidates.push([v, String(v)]);
+        }
+      }
+    }
+  } else {
+    const nice = niceAxis(first, last);
+    const label = tickLabel(nice.decimals);
+    for (
+      let k = Math.ceil(first / nice.interval - 1e-9);
+      k * nice.interval <= last * (1 + 1e-12) + 1e-12;
+      k++
+    ) {
+      const v = Number((k * nice.interval).toPrecision(12));
+      candidates.push([v, label(v)]);
+    }
+  }
+  for (const [v, text] of candidates) {
+    let best = 0;
+    for (let i = 1; i < n; i++) {
+      if (Math.abs(scale(at(i)) - scale(v)) < Math.abs(scale(at(best)) - scale(v))) best = i;
+    }
+    if (Math.abs(scale(at(best)) - scale(v)) <= halfBin(best) && !ticks.has(best)) {
+      ticks.set(best, text);
+    }
+  }
+  return ticks;
+}
+
+/**
  * The ECharts option of a spectrogram: one heatmap cell per frequency bin and
  * time frame on category axes, low frequencies at the bottom. A log frequency
  * scale drops bins at or below 0 Hz and resamples the values onto as many
@@ -312,7 +366,7 @@ export function buildSpectrogramOption(
         }),
       )
     : { top: config.title ? 50 : 36, right: 90, bottom: 36, left: 36 };
-  const axis = (name: string, labels: string[]) => ({
+  const axis = (name: string, labels: string[], ticks: ReadonlyMap<number, string>) => ({
     type: "category",
     data: labels,
     name,
@@ -320,6 +374,12 @@ export function buildSpectrogramOption(
     boundaryGap: true,
     splitArea: { show: false },
     axisLine: { show: false },
+    // Labels and ticks sit at the bins nearest the axis's nice values.
+    axisLabel: {
+      interval: (index: number) => ticks.has(index),
+      formatter: (_value: unknown, index: number) => ticks.get(index) ?? "",
+    },
+    axisTick: { interval: (index: number) => ticks.has(index), alignWithLabel: true },
   });
   return {
     ...(config.title ? { title: { text: config.title } } : {}),
@@ -332,8 +392,8 @@ export function buildSpectrogramOption(
       },
     },
     grid,
-    xAxis: axis(xlab, timeLabels),
-    yAxis: axis(ylab, freqLabels),
+    xAxis: axis(xlab, timeLabels, niceBinTicks(timeShown, false)),
+    yAxis: axis(ylab, freqLabels, niceBinTicks(freqShown, log)),
     visualMap: {
       type: "continuous",
       min: zlim[0],

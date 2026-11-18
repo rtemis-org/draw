@@ -1,5 +1,7 @@
 # rtemis.draw 0.5.5
 
+* `draw_treemap()`, `draw_sunburst()`, `draw_radar()`, and `draw_funnel()` draw treemaps, sunburst charts, radar charts, and funnel charts, with the configurations `TreemapConfig`, `SunburstConfig`, `RadarConfig`, and `FunnelConfig`.
+
 * `draw_scatter()`, `draw_fit()`, and `draw()` on a `ScatterConfig` build the chart with the `@rtemis/draw` scatter builder, the one rtemislive uses; `compile()` on a `ScatterConfig` returns a `BuildRequest`. `ScatterConfig` `y` takes several columns.
 
 * `fit` takes `"polynomial"` (`fit_params` `degree`) and `"loess"` (`span`) besides `"glm"`, `"gam"`, and rtemis learners; `fit_per_group = FALSE` fits one curve over every group.
@@ -32,7 +34,7 @@
 
 * A network node outside the hovered node's neighborhood keeps its own color at 30% opacity.
 
-* The network widget and its SVG export lay out and style the graph with the `@rtemis/draw` network functions, the ones rtemislive uses. `draw_network()`, `draw_graph()`, `SigmaOption`, and `NetworkConfig` gain `seed`; the force layout starts from seeded random positions, so its arrangement differs from earlier versions.
+* The network widget and its SVG export lay out and style the graph with the `@rtemis/draw` network functions, the ones rtemislive uses. `draw_network()`, `draw_graph()`, `SigmaOption`, and `NetworkConfig` gain `seed`, which sets community detection, the force layout's random starting positions, and the random layout.
 
 * `draw_pie()` and `draw()` on a `PieConfig` build the chart with the `@rtemis/draw` pie builder, the one rtemislive uses; `compile()` on a `PieConfig` returns a `BuildRequest`. Values that share a label sum into one slice. `PieConfig` gains `inner_radius` and `show_labels`; `draw_pie()` gains `show_labels`, and its two-element `radius` sets the inner and outer radius.
 

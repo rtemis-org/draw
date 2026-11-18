@@ -69,6 +69,7 @@ describe("buildRadarOption", () => {
       { name: "power", max: 3, min: -1 },
     ]);
     expect(option.legend).toEqual({ data: ["a", "b"] });
+    expect(option.radar).toMatchObject({ center: ["50%", "56%"], radius: "62%" });
     const series = seriesOf(option);
     expect(series.data[0]).toEqual({
       name: "a",
@@ -95,6 +96,7 @@ describe("buildRadarOption", () => {
   it("leaves out the legend of one series", () => {
     const option = buildRadarOption({ columns: { s: [1], p: [2] } }, { indicators: ["s", "p"] });
     expect(option.legend).toBeUndefined();
+    expect(option.radar).toMatchObject({ radius: "68%" });
   });
 });
 

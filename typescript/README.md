@@ -59,6 +59,8 @@ Sankey diagrams (`buildSankeyOption()`) take a link table. Rows with the same so
 
 Pie charts (`buildPieOption()`) take a table of labels and values. Rows with the same label sum into one slice (`pieSlices()`); a missing label, a missing or negative value, or a zero total stops with an error naming it. `inner_radius` draws a donut, `rose_type` a Nightingale rose, and `label_format` sets each slice label to the name, the value, the percentage, or the name with either.
 
+Funnels (`buildFunnelOption()`) sum the rows of each label into a stage as the pie does (`labeledSums()`) and order the stages by value or by the data. Treemaps (`buildTreemapOption()`) and sunbursts (`buildSunburstOption()`) take a table nested by its `levels` columns (`hierarchyFromTable()`: a path ends at its first missing level, the rows of a node sum their `value`) or a tree the host built. Radar charts (`buildRadarOption()`) draw one polygon per group over numeric indicator columns, the rows of a group combined by `aggregate` (`radarSeries()`).
+
 Time series (`buildTimeSeriesOption()`) take a time column and value columns, sort each series by time, and draw its observations with an optional rolling summary (`rollingValues()`: mean, median, minimum, maximum, or sum over a window of observations), values on a right axis, zeitgeber labels, and shading of flagged runs. The zeitgeber labels are a custom series whose renderer `registerRenderers()` registers.
 
 3D scatters (`buildScatter3DOption()`) take numeric x, y, and z columns and draw ECharts-GL points, paths through consecutive rows of each group, or both, with the surfaces the host fitted (`surfaces`); `appendLayers()` widens the 3D axes to a surface layer. The option needs the echarts-gl extension.

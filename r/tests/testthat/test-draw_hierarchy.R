@@ -192,7 +192,12 @@ test_that("the four chart types are registered and export to SVG", {
   widgets <- list(
     draw_treemap(places, levels = c("region", "country"), value = "n"),
     draw_sunburst(places, levels = c("region", "country"), value = "n"),
-    draw_radar(teams, indicators = c("speed", "power"), group = "team", aggregate = "sum"),
+    draw_radar(
+      teams,
+      indicators = c("speed", "power"),
+      group = "team",
+      aggregate = "sum"
+    ),
     draw_funnel(c(100, 30, 10), labels = c("Visit", "Cart", "Buy"))
   )
   for (w in widgets) {

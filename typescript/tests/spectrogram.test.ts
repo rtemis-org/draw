@@ -3,6 +3,7 @@ import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import {
   buildSpectrogramOption,
+  niceBinTicks,
   type SpectrogramChartConfig,
   type SpectrogramData,
   spectrogramColors,
@@ -33,8 +34,19 @@ const rounded = (v: unknown): unknown =>
         : v;
 const channels = (hex: string) => [1, 3, 5].map((i) => Number.parseInt(hex.slice(i, i + 2), 16));
 
+// The axes label the bins nearest their nice values, where R let ECharts
+// choose the labeled bins; the labels are compared in their own test.
+const withoutLabels = (axis: unknown) => {
+  const { axisLabel: _label, axisTick: _tick, ...rest } = axis as Record<string, unknown>;
+  return rest;
+};
+
 function comparable(option: Record<string, unknown>) {
-  const { tooltip, grid, visualMap, ...rest } = option as Record<string, Record<string, unknown>>;
+  const { tooltip, grid, visualMap, xAxis, yAxis, ...others } = option as Record<
+    string,
+    Record<string, unknown>
+  >;
+  const rest = { ...others, xAxis: withoutLabels(xAxis), yAxis: withoutLabels(yAxis) };
   const { inRange, ...map } = visualMap as Record<string, unknown>;
   return {
     rest: rounded(rest),
@@ -128,6 +140,48 @@ describe("buildSpectrogramOption", () => {
         {},
       ),
     ).toThrow("finite value");
+  });
+});
+
+describe("niceBinTicks", () => {
+  it("labels the bins nearest the nice values of a linear axis", () => {
+    const time = Array.from({ length: 60 }, (_, i) => 0.016 + i * 0.032);
+    const ticks = niceBinTicks(time, false);
+    expect([...ticks.values()]).toEqual(["0.5", "1.0", "1.5"]);
+    expect([...ticks.keys()]).toEqual([15, 31, 46]);
+  });
+
+  it("labels 1, 2, and 5 times the powers of ten on a log axis", () => {
+    const freq = Array.from({ length: 50 }, (_, i) => 50 * 80 ** (i / 49));
+    expect([...niceBinTicks(freq, true).values()]).toEqual([
+      "50",
+      "100",
+      "200",
+      "500",
+      "1000",
+      "2000",
+    ]);
+  });
+
+  it("formats the labels of a spectrogram's axes", () => {
+    const option = buildSpectrogramOption(
+      {
+        time: [0, 0.5, 1, 1.5, 2],
+        frequency: [0, 1000, 2000],
+        values: [
+          [1, 2, 3, 4, 5],
+          [1, 2, 3, 4, 5],
+          [1, 2, 3, 4, 5],
+        ],
+      },
+      { db: false, freq_unit: "kHz" },
+    );
+    const y = option.yAxis as {
+      axisLabel: { interval: (i: number) => boolean; formatter: (v: unknown, i: number) => string };
+    };
+    expect(
+      [0, 1, 2].filter((i) => y.axisLabel.interval(i)).map((i) => y.axisLabel.formatter("", i)),
+    ).toEqual(["0.0", "1.0", "2.0"]);
   });
 });
 

@@ -136,7 +136,8 @@ export function radarSeries(data: TabularData, config: RadarChartConfig): RadarS
 
 /**
  * The ECharts option of a radar chart: one axis per indicator, from 0, or
- * from its smallest value when negative, to its largest value; one polygon
+ * from its smallest value when negative, to its largest value, the radar
+ * lowered below a legend or title; one polygon
  * per series, filled at `area_opacity` and stroked at `line_width`, colored
  * from the palette; a legend listing the series when there are several.
  * spec: draw/shared-builders#radar
@@ -161,7 +162,17 @@ export function buildRadarOption(
     ...(config.title ? { title: { text: config.title, left: "center" } } : {}),
     tooltip: { trigger: "item", valueFormatter: tooltipValue },
     ...(series.length > 1 ? { legend: { data: series.map((s) => s.name) } } : {}),
-    radar: { radius: "68%", indicator, splitArea: { areaStyle: { opacity: 0.25 } } },
+    // A legend or title above the chart lowers and narrows the radar so the
+    // top indicator's name stays clear of them.
+    radar:
+      series.length > 1 || config.title
+        ? {
+            center: ["50%", "56%"],
+            radius: "62%",
+            indicator,
+            splitArea: { areaStyle: { opacity: 0.25 } },
+          }
+        : { radius: "68%", indicator, splitArea: { areaStyle: { opacity: 0.25 } } },
     series: [
       {
         type: "radar",

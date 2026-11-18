@@ -5195,7 +5195,14 @@ ${rate(r.balancedAccuracy)}`, summary2) }
       ...config.title ? { title: { text: config.title, left: "center" } } : {},
       tooltip: { trigger: "item", valueFormatter: tooltipValue },
       ...series.length > 1 ? { legend: { data: series.map((s) => s.name) } } : {},
-      radar: { radius: "68%", indicator, splitArea: { areaStyle: { opacity: 0.25 } } },
+      // A legend or title above the chart lowers and narrows the radar so the
+      // top indicator's name stays clear of them.
+      radar: series.length > 1 || config.title ? {
+        center: ["50%", "56%"],
+        radius: "62%",
+        indicator,
+        splitArea: { areaStyle: { opacity: 0.25 } }
+      } : { radius: "68%", indicator, splitArea: { areaStyle: { opacity: 0.25 } } },
       series: [
         {
           type: "radar",
@@ -8842,6 +8849,48 @@ ${rate(r.balancedAccuracy)}`, summary2) }
     });
   }
   var range2 = (r) => r && r.length >= 2 ? [r[0], r[1]] : null;
+  function niceBinTicks(values, log) {
+    const ticks = /* @__PURE__ */ new Map();
+    const n = values.length;
+    if (n === 0) return ticks;
+    const at = (i) => values[Math.min(Math.max(i, 0), n - 1)];
+    const scale = (v) => log ? Math.log10(v) : v;
+    const halfBin = (i) => {
+      const lo = Math.max(i - 1, 0);
+      const hi = Math.min(i + 1, n - 1);
+      return hi > lo ? Math.abs(scale(at(hi)) - scale(at(lo))) / (hi - lo) / 2 : Infinity;
+    };
+    const first = at(0);
+    const last = at(n - 1);
+    const candidates = [];
+    if (log) {
+      if (first > 0) {
+        for (let e = Math.floor(Math.log10(first)); e <= Math.ceil(Math.log10(last)); e++) {
+          for (const m of [1, 2, 5]) {
+            const v = Number((m * 10 ** e).toPrecision(12));
+            candidates.push([v, String(v)]);
+          }
+        }
+      }
+    } else {
+      const nice = niceAxis(first, last);
+      const label = tickLabel(nice.decimals);
+      for (let k = Math.ceil(first / nice.interval - 1e-9); k * nice.interval <= last * (1 + 1e-12) + 1e-12; k++) {
+        const v = Number((k * nice.interval).toPrecision(12));
+        candidates.push([v, label(v)]);
+      }
+    }
+    for (const [v, text] of candidates) {
+      let best = 0;
+      for (let i = 1; i < n; i++) {
+        if (Math.abs(scale(at(i)) - scale(v)) < Math.abs(scale(at(best)) - scale(v))) best = i;
+      }
+      if (Math.abs(scale(at(best)) - scale(v)) <= halfBin(best) && !ticks.has(best)) {
+        ticks.set(best, text);
+      }
+    }
+    return ticks;
+  }
   function buildSpectrogramOption(data, config, appearance = {}) {
     let freq = [...data.frequency];
     let time = [...data.time];
@@ -8950,14 +8999,20 @@ ${rate(r.balancedAccuracy)}`, summary2) }
         return typeof v === "number" ? [[side, v]] : [];
       })
     ) : { top: config.title ? 50 : 36, right: 90, bottom: 36, left: 36 };
-    const axis = (name, labels) => ({
+    const axis = (name, labels, ticks) => ({
       type: "category",
       data: labels,
       name,
       nameLocation: "middle",
       boundaryGap: true,
       splitArea: { show: false },
-      axisLine: { show: false }
+      axisLine: { show: false },
+      // Labels and ticks sit at the bins nearest the axis's nice values.
+      axisLabel: {
+        interval: (index) => ticks.has(index),
+        formatter: (_value, index) => ticks.get(index) ?? ""
+      },
+      axisTick: { interval: (index) => ticks.has(index), alignWithLabel: true }
     });
     return {
       ...config.title ? { title: { text: config.title } } : {},
@@ -8970,8 +9025,8 @@ ${rate(r.balancedAccuracy)}`, summary2) }
         }
       },
       grid,
-      xAxis: axis(xlab, timeLabels),
-      yAxis: axis(ylab, freqLabels),
+      xAxis: axis(xlab, timeLabels, niceBinTicks(timeShown, false)),
+      yAxis: axis(ylab, freqLabels, niceBinTicks(freqShown, log)),
       visualMap: {
         type: "continuous",
         min: zlim[0],
