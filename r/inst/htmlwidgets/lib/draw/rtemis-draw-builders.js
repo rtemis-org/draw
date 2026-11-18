@@ -32,6 +32,8 @@ var RtemisDraw = (() => {
     DENSITY_CHART_CONFIG_MEMBERS: () => DENSITY_CHART_CONFIG_MEMBERS,
     DENSITY_VALUE_LABEL: () => DENSITY_VALUE_LABEL,
     FIT_MEMBERS: () => FIT_MEMBERS,
+    GANTT_CHART_CONFIG_MEMBERS: () => GANTT_CHART_CONFIG_MEMBERS,
+    GANTT_ROW_PX: () => GANTT_ROW_PX,
     HISTOGRAM_CHART_CONFIG_MEMBERS: () => HISTOGRAM_CHART_CONFIG_MEMBERS,
     LINE_CHART_CONFIG_MEMBERS: () => LINE_CHART_CONFIG_MEMBERS,
     MAX_SYMBOL_SIZE: () => MAX_SYMBOL_SIZE,
@@ -57,6 +59,7 @@ var RtemisDraw = (() => {
     buildBoxplotOption: () => buildBoxplotOption,
     buildConfusionOption: () => buildConfusionOption,
     buildDensityOption: () => buildDensityOption,
+    buildGanttOption: () => buildGanttOption,
     buildHistogramOption: () => buildHistogramOption,
     buildLineOption: () => buildLineOption,
     buildPrOption: () => buildPrOption,
@@ -82,6 +85,7 @@ var RtemisDraw = (() => {
     fitLegend: () => fitLegend,
     fontStack: () => fontStack,
     formatNumber: () => formatNumber,
+    ganttHeight: () => ganttHeight,
     histogramEdges: () => histogramEdges,
     histogramValueLabel: () => histogramValueLabel,
     kernelDensity: () => kernelDensity,
@@ -3079,6 +3083,161 @@ ${rate(r.balancedAccuracy)}`, summary) }
     return { x, y, bw };
   }
 
+  // src/charts/gantt/renderers.ts
+  var GANTT_BAR = "rtemis.gantt.v1";
+  var ganttRenderers = {
+    // Data: [row, start, end, flag]. A bar spans start to end on its row, at
+    // least one pixel wide, filled in its series color; a flag of 1 outlines
+    // it without changing the fill.
+    [GANTT_BAR]: (params, api) => {
+      const p = params.itemPayload;
+      const row = api.value(0);
+      const [x0, y] = api.coord([api.value(1), row]);
+      const [x1] = api.coord([api.value(2), row]);
+      const size = api.size([0, 1]);
+      const band = Array.isArray(size) ? size[1] : size;
+      const height = band * p.barHeight;
+      const style = { fill: api.visual("color") };
+      if (api.value(3)) {
+        style.stroke = p.borderColor;
+        style.lineWidth = p.borderWidth;
+      }
+      return {
+        type: "rect",
+        transition: ["shape"],
+        shape: { x: x0, y: y - height / 2, width: Math.max(1, x1 - x0), height, r: p.barRadius },
+        style
+      };
+    }
+  };
+
+  // src/charts/gantt/config.ts
+  var GANTT_CHART_CONFIG_MEMBERS = Object.freeze([
+    "type",
+    "title",
+    "legend_position",
+    "legend_placement",
+    "legend_title",
+    "label",
+    "start",
+    "end",
+    "group",
+    "tooltip",
+    "border",
+    "axis_type",
+    "zoom",
+    "guides",
+    "bar_height",
+    "bar_radius",
+    "border_color",
+    "border_width",
+    "palette",
+    "xlab"
+  ]);
+  var GANTT_ROW_PX = 20;
+  function ganttHeight(rows, rowPx = GANTT_ROW_PX) {
+    return Math.max(rows * rowPx + 96, 220);
+  }
+  function buildGanttOption(data, config, appearance = {}) {
+    const labelColumn = config.label ?? "label";
+    const labels = textColumn(data, labelColumn, "label");
+    if (labels.length === 0) throw new Error("A Gantt chart needs at least one task.");
+    const bound = (member) => {
+      const name = config[member] ?? member;
+      const time2 = isTime(data, name);
+      return column(data.columns, name, member).map((v, i) => {
+        const value = time2 ? timeMs(v) : typeof v === "number" && Number.isFinite(v) ? v : null;
+        if (value === null) {
+          throw new Error(
+            `Column '${name}' (config member '${member}') must hold a number or time in every row; row ${i + 1} holds '${String(v)}'.`
+          );
+        }
+        return value;
+      });
+    };
+    const starts = bound("start");
+    const ends = bound("end");
+    const tips = config.tooltip ? textColumn(data, config.tooltip, "tooltip") : labels;
+    const flags = config.border ? column(data.columns, config.border, "border").map((v) => v === true || v === 1 ? 1 : 0) : null;
+    const rows = distinct(labels);
+    const rowOf = new Map(rows.map((r, i) => [r, i]));
+    const groups = config.group ? textColumn(data, config.group, "group") : null;
+    const levels = groups ? distinct(groups, data.levels?.[config.group]) : [""];
+    const palette = asArray(config.palette);
+    const colors = palette.length > 0 ? palette : appearance.palette ?? [];
+    const payload = {
+      barHeight: config.bar_height ?? 0.6,
+      barRadius: config.bar_radius ?? 0,
+      borderColor: config.border_color ?? "#E53935",
+      borderWidth: config.border_width ?? 1.5
+    };
+    const series = levels.map((level, k) => {
+      const color = colors.length > 0 ? colors[k % colors.length] : void 0;
+      const items = [];
+      labels.forEach((label, i) => {
+        if (groups && groups[i] !== level) return;
+        const value = [rowOf.get(label), starts[i], ends[i]];
+        items.push({ value: flags ? [...value, flags[i]] : value, name: tips[i] });
+      });
+      return {
+        type: "custom",
+        ...groups ? { name: level } : {},
+        renderItem: GANTT_BAR,
+        itemPayload: payload,
+        encode: { x: [1, 2], y: 0 },
+        clip: true,
+        ...color ? { itemStyle: { color } } : {},
+        data: items
+      };
+    });
+    const zoom = config.zoom ?? true;
+    const time = config.axis_type === "time";
+    const controls = zoom ? xyZoom(true) : null;
+    return {
+      ...config.title ? { title: { text: config.title, left: "center" } } : {},
+      ...time ? { useUTC: true } : {},
+      tooltip: { trigger: "item", confine: true, formatter: "{b}" },
+      legend: { show: groups !== null, data: groups ? levels : [] },
+      ...controls ? { toolbox: controls.toolbox } : {},
+      grid: {
+        left: 8,
+        right: 16,
+        // The toolbox icons take a row above the plot, ending about 40 pixels
+        // from the top.
+        top: Math.max(config.title ? 40 : 12, zoom ? 48 : 0),
+        bottom: 8,
+        outerBoundsMode: "same",
+        outerBoundsContain: config.xlab ? "all" : "axisLabel"
+      },
+      xAxis: {
+        type: time ? "time" : "value",
+        ...config.xlab ? { name: config.xlab, nameLocation: "middle", nameGap: 28 } : {},
+        ...config.guides ?? true ? {
+          axisPointer: {
+            show: true,
+            type: "line",
+            snap: false,
+            label: { show: true, backgroundColor: "#666666" },
+            lineStyle: { color: "#808080", width: 1, type: "dashed" }
+          }
+        } : {}
+      },
+      yAxis: {
+        type: "category",
+        // Leading spaces indent a label; the SVG renderer collapses them unless
+        // they are no-break spaces.
+        data: rows.map((r) => r.replace(/^ +/, (m) => "\xA0".repeat(m.length))),
+        inverse: true,
+        boundaryGap: true,
+        // Every row is labeled; `ganttHeight()` gives each row its line.
+        axisLabel: { interval: 0 },
+        axisTick: { show: false }
+      },
+      ...controls ? { dataZoom: controls.dataZoom } : {},
+      series
+    };
+  }
+
   // src/charts/histogram/renderers.ts
   var HISTOGRAM = "rtemis.histogram.v1";
   var histogramRenderers = {
@@ -5371,6 +5530,7 @@ ${rate(r.balancedAccuracy)}`, summary) }
   // src/shared/renderers.ts
   var renderers = Object.freeze({
     ...boxplotRenderers,
+    ...ganttRenderers,
     ...histogramRenderers,
     ...scatterRenderers,
     ...survivalRenderers
@@ -5457,6 +5617,7 @@ ${rate(r.balancedAccuracy)}`, summary) }
     boxplot: buildBoxplotOption,
     confusion: buildConfusionOption,
     density: buildDensityOption,
+    gantt: buildGanttOption,
     histogram: buildHistogramOption,
     line: buildLineOption,
     pr: buildPrOption,

@@ -20,6 +20,8 @@
 
 * `draw_survival()`, `draw_survfit()`, and `draw()` on a `SurvivalConfig` build the chart with the `@rtemis/draw` survival builder, the one rtemislive uses; `compile()` on a `SurvivalConfig` returns a `BuildRequest`. `show_median` defaults to `TRUE` and labels the median; landmarks read as percents; the risk table draws one row per group in its color under a time axis that labels the risk times; one ungrouped curve draws no legend.
 
+* `draw_gantt()` and `draw()` on a `GanttConfig` build the chart with the `@rtemis/draw` Gantt builder, the one rtemislive's execution timeline uses; `compile()` on a `GanttConfig` returns a `BuildRequest`. With `height` unset, the chart takes 20 pixels per task row plus 96, at least 220, and every row is labeled.
+
 * `draw_fit()` names the x axis "Observed" by default.
 
 * `draw_boxplot()` and `BoxplotConfig` gain `mean_marker`, a diamond at each box's mean; `draw_varimp(type = "boxplot")` sets it.

@@ -1,8 +1,8 @@
 // Shared custom-series renderers for browser widgets and Node SVG export.
 // renderItem names and itemPayload remain plain JSON in the compiled option.
-// The boxplot's, the histogram's, and the scatter rug's renderers are
-// @rtemis/draw's: in Node this module registers them too, and in a browser
-// the binding does.
+// The boxplot's, the Gantt chart's, the histogram's, the scatter rug's, and
+// the survival risk strip's renderers are @rtemis/draw's: in Node this module
+// registers them too, and in a browser the binding does.
 // See CustomSeriesOption / CustomSeriesRenderItemParams in ECharts
 // src/chart/custom/CustomSeries.ts and name lookup in CustomView.ts.
 (function (root, register) {
@@ -34,31 +34,6 @@
         text: String(api.value(1)), align: "center", verticalAlign: "top",
         fill: "#888888", font: api.font({ fontSize: 12 }) } };
     },
-    // Data: [row, start, end, optional border flag]. Colors are resolved by
-    // ECharts so series legends and per-datum styling use the same visual.
-    "rtemis.gantt.v1": function (params, api) {
-      const settings = params.itemPayload;
-      const row = api.value(0);
-      const start = api.coord([api.value(1), row]);
-      const end = api.coord([api.value(2), row]);
-      const height = api.size([0, 1])[1] * settings.barHeight;
-      const style = { fill: api.visual("color") };
-      if (api.value(3)) {
-        style.stroke = settings.borderColor;
-        style.lineWidth = settings.borderWidth;
-      }
-      return {
-        type: "rect",
-        transition: ["shape"],
-        shape: {
-          x: start[0], y: start[1] - height / 2,
-          width: Math.max(1, end[0] - start[0]), height: height,
-          r: settings.barRadius,
-        },
-        style: style,
-      };
-    },
-
     // Data: [left position, right position, left height, right height,
     // merge height]. Each merge contributes one three-segment U shape.
     "rtemis.heatmap_tracks.v1": function(params, api) {

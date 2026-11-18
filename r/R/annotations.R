@@ -187,6 +187,7 @@ CARTESIAN_BUILDER_TYPES <- c(
   "bar",
   "boxplot",
   "density",
+  "gantt",
   "histogram",
   "line",
   "pr",

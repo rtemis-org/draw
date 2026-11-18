@@ -24,7 +24,7 @@
 #    its presentation while keeping its meaning.
 
 # %% ORIGIN_VALUES ----
-# The three things a value's provenance can be. Named here so the S7 validator,
+# The three values a provenance entry takes. Named here so the S7 validator,
 # the emitted schema's `enum`, and `config_derive()` cannot drift apart.
 ORIGIN_VALUES <- c("user", "default", "derived")
 
@@ -388,10 +388,10 @@ config_margins <- function(config) {
 #' Resolution is its own step rather than a set of fallbacks inside the option
 #' builders, and that is what makes an output config honest. A value derived
 #' during rendering would have to be *reconstructed* to write it down; a value
-#' derived here is simply part of the document that then gets rendered. Reading
+#' derived here is part of the document that then gets rendered. Reading
 #' a complete config and rendering it become the same operation.
 #'
-#' Two things are deliberately **not** resolved:
+#' Two kinds of value stay unresolved:
 #'
 #' - **Anything describing the display surface** -- width, height, aspect ratio,
 #'   container geometry. Those belong to the interface, are recomputed by each
@@ -405,10 +405,10 @@ config_margins <- function(config) {
 #' that: it resolves up front, and a builder it shares with [draw()] may resolve
 #' again without changing the result.
 #'
-#' Data is optional. With none available, the values that need it are simply not
-#' derived; the ones that come from the column names still are. That makes
-#' `resolve()` total -- it has no failing input -- so a caller can always ask for
-#' the most complete config obtainable from what it has.
+#' Data is optional. With none available, the values that need it stay unset,
+#' and the ones that come from the column names are still derived. That makes
+#' `resolve()` total -- it has no failing input -- so a caller can always ask
+#' for the most complete config obtainable from what it has.
 #'
 #' @param config [ChartConfig]: The chart configuration.
 #' @param data Optional Data frame or named list: The data to plot. When `NULL`,
@@ -439,9 +439,9 @@ resolve <- new_generic(
 #' Fill in unset config properties and mark them derived
 #'
 #' Sets each named property only if it is currently unset, so an author's
-#' choice is never overwritten, and records `"derived"` for the ones actually
-#' filled. Values that resolve to NULL are left alone: there was nothing to
-#' derive from, which is not the same as having derived a null.
+#' choice is never overwritten, and records `"derived"` for the ones it fills.
+#' Values that resolve to NULL are left alone: there was nothing to derive
+#' from, which is not the same as having derived a null.
 #'
 #' @param config [ChartConfig]: The chart configuration.
 #' @param values Named list: Candidate values, one per property name.
@@ -515,6 +515,31 @@ method(render_meta, ChartConfig) <- function(config, option) {
 }
 
 
+# %% render_height ----
+#' The widget height a config's chart takes when the caller sets none
+#'
+#' @param config [ChartConfig]: The chart configuration.
+#' @param data Optional Data frame or named list: The resolved data.
+#'
+#' @return Numeric height in pixels, or `NULL` for the widget's default.
+#'
+#' @author EDG
+#' @keywords internal
+#' @noRd
+render_height <- new_generic(
+  "render_height",
+  "config",
+  function(config, data = NULL) {
+    data <- config_data(config, data, required = FALSE)
+    S7_dispatch()
+  }
+)
+
+method(render_height, ChartConfig) <- function(config, data = NULL) {
+  NULL
+}
+
+
 # %% draw.ChartConfig ----
 # Every config renders the same way: compile to the backend option, then draw
 # it. The render targets are arguments here, never properties of the config.
@@ -531,10 +556,11 @@ method(draw, ChartConfig) <- function(
 ) {
   built <- compile(option, data = data, theme = theme)
   meta <- render_meta(option, built)
+  height <- height %||% render_height(option, data)
   # `meta` is the ECharts binding's channel; the Sigma and MapLibre methods have
   # no formal for it. Forwarding an empty one anyway would make draw() an error
   # on every config those backends serve -- while forwarding a *non-empty* one
-  # to a backend that cannot carry it should be exactly that, rather than hints
+  # to a backend that cannot carry it is exactly that error, rather than hints
   # silently going nowhere. So it travels only when there is something to send.
   if (length(meta) > 0L) {
     return(draw(

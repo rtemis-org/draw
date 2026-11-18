@@ -14,6 +14,7 @@ import { buildBoxplotOption } from "./charts/boxplot/index.ts";
 import { buildConfusionOption } from "./charts/confusion/index.ts";
 import { buildPrOption, buildRocOption, curveAspect } from "./charts/curves/index.ts";
 import { buildDensityOption } from "./charts/density/index.ts";
+import { buildGanttOption } from "./charts/gantt/index.ts";
 import { buildHistogramOption } from "./charts/histogram/index.ts";
 import { buildLineOption, lineAspect } from "./charts/line/index.ts";
 import { buildScatterOption, scatterAspect } from "./charts/scatter/index.ts";
@@ -97,6 +98,13 @@ export {
   kernelDensity,
   ruleBandwidth,
 } from "./charts/density/index.ts";
+export type { GanttAppearance, GanttChartConfig } from "./charts/gantt/index.ts";
+export {
+  buildGanttOption,
+  GANTT_CHART_CONFIG_MEMBERS,
+  GANTT_ROW_PX,
+  ganttHeight,
+} from "./charts/gantt/index.ts";
 export type {
   BreaksRule,
   HistogramAppearance,
@@ -206,6 +214,7 @@ export const builders = Object.freeze({
   boxplot: buildBoxplotOption,
   confusion: buildConfusionOption,
   density: buildDensityOption,
+  gantt: buildGanttOption,
   histogram: buildHistogramOption,
   line: buildLineOption,
   pr: buildPrOption,

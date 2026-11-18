@@ -3,11 +3,8 @@
 # 2026- EDG rtemis.org
 
 # The Gantt chart's config. Table-bound like Sankey: the bound data is a table
-# of tasks, and the properties name the columns within it.
-#
-# `gantt_option()` requires the columns to be called `label`, `start` and `end`.
-# The config names them instead, defaulting to those, so a table using other
-# names can be bound without being reshaped first.
+# of tasks, and the properties name the columns within it, defaulting to
+# `label`, `start`, and `end`.
 
 # %% GanttConfig ----
 #' Gantt Chart Configuration
@@ -221,41 +218,48 @@ method(resolve, GanttConfig) <- function(config, data = NULL, ...) {
 
 
 # %% compile.GanttConfig ----
-# The builder expects the conventional column names, so the bound columns are
-# renamed into them. The optional roles keep their own names, since the builder
-# takes those as column names rather than as values.
+# The option is built in JavaScript by @rtemis/draw, so compiling a Gantt
+# config gives the request the widget and SVG export pass to
+# `RtemisDraw.builders.gantt`: the bound task columns and the config.
+# spec: draw/shared-builders#gantt
 method(compile, GanttConfig) <- function(
   config,
   data = NULL,
   theme = NULL,
   ...
 ) {
-  tasks <- data.frame(
-    label = config_column(data, config@label, "label"),
-    start = config_column(data, config@start, "start"),
-    end = config_column(data, config@end, "end"),
-    stringsAsFactors = FALSE
-  )
-  for (role in c("group", "tooltip", "border")) {
+  roles <- c("label", "start", "end", "group", "tooltip", "border")
+  columns <- character(0)
+  for (role in roles) {
     column <- prop(config, role)
     if (!is.null(column)) {
-      tasks[[column]] <- config_column(data, column, role)
+      config_column(data, column, role)
+      columns <- c(columns, column)
     }
   }
-  gantt_option(
-    tasks = tasks,
-    group = config@group,
-    axis_type = config@axis_type,
-    bar_height = config@bar_height,
-    bar_radius = config@bar_radius,
-    guides = config@guides,
-    zoom = config@zoom,
-    tooltip = config@tooltip,
-    border = config@border,
-    border_color = config@border_color,
-    border_width = config@border_width,
-    xlab = config@xlab,
-    title = config@title,
-    palette = config@palette
+  # A missing time has no place on the axis.
+  if (anyNA(data[[config@start]]) || anyNA(data[[config@end]])) {
+    abort(
+      "Columns '",
+      config@start,
+      "' and '",
+      config@end,
+      "' must not contain missing values (NA).",
+      class = c("rtemis_value_error", "rtemis_input_error")
+    )
+  }
+  BuildRequest(
+    type = "gantt",
+    data = tabular_json(data, unique(columns)),
+    config = config_members(config),
+    appearance = list()
   )
+}
+
+
+# %% render_height.GanttConfig ----
+# One row per distinct task label.
+method(render_height, GanttConfig) <- function(config, data = NULL) {
+  labels <- config_column(data, config@label, "label")
+  if (is.null(labels)) NULL else gantt_height(length(unique(labels)))
 }

@@ -16,6 +16,7 @@ BUILDER_TYPES <- c(
   "boxplot",
   "confusion",
   "density",
+  "gantt",
   "histogram",
   "line",
   "pr",

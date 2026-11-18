@@ -26,10 +26,10 @@ each one \code{"derived"} in the config's \code{origin} map.
 Resolution is its own step rather than a set of fallbacks inside the option
 builders, and that is what makes an output config honest. A value derived
 during rendering would have to be \emph{reconstructed} to write it down; a value
-derived here is simply part of the document that then gets rendered. Reading
+derived here is part of the document that then gets rendered. Reading
 a complete config and rendering it become the same operation.
 
-Two things are deliberately \strong{not} resolved:
+Two kinds of value stay unresolved:
 \itemize{
 \item \strong{Anything describing the display surface} -- width, height, aspect ratio,
 container geometry. Those belong to the interface, are recomputed by each
@@ -44,10 +44,10 @@ set, so resolving twice is the same as resolving once. \code{\link[=compile]{com
 that: it resolves up front, and a builder it shares with \code{\link[=draw]{draw()}} may resolve
 again without changing the result.
 
-Data is optional. With none available, the values that need it are simply not
-derived; the ones that come from the column names still are. That makes
-\code{resolve()} total -- it has no failing input -- so a caller can always ask for
-the most complete config obtainable from what it has.
+Data is optional. With none available, the values that need it stay unset,
+and the ones that come from the column names are still derived. That makes
+\code{resolve()} total -- it has no failing input -- so a caller can always ask
+for the most complete config obtainable from what it has.
 }
 \examples{
 # Axis limits come from the data; the labels come from the column names.

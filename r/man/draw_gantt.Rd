@@ -40,8 +40,8 @@ appearance for other columns. When \code{NULL}, all bars share one color.}
 
 \item{axis_type}{Character \{"value", "time"\}: Type of the x-axis. Use
 \code{"value"} for numeric offsets (e.g. milliseconds from start) and \code{"time"}
-for absolute timestamps; \code{POSIXct}/\code{Date} \code{start}/\code{end} columns are
-converted to epoch milliseconds automatically.}
+for absolute timestamps; \code{POSIXct} and \code{Date} \code{start} and \code{end} columns
+are placed and labeled in UTC.}
 
 \item{bar_height}{Numeric \verb{(0, 1]}: Bar thickness as a fraction of one
 category band.}
@@ -56,8 +56,8 @@ zoom and drag to pan on both the time and row axes (\code{inside} dataZoom),
 plus a top-right toolbox with box-zoom, undo, and reset controls.}
 
 \item{tooltip}{Optional Character: Name of a column in \code{tasks} to show as the
-tooltip text for each bar. When \code{NULL}, a default \code{label: start - end}
-tooltip is shown.}
+tooltip text for each bar. When \code{NULL}, the tooltip shows the task's
+label.}
 
 \item{border}{Optional Character: Name of a logical column in \code{tasks}; bars
 whose value is \code{TRUE} get an outline (in \code{border_color}) without changing
@@ -78,7 +78,8 @@ vector overriding the theme palette. Groups are colored in order.}
 
 \item{width}{Optional Character or Numeric: Widget width.}
 
-\item{height}{Optional Character or Numeric: Widget height.}
+\item{height}{Optional Character or Numeric: Widget height. \code{NULL} sizes
+the chart from its number of task rows.}
 
 \item{element_id}{Optional Character: Explicit DOM element ID for the widget
 container. \code{NULL} lets htmlwidgets generate one.}
@@ -106,16 +107,16 @@ htmlwidget: Widget object.
 \description{
 Draw a timeline (Gantt) chart: one horizontal bar per task, positioned by
 \code{start} and \code{end} on a value or time x-axis and grouped into rows by \code{label}
-on the y-axis. Implemented as an ECharts \code{custom} series (ECharts has no
-native Gantt series).
+on the y-axis. The option is built by @rtemis/draw's Gantt builder, which
+rtemislive's execution timeline also uses, and draws each bar with an
+ECharts custom series.
 }
 \details{
-The legend uses the shared position/placement controls and reserves enough
-room for the time axis. Tick density follows the available plotting width,
-and long task labels are truncated. Default bar tooltips retain the full task
-text.
-Browser resizing, panel figures, and SVG export share this layout behavior.
-Increase \code{height} when a timeline contains many task rows.
+The legend uses the shared position and placement controls. Tick density
+follows the available plotting width, and long task labels are truncated;
+the tooltip shows the full text. Browser resizing, panel figures, and SVG
+export share this layout. With \code{height} unset, the chart is 20 pixels per
+task row plus 96 pixels, at least 220.
 }
 \examples{
 tasks <- data.frame(

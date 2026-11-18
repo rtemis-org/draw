@@ -212,7 +212,7 @@ test_that("line, time series, and Gantt presets zoom on Shift+wheel", {
     start = c(0, 1),
     end = c(1, 3)
   )
-  opt <- draw_gantt(tasks)$x$option
+  opt <- raw_option(draw_gantt(tasks))
   expect_identical(zoom_types(opt), c("inside", "inside"))
   for (z in opt[["dataZoom"]]) {
     expect_identical(z[["zoomOnMouseWheel"]], "shift")
@@ -316,10 +316,8 @@ test_that("static_controls drops zoom controls and returns the slider band", {
   out <- static_controls(opt)
   expect_null(out[["dataZoom"]])
   expect_equal(out[["grid"]][["bottom"]], DEFAULT_MARGINS[["bottom"]])
-  opt <- strip_js(
-    draw_gantt(data.frame(label = "a", start = 0, end = 1))$x$option,
-    path = "option"
-  )
+  opt <- raw_option(draw_gantt(data.frame(label = "a", start = 0, end = 1)))
+  expect_false(is.null(opt[["toolbox"]]))
   out <- static_controls(opt)
   expect_null(out[["toolbox"]])
   expect_identical(out[["grid"]], opt[["grid"]])

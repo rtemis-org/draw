@@ -212,18 +212,18 @@ test_that("Gantt SVG contains proportional bars, failure outlines, and labels", 
   }
   expect_false(any(grepl("<image|@keyframes|<animate", svg)))
 
-  # The renderer identity and its parameters survive a plain JSON round trip.
-  # No executable JavaScript is needed to reconstruct the static scene.
-  w[["x"]][["option"]] <- jsonlite::fromJSON(
+  # The build request survives a plain JSON round trip. No executable
+  # JavaScript is needed to reconstruct the static scene.
+  w[["x"]][["build"]] <- jsonlite::fromJSON(
     jsonlite::toJSON(
-      strip_js(w[["x"]][["option"]]),
+      w[["x"]][["build"]],
       auto_unbox = TRUE,
       null = "null",
       digits = NA
     ),
     simplifyVector = FALSE
   )
-  save_drawing(w, path)
+  save_drawing(w, path, width = 800, height = 600)
   expect_identical(readLines(path, warn = FALSE), svg)
 })
 
@@ -326,7 +326,10 @@ test_that("missing heatmap cells remain missing with materialized value labels",
 
 test_that("unknown custom renderers fail without replacing an existing file", {
   skip_if_no_node()
-  w <- draw_gantt(data.frame(label = "Task", start = 0, end = 1))
+  w <- draw(built_option(
+    draw_gantt(data.frame(label = "Task", start = 0, end = 1)),
+    simplify = FALSE
+  ))
   w[["x"]][["option"]][["series"]][[1L]][["renderItem"]] <- "unregistered"
   # An empty series must still be rejected, rather than silently skipped.
   w[["x"]][["option"]][["series"]][[1L]][["data"]] <- list()

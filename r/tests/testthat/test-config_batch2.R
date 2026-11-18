@@ -118,9 +118,13 @@ test_that("sankey and gantt compile to the same options as the vector path", {
     compile(setup_SankeyConfig(), data = links_df()),
     sankey_option(links = links_df())
   )
+  skip_if_no_node()
   expect_identical(
-    compile(setup_GanttConfig(group = "kind"), data = tasks_df2()),
-    gantt_option(tasks = tasks_df2(), group = "kind")
+    built_option(compile(
+      setup_GanttConfig(group = "kind"),
+      data = tasks_df2()
+    )),
+    node_option(draw_gantt(tasks_df2(), group = "kind"))
   )
 })
 
@@ -148,8 +152,9 @@ test_that("a table-bound config binds columns that are not conventionally named"
 test_that("gantt binds renamed task columns", {
   renamed <- tasks_df2()
   names(renamed)[1:3] <- c("name", "t0", "t1")
+  skip_if_no_node()
   expect_identical(
-    compile(
+    built_option(compile(
       setup_GanttConfig(
         label = "name",
         start = "t0",
@@ -157,8 +162,8 @@ test_that("gantt binds renamed task columns", {
         group = "kind"
       ),
       data = renamed
-    ),
-    gantt_option(tasks = tasks_df2(), group = "kind")
+    )),
+    built_option(compile(setup_GanttConfig(group = "kind"), data = tasks_df2()))
   )
 })
 
