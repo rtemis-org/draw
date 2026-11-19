@@ -1,8 +1,5 @@
 {
-  "color": [
-    "#111111",
-    "#222222"
-  ],
+  "color": ["#111111", "#222222"],
   "backgroundColor": "#ffffff",
   "textStyle": {
     "color": "rgba(0, 0, 0, 0.7)",
@@ -104,10 +101,7 @@
     },
     "splitArea": {
       "areaStyle": {
-        "color": [
-          "rgba(0, 0, 0, 0)",
-          "#eeeeee"
-        ]
+        "color": ["rgba(0, 0, 0, 0)", "#eeeeee"]
       }
     }
   },
