@@ -1620,11 +1620,14 @@ var RtemisDraw = (() => {
     const axisLabel = { fontSize: sizes.axisLabel, color: fg };
     const axisLine = tokens.axis_color ? { lineStyle: { color: tokens.axis_color } } : void 0;
     const axisTick = { show: false };
-    const valueAxis2 = present({
-      axisLabel,
+    const splitLine = tokens.grid_color ? { lineStyle: { color: tokens.grid_color } } : void 0;
+    const valueAxis2 = present({ axisLabel, axisLine, axisTick, splitLine });
+    const radar = present({
+      ...SERIES_THEME.radar,
+      axisName: axisLabel,
       axisLine,
-      axisTick,
-      splitLine: tokens.grid_color ? { lineStyle: { color: tokens.grid_color } } : void 0
+      splitLine,
+      splitArea: tokens.grid_color ? { areaStyle: { color: ["rgba(0, 0, 0, 0)", tokens.grid_color] } } : void 0
     });
     return {
       color: [...tokens.palette],
@@ -1648,6 +1651,7 @@ var RtemisDraw = (() => {
       // spec: draw/visual-qa-docs#neutral-data-zoom-sliders
       dataZoom: { ...zoomSliderStyle(dark), textStyle: axisLabel },
       ...SERIES_THEME,
+      radar,
       categoryAxis: present({ axisLabel, axisLine, axisTick, splitLine: { show: false } }),
       valueAxis: valueAxis2,
       logAxis: valueAxis2,

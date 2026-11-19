@@ -1,5 +1,8 @@
 {
-  "color": ["#111111", "#222222"],
+  "color": [
+    "#111111",
+    "#222222"
+  ],
   "backgroundColor": "#ffffff",
   "textStyle": {
     "color": "rgba(0, 0, 0, 0.7)",
@@ -84,7 +87,29 @@
     "symbol": "circle"
   },
   "radar": {
-    "symbol": "circle"
+    "symbol": "circle",
+    "axisName": {
+      "fontSize": 14,
+      "color": "rgba(0, 0, 0, 0.7)"
+    },
+    "axisLine": {
+      "lineStyle": {
+        "color": "#999999"
+      }
+    },
+    "splitLine": {
+      "lineStyle": {
+        "color": "#eeeeee"
+      }
+    },
+    "splitArea": {
+      "areaStyle": {
+        "color": [
+          "rgba(0, 0, 0, 0)",
+          "#eeeeee"
+        ]
+      }
+    }
   },
   "categoryAxis": {
     "axisLabel": {

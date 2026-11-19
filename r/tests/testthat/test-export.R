@@ -605,3 +605,23 @@ test_that("scene and panel exports pass portable payloads to the SVG renderer", 
   expect_identical(calls[[3L]][["layout"]], panels[["x"]][["layout"]])
   expect_false(file.exists(path))
 })
+
+test_that("an SVG export builds in the scheme of its theme's background", {
+  skip_if_not_installed("survival")
+  skip_if_no_node()
+  fit <- survival::survfit(
+    survival::Surv(time, status) ~ sex,
+    data = survival::lung
+  )
+  caption <- function(theme) {
+    path <- tempfile(fileext = ".svg")
+    on.exit(unlink(path))
+    w <- draw_survfit(fit, risk_times = c(0, 250, 500, 750), theme = theme)
+    save_drawing(w, path, width = 600, height = 450)
+    svg <- paste(readLines(path, warn = FALSE), collapse = "")
+    regmatches(svg, regexpr("<text[^>]*>At risk</text>", svg))
+  }
+  # The risk table's caption takes the scheme's text color.
+  expect_match(caption(NULL), 'fill="rgb(0,0,0)"', fixed = TRUE)
+  expect_match(caption(theme_dark()), 'fill="rgb(255,255,255)"', fixed = TRUE)
+})

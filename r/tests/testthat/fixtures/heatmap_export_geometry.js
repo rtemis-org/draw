@@ -13,6 +13,7 @@ const body = {style: {}, classList: {contains: () => false}};
 const context = {
   document: {body}, window: {}, HTMLWidgets: {widget() {}},
   RtemisDraw: require(path.join(directory, 'rtemis-draw-builders.js')),
+  RtemisVectorTheme: require(path.join(directory, 'vector_theme.js')),
   rtemisA3: require(path.join(directory, 'a3.js')),
   rtemisPanels: layout,
   echarts: {...echarts, init: (_, theme, options) =>

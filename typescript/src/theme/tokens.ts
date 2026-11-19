@@ -235,11 +235,20 @@ export function themeOption(tokens: ThemeTokens): Json {
   const axisLabel = { fontSize: sizes.axisLabel, color: fg };
   const axisLine = tokens.axis_color ? { lineStyle: { color: tokens.axis_color } } : undefined;
   const axisTick = { show: false };
-  const valueAxis = present({
-    axisLabel,
+  const splitLine = tokens.grid_color ? { lineStyle: { color: tokens.grid_color } } : undefined;
+  const valueAxis = present({ axisLabel, axisLine, axisTick, splitLine });
+  // The radar coordinate system: indicator names in the axis label style,
+  // spokes in the axis color, and rings and their bands in the grid color.
+  // ECharts merges a theme's `radar` entry into the radar component and into
+  // radar series, so the series' symbol sits in the same entry.
+  const radar = present({
+    ...SERIES_THEME.radar,
+    axisName: axisLabel,
     axisLine,
-    axisTick,
-    splitLine: tokens.grid_color ? { lineStyle: { color: tokens.grid_color } } : undefined,
+    splitLine,
+    splitArea: tokens.grid_color
+      ? { areaStyle: { color: ["rgba(0, 0, 0, 0)", tokens.grid_color] } }
+      : undefined,
   });
   return {
     color: [...tokens.palette],
@@ -263,6 +272,7 @@ export function themeOption(tokens: ThemeTokens): Json {
     // spec: draw/visual-qa-docs#neutral-data-zoom-sliders
     dataZoom: { ...zoomSliderStyle(dark), textStyle: axisLabel },
     ...SERIES_THEME,
+    radar,
     categoryAxis: present({ axisLabel, axisLine, axisTick, splitLine: { show: false } }),
     valueAxis,
     logAxis: valueAxis,

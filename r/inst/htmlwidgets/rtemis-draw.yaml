@@ -19,8 +19,12 @@ dependencies:
       - panels.js
       - a3.js
       - panel_widget.js
+  - name: rtemis-vector-theme
+    version: 1.0.0
+    src: htmlwidgets/lib/draw
+    script: vector_theme.js
   - name: rtemis-draw-builders
-    version: 0.9.0
+    version: 0.9.1
     src: htmlwidgets/lib/draw
     script: rtemis-draw-builders.js
   - name: rtemis-theme-watch

@@ -211,3 +211,26 @@ test_that("neutral slider themes survive native rendering and allow chart overri
   expect_null(attr(output, "status"), info = paste(output, collapse = "\n"))
   expect_match(paste(output, collapse = "\n"), "Neutral slider themes")
 })
+
+test_that("a theme styles the radar coordinate system from its colors", {
+  dark <- to_list(theme_dark())[["radar"]]
+  expect_equal(dark[["symbol"]], "circle")
+  expect_equal(dark[["axisName"]][["color"]], "rgba(255, 255, 255, 0.7)")
+  expect_equal(
+    dark[["axisLine"]][["lineStyle"]][["color"]],
+    "rgba(255, 255, 255, 0.3)"
+  )
+  expect_equal(
+    dark[["splitLine"]][["lineStyle"]][["color"]],
+    "rgba(255, 255, 255, 0.1)"
+  )
+  expect_equal(
+    dark[["splitArea"]][["areaStyle"]][["color"]],
+    c("rgba(0, 0, 0, 0)", "rgba(255, 255, 255, 0.1)")
+  )
+  # A theme without axis or grid colors leaves those to ECharts.
+  light <- to_list(theme_light())[["radar"]]
+  expect_equal(light[["axisName"]][["color"]], "rgba(0, 0, 0, 0.7)")
+  expect_null(light[["splitLine"]])
+  expect_null(light[["splitArea"]])
+})

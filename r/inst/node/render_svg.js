@@ -26,6 +26,7 @@ const echarts = require(echartsPath);
 const registerRenderers = require("../htmlwidgets/lib/draw/renderers.js");
 const rendererNames = registerRenderers(echarts);
 const builders = require("../htmlwidgets/lib/draw/rtemis-draw-builders.js");
+const vectorTheme = require("../htmlwidgets/lib/draw/vector_theme.js");
 // The shared layout (panels.js) reaches the package through the global the
 // browser bundle defines.
 globalThis.RtemisDraw = builders;
@@ -36,8 +37,9 @@ const ZOOM_SLIDER_ID = builders.ZOOM_SLIDER_ID;
 const ZOOM_SLIDER_HANDLE = 7;
 
 // Build the option of a payload that carries a build request with the bundled
-// @rtemis/draw, in the light scheme offline export uses, without interactive
-// controls. spec: draw/shared-builders#r-widget
+// @rtemis/draw, without interactive controls, in the scheme of the export's
+// theme: dark when its background is dark, as theme_dark()'s is, and light
+// otherwise. spec: draw/shared-builders#r-widget
 function build(panel) {
   const request = panel.build;
   const builder = builders.builders[request.type];
@@ -46,7 +48,8 @@ function build(panel) {
   // The background of the export's theme, which a treemap's and a sunburst's
   // borders take.
   const background = typeof panel.theme?.backgroundColor === "string" ? panel.theme.backgroundColor : undefined;
-  const appearance = {...request.appearance, dark: false, ...(background ? {background} : {})};
+  const dark = vectorTheme.isDark(background);
+  const appearance = {...request.appearance, dark, ...(background ? {background} : {})};
   const option = {...builder(data, request.config, appearance)};
   // The builders leave the background to the host; export paints the theme's.
   delete option.backgroundColor;

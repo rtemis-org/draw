@@ -309,6 +309,24 @@ build_theme <- function(
     }
   ))
 
+  # The radar coordinate system: indicator names in the axis label style,
+  # spokes in the axis color, and rings and their bands in the grid color.
+  # ECharts merges a theme's `radar` entry into the radar component and into
+  # radar series, so the series' symbol sits in the same entry.
+  radar_cfg <- drop_nulls(list(
+    symbol = "circle",
+    axisName = if (length(axis_label_style) > 0L) axis_label_style,
+    axisLine = if (!is.null(axis_color)) {
+      list(lineStyle = list(color = axis_color))
+    },
+    splitLine = if (!is.null(grid_color)) {
+      list(lineStyle = list(color = grid_color))
+    },
+    splitArea = if (!is.null(grid_color)) {
+      list(areaStyle = list(color = c("rgba(0, 0, 0, 0)", grid_color)))
+    }
+  ))
+
   category_axis_cfg <- drop_nulls(list(
     axisLabel = if (length(axis_label_style) > 0L) axis_label_style,
     axisLine = if (!is.null(axis_color)) {
@@ -383,7 +401,7 @@ build_theme <- function(
     # Filled symbols, where ECharts' default `emptyCircle` fills with the
     # canvas background; `SERIES_THEME` in @rtemis/draw.
     line = list(symbol = "circle"),
-    radar = list(symbol = "circle")
+    radar = radar_cfg
   )
 }
 

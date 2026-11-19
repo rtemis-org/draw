@@ -60,7 +60,10 @@ function rtemisDrawBuild(x, dark) {
   // sunburst's borders take.
   const theme = x.autoTheme && dark ? x.themeDark : x.theme;
   const background = theme && typeof theme.backgroundColor === 'string' ? theme.backgroundColor : undefined;
-  const appearance = {...request.appearance, dark, ...(background ? {background} : {})};
+  // An explicit theme sets the scheme the builder draws in, from its
+  // background; the automatic theme follows the page.
+  const scheme = !x.autoTheme && background ? RtemisVectorTheme.isDark(background) : dark;
+  const appearance = {...request.appearance, dark: scheme, ...(background ? {background} : {})};
   const option = {...builder(data, request.config, appearance)};
   // The builders leave the background to the host; the widget paints the theme's.
   delete option.backgroundColor;
