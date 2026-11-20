@@ -90,6 +90,9 @@ test_that("structural constraints use the same declaration in R and JSON Schema"
           expect_error(do.call(case[["setup"]], args))
         }
         values <- chart_config_to_list(case[["setup"]](), complete = TRUE)
+        # The theme member references the registry's theme record; it is
+        # validated in test-theme.R.
+        values[["theme"]] <- NULL
         for (name in names(args)) {
           value <- args[[name]]
           spec <- prop_spec(case[["cls"]]@properties[[name]])
@@ -174,6 +177,14 @@ test_that("all registered input and complete records validate independently", {
         "Chart",
         complete = complete
       )
+      if (complete) {
+        # The record's theme member references the registry's theme record;
+        # the test inlines it, since the validator resolves no remote `$ref`.
+        theme <- theme_schema("https://example.org/theme", complete = TRUE)
+        theme[["$schema"]] <- NULL
+        theme[["$id"]] <- NULL
+        schema[["properties"]][["theme"]] <- theme
+      }
       config <- get(entry[["setup"]])()
       document <- chart_config_to_list(config, complete = complete)
       expect_true(

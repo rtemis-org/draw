@@ -30,9 +30,9 @@ theme_light(
   title_font_weight = NULL,
   grid_opacity = NULL,
   grid_style = NULL,
-  axis_label_gap = NULL,
-  axis_name_gap = NULL,
-  axis_name_location = NULL,
+  axis_label_gap = 2/3,
+  axis_name_gap = 0.625,
+  axis_name_location = "middle",
   axis_line_show = NULL,
   color_scale_font_size = NULL,
   echarts = NULL
@@ -107,7 +107,8 @@ camelCase names. Only ECharts charts read it.}
 \description{
 Returns the light theme: dark text on white, the rtemis palette, and the sign
 colors. Title text defaults to 1.2 times \code{base_font_size}; all other text to
-\code{base_font_size}.
+\code{base_font_size}. Tick labels sit 2/3 em from the plot, axis names 0.625 em
+clear of the tick labels, and axis names are centered on their axis.
 }
 \examples{
 theme_light(base_font_size = 14)

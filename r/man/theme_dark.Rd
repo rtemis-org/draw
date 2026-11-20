@@ -30,9 +30,9 @@ theme_dark(
   title_font_weight = NULL,
   grid_opacity = NULL,
   grid_style = NULL,
-  axis_label_gap = NULL,
-  axis_name_gap = NULL,
-  axis_name_location = NULL,
+  axis_label_gap = 2/3,
+  axis_name_gap = 0.625,
+  axis_name_location = "middle",
   axis_line_show = NULL,
   color_scale_font_size = NULL,
   echarts = NULL
@@ -108,6 +108,7 @@ camelCase names. Only ECharts charts read it.}
 Returns the dark theme: light text on near-black, the rtemis palette, and the
 sign colors, which keep their contrast on either background. Title text
 defaults to 1.2 times \code{base_font_size}; all other text to \code{base_font_size}.
+The axis spacing is that of \code{\link[=theme_light]{theme_light()}}.
 }
 \examples{
 theme_dark(base_font_size = 14)

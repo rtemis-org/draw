@@ -40,11 +40,10 @@ leaf_url <- function(type, kind) {
 
 # Every document in the registry is written by one function, so the keyword
 # order and the serialization are the registry's rather than this package's.
-# `digits = I(17)` is the one thing a chart schema needs that the default does
-# not give: 17 significant digits is what round-trips an IEEE 754 double
-# exactly, and jsonlite's own default of 4 *decimal places* would silently round
-# a resolved axis limit -- a document that draws a nearly identical chart, which
-# is worse than one that obviously fails.
+# `digits = I(17)` is the setting a chart schema needs beyond the default: 17
+# significant digits round-trip an IEEE 754 double exactly, and jsonlite's own
+# default of 4 *decimal places* rounds a resolved axis limit, so the document
+# would draw a chart that differs from the one written.
 # The input-schema contract, held in `rtemis.core` because rtemis publishes into
 # the same registry and one registry cannot hold documents kept to two
 # standards. Config schemas only: a record states what a run used, so everything
@@ -124,3 +123,23 @@ cat(sprintf(
   family,
   length(charts)
 ))
+
+# The theme: the tokens every chart backend reads, and the record a chart
+# record's `theme` member holds. A config with no discriminator, so the input
+# form requires nothing.
+theme_dir <- file.path(schema_repo, "theme", "v1")
+for (kind in c("schema", "record")) {
+  theme_id <- paste0(base_url, "/theme/v1/", kind, ".json")
+  schema <- theme_schema(theme_id, complete = kind == "record")
+  if (kind == "schema") {
+    rtemis.core::assert_config_contract(schema, theme_id)
+  }
+  rtemis.core::write_JSONSchema(
+    schema,
+    file.path(theme_dir, paste0(kind, ".json")),
+    overwrite = TRUE,
+    digits = I(17),
+    verbosity = 0L
+  )
+}
+cat(sprintf("%-14s schema + record\n", "theme"))

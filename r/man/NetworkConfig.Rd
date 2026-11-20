@@ -9,6 +9,7 @@ NetworkConfig(
   title = NULL,
   origin = NULL,
   writer = NULL,
+  theme = NULL,
   directed = FALSE,
   threshold = NULL,
   self_loops = FALSE,
@@ -43,6 +44,10 @@ authored config; written by the interface that resolved it.}
 
 \item{writer}{Optional Named character: Which interface wrote the config, as
 \code{name} and \code{version}. Absent on an authored config.}
+
+\item{theme}{Optional \link{Theme}: The theme a chart record was drawn with, set
+by \code{\link[=read_chart_config]{read_chart_config()}}. \code{\link[=draw]{draw()}} uses it when the caller passes no
+theme. Absent on an authored config.}
 
 \item{directed}{Logical: Treat the matrix as directed.}
 

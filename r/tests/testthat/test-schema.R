@@ -69,8 +69,21 @@ test_that("the schema declares the 2020-12 dialect and its own id", {
 })
 
 test_that("every class property appears in the schema", {
+  # `theme` appears in a record only.
   s <- scatter_schema()
-  expect_setequal(names(s[["properties"]]), names(ScatterConfig@properties))
+  expect_setequal(
+    names(s[["properties"]]),
+    setdiff(names(ScatterConfig@properties), "theme")
+  )
+  record <- scatter_schema(complete = TRUE)
+  expect_setequal(
+    names(record[["properties"]]),
+    names(ScatterConfig@properties)
+  )
+  expect_identical(
+    record[["properties"]][["theme"]][["$ref"]],
+    "https://schema.rtemis.org/theme/v1/record.json"
+  )
 })
 
 test_that("the discriminator is emitted as a constant", {
@@ -97,11 +110,11 @@ test_that("an input config requires only the discriminator", {
   expect_identical(as.character(scatter_schema()[["required"]]), "type")
 })
 
-test_that("an output config requires every property", {
+test_that("an output config requires every property but its optional theme", {
   s <- scatter_schema(complete = TRUE)
   expect_setequal(
     as.character(s[["required"]]),
-    names(ScatterConfig@properties)
+    setdiff(names(ScatterConfig@properties), "theme")
   )
 })
 
@@ -290,7 +303,7 @@ test_that("origin is a closed object with an entry per settable property", {
   origin <- scatter_schema(complete = TRUE)[["properties"]][["origin"]]
   settable <- setdiff(
     names(ScatterConfig@properties),
-    c("type", "origin", "writer")
+    c("type", PROVENANCE_PROPS)
   )
   expect_setequal(names(origin[["properties"]]), settable)
   expect_setequal(as.character(origin[["required"]]), settable)

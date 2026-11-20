@@ -7,9 +7,9 @@
 #
 # The load-bearing test is the round trip: a config written in one interface and
 # read in another must produce the same chart. That is the whole point of the
-# schema, and it is the property most easily broken by a serialization detail
-# (JSON has one number type; jsonlite drops names from atomic vectors; a
-# one-element array unboxes to a scalar).
+# schema, and a serialization detail breaks it (JSON has one number type;
+# jsonlite drops names from atomic vectors; a one-element array unboxes to a
+# scalar).
 
 # Files land in the session temp directory, which R clears on exit. Registering
 # per-test cleanup would need withr, which is not a declared dependency.
@@ -50,7 +50,7 @@ test_that("origin covers every settable property", {
   cfg <- setup_ScatterConfig()
   expect_setequal(
     names(cfg@origin),
-    setdiff(names(ScatterConfig@properties), c("type", "origin", "writer"))
+    setdiff(names(ScatterConfig@properties), c("type", PROVENANCE_PROPS))
   )
 })
 
@@ -207,10 +207,9 @@ test_that("an invalid value is rejected on read, through the same validator", {
 # %% complete documents ----
 
 # An output config is the form one interface hands to another: every property
-# present, nothing left for the reader to infer, and provenance attached. The
-# test that matters is that the package can actually produce one -- the schema
-# says `record.json` requires every key, and it is only worth requiring if
-# something writes them.
+# present, nothing left for the reader to infer, and provenance attached. These
+# tests check that the package writes one: the schema says `record.json`
+# requires every key, which holds only if something writes them.
 
 test_that("a complete document carries every property the schema requires", {
   config <- resolve(setup_ScatterConfig(x = "wt", y = "mpg"), data = mtcars)
@@ -225,7 +224,11 @@ test_that("a complete document carries every property the schema requires", {
     complete = TRUE
   )
   document <- jsonlite::fromJSON(path, simplifyVector = FALSE)
-  expect_setequal(names(document), as.character(schema[["required"]]))
+  # The record also states the optional theme it was drawn with.
+  expect_setequal(
+    names(document),
+    c(as.character(schema[["required"]]), "theme")
+  )
 })
 
 test_that("a complete document states unset properties as explicit nulls", {
@@ -372,7 +375,10 @@ test_that("every chart type writes a complete document that conforms", {
       complete = TRUE
     )
     document <- jsonlite::fromJSON(path, simplifyVector = FALSE)
-    expect_setequal(names(document), as.character(schema[["required"]]))
+    expect_setequal(
+      names(document),
+      c(as.character(schema[["required"]]), "theme")
+    )
   }
 })
 
@@ -385,8 +391,9 @@ test_that("every chart type round-trips a complete document", {
     write_chart_config(config, path, complete = TRUE)
     back <- read_chart_config(path)
 
-    # `writer` excepted: the write stamps it and the source config had none.
-    for (nm in setdiff(names(S7::props(config)), "writer")) {
+    # `writer` and `theme` excepted: the write stamps the writer and records
+    # the automatic theme, and the source config had neither.
+    for (nm in setdiff(names(S7::props(config)), c("writer", "theme"))) {
       expect_identical(prop(back, nm), prop(config, nm), info = paste(type, nm))
     }
   }

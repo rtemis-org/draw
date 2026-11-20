@@ -23,6 +23,9 @@ function asR(tokens: ThemeTokens) {
   return { rest, logAxis, timeAxis };
 }
 
+// rtemis.draw's themes with the axis spacing left to ECharts.
+const NO_SPACING = { axis_label_gap: null, axis_name_gap: null, axis_name_location: null } as const;
+
 describe("themeOption", () => {
   const cases: [string, ThemeTokens][] = [
     ["light", lightThemeTokens()],
@@ -117,7 +120,10 @@ describe("themeOption's weight, gridline, and axis spacing tokens", () => {
   });
 
   it("leaves the spacing to ECharts when the tokens are unset", () => {
-    const plain = themeOption(lightThemeTokens()) as Record<string, Record<string, unknown>>;
+    const plain = themeOption(lightThemeTokens(NO_SPACING)) as Record<
+      string,
+      Record<string, unknown>
+    >;
     expect(plain.valueAxis).not.toHaveProperty("nameTextStyle");
     expect(plain.valueAxis).not.toHaveProperty("nameLocation");
     expect(plain.valueAxis?.axisLabel).not.toHaveProperty("margin");
@@ -155,13 +161,13 @@ describe("a registered theme's axis spacing", () => {
     );
     // The theme's 30-pixel margin and location, against the option's.
     const fromTheme = nameX(theme, {});
-    const fromOption = nameX(themeOption(lightThemeTokens({ base_font_size: 16 })), {
+    const fromOption = nameX(themeOption(lightThemeTokens({ base_font_size: 16, ...NO_SPACING })), {
       nameLocation: "middle",
       nameTextStyle: { textMargin: [30, 3, 30, 3] },
     });
     expect(fromTheme).toBeCloseTo(fromOption, 1);
     // ECharts' own margin places the name nearer the tick labels.
-    const plain = nameX(themeOption(lightThemeTokens({ base_font_size: 16 })), {
+    const plain = nameX(themeOption(lightThemeTokens({ base_font_size: 16, ...NO_SPACING })), {
       nameLocation: "middle",
     });
     expect(plain - fromTheme).toBeGreaterThan(10);

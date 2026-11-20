@@ -8,29 +8,36 @@
   },
   "title": {
     "textStyle": {
-      "fontSize": 20,
       "color": "rgba(0, 0, 0, 0.7)",
-      "fontFamily": "'Source Sans 3', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
+      "fontFamily": "'Source Sans 3', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+      "fontSize": 20
     },
     "subtextStyle": {
-      "fontSize": 14,
       "color": "rgba(0, 0, 0, 0.7)",
-      "fontFamily": "'Source Sans 3', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
+      "fontFamily": "'Source Sans 3', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+      "fontSize": 14
     }
   },
   "legend": {
     "textStyle": {
       "color": "rgba(0, 0, 0, 0.7)",
-      "fontSize": 14,
-      "fontFamily": "'Source Sans 3', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
+      "fontFamily": "'Source Sans 3', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+      "fontSize": 14
     }
   },
   "tooltip": {
     "backgroundColor": "#fafafa",
     "textStyle": {
       "color": "rgba(0, 0, 0, 0.7)",
-      "fontSize": 14,
-      "fontFamily": "'Source Sans 3', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
+      "fontFamily": "'Source Sans 3', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+      "fontSize": 14
+    }
+  },
+  "visualMap": {
+    "textStyle": {
+      "color": "rgba(0, 0, 0, 0.7)",
+      "fontFamily": "'Source Sans 3', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+      "fontSize": 14
     }
   },
   "dataZoom": {
@@ -67,10 +74,6 @@
       "color": "#808080",
       "opacity": 0.3
     },
-    "textStyle": {
-      "fontSize": 14,
-      "color": "rgba(0, 0, 0, 0.7)"
-    },
     "emphasis": {
       "handleStyle": {
         "borderColor": "#505050"
@@ -78,6 +81,10 @@
       "moveHandleStyle": {
         "color": "#707070"
       }
+    },
+    "textStyle": {
+      "fontSize": 14,
+      "color": "rgba(0, 0, 0, 0.7)"
     }
   },
   "line": {
@@ -106,9 +113,14 @@
     }
   },
   "categoryAxis": {
+    "nameLocation": "middle",
+    "nameTextStyle": {
+      "textMargin": [8.75, 3, 8.75, 3]
+    },
     "axisLabel": {
       "fontSize": 14,
-      "color": "rgba(0, 0, 0, 0.7)"
+      "color": "rgba(0, 0, 0, 0.7)",
+      "margin": 9.333333333333332
     },
     "axisLine": {
       "lineStyle": {
@@ -123,9 +135,14 @@
     }
   },
   "valueAxis": {
+    "nameLocation": "middle",
+    "nameTextStyle": {
+      "textMargin": [8.75, 3, 8.75, 3]
+    },
     "axisLabel": {
       "fontSize": 14,
-      "color": "rgba(0, 0, 0, 0.7)"
+      "color": "rgba(0, 0, 0, 0.7)",
+      "margin": 9.333333333333332
     },
     "axisLine": {
       "lineStyle": {
@@ -139,13 +156,6 @@
       "lineStyle": {
         "color": "#eeeeee"
       }
-    }
-  },
-  "visualMap": {
-    "textStyle": {
-      "color": "rgba(0, 0, 0, 0.7)",
-      "fontFamily": "'Source Sans 3', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
-      "fontSize": 14
     }
   }
 }

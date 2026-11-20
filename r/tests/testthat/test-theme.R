@@ -256,3 +256,109 @@ test_that("font_stack_entries returns unquoted family names", {
     c("Source Sans 3", "Geist", "sans-serif")
   )
 })
+
+# -- Record ------------------------------------------------------------------------
+
+test_that("a theme record resolves the derived tokens and validates", {
+  skip_if_not_installed("jsonvalidate", "1.5.0")
+  record <- theme_record(theme_dark(base_font_size = 14))
+  expect_identical(record[["title_font_size"]], 17)
+  expect_identical(record[["legend_color"]], "rgba(255, 255, 255, 0.7)")
+  expect_identical(record[["font_family"]], DEFAULT_FONT_FAMILY)
+  expect_null(record[["font_weight"]])
+  expect_identical(record[["origin"]][["base_font_size"]], "user")
+  expect_identical(record[["origin"]][["title_font_size"]], "derived")
+  expect_identical(record[["origin"]][["bg_color"]], "default")
+  expect_identical(record[["writer"]][["name"]], "rtemis.draw")
+  schema <- theme_schema("https://example.org/theme", complete = TRUE)
+  expect_true(jsonvalidate::json_validate(
+    jsonlite::toJSON(record, auto_unbox = TRUE, null = "null", digits = I(17)),
+    jsonlite::toJSON(schema, auto_unbox = TRUE, null = "null"),
+    engine = "ajv"
+  ))
+  # The automatic theme is recorded as light, every token a default.
+  automatic <- theme_record(NULL)
+  expect_identical(automatic[["scheme"]], "light")
+  expect_false(any(unlist(automatic[["origin"]]) == "user"))
+})
+
+test_that("R's resolve_theme() equals @rtemis/draw's resolveTheme()", {
+  skip_if_no_node()
+  themes <- list(
+    theme_light(),
+    theme_dark(
+      base_font_size = 15,
+      font_family = "Geist",
+      legend_color = "#cccccc"
+    ),
+    Theme(scheme = "dark", base_font_size = 13, title_font_size = 21)
+  )
+  path <- tempfile(fileext = ".json")
+  on.exit(unlink(path), add = TRUE)
+  jsonlite::write_json(
+    list(
+      builders = system.file(
+        "htmlwidgets/lib/draw/rtemis-draw-builders.js",
+        package = "rtemis.draw"
+      ),
+      themes = lapply(themes, to_list)
+    ),
+    path,
+    auto_unbox = TRUE,
+    null = "null",
+    digits = I(17)
+  )
+  output <- system2(
+    Sys.which("node"),
+    c(shQuote(test_path("fixtures", "theme_resolve.js")), shQuote(path)),
+    stdout = TRUE,
+    stderr = TRUE
+  )
+  from_ts <- jsonlite::fromJSON(
+    paste(output, collapse = ""),
+    simplifyVector = FALSE
+  )
+  for (i in seq_along(themes)) {
+    from_r <- jsonlite::fromJSON(
+      jsonlite::toJSON(
+        theme_record(themes[[i]]),
+        auto_unbox = TRUE,
+        null = "null",
+        digits = I(17)
+      ),
+      simplifyVector = FALSE
+    )
+    # resolveTheme() leaves the writer to the host that writes the record, and
+    # omits the tokens a backend's default leaves unset.
+    from_r[["writer"]] <- NULL
+    from_r <- from_r[!vapply(from_r, is.null, logical(1L))]
+    expect_identical(
+      from_ts[[i]][order(names(from_ts[[i]]))],
+      from_r[order(names(from_r))],
+      info = i
+    )
+  }
+})
+
+test_that("a chart record carries its theme, and drawing it uses that theme", {
+  config <- resolve(setup_ScatterConfig(x = "wt", y = "mpg"), data = mtcars)
+  path <- tempfile(fileext = ".json")
+  on.exit(unlink(path), add = TRUE)
+  # The automatic theme stays automatic.
+  write_chart_config(config, path, complete = TRUE)
+  back <- read_chart_config(path)
+  expect_null(back@theme)
+  expect_true(isTRUE(draw(back, data = mtcars)$x$autoTheme))
+  # An explicit theme returns, and draw() uses it unless the caller passes one.
+  config@theme <- theme_dark(base_font_size = 14)
+  write_chart_config(config, path, complete = TRUE)
+  back <- read_chart_config(path)
+  expect_identical(back@theme@scheme, "dark")
+  expect_identical(back@theme@base_font_size, 14)
+  widget <- draw(back, data = mtcars)
+  expect_identical(widget$x$theme$scheme, "dark")
+  expect_identical(
+    draw(back, data = mtcars, theme = theme_light())$x$theme$scheme,
+    "light"
+  )
+})

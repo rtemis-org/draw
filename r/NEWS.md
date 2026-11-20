@@ -1,5 +1,9 @@
 # rtemis.draw 0.5.5
 
+* A complete chart record (`write_chart_config(complete = TRUE)`) states the theme it was drawn with in a `theme` member, and `read_chart_config()` restores it, so `draw()` of the config draws with that theme unless the caller passes one. The automatic light/dark theme is recorded as the light theme and reads back as automatic. `Theme` gains `origin` and `writer`, and the theme is published as `theme/v1` with a record form.
+
+* `theme_light()` and `theme_dark()` set `axis_label_gap` to 2/3 em, `axis_name_gap` to 0.625 em, and `axis_name_location` to `"middle"`: tick labels stay 8 pixels from the plot at the default 12-pixel text, and axis names sit 7.5 pixels clear of the tick labels.
+
 * `Theme` holds the tokens of a theme, which every backend reads: `scheme`, `font_family`, the text sizes, `font_weight`, `title_font_weight`, `palette`, `bg_color`, `fg_color`, the component colors, `grid_opacity`, `grid_style`, the sign colors, `axis_label_gap`, `axis_name_gap`, `axis_name_location`, `axis_line_show`, and `color_scale_font_size`, plus `echarts`, an ECharts theme patch. The `Theme()` arguments `color`, `background_color`, `text_style`, `title`, `legend`, `tooltip`, `data_zoom`, `line`, `radar`, `bar`, `pie`, `scatter`, and the four axis types are deprecated: `color` sets `palette`, `background_color` sets `bg_color`, and the others set keys of `echarts`, with a warning. Reading a removed property, such as `theme@background_color`, is an error; `theme@bg_color` holds the background. A list `theme` is deprecated. `to_list()` on a `Theme` returns the token document. `theme_light()` and `theme_dark()` keep their arguments and gain the new tokens and `echarts`.
 
 * `draw_treemap()`, `draw_sunburst()`, `draw_radar()`, and `draw_funnel()` draw treemaps, sunburst charts, radar charts, and funnel charts, with the configurations `TreemapConfig`, `SunburstConfig`, `RadarConfig`, and `FunnelConfig`.

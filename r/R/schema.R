@@ -12,9 +12,9 @@
 # Two rules it enforces:
 #
 # 1. **No `default` is ever emitted.** A default is what an interface chooses
-#    to fill in, not a fact about the document, and interfaces are expected to
-#    differ -- a chart pane in an IDE and a large web canvas should not be
-#    forced to agree. Round-trip fidelity comes from writing *resolved*
+#    to fill in, not a fact about the document, and interfaces differ: a chart
+#    pane in an IDE and a large web canvas fill in different values.
+#    Round-trip fidelity comes from writing *resolved*
 #    documents, not from sharing defaults.
 # 2. **An input config requires nothing** beyond the discriminator, which
 #    carries the document's shape. A config is partial by nature: the author
@@ -133,9 +133,9 @@ schema_property <- function(spec) {
 #' missing an entry, or any map naming an unknown property, fails validation.
 #'
 #' Matches the `origin` block every `record.json` in the rtemis registry
-#' carries. The chart vocabulary is the three of `ORIGIN_VALUES` a chart can
-#' actually produce -- `"tuned"` needs a tuner and `"unset"` means a run never
-#' reached the value, neither of which a chart has.
+#' carries. The chart vocabulary is the three of `ORIGIN_VALUES` a chart
+#' produces: `"tuned"` needs a tuner and `"unset"` means a run never reached
+#' the value, neither of which a chart has.
 #'
 #' @param names Character: The settable property names.
 #' @param nullable Logical: Whether the map itself may be null, which it may be
@@ -303,6 +303,20 @@ chart_schema <- function(
       )
       next
     }
+    if (identical(nm, "theme")) {
+      # The theme a record was drawn with: optional in a record, so records
+      # written without one stay valid, and absent from an input config.
+      if (complete) {
+        out[[nm]] <- list(
+          `$ref` = paste0(THEME_SCHEMA_BASE, "record.json"),
+          description = paste(
+            "The resolved theme the chart was drawn with. With every origin",
+            "'default', the automatic light/dark theme, recorded as light."
+          )
+        )
+      }
+      next
+    }
     if (nm %in% PROVENANCE_PROPS) {
       # Provenance is structured, not a free map, and a record must state it:
       # see @details above.
@@ -339,7 +353,7 @@ chart_schema <- function(
     properties = out,
     # An input config requires only the key carrying the document's shape.
     # I(): `required` is an array even when it holds one key.
-    required = I(if (complete) names(out) else "type"),
+    required = I(if (complete) setdiff(names(out), "theme") else "type"),
     additionalProperties = FALSE
   )
   rules <- list()
@@ -353,6 +367,71 @@ chart_schema <- function(
   }
   schema
 } # /rtemis.draw::chart_schema
+
+
+# The registry path of the theme schema and record.
+THEME_SCHEMA_BASE <- "https://schema.rtemis.org/theme/v1/"
+
+# %% theme_schema ----
+#' Generate the theme schema
+#'
+#' The input form requires nothing: an empty theme is the light theme. The
+#' record form, what a chart record's `theme` member holds, requires every
+#' token, its `origin`, and its `writer`.
+#'
+#' @param id Character: The schema's `$id` URL.
+#' @param complete Logical: If TRUE, the record form.
+#'
+#' @return Named list: The JSON Schema, ready for [jsonlite::toJSON()].
+#'
+#' @author EDG
+#' @keywords internal
+#' @noRd
+theme_schema <- function(id, complete = FALSE) {
+  check_character_scalar(id)
+  check_logical_scalar(complete)
+  properties <- Theme@properties
+  out <- list()
+  for (nm in names(properties)) {
+    if (identical(nm, "origin")) {
+      out[[nm]] <- origin_property(THEME_TOKENS, nullable = !complete)
+      next
+    }
+    if (identical(nm, "writer")) {
+      out[[nm]] <- writer_property(nullable = !complete)
+      next
+    }
+    out[[nm]] <- schema_property(prop_spec(properties[[nm]]))
+  }
+  list(
+    `$schema` = JSON_SCHEMA_DIALECT,
+    `$id` = id,
+    title = "rtemis Theme",
+    description = paste(
+      "The tokens of a chart theme, which every rtemis.draw backend reads:",
+      "fonts, text sizes and weights, surface and text colors, the categorical",
+      "palette, the sign colors, gridline style, and axis spacing, with an",
+      "ECharts theme patch. A record holds every token resolved, with its",
+      "origin."
+    ),
+    type = "object",
+    `x-rtemis` = list(
+      publication = list(
+        producer = "rtemis.draw",
+        language = "r",
+        scope = "shared",
+        domain = "domain",
+        class = "rtemis.draw::Theme",
+        role = "document",
+        kind = "config",
+        order = 1L
+      )
+    ),
+    properties = out,
+    required = I(if (complete) names(out) else character()),
+    additionalProperties = FALSE
+  )
+} # /rtemis.draw::theme_schema
 
 
 # %% chart_type_of ----

@@ -378,6 +378,7 @@ export type {
   ColorScheme,
   FontWeight,
   ThemeDocument,
+  ThemeOrigin,
   ThemeTokens,
 } from "./theme/tokens.ts";
 export {
@@ -387,8 +388,10 @@ export {
   lightThemeTokens,
   mergePatch,
   RTEMIS_PALETTE,
+  resolveTheme,
   SERIES_THEME,
   SIGN_COLORS,
+  THEME_DOCUMENT_MEMBERS,
   themeFontSizes,
   themeObject,
   themeOption,

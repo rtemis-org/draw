@@ -743,3 +743,10 @@ check_dots_empty <- function(...) {
 axis_title <- function(x) {
   if (!is.null(x) && nzchar(x)) x
 } # /rtemis.draw::axis_title
+
+
+# %% ORIGIN_VALUES ----
+# The three values a provenance entry takes, in a chart config and in a theme.
+# Named here, collated before both, so the S7 validators, the emitted schemas'
+# `enum`, and `config_derive()` cannot drift apart.
+ORIGIN_VALUES <- c("user", "default", "derived")

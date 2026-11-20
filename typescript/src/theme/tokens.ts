@@ -97,12 +97,24 @@ export const SIGN_COLORS = Object.freeze({
   positive: "#C55E28",
 });
 
+/**
+ * The axis spacing of rtemis.draw's light and dark themes: tick labels 2/3 em
+ * from the plot (8 pixels at the 12-pixel base), axis names 0.625 em clear of
+ * the tick labels, and names centered on their axis.
+ */
+const THEME_SPACING = Object.freeze({
+  axis_label_gap: 2 / 3,
+  axis_name_gap: 0.625,
+  axis_name_location: "middle",
+} as const);
+
 /** The light theme's tokens, as rtemis.draw's `theme_light()` sets them. */
 export function lightThemeTokens(overrides: Partial<ThemeTokens> = {}): ThemeTokens {
   return Object.freeze({
     scheme: "light",
     base_font_size: 12,
     palette: RTEMIS_PALETTE,
+    ...THEME_SPACING,
     bg_color: "#ffffff",
     fg_color: "rgba(0, 0, 0, 0.7)",
     negative_color: SIGN_COLORS.negative,
@@ -118,6 +130,7 @@ export function darkThemeTokens(overrides: Partial<ThemeTokens> = {}): ThemeToke
     scheme: "dark",
     base_font_size: 12,
     palette: RTEMIS_PALETTE,
+    ...THEME_SPACING,
     bg_color: "#181818",
     fg_color: "rgba(255, 255, 255, 0.7)",
     title_color: "rgba(255, 255, 255, 0.9)",
@@ -369,7 +382,88 @@ export function themeOption(tokens: ThemeTokens): Json {
  */
 export type ThemeDocument = ThemeTokens & {
   readonly echarts?: Record<string, unknown> | null;
+  /** Where each token came from; recorded by rtemis.draw's theme constructors. */
+  readonly origin?: Readonly<Record<string, ThemeOrigin>> | null;
+  /** Which interface wrote a resolved theme, as `name` and `version`. */
+  readonly writer?: Readonly<{ name: string; version: string }> | null;
 };
+
+/** Where a token's value came from. */
+export type ThemeOrigin = "user" | "default" | "derived";
+
+/** The members of a theme document, as rtemis.draw's `Theme` declares them. */
+export const THEME_DOCUMENT_MEMBERS = Object.freeze([
+  "scheme",
+  "font_family",
+  "base_font_size",
+  "title_font_size",
+  "subtitle_font_size",
+  "axis_label_font_size",
+  "legend_font_size",
+  "tooltip_font_size",
+  "color_scale_font_size",
+  "font_weight",
+  "title_font_weight",
+  "palette",
+  "bg_color",
+  "fg_color",
+  "title_color",
+  "subtitle_color",
+  "legend_color",
+  "axis_color",
+  "grid_color",
+  "grid_opacity",
+  "grid_style",
+  "tooltip_bg",
+  "tooltip_border_color",
+  "tooltip_color",
+  "negative_color",
+  "neutral_color",
+  "positive_color",
+  "axis_label_gap",
+  "axis_name_gap",
+  "axis_name_location",
+  "axis_line_show",
+  "echarts",
+  "origin",
+  "writer",
+] as const);
+
+/**
+ * A theme with the tokens that follow rules of the theme itself filled in and
+ * marked `"derived"`: the title size, 1.2 times `base_font_size` rounded half
+ * to even; the subtitle, axis label, legend, tooltip, and color scale sizes,
+ * `base_font_size`; the title, subtitle, legend, and tooltip colors,
+ * `fg_color`; and the font family, {@link DEFAULT_FONT_FAMILY}. Tokens left to
+ * a backend's own default stay unset. rtemis.draw's `resolve_theme()` ports
+ * these rules. spec: draw/chart-appearance#the-theme
+ */
+export function resolveTheme(doc: ThemeDocument): ThemeDocument {
+  const origin: Record<string, ThemeOrigin> = { ...(doc.origin ?? {}) };
+  const out: Record<string, unknown> = { ...doc };
+  const derive = (name: string, value: unknown) => {
+    if (out[name] === undefined || out[name] === null) {
+      out[name] = value;
+      origin[name] = "derived";
+    }
+  };
+  const base = doc.base_font_size;
+  derive("title_font_size", roundHalfEven(base * 1.2));
+  for (const name of [
+    "subtitle_font_size",
+    "axis_label_font_size",
+    "legend_font_size",
+    "tooltip_font_size",
+    "color_scale_font_size",
+  ]) {
+    derive(name, base);
+  }
+  for (const name of ["title_color", "subtitle_color", "legend_color", "tooltip_color"]) {
+    derive(name, doc.fg_color);
+  }
+  derive("font_family", DEFAULT_FONT_FAMILY);
+  return { ...(out as unknown as ThemeDocument), origin };
+}
 
 /**
  * Merges a patch into a JSON object: objects merge recursively, any other

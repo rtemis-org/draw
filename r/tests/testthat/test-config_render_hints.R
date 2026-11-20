@@ -95,10 +95,12 @@ test_that("render hints are absent from a written config", {
   }
 })
 
-test_that("no render target is a property of these configs", {
+test_that("no render target is an authored property of these configs", {
+  # `theme` is provenance a record carries, never a setup_*() value.
   for (cls in list(HeatmapConfig, SpectrogramConfig, A3Config)) {
-    props <- names(cls@properties)
+    props <- setdiff(names(cls@properties), c("type", PROVENANCE_PROPS))
     expect_false(any(c("width", "height", "theme", "filename") %in% props))
+    expect_false("theme" %in% names(formals(get(paste0("setup_", cls@name)))))
   }
 })
 

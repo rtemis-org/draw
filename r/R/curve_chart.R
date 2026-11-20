@@ -485,6 +485,9 @@ draw_curve_config <- function(
   ...,
   data = NULL
 ) {
+  # A config read from a chart record draws with the record's theme unless
+  # the caller passes one. spec: draw/chart-appearance#the-theme
+  theme <- theme %||% option@theme
   built <- compile(option, data = data, theme = theme)
   # The legend title names the entries' values, which then read as numbers.
   option@legend_title <- curve_legend_title(option)

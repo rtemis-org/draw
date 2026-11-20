@@ -26,6 +26,7 @@ import { SUNBURST_CHART_CONFIG_MEMBERS } from "../src/charts/sunburst/config.ts"
 import { SURVIVAL_CHART_CONFIG_MEMBERS } from "../src/charts/survival/config.ts";
 import { TIMESERIES_CHART_CONFIG_MEMBERS } from "../src/charts/timeseries/config.ts";
 import { TREEMAP_CHART_CONFIG_MEMBERS } from "../src/charts/treemap/config.ts";
+import { THEME_DOCUMENT_MEMBERS } from "../src/theme/tokens.ts";
 
 // `just ts-schema-check` generates the chart schemas from the R classes into a
 // temporary directory and sets RTEMIS_DRAW_SCHEMA_DIR; without it the check is
@@ -74,4 +75,21 @@ describe.skipIf(!schemaDir)("config types against the generated schemas", () => 
       expect([...members].sort()).toEqual(fromSchema);
     });
   }
+});
+
+describe.skipIf(!schemaDir)("the theme document against theme/v1", () => {
+  const read = (kind: string) =>
+    JSON.parse(readFileSync(join(schemaDir ?? "", `theme/v1/${kind}.json`), "utf8")) as {
+      properties: Record<string, unknown>;
+      required?: string[];
+    };
+  it("ThemeDocument has every theme/v1 property and no other", () => {
+    expect([...THEME_DOCUMENT_MEMBERS].sort()).toEqual(
+      Object.keys(read("schema").properties).sort(),
+    );
+  });
+  it("the record requires every member", () => {
+    const record = read("record");
+    expect([...(record.required ?? [])].sort()).toEqual([...THEME_DOCUMENT_MEMBERS].sort());
+  });
 });

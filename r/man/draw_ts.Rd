@@ -35,8 +35,9 @@ factor level, or by first appearance for other vectors.}
 
 \item{...}{Additional settings passed to \code{\link[=setup_TimeSeriesConfig]{setup_TimeSeriesConfig()}}.}
 
-\item{theme}{Optional \link{Theme}: Theme override. The palette inside the theme can be
-overridden per-chart with the \code{color} argument.}
+\item{theme}{Optional \link{Theme}: The theme a chart record was drawn with, set
+by \code{\link[=read_chart_config]{read_chart_config()}}. \code{\link[=draw]{draw()}} uses it when the caller passes no
+theme. Absent on an authored config.}
 
 \item{width}{Optional Character or Numeric: Widget width.}
 

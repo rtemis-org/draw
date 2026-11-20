@@ -360,6 +360,9 @@ method(draw, ConfusionConfig) <- function(
   ...,
   data = NULL
 ) {
+  # A config read from a chart record draws with the record's theme unless
+  # the caller passes one. spec: draw/chart-appearance#the-theme
+  theme <- theme %||% option@theme
   built <- compile(option, data = data, theme = theme)
   panels <- length(jsonlite::parse_json(built@data)[["panels"]])
   cols <- min(option@ncol, panels)

@@ -279,6 +279,9 @@ method(draw, A3Config) <- function(
   data = NULL,
   grid = NULL
 ) {
+  # A config read from a chart record draws with the record's theme unless
+  # the caller passes one. spec: draw/chart-appearance#the-theme
+  theme <- theme %||% option@theme
   data <- config_data(option, data)
   if (!is.null(grid) && !S7::S7_inherits(grid, Grid)) {
     abort(

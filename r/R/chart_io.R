@@ -159,9 +159,9 @@ settable_props <- function(config) {
 #'
 #' The check is on `origin`: a complete document has to say where every one of
 #' its values came from, and only `setup_*()` builds a map that covers every
-#' property. A config from a bare constructor has none, and one from an older
-#' writer may cover fewer properties than the class now declares -- in both
-#' cases writing it as complete would assert a provenance nobody established.
+#' property. A config from a bare constructor has none, and one from another
+#' writer may cover fewer properties than the class declares; in both cases
+#' writing it as complete would assert a provenance nobody established.
 #'
 #' @param config [ChartConfig]: The chart configuration.
 #'
@@ -226,6 +226,9 @@ chart_config_to_list <- function(config, complete = FALSE) {
     config <- as_output_config(config)
   }
   values <- S7::props(config)
+  # A record states the resolved theme it was drawn with: the config's, else the
+  # automatic one (`theme_record()`). An input config states none.
+  values[["theme"]] <- if (complete) theme_record(config@theme) else NULL
   if (!complete) {
     values <- values[!vapply(values, is.null, logical(1L))]
   }
@@ -239,8 +242,9 @@ chart_config_to_list <- function(config, complete = FALSE) {
   for (nm in names(values)) {
     # An unset property is a null on the wire, which has no container to shape
     # -- and assigning NULL into a list would delete the key rather than empty
-    # it, dropping the very entry `complete` exists to keep.
-    if (is.null(values[[nm]])) {
+    # it, dropping the entry `complete` exists to keep. The theme record is
+    # already shaped.
+    if (is.null(values[[nm]]) || identical(nm, "theme")) {
       next
     }
     spec <- prop_spec(properties[[nm]])
@@ -298,9 +302,9 @@ write_chart_config <- function(config, path, complete = FALSE) {
     null = "null",
     # 17 significant digits is what round-trips an IEEE 754 double exactly.
     # jsonlite defaults to 4 *decimal places*, which silently rounds a resolved
-    # axis limit, and even `digits = NA` loses the last bits -- so a document
-    # would draw a *nearly* identical chart, which is worse than an obviously
-    # broken one. Verified: I(15) and I(16) still lose them.
+    # axis limit, and even `digits = NA` loses the last bits, so a document
+    # would draw a chart that differs from the one written in its last digits.
+    # I(15) and I(16) also lose them.
     digits = I(17)
   )
   writeLines(as.character(json), path)
@@ -368,9 +372,21 @@ read_chart_config <- function(x) {
     names(args)
   )
   config <- do.call(setup, args)
-  for (nm in PROVENANCE_PROPS) {
+  for (nm in setdiff(PROVENANCE_PROPS, "theme")) {
     if (!is.null(parsed[[nm]])) {
       prop(config, nm) <- unlist(parsed[[nm]])
+    }
+  }
+  # The theme a record was drawn with, which draw() uses unless the caller
+  # passes one. A light theme with no token the author set is the automatic
+  # light/dark theme, recorded as light, and stays automatic.
+  recorded <- parsed[["theme"]]
+  if (!is.null(recorded)) {
+    origins <- unlist(recorded[["origin"]])
+    automatic <- identical(recorded[["scheme"]], "light") &&
+      !any(origins == "user")
+    if (!automatic) {
+      config@theme <- theme_from_list(recorded)
     }
   }
   config
@@ -400,8 +416,8 @@ unlist_scalar <- function(x) {
 #' Coerce a parsed JSON value to its property's declared type
 #'
 #' JSON has one number type, so `[0, 6]` parses back as integer and would land
-#' in a `prop_float()` as the wrong storage mode -- accepted by the validator,
-#' but no longer identical to what was written. The declared type is the
+#' in a `prop_float()` as the wrong storage mode: accepted by the validator,
+#' but not identical to what was written. The declared type is the
 #' authority, so the reader coerces to it rather than trusting what the parser
 #' guessed.
 #'
@@ -431,3 +447,33 @@ coerce_to_spec <- function(value, spec) {
   }
   coerced
 } # /rtemis.draw::coerce_to_spec
+
+
+# %% theme_from_list ----
+#' Rebuild a Theme from a parsed theme document or record
+#'
+#' @param x Named list: A parsed `theme/v1` document.
+#' @return `Theme` object, with the document's origin and writer.
+#' @keywords internal
+#' @noRd
+theme_from_list <- function(x) {
+  tokens <- x[intersect(names(x), THEME_TOKENS)]
+  tokens <- tokens[!vapply(tokens, is.null, logical(1L))]
+  tokens <- lapply(stats::setNames(nm = names(tokens)), function(nm) {
+    if (identical(nm, "echarts")) {
+      return(tokens[[nm]])
+    }
+    coerce_to_spec(
+      unlist_scalar(tokens[[nm]]),
+      prop_spec(Theme@properties[[nm]])
+    )
+  })
+  theme <- do.call(Theme, tokens)
+  if (!is.null(x[["origin"]])) {
+    theme@origin <- unlist(x[["origin"]])
+  }
+  if (!is.null(x[["writer"]])) {
+    theme@writer <- unlist(x[["writer"]])
+  }
+  theme
+} # /rtemis.draw::theme_from_list

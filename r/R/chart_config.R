@@ -19,22 +19,18 @@
 #    parallel "live" hierarchy.
 # 2. **A config carries only what the author supplies.** What the *interface*
 #    supplies -- `theme`, `width`, `height`, `element_id`, `filename` -- are
-#    arguments to `draw()` and are deliberately not properties. That is what
-#    lets one document render correctly in an IDE pane and a web app, adapting
-#    its presentation while keeping its meaning.
-
-# %% ORIGIN_VALUES ----
-# The three values a provenance entry takes. Named here so the S7 validator,
-# the emitted schema's `enum`, and `config_derive()` cannot drift apart.
-ORIGIN_VALUES <- c("user", "default", "derived")
-
+#    arguments to `draw()`. That is what lets one document render correctly in
+#    an IDE pane and a web app, adapting its presentation while keeping its
+#    meaning. A written record states the theme it was drawn with, as
+#    provenance: `theme` is a provenance property, never an authored one.
 
 # %% PROVENANCE_PROPS ----
 # The properties that describe the *document* rather than the chart. They are
-# not `setup_*()` values, they carry no origin of their own, and they are the
-# two a complete document must state -- so every place that has to treat them
-# apart from the chart's own properties reads them from here.
-PROVENANCE_PROPS <- c("origin", "writer")
+# not `setup_*()` values and carry no origin of their own: `origin` and
+# `writer`, which a complete document must state, and `theme`, the resolved
+# theme a record was drawn with -- so every place that has to treat them apart
+# from the chart's own properties reads them from here.
+PROVENANCE_PROPS <- c("origin", "writer", "theme")
 
 
 # %% ChartConfig ----
@@ -54,6 +50,9 @@ PROVENANCE_PROPS <- c("origin", "writer")
 #'   authored config; written by the interface that resolved it.
 #' @param writer Optional Named character: Which interface wrote the config, as
 #'   `name` and `version`. Absent on an authored config.
+#' @param theme Optional [Theme]: The theme a chart record was drawn with, set
+#'   by [read_chart_config()]. [draw()] uses it when the caller passes no
+#'   theme. Absent on an authored config.
 #'
 #' @return `ChartConfig` object.
 #'
@@ -112,7 +111,8 @@ ChartConfig <- new_class(
         "Which interface wrote this document, as `name` and `version`.",
         "Absent on an authored config."
       )
-    )
+    ),
+    theme = class_or_null_property(Theme)
   ),
   # The published schema states both maps as closed objects, so the class holds
   # to the same shape: an origin naming a property the chart does not have, or a
@@ -554,6 +554,9 @@ method(draw, ChartConfig) <- function(
   ...,
   data = NULL
 ) {
+  # A config read from a chart record draws with the record's theme unless
+  # the caller passes one. spec: draw/chart-appearance#the-theme
+  theme <- theme %||% option@theme
   built <- compile(option, data = data, theme = theme)
   meta <- render_meta(option, built)
   height <- height %||% render_height(option, data)

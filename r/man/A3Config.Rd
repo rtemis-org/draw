@@ -9,6 +9,7 @@ A3Config(
   title = NULL,
   origin = NULL,
   writer = NULL,
+  theme = NULL,
   n_per_row = 21L,
   position_every = 10L,
   ptm_placement = "radial",
@@ -44,6 +45,10 @@ authored config; written by the interface that resolved it.}
 
 \item{writer}{Optional Named character: Which interface wrote the config, as
 \code{name} and \code{version}. Absent on an authored config.}
+
+\item{theme}{Optional \link{Theme}: The theme a chart record was drawn with, set
+by \code{\link[=read_chart_config]{read_chart_config()}}. \code{\link[=draw]{draw()}} uses it when the caller passes no
+theme. Absent on an authored config.}
 
 \item{n_per_row}{Integer \verb{[2, Inf)}: Residues per row.}
 

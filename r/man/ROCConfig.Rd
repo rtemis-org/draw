@@ -9,6 +9,7 @@ ROCConfig(
   title = NULL,
   origin = NULL,
   writer = NULL,
+  theme = NULL,
   legend_position = "top",
   legend_placement = "outside",
   legend_title = NULL,
@@ -44,6 +45,9 @@ authored config; written by the interface that resolved it.}
 
 \item{writer}{Optional Named character: Which interface wrote the config, as
 \code{name} and \code{version}. Absent on an authored config.}
+
+\item{theme}{Optional \link{Theme}: Theme override. The palette inside the theme can be
+overridden per-chart with the \code{color} argument.}
 
 \item{legend_position}{Character \{"top", "bottom", "left", "right",
 "top-left", "top-right", "bottom-left", "bottom-right"\}: Legend anchor.

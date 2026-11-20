@@ -37,6 +37,8 @@ Theme(
   axis_name_location = NULL,
   axis_line_show = NULL,
   echarts = NULL,
+  origin = NULL,
+  writer = NULL,
   color = NULL,
   background_color = NULL,
   text_style = NULL,
@@ -113,6 +115,14 @@ ECharts' default for each axis type.}
 the projection of the tokens: objects merge recursively, any other value
 replaces, and \code{NULL} inside the patch removes a key. Keys are ECharts'
 camelCase names. Only ECharts charts read it.}
+
+\item{origin}{Optional Named character \{"user", "default", "derived"\}:
+Where each token came from, one entry per token. \code{\link[=theme_light]{theme_light()}},
+\code{\link[=theme_dark]{theme_dark()}}, and \code{Theme()} record it; a resolved theme marks the tokens
+it derived.}
+
+\item{writer}{Optional Named character: Which interface wrote the theme, as
+\code{name} and \code{version}. Absent on an authored theme.}
 
 \item{color, background_color, text_style, title, legend, tooltip, data_zoom, line, radar, bar, pie, scatter, category_axis, value_axis, log_axis, time_axis}{Deprecated; see Details.}
 }

@@ -9,6 +9,7 @@ LineConfig(
   title = NULL,
   origin = NULL,
   writer = NULL,
+  theme = NULL,
   legend_position = "top",
   legend_placement = "outside",
   legend_title = NULL,
@@ -62,6 +63,10 @@ authored config; written by the interface that resolved it.}
 
 \item{writer}{Optional Named character: Which interface wrote the config, as
 \code{name} and \code{version}. Absent on an authored config.}
+
+\item{theme}{Optional \link{Theme}: The theme a chart record was drawn with, set
+by \code{\link[=read_chart_config]{read_chart_config()}}. \code{\link[=draw]{draw()}} uses it when the caller passes no
+theme. Absent on an authored config.}
 
 \item{legend_position}{Character \{"top", "bottom", "left", "right",
 "top-left", "top-right", "bottom-left", "bottom-right"\}: Legend anchor.

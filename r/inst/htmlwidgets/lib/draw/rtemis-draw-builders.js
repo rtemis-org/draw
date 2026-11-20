@@ -70,6 +70,7 @@ var RtemisDraw = (() => {
     SPECTROGRAM_CHART_CONFIG_MEMBERS: () => SPECTROGRAM_CHART_CONFIG_MEMBERS,
     SUNBURST_CHART_CONFIG_MEMBERS: () => SUNBURST_CHART_CONFIG_MEMBERS,
     SURVIVAL_CHART_CONFIG_MEMBERS: () => SURVIVAL_CHART_CONFIG_MEMBERS,
+    THEME_DOCUMENT_MEMBERS: () => THEME_DOCUMENT_MEMBERS,
     TIMESERIES_CHART_CONFIG_MEMBERS: () => TIMESERIES_CHART_CONFIG_MEMBERS,
     TREEMAP_CHART_CONFIG_MEMBERS: () => TREEMAP_CHART_CONFIG_MEMBERS,
     ZOOM_SLIDER_ID: () => ZOOM_SLIDER_ID,
@@ -170,6 +171,7 @@ var RtemisDraw = (() => {
     radicalInverse: () => radicalInverse,
     registerRenderers: () => registerRenderers,
     repelLabels: () => repelLabels,
+    resolveTheme: () => resolveTheme,
     rollingValues: () => rollingValues,
     ruleBandwidth: () => ruleBandwidth,
     sankeyLinks: () => sankeyLinks,
@@ -1511,11 +1513,17 @@ var RtemisDraw = (() => {
     neutral: "#808080",
     positive: "#C55E28"
   });
+  var THEME_SPACING = Object.freeze({
+    axis_label_gap: 2 / 3,
+    axis_name_gap: 0.625,
+    axis_name_location: "middle"
+  });
   function lightThemeTokens(overrides = {}) {
     return Object.freeze({
       scheme: "light",
       base_font_size: 12,
       palette: RTEMIS_PALETTE,
+      ...THEME_SPACING,
       bg_color: "#ffffff",
       fg_color: "rgba(0, 0, 0, 0.7)",
       negative_color: SIGN_COLORS.negative,
@@ -1529,6 +1537,7 @@ var RtemisDraw = (() => {
       scheme: "dark",
       base_font_size: 12,
       palette: RTEMIS_PALETTE,
+      ...THEME_SPACING,
       bg_color: "#181818",
       fg_color: "rgba(255, 255, 255, 0.7)",
       title_color: "rgba(255, 255, 255, 0.9)",
@@ -1712,6 +1721,68 @@ var RtemisDraw = (() => {
       logAxis: valueAxis2,
       timeAxis: valueAxis2
     };
+  }
+  var THEME_DOCUMENT_MEMBERS = Object.freeze([
+    "scheme",
+    "font_family",
+    "base_font_size",
+    "title_font_size",
+    "subtitle_font_size",
+    "axis_label_font_size",
+    "legend_font_size",
+    "tooltip_font_size",
+    "color_scale_font_size",
+    "font_weight",
+    "title_font_weight",
+    "palette",
+    "bg_color",
+    "fg_color",
+    "title_color",
+    "subtitle_color",
+    "legend_color",
+    "axis_color",
+    "grid_color",
+    "grid_opacity",
+    "grid_style",
+    "tooltip_bg",
+    "tooltip_border_color",
+    "tooltip_color",
+    "negative_color",
+    "neutral_color",
+    "positive_color",
+    "axis_label_gap",
+    "axis_name_gap",
+    "axis_name_location",
+    "axis_line_show",
+    "echarts",
+    "origin",
+    "writer"
+  ]);
+  function resolveTheme(doc) {
+    const origin = { ...doc.origin ?? {} };
+    const out = { ...doc };
+    const derive = (name, value) => {
+      if (out[name] === void 0 || out[name] === null) {
+        out[name] = value;
+        origin[name] = "derived";
+      }
+    };
+    const base = doc.base_font_size;
+    derive("title_font_size", roundHalfEven(base * 1.2));
+    for (const name of [
+      "subtitle_font_size",
+      "axis_label_font_size",
+      "legend_font_size",
+      "tooltip_font_size",
+      "color_scale_font_size"
+    ]) {
+      derive(name, base);
+    }
+    for (const name of ["title_color", "subtitle_color", "legend_color", "tooltip_color"]) {
+      derive(name, doc.fg_color);
+    }
+    derive("font_family", DEFAULT_FONT_FAMILY);
+    return { ...out, origin };
   }
   function mergePatch(target, patch) {
     const out = { ...target };

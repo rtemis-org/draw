@@ -9,6 +9,7 @@ MermaidConfig(
   title = NULL,
   origin = NULL,
   writer = NULL,
+  theme = NULL,
   palette = NULL,
   node_color = NULL,
   fill_alpha = 0.1,
@@ -32,6 +33,10 @@ authored config; written by the interface that resolved it.}
 
 \item{writer}{Optional Named character: Which interface wrote the config, as
 \code{name} and \code{version}. Absent on an authored config.}
+
+\item{theme}{Optional \link{Theme}: The theme a chart record was drawn with, set
+by \code{\link[=read_chart_config]{read_chart_config()}}. \code{\link[=draw]{draw()}} uses it when the caller passes no
+theme. Absent on an authored config.}
 
 \item{palette}{Optional Character: Colors for categorical entities,
 overriding the theme palette. \code{NULL} uses the theme's.}

@@ -98,6 +98,12 @@ theme_size_property <- function(description) {
 #'   the projection of the tokens: objects merge recursively, any other value
 #'   replaces, and `NULL` inside the patch removes a key. Keys are ECharts'
 #'   camelCase names. Only ECharts charts read it.
+#' @param origin Optional Named character \{"user", "default", "derived"\}:
+#'   Where each token came from, one entry per token. [theme_light()],
+#'   [theme_dark()], and `Theme()` record it; a resolved theme marks the tokens
+#'   it derived.
+#' @param writer Optional Named character: Which interface wrote the theme, as
+#'   `name` and `version`. Absent on an authored theme.
 #' @param color,background_color,text_style,title,legend,tooltip,data_zoom,line,radar,bar,pie,scatter,category_axis,value_axis,log_axis,time_axis
 #'   Deprecated; see Details.
 #'
@@ -207,6 +213,28 @@ Theme <- S7::new_class(
     echarts = prop_bag(
       nullable = TRUE,
       description = "ECharts theme-object patch merged over the projection."
+    ),
+    # Provenance, as a chart config's: where each token came from, and which
+    # interface wrote a resolved theme.
+    origin = prop_string(
+      NULL,
+      enum = ORIGIN_VALUES,
+      nullable = TRUE,
+      map = TRUE,
+      description = paste(
+        "Where each token came from: 'user' if the author set it, 'default'",
+        "if the theme's constructor filled it in, 'derived' if resolving the",
+        "theme computed it from other tokens."
+      )
+    ),
+    writer = prop_string(
+      NULL,
+      nullable = TRUE,
+      map = TRUE,
+      description = paste(
+        "Which interface wrote this document, as `name` and `version`.",
+        "Absent on an authored theme."
+      )
     )
   ),
   validator = function(self) {
@@ -216,6 +244,14 @@ Theme <- S7::new_class(
     }
     if (length(self@palette) == 0L) {
       return("`palette` must hold at least one color.")
+    }
+    origin_extra <- setdiff(names(self@origin), THEME_TOKENS)
+    if (length(origin_extra) > 0L) {
+      return(paste0(
+        "@origin names tokens a theme does not have: ",
+        paste(origin_extra, collapse = ", "),
+        "."
+      ))
     }
     NULL
   },
@@ -252,6 +288,8 @@ Theme <- S7::new_class(
     axis_name_location = NULL,
     axis_line_show = NULL,
     echarts = NULL,
+    origin = NULL,
+    writer = NULL,
     color = NULL,
     background_color = NULL,
     text_style = NULL,
@@ -288,6 +326,7 @@ Theme <- S7::new_class(
       time_axis = time_axis
     )
     legacy <- legacy[!vapply(legacy, is.null, logical(1L))]
+    origin <- origin %||% theme_origin(match.call())
     if (length(legacy) > 0L) {
       warn(
         "Deprecated `Theme()` argument(s): ",
@@ -346,10 +385,41 @@ Theme <- S7::new_class(
       axis_name_gap = axis_name_gap,
       axis_name_location = axis_name_location,
       axis_line_show = axis_line_show,
-      echarts = echarts
+      echarts = echarts,
+      origin = origin,
+      writer = writer
     )
   }
 )
+
+# The tokens of a theme: every property but its provenance.
+THEME_TOKENS <- setdiff(names(Theme@properties), c("origin", "writer"))
+
+#' Where each token of a theme came from
+#'
+#' The tokens named in `call` are `"user"`, the rest `"default"`. The
+#' deprecated `Theme()` arguments map to the tokens they set: `color` to
+#' `palette`, `background_color` to `bg_color`, and the others to `echarts`;
+#' [theme_light()]'s `color` is its `palette`.
+#'
+#' @param call Call: The call of `Theme()`, [theme_light()], or [theme_dark()].
+#'
+#' @return Named character vector, one entry per token.
+#' @keywords internal
+#' @noRd
+theme_origin <- function(call) {
+  supplied <- setdiff(names(as.list(call))[-1L], "")
+  supplied[supplied == "color"] <- "palette"
+  supplied[supplied == "background_color"] <- "bg_color"
+  supplied[
+    supplied %in%
+      setdiff(names(THEME_LEGACY_ARGS), c("color", "background_color"))
+  ] <- "echarts"
+  stats::setNames(
+    ifelse(THEME_TOKENS %in% supplied, "user", "default"),
+    THEME_TOKENS
+  )
+}
 
 #' The token document of a theme
 #'
@@ -369,6 +439,10 @@ S7::method(to_list, Theme) <- function(x, ...) {
   )
   out <- out[!vapply(out, is.null, logical(1L))]
   out[["palette"]] <- I(out[["palette"]])
+  # Maps serialize as JSON objects.
+  for (map in c("origin", "writer")) {
+    if (!is.null(out[[map]])) out[[map]] <- as.list(out[[map]])
+  }
   out
 }
 
@@ -492,13 +566,94 @@ font_stack <- function(font_family) {
 }
 
 
+# -- Resolution ------------------------------------------------------------------
+
+#' Resolve a theme's derived tokens
+#'
+#' Fills the tokens a theme leaves to rules of the theme itself, and marks each
+#' one `"derived"`: the title size, 1.2 times `base_font_size` rounded half to
+#' even; the subtitle, axis label, legend, tooltip, and color scale sizes,
+#' `base_font_size`; the title, subtitle, legend, and tooltip colors,
+#' `fg_color`; and the font family, the system UI font stack. Tokens left to a
+#' backend's own default, such as `axis_color`, stay unset. A port of
+#' `resolveTheme()` in `@rtemis/draw`, held equal to it by shared fixtures.
+#'
+#' @param theme `Theme` object.
+#' @return `Theme` object with the derived tokens set and `writer` stamped.
+#' @keywords internal
+#' @noRd
+resolve_theme <- function(theme) {
+  origin <- theme@origin %||% theme_origin(quote(Theme()))
+  derive <- function(name, value) {
+    if (is.null(S7::prop(theme, name))) {
+      S7::prop(theme, name) <<- value
+      origin[[name]] <<- "derived"
+    }
+  }
+  base <- theme@base_font_size
+  # R's round() rounds half to even, as the TypeScript port does.
+  derive("title_font_size", round(base * 1.2))
+  for (name in c(
+    "subtitle_font_size",
+    "axis_label_font_size",
+    "legend_font_size",
+    "tooltip_font_size",
+    "color_scale_font_size"
+  )) {
+    derive(name, base)
+  }
+  for (name in c(
+    "title_color",
+    "subtitle_color",
+    "legend_color",
+    "tooltip_color"
+  )) {
+    derive(name, theme@fg_color)
+  }
+  derive("font_family", DEFAULT_FONT_FAMILY)
+  theme@origin <- origin
+  theme@writer <- chart_writer()
+  theme
+} # /rtemis.draw::resolve_theme
+
+#' The record of a theme
+#'
+#' The resolved theme as a list for a chart record's `theme` member: every
+#' token, unset ones as explicit nulls, with its origin and writer. `NULL`
+#' (the automatic light/dark theme) records the light theme with every origin
+#' `"default"`, so a reader may resolve it again for its own scheme.
+#'
+#' @param theme Optional `Theme` object.
+#' @return Named list.
+#' @keywords internal
+#' @noRd
+theme_record <- function(theme = NULL) {
+  if (is.null(theme)) {
+    theme <- theme_light()
+    theme@origin <- stats::setNames(
+      rep("default", length(THEME_TOKENS)),
+      THEME_TOKENS
+    )
+  }
+  resolved <- resolve_theme(theme)
+  out <- lapply(stats::setNames(nm = S7::prop_names(resolved)), function(name) {
+    S7::prop(resolved, name)
+  })
+  out[["palette"]] <- I(out[["palette"]])
+  out[["origin"]] <- as.list(out[["origin"]])
+  out[["writer"]] <- as.list(out[["writer"]])
+  out
+} # /rtemis.draw::theme_record
+
+
 # -- Built-in themes -----------------------------------------------------------
 
 #' Light Theme
 #'
 #' Returns the light theme: dark text on white, the rtemis palette, and the sign
 #' colors. Title text defaults to 1.2 times `base_font_size`; all other text to
-#' `base_font_size`.
+#' `base_font_size`. Tick labels sit 2/3 em from the plot, axis names 0.625 em
+#' clear of the tick labels, and axis names are centered on their axis.
 #'
 #' @inheritParams Theme
 #' @param font_family Optional Character: Font family name or CSS font stack,
@@ -543,9 +698,9 @@ theme_light <- function(
   title_font_weight = NULL,
   grid_opacity = NULL,
   grid_style = NULL,
-  axis_label_gap = NULL,
-  axis_name_gap = NULL,
-  axis_name_location = NULL,
+  axis_label_gap = 2 / 3,
+  axis_name_gap = 0.625,
+  axis_name_location = "middle",
   axis_line_show = NULL,
   color_scale_font_size = NULL,
   echarts = NULL
@@ -582,7 +737,8 @@ theme_light <- function(
     axis_name_location = axis_name_location,
     axis_line_show = axis_line_show,
     color_scale_font_size = color_scale_font_size,
-    echarts = echarts
+    echarts = echarts,
+    origin = theme_origin(match.call())
   )
 } # /rtemis.draw::theme_light
 
@@ -591,6 +747,7 @@ theme_light <- function(
 #' Returns the dark theme: light text on near-black, the rtemis palette, and the
 #' sign colors, which keep their contrast on either background. Title text
 #' defaults to 1.2 times `base_font_size`; all other text to `base_font_size`.
+#' The axis spacing is that of [theme_light()].
 #'
 #' @inheritParams theme_light
 #' @return [Theme]: Theme object.
@@ -625,9 +782,9 @@ theme_dark <- function(
   title_font_weight = NULL,
   grid_opacity = NULL,
   grid_style = NULL,
-  axis_label_gap = NULL,
-  axis_name_gap = NULL,
-  axis_name_location = NULL,
+  axis_label_gap = 2 / 3,
+  axis_name_gap = 0.625,
+  axis_name_location = "middle",
   axis_line_show = NULL,
   color_scale_font_size = NULL,
   echarts = NULL
@@ -664,6 +821,7 @@ theme_dark <- function(
     axis_name_location = axis_name_location,
     axis_line_show = axis_line_show,
     color_scale_font_size = color_scale_font_size,
-    echarts = echarts
+    echarts = echarts,
+    origin = theme_origin(match.call())
   )
 } # /rtemis.draw::theme_dark
