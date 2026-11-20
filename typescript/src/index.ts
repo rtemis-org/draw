@@ -334,6 +334,8 @@ export {
   SIZE_KEY_ID,
   sizeKeyValues,
 } from "./layout/keys.ts";
+export type { LayoutRect, MeasuredLayout } from "./layout/measure.ts";
+export { measureLayout } from "./layout/measure.ts";
 export { colorRamp, dark3, divergingRamp, hcl } from "./shared/color.ts";
 export type { ColormapName } from "./shared/colormaps.ts";
 export { COLORMAPS } from "./shared/colormaps.ts";

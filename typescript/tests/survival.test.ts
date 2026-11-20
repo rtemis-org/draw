@@ -121,7 +121,7 @@ describe("the risk strip renderer", () => {
     fontSize: 12,
     labels: ["10", "8"],
     caption: "At risk",
-    captionX: 29,
+    captionOffset: 41,
     textColor: "#333333",
   };
   const api = (time: number, row: number) => ({
@@ -146,9 +146,9 @@ describe("the risk strip renderer", () => {
       fill: "#ff0000",
     });
   });
-  it("draws the caption rotated beside the rows", () => {
+  it("draws the caption rotated beside the rows, left of the plot's edge", () => {
     const el = render({ itemPayload: payload, dataIndex: 0 }, api(0, -1));
-    expect(el).toMatchObject({ x: 29, rotation: Math.PI / 2 });
+    expect(el).toMatchObject({ x: 100 - 41, rotation: Math.PI / 2 });
     expect(el.style).toMatchObject({ text: "At risk", fill: "#333333" });
   });
 });
@@ -168,5 +168,26 @@ describe("layoutSurvivalRisk", () => {
     expect(rows[0]?.itemPayload).toMatchObject({ offset, lineHeight: 24, fontSize: 15 });
     expect((option.grid as { bottom: number }).bottom).toBe(offset + 24 + 10);
     expect(option.xAxis).toMatchObject({ axisLabel: { showMinLabel: true, showMaxLabel: true } });
+  });
+
+  it("places the caption where the y axis name sits", () => {
+    const captionOffset = (yAxis: Record<string, unknown> | null) => {
+      const option = buildSurvivalOption(
+        { curves: [curve], risk: { time: [0, 5], counts: [[10, 1]] } },
+        { risk_table: true },
+      );
+      if (yAxis) Object.assign(option.yAxis as object, yAxis);
+      const rows = seriesOf(layoutSurvivalRisk(option)).filter((s) => s.renderItem);
+      return (rows[0]?.itemPayload as { captionOffset: number } | undefined)?.captionOffset;
+    };
+    // The builder's centered name, its 12-pixel text 45 pixels left of the
+    // plot: its center 51 pixels left.
+    expect(captionOffset(null)).toBe(51);
+    expect(captionOffset({ nameGap: 60 })).toBe(66);
+    expect(captionOffset({ nameGap: 80, nameTextStyle: { fontSize: 16 } })).toBe(88);
+    // A smaller gap: ECharts moves the name clear of the tick labels.
+    expect(captionOffset({ nameGap: 20 })).toBe(51);
+    // A name at an end of the axis leaves the caption in its place.
+    expect(captionOffset({ nameGap: 60, nameLocation: "end" })).toBe(51);
   });
 });

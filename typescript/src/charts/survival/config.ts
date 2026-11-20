@@ -150,6 +150,8 @@ export function survivalMedian(curve: Pick<SurvivalCurve, "time" | "survival">):
 // The strip's space: a gap under the time axis name, rows 1.6 times the
 // axis label font, and a pad at the canvas bottom.
 const RISK_GAP = 12;
+/** The builder's gap between the plot's left edge and the y axis name. */
+const Y_NAME_GAP = 45;
 const RISK_PAD = 10;
 
 /**
@@ -402,8 +404,8 @@ export function buildSurvivalOption(
       rows: curves.length,
       fontSize: 0,
       caption: "At risk",
-      // Where the y axis name sits: its gap left of the grid.
-      captionX: grid.left - 45 + 4,
+      // `layoutSurvivalRisk()` sets it from the y axis name below.
+      captionOffset: 0,
       textColor:
         appearance.textColor ?? (appearance.dark ? darkThemeTokens() : lightThemeTokens()).fg_color,
     };
@@ -463,7 +465,7 @@ export function buildSurvivalOption(
       max: 1,
       name: config.ylab ?? "Survival probability",
       nameLocation: "middle",
-      nameGap: 45,
+      nameGap: Y_NAME_GAP,
     },
     legend: {
       show: legendShown,
@@ -482,9 +484,14 @@ export function buildSurvivalOption(
  * axis name, at the axis label font size: each row is 1.6 times that size,
  * the strip starts 12 pixels below the name (`nameGap`, the name's font
  * size, and any `textMargin` above and below it),
- * and the grid's bottom margin holds the axis band and the rows. A host that
- * restyles the time axis after the build calls it again. Mutates and returns
- * `option`; an option without the strip is returned as it is.
+ * and the grid's bottom margin holds the axis band and the rows. The caption
+ * "At risk" is centered where a centered y axis name is: `nameGap` plus half
+ * the name's font size left of the plot, the gap at least the builder's 45
+ * pixels, since ECharts moves a name with a smaller gap clear of the tick
+ * labels; with the name at an end of the axis, the caption keeps the
+ * builder's place. A host that restyles either axis
+ * after the build calls it again. Mutates and returns `option`; an option
+ * without the strip is returned as it is.
  */
 export function layoutSurvivalRisk<T extends Record<string, unknown>>(option: T): T {
   const series = Array.isArray(option.series) ? (option.series as Record<string, unknown>[]) : [];
@@ -509,11 +516,19 @@ export function layoutSurvivalRisk<T extends Record<string, unknown>>(option: T)
       : [0, 0];
   const offset = nameGap + above + Math.ceil(size(x?.nameTextStyle) * 1.3) + below + RISK_GAP;
   const lineHeight = Math.round(fontSize * 1.6);
+  const y = (Array.isArray(option.yAxis) ? option.yAxis[0] : option.yAxis) as
+    | Record<string, unknown>
+    | undefined;
+  const centered = y?.nameLocation === "middle" || y?.nameLocation === "center";
+  const yGap = centered && typeof y?.nameGap === "number" ? y.nameGap : Y_NAME_GAP;
+  // ECharts puts a centered name's edge nearest the axis `nameGap` from it, so
+  // the name's center lies half its font size further out.
+  const captionOffset = Math.max(yGap, Y_NAME_GAP) + size(y?.nameTextStyle) / 2;
   let rows = 0;
   for (const s of strips) {
     const payload = s.itemPayload as RiskPayload;
     rows = payload.rows;
-    s.itemPayload = { ...payload, offset, lineHeight, fontSize };
+    s.itemPayload = { ...payload, offset, lineHeight, fontSize, captionOffset };
   }
   // Each risk time is a labeled column, the first and last included, whatever
   // a host's restyling hides at the axis ends.

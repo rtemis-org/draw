@@ -26,9 +26,10 @@ export interface RiskPayload {
   readonly fontSize: number;
   /** Count text by data index. */
   readonly labels: readonly string[];
-  /** Caption text, drawn rotated at `captionX` beside the rows. */
+  /** Caption text, drawn rotated `captionOffset` pixels left of the plot's
+   *  left edge, beside the rows. */
   readonly caption: string;
-  readonly captionX: number;
+  readonly captionOffset: number;
   readonly textColor: string;
 }
 
@@ -41,7 +42,8 @@ export const survivalRenderers: Readonly<Record<string, (params: Params, api: Ap
   // and its text takes the curve's color. The counts sit under the time
   // axis's own coordinate of each time, so they stay aligned with its ticks
   // through resizing; the rows start `offset` pixels below the plot's bottom
-  // edge, the coordinate of survival 0.
+  // edge, the coordinate of survival 0. The caption's datum is at the time
+  // axis's minimum, so its coordinate is the plot's left edge.
   [SURVIVAL_RISK]: (params, api) => {
     const p = params.itemPayload;
     const [x, edge] = api.coord([api.value(0), 0]) as [number, number];
@@ -50,7 +52,7 @@ export const survivalRenderers: Readonly<Record<string, (params: Params, api: Ap
     if (row < 0) {
       return {
         type: "text",
-        x: p.captionX,
+        x: x - p.captionOffset,
         y: top + (p.rows * p.lineHeight) / 2,
         rotation: Math.PI / 2,
         style: {

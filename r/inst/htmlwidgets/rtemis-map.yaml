@@ -8,7 +8,7 @@ dependencies:
     src: htmlwidgets/lib/draw
     script: vector_theme.js
   - name: rtemis-draw-builders
-    version: 0.9.1
+    version: 0.9.2
     src: htmlwidgets/lib/draw
     script: rtemis-draw-builders.js
   - name: rtemis-theme-watch

@@ -105,4 +105,4 @@ just ts-bundle-check  # fail when the R package's copy differs from a fresh buil
 
 ## License
 
-[BSD 3-Clause](LICENSE.txt)
+[BSD 3-Clause](LICENSE.txt). The continuous color schemes come from viridisLite (MIT) and, for turbo, Google LLC (Apache License 2.0); their notices are in [LICENSE-THIRD-PARTY.txt](LICENSE-THIRD-PARTY.txt).

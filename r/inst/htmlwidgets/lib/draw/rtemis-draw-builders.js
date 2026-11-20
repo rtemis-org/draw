@@ -150,6 +150,7 @@ var RtemisDraw = (() => {
     lightThemeTokens: () => lightThemeTokens,
     lineAspect: () => lineAspect,
     mapFeatures: () => mapFeatures,
+    measureLayout: () => measureLayout,
     networkReducers: () => networkReducers,
     normalizeLocation: () => normalizeLocation,
     pieSlices: () => pieSlices,
@@ -1090,9 +1091,9 @@ var RtemisDraw = (() => {
     const magnitude = Math.abs(value);
     if (magnitude < 1e-3 || magnitude >= 1e15) return value.toExponential(digits - 1);
     if (Math.floor(Math.log10(magnitude)) + 1 >= digits) return value.toFixed(0);
-    const rounded = Number(value.toPrecision(digits));
-    const decimals = Math.max(0, digits - 1 - Math.floor(Math.log10(Math.abs(rounded))));
-    return rounded.toFixed(decimals);
+    const rounded2 = Number(value.toPrecision(digits));
+    const decimals = Math.max(0, digits - 1 - Math.floor(Math.log10(Math.abs(rounded2))));
+    return rounded2.toFixed(decimals);
   }
   function tooltipValue(value) {
     return formatNumber(value);
@@ -3690,7 +3691,7 @@ ${rate(r.balancedAccuracy)}`, summary2) }
       Number.parseInt(m[3], 16)
     ];
   }
-  var hex2 = (v, round = Math.round) => round(Math.min(255, Math.max(0, v))).toString(16).padStart(2, "0").toUpperCase();
+  var hex2 = (v, round2 = Math.round) => round2(Math.min(255, Math.max(0, v))).toString(16).padStart(2, "0").toUpperCase();
   function colorRamp(colors, n) {
     const stops = colors.map(rgbOf);
     if (stops.length === 0) throw new Error("A color ramp needs at least one color.");
@@ -5601,7 +5602,7 @@ ${rate(r.balancedAccuracy)}`, summary2) }
     const blockW = vertical ? Math.max(...parts.map((p) => p.w)) : parts.reduce((sum, p) => sum + p.w, 0) + GAP * (parts.length - 1);
     const blockH = vertical ? parts.reduce((sum, p) => sum + p.h, 0) + GAP * (parts.length - 1) : Math.max(...parts.map((p) => p.h));
     const authored = [option.grid ?? {}].flat()[0] ?? {};
-    const px = (v, extent, fallback) => typeof v === "number" ? v : typeof v === "string" && v.endsWith("%") ? Number.parseFloat(v) * extent / 100 : fallback;
+    const px = (v, extent2, fallback) => typeof v === "number" ? v : typeof v === "string" && v.endsWith("%") ? Number.parseFloat(v) * extent2 / 100 : fallback;
     const side = placement.side;
     const extra = placement.inside ? 0 : (vertical ? blockW : blockH) + GAP;
     const margin = (s) => px(authored[s], s === "left" || s === "right" ? width : height, 36);
@@ -9224,7 +9225,8 @@ ${rate(r.balancedAccuracy)}`, summary2) }
     // and its text takes the curve's color. The counts sit under the time
     // axis's own coordinate of each time, so they stay aligned with its ticks
     // through resizing; the rows start `offset` pixels below the plot's bottom
-    // edge, the coordinate of survival 0.
+    // edge, the coordinate of survival 0. The caption's datum is at the time
+    // axis's minimum, so its coordinate is the plot's left edge.
     [SURVIVAL_RISK]: (params, api) => {
       const p = params.itemPayload;
       const [x, edge] = api.coord([api.value(0), 0]);
@@ -9233,7 +9235,7 @@ ${rate(r.balancedAccuracy)}`, summary2) }
       if (row < 0) {
         return {
           type: "text",
-          x: p.captionX,
+          x: x - p.captionOffset,
           y: top + p.rows * p.lineHeight / 2,
           rotation: Math.PI / 2,
           style: {
@@ -9305,6 +9307,7 @@ ${rate(r.balancedAccuracy)}`, summary2) }
     return (t[i] + end) / 2;
   }
   var RISK_GAP = 12;
+  var Y_NAME_GAP = 45;
   var RISK_PAD = 10;
   function buildSurvivalOption(data, config, appearance = {}) {
     const curves = data.curves.filter((c) => c.time.length > 0);
@@ -9523,8 +9526,8 @@ ${rate(r.balancedAccuracy)}`, summary2) }
         rows: curves.length,
         fontSize: 0,
         caption: "At risk",
-        // Where the y axis name sits: its gap left of the grid.
-        captionX: grid.left - 45 + 4,
+        // `layoutSurvivalRisk()` sets it from the y axis name below.
+        captionOffset: 0,
         textColor: appearance.textColor ?? (appearance.dark ? darkThemeTokens() : lightThemeTokens()).fg_color
       };
       curves.forEach((_, i) => {
@@ -9578,7 +9581,7 @@ ${rate(r.balancedAccuracy)}`, summary2) }
         max: 1,
         name: config.ylab ?? "Survival probability",
         nameLocation: "middle",
-        nameGap: 45
+        nameGap: Y_NAME_GAP
       },
       legend: {
         show: legendShown,
@@ -9606,11 +9609,15 @@ ${rate(r.balancedAccuracy)}`, summary2) }
     const [above, below] = Array.isArray(margin) ? [Number(margin[0]) || 0, Number(margin[2] ?? margin[0]) || 0] : typeof margin === "number" ? [margin, margin] : [0, 0];
     const offset = nameGap + above + Math.ceil(size(x?.nameTextStyle) * 1.3) + below + RISK_GAP;
     const lineHeight = Math.round(fontSize * 1.6);
+    const y = Array.isArray(option.yAxis) ? option.yAxis[0] : option.yAxis;
+    const centered = y?.nameLocation === "middle" || y?.nameLocation === "center";
+    const yGap = centered && typeof y?.nameGap === "number" ? y.nameGap : Y_NAME_GAP;
+    const captionOffset = Math.max(yGap, Y_NAME_GAP) + size(y?.nameTextStyle) / 2;
     let rows = 0;
     for (const s of strips) {
       const payload = s.itemPayload;
       rows = payload.rows;
-      s.itemPayload = { ...payload, offset, lineHeight, fontSize };
+      s.itemPayload = { ...payload, offset, lineHeight, fontSize, captionOffset };
     }
     if (x) x.axisLabel = { ...x.axisLabel, showMinLabel: true, showMaxLabel: true };
     const grid = Array.isArray(option.grid) ? option.grid[0] : option.grid;
@@ -10699,6 +10706,84 @@ ${rate(r.balancedAccuracy)}`, summary2) }
           opacity: over && source !== over && target !== over ? Math.min(edgeOpacity, 0.06) : edgeOpacity
         };
       }
+    };
+  }
+
+  // src/layout/measure.ts
+  var round = (v) => Math.round(v * 10) / 10;
+  var rounded = (r) => ({
+    x: round(r.x),
+    y: round(r.y),
+    width: round(r.width),
+    height: round(r.height)
+  });
+  function blank(color) {
+    if (color === null || color === void 0 || color === "none" || color === "transparent") {
+      return true;
+    }
+    return typeof color === "string" && /^rgba\(.*,\s*0(\.0*)?\s*\)$/.test(color);
+  }
+  function paints(el) {
+    const style = el.style ?? {};
+    if (typeof style.text === "string") return style.text.length > 0;
+    if (!blank(style.fill)) return true;
+    const width = typeof style.lineWidth === "number" ? style.lineWidth : 1;
+    return !blank(style.stroke) && width > 0;
+  }
+  function extent(group, keep = () => true) {
+    let x0 = Number.POSITIVE_INFINITY;
+    let y0 = Number.POSITIVE_INFINITY;
+    let x1 = Number.NEGATIVE_INFINITY;
+    let y1 = Number.NEGATIVE_INFINITY;
+    group.traverse((el) => {
+      if (el.isGroup || el.invisible || el.ignore || !paints(el) || !keep(el)) return;
+      const r = el.getBoundingRect().clone();
+      r.applyTransform(el.getComputedTransform());
+      if (!(r.width > 0 || r.height > 0)) return;
+      x0 = Math.min(x0, r.x);
+      y0 = Math.min(y0, r.y);
+      x1 = Math.max(x1, r.x + r.width);
+      y1 = Math.max(y1, r.y + r.height);
+    });
+    return Number.isFinite(x0) ? rounded({ x: x0, y: y0, width: x1 - x0, height: y1 - y0 }) : null;
+  }
+  function componentExtent(chart, type, keep) {
+    const model = chart.getModel().getComponent(type);
+    if (!model || model.get("show") === false) return null;
+    const view = chart.getViewOfComponentModel(model);
+    return view ? extent(view.group, keep) : null;
+  }
+  var isGradient = (el) => {
+    const fill = el.style?.fill;
+    return Boolean(fill && typeof fill === "object" && fill.colorStops);
+  };
+  function measureLayout(chart) {
+    const model = chart.getModel();
+    const plots = [];
+    for (let i = 0; ; i++) {
+      const grid = model.getComponent("grid", i);
+      if (!grid) break;
+      const rect = grid.coordinateSystem?.getRect?.();
+      if (rect && rect.width > 0) plots.push(rounded(rect));
+    }
+    const fromGrid = plots.length > 0;
+    if (!fromGrid && chart.getViewOfSeriesModel) {
+      for (const series of model.getSeries?.() ?? []) {
+        const view = chart.getViewOfSeriesModel(series);
+        const rect = view ? extent(view.group) : null;
+        if (rect) plots.push(rect);
+      }
+    }
+    const scale = model.getComponent("visualMap");
+    const scaleView = scale && scale.get("show") !== false ? chart.getViewOfComponentModel(scale) : void 0;
+    return {
+      pane: { width: chart.getWidth(), height: chart.getHeight() },
+      plots,
+      plotsFrom: fromGrid ? "grid" : plots.length > 0 ? "series" : "none",
+      legend: componentExtent(chart, "legend"),
+      colorScale: scaleView ? extent(scaleView.group) : null,
+      colorScaleBar: scaleView ? extent(scaleView.group, isGradient) : null,
+      title: componentExtent(chart, "title")
     };
   }
 

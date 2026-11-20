@@ -38,6 +38,7 @@ rtemis renderers and bindings are shipped as readable source in
 | Package | Version | Source | License notices |
 | --- | --- | --- | --- |
 | claygl | 1.3.0 | [npm](https://www.npmjs.com/package/claygl/v/1.3.0) | [claygl@1.3.0.txt](claygl@1.3.0.txt) |
+| @rtemis/draw color schemes (viridisLite 0.4.3; turbo, Google LLC) | 0.9.1 | [npm](https://www.npmjs.com/package/@rtemis/draw/v/0.9.1) | [rtemis-draw-colormaps.txt](rtemis-draw-colormaps.txt) |
 | d3-array | 3.2.4 | [npm](https://www.npmjs.com/package/d3-array/v/3.2.4) | [d3-array@3.2.4.txt](d3-array@3.2.4.txt) |
 | d3-color | 3.1.0 | [npm](https://www.npmjs.com/package/d3-color/v/3.1.0) | [d3-color@3.1.0.txt](d3-color@3.1.0.txt) |
 | d3-geo | 3.1.1 | [npm](https://www.npmjs.com/package/d3-geo/v/3.1.1) | [d3-geo@3.1.1.txt](d3-geo@3.1.1.txt) |
