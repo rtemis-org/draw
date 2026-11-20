@@ -2,10 +2,12 @@
 // starts a browser and never embeds a raster snapshot. @rtemis/draw's network
 // and choropleth functions own the graph layout and styling and the map's
 // joins and classes, as in the interactive widgets.
+// vector_theme.js reads theme documents through the `RtemisDraw` global.
+const builders = require('../htmlwidgets/lib/draw/rtemis-draw-builders.js');
+globalThis.RtemisDraw = globalThis.RtemisDraw || builders;
 const themeUtils = require('../htmlwidgets/lib/draw/vector_theme.js');
 const esc = themeUtils.escape;
 const graphDeps = require('./graph-deps.js');
-const builders = require('../htmlwidgets/lib/draw/rtemis-draw-builders.js');
 const mapDeps = require('./map-deps.js');
 const echarts = require('../htmlwidgets/lib/echarts/echarts.min.js');
 const number = n => {
@@ -25,7 +27,8 @@ function frame(x, content) {
 function graphGeometry(x) {
   const t = themeUtils.resolve(x.theme), config = x.config || {}, model = x.model || {};
   const graph = builders.buildNetworkGraph({...model, nodes: model.nodes || [], edges: model.edges || []}, config, graphDeps);
-  const scene = builders.networkReducers(graph, config, {label_color: t.fg, font_family: t.fontFamily, scheme: t.dark ? 'dark' : 'light'});
+  const appearance = x.theme ? builders.networkTheme(x.theme) : {label_color: t.fg, font_family: t.fontFamily, scheme: 'light'};
+  const scene = builders.networkReducers(graph, config, appearance);
   const attrs = graph.mapNodes((id, a) => a);
   const extent = {x:[0,1], y:[0,1]};
   if (attrs.length) for (const axis of ['x','y']) {

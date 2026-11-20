@@ -228,7 +228,7 @@ test_that("calibration SVG retains actual curve and rug marks", {
       height = 600
     )
     no_diagonal <- paste(readLines(path, warn = FALSE), collapse = "\n")
-    first_color <- to_list(theme)[["color"]][[1L]]
+    first_color <- theme@palette[[1L]]
     expect_match(with_diagonal, first_color, fixed = TRUE)
     expect_match(no_diagonal, first_color, fixed = TRUE)
   }

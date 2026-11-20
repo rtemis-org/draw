@@ -220,31 +220,22 @@ render_widget <- function(
   height = NULL,
   element_id = NULL
 ) {
-  # Theme resolution is uniform across backends:
-  #   NA   -> no theme (raw backend defaults)
-  #   NULL -> auto-detect: send both light + dark, let JS pick by dark mode
-  #   Theme / list -> an explicit theme
+  # Theme resolution is uniform across backends; each widget projects the
+  # token documents with @rtemis/draw:
+  #   NA    -> no theme (raw backend defaults)
+  #   NULL  -> auto-detect: send the light and dark documents, JS picks by mode
+  #   Theme -> an explicit theme
+  theme <- as_theme(theme)
   auto_theme <- FALSE
   theme_list <- NULL
   theme_dark_list <- NULL
-  if (identical(theme, NA)) {
-    theme_list <- NULL
-  } else if (is.null(theme)) {
+  if (is.null(theme)) {
     auto_theme <- TRUE
     theme_list <- to_list(theme_light())
     theme_dark_list <- to_list(theme_dark())
   } else if (S7::S7_inherits(theme, Theme)) {
     theme_list <- to_list(theme)
-  } else if (is.list(theme)) {
-    theme_list <- theme
   }
-
-  # htmlwidgets serializes with `keep_vec_names = TRUE`, so a *named* palette
-  # reaches the browser as a JSON object where ECharts expects an array, and the
-  # chart renders with no colors. The palette is unnamed at every site that
-  # builds one; this is the backstop for a Theme assembled some other way.
-  theme_list[["color"]] <- palette_colors(theme_list[["color"]])
-  theme_dark_list[["color"]] <- palette_colors(theme_dark_list[["color"]])
 
   payload <- c(
     payload,

@@ -456,7 +456,7 @@ spectrogram_request <- function(
       negative = sign[["negative"]],
       positive = sign[["positive"]]
     )
-    appearance[["background"]] <- theme@background_color
+    appearance[["background"]] <- theme@bg_color
   }
   BuildRequest(
     type = "spectrogram",

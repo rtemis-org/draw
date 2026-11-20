@@ -26,14 +26,13 @@ HTMLWidgets.widget({
     let currentPayload = null;
     let renderedDark = null;
 
-    // Resolve the active theme list (echarts-shaped) -> the few colors sigma
-    // needs: page background, label color, font family. Dark-mode detection is
-    // shared with the other bindings (lib/draw/theme_watch.js).
+    // The active theme document (light or dark by the page when automatic) and
+    // the background, label color, font, and scheme it states. Dark-mode
+    // detection is shared with the other bindings (lib/draw/theme_watch.js).
     const resolveTheme = (x) => {
       renderedDark = window.RtemisThemeWatch.isDark();
-      return window.RtemisVectorTheme.resolve(
-        x.autoTheme && renderedDark ? x.themeDark : x.theme
-      );
+      const doc = x.autoTheme && renderedDark ? x.themeDark : x.theme;
+      return { doc, ...window.RtemisVectorTheme.resolve(doc) };
     };
 
     // Containers: a graph surface plus a hover tooltip + optional title overlay,
@@ -107,11 +106,15 @@ HTMLWidgets.widget({
       const reducers = window.RtemisDraw.networkReducers(
         graph,
         config,
-        {
-          label_color: theme.fg,
-          font_family: theme.fontFamily,
-          scheme: theme.dark ? "dark" : "light",
-        },
+        // The reducers' appearance from the theme document (palette, sign
+        // colors, label color, font, scheme); without one, neutral defaults.
+        theme.doc
+          ? window.RtemisDraw.networkTheme(theme.doc)
+          : {
+              label_color: theme.fg,
+              font_family: theme.fontFamily,
+              scheme: "light",
+            },
         () => hovered
       );
       const colorByGroup = !!config.color_by_group;

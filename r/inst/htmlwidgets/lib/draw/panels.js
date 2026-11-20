@@ -11,7 +11,7 @@
   function background(payload, dark = false) {
     const colors = payload.panels.map(panel => {
       const theme = panel.autoTheme && dark ? panel.themeDark : panel.theme;
-      const color = panel.option?.backgroundColor || theme?.backgroundColor;
+      const color = panel.option?.backgroundColor || theme?.bg_color;
       // ECharts also accepts gradients; those remain local to their child.
       return typeof color === 'string' ? color : 'transparent';
     });

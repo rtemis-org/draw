@@ -358,16 +358,33 @@ export type { RepelLabelParams, RepelLabelPosition } from "./shared/repel.ts";
 export { applyRepelLabels, repelLabels } from "./shared/repel.ts";
 export type { ColumnarSource, ColumnNames, ColumnType, TabularData } from "./shared/source.ts";
 export { timeLabel, timeMs } from "./shared/source.ts";
-export type { ColorScheme, ThemeTokens } from "./theme/tokens.ts";
+export type { ChoroplethTheme, NetworkTheme } from "./theme/backends.ts";
+export {
+  choroplethTheme,
+  DIAGRAM_GRAYS,
+  DIAGRAM_SERIES,
+  diagramTheme,
+  flattenColor,
+  networkTheme,
+} from "./theme/backends.ts";
+export type {
+  AxisNameLocation,
+  ColorScheme,
+  FontWeight,
+  ThemeDocument,
+  ThemeTokens,
+} from "./theme/tokens.ts";
 export {
   DEFAULT_FONT_FAMILY,
   darkThemeTokens,
   fontStack,
   lightThemeTokens,
+  mergePatch,
   RTEMIS_PALETTE,
   SERIES_THEME,
   SIGN_COLORS,
   themeFontSizes,
+  themeObject,
   themeOption,
   zoomSliderStyle,
 } from "./theme/tokens.ts";

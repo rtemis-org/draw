@@ -1,73 +1,22 @@
-// Pele CSS variables from a resolved draw theme, shared by the rtemis-diagram
-// widget and SVG export. No DOM dependency.
+// Pele CSS variables from a theme document, shared by the rtemis-diagram widget
+// and SVG export. No DOM dependency.
 // spec: draw/mermaid-diagrams#theme-mapping
 (function(root, factory) {
   if (typeof module === 'object' && module.exports) module.exports = factory();
   else root.RtemisDiagramTheme = factory();
 })(typeof globalThis !== 'undefined' ? globalThis : this, function() {
-  // Neutral grays for every uncolored element. Nodes sit closer to the
-  // background than subgraphs, in both schemes.
-  const GRAYS = {
-    light: {
-      muted: '#6e6e6e', line: '#5c5c5c', surface: '#f3f3f3',
-      'surface-alt': '#e6e6e6', border: '#8a8a8a'
-    },
-    dark: {
-      muted: '#999999', line: '#a3a3a3', surface: '#232323',
-      'surface-alt': '#2e2e2e', border: '#6a6a6a'
-    }
-  };
   // Pele cycles its categorical colors over eight variables.
   const SERIES = 8;
 
-  function hex(color) {
-    let h = String(color || '').trim().replace('#', '');
-    if (h.length === 3) h = [...h].map(c => c + c).join('');
-    return /^[0-9a-f]{6}$/i.test(h) ? h.toLowerCase() : null;
-  }
-
-  function isDark(color) {
-    const h = hex(color);
-    if (!h) return false;
-    const [r, g, b] = [0, 2, 4].map(i => parseInt(h.slice(i, i + 2), 16));
-    return 0.299 * r + 0.587 * g + 0.114 * b < 127.5;
-  }
-
-  // An rgba() color composited over the background, as an opaque hex color,
-  // so exported files carry no alpha the background would otherwise supply.
-  function flatten(color, bg) {
-    const m = /^rgba?\(\s*([\d.]+)\s*,\s*([\d.]+)\s*,\s*([\d.]+)\s*(?:,\s*([\d.]+)\s*)?\)$/i
-      .exec(String(color || '').trim());
-    if (!m) return color;
-    const a = m[4] === undefined ? 1 : Number(m[4]);
-    const base = hex(bg) || 'ffffff';
-    const out = [1, 2, 3].map((k, i) => {
-      const under = parseInt(base.slice(2 * i, 2 * i + 2), 16);
-      const v = Math.round(a * Number(m[k]) + (1 - a) * under);
-      return Math.max(0, Math.min(255, v)).toString(16).padStart(2, '0');
-    });
-    return '#' + out.join('');
-  }
-
-  // Variable values (names without the `--pele-` prefix) for `theme`, an
-  // ECharts-shaped theme list, and `style`, the widget payload's style. A null
-  // theme sets only the colors the payload states.
+  // Variable values (names without the `--pele-` prefix) for `theme`, a theme
+  // document (R's `Theme`) projected by @rtemis/draw's `diagramTheme()` on the
+  // `RtemisDraw` global, and `style`, the widget payload's style, whose palette
+  // and critical color take precedence. A null theme sets only the colors the
+  // payload states.
   function vars(theme, style) {
     const s = style || {};
-    const out = {};
-    if (theme) {
-      const bg = theme.backgroundColor || '#ffffff';
-      const grays = GRAYS[isDark(bg) ? 'dark' : 'light'];
-      out.bg = bg;
-      if (theme.textStyle && theme.textStyle.color) {
-        out.fg = flatten(theme.textStyle.color, bg);
-      }
-      Object.assign(out, grays);
-      if (theme.textStyle && theme.textStyle.fontFamily) {
-        out.font = theme.textStyle.fontFamily;
-      }
-    }
-    const palette = s.palette || (theme && theme.color) || null;
+    const out = theme ? globalThis.RtemisDraw.diagramTheme(theme) : {};
+    const palette = s.palette || (theme && theme.palette) || null;
     // A palette shorter than eight colors is recycled, so every categorical
     // color comes from it.
     if (palette && palette.length) {
@@ -86,9 +35,7 @@
     const out = {autoDirection: !!s.autoDirection};
     if (s.fontSize != null) out.fontSize = s.fontSize;
     if (s.padding != null) out.padding = s.padding;
-    if (theme && theme.textStyle && theme.textStyle.fontFamily) {
-      out.fontFamily = theme.textStyle.fontFamily;
-    }
+    if (theme) out.fontFamily = globalThis.RtemisDraw.fontStack(theme.font_family);
     if (idPrefix) out.idPrefix = idPrefix;
     return out;
   }
@@ -172,5 +119,5 @@
       aliases[name] !== undefined ? aliases[name] : all);
   }
 
-  return {GRAYS, SERIES, isDark, flatten, vars, options, colorNodes, inline};
+  return {SERIES, vars, options, colorNodes, inline};
 });

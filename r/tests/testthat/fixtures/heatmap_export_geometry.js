@@ -76,7 +76,7 @@ for (const payload of input.charts) {
       // The derived scale runs through the theme's background at zero, the
       // midpoint of a range symmetric about it.
       const colors = visualMap.get('inRange').color;
-      assert.equal(colors[50].toLowerCase(), payload.theme.backgroundColor.toLowerCase());
+      assert.equal(colors[50].toLowerCase(), payload.theme.bg_color.toLowerCase());
     }
   } finally {widget.dispose();}
 }

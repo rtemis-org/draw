@@ -24,16 +24,34 @@ const option = builders.a3(a3Document, config)
 
 ## Charts
 
-| Type | Builder | Data | Config schema |
+Each chart type has a config schema at `https://schema.rtemis.org/chart/<type>/v1/schema.json` and a builder, or for a network or map a set of functions, that takes the data the host prepared and the config. `builders` maps each ECharts chart type to its builder.
+
+| Type | Renderer | Function | Data |
 |---|---|---|---|
-| `a3` | `buildA3Option(document, config, appearance)` | an A3 document (`@rtemis/a3` `A3Data`) | `https://schema.rtemis.org/chart/a3/v1/schema.json` |
-| `bar` | `buildBarOption(data, config, appearance)` | tabular data, `{columns, levels, types}` | `https://schema.rtemis.org/chart/bar/v1/schema.json` |
-| `line` | `buildLineOption(data, config, appearance)` | tabular data, `{columns, levels, types}` | `https://schema.rtemis.org/chart/line/v1/schema.json` |
-| `boxplot` | `buildBoxplotOption(data, config, appearance)` | box summaries, `{variables, levels, cells, comparisons}` | `https://schema.rtemis.org/chart/boxplot/v1/schema.json` |
-| `confusion` | `buildConfusionOption(data, config, appearance)` | counts, `{classes, panels}` | `https://schema.rtemis.org/chart/confusion/v1/schema.json` |
-| `roc`, `pr` | `buildRocOption(data, config, appearance)`, `buildPrOption(data, config, appearance)` | grouped curves, `{groups, curves}` | `https://schema.rtemis.org/chart/roc/v1/schema.json`, `https://schema.rtemis.org/chart/pr/v1/schema.json` |
-| `density` | `buildDensityOption(data, config, appearance)` | curves, `{samples}` | `https://schema.rtemis.org/chart/density/v1/schema.json` |
-| `histogram` | `buildHistogramOption(data, config, appearance)` | bins, `{edges, samples}` | `https://schema.rtemis.org/chart/histogram/v1/schema.json` |
+| `a3` | ECharts | `buildA3Option(document, config, appearance)` | an A3 document (`@rtemis/a3` `A3Data`) |
+| `bar` | ECharts | `buildBarOption(data, config, appearance)` | tabular data, `{columns, levels, types}` |
+| `line` | ECharts | `buildLineOption(data, config, appearance)` | tabular data, with fitted curves |
+| `scatter` | ECharts | `buildScatterOption(data, config, appearance)` | tabular data, with fitted curves |
+| `timeseries` | ECharts | `buildTimeSeriesOption(data, config, appearance)` | tabular data |
+| `boxplot` | ECharts | `buildBoxplotOption(data, config, appearance)` | box summaries, `{variables, levels, cells, comparisons}` |
+| `histogram` | ECharts | `buildHistogramOption(data, config, appearance)` | bins, `{edges, samples}` |
+| `density` | ECharts | `buildDensityOption(data, config, appearance)` | curves, `{samples}` |
+| `heatmap` | ECharts | `buildHeatmapOption(data, config, appearance)` | a matrix, its labels, trees, notes, and tracks |
+| `spectrogram` | ECharts | `buildSpectrogramOption(data, config, appearance)` | a spectrum matrix, `{time, frequency, values}` |
+| `pie` | ECharts | `buildPieOption(data, config, appearance)` | tabular data |
+| `funnel` | ECharts | `buildFunnelOption(data, config, appearance)` | tabular data |
+| `treemap`, `sunburst` | ECharts | `buildTreemapOption(data, config, appearance)`, `buildSunburstOption(data, config, appearance)` | tabular data nested by level columns, or a tree |
+| `radar` | ECharts | `buildRadarOption(data, config, appearance)` | tabular data |
+| `sankey` | ECharts | `buildSankeyOption(data, config, appearance)` | a link table |
+| `gantt` | ECharts | `buildGanttOption(data, config, appearance)` | a task table |
+| `survival` | ECharts | `buildSurvivalOption(data, config, appearance)` | curves, `{curves, risk}` |
+| `confusion` | ECharts | `buildConfusionOption(data, config, appearance)` | counts, `{classes, panels}` |
+| `roc`, `pr` | ECharts | `buildRocOption(data, config, appearance)`, `buildPrOption(data, config, appearance)` | grouped curves, `{groups, curves}` |
+| `calibration` | ECharts | `buildCalibrationOption(data, config, appearance)` | bins per group |
+| `significance` | ECharts | `buildSignificanceOption(data, config, appearance)` | hypotheses with estimates and p-values |
+| `scatter3d` | ECharts-GL | `buildScatter3DOption(data, config, appearance)` | x, y, and z columns, with fitted surfaces |
+| `network` | Sigma.js | `buildNetworkGraph(model, config, libraries)`, `networkReducers(graph, config, appearance, hovered)` | a graph model (`GraphModel`), `{nodes, edges, directed}` |
+| `choropleth` | MapLibre GL | `mapFeatures(topology, resolution, feature)`, `joinChoropleth(model, ids)`, `buildChoroplethScale(values, config, appearance, interpolators)`, `choroplethFillExpression(scale)` | a map model (`MapModel`), `{rows, resolution}` |
 
 Tabular data holds the columns the config binds, each an array or typed array, optionally the level order of categorical columns, and optionally the type of a column whose values are not read as stored: `"time"` declares a date or date-time column, held as epoch milliseconds of its wall-clock reading in UTC or as ISO 8601 text, whose offset is ignored. A bar chart labels a time category by its date, or its date and time. `frequency` names a column holding the number of rows each row stands for, when the host has combined rows. A bar chart draws one bar per row; with `group`, one bar per distinct category and group, in level order. When `group` or `aggregate` is set, the data must hold one row per category and group: the host combines rows as `aggregate` says (rtemislive in DuckDB, rtemis.draw in R) before building. With `y` unset, each bar is the number of rows of its category and group: the sum of the `frequency` column, or one per row. `barValueLabel(config, name)` gives the value axis name a host derives when the author sets none: "Count" with `y` unset; for one `y` column its name, as "Mean X", "Median X", or "Sum of X" under an aggregate.
 
@@ -87,7 +105,9 @@ Choropleth maps are drawn by MapLibre GL. `mapFeatures(topology, resolution, fea
 
 ## Themes
 
-`themeOption(tokens)` projects a theme's tokens (fonts, text sizes, surface colors, the palette, sign colors, axis colors, and gridline colors) to the ECharts theme object a host registers with `echarts.registerTheme()` or `chart.setTheme()`. `lightThemeTokens()` and `darkThemeTokens()` give rtemis.draw's light and dark themes, whose projections equal the objects `theme_light()` and `theme_dark()` register. Builders write no path the theme owns.
+`themeOption(tokens)` projects a theme's tokens (fonts, text sizes and weights, surface colors, the palette, sign colors, axis colors, gridline color, opacity, and style, and the axis spacing in em of the font size) to the ECharts theme object a host registers with `echarts.registerTheme()` or `chart.setTheme()`. `lightThemeTokens()` and `darkThemeTokens()` give rtemis.draw's light and dark themes. `themeObject(doc)` projects a theme document, the tokens with an optional `echarts` patch, as rtemis.draw's `Theme` writes it, and merges the patch with `mergePatch()`. Builders write no path the theme owns.
+
+The other backends read the same tokens: `networkTheme(tokens)` gives the Sigma.js network's palette, sign colors, label color, font, scheme, and backgrounds; `choroplethTheme(tokens)` the MapLibre map's background, foreground, font, scheme, and overlay panels; `diagramTheme(tokens)` Pele's CSS variables.
 
 ## In rtemis.draw
 

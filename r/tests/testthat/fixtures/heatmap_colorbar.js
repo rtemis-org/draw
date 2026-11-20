@@ -1,12 +1,15 @@
-// Inspect rendered colorbar and grid geometry, rather than just the option's
+// Inspect rendered colorbar and grid geometry beside the option's
 // top value. Check real labels and preserve drag selection across resizing.
 const assert = require('node:assert/strict');
 const input = JSON.parse(require('node:fs').readFileSync(process.argv[2], 'utf8'));
 const echarts = require(input.echarts), layout = require(input.layout);
 const register = require(require('node:path').join(require('node:path').dirname(input.layout), 'renderers.js'));
 register(echarts);
+const path = require('node:path');
+const builders = require(path.join(path.dirname(input.layout), 'rtemis-draw-builders.js'));
 for (const payload of input.charts) {
-  const chart = echarts.init(null, payload.theme, {renderer: 'svg', ssr: true, width: 800, height: 600});
+  const theme = payload.theme ? builders.themeObject(payload.theme) : null;
+  const chart = echarts.init(null, theme, {renderer: 'svg', ssr: true, width: 800, height: 600});
   try {
     payload.option.animation = false;
     chart.setOption(payload.option);

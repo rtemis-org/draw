@@ -1,5 +1,7 @@
 # rtemis.draw 0.5.5
 
+* `Theme` holds the tokens of a theme, which every backend reads: `scheme`, `font_family`, the text sizes, `font_weight`, `title_font_weight`, `palette`, `bg_color`, `fg_color`, the component colors, `grid_opacity`, `grid_style`, the sign colors, `axis_label_gap`, `axis_name_gap`, `axis_name_location`, `axis_line_show`, and `color_scale_font_size`, plus `echarts`, an ECharts theme patch. The `Theme()` arguments `color`, `background_color`, `text_style`, `title`, `legend`, `tooltip`, `data_zoom`, `line`, `radar`, `bar`, `pie`, `scatter`, and the four axis types are deprecated: `color` sets `palette`, `background_color` sets `bg_color`, and the others set keys of `echarts`, with a warning. Reading a removed property, such as `theme@background_color`, is an error; `theme@bg_color` holds the background. A list `theme` is deprecated. `to_list()` on a `Theme` returns the token document. `theme_light()` and `theme_dark()` keep their arguments and gain the new tokens and `echarts`.
+
 * `draw_treemap()`, `draw_sunburst()`, `draw_radar()`, and `draw_funnel()` draw treemaps, sunburst charts, radar charts, and funnel charts, with the configurations `TreemapConfig`, `SunburstConfig`, `RadarConfig`, and `FunnelConfig`.
 
 * `draw_scatter()`, `draw_fit()`, and `draw()` on a `ScatterConfig` build the chart with the `@rtemis/draw` scatter builder, the one rtemislive uses; `compile()` on a `ScatterConfig` returns a `BuildRequest`. `ScatterConfig` `y` takes several columns.

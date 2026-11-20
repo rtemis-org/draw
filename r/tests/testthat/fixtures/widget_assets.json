@@ -64,7 +64,7 @@
       "rtemis-draw.js"
     ],
     "md5": [
-      "650f24ea0c9e1cb31d8da22aa4ca8b1f"
+      "19150a6c80d65741659e1fff2253df02"
     ]
   },
   "rtemis-panel-layout-1.0.4": {
@@ -218,7 +218,7 @@
       "rtemis-graph.js"
     ],
     "md5": [
-      "a1c80573422828c5d66fede76209f419"
+      "6786aa434d18e1549e0f4ee23c141c98"
     ]
   },
   "rtemis-map-binding-0.5.3": {
@@ -242,7 +242,7 @@
       "rtemis-map.js"
     ],
     "md5": [
-      "3dcaeaa510356a395dcc5d0d79afb5a3"
+      "7e5c2102046eb25b8fe87a6311a8e00a"
     ]
   },
   "rtemis-draw-renderers-1.1.0": {
@@ -529,6 +529,50 @@
     ],
     "md5": [
       "03749660e5445baa6dd9a40957abea61"
+    ]
+  },
+  "rtemis-draw-builders-0.10.0": {
+    "scripts": [
+      "rtemis-draw-builders.js"
+    ],
+    "md5": [
+      "231c05ebe9d116752cf3aa3119ed07bd"
+    ]
+  },
+  "rtemis-panel-layout-1.0.13": {
+    "scripts": [
+      "panels.js",
+      "a3.js",
+      "panel_widget.js"
+    ],
+    "md5": [
+      "c4ffb87d764ad6e92a6e83a7ce61e7a7",
+      "d35d723753c796470a8513968a8f15b2",
+      "ca5750ba961ca56c09b06a83ae32205e"
+    ]
+  },
+  "rtemis-vector-theme-2.0.0": {
+    "scripts": [
+      "vector_theme.js"
+    ],
+    "md5": [
+      "ca7759887b971a3dbc3bd1f8886f7680"
+    ]
+  },
+  "rtemis-diagram-theme-2.0.0": {
+    "scripts": [
+      "diagram_theme.js"
+    ],
+    "md5": [
+      "545da2aecd14ef80c132fab17596f15d"
+    ]
+  },
+  "rtemis-draw-builders-0.10.1": {
+    "scripts": [
+      "rtemis-draw-builders.js"
+    ],
+    "md5": [
+      "003dcd7b82d5d9306216431d6dffc8f0"
     ]
   }
 }

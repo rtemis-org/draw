@@ -6,6 +6,10 @@ const vm = require('node:vm');
 const source = fs.readFileSync(process.argv[2], 'utf8');
 const path = require('node:path');
 const directory = path.join(path.dirname(process.argv[2]), 'lib/draw');
+// Theme documents as R's theme_light() and theme_dark() write them.
+const builders = require(path.join(directory, 'rtemis-draw-builders.js'));
+const light = builders.lightThemeTokens();
+const dark = builders.darkThemeTokens();
 for (const kind of ['single', 'panels']) {
 for (const location of ['standalone', 'embedded', 'embedded-direct', 'embedded-header', 'multiple', 'bounded', 'vscode', 'vscode-header', 'vscode-outer-header', 'vscode-multiple', 'vscode-nested']) {
   const isVSCode = location.startsWith('vscode');
@@ -45,9 +49,10 @@ for (const location of ['standalone', 'embedded', 'embedded-direct', 'embedded-h
     document: {body, documentElement: html, createElement() {return {style: {}, isConnected: true};}},
     window: {MutationObserver: Observer}, MutationObserver: Observer,
     HTMLWidgets: {widget() {}},
+    RtemisDraw: builders,
     rtemisA3: {fit() {}},
     rtemisPanels: {background: require(path.join(directory, 'panels.js')).background, cells: require(path.join(directory, 'panels.js')).cells, fitHeatmap() {}, fitGantt() {}, prepareLabels: require(path.join(directory, 'panels.js')).prepareLabels, prepareColors() {}, fitAxes() {}, positionLegend() {}, centerVisualMaps() {}},
-    echarts: {registerTheme() {}, init() {return {setOption() {}, dispose() {}};}}
+    echarts: {registerTheme() {}, registerCustomSeries() {}, init() {return {setOption() {}, dispose() {}};}}
   };
   vm.createContext(context);
   // The binding's shared theme detection must see this context's stub DOM.
@@ -58,7 +63,7 @@ for (const location of ['standalone', 'embedded', 'embedded-direct', 'embedded-h
   const renderer = kind === 'panels' ? context.rtemisPanelFactory(el, 560, 500) : context.rtemisDrawFactory(el, 560, 500, location === 'bounded');
   const render = payload => renderer.renderValue(kind === 'panels' ? {panels:[payload, payload], layout:{ncol:2,gap:20,padding:10}} : payload);
   render({option: {}, autoTheme: true,
-    theme: {backgroundColor: '#ffffff'}, themeDark: {backgroundColor: '#181818'}});
+    theme: light, themeDark: dark});
   assert.equal(el.style.backgroundColor, '#181818');
   assert.equal(body.style.backgroundColor, ownsPage ? '#181818' : 'white');
   assert.equal(html.style.backgroundColor, ownsPage ? '#181818' : '');
@@ -66,7 +71,7 @@ for (const location of ['standalone', 'embedded', 'embedded-direct', 'embedded-h
   classes.add(isVSCode ? 'vscode-light' : 'quarto-light'); notify();
   assert.equal(el.style.backgroundColor, '#ffffff');
   assert.equal(body.style.backgroundColor, ownsPage ? '#ffffff' : 'white');
-  render({option: {backgroundColor: '#253344'}, theme: {backgroundColor: '#ffffff'}});
+  render({option: {backgroundColor: '#253344'}, theme: light});
   assert.equal(el.style.backgroundColor, '#253344', 'Explicit option background must win');
   assert.equal(body.style.backgroundColor, ownsPage ? '#253344' : 'white');
   renderer.dispose();

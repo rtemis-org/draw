@@ -1,4 +1,7 @@
 // Theme and XML text utilities shared by vector backends. No DOM dependency.
+// A theme is a theme document (R's `Theme`), read through @rtemis/draw's
+// `choroplethTheme()` on the `RtemisDraw` global, which the browser bundle and
+// render_svg.js define.
 (function(root, factory) {
   if (typeof module === 'object' && module.exports) module.exports = factory();
   else root.RtemisVectorTheme = factory();
@@ -12,9 +15,12 @@
   function escape(value) {
     return String(value).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&apos;'}[c]));
   }
-  function resolve(theme) {
-    const bg = theme?.backgroundColor || '#ffffff';
-    return {bg, dark:isDark(bg), fg:theme?.textStyle?.color || '#1a1a1a', fontFamily:theme?.textStyle?.fontFamily || 'sans-serif'};
+  // The background, text color, font stack, and scheme of a theme document;
+  // without one (`theme = NA` in R), neutral defaults.
+  function resolve(doc) {
+    if (!doc) return {bg:'#ffffff', dark:false, fg:'#1a1a1a', fontFamily:'sans-serif'};
+    const t = globalThis.RtemisDraw.choroplethTheme(doc);
+    return {bg:t.background, dark:t.scheme === 'dark', fg:t.foreground, fontFamily:t.font_family};
   }
   return {isDark, escape, resolve};
 });

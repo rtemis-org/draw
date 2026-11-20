@@ -6,6 +6,7 @@ import {
   survivalMedian,
 } from "../src/charts/survival/config.ts";
 import { survivalRenderers } from "../src/charts/survival/renderers.ts";
+import { lightThemeTokens } from "../src/theme/tokens.ts";
 
 type Series = {
   type: string;
@@ -168,6 +169,20 @@ describe("layoutSurvivalRisk", () => {
     expect(rows[0]?.itemPayload).toMatchObject({ offset, lineHeight: 24, fontSize: 15 });
     expect((option.grid as { bottom: number }).bottom).toBe(offset + 24 + 10);
     expect(option.xAxis).toMatchObject({ axisLabel: { showMinLabel: true, showMaxLabel: true } });
+  });
+
+  it("takes text sizes and the name margin from tokens the option leaves to the theme", () => {
+    const option = buildSurvivalOption(
+      { curves: [curve], risk: { time: [0, 5], counts: [[10, 1]] } },
+      { risk_table: true },
+    );
+    const tokens = lightThemeTokens({ base_font_size: 16, axis_name_gap: 0.625 });
+    const rows = seriesOf(layoutSurvivalRisk(option, tokens)).filter((s) => s.renderItem);
+    // Name gap 30, its 10-pixel margins above and below, 16-pixel name text.
+    const offset = 30 + 10 + Math.ceil(16 * 1.3) + 10 + 12;
+    expect(rows[0]?.itemPayload).toMatchObject({ offset, lineHeight: 26, fontSize: 16 });
+    // The caption is centered on a 16-pixel centered y axis name.
+    expect(rows[0]?.itemPayload).toMatchObject({ captionOffset: 45 + 8 });
   });
 
   it("places the caption where the y axis name sits", () => {

@@ -11,7 +11,9 @@ const luminance = rgb => rgb.slice(0, 3).map(v => v / 255)
   .reduce((sum, v, i) => sum + v * [.2126, .7152, .0722][i], 0);
 for (const source of input.charts) {
   const payload = JSON.parse(JSON.stringify(source));
-  for (const theme of [payload.theme, payload.themeDark || payload.theme, payload.theme]) {
+  // The ECharts theme objects of the payload's light and dark theme documents.
+  const docs = [payload.theme, payload.themeDark || payload.theme, payload.theme];
+  for (const theme of docs.map(doc => confusion.themeObject(doc))) {
     const densePanels = payload.option.grid.length > 4 && payload.option.yAxis[0].data.some(x => x.length > 20);
     for (const [width, height] of (densePanels ? [[800, 1000], [344, 1500], [1100, 650]] : [[800, 550], [344, 900], [1100, 500]])) {
       confusion.fitConfusion(echarts, payload, theme, width, height);
@@ -83,10 +85,10 @@ for (const source of input.charts) {
     }
   }
   if (payload.option.yAxis[0].data.some(x => x.length > 20)) {
-    assert.throws(() => confusion.fitConfusion(echarts, payload, payload.theme, 200, 100), /Increase confusion figure dimensions/);
+    assert.throws(() => confusion.fitConfusion(echarts, payload, confusion.themeObject(payload.theme), 200, 100), /Increase confusion figure dimensions/);
   }
-  const wide = confusion.confusionHeight(echarts, payload, payload.theme, 1100);
-  const narrow = confusion.confusionHeight(echarts, payload, payload.theme, 344);
+  const wide = confusion.confusionHeight(echarts, payload, confusion.themeObject(payload.theme), 1100);
+  const narrow = confusion.confusionHeight(echarts, payload, confusion.themeObject(payload.theme), 344);
   assert.ok(Number.isFinite(wide) && Number.isFinite(narrow));
 }
 console.log('Confusion squares, theme fades, faint margins, clean labels, bounds, and resize passed');

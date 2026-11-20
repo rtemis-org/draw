@@ -56,13 +56,13 @@ function rtemisDrawBuild(x, dark) {
   const builder = RtemisDraw.builders[request.type];
   if (!builder) throw new Error(`No @rtemis/draw builder for chart type '${request.type}'.`);
   const data = typeof request.data === 'string' ? JSON.parse(request.data) : request.data;
-  // The background of the theme the widget applies, which a treemap's and a
-  // sunburst's borders take.
+  // The background of the theme document the widget applies, which a
+  // treemap's and a sunburst's borders take.
   const theme = x.autoTheme && dark ? x.themeDark : x.theme;
-  const background = theme && typeof theme.backgroundColor === 'string' ? theme.backgroundColor : undefined;
-  // An explicit theme sets the scheme the builder draws in, from its
-  // background; the automatic theme follows the page.
-  const scheme = !x.autoTheme && background ? RtemisVectorTheme.isDark(background) : dark;
+  const background = theme && typeof theme.bg_color === 'string' ? theme.bg_color : undefined;
+  // An explicit theme states the scheme the builder draws in; the automatic
+  // theme follows the page.
+  const scheme = !x.autoTheme && theme ? theme.scheme === 'dark' : dark;
   const appearance = {...request.appearance, dark: scheme, ...(background ? {background} : {})};
   const option = {...builder(data, request.config, appearance)};
   // The builders leave the background to the host; the widget paints the theme's.
@@ -199,12 +199,10 @@ function rtemisDrawFactory(el, width, height, bounded = false, onBackground = ()
         if (aspectHeight !== null) currentHeight = aspectHeight;
       }
 
-      if (x.autoTheme) {
-        // Auto-detect: pick light or dark theme
-        themeObj = dark ? x.themeDark : x.theme;
-      } else if (x.theme) {
-        themeObj = x.theme;
-      }
+      // The theme document (R's `Theme`), light or dark by the page when
+      // automatic, projected to the ECharts theme object by @rtemis/draw.
+      const themeDoc = x.autoTheme && dark ? x.themeDark : x.theme;
+      if (themeDoc) themeObj = RtemisDraw.themeObject(themeDoc);
       renderedDark = dark;
       currentTheme = themeObj;
       // The package fits a confusion chart's square cells and strips.

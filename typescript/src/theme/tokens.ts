@@ -8,6 +8,12 @@
 /** Light or dark: which set of neutral control colors the projection uses. */
 export type ColorScheme = "light" | "dark";
 
+/** A font weight from 1 to 1000: 400 is normal, 700 bold. */
+export type FontWeight = number;
+
+/** Where an axis name sits along its axis. */
+export type AxisNameLocation = "start" | "middle" | "end";
+
 /** A theme's tokens. Unset text sizes follow `base_font_size`; unset text colors follow `fg_color`. */
 export interface ThemeTokens {
   readonly scheme: ColorScheme;
@@ -20,6 +26,12 @@ export interface ThemeTokens {
   readonly axis_label_font_size?: number | null;
   readonly legend_font_size?: number | null;
   readonly tooltip_font_size?: number | null;
+  /** Text size of color scale labels; unset is `base_font_size`. */
+  readonly color_scale_font_size?: number | null;
+  /** Weight of every text; unset is ECharts' default, normal (400). */
+  readonly font_weight?: FontWeight | null;
+  /** Weight of titles; unset is ECharts' default, bold (700). */
+  readonly title_font_weight?: FontWeight | null;
   /** Categorical palette. */
   readonly palette: readonly string[];
   readonly bg_color: string;
@@ -29,6 +41,10 @@ export interface ThemeTokens {
   readonly legend_color?: string | null;
   readonly axis_color?: string | null;
   readonly grid_color?: string | null;
+  /** Opacity of gridlines, from 0 to 1; unset is 1. */
+  readonly grid_opacity?: number | null;
+  /** Dash style of gridlines; unset is `solid`. */
+  readonly grid_style?: "solid" | "dashed" | "dotted" | null;
   readonly tooltip_bg?: string | null;
   readonly tooltip_border_color?: string | null;
   readonly tooltip_color?: string | null;
@@ -36,6 +52,22 @@ export interface ThemeTokens {
   readonly negative_color: string;
   readonly neutral_color: string;
   readonly positive_color: string;
+  /**
+   * Distance from the plot to the tick labels, in em of the axis label font
+   * size; unset is ECharts' default, 8 pixels.
+   */
+  readonly axis_label_gap?: number | null;
+  /**
+   * Margin around an axis name, in em of the base font size: a centered name
+   * keeps it from the tick labels, which ECharts moves the name clear of.
+   * Unset is ECharts' default, 5 pixels on a horizontal axis and 8 on a
+   * vertical one.
+   */
+  readonly axis_name_gap?: number | null;
+  /** Where every axis name sits; unset leaves it to the chart and ECharts. */
+  readonly axis_name_location?: AxisNameLocation | null;
+  /** Whether axis lines show; unset is ECharts' default for each axis type. */
+  readonly axis_line_show?: boolean | null;
 }
 
 /** rtemis' categorical palette. */
@@ -127,8 +159,9 @@ const GENERIC_FONT_FAMILIES = new Set([
 
 /**
  * A complete CSS font stack: every family name that is not a sequence of CSS
- * identifiers is quoted, and {@link DEFAULT_FONT_FAMILY} follows unless the
- * stack ends in a generic family. Matches rtemis.draw's `font_stack()`.
+ * identifiers or a CSS variable reference is quoted, and
+ * {@link DEFAULT_FONT_FAMILY} follows unless the stack ends in a generic
+ * family. Matches rtemis.draw's `font_stack()`.
  */
 export function fontStack(fontFamily?: string | null): string {
   if (fontFamily === undefined || fontFamily === null) return DEFAULT_FONT_FAMILY;
@@ -139,13 +172,22 @@ export function fontStack(fontFamily?: string | null): string {
   if (entries.length === 0) throw new Error("`font_family` must be a nonempty font family.");
   const ident = /^-?[A-Za-z_][A-Za-z0-9_-]*( +-?[A-Za-z_][A-Za-z0-9_-]*)*$/;
   const quoted = /^(['"]).*\1$/;
+  // A CSS variable reference (`var(--font-sans)`) is kept as written.
+  const variable = /^var\(.*\)$/i;
   const out = entries.map((e) => {
     const generic = GENERIC_FONT_FAMILIES.has(e.toLowerCase());
-    return quoted.test(e) || generic || ident.test(e) ? e : `'${e.replaceAll("'", "\\'")}'`;
+    return quoted.test(e) || generic || ident.test(e) || variable.test(e)
+      ? e
+      : `'${e.replaceAll("'", "\\'")}'`;
   });
   const last = entries[entries.length - 1] ?? "";
   if (!GENERIC_FONT_FAMILIES.has(last.toLowerCase())) out.push(DEFAULT_FONT_FAMILY);
   return out.join(", ");
+}
+
+/** A length in em of `size` as pixels, or undefined when the length is unset. */
+function em(length: number | null | undefined, size: number): number | undefined {
+  return length === undefined || length === null ? undefined : length * size;
 }
 
 /** Round half to even, as R's `round()` does. */
@@ -230,20 +272,47 @@ export function themeOption(tokens: ThemeTokens): Json {
   const sizes = themeFontSizes(tokens);
   const dark = tokens.scheme === "dark";
   const fg = tokens.fg_color;
-  const textStyle = { color: fg, fontFamily: fontStack(tokens.font_family), fontSize: sizes.base };
+  const textStyle = present({
+    color: fg,
+    fontFamily: fontStack(tokens.font_family),
+    fontSize: sizes.base,
+    fontWeight: tokens.font_weight,
+  });
   const withText = (style: Json): Json => ({ ...textStyle, ...style });
-  const axisLabel = { fontSize: sizes.axisLabel, color: fg };
-  const axisLine = tokens.axis_color ? { lineStyle: { color: tokens.axis_color } } : undefined;
+  const axisLabelText = present({
+    fontSize: sizes.axisLabel,
+    color: fg,
+    fontWeight: tokens.font_weight,
+  });
+  const axisLabel = present({
+    ...axisLabelText,
+    margin: em(tokens.axis_label_gap, sizes.axisLabel),
+  });
+  const nameMargin = em(tokens.axis_name_gap, sizes.base);
+  const nameTextStyle =
+    nameMargin === undefined ? undefined : { textMargin: [nameMargin, 3, nameMargin, 3] };
+  const axisLineStyle = tokens.axis_color ? { lineStyle: { color: tokens.axis_color } } : {};
+  const axisLine =
+    Object.keys(axisLineStyle).length > 0 ||
+    (tokens.axis_line_show !== undefined && tokens.axis_line_show !== null)
+      ? present({ show: tokens.axis_line_show, ...axisLineStyle })
+      : undefined;
   const axisTick = { show: false };
-  const splitLine = tokens.grid_color ? { lineStyle: { color: tokens.grid_color } } : undefined;
-  const valueAxis = present({ axisLabel, axisLine, axisTick, splitLine });
+  const gridLine = present({
+    color: tokens.grid_color,
+    opacity: tokens.grid_opacity,
+    type: tokens.grid_style,
+  });
+  const splitLine = Object.keys(gridLine).length > 0 ? { lineStyle: gridLine } : undefined;
+  const axisName = present({ nameLocation: tokens.axis_name_location, nameTextStyle });
+  const valueAxis = present({ ...axisName, axisLabel, axisLine, axisTick, splitLine });
   // The radar coordinate system: indicator names in the axis label style,
   // spokes in the axis color, and rings and their bands in the grid color.
   // ECharts merges a theme's `radar` entry into the radar component and into
   // radar series, so the series' symbol sits in the same entry.
   const radar = present({
     ...SERIES_THEME.radar,
-    axisName: axisLabel,
+    axisName: axisLabelText,
     axisLine,
     splitLine,
     splitArea: tokens.grid_color
@@ -255,7 +324,13 @@ export function themeOption(tokens: ThemeTokens): Json {
     backgroundColor: tokens.bg_color,
     textStyle,
     title: {
-      textStyle: withText(present({ color: tokens.title_color, fontSize: sizes.title })),
+      textStyle: withText(
+        present({
+          color: tokens.title_color,
+          fontSize: sizes.title,
+          fontWeight: tokens.title_font_weight,
+        }),
+      ),
       subtextStyle: withText(present({ color: tokens.subtitle_color, fontSize: sizes.subtitle })),
     },
     legend: {
@@ -266,16 +341,64 @@ export function themeOption(tokens: ThemeTokens): Json {
       borderColor: tokens.tooltip_border_color,
       textStyle: withText({ color: tokens.tooltip_color ?? fg, fontSize: sizes.tooltip }),
     }),
-    visualMap: { textStyle },
+    visualMap: {
+      textStyle: present({ ...textStyle, fontSize: tokens.color_scale_font_size ?? sizes.base }),
+    },
     // Neutral controls leave the palette to encode data; every accent-bearing
     // slider state is set so ECharts' blue defaults cannot show.
     // spec: draw/visual-qa-docs#neutral-data-zoom-sliders
-    dataZoom: { ...zoomSliderStyle(dark), textStyle: axisLabel },
+    dataZoom: { ...zoomSliderStyle(dark), textStyle: axisLabelText },
     ...SERIES_THEME,
     radar,
-    categoryAxis: present({ axisLabel, axisLine, axisTick, splitLine: { show: false } }),
+    categoryAxis: present({
+      ...axisName,
+      axisLabel,
+      axisLine,
+      axisTick,
+      splitLine: { show: false },
+    }),
     valueAxis,
     logAxis: valueAxis,
     timeAxis: valueAxis,
   };
+}
+
+/**
+ * A theme as rtemis.draw's `Theme` writes it: the tokens, and `echarts`, an
+ * ECharts theme-object patch merged over their projection.
+ */
+export type ThemeDocument = ThemeTokens & {
+  readonly echarts?: Record<string, unknown> | null;
+};
+
+/**
+ * Merges a patch into a JSON object: objects merge recursively, any other
+ * value, an array included, replaces the target's, and `null` removes the key.
+ * Returns a new object.
+ */
+export function mergePatch(target: Json, patch: Json): Json {
+  const out: Json = { ...target };
+  for (const [key, value] of Object.entries(patch)) {
+    if (value === null) {
+      delete out[key];
+    } else if (
+      typeof value === "object" &&
+      !Array.isArray(value) &&
+      typeof out[key] === "object" &&
+      out[key] !== null &&
+      !Array.isArray(out[key])
+    ) {
+      out[key] = mergePatch(out[key] as Json, value as Json);
+    } else {
+      out[key] = value;
+    }
+  }
+  return out;
+}
+
+/** The ECharts theme object of a theme document: the projection, then the patch. */
+export function themeObject(doc: ThemeDocument): Json {
+  const { echarts, ...tokens } = doc;
+  const option = themeOption(tokens);
+  return echarts ? mergePatch(option, echarts) : option;
 }

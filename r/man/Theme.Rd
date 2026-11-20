@@ -5,11 +5,40 @@
 \title{Theme}
 \usage{
 Theme(
+  scheme = "light",
+  font_family = NULL,
+  base_font_size = 12,
+  title_font_size = NULL,
+  subtitle_font_size = NULL,
+  axis_label_font_size = NULL,
+  legend_font_size = NULL,
+  tooltip_font_size = NULL,
+  color_scale_font_size = NULL,
+  font_weight = NULL,
+  title_font_weight = NULL,
+  palette = palette_colors(rtemis_colors),
+  bg_color = "#ffffff",
+  fg_color = "rgba(0, 0, 0, 0.7)",
+  title_color = NULL,
+  subtitle_color = NULL,
+  legend_color = NULL,
+  axis_color = NULL,
+  grid_color = NULL,
+  grid_opacity = NULL,
+  grid_style = NULL,
+  tooltip_bg = NULL,
+  tooltip_border_color = NULL,
+  tooltip_color = NULL,
+  negative_color = SIGN_COLORS[["negative"]],
+  neutral_color = SIGN_COLORS[["neutral"]],
+  positive_color = SIGN_COLORS[["positive"]],
+  axis_label_gap = NULL,
+  axis_name_gap = NULL,
+  axis_name_location = NULL,
+  axis_line_show = NULL,
+  echarts = NULL,
   color = NULL,
   background_color = NULL,
-  negative_color = NULL,
-  neutral_color = NULL,
-  positive_color = NULL,
   text_style = NULL,
   title = NULL,
   legend = NULL,
@@ -27,57 +56,90 @@ Theme(
 )
 }
 \arguments{
-\item{color}{Optional Character: Color palette.}
+\item{scheme}{Character \{"light", "dark"\}: Which neutral control colors the
+theme uses.}
 
-\item{background_color}{Optional Character: Chart background color.}
+\item{font_family}{Optional Character: Font family name or CSS font stack,
+e.g. \code{"Geist"}. \code{NULL} uses the system UI font stack.}
 
-\item{negative_color, neutral_color, positive_color}{Optional Character: Colors
-for negative values, values of neither sign, and positive values, in every
-chart that colors by sign. A chart's own color arguments take precedence;
-\code{NULL} uses the defaults of \code{\link[=theme_light]{theme_light()}}.}
+\item{base_font_size}{Numeric \verb{(0, Inf)}: Size in pixels of all text.}
 
-\item{text_style}{Optional \link{TextStyle}: Global default text style.}
+\item{title_font_size, subtitle_font_size, axis_label_font_size, legend_font_size, tooltip_font_size}{Optional Numeric \verb{(0, Inf)}: Text sizes in pixels. \code{NULL} sets the title
+to 1.2 times \code{base_font_size} and the others to \code{base_font_size}.}
 
-\item{title}{Optional Named list: Title overrides.}
+\item{color_scale_font_size}{Optional Numeric \verb{(0, Inf)}: Text size in
+pixels of color scale labels. \code{NULL} uses \code{base_font_size}.}
 
-\item{legend}{Optional Named list: Legend overrides.}
+\item{font_weight}{Optional Numeric \verb{[1, 1000]}: Weight of all text; 400 is
+normal, 700 bold. \code{NULL} uses ECharts' default, 400.}
 
-\item{tooltip}{Optional Named list: Tooltip overrides.}
+\item{title_font_weight}{Optional Numeric \verb{[1, 1000]}: Weight of titles.
+\code{NULL} uses ECharts' default, 700.}
 
-\item{data_zoom}{Optional Named list: Data-zoom defaults using native ECharts
-camelCase fields from \code{SliderDataZoomOption} in
-\code{src/component/dataZoom/SliderZoomModel.ts}.}
+\item{palette}{Character: Categorical palette.}
 
-\item{line}{Optional Named list: Line-series defaults.}
+\item{bg_color}{Character: Chart background color.}
 
-\item{radar}{Optional Named list: Radar-series defaults.}
+\item{fg_color}{Character: Text color.}
 
-\item{bar}{Optional Named list: Bar-series defaults.}
+\item{title_color, subtitle_color, legend_color, axis_color, grid_color, tooltip_bg, tooltip_border_color, tooltip_color}{Optional Character: Colors of titles, subtitles, legend text, axis lines,
+gridlines, the tooltip background, its border, and its text. \code{NULL}
+follows \code{fg_color} for text and ECharts' default otherwise.}
 
-\item{pie}{Optional Named list: Pie-series defaults.}
+\item{grid_opacity}{Optional Numeric \verb{[0, 1]}: Opacity of gridlines.}
 
-\item{scatter}{Optional Named list: Scatter-series defaults.}
+\item{grid_style}{Optional Character \{"solid", "dashed", "dotted"\}: Dash
+style of gridlines.}
 
-\item{category_axis}{Optional Named list: Category-axis defaults.}
+\item{negative_color, neutral_color, positive_color}{Character: Colors of
+negative values, values of neither sign, and positive values, in every
+chart that colors by sign. A chart's own color arguments take precedence.}
 
-\item{value_axis}{Optional Named list: Value-axis defaults.}
+\item{axis_label_gap}{Optional Numeric \verb{[0, Inf)}: Distance from the plot to
+the tick labels, in em of the axis label font size. \code{NULL} uses ECharts'
+default, 8 pixels.}
 
-\item{log_axis}{Optional Named list: Log-axis defaults.}
+\item{axis_name_gap}{Optional Numeric \verb{[0, Inf)}: Margin around an axis
+name, in em of \code{base_font_size}; a centered name keeps it from the tick
+labels. \code{NULL} uses ECharts' default.}
 
-\item{time_axis}{Optional Named list: Time-axis defaults.}
+\item{axis_name_location}{Optional Character \{"start", "middle", "end"\}:
+Where every axis name sits along its axis. \code{NULL} leaves it to each chart.}
+
+\item{axis_line_show}{Optional Logical: Whether axis lines show. \code{NULL} uses
+ECharts' default for each axis type.}
+
+\item{echarts}{Optional Named list: ECharts theme-object patch, merged over
+the projection of the tokens: objects merge recursively, any other value
+replaces, and \code{NULL} inside the patch removes a key. Keys are ECharts'
+camelCase names. Only ECharts charts read it.}
+
+\item{color, background_color, text_style, title, legend, tooltip, data_zoom, line, radar, bar, pie, scatter, category_axis, value_axis, log_axis, time_axis}{Deprecated; see Details.}
 }
 \value{
 \code{Theme} object.
 }
 \description{
-A chart theme that controls default colors, text styles, and
-component appearance. Corresponds to the object passed as the second
-argument to \code{echarts.init(dom, theme)} or registered via
-\code{echarts.registerTheme()}.
+The tokens of a chart theme, which every backend reads: fonts, text sizes,
+text weights, surface colors, text colors, the categorical palette, the sign
+colors, gridline style, and axis spacing. \verb{@rtemis/draw} projects them to the
+ECharts theme object (\code{themeOption()}) and to the themes of the network, map,
+and diagram widgets, in the browser and in SVG export. \code{\link[=theme_light]{theme_light()}} and
+\code{\link[=theme_dark]{theme_dark()}} build the two built-in themes.
 }
 \details{
-TS source: \code{src/model/globalDefault.ts}, \code{src/theme/dark.ts}.
+Corresponds to \code{ThemeTokens} and \code{ThemeDocument} in \verb{@rtemis/draw}
+\code{src/theme/tokens.ts}.
+
+The arguments \code{color}, \code{background_color}, \code{text_style}, \code{title}, \code{legend},
+\code{tooltip}, \code{data_zoom}, \code{line}, \code{radar}, \code{bar}, \code{pie}, \code{scatter},
+\code{category_axis}, \code{value_axis}, \code{log_axis}, and \code{time_axis} are deprecated:
+\code{color} sets \code{palette}, \code{background_color} sets \code{bg_color}, and the others
+set the matching key of \code{echarts}, with a warning.
 }
 \examples{
-Theme(color = c("#16a085", "#e67e22"), background_color = "#ffffff")
+Theme(palette = c("#16a085", "#e67e22"), base_font_size = 14)
+}
+\author{
+EDG
 }

@@ -2,12 +2,11 @@
 # ::rtemis.draw::
 # 2026- EDG rtemis.org
 
-# The palette is owned by rtemis.core. rtemis.draw used to define and export a
-# second, different `rtemis_colors` -- 10 unnamed hues against core's 15 named
-# ones -- which masked core's for anyone loading both, and made a positional
-# lookup such as `rtemis_colors[[2L]]` mean a different color depending on which
-# package resolved it. Re-exported here so `rtemis.draw::rtemis_colors` keeps
-# working, with one definition behind it.
+# The palette is defined in rtemis.core and re-exported here, so
+# `rtemis.draw::rtemis_colors` and `rtemis.core::rtemis_colors` are one object:
+# a second definition would mask core's for anyone loading both, and a
+# positional lookup such as `rtemis_colors[[2L]]` would depend on which package
+# resolved it.
 #
 # Index it by name (`rtemis_colors[["teal"]]`), never by position.
 
@@ -42,10 +41,10 @@ SIGN_COLORS <- c(
 #'
 #' Charts that color by sign compute their colors before the widget exists, so
 #' they read them from the theme here rather than in the browser. A [Theme]
-#' supplies its own, falling back to `SIGN_COLORS` for any it leaves unset.
-#' `NULL` (light/dark auto-detection) reads the built-in light theme: both
-#' built-in themes use the same pair, which keeps its contrast on either
-#' background. `NA` and an ECharts theme list carry no sign colors.
+#' supplies its own. `NULL` (light/dark auto-detection) reads the built-in
+#' light theme: both built-in themes use the same pair, which keeps its
+#' contrast on either background. `NA` and a deprecated ECharts theme list
+#' carry none, and `SIGN_COLORS` apply.
 #'
 #' @param theme Optional [Theme], list, or `NA`: The theme, as passed to
 #'   [draw()].
@@ -75,9 +74,10 @@ theme_sign_colors <- function(theme = NULL) {
 #'
 #' Heatmap and spectrogram scales pin their neutral point to the chart
 #' background, so a value of zero disappears into it. The browser chooses the
-#' light or dark variant by the background it actually draws on; this supplies
-#' the background each variant is built against. A theme that sets a background
-#' uses it for both; otherwise they are the built-in light and dark themes'.
+#' light or dark variant by the background it draws on; this supplies
+#' the background each variant is built against. An explicit [Theme], or a
+#' deprecated ECharts theme list with `backgroundColor`, gives its background
+#' for both; otherwise they are the built-in light and dark themes'.
 #'
 #' @param theme Optional [Theme], list, or `NA`: The theme, as passed to
 #'   [draw()].
@@ -89,7 +89,7 @@ theme_sign_colors <- function(theme = NULL) {
 #' @noRd
 theme_backgrounds <- function(theme = NULL) {
   bg <- if (S7::S7_inherits(theme, Theme)) {
-    theme@background_color
+    theme@bg_color
   } else if (is.list(theme)) {
     theme[["backgroundColor"]]
   }
@@ -97,7 +97,7 @@ theme_backgrounds <- function(theme = NULL) {
     return(c(light = bg, dark = bg))
   }
   c(
-    light = theme_light()@background_color,
-    dark = theme_dark()@background_color
+    light = theme_light()@bg_color,
+    dark = theme_dark()@bg_color
   )
 } # /rtemis.draw::theme_backgrounds

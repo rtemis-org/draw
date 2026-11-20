@@ -1,28 +1,31 @@
-// Unit checks for lib/draw/diagram_theme.js, which maps a draw theme to Pele
-// CSS variables in the browser and inlines them in SVG export.
+// Unit checks for lib/draw/diagram_theme.js, which maps a theme document to
+// Pele CSS variables in the browser and inlines them in SVG export.
 const assert = require('node:assert/strict');
+const path = require('node:path');
+const builders = require(path.join(path.dirname(process.argv[2]), 'rtemis-draw-builders.js'));
+globalThis.RtemisDraw = builders;
 const t = require(process.argv[2]);
 
-const light = {
-  backgroundColor: '#ffffff',
-  color: ['#6CA3A0', '#F08904', '#BE2E5F'],
-  textStyle: {color: 'rgba(0, 0, 0, 0.7)', fontFamily: 'system-ui, sans-serif'}
+const tokens = {
+  base_font_size: 12,
+  palette: ['#6CA3A0', '#F08904', '#BE2E5F'],
+  font_family: 'system-ui, sans-serif',
+  negative_color: '#2D83D3',
+  neutral_color: '#808080',
+  positive_color: '#C55E28'
 };
-const dark = {...light, backgroundColor: '#181818',
-  textStyle: {color: 'rgba(255, 255, 255, 0.7)', fontFamily: 'system-ui, sans-serif'}};
+const light = {...tokens, scheme: 'light', bg_color: '#ffffff', fg_color: 'rgba(0, 0, 0, 0.7)'};
+const dark = {...tokens, scheme: 'dark', bg_color: '#181818', fg_color: 'rgba(255, 255, 255, 0.7)'};
 
-// rgba text composites over the background into an opaque color.
-assert.equal(t.flatten('rgba(0, 0, 0, 0.7)', '#ffffff'), '#4d4d4d');
-assert.equal(t.flatten('rgba(255, 255, 255, 0.7)', '#181818'), '#bababa');
-assert.equal(t.flatten('#123456', '#ffffff'), '#123456');
-
-// Neutral grays follow the background's lightness.
+// rgba text composites over the background into an opaque color, and the
+// neutral grays follow the stated scheme.
 const lv = t.vars(light, {});
 const dv = t.vars(dark, {});
 assert.equal(lv.bg, '#ffffff');
 assert.equal(lv.fg, '#4d4d4d');
-assert.equal(lv.surface, t.GRAYS.light.surface);
-assert.equal(dv.surface, t.GRAYS.dark.surface);
+assert.equal(dv.fg, '#bababa');
+assert.equal(lv.surface, builders.DIAGRAM_GRAYS.light.surface);
+assert.equal(dv.surface, builders.DIAGRAM_GRAYS.dark.surface);
 assert.equal(lv.font, 'system-ui, sans-serif');
 
 // The theme palette is recycled over the eight series variables; the first

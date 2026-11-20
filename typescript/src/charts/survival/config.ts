@@ -1,7 +1,12 @@
 import { ddSci, formatNumber } from "../../shared/format.ts";
 import type { LegendMembers } from "../../shared/legend.ts";
 import { asArray, type ColumnNames } from "../../shared/source.ts";
-import { darkThemeTokens, lightThemeTokens } from "../../theme/tokens.ts";
+import {
+  darkThemeTokens,
+  lightThemeTokens,
+  type ThemeTokens,
+  themeFontSizes,
+} from "../../theme/tokens.ts";
 import { type RiskPayload, SURVIVAL_RISK } from "./renderers.ts";
 
 /**
@@ -490,22 +495,36 @@ export function buildSurvivalOption(
  * pixels, since ECharts moves a name with a smaller gap clear of the tick
  * labels; with the name at an end of the axis, the caption keeps the
  * builder's place. A host that restyles either axis
- * after the build calls it again. Mutates and returns `option`; an option
- * without the strip is returned as it is.
+ * after the build calls it again; a host that registers a theme passes its
+ * `tokens`, whose text sizes and name margin stand where the option sets
+ * none. Mutates and returns `option`; an option without the strip is returned
+ * as it is.
  */
-export function layoutSurvivalRisk<T extends Record<string, unknown>>(option: T): T {
+export function layoutSurvivalRisk<T extends Record<string, unknown>>(
+  option: T,
+  tokens?: ThemeTokens,
+): T {
   const series = Array.isArray(option.series) ? (option.series as Record<string, unknown>[]) : [];
   const strips = series.filter((s) => s?.renderItem === SURVIVAL_RISK);
   if (strips.length === 0) return option;
   const x = (Array.isArray(option.xAxis) ? option.xAxis[0] : option.xAxis) as
     | Record<string, unknown>
     | undefined;
-  const size = (style: unknown) => {
+  // Text sizes and the name margin the option leaves to a registered theme
+  // come from its tokens; without tokens, ECharts' 12 pixels and no margin.
+  const sizes = tokens ? themeFontSizes(tokens) : null;
+  const size = (style: unknown, fallback = 12) => {
     const v = (style as { fontSize?: unknown } | undefined)?.fontSize;
-    return typeof v === "number" ? v : 12;
+    return typeof v === "number" ? v : fallback;
   };
+  const labelSize = sizes?.axisLabel ?? 12;
+  const nameSize = sizes?.base ?? 12;
+  const themeMargin =
+    tokens?.axis_name_gap === undefined || tokens.axis_name_gap === null
+      ? 0
+      : tokens.axis_name_gap * nameSize;
   const nameGap = typeof x?.nameGap === "number" ? x.nameGap : 30;
-  const fontSize = size(x?.axisLabel);
+  const fontSize = size(x?.axisLabel, labelSize);
   // A host's text margin around the axis name, [top, right, bottom, left] or
   // one number, widens the name's band.
   const margin = (x?.nameTextStyle as { textMargin?: unknown } | undefined)?.textMargin;
@@ -513,8 +532,9 @@ export function layoutSurvivalRisk<T extends Record<string, unknown>>(option: T)
     ? [Number(margin[0]) || 0, Number(margin[2] ?? margin[0]) || 0]
     : typeof margin === "number"
       ? [margin, margin]
-      : [0, 0];
-  const offset = nameGap + above + Math.ceil(size(x?.nameTextStyle) * 1.3) + below + RISK_GAP;
+      : [themeMargin, themeMargin];
+  const offset =
+    nameGap + above + Math.ceil(size(x?.nameTextStyle, nameSize) * 1.3) + below + RISK_GAP;
   const lineHeight = Math.round(fontSize * 1.6);
   const y = (Array.isArray(option.yAxis) ? option.yAxis[0] : option.yAxis) as
     | Record<string, unknown>
@@ -523,7 +543,7 @@ export function layoutSurvivalRisk<T extends Record<string, unknown>>(option: T)
   const yGap = centered && typeof y?.nameGap === "number" ? y.nameGap : Y_NAME_GAP;
   // ECharts puts a centered name's edge nearest the axis `nameGap` from it, so
   // the name's center lies half its font size further out.
-  const captionOffset = Math.max(yGap, Y_NAME_GAP) + size(y?.nameTextStyle) / 2;
+  const captionOffset = Math.max(yGap, Y_NAME_GAP) + size(y?.nameTextStyle, nameSize) / 2;
   let rows = 0;
   for (const s of strips) {
     const payload = s.itemPayload as RiskPayload;

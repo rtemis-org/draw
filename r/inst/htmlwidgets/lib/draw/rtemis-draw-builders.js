@@ -37,6 +37,8 @@ var RtemisDraw = (() => {
     DEFAULT_POINT_SIZE: () => DEFAULT_POINT_SIZE,
     DENSITY_CHART_CONFIG_MEMBERS: () => DENSITY_CHART_CONFIG_MEMBERS,
     DENSITY_VALUE_LABEL: () => DENSITY_VALUE_LABEL,
+    DIAGRAM_GRAYS: () => DIAGRAM_GRAYS,
+    DIAGRAM_SERIES: () => DIAGRAM_SERIES,
     FIT_MEMBERS: () => FIT_MEMBERS,
     FUNNEL_CHART_CONFIG_MEMBERS: () => FUNNEL_CHART_CONFIG_MEMBERS,
     GANTT_CHART_CONFIG_MEMBERS: () => GANTT_CHART_CONFIG_MEMBERS,
@@ -109,6 +111,7 @@ var RtemisDraw = (() => {
     calcLimitsFromZero: () => calcLimitsFromZero,
     choroplethColor: () => choroplethColor,
     choroplethFillExpression: () => choroplethFillExpression,
+    choroplethTheme: () => choroplethTheme,
     classCount: () => classCount,
     colorRamp: () => colorRamp,
     confusionHeight: () => confusionHeight,
@@ -120,6 +123,7 @@ var RtemisDraw = (() => {
     dark3: () => dark3,
     darkThemeTokens: () => darkThemeTokens,
     ddSci: () => ddSci,
+    diagramTheme: () => diagramTheme,
     divergingRamp: () => divergingRamp,
     fitConfusion: () => fitConfusion,
     fitHeatmap: () => fitHeatmap,
@@ -127,6 +131,7 @@ var RtemisDraw = (() => {
     fitLabel: () => fitLabel,
     fitLegend: () => fitLegend,
     fitSurfaceAxes: () => fitSurfaceAxes,
+    flattenColor: () => flattenColor,
     fontStack: () => fontStack,
     formatNumber: () => formatNumber,
     funnelStages: () => funnelStages,
@@ -151,7 +156,9 @@ var RtemisDraw = (() => {
     lineAspect: () => lineAspect,
     mapFeatures: () => mapFeatures,
     measureLayout: () => measureLayout,
+    mergePatch: () => mergePatch,
     networkReducers: () => networkReducers,
+    networkTheme: () => networkTheme,
     normalizeLocation: () => normalizeLocation,
     pieSlices: () => pieSlices,
     placeColorScale: () => placeColorScale,
@@ -172,6 +179,7 @@ var RtemisDraw = (() => {
     surfaceSeries: () => surfaceSeries,
     survivalMedian: () => survivalMedian,
     themeFontSizes: () => themeFontSizes,
+    themeObject: () => themeObject,
     themeOption: () => themeOption,
     timeLabel: () => timeLabel,
     timeMs: () => timeMs,
@@ -1553,13 +1561,17 @@ var RtemisDraw = (() => {
     if (entries.length === 0) throw new Error("`font_family` must be a nonempty font family.");
     const ident = /^-?[A-Za-z_][A-Za-z0-9_-]*( +-?[A-Za-z_][A-Za-z0-9_-]*)*$/;
     const quoted = /^(['"]).*\1$/;
+    const variable = /^var\(.*\)$/i;
     const out = entries.map((e) => {
       const generic = GENERIC_FONT_FAMILIES.has(e.toLowerCase());
-      return quoted.test(e) || generic || ident.test(e) ? e : `'${e.replaceAll("'", "\\'")}'`;
+      return quoted.test(e) || generic || ident.test(e) || variable.test(e) ? e : `'${e.replaceAll("'", "\\'")}'`;
     });
     const last = entries[entries.length - 1] ?? "";
     if (!GENERIC_FONT_FAMILIES.has(last.toLowerCase())) out.push(DEFAULT_FONT_FAMILY);
     return out.join(", ");
+  }
+  function em(length, size) {
+    return length === void 0 || length === null ? void 0 : length * size;
   }
   function roundHalfEven(x) {
     const floor = Math.floor(x);
@@ -1616,16 +1628,38 @@ var RtemisDraw = (() => {
     const sizes = themeFontSizes(tokens);
     const dark = tokens.scheme === "dark";
     const fg = tokens.fg_color;
-    const textStyle = { color: fg, fontFamily: fontStack(tokens.font_family), fontSize: sizes.base };
+    const textStyle = present({
+      color: fg,
+      fontFamily: fontStack(tokens.font_family),
+      fontSize: sizes.base,
+      fontWeight: tokens.font_weight
+    });
     const withText = (style) => ({ ...textStyle, ...style });
-    const axisLabel = { fontSize: sizes.axisLabel, color: fg };
-    const axisLine = tokens.axis_color ? { lineStyle: { color: tokens.axis_color } } : void 0;
+    const axisLabelText = present({
+      fontSize: sizes.axisLabel,
+      color: fg,
+      fontWeight: tokens.font_weight
+    });
+    const axisLabel = present({
+      ...axisLabelText,
+      margin: em(tokens.axis_label_gap, sizes.axisLabel)
+    });
+    const nameMargin = em(tokens.axis_name_gap, sizes.base);
+    const nameTextStyle = nameMargin === void 0 ? void 0 : { textMargin: [nameMargin, 3, nameMargin, 3] };
+    const axisLineStyle = tokens.axis_color ? { lineStyle: { color: tokens.axis_color } } : {};
+    const axisLine = Object.keys(axisLineStyle).length > 0 || tokens.axis_line_show !== void 0 && tokens.axis_line_show !== null ? present({ show: tokens.axis_line_show, ...axisLineStyle }) : void 0;
     const axisTick = { show: false };
-    const splitLine = tokens.grid_color ? { lineStyle: { color: tokens.grid_color } } : void 0;
-    const valueAxis2 = present({ axisLabel, axisLine, axisTick, splitLine });
+    const gridLine = present({
+      color: tokens.grid_color,
+      opacity: tokens.grid_opacity,
+      type: tokens.grid_style
+    });
+    const splitLine = Object.keys(gridLine).length > 0 ? { lineStyle: gridLine } : void 0;
+    const axisName = present({ nameLocation: tokens.axis_name_location, nameTextStyle });
+    const valueAxis2 = present({ ...axisName, axisLabel, axisLine, axisTick, splitLine });
     const radar = present({
       ...SERIES_THEME.radar,
-      axisName: axisLabel,
+      axisName: axisLabelText,
       axisLine,
       splitLine,
       splitArea: tokens.grid_color ? { areaStyle: { color: ["rgba(0, 0, 0, 0)", tokens.grid_color] } } : void 0
@@ -1635,7 +1669,13 @@ var RtemisDraw = (() => {
       backgroundColor: tokens.bg_color,
       textStyle,
       title: {
-        textStyle: withText(present({ color: tokens.title_color, fontSize: sizes.title })),
+        textStyle: withText(
+          present({
+            color: tokens.title_color,
+            fontSize: sizes.title,
+            fontWeight: tokens.title_font_weight
+          })
+        ),
         subtextStyle: withText(present({ color: tokens.subtitle_color, fontSize: sizes.subtitle }))
       },
       legend: {
@@ -1646,18 +1686,44 @@ var RtemisDraw = (() => {
         borderColor: tokens.tooltip_border_color,
         textStyle: withText({ color: tokens.tooltip_color ?? fg, fontSize: sizes.tooltip })
       }),
-      visualMap: { textStyle },
+      visualMap: {
+        textStyle: present({ ...textStyle, fontSize: tokens.color_scale_font_size ?? sizes.base })
+      },
       // Neutral controls leave the palette to encode data; every accent-bearing
       // slider state is set so ECharts' blue defaults cannot show.
       // spec: draw/visual-qa-docs#neutral-data-zoom-sliders
-      dataZoom: { ...zoomSliderStyle(dark), textStyle: axisLabel },
+      dataZoom: { ...zoomSliderStyle(dark), textStyle: axisLabelText },
       ...SERIES_THEME,
       radar,
-      categoryAxis: present({ axisLabel, axisLine, axisTick, splitLine: { show: false } }),
+      categoryAxis: present({
+        ...axisName,
+        axisLabel,
+        axisLine,
+        axisTick,
+        splitLine: { show: false }
+      }),
       valueAxis: valueAxis2,
       logAxis: valueAxis2,
       timeAxis: valueAxis2
     };
+  }
+  function mergePatch(target, patch) {
+    const out = { ...target };
+    for (const [key, value] of Object.entries(patch)) {
+      if (value === null) {
+        delete out[key];
+      } else if (typeof value === "object" && !Array.isArray(value) && typeof out[key] === "object" && out[key] !== null && !Array.isArray(out[key])) {
+        out[key] = mergePatch(out[key], value);
+      } else {
+        out[key] = value;
+      }
+    }
+    return out;
+  }
+  function themeObject(doc) {
+    const { echarts, ...tokens } = doc;
+    const option = themeOption(tokens);
+    return echarts ? mergePatch(option, echarts) : option;
   }
 
   // src/charts/boxplot/renderers.ts
@@ -9594,25 +9660,29 @@ ${rate(r.balancedAccuracy)}`, summary2) }
       series
     });
   }
-  function layoutSurvivalRisk(option) {
+  function layoutSurvivalRisk(option, tokens) {
     const series = Array.isArray(option.series) ? option.series : [];
     const strips = series.filter((s) => s?.renderItem === SURVIVAL_RISK);
     if (strips.length === 0) return option;
     const x = Array.isArray(option.xAxis) ? option.xAxis[0] : option.xAxis;
-    const size = (style) => {
+    const sizes = tokens ? themeFontSizes(tokens) : null;
+    const size = (style, fallback = 12) => {
       const v = style?.fontSize;
-      return typeof v === "number" ? v : 12;
+      return typeof v === "number" ? v : fallback;
     };
+    const labelSize = sizes?.axisLabel ?? 12;
+    const nameSize = sizes?.base ?? 12;
+    const themeMargin = tokens?.axis_name_gap === void 0 || tokens.axis_name_gap === null ? 0 : tokens.axis_name_gap * nameSize;
     const nameGap = typeof x?.nameGap === "number" ? x.nameGap : 30;
-    const fontSize = size(x?.axisLabel);
+    const fontSize = size(x?.axisLabel, labelSize);
     const margin = x?.nameTextStyle?.textMargin;
-    const [above, below] = Array.isArray(margin) ? [Number(margin[0]) || 0, Number(margin[2] ?? margin[0]) || 0] : typeof margin === "number" ? [margin, margin] : [0, 0];
-    const offset = nameGap + above + Math.ceil(size(x?.nameTextStyle) * 1.3) + below + RISK_GAP;
+    const [above, below] = Array.isArray(margin) ? [Number(margin[0]) || 0, Number(margin[2] ?? margin[0]) || 0] : typeof margin === "number" ? [margin, margin] : [themeMargin, themeMargin];
+    const offset = nameGap + above + Math.ceil(size(x?.nameTextStyle, nameSize) * 1.3) + below + RISK_GAP;
     const lineHeight = Math.round(fontSize * 1.6);
     const y = Array.isArray(option.yAxis) ? option.yAxis[0] : option.yAxis;
     const centered = y?.nameLocation === "middle" || y?.nameLocation === "center";
     const yGap = centered && typeof y?.nameGap === "number" ? y.nameGap : Y_NAME_GAP;
-    const captionOffset = Math.max(yGap, Y_NAME_GAP) + size(y?.nameTextStyle) / 2;
+    const captionOffset = Math.max(yGap, Y_NAME_GAP) + size(y?.nameTextStyle, nameSize) / 2;
     let rows = 0;
     for (const s of strips) {
       const payload = s.itemPayload;
@@ -10909,6 +10979,90 @@ ${rate(r.balancedAccuracy)}`, summary2) }
       s.labelLayout = repel;
     }
     return option;
+  }
+
+  // src/theme/backends.ts
+  function overlayBackground(dark) {
+    return dark ? "rgba(40,40,40,0.85)" : "rgba(255,255,255,0.85)";
+  }
+  function networkTheme(tokens) {
+    const dark = tokens.scheme === "dark";
+    return {
+      palette: [...tokens.palette],
+      positive_color: tokens.positive_color,
+      negative_color: tokens.negative_color,
+      label_color: tokens.fg_color,
+      font_family: fontStack(tokens.font_family),
+      scheme: tokens.scheme,
+      background: tokens.bg_color,
+      tooltip_background: overlayBackground(dark)
+    };
+  }
+  function choroplethTheme(tokens) {
+    const dark = tokens.scheme === "dark";
+    return {
+      scheme: tokens.scheme,
+      background: tokens.bg_color,
+      foreground: tokens.fg_color,
+      font_family: fontStack(tokens.font_family),
+      overlay: {
+        background: overlayBackground(dark),
+        foreground: tokens.fg_color,
+        muted: dark ? "rgba(230,230,230,0.7)" : "rgba(26,26,26,0.65)"
+      }
+    };
+  }
+  var DIAGRAM_GRAYS = Object.freeze({
+    light: Object.freeze({
+      muted: "#6e6e6e",
+      line: "#5c5c5c",
+      surface: "#f3f3f3",
+      "surface-alt": "#e6e6e6",
+      border: "#8a8a8a"
+    }),
+    dark: Object.freeze({
+      muted: "#999999",
+      line: "#a3a3a3",
+      surface: "#232323",
+      "surface-alt": "#2e2e2e",
+      border: "#6a6a6a"
+    })
+  });
+  var DIAGRAM_SERIES = 8;
+  function hex6(color) {
+    let h = color.trim().replace("#", "");
+    if (h.length === 3) h = [...h].map((c) => c + c).join("");
+    return /^[0-9a-f]{6}$/i.test(h) ? h.toLowerCase() : null;
+  }
+  function flattenColor(color, background) {
+    const m = /^rgba?\(\s*([\d.]+)\s*,\s*([\d.]+)\s*,\s*([\d.]+)\s*(?:,\s*([\d.]+)\s*)?\)$/i.exec(
+      color.trim()
+    );
+    if (!m) return color;
+    const a = m[4] === void 0 ? 1 : Number(m[4]);
+    const base = hex6(background) ?? "ffffff";
+    const channels2 = [m[1], m[2], m[3]].map((c, i) => {
+      const under = Number.parseInt(base.slice(2 * i, 2 * i + 2), 16);
+      const v = Math.round(a * Number(c) + (1 - a) * under);
+      return Math.max(0, Math.min(255, v)).toString(16).padStart(2, "0");
+    });
+    return `#${channels2.join("")}`;
+  }
+  function diagramTheme(tokens) {
+    const out = {
+      bg: tokens.bg_color,
+      fg: flattenColor(tokens.fg_color, tokens.bg_color),
+      ...DIAGRAM_GRAYS[tokens.scheme],
+      font: fontStack(tokens.font_family)
+    };
+    const palette = tokens.palette;
+    if (palette.length > 0) {
+      for (let i = 0; i < DIAGRAM_SERIES; i++) {
+        out[`series-${i + 1}`] = palette[i % palette.length];
+      }
+      out.accent = palette[0];
+    }
+    return out;
   }
 
   // src/index.ts

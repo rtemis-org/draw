@@ -21,7 +21,7 @@ custom_theme <- function(...) {
 }
 
 
-test_that("built-in themes carry the sign colors and keep them out of ECharts", {
+test_that("built-in themes carry the sign colors as tokens", {
   for (theme in list(theme_light(), theme_dark())) {
     expect_identical(
       c(
@@ -31,8 +31,8 @@ test_that("built-in themes carry the sign colors and keep them out of ECharts", 
       ),
       SIGN_COLORS
     )
-    expect_false(any(
-      c("negativeColor", "neutralColor", "positiveColor") %in%
+    expect_true(all(
+      c("negative_color", "neutral_color", "positive_color") %in%
         names(to_list(theme))
     ))
   }
@@ -210,7 +210,7 @@ test_that("heatmap and spectrogram scales fade to the theme's background", {
       cluster_rows = FALSE,
       cluster_cols = FALSE,
       zlim = c(-1, 1),
-      theme = Theme(background_color = "#202830")
+      theme = Theme(bg_color = "#202830")
     )
     expect_identical(midpoint(scale(w, FALSE)), "#202830")
     expect_identical(midpoint(scale(w, TRUE)), "#202830")
@@ -228,7 +228,7 @@ test_that("heatmap and spectrogram scales fade to the theme's background", {
       db = FALSE,
       colormap = "diverging",
       n_colors = 11L,
-      theme = custom_theme(background_color = "#202830")
+      theme = custom_theme(bg_color = "#202830")
     )
     pal <- scale(w, FALSE)
     expect_identical(

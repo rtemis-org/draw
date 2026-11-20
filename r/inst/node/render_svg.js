@@ -26,7 +26,6 @@ const echarts = require(echartsPath);
 const registerRenderers = require("../htmlwidgets/lib/draw/renderers.js");
 const rendererNames = registerRenderers(echarts);
 const builders = require("../htmlwidgets/lib/draw/rtemis-draw-builders.js");
-const vectorTheme = require("../htmlwidgets/lib/draw/vector_theme.js");
 // The shared layout (panels.js) reaches the package through the global the
 // browser bundle defines.
 globalThis.RtemisDraw = builders;
@@ -36,10 +35,14 @@ const a3 = require("../htmlwidgets/lib/draw/a3.js");
 const ZOOM_SLIDER_ID = builders.ZOOM_SLIDER_ID;
 const ZOOM_SLIDER_HANDLE = 7;
 
+// The ECharts theme object of a payload's theme document (R's `Theme`), or null.
+function themeObjectOf(panel) {
+  return panel.theme ? builders.themeObject(panel.theme) : null;
+}
+
 // Build the option of a payload that carries a build request with the bundled
-// @rtemis/draw, without interactive controls, in the scheme of the export's
-// theme: dark when its background is dark, as theme_dark()'s is, and light
-// otherwise. spec: draw/shared-builders#r-widget
+// @rtemis/draw, without interactive controls, in the scheme its theme document
+// states. spec: draw/shared-builders#r-widget
 function build(panel) {
   const request = panel.build;
   const builder = builders.builders[request.type];
@@ -47,8 +50,8 @@ function build(panel) {
   const data = typeof request.data === "string" ? JSON.parse(request.data) : request.data;
   // The background of the export's theme, which a treemap's and a sunburst's
   // borders take.
-  const background = typeof panel.theme?.backgroundColor === "string" ? panel.theme.backgroundColor : undefined;
-  const dark = vectorTheme.isDark(background);
+  const background = typeof panel.theme?.bg_color === "string" ? panel.theme.bg_color : undefined;
+  const dark = panel.theme?.scheme === "dark";
   const appearance = {...request.appearance, dark, ...(background ? {background} : {})};
   const option = {...builder(data, request.config, appearance)};
   // The builders leave the background to the host; export paints the theme's.
@@ -84,7 +87,7 @@ function build(panel) {
 // at least one pixel keeps the fit defined when glyph sizes are zero.
 function a3ExportHeight(panel, width) {
   const hint = {...panel.a3, bodyHeight: Math.max(panel.a3.bodyHeight, 1)};
-  const chart = echarts.init(null, panel.theme || null,
+  const chart = echarts.init(null, themeObjectOf(panel),
     {renderer: "svg", ssr: true, width, height: Math.max(Math.ceil(panel.a3.height), 1)});
   try {
     chart.setOption(panel.option);
@@ -123,10 +126,11 @@ process.stdin.on("end", () => {
 	let height = payload.height || 600;
 	const creator = payload.creator || "rtemis.draw";
 	function renderPanel(panel, w, h) {
-    if (panel.option?.grid3D) return require("../htmlwidgets/lib/draw/scatter3d.js").svg(panel,w,h);
-		if (panel.confusion) builders.fitConfusion(echarts, panel, panel.theme, w, h);
+    const themeObj = themeObjectOf(panel);
+    if (panel.option?.grid3D) return require("../htmlwidgets/lib/draw/scatter3d.js").svg({...panel, theme: themeObj}, w, h);
+		if (panel.confusion) builders.fitConfusion(echarts, panel, themeObj, w, h);
 		layout.prepareLabels(panel);
-		layout.prepareColors(echarts, panel, panel.theme);
+		layout.prepareColors(echarts, panel, themeObj);
 		const option = panel.option;
 		if (!option) throw new Error("An ECharts option is required for each panel.");
 		const series = Array.isArray(option.series) ? option.series : [option.series];
@@ -146,7 +150,7 @@ process.stdin.on("end", () => {
 		option.animation = false;
 		let chart;
 		try {
-			chart = echarts.init(null, panel.theme || null,
+			chart = echarts.init(null, themeObj,
 				{renderer: "svg", ssr: true, width: w, height: h});
 			chart.setOption(option);
 			layout.fitGantt(echarts, chart, panel);

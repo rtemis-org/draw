@@ -36,11 +36,20 @@ charts <- function() {
 }
 
 test_that("the theme palette serializes as a JSON array, not an object", {
+  # The theme document carries the palette as `palette`.
   for (nm in names(charts())) {
     json <- widget_json(charts()[[nm]])
-    idx <- regexpr('"theme":{"color":', json, fixed = TRUE)
+    theme <- regexpr('"theme":{', json, fixed = TRUE)
+    expect_gt(theme, 0L)
+    rest <- substring(json, theme)
+    key <- '"palette":'
+    idx <- regexpr(key, rest, fixed = TRUE)
     expect_gt(idx, 0L)
-    expect_identical(substr(json, idx + 17L, idx + 17L), "[", label = nm)
+    expect_identical(
+      substr(rest, idx + nchar(key), idx + nchar(key)),
+      "[",
+      label = nm
+    )
   }
 })
 

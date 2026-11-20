@@ -6,6 +6,7 @@ const echarts = require(input.echarts), directory = path.dirname(input.layout);
 require(path.join(directory, 'renderers.js'))(echarts);
 const body = {style: {}, classList: {contains: () => false}};
 const context = {document: {body}, window: {}, HTMLWidgets: {widget() {}},
+  RtemisDraw: require(path.join(directory, 'rtemis-draw-builders.js')),
   rtemisPanels: require(input.layout), rtemisA3: require(path.join(directory, 'a3.js')),
   echarts: {...echarts, init: (_, theme, options) => echarts.init(null, theme,
     {...options, renderer: 'svg', ssr: true})}};

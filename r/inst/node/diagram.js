@@ -10,6 +10,9 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const vm = require('node:vm');
+// diagram_theme.js reads theme documents through the `RtemisDraw` global.
+globalThis.RtemisDraw =
+  globalThis.RtemisDraw || require('../htmlwidgets/lib/draw/rtemis-draw-builders.js');
 const diagramTheme = require('../htmlwidgets/lib/draw/diagram_theme.js');
 
 // Helvetica and its metric-compatible fonts on macOS, Windows, and Linux: the

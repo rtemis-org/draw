@@ -29,7 +29,9 @@ test_that("draw() includes theme when provided", {
   th <- theme_dark()
   w <- draw(opt, theme = th)
   expect_false(is.null(w$x$theme))
-  expect_equal(w$x$theme$backgroundColor, "#181818")
+  # The widget carries the token document; the browser projects it.
+  expect_equal(w$x$theme$bg_color, "#181818")
+  expect_equal(w$x$theme$scheme, "dark")
 })
 
 test_that("draw() passes renderer option", {

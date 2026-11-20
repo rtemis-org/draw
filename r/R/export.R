@@ -161,7 +161,7 @@ save_drawing <- function(widget, filename, width = NULL, height = NULL) {
     scene <- strip_js(payload, path = "scene")
     if (backend == "diagram") {
       scene[["fontMetrics"]] <- font_metrics(
-        theme[["textStyle"]][["fontFamily"]],
+        font_stack(theme[["font_family"]]),
         scene[["source"]]
       )
     }

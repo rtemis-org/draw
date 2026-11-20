@@ -278,7 +278,7 @@ test_that("the diverging scale centers on the theme background and reverses", {
   expect_identical(colors(backward), rev(colors(forward)))
   expect_identical(
     toupper(colors(forward)[[3L]]),
-    toupper(theme_light()@background_color)
+    toupper(theme_light()@bg_color)
   )
   expect_identical(
     unlist(raw_option(draw_spectrogram(

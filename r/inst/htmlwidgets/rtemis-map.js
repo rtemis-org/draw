@@ -33,10 +33,9 @@ HTMLWidgets.widget({
     let currentPayload = null;
     let renderedDark = null;
 
-    // Resolves the active theme (an ECharts theme list) to the colors the map
-    // reads. An explicit theme is dark or light by its background luminance; in
-    // auto mode the host's scheme decides, by the detection every binding shares
-    // (lib/draw/theme_watch.js).
+    // Resolves the active theme document to the colors the map reads. An
+    // explicit theme states its scheme; in auto mode the host's scheme decides,
+    // by the detection every binding shares (lib/draw/theme_watch.js).
     const resolveTheme = (x) => {
       renderedDark = window.RtemisThemeWatch.isDark();
       return window.RtemisVectorTheme.resolve(

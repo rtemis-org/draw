@@ -3,7 +3,9 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const payload = JSON.parse(fs.readFileSync(process.argv[2], 'utf8'));
 const echarts = require(payload.echarts);
-for (const theme of payload.themes) {
+// The theme documents R writes, projected by the bundled @rtemis/draw.
+const builders = require(payload.builders);
+for (const theme of payload.themes.map(doc => builders.themeObject(doc))) {
   const chart = echarts.init(null, theme, {renderer:'svg', ssr:true, width:700, height:450});
   try {
     chart.setOption({animation:false, xAxis:{type:'value'}, yAxis:{type:'value'},

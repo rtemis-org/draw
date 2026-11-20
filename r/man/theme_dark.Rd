@@ -25,69 +25,93 @@ theme_dark(
   tooltip_color = NULL,
   negative_color = SIGN_COLORS[["negative"]],
   neutral_color = SIGN_COLORS[["neutral"]],
-  positive_color = SIGN_COLORS[["positive"]]
+  positive_color = SIGN_COLORS[["positive"]],
+  font_weight = NULL,
+  title_font_weight = NULL,
+  grid_opacity = NULL,
+  grid_style = NULL,
+  axis_label_gap = NULL,
+  axis_name_gap = NULL,
+  axis_name_location = NULL,
+  axis_line_show = NULL,
+  color_scale_font_size = NULL,
+  echarts = NULL
 )
 }
 \arguments{
-\item{base_font_size}{Numeric \verb{[0, Inf)}: Base font size in pixels for all text.}
+\item{base_font_size}{Numeric \verb{(0, Inf)}: Size in pixels of all text.}
 
-\item{title_font_size}{Optional Numeric \verb{[0, Inf)}: Title font size.}
+\item{title_font_size, subtitle_font_size, axis_label_font_size, legend_font_size, tooltip_font_size}{Optional Numeric \verb{(0, Inf)}: Text sizes in pixels. \code{NULL} sets the title
+to 1.2 times \code{base_font_size} and the others to \code{base_font_size}.}
 
-\item{subtitle_font_size}{Optional Numeric \verb{[0, Inf)}: Subtitle font size.}
+\item{font_family}{Optional Character: Font family name or CSS font stack,
+e.g. \code{"Geist"} or \code{"Geist, Helvetica, sans-serif"}. Unless the stack ends
+in a generic family such as \code{sans-serif}, the system UI font stack follows
+it as the fallback. A family name that is not a sequence of CSS
+identifiers, e.g. \verb{Source Sans 3}, is quoted. \code{NULL} uses the system UI
+font stack. The default is the \code{rtemis.font_family} option, which sets the
+font of every rtemis plot, e.g. \code{options(rtemis.font_family = "Geist")}. A
+widget uses the font when the viewer's system has it installed or the page
+loads it.}
 
-\item{axis_label_font_size}{Optional Numeric \verb{[0, Inf)}: Axis-label font size.}
+\item{color}{Character: Categorical palette.}
 
-\item{legend_font_size}{Optional Numeric \verb{[0, Inf)}: Legend font size.}
+\item{bg_color}{Character: Chart background color.}
 
-\item{tooltip_font_size}{Optional Numeric \verb{[0, Inf)}: Tooltip font size.}
+\item{fg_color}{Character: Text color.}
 
-\item{font_family}{Optional Character scalar: Font family name or CSS font
-stack, e.g. \code{"Geist"} or \code{"Geist, Helvetica, sans-serif"}. Unless the
-stack ends in a generic family such as \code{sans-serif}, the system UI font
-stack follows it as the fallback. A family name that is not a sequence of
-CSS identifiers, e.g. \verb{Source Sans 3}, is quoted. \code{NULL} uses the system
-UI font stack. The default is the \code{rtemis.font_family} option, which sets
-the font of every rtemis plot, e.g. \code{options(rtemis.font_family = "Geist")}.
-A widget uses the font when the viewer's system has it installed or the
-page loads it.}
+\item{title_color, subtitle_color, legend_color, axis_color, grid_color, tooltip_bg, tooltip_border_color, tooltip_color}{Optional Character: Colors of titles, subtitles, legend text, axis lines,
+gridlines, the tooltip background, its border, and its text. \code{NULL}
+follows \code{fg_color} for text and ECharts' default otherwise.}
 
-\item{color}{Character: Color palette.}
-
-\item{bg_color}{Optional Character: Chart background color.}
-
-\item{fg_color}{Optional Character: Global text color.}
-
-\item{title_color}{Optional Character: Title text color.}
-
-\item{subtitle_color}{Optional Character: Subtitle text color.}
-
-\item{legend_color}{Optional Character: Legend text color.}
-
-\item{axis_color}{Optional Character: Axis line color.}
-
-\item{grid_color}{Optional Character: Grid or split-line color.}
-
-\item{tooltip_bg}{Optional Character: Tooltip background color.}
-
-\item{tooltip_border_color}{Optional Character: Tooltip border color.}
-
-\item{tooltip_color}{Optional Character: Tooltip text color.}
-
-\item{negative_color, neutral_color, positive_color}{Character: Colors for
+\item{negative_color, neutral_color, positive_color}{Character: Colors of
 negative values, values of neither sign, and positive values, in every
-chart that colors by sign. The defaults, blue, gray, and orange, have equal
-perceived lightness, keep at least 3.9:1 contrast on light and dark
-backgrounds, and stay distinguishable under deuteranopia and protanopia.}
+chart that colors by sign. A chart's own color arguments take precedence.}
+
+\item{font_weight}{Optional Numeric \verb{[1, 1000]}: Weight of all text; 400 is
+normal, 700 bold. \code{NULL} uses ECharts' default, 400.}
+
+\item{title_font_weight}{Optional Numeric \verb{[1, 1000]}: Weight of titles.
+\code{NULL} uses ECharts' default, 700.}
+
+\item{grid_opacity}{Optional Numeric \verb{[0, 1]}: Opacity of gridlines.}
+
+\item{grid_style}{Optional Character \{"solid", "dashed", "dotted"\}: Dash
+style of gridlines.}
+
+\item{axis_label_gap}{Optional Numeric \verb{[0, Inf)}: Distance from the plot to
+the tick labels, in em of the axis label font size. \code{NULL} uses ECharts'
+default, 8 pixels.}
+
+\item{axis_name_gap}{Optional Numeric \verb{[0, Inf)}: Margin around an axis
+name, in em of \code{base_font_size}; a centered name keeps it from the tick
+labels. \code{NULL} uses ECharts' default.}
+
+\item{axis_name_location}{Optional Character \{"start", "middle", "end"\}:
+Where every axis name sits along its axis. \code{NULL} leaves it to each chart.}
+
+\item{axis_line_show}{Optional Logical: Whether axis lines show. \code{NULL} uses
+ECharts' default for each axis type.}
+
+\item{color_scale_font_size}{Optional Numeric \verb{(0, Inf)}: Text size in
+pixels of color scale labels. \code{NULL} uses \code{base_font_size}.}
+
+\item{echarts}{Optional Named list: ECharts theme-object patch, merged over
+the projection of the tokens: objects merge recursively, any other value
+replaces, and \code{NULL} inside the patch removes a key. Keys are ECharts'
+camelCase names. Only ECharts charts read it.}
 }
 \value{
 \link{Theme}: Theme object.
 }
 \description{
-Returns a dark theme. All parameters have sensible defaults; most
-users only need \code{base_font_size}. Title font size defaults to 1.2x
-the base; all other text defaults to 1x.
-Data-zoom sliders use neutral gray controls adapted to dark backgrounds.
+Returns the dark theme: light text on near-black, the rtemis palette, and the
+sign colors, which keep their contrast on either background. Title text
+defaults to 1.2 times \code{base_font_size}; all other text to \code{base_font_size}.
 }
 \examples{
 theme_dark(base_font_size = 14)
+}
+\author{
+EDG
 }

@@ -3,8 +3,12 @@ dependencies:
     version: 1.6.0
     src: htmlwidgets/lib/pele
     script: pele.global.js
+  - name: rtemis-draw-builders
+    version: 0.10.1
+    src: htmlwidgets/lib/draw
+    script: rtemis-draw-builders.js
   - name: rtemis-diagram-theme
-    version: 1.0.0
+    version: 2.0.0
     src: htmlwidgets/lib/draw
     script: diagram_theme.js
   - name: rtemis-theme-watch
