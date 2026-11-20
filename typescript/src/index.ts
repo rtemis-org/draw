@@ -349,7 +349,13 @@ export { valueLabel } from "./shared/labels.ts";
 export type { Layer } from "./shared/layers.ts";
 export { appendLayers } from "./shared/layers.ts";
 export type { MarginMembers } from "./shared/layout.ts";
-export { DEFAULT_MARGIN, placeZoomSlider, ZOOM_SLIDER_ID } from "./shared/layout.ts";
+export {
+  AXIS_LABEL_INSET_EM,
+  axisLabelInset,
+  DEFAULT_MARGIN,
+  placeZoomSlider,
+  ZOOM_SLIDER_ID,
+} from "./shared/layout.ts";
 export type { LegendMembers } from "./shared/legend.ts";
 export type { AxisLimits } from "./shared/limits.ts";
 export { calcLimits, calcLimitsFromZero, DEFAULT_PAD } from "./shared/limits.ts";

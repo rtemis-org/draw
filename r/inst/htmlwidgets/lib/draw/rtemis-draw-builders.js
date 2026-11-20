@@ -22,6 +22,7 @@ var RtemisDraw = (() => {
   var index_exports = {};
   __export(index_exports, {
     A3_CHART_CONFIG_MEMBERS: () => A3_CHART_CONFIG_MEMBERS,
+    AXIS_LABEL_INSET_EM: () => AXIS_LABEL_INSET_EM,
     BAR_CHART_CONFIG_MEMBERS: () => BAR_CHART_CONFIG_MEMBERS,
     BOXPLOT_CHART_CONFIG_MEMBERS: () => BOXPLOT_CHART_CONFIG_MEMBERS,
     CALIBRATION_CHART_CONFIG_MEMBERS: () => CALIBRATION_CHART_CONFIG_MEMBERS,
@@ -77,6 +78,7 @@ var RtemisDraw = (() => {
     applyRepelLabels: () => applyRepelLabels,
     aspectHints: () => aspectHints,
     autoAlpha: () => autoAlpha,
+    axisLabelInset: () => axisLabelInset,
     axisTooltip: () => axisTooltip,
     boxplotStats: () => boxplotStats,
     branchColors: () => branchColors,
@@ -1125,6 +1127,10 @@ var RtemisDraw = (() => {
 
   // src/shared/layout.ts
   var DEFAULT_MARGIN = 36;
+  var AXIS_LABEL_INSET_EM = 0.09;
+  function axisLabelInset(fontSize) {
+    return fontSize * AXIS_LABEL_INSET_EM;
+  }
   var SIDES = ["top", "right", "bottom", "left"];
   function cartesianGrid(config, axisNames) {
     const set = SIDES.filter((side) => typeof config[`margin_${side}`] === "number");
@@ -9660,6 +9666,10 @@ ${rate(r.balancedAccuracy)}`, summary2) }
       series
     });
   }
+  function firstMargin(margin, fallback) {
+    if (Array.isArray(margin)) return Number(margin[0]) || 0;
+    return typeof margin === "number" ? margin : fallback;
+  }
   function layoutSurvivalRisk(option, tokens) {
     const series = Array.isArray(option.series) ? option.series : [];
     const strips = series.filter((s) => s?.renderItem === SURVIVAL_RISK);
@@ -9682,7 +9692,14 @@ ${rate(r.balancedAccuracy)}`, summary2) }
     const y = Array.isArray(option.yAxis) ? option.yAxis[0] : option.yAxis;
     const centered = y?.nameLocation === "middle" || y?.nameLocation === "center";
     const yGap = centered && typeof y?.nameGap === "number" ? y.nameGap : Y_NAME_GAP;
-    const captionOffset = Math.max(yGap, Y_NAME_GAP) + size(y?.nameTextStyle, nameSize) / 2;
+    const yMargin = firstMargin(
+      y?.nameTextStyle?.textMargin,
+      themeMargin
+    );
+    const yLabel = y?.axisLabel;
+    const labelsExtent = (typeof yLabel?.margin === "number" ? yLabel.margin : 8) + 4 * 0.6 * size(y?.axisLabel, labelSize);
+    const nameEdge = Math.max(yGap, Y_NAME_GAP, centered && yMargin > 0 ? labelsExtent + yMargin : 0);
+    const captionOffset = nameEdge + size(y?.nameTextStyle, nameSize) / 2;
     let rows = 0;
     for (const s of strips) {
       const payload = s.itemPayload;

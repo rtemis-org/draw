@@ -14,6 +14,22 @@ export interface MarginMembers {
 /** Margin in pixels on every side when a config sets none. */
 export const DEFAULT_MARGIN = 36;
 
+/**
+ * The glyphs of a horizontal axis's tick labels start this many em inside
+ * their text box, so they read that much farther from the plot than their
+ * label margin.
+ */
+export const AXIS_LABEL_INSET_EM = 0.09;
+
+/**
+ * Pixels a vertical axis's tick label margin adds at `fontSize`, so the tick
+ * labels of both axes read at one distance from the plot.
+ * spec: draw/chart-appearance#the-theme
+ */
+export function axisLabelInset(fontSize: number): number {
+  return fontSize * AXIS_LABEL_INSET_EM;
+}
+
 const SIDES = ["top", "right", "bottom", "left"] as const;
 type Side = (typeof SIDES)[number];
 

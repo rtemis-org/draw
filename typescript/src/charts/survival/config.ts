@@ -484,6 +484,12 @@ export function buildSurvivalOption(
   });
 }
 
+/** The first side of a text margin, one number or `[top, right, bottom, left]`. */
+function firstMargin(margin: unknown, fallback: number): number {
+  if (Array.isArray(margin)) return Number(margin[0]) || 0;
+  return typeof margin === "number" ? margin : fallback;
+}
+
 /**
  * Places the number-at-risk strip of a built survival option under its time
  * axis name, at the axis label font size: each row is 1.6 times that size,
@@ -493,9 +499,10 @@ export function buildSurvivalOption(
  * "At risk" is centered where a centered y axis name is: `nameGap` plus half
  * the name's font size left of the plot, the gap at least the builder's 45
  * pixels, since ECharts moves a name with a smaller gap clear of the tick
- * labels; with the name at an end of the axis, the caption keeps the
- * builder's place. A host that restyles either axis
- * after the build calls it again; a host that registers a theme passes its
+ * labels, and with a name text margin at least the labels' estimated extent
+ * plus that margin; with the name at an end of the axis, the caption keeps
+ * the builder's place. A host that restyles either axis after the build
+ * calls it again; a host that registers a theme passes its
  * `tokens`, whose text sizes and name margin stand where the option sets
  * none. Mutates and returns `option`; an option without the strip is returned
  * as it is.
@@ -541,9 +548,21 @@ export function layoutSurvivalRisk<T extends Record<string, unknown>>(
     | undefined;
   const centered = y?.nameLocation === "middle" || y?.nameLocation === "center";
   const yGap = centered && typeof y?.nameGap === "number" ? y.nameGap : Y_NAME_GAP;
-  // ECharts puts a centered name's edge nearest the axis `nameGap` from it, so
+  // A centered name with a text margin keeps it from the tick labels, which
+  // ECharts moves the name clear of. The labels' extent is estimated as their
+  // margin plus the widest survival label, "1.00", at 0.6 em per character.
+  const yMargin = firstMargin(
+    (y?.nameTextStyle as { textMargin?: unknown } | undefined)?.textMargin,
+    themeMargin,
+  );
+  const yLabel = y?.axisLabel as { margin?: unknown } | undefined;
+  const labelsExtent =
+    (typeof yLabel?.margin === "number" ? yLabel.margin : 8) +
+    4 * 0.6 * size(y?.axisLabel, labelSize);
+  const nameEdge = Math.max(yGap, Y_NAME_GAP, centered && yMargin > 0 ? labelsExtent + yMargin : 0);
+  // ECharts puts a centered name's edge nearest the axis at that distance, so
   // the name's center lies half its font size further out.
-  const captionOffset = Math.max(yGap, Y_NAME_GAP) + size(y?.nameTextStyle, nameSize) / 2;
+  const captionOffset = nameEdge + size(y?.nameTextStyle, nameSize) / 2;
   let rows = 0;
   for (const s of strips) {
     const payload = s.itemPayload as RiskPayload;

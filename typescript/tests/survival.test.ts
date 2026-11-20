@@ -181,8 +181,11 @@ describe("layoutSurvivalRisk", () => {
     // Name gap 30, its 10-pixel margins above and below, 16-pixel name text.
     const offset = 30 + 10 + Math.ceil(16 * 1.3) + 10 + 12;
     expect(rows[0]?.itemPayload).toMatchObject({ offset, lineHeight: 26, fontSize: 16 });
-    // The caption is centered on a 16-pixel centered y axis name.
-    expect(rows[0]?.itemPayload).toMatchObject({ captionOffset: 45 + 8 });
+    // The caption is centered on a 16-pixel centered y axis name, which the
+    // theme's 10-pixel margin keeps clear of the estimated tick labels.
+    expect(rows[0]?.itemPayload).toMatchObject({
+      captionOffset: 8 + 4 * 0.6 * 16 + 10 + 8,
+    });
   });
 
   it("places the caption where the y axis name sits", () => {
@@ -202,6 +205,11 @@ describe("layoutSurvivalRisk", () => {
     expect(captionOffset({ nameGap: 80, nameTextStyle: { fontSize: 16 } })).toBe(88);
     // A smaller gap: ECharts moves the name clear of the tick labels.
     expect(captionOffset({ nameGap: 20 })).toBe(51);
+    // A name text margin keeps the name that far from the tick labels: their
+    // margin 8 and "1.00" at 0.6 em of 12 pixels, plus 30.
+    expect(captionOffset({ nameGap: 20, nameTextStyle: { textMargin: [30, 3, 30, 3] } })).toBe(
+      8 + 4 * 0.6 * 12 + 30 + 6,
+    );
     // A name at an end of the axis leaves the caption in its place.
     expect(captionOffset({ nameGap: 60, nameLocation: "end" })).toBe(51);
   });
