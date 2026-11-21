@@ -1,0 +1,138 @@
+<svg width="640" height="420" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" baseProfile="full" viewBox="0 0 640 420">
+<rect width="640" height="420" x="0" y="0" fill="#ffffff"></rect>
+<path d="M183.5 355.5L502.5 355.5" fill="none" pointer-events="visible" stroke="#dbdee4" class="zr-cls-0"></path>
+<path d="M183.5 291.5L502.5 291.5" fill="none" pointer-events="visible" stroke="#dbdee4" class="zr-cls-0"></path>
+<path d="M183.5 227.5L502.5 227.5" fill="none" pointer-events="visible" stroke="#dbdee4" class="zr-cls-0"></path>
+<path d="M183.5 163.5L502.5 163.5" fill="none" pointer-events="visible" stroke="#dbdee4" class="zr-cls-0"></path>
+<path d="M183.5 100.5L502.5 100.5" fill="none" pointer-events="visible" stroke="#dbdee4" class="zr-cls-0"></path>
+<path d="M183.5 36.5L502.5 36.5" fill="none" pointer-events="visible" stroke="#dbdee4" class="zr-cls-0"></path>
+<path d="M183.5 36L183.5 355" fill="none" pointer-events="visible" stroke="#dbdee4" class="zr-cls-0"></path>
+<path d="M247.5 36L247.5 355" fill="none" pointer-events="visible" stroke="#dbdee4" class="zr-cls-0"></path>
+<path d="M311.5 36L311.5 355" fill="none" pointer-events="visible" stroke="#dbdee4" class="zr-cls-0"></path>
+<path d="M375.5 36L375.5 355" fill="none" pointer-events="visible" stroke="#dbdee4" class="zr-cls-0"></path>
+<path d="M438.5 36L438.5 355" fill="none" pointer-events="visible" stroke="#dbdee4" class="zr-cls-0"></path>
+<path d="M502.5 36L502.5 355" fill="none" pointer-events="visible" stroke="#dbdee4" class="zr-cls-0"></path>
+<text dominant-baseline="central" text-anchor="middle" style="font-size:12px;font-family:system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;" xml:space="preserve" y="-6" transform="matrix(0,-1,1,0,138.5,195.5)" fill="rgb(0,0,0)" fill-opacity="0.7">Observed proportion</text>
+<path d="M183.5 355L183.5 36" fill="none" pointer-events="visible" stroke="#54555a" stroke-linecap="round" class="zr-cls-0"></path>
+<text dominant-baseline="central" text-anchor="middle" style="font-size:12px;font-family:system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;" xml:space="preserve" y="6" transform="translate(343 385)" fill="rgb(0,0,0)" fill-opacity="0.7">Mean predicted probability</text>
+<path d="M183.5 355.5L502.5 355.5" fill="none" pointer-events="visible" stroke="#54555a" stroke-linecap="round" class="zr-cls-0"></path>
+<text dominant-baseline="central" text-anchor="end" style="font-size:12px;font-family:system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;" transform="translate(175.5 355)" fill="rgb(0,0,0)" fill-opacity="0.7">0</text>
+<text dominant-baseline="central" text-anchor="end" style="font-size:12px;font-family:system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;" transform="translate(175.5 291.2)" fill="rgb(0,0,0)" fill-opacity="0.7">0.2</text>
+<text dominant-baseline="central" text-anchor="end" style="font-size:12px;font-family:system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;" transform="translate(175.5 227.4)" fill="rgb(0,0,0)" fill-opacity="0.7">0.4</text>
+<text dominant-baseline="central" text-anchor="end" style="font-size:12px;font-family:system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;" transform="translate(175.5 163.6)" fill="rgb(0,0,0)" fill-opacity="0.7">0.6</text>
+<text dominant-baseline="central" text-anchor="end" style="font-size:12px;font-family:system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;" transform="translate(175.5 99.8)" fill="rgb(0,0,0)" fill-opacity="0.7">0.8</text>
+<text dominant-baseline="central" text-anchor="end" style="font-size:12px;font-family:system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;" transform="translate(175.5 36)" fill="rgb(0,0,0)" fill-opacity="0.7">1</text>
+<text dominant-baseline="central" text-anchor="middle" style="font-size:12px;font-family:system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;" y="6" transform="translate(183.5 363)" fill="rgb(0,0,0)" fill-opacity="0.7">0</text>
+<text dominant-baseline="central" text-anchor="middle" style="font-size:12px;font-family:system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;" y="6" transform="translate(247.3 363)" fill="rgb(0,0,0)" fill-opacity="0.7">0.2</text>
+<text dominant-baseline="central" text-anchor="middle" style="font-size:12px;font-family:system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;" y="6" transform="translate(311.1 363)" fill="rgb(0,0,0)" fill-opacity="0.7">0.4</text>
+<text dominant-baseline="central" text-anchor="middle" style="font-size:12px;font-family:system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;" y="6" transform="translate(374.9 363)" fill="rgb(0,0,0)" fill-opacity="0.7">0.6</text>
+<text dominant-baseline="central" text-anchor="middle" style="font-size:12px;font-family:system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;" y="6" transform="translate(438.7 363)" fill="rgb(0,0,0)" fill-opacity="0.7">0.8</text>
+<text dominant-baseline="central" text-anchor="middle" style="font-size:12px;font-family:system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;" y="6" transform="translate(502.5 363)" fill="rgb(0,0,0)" fill-opacity="0.7">1</text>
+<g clip-path="url(#zr-c0)">
+<path d="M183.5 355L502.5 36" fill="none" pointer-events="visible" stroke="#808080" stroke-dasharray="4,2" stroke-linejoin="bevel" class="zr-cls-0"></path>
+</g>
+<path d="M-1 -1l2 0l0 2l-2 0Z" transform="matrix(0.5,0,0,4,270.8266,351)" fill="#6CA3A0" fill-opacity="0.3" ecmeta_series_index="2" ecmeta_data_index="0" ecmeta_ssr_type="chart" class="zr-cls-1"></path>
+<path d="M-1 -1l2 0l0 2l-2 0Z" transform="matrix(0.5,0,0,4,436.0224,351)" fill="#6CA3A0" fill-opacity="0.3" ecmeta_series_index="2" ecmeta_data_index="1" ecmeta_ssr_type="chart" class="zr-cls-1"></path>
+<path d="M-1 -1l2 0l0 2l-2 0Z" transform="matrix(0.5,0,0,4,342.1555,351)" fill="#6CA3A0" fill-opacity="0.3" ecmeta_series_index="2" ecmeta_data_index="2" ecmeta_ssr_type="chart" class="zr-cls-1"></path>
+<path d="M-1 -1l2 0l0 2l-2 0Z" transform="matrix(0.5,0,0,4,444.3241,351)" fill="#6CA3A0" fill-opacity="0.3" ecmeta_series_index="2" ecmeta_data_index="3" ecmeta_ssr_type="chart" class="zr-cls-1"></path>
+<path d="M-1 -1l2 0l0 2l-2 0Z" transform="matrix(0.5,0,0,4,309.7529,351)" fill="#6CA3A0" fill-opacity="0.3" ecmeta_series_index="2" ecmeta_data_index="4" ecmeta_ssr_type="chart" class="zr-cls-1"></path>
+<path d="M-1 -1l2 0l0 2l-2 0Z" transform="matrix(0.5,0,0,4,468.9998,351)" fill="#6CA3A0" fill-opacity="0.3" ecmeta_series_index="2" ecmeta_data_index="5" ecmeta_ssr_type="chart" class="zr-cls-1"></path>
+<path d="M-1 -1l2 0l0 2l-2 0Z" transform="matrix(0.5,0,0,4,232.4649,351)" fill="#6CA3A0" fill-opacity="0.3" ecmeta_series_index="2" ecmeta_data_index="6" ecmeta_ssr_type="chart" class="zr-cls-1"></path>
+<path d="M-1 -1l2 0l0 2l-2 0Z" transform="matrix(0.5,0,0,4,373.0563,351)" fill="#6CA3A0" fill-opacity="0.3" ecmeta_series_index="2" ecmeta_data_index="7" ecmeta_ssr_type="chart" class="zr-cls-1"></path>
+<path d="M-1 -1l2 0l0 2l-2 0Z" transform="matrix(0.5,0,0,4,268.7719,351)" fill="#6CA3A0" fill-opacity="0.3" ecmeta_series_index="2" ecmeta_data_index="8" ecmeta_ssr_type="chart" class="zr-cls-1"></path>
+<path d="M-1 -1l2 0l0 2l-2 0Z" transform="matrix(0.5,0,0,4,436.2476,351)" fill="#6CA3A0" fill-opacity="0.3" ecmeta_series_index="2" ecmeta_data_index="9" ecmeta_ssr_type="chart" class="zr-cls-1"></path>
+<path d="M-1 -1l2 0l0 2l-2 0Z" transform="matrix(0.5,0,0,4,374.8955,351)" fill="#6CA3A0" fill-opacity="0.3" ecmeta_series_index="2" ecmeta_data_index="10" ecmeta_ssr_type="chart" class="zr-cls-1"></path>
+<path d="M-1 -1l2 0l0 2l-2 0Z" transform="matrix(0.5,0,0,4,353.7285,351)" fill="#6CA3A0" fill-opacity="0.3" ecmeta_series_index="2" ecmeta_data_index="11" ecmeta_ssr_type="chart" class="zr-cls-1"></path>
+<path d="M-1 -1l2 0l0 2l-2 0Z" transform="matrix(0.5,0,0,4,225.9541,351)" fill="#6CA3A0" fill-opacity="0.3" ecmeta_series_index="2" ecmeta_data_index="12" ecmeta_ssr_type="chart" class="zr-cls-1"></path>
+<path d="M-1 -1l2 0l0 2l-2 0Z" transform="matrix(0.5,0,0,4,456.243,351)" fill="#6CA3A0" fill-opacity="0.3" ecmeta_series_index="2" ecmeta_data_index="13" ecmeta_ssr_type="chart" class="zr-cls-1"></path>
+<path d="M-1 -1l2 0l0 2l-2 0Z" transform="matrix(0.5,0,0,4,246.5077,351)" fill="#6CA3A0" fill-opacity="0.3" ecmeta_series_index="2" ecmeta_data_index="14" ecmeta_ssr_type="chart" class="zr-cls-1"></path>
+<path d="M-1 -1l2 0l0 2l-2 0Z" transform="matrix(0.5,0,0,4,402.5659,351)" fill="#6CA3A0" fill-opacity="0.3" ecmeta_series_index="2" ecmeta_data_index="15" ecmeta_ssr_type="chart" class="zr-cls-1"></path>
+<path d="M-1 -1l2 0l0 2l-2 0Z" transform="matrix(0.5,0,0,4,311.9217,351)" fill="#6CA3A0" fill-opacity="0.3" ecmeta_series_index="2" ecmeta_data_index="16" ecmeta_ssr_type="chart" class="zr-cls-1"></path>
+<path d="M-1 -1l2 0l0 2l-2 0Z" transform="matrix(0.5,0,0,4,373.3633,351)" fill="#6CA3A0" fill-opacity="0.3" ecmeta_series_index="2" ecmeta_data_index="17" ecmeta_ssr_type="chart" class="zr-cls-1"></path>
+<path d="M-1 -1l2 0l0 2l-2 0Z" transform="matrix(0.5,0,0,4,231.7654,351)" fill="#6CA3A0" fill-opacity="0.3" ecmeta_series_index="2" ecmeta_data_index="18" ecmeta_ssr_type="chart" class="zr-cls-1"></path>
+<path d="M-1 -1l2 0l0 2l-2 0Z" transform="matrix(0.5,0,0,4,399.6748,351)" fill="#6CA3A0" fill-opacity="0.3" ecmeta_series_index="2" ecmeta_data_index="19" ecmeta_ssr_type="chart" class="zr-cls-1"></path>
+<path d="M-1 -1l2 0l0 2l-2 0Z" transform="matrix(0.5,0,0,4,247.0056,351)" fill="#6CA3A0" fill-opacity="0.3" ecmeta_series_index="2" ecmeta_data_index="20" ecmeta_ssr_type="chart" class="zr-cls-1"></path>
+<path d="M-1 -1l2 0l0 2l-2 0Z" transform="matrix(0.5,0,0,4,367.7831,351)" fill="#6CA3A0" fill-opacity="0.3" ecmeta_series_index="2" ecmeta_data_index="21" ecmeta_ssr_type="chart" class="zr-cls-1"></path>
+<path d="M-1 -1l2 0l0 2l-2 0Z" transform="matrix(0.5,0,0,4,333.111,351)" fill="#6CA3A0" fill-opacity="0.3" ecmeta_series_index="2" ecmeta_data_index="22" ecmeta_ssr_type="chart" class="zr-cls-1"></path>
+<path d="M-1 -1l2 0l0 2l-2 0Z" transform="matrix(0.5,0,0,4,383.4812,351)" fill="#6CA3A0" fill-opacity="0.3" ecmeta_series_index="2" ecmeta_data_index="23" ecmeta_ssr_type="chart" class="zr-cls-1"></path>
+<path d="M-1 -1l2 0l0 2l-2 0Z" transform="matrix(0.5,0,0,4,273.6467,351)" fill="#6CA3A0" fill-opacity="0.3" ecmeta_series_index="2" ecmeta_data_index="24" ecmeta_ssr_type="chart" class="zr-cls-1"></path>
+<path d="M-1 -1l2 0l0 2l-2 0Z" transform="matrix(0.5,0,0,4,425.0254,351)" fill="#6CA3A0" fill-opacity="0.3" ecmeta_series_index="2" ecmeta_data_index="25" ecmeta_ssr_type="chart" class="zr-cls-1"></path>
+<path d="M-1 -1l2 0l0 2l-2 0Z" transform="matrix(0.5,0,0,4,200.7993,351)" fill="#6CA3A0" fill-opacity="0.3" ecmeta_series_index="2" ecmeta_data_index="26" ecmeta_ssr_type="chart" class="zr-cls-1"></path>
+<path d="M-1 -1l2 0l0 2l-2 0Z" transform="matrix(0.5,0,0,4,436.633,351)" fill="#6CA3A0" fill-opacity="0.3" ecmeta_series_index="2" ecmeta_data_index="27" ecmeta_ssr_type="chart" class="zr-cls-1"></path>
+<path d="M-1 -1l2 0l0 2l-2 0Z" transform="matrix(0.5,0,0,4,382.187,351)" fill="#6CA3A0" fill-opacity="0.3" ecmeta_series_index="2" ecmeta_data_index="28" ecmeta_ssr_type="chart" class="zr-cls-1"></path>
+<path d="M-1 -1l2 0l0 2l-2 0Z" transform="matrix(0.5,0,0,4,415.8433,351)" fill="#6CA3A0" fill-opacity="0.3" ecmeta_series_index="2" ecmeta_data_index="29" ecmeta_ssr_type="chart" class="zr-cls-1"></path>
+<path d="M-1 -1l2 0l0 2l-2 0Z" transform="matrix(0.5,0,0,4,229.7203,351)" fill="#6CA3A0" fill-opacity="0.3" ecmeta_series_index="2" ecmeta_data_index="30" ecmeta_ssr_type="chart" class="zr-cls-1"></path>
+<path d="M-1 -1l2 0l0 2l-2 0Z" transform="matrix(0.5,0,0,4,473.7252,351)" fill="#6CA3A0" fill-opacity="0.3" ecmeta_series_index="2" ecmeta_data_index="31" ecmeta_ssr_type="chart" class="zr-cls-1"></path>
+<path d="M-1 -1l2 0l0 2l-2 0Z" transform="matrix(0.5,0,0,4,286.5749,351)" fill="#6CA3A0" fill-opacity="0.3" ecmeta_series_index="2" ecmeta_data_index="32" ecmeta_ssr_type="chart" class="zr-cls-1"></path>
+<path d="M-1 -1l2 0l0 2l-2 0Z" transform="matrix(0.5,0,0,4,464.9412,351)" fill="#6CA3A0" fill-opacity="0.3" ecmeta_series_index="2" ecmeta_data_index="33" ecmeta_ssr_type="chart" class="zr-cls-1"></path>
+<path d="M-1 -1l2 0l0 2l-2 0Z" transform="matrix(0.5,0,0,4,283.4654,351)" fill="#6CA3A0" fill-opacity="0.3" ecmeta_series_index="2" ecmeta_data_index="34" ecmeta_ssr_type="chart" class="zr-cls-1"></path>
+<path d="M-1 -1l2 0l0 2l-2 0Z" transform="matrix(0.5,0,0,4,449.5088,351)" fill="#6CA3A0" fill-opacity="0.3" ecmeta_series_index="2" ecmeta_data_index="35" ecmeta_ssr_type="chart" class="zr-cls-1"></path>
+<path d="M-1 -1l2 0l0 2l-2 0Z" transform="matrix(0.5,0,0,4,377.9895,351)" fill="#6CA3A0" fill-opacity="0.3" ecmeta_series_index="2" ecmeta_data_index="36" ecmeta_ssr_type="chart" class="zr-cls-1"></path>
+<path d="M-1 -1l2 0l0 2l-2 0Z" transform="matrix(0.5,0,0,4,451.4539,351)" fill="#6CA3A0" fill-opacity="0.3" ecmeta_series_index="2" ecmeta_data_index="37" ecmeta_ssr_type="chart" class="zr-cls-1"></path>
+<path d="M-1 -1l2 0l0 2l-2 0Z" transform="matrix(0.5,0,0,4,294.7348,351)" fill="#6CA3A0" fill-opacity="0.3" ecmeta_series_index="2" ecmeta_data_index="38" ecmeta_ssr_type="chart" class="zr-cls-1"></path>
+<path d="M-1 -1l2 0l0 2l-2 0Z" transform="matrix(0.5,0,0,4,368.7172,351)" fill="#6CA3A0" fill-opacity="0.3" ecmeta_series_index="2" ecmeta_data_index="39" ecmeta_ssr_type="chart" class="zr-cls-1"></path>
+<path d="M-1 -1l2 0l0 2l-2 0Z" transform="matrix(0.5,0,0,4,310.0255,351)" fill="#6CA3A0" fill-opacity="0.3" ecmeta_series_index="2" ecmeta_data_index="40" ecmeta_ssr_type="chart" class="zr-cls-1"></path>
+<path d="M-1 -1l2 0l0 2l-2 0Z" transform="matrix(0.5,0,0,4,388.4237,351)" fill="#6CA3A0" fill-opacity="0.3" ecmeta_series_index="2" ecmeta_data_index="41" ecmeta_ssr_type="chart" class="zr-cls-1"></path>
+<path d="M-1 -1l2 0l0 2l-2 0Z" transform="matrix(0.5,0,0,4,427.5473,351)" fill="#6CA3A0" fill-opacity="0.3" ecmeta_series_index="2" ecmeta_data_index="42" ecmeta_ssr_type="chart" class="zr-cls-1"></path>
+<path d="M-1 -1l2 0l0 2l-2 0Z" transform="matrix(0.5,0,0,4,436.4541,351)" fill="#6CA3A0" fill-opacity="0.3" ecmeta_series_index="2" ecmeta_data_index="43" ecmeta_ssr_type="chart" class="zr-cls-1"></path>
+<path d="M-1 -1l2 0l0 2l-2 0Z" transform="matrix(0.5,0,0,4,228.8272,351)" fill="#6CA3A0" fill-opacity="0.3" ecmeta_series_index="2" ecmeta_data_index="44" ecmeta_ssr_type="chart" class="zr-cls-1"></path>
+<path d="M-1 -1l2 0l0 2l-2 0Z" transform="matrix(0.5,0,0,4,481.2726,351)" fill="#6CA3A0" fill-opacity="0.3" ecmeta_series_index="2" ecmeta_data_index="45" ecmeta_ssr_type="chart" class="zr-cls-1"></path>
+<path d="M-1 -1l2 0l0 2l-2 0Z" transform="matrix(0.5,0,0,4,243.6208,351)" fill="#6CA3A0" fill-opacity="0.3" ecmeta_series_index="2" ecmeta_data_index="46" ecmeta_ssr_type="chart" class="zr-cls-1"></path>
+<path d="M-1 -1l2 0l0 2l-2 0Z" transform="matrix(0.5,0,0,4,297.5249,351)" fill="#6CA3A0" fill-opacity="0.3" ecmeta_series_index="2" ecmeta_data_index="47" ecmeta_ssr_type="chart" class="zr-cls-1"></path>
+<path d="M-1 -1l2 0l0 2l-2 0Z" transform="matrix(0.5,0,0,4,220.0469,351)" fill="#6CA3A0" fill-opacity="0.3" ecmeta_series_index="2" ecmeta_data_index="48" ecmeta_ssr_type="chart" class="zr-cls-1"></path>
+<path d="M-1 -1l2 0l0 2l-2 0Z" transform="matrix(0.5,0,0,4,419.2949,351)" fill="#6CA3A0" fill-opacity="0.3" ecmeta_series_index="2" ecmeta_data_index="49" ecmeta_ssr_type="chart" class="zr-cls-1"></path>
+<path d="M-1 -1l2 0l0 2l-2 0Z" transform="matrix(0.5,0,0,4,244.9978,351)" fill="#6CA3A0" fill-opacity="0.3" ecmeta_series_index="2" ecmeta_data_index="50" ecmeta_ssr_type="chart" class="zr-cls-1"></path>
+<path d="M-1 -1l2 0l0 2l-2 0Z" transform="matrix(0.5,0,0,4,442.3102,351)" fill="#6CA3A0" fill-opacity="0.3" ecmeta_series_index="2" ecmeta_data_index="51" ecmeta_ssr_type="chart" class="zr-cls-1"></path>
+<path d="M-1 -1l2 0l0 2l-2 0Z" transform="matrix(0.5,0,0,4,255.6881,351)" fill="#6CA3A0" fill-opacity="0.3" ecmeta_series_index="2" ecmeta_data_index="52" ecmeta_ssr_type="chart" class="zr-cls-1"></path>
+<path d="M-1 -1l2 0l0 2l-2 0Z" transform="matrix(0.5,0,0,4,278.5538,351)" fill="#6CA3A0" fill-opacity="0.3" ecmeta_series_index="2" ecmeta_data_index="53" ecmeta_ssr_type="chart" class="zr-cls-1"></path>
+<path d="M-1 -1l2 0l0 2l-2 0Z" transform="matrix(0.5,0,0,4,252.3746,351)" fill="#6CA3A0" fill-opacity="0.3" ecmeta_series_index="2" ecmeta_data_index="54" ecmeta_ssr_type="chart" class="zr-cls-1"></path>
+<path d="M-1 -1l2 0l0 2l-2 0Z" transform="matrix(0.5,0,0,4,483.6389,351)" fill="#6CA3A0" fill-opacity="0.3" ecmeta_series_index="2" ecmeta_data_index="55" ecmeta_ssr_type="chart" class="zr-cls-1"></path>
+<path d="M-1 -1l2 0l0 2l-2 0Z" transform="matrix(0.5,0,0,4,244.4705,351)" fill="#6CA3A0" fill-opacity="0.3" ecmeta_series_index="2" ecmeta_data_index="56" ecmeta_ssr_type="chart" class="zr-cls-1"></path>
+<path d="M-1 -1l2 0l0 2l-2 0Z" transform="matrix(0.5,0,0,4,375.3339,351)" fill="#6CA3A0" fill-opacity="0.3" ecmeta_series_index="2" ecmeta_data_index="57" ecmeta_ssr_type="chart" class="zr-cls-1"></path>
+<path d="M-1 -1l2 0l0 2l-2 0Z" transform="matrix(0.5,0,0,4,261.9428,351)" fill="#6CA3A0" fill-opacity="0.3" ecmeta_series_index="2" ecmeta_data_index="58" ecmeta_ssr_type="chart" class="zr-cls-1"></path>
+<path d="M-1 -1l2 0l0 2l-2 0Z" transform="matrix(0.5,0,0,4,481.5096,351)" fill="#6CA3A0" fill-opacity="0.3" ecmeta_series_index="2" ecmeta_data_index="59" ecmeta_ssr_type="chart" class="zr-cls-1"></path>
+<g clip-path="url(#zr-c1)">
+<path d="M233 355L277.8 301.8L355.2 195.5L412.7 89.2L461.2 36" fill="none" pointer-events="visible" stroke="#6CA3A0" stroke-width="2" stroke-linejoin="bevel" class="zr-cls-2"></path>
+</g>
+<path d="M1 0A1 1 0 1 1 1 -0.1A1 1 0 0 1 1 0" transform="matrix(3.5,0,0,3.5,233.0151,355)" fill="#6CA3A0" ecmeta_series_index="1" ecmeta_data_index="0" ecmeta_ssr_type="chart" class="zr-cls-1"></path>
+<path d="M1 0A1 1 0 1 1 1 -0.1A1 1 0 0 1 1 0" transform="matrix(3.5,0,0,3.5,277.8214,301.8333)" fill="#6CA3A0" ecmeta_series_index="1" ecmeta_data_index="1" ecmeta_ssr_type="chart" class="zr-cls-1"></path>
+<path d="M1 0A1 1 0 1 1 1 -0.1A1 1 0 0 1 1 0" transform="matrix(3.5,0,0,3.5,355.1734,195.5)" fill="#6CA3A0" ecmeta_series_index="1" ecmeta_data_index="2" ecmeta_ssr_type="chart" class="zr-cls-1"></path>
+<path d="M1 0A1 1 0 1 1 1 -0.1A1 1 0 0 1 1 0" transform="matrix(3.5,0,0,3.5,412.7307,89.1667)" fill="#6CA3A0" ecmeta_series_index="1" ecmeta_data_index="3" ecmeta_ssr_type="chart" class="zr-cls-1"></path>
+<path d="M1 0A1 1 0 1 1 1 -0.1A1 1 0 0 1 1 0" transform="matrix(3.5,0,0,3.5,461.2133,36)" fill="#6CA3A0" ecmeta_series_index="1" ecmeta_data_index="4" ecmeta_ssr_type="chart" class="zr-cls-1"></path>
+<path d="M0 0l142 0l0 12l-142 0Z" transform="translate(272 12)" fill="rgb(0,0,0)" fill-opacity="0" stroke="#b7b9be" stroke-width="0" class="zr-cls-0"></path>
+<path d="M0 7L25 7" transform="translate(273 11)" fill="#000" stroke="#6CA3A0" stroke-width="2" stroke-linecap="butt" stroke-miterlimit="10" class="zr-cls-0"></path>
+<path d="M18.1 7A5.6 5.6 0 1 1 18.1 6.4A5.6 5.6 0 0 1 18.1 7" transform="translate(273 11)" fill="#6CA3A0" class="zr-cls-0"></path>
+<text dominant-baseline="central" text-anchor="start" style="font-size:12px;font-family:system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;" xml:space="preserve" x="30" y="7" transform="translate(273 11)" fill="rgb(0,0,0)" fill-opacity="0.7">Sample (Brier 0.111)</text>
+<path d="M-1 1l142 0l0 12l-142 0Z" transform="translate(273 11)" fill="none" pointer-events="visible" ecmeta_series_index="1" ecmeta_data_index="0" ecmeta_ssr_type="legend" class="zr-cls-3"></path>
+<defs >
+<clipPath id="zr-c0">
+<path d="M183 35.5l320 0l0 320l-320 0Z" fill="#000" class="zr-cls-0"></path>
+</clipPath>
+<clipPath id="zr-c1">
+<path d="M182 -287l322 0l0 965l-322 0Z" fill="#000" class="zr-cls-4"></path>
+</clipPath>
+</defs>
+<style ><![CDATA[
+.zr-cls-0:hover {
+pointer-events:none;
+}
+.zr-cls-1:hover {
+cursor:pointer;
+fill:rgba(118,179,176,1);
+}
+.zr-cls-4:hover {
+cursor:pointer;
+fill:rgba(0,0,0,1);
+}
+.zr-cls-2:hover {
+cursor:pointer;
+}
+.zr-cls-3:hover {
+cursor:pointer;
+fill:rgba(0,0,0,0);
+}
+
+]]>
+
+</style>
+</svg>

@@ -5,4 +5,6 @@ export {
   GANTT_ROW_PX,
   ganttHeight,
 } from "./config.ts";
+export type { GanttFitContext } from "./fit.ts";
+export { fitGantt } from "./fit.ts";
 export { ganttRenderers } from "./renderers.ts";

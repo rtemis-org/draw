@@ -34,3 +34,4 @@ node_modules
 ^tools/document[.]R$
 ^tools/coverage-local[.]R$
 ^revdep$
+^tests/testthat/_snaps$

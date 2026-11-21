@@ -1,0 +1,70 @@
+<svg width="640" height="420" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" baseProfile="full" viewBox="0 0 640 420">
+<rect width="640" height="420" x="0" y="0" fill="#ffffff"></rect>
+<path d="M190.5 355.5L495.5 355.5" fill="none" pointer-events="visible" stroke="#dbdee4" class="zr-cls-0"></path>
+<path d="M190.5 294.5L495.5 294.5" fill="none" pointer-events="visible" stroke="#dbdee4" class="zr-cls-0"></path>
+<path d="M190.5 233.5L495.5 233.5" fill="none" pointer-events="visible" stroke="#dbdee4" class="zr-cls-0"></path>
+<path d="M190.5 172.5L495.5 172.5" fill="none" pointer-events="visible" stroke="#dbdee4" class="zr-cls-0"></path>
+<path d="M190.5 111.5L495.5 111.5" fill="none" pointer-events="visible" stroke="#dbdee4" class="zr-cls-0"></path>
+<path d="M190.5 50.5L495.5 50.5" fill="none" pointer-events="visible" stroke="#dbdee4" class="zr-cls-0"></path>
+<path d="M190.5 50L190.5 355" fill="none" pointer-events="visible" stroke="#dbdee4" class="zr-cls-0"></path>
+<path d="M251.5 50L251.5 355" fill="none" pointer-events="visible" stroke="#dbdee4" class="zr-cls-0"></path>
+<path d="M312.5 50L312.5 355" fill="none" pointer-events="visible" stroke="#dbdee4" class="zr-cls-0"></path>
+<path d="M373.5 50L373.5 355" fill="none" pointer-events="visible" stroke="#dbdee4" class="zr-cls-0"></path>
+<path d="M434.5 50L434.5 355" fill="none" pointer-events="visible" stroke="#dbdee4" class="zr-cls-0"></path>
+<path d="M495.5 50L495.5 355" fill="none" pointer-events="visible" stroke="#dbdee4" class="zr-cls-0"></path>
+<text dominant-baseline="central" text-anchor="middle" style="font-size:12px;font-family:system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;" xml:space="preserve" y="-6" transform="matrix(0,-1,1,0,145.5,202.5)" fill="rgb(0,0,0)" fill-opacity="0.7">True positive rate</text>
+<path d="M190.5 355L190.5 50" fill="none" pointer-events="visible" stroke="#54555a" stroke-linecap="round" class="zr-cls-0"></path>
+<text dominant-baseline="central" text-anchor="middle" style="font-size:12px;font-family:system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;" xml:space="preserve" y="6" transform="translate(343 385)" fill="rgb(0,0,0)" fill-opacity="0.7">False positive rate</text>
+<path d="M190.5 355.5L495.5 355.5" fill="none" pointer-events="visible" stroke="#54555a" stroke-linecap="round" class="zr-cls-0"></path>
+<text dominant-baseline="central" text-anchor="end" style="font-size:12px;font-family:system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;" transform="translate(182.5 355)" fill="rgb(0,0,0)" fill-opacity="0.7">0</text>
+<text dominant-baseline="central" text-anchor="end" style="font-size:12px;font-family:system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;" transform="translate(182.5 294)" fill="rgb(0,0,0)" fill-opacity="0.7">0.2</text>
+<text dominant-baseline="central" text-anchor="end" style="font-size:12px;font-family:system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;" transform="translate(182.5 233)" fill="rgb(0,0,0)" fill-opacity="0.7">0.4</text>
+<text dominant-baseline="central" text-anchor="end" style="font-size:12px;font-family:system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;" transform="translate(182.5 172)" fill="rgb(0,0,0)" fill-opacity="0.7">0.6</text>
+<text dominant-baseline="central" text-anchor="end" style="font-size:12px;font-family:system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;" transform="translate(182.5 111)" fill="rgb(0,0,0)" fill-opacity="0.7">0.8</text>
+<text dominant-baseline="central" text-anchor="end" style="font-size:12px;font-family:system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;" transform="translate(182.5 50)" fill="rgb(0,0,0)" fill-opacity="0.7">1</text>
+<text dominant-baseline="central" text-anchor="middle" style="font-size:12px;font-family:system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;" y="6" transform="translate(190.5 363)" fill="rgb(0,0,0)" fill-opacity="0.7">0</text>
+<text dominant-baseline="central" text-anchor="middle" style="font-size:12px;font-family:system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;" y="6" transform="translate(251.5 363)" fill="rgb(0,0,0)" fill-opacity="0.7">0.2</text>
+<text dominant-baseline="central" text-anchor="middle" style="font-size:12px;font-family:system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;" y="6" transform="translate(312.5 363)" fill="rgb(0,0,0)" fill-opacity="0.7">0.4</text>
+<text dominant-baseline="central" text-anchor="middle" style="font-size:12px;font-family:system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;" y="6" transform="translate(373.5 363)" fill="rgb(0,0,0)" fill-opacity="0.7">0.6</text>
+<text dominant-baseline="central" text-anchor="middle" style="font-size:12px;font-family:system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;" y="6" transform="translate(434.5 363)" fill="rgb(0,0,0)" fill-opacity="0.7">0.8</text>
+<text dominant-baseline="central" text-anchor="middle" style="font-size:12px;font-family:system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;" y="6" transform="translate(495.5 363)" fill="rgb(0,0,0)" fill-opacity="0.7">1</text>
+<g clip-path="url(#zr-c0)">
+<path d="M190.5 355L495.5 50" fill="none" pointer-events="visible" stroke="#808080" stroke-dasharray="4,2" stroke-linejoin="bevel" class="zr-cls-0"></path>
+</g>
+<g clip-path="url(#zr-c1)">
+<path d="M190.5 355L190.5 344.8L190.5 334.7L190.5 324.5L190.5 314.3L190.5 304.2L190.5 294L190.5 283.8L190.5 273.7L190.5 263.5L190.5 253.3L190.5 243.2L190.5 233L190.5 222.8L190.5 212.7L190.5 202.5L200.7 202.5L200.7 192.3L200.7 182.2L200.7 172L200.7 161.8L200.7 151.7L200.7 141.5L200.7 131.3L210.8 131.3L221 131.3L221 121.2L231.2 121.2L231.2 111L231.2 100.8L231.2 90.7L231.2 80.5L231.2 70.3L241.3 70.3L251.5 70.3L261.7 70.3L271.8 70.3L282 70.3L282 60.2L292.2 60.2L302.3 60.2L312.5 60.2L312.5 50L322.7 50L332.8 50L343 50L353.2 50L363.3 50L373.5 50L383.7 50L393.8 50L404 50L414.2 50L424.3 50L434.5 50L444.7 50L454.8 50L465 50L475.2 50L485.3 50L495.5 50" fill="none" pointer-events="visible" stroke="#6CA3A0" stroke-width="2" stroke-linejoin="bevel" class="zr-cls-1"></path>
+</g>
+<path d="M0 0l70.6 0l0 12l-70.6 0Z" transform="translate(307.7 26)" fill="rgb(0,0,0)" fill-opacity="0" stroke="#b7b9be" stroke-width="0" class="zr-cls-0"></path>
+<path d="M0.8 0L19.3 0A0.8 0.8 0 0 1 20 0.7L20 2.3A0.8 0.8 0 0 1 19.3 3L0.8 3A0.8 0.8 0 0 1 0 2.3L0 0.8A0.8 0.8 0 0 1 0.7 0Z" transform="translate(307.7 30.5)" fill="#6CA3A0" ecmeta_series_index="1" ecmeta_data_index="0" ecmeta_ssr_type="legend" ecmeta_silent="true" class="zr-cls-0"></path>
+<text dominant-baseline="central" text-anchor="start" style="font-size:12px;font-family:system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;" xml:space="preserve" x="25" y="1.5" transform="translate(307.7 30.5)" fill="rgb(0,0,0)" fill-opacity="0.7">yes 0.94</text>
+<path d="M0 -4.5l70.6 0l0 12l-70.6 0Z" transform="translate(307.7 30.5)" fill="none" pointer-events="visible" ecmeta_series_index="1" ecmeta_data_index="0" ecmeta_ssr_type="legend" class="zr-cls-2"></path>
+<path d="M0 0l25.3 0l0 12l-25.3 0Z" transform="translate(307.7 12)" fill="none" pointer-events="visible" class="zr-cls-0"></path>
+<text dominant-baseline="central" text-anchor="start" style="font-size:12px;font-family:system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;font-weight:bold;" y="6" transform="translate(307.7 12)" fill="rgb(0,0,0)" fill-opacity="0.7">AUC</text>
+<defs >
+<clipPath id="zr-c0">
+<path d="M190 49.5l306 0l0 306l-306 0Z" fill="#000" class="zr-cls-0"></path>
+</clipPath>
+<clipPath id="zr-c1">
+<path d="M189 49l308 0l0 307l-308 0Z" fill="#000" class="zr-cls-3"></path>
+</clipPath>
+</defs>
+<style ><![CDATA[
+.zr-cls-0:hover {
+pointer-events:none;
+}
+.zr-cls-3:hover {
+cursor:pointer;
+fill:rgba(0,0,0,1);
+}
+.zr-cls-1:hover {
+cursor:pointer;
+}
+.zr-cls-2:hover {
+cursor:pointer;
+fill:rgba(0,0,0,0);
+}
+
+]]>
+
+</style>
+</svg>

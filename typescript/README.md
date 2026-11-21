@@ -109,6 +109,10 @@ Choropleth maps are drawn by MapLibre GL. `mapFeatures(topology, resolution, fea
 
 The other backends read the same tokens: `networkTheme(tokens)` gives the Sigma.js network's palette, sign colors, label color, font, scheme, and backgrounds; `choroplethTheme(tokens)` the MapLibre map's background, foreground, font, scheme, and overlay panels; `diagramTheme(tokens)` Pele's CSS variables.
 
+## Fit
+
+`fit(echarts, chart, context)` lays out a drawn chart on its surface: square heatmap cells, a scatter chart's color scale and size key or any other chart's vertical color scale, and the legend row aligned with the plot area. A host calls it after `setOption` and after a resize, outside ECharts' render pass, with the option it set as `context.option` and the chart type as `context.type`. It returns `state`, which `fitState(chart)` compares to skip a pass when nothing moved, and `FIT_EVENTS` names the chart events after which a host fits again.
+
 ## In rtemis.draw
 
 rtemis.draw ships the builders as one script, `r/inst/htmlwidgets/lib/draw/rtemis-draw-builders.js`, which defines the global `RtemisDraw` in a browser and is a CommonJS module in Node.js. The `rtemis-draw` widget declares it as a dependency and builds the option of a `BuildRequest` with it; `save_drawing()` builds the same request in Node.js. The `rtemis-graph` widget and the network SVG export build and style the graph with the network functions and the vendored Graphology libraries; the `rtemis-map` widget and the map SVG export join and color the map with the choropleth functions and the vendored topojson-client and d3-scale-chromatic. From the repository root:

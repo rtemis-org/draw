@@ -1,10 +1,15 @@
 // Shared geometry for independent chart panels in browser and SVG export.
 // spec: draw/first-cran-release#current-static-export-boundary
 // Child EChartsOption references stay local to each ECharts instance.
+// Its fit steps delegate to the bundled @rtemis/draw: in Node the module
+// beside this file, in the browser the RtemisDraw global the widget loads.
 (function(root, factory) {
-  if (typeof module === 'object' && module.exports) module.exports = factory();
-  else root.rtemisPanels = factory();
-})(typeof globalThis !== 'undefined' ? globalThis : this, function() {
+  if (typeof module === 'object' && module.exports) {
+    module.exports = factory(() => require('./rtemis-draw-builders.js'));
+  } else {
+    root.rtemisPanels = factory(() => root.RtemisDraw);
+  }
+})(typeof globalThis !== 'undefined' ? globalThis : this, function(rtemisDraw) {
   'use strict';
   // A shared surface has a meaningful fill only when all child backgrounds
   // agree. Mixed figures remain transparent instead of privileging one panel.
@@ -32,46 +37,20 @@
       width: w, height: h
     }));
   }
+  // The fixed-aspect plotting box (`fitAspectBox()` and `fitAspectAxes()` in
+  // @rtemis/draw): set on the option before drawing, then constrained again
+  // inside the area ECharts' outer bounds leave for the plot.
   function fit(payload, width, height) {
-    const a = payload.aspect;
-    if (!a) return;
-    const grid = payload.option.grid;
-    if (!grid || Array.isArray(grid)) throw new Error('A fixed-aspect panel requires one plotting grid.');
-    if (![a.ratio, a.leftPx, a.rightPx, a.topPx, a.botPx].every(Number.isFinite) ||
-        a.ratio <= 0 || [a.leftPx, a.rightPx, a.topPx, a.botPx].some(v => v < 0)) {
-      throw new Error('Supply a positive aspect ratio and nonnegative pixel margins.');
-    }
-    const available = Math.min(width - a.leftPx - a.rightPx,
-      (height - a.topPx - a.botPx) / a.ratio);
-    const preferred = a.widthPx == null ? available : a.widthPx;
-    if (!Number.isFinite(preferred) || preferred <= 0 || available <= 0) {
-      throw new Error('Increase panel dimensions to leave room for the plotting grid and margins.');
-    }
-    grid.width = Math.min(available, preferred);
-    grid.height = grid.width * a.ratio;
-    grid.left = a.leftPx + (width - a.leftPx - a.rightPx - grid.width) / 2;
-    grid.top = a.topPx + (height - a.topPx - a.botPx - grid.height) / 2;
+    if (!payload.aspect) return;
+    rtemisDraw().fitAspectBox(payload.option, payload.aspect, width, height);
   }
-  // Native outer bounds reserve axis-label/name space before the layout enforces the
-  // data-area ratio. Pinning the unmeasured outer box instead clips labels;
-  // leaving native shrinkage unconstrained makes an identity line non-square.
-  // Shared by standalone widgets, bounded panels, and Node SVG rendering.
   function fitAxes(chart, payload) {
-    const a = payload.aspect;
-    if (!a) return;
-    const rect = chart.getModel().getComponent('grid').coordinateSystem.getRect();
-    const width = Math.min(rect.width, rect.height / a.ratio);
-    const height = width * a.ratio;
-    chart.setOption({grid: {
-      left: rect.x + (rect.width - width) / 2,
-      top: rect.y + (rect.height - height) / 2,
-      width, height, containLabel: false, outerBoundsMode: 'none'
-    }});
+    if (!payload.aspect) return;
+    rtemisDraw().fitAspectAxes(chart, payload.aspect);
   }
-  // Fit all heatmap grids as one scene. The row/column dendrogram strips keep
-  // their thickness and remain aligned with the matrix when space is added
-  // around a square-cell plot. Always derive from the original option so a
-  // resize cannot accumulate offsets. GridOption: coord/cartesian/GridModel.ts.
+  // Square heatmap cells (`fitHeatmap()` in @rtemis/draw), from the payload's
+  // heatmap hints. An export fails on hints or a surface that leave no room
+  // for the cells, where a browser host draws the chart as built.
   function fitHeatmap(chart, payload) {
     if (!payload.squareCells) return;
     const {nRows, nCols, leftPx, rightPx, topPx, botPx} = payload;
@@ -79,33 +58,10 @@
         ![leftPx, rightPx, topPx, botPx].every(v => Number.isFinite(v) && v >= 0)) {
       throw new Error('Supply positive heatmap dimensions and nonnegative pixel margins.');
     }
-    const availableWidth = chart.getWidth() - leftPx - rightPx;
-    const availableHeight = chart.getHeight() - topPx - botPx;
-    const cell = Math.min(availableWidth / nCols, availableHeight / nRows);
+    const cell = Math.min((chart.getWidth() - leftPx - rightPx) / nCols,
+      (chart.getHeight() - topPx - botPx) / nRows);
     if (cell <= 0) throw new Error('Increase figure dimensions to leave room for heatmap cells and margins.');
-    const dx = (availableWidth - nCols * cell) / 2;
-    const dy = (availableHeight - nRows * cell) / 2;
-    const grids = Array.isArray(payload.option.grid) ? payload.option.grid : [payload.option.grid];
-    const update = {grid: grids.map(grid => {
-      const update = {...grid, containLabel: false, outerBoundsMode: 'none'};
-      for (const side of ['left', 'right', 'top', 'bottom']) {
-        if (grid[side] != null) update[side] = grid[side] + (['left', 'right'].includes(side) ? dx : dy);
-      }
-      return update;
-    })};
-    // Keep marginal components with the fitted scene instead of leaving the
-    // colorbar at the far canvas edge when height constrains the matrix.
-    const maps = payload.option.visualMap;
-    if (maps) update.visualMap = (Array.isArray(maps) ? maps : [maps]).map(map => {
-      const side = map.orient === 'horizontal' ? 'bottom' : 'right';
-      const offset = side === 'right' ? dx : dy;
-      const anchor = map[side] === side ? 0 : map[side];
-      return Number.isFinite(anchor) ? {[side]: anchor + offset} : {};
-    });
-    const titles = payload.option.title;
-    if (titles) update.title = (Array.isArray(titles) ? titles : [titles]).map(title =>
-      Number.isFinite(title.left) ? {left: title.left + dx} : {});
-    chart.setOption(update);
+    rtemisDraw().fitHeatmap(chart, payload.option, payload);
   }
   // Native label layout knows each cell's final size, after grid fitting and
   // resizing. Keep literal full notes in data, and truncate only their labels.
@@ -116,7 +72,7 @@
     let repel = null;
     (payload.option.series || []).forEach(series => {
       if (series.rtemisRepelLabels) {
-        const draw = typeof RtemisDraw !== 'undefined' ? RtemisDraw : globalThis.RtemisDraw;
+        const draw = rtemisDraw();
         repel = repel || draw.repelLabels();
         series.labelLayout = repel;
       }
@@ -142,327 +98,35 @@
       map.inRange = {...map.inRange, color: colors};
     });
   }
-  // ECharts legends and visualMaps have no title field. The shared layout
-  // measures a title with the legend font in bold and draws it as one silent
-  // graphic text element, so browser resize and SVG export agree.
+  // The member-driven legend layout (`layoutLegend()` in @rtemis/draw).
   // spec: draw/legend-title
-  const LEGEND_TITLE_ID = 'rtemis-legend-title';
-  // Words wrap greedily at `maxWidth`; a single word wider than it keeps its
-  // own line.
-  function measureLegendTitle(echarts, chart, model, text, maxWidth = Infinity) {
-    if (!text || !echarts) return null;
-    const own = model.getModel('textStyle'), global = chart.getModel().getModel('textStyle');
-    const fontSize = own.get('fontSize') || global.getShallow('fontSize') || 12;
-    const fontFamily = own.get('fontFamily') || global.getShallow('fontFamily') || 'sans-serif';
-    const fill = own.get('color') || global.getShallow('color') || '#333';
-    const font = `bold ${fontSize}px ${fontFamily}`, regularFont = `${fontSize}px ${fontFamily}`;
-    // Without a canvas (Node SVG export), zrender estimates widths from a
-    // regular-weight Helvetica table and ignores the weight; bold Helvetica is
-    // about 10% wider.
-    const measure = t => {
-      const width = echarts.format.getTextRect(t, font).width;
-      return width === echarts.format.getTextRect(t, regularFont).width ? width * 1.1 : width;
-    };
-    const lines = [];
-    let current = '';
-    String(text).split(/\s+/).forEach(word => {
-      const next = current ? `${current} ${word}` : word;
-      if (current && measure(next) > maxWidth) {lines.push(current); current = word;} else current = next;
-    });
-    lines.push(current);
-    const lineHeight = Math.ceil(echarts.format.getTextRect('Mg', font).height);
-    const line = Math.max(model.get('itemHeight') || 14,
-      echarts.format.getTextRect('Mg', regularFont).height);
-    const padding = [].concat(model.get('padding') ?? 5);
-    return {text: lines.join('\n'), fontSize, fontFamily, fill, line, lineHeight,
-      width: Math.ceil(Math.max(...lines.map(measure))), height: lines.length * lineHeight,
-      padTop: padding[0], padLeft: padding.length === 4 ? padding[3] : padding[padding.length > 1 ? 1 : 0]};
-  }
-  function drawLegendTitle(chart, title, left, top) {
-    chart.setOption({graphic: {elements: [{id: LEGEND_TITLE_ID, type: 'text', left, top, silent: true,
-      z: 100, style: {text: title.text, fontSize: title.fontSize, fontFamily: title.fontFamily,
-        fontWeight: 'bold', fill: title.fill, lineHeight: title.lineHeight}}]}});
-  }
-  // Layout the complete categorical legend against measured native geometry.
-  // Position and placement are semantic hints, never extra ECharts options.
-  // Native LegendView handles row wrapping; measured space is shared by SVG.
   function layoutLegend(echarts, chart, payload) {
-    const position = payload.legendPosition;
-    if (!position || payload.legendTarget === 'visualMap') return;
-    // Old serialized ROC widgets carry only a corner and retain inset meaning.
-    const inside = (payload.legendPlacement || 'inside') === 'inside';
-    const vertical = position === 'left' || position === 'right';
-    const lower = position.startsWith('bottom'), right = position.endsWith('right');
-    const left = position.endsWith('left');
-    const width = chart.getWidth(), height = chart.getHeight(), gap = 12;
-    const source = payload.option;
-    let models = [];
-    chart.getModel().eachComponent('legend', model => {
-      if (model.get('show') && model.getData().length) models.push(model);
-    });
-    if (!models.length) return;
-    const bounds = model => {
-      const group = chart.getViewOfComponentModel(model).group;
-      const box = group.getBoundingRect().clone();
-      box.applyTransform(group.getComputedTransform());
-      return box;
-    };
-    const px = (value, extent, fallback) => typeof value === 'number' ? value :
-      typeof value === 'string' && value.endsWith('%') ? parseFloat(value) * extent / 100 : fallback;
-    let header = gap;
-    ['title', 'toolbox'].forEach(type => chart.getModel().eachComponent(type, model => {
-      const box = bounds(model);
-      if (box.width && box.height && box.y < height / 2) header = Math.max(header, box.y + box.height + gap);
-    }));
-    // Restore authored margins on each pass: repeated resize must not accumulate
-    // legend space. The aspect fitter subsequently constrains the data rectangle.
-    let grids = source.grid ? (Array.isArray(source.grid) ? source.grid : [source.grid]).map(g => ({...g})) : [];
-    if (payload.aspect) {
-      const a = payload.aspect;
-      grids = [{...grids[0], left: a.leftPx, right: a.rightPx, top: a.topPx, bottom: a.botPx,
-        width: null, height: null}];
-    }
-    const isGantt = (Array.isArray(source.series) ? source.series : [source.series])
-      .some(s => s?.renderItem === 'rtemis.gantt.v1');
-    if (isGantt) grids = grids.map(g => ({...g, right: 16, top: Math.max(g.top, header)}));
-    if (grids.length) chart.setOption({grid: grids});
-    const area = () => {
-      const model = chart.getModel().getComponent('grid');
-      return model ? model.coordinateSystem.getRect() : {x: gap, y: header, width: width - 2 * gap, height: height - header - gap};
-    };
-    const initial = area();
-    const availableWidth = vertical ? Math.max(60, Math.min(initial.width * .4, 240)) : Math.max(1, initial.width - (inside ? 2 * gap : 0));
-    // A title sits before the first row of a horizontal legend, with the rows
-    // indented after it, unless it takes more than half the width or the
-    // payload sets `legendTitleAbove`; otherwise it sits above the items.
-    let title = measureLegendTitle(echarts, chart, models[0], payload.legendTitle);
-    const inline = !!title && !vertical && !payload.legendTitleAbove &&
-      title.width + 10 <= availableWidth / 2;
-    if (title && !inline) {
-      title = measureLegendTitle(echarts, chart, models[0], payload.legendTitle,
-        availableWidth - 2 * title.padLeft);
-    }
-    const indent = inline ? title.width + 10 : 0;
-    const lead = title && !inline ? title.height + 2 : 0;
-    const itemsWidth = availableWidth - indent;
-    const availableHeight = Math.max(1, initial.height - (inside ? 2 * gap : 0) - lead);
-    const legends = models.map(model => {
-      const font = model.getModel('textStyle').getFont();
-      const natural = Math.max(0, ...model.getData().map(item =>
-        echarts.format.getTextRect(item.get('name'), font).width));
-      const textWidth = Math.max(1, itemsWidth - model.get('itemWidth') - 15);
-      return {id: model.id, orient: vertical ? 'vertical' : 'horizontal',
-        left: 0, right: null, top: 0, bottom: null, width: itemsWidth,
-        height: vertical ? availableHeight : 1000000,
-        textStyle: {width: natural > textWidth ? textWidth : null, overflow: 'break'}};
-    });
-    chart.setOption({legend: legends});
-    models = models.map(model => chart.getModel().getComponent('legend', model.componentIndex));
-    const boxes = models.map(bounds);
-    // Keep annotation families together, but pack complete components into
-    // horizontal rows instead of giving every family its own full-width band.
-    const rows = [];
-    boxes.forEach((box, index) => {
-      let row = rows[rows.length - 1];
-      if (!row || vertical || row.width + 16 + box.width > itemsWidth) {
-        row = {items: [], width: 0, height: 0}; rows.push(row);
-      }
-      row.items.push({index, offset: row.width + (row.items.length ? 16 : 0)});
-      row.width += box.width + (row.items.length > 1 ? 16 : 0);
-      row.height = Math.max(row.height, box.height);
-    });
-    const itemsHeight = rows.reduce((sum, row) => sum + row.height, 0) + (rows.length - 1) * 6;
-    const legendHeight = itemsHeight + lead;
-    const legendWidth = Math.max(indent + Math.max(...rows.map(row => row.width)),
-      title && !inline ? title.width + 2 * title.padLeft : 0);
-    const extra = vertical ? legendWidth + gap : legendHeight + gap;
-    if (!inside) {
-      grids = grids.map(g => {
-        const next = {...g};
-        if (vertical) {
-          const side = right ? 'right' : 'left';
-          next[side] = px(g[side], width, 36) + extra;
-        } else if (lower) {
-          next.bottom = px(g.bottom, height, 36) + extra;
-        } else {
-          next.top = Math.max(px(g.top, height, 36), header + extra);
-        }
-        return next;
-      });
-      const update = {};
-      if (grids.length) update.grid = grids;
-      else update.series = (Array.isArray(source.series) ? source.series : [source.series]).map(s => {
-        // Native box-layout series such as pie reserve the same outside bands.
-        if (s?.type !== 'pie') return {};
-        return {left: gap + (vertical && left ? extra : 0), right: gap + (vertical && right ? extra : 0),
-          top: header + (!vertical && !lower ? extra : 0), bottom: gap + (!vertical && lower ? extra : 0)};
-      });
-      // Bottom legends sit below slider controls; move those controls as a band.
-      if (!vertical && lower && source.dataZoom) {
-        update.dataZoom = (Array.isArray(source.dataZoom) ? source.dataZoom : [source.dataZoom]).map(z =>
-          z.type === 'slider' ? {bottom: px(z.bottom, height, 0) + extra} : {});
-      } else if (source.dataZoom) {
-        update.dataZoom = (Array.isArray(source.dataZoom) ? source.dataZoom : [source.dataZoom]).map(z =>
-          z.type === 'slider' ? {bottom: z.bottom ?? null} : {});
-      }
-      chart.setOption(update);
-    }
-    if (payload.aspect) fitAxes(chart, payload);
-    const grid = area();
-    let top = inside ? (lower ? grid.y + grid.height - legendHeight - gap :
-      vertical ? grid.y + (grid.height - legendHeight) / 2 : grid.y + gap) :
-      vertical ? grid.y + (grid.height - legendHeight) / 2 : lower ? height - gap - legendHeight : header;
-    const rowX = w => vertical ? (inside ? (right ? grid.x + grid.width - w - gap : grid.x + gap) :
-      right ? width - gap - w : gap) :
-      right ? grid.x + grid.width - w - (inside ? gap : 0) :
-      left ? grid.x + (inside ? gap : 0) : grid.x + (grid.width - w) / 2;
-    // With a title, rows align to the left edge of the whole legend block.
-    const blockX = rowX(legendWidth);
-    if (title) {
-      drawLegendTitle(chart, title, blockX + title.padLeft,
-        top + title.padTop + (inline ? (title.line - title.height) / 2 : 0));
-    }
-    top += lead;
-    const updates = [];
-    rows.forEach(row => {
-      const x = title ? blockX + indent : rowX(row.width);
-      row.items.forEach(item => updates.push({id: models[item.index].id,
-        left: x + item.offset, right: null, top, bottom: null}));
-      top += row.height + 6;
-    });
-    chart.setOption({legend: updates});
+    rtemisDraw().layoutLegend(echarts, chart, {option: payload.option,
+      position: payload.legendPosition, placement: payload.legendPlacement,
+      title: payload.legendTitle, titleAbove: payload.legendTitleAbove,
+      target: payload.legendTarget, aspect: payload.aspect});
   }
 
-  // Continuous legends share anchors/placement but retain a vertical right
-  // default. Their native view includes endpoint text and draggable handles.
+  // A color scale the legend members place (`layoutColorScale()` in
+  // @rtemis/draw), with the payload's heatmap hints.
   function positionVisualMaps(chart, payload, echarts) {
-    const position = payload.legendPosition;
-    const model = chart.getModel().getComponent('visualMap');
-    if (!position || !model?.get('show')) return;
-    const source = payload.option, gap = 12, width = chart.getWidth(), height = chart.getHeight();
-    const vertical = position === 'left' || position === 'right';
-    const inside = payload.legendPlacement === 'inside';
-    const right = position.endsWith('right'), left = position.endsWith('left'), lower = position.startsWith('bottom');
-    const bounds = component => {
-      const group = chart.getViewOfComponentModel(component).group;
-      const box = group.getBoundingRect().clone(); box.applyTransform(group.getComputedTransform()); return box;
-    };
-    const px = (v, extent) => typeof v === 'string' && v.endsWith('%') ? parseFloat(v) * extent / 100 : +v || 0;
-    const grids = (Array.isArray(source.grid) ? source.grid : [source.grid]).map(g => ({...g}));
-    // Remove only the builder's automatic right-side allowance. User margins
-    // and dendrogram bands remain part of the authored plotting geometry.
-    const reserved = payload.legendReserveRight || 0;
-    grids.forEach(g => {if (g.right != null) g.right = px(g.right, width) - reserved;});
-    chart.setOption({grid: grids, visualMap: {orient: vertical ? 'vertical' : 'horizontal',
-      left: 0, top: 0, right: null, bottom: null,
-      itemHeight: Math.min(140, Math.max(30, (vertical ? height : width) - 160))}});
-    // Title above a vertical colorbar; before a horizontal one when both fit
-    // on one line, otherwise above it. A title above wraps at the wider of the
-    // colorbar and a quarter of the chart (at most 160 px) when vertical, and
-    // at the chart width when horizontal.
-    const native = bounds(model);
-    // The bar's left edge in the measured scale: the scale's bounds start at
-    // its padding and handles.
-    let barX = native.x;
-    chart.getViewOfComponentModel(model).group.traverse(el => {
-      if (el.isGroup || !el.style?.fill?.colorStops) return;
-      const r = el.getBoundingRect().clone(); r.applyTransform(el.getComputedTransform());
-      barX = Math.min(barX === native.x ? r.x : barX, r.x);
-    });
-    let title = measureLegendTitle(echarts, chart, model, payload.legendTitle);
-    const inline = !!title && !vertical && title.width + 10 + native.width <= width - 2 * gap;
-    if (title && !inline) {
-      title = measureLegendTitle(echarts, chart, model, payload.legendTitle,
-        vertical ? Math.max(native.width, Math.min(160, width / 4)) - 2 * title.padLeft : width - 2 * gap);
-    }
-    const indent = inline ? title.width + 10 : 0;
-    const lead = title && !inline ? title.height + 2 : 0;
-    const box = {width: Math.max(native.width + indent, lead ? title.width + 2 * title.padLeft : 0),
-      height: Math.max(native.height + lead, title ? title.height : 0)};
-    const side = vertical ? (right ? 'right' : 'left') : lower ? 'bottom' : 'top';
-    let header = gap;
-    chart.getModel().eachComponent('title', title => {
-      const t = bounds(title); if (t.width && t.height) header = Math.max(header, t.y + t.height + gap);
-    });
-    const firstTop = Math.min(...grids.map(g => px(g.top, height)));
-    const extra = inside ? 0 : side === 'top' ? Math.max(0, header + box.height + gap - firstTop) :
-      (vertical ? box.width : box.height) + gap;
-    const adjusted = {...payload, option: {...source, grid: grids}, rightPx: payload.rightPx - reserved};
-    grids.forEach(g => {if (g[side] != null) g[side] = px(g[side], vertical ? width : height) + extra;});
-    const key = {top: 'topPx', bottom: 'botPx', left: 'leftPx', right: 'rightPx'}[side];
-    if (Number.isFinite(adjusted[key])) adjusted[key] += extra;
-    chart.setOption({grid: grids});
-    if (payload.squareCells) fitHeatmap(chart, adjusted);
-    const areas = [];
-    // The plotting area of the scale's series: a heatmap's cells, or a
-    // scatter chart's points.
-    model.eachTargetSeries(series => {
-      if (series.coordinateSystem?.type === 'cartesian2d') areas.push(series.coordinateSystem.getArea());
-    });
-    if (!areas.length) return;
-    const grid = areas[0];
-    // Outside anchors sit beyond axis/dendrogram bands, not across their labels.
-    const dx = payload.squareCells ? Math.max(0, (width - adjusted.leftPx - adjusted.rightPx - grid.width) / 2) : 0;
-    // An outside scale at the right sits 16 px (@rtemis/draw's KEY_GAP) right
-    // of the rightmost plotting area, such as a row dendrogram, as the
-    // scatter chart's keys do. spec: draw/shared-builders#keys
-    let plotRight = grid.x + grid.width;
-    chart.getModel().eachComponent('grid', g => {
-      const r = g.coordinateSystem?.getRect?.();
-      if (r && r.width > 0) plotRight = Math.max(plotRight, r.x + r.width);
-    });
-    const x = vertical ? (inside ? right ? grid.x + grid.width - box.width - gap : grid.x + gap :
-      right ? plotRight + 16 - (barX - native.x) - (title ? 0 : native.x) : gap + dx) :
-      left ? grid.x + (inside ? gap : 0) : right ? grid.x + grid.width - box.width - (inside ? gap : 0) : grid.x + (grid.width - box.width) / 2;
-    let y = vertical ? grid.y + (grid.height - box.height) / 2 :
-      inside ? lower ? grid.y + grid.height - box.height - gap : grid.y + gap :
-      lower ? height - gap - box.height : header;
-    if (title) {
-      drawLegendTitle(chart, title, x + title.padLeft,
-        y + (inline ? (native.height - title.height) / 2 : title.padTop));
-    }
-    // Handles and endpoint text extend beyond the layout box. With a title,
-    // the measured box starts exactly at the reserved position below or after it.
-    const shiftX = title ? indent - native.x : 0, shiftY = title ? lead - native.y : 0;
-    chart.setOption({visualMap: {left: x + shiftX, right: null, top: y + shiftY, bottom: null}});
+    rtemisDraw().layoutColorScale(echarts, chart, {option: payload.option,
+      position: payload.legendPosition, placement: payload.legendPlacement,
+      title: payload.legendTitle, heatmap: payload});
   }
-  // Edge-aligned pie labels need a real text band. ECharts truncates them to
-  // zero width when radius + guide lines consume that band. Fit from authored
-  // radii on every resize, so a narrow host does not permanently shrink a pie.
+  // Sankey labels, the categorical legend, and edge-aligned pie labels
+  // (`fitSankey()`, `layoutLegend()`, and `fitPieLabels()` in @rtemis/draw).
   function positionLegend(echarts, chart, payload) {
     fitSankey(echarts, chart, payload);
     layoutLegend(echarts, chart, payload);
-    const definitions = payload.option?.series;
-    const source = Array.isArray(definitions) ? definitions : [definitions];
-    const updates = source.map((definition, index) => {
-      if (definition?.type !== 'pie' || definition.label?.alignTo !== 'edge') return {};
-      const model = chart.getModel().getSeriesByIndex(index), data = model.getData();
-      const rect = data.getLayout('viewRect');
-      const px = (value, extent) => typeof value === 'string' && value.endsWith('%') ? parseFloat(value)*extent/100 : +value || 0;
-      const base = Math.min(rect.width, rect.height)/2;
-      const radii = Array.isArray(definition.radius) ? definition.radius : [0, definition.radius ?? '75%'];
-      const outer = px(radii[1], base), inner = px(radii[0], base);
-      let band = 0;
-      for (let i=0; i<data.count(); i++) {
-        const label = data.getItemModel(i).getModel('label');
-        if (label.get('show') === false || !['outer','outside'].includes(label.get('position'))) continue;
-        const line = data.getItemModel(i).getModel('labelLine');
-        const width = echarts.format.getTextRect(data.getName(i), label.getFont()).width;
-        band = Math.max(band, width + px(label.get('edgeDistance'),rect.width) +
-          px(line.get('length'),rect.width) + px(line.get('length2'),rect.width) +
-          (label.get('distanceToLabelLine') || 0) + 4);
-      }
-      const radius = Math.min(outer, Math.max(10, rect.width/2 - band));
-      return {radius: [outer ? inner*radius/outer : 0, radius]};
-    });
-    if (updates.some(update => update.radius)) chart.setOption({series: updates});
+    rtemisDraw().fitPieLabels(echarts, chart, {option: payload.option});
   }
   // The color scale and size key of a chart @rtemis/draw builds are placed by
   // the package's fitKeys(), on the side the legend members ask for and away
   // from a categorical legend. A fixed-aspect plot is fitted again inside the
   // narrowed area before the keys are placed. spec: draw/shared-builders#keys
   function fitKeys(chart, payload, echarts) {
-    const draw = typeof RtemisDraw !== 'undefined' ? RtemisDraw : globalThis.RtemisDraw;
+    const draw = rtemisDraw();
     if (!draw?.fitKeys) return;
     let hasLegend = false;
     chart.getModel().eachComponent('legend', model => {
@@ -479,167 +143,23 @@
   function centerVisualMaps(chart, payload, echarts) {
     if (payload.fitKeys) return fitKeys(chart, payload, echarts);
     if (payload.legendTarget === 'visualMap') return positionVisualMaps(chart, payload, echarts);
-    const definitions = payload.option?.visualMap;
-    if (!definitions) return;
-    const maps = Array.isArray(definitions) ? definitions : [definitions];
-    let changed = false;
-    const updates = maps.map((definition, index) => {
-      if (!['middle', 'center'].includes(definition.top)) return {};
-      const model = chart.getModel().getComponent('visualMap', index);
-      if (!model?.get('show') || model.get('orient') !== 'vertical') return {};
-      const areas = [];
-      model.eachTargetSeries(series => {
-        if (series.subType === 'heatmap' && series.coordinateSystem?.type === 'cartesian2d') {
-          areas.push(series.coordinateSystem.getArea());
-        }
-      });
-      if (!areas.length) return {};
-      const top = Math.min(...areas.map(area => area.y));
-      const bottom = Math.max(...areas.map(area => area.y + area.height));
-      const view = chart.getViewOfComponentModel(model);
-      const height = view.group.getBoundingRect().height;
-      changed = true;
-      return {top: (top + bottom - height) / 2};
-    });
-    if (changed) chart.setOption({visualMap: updates});
+    rtemisDraw().centerColorScales(chart, {option: payload.option});
   }
-  // Fit the package-owned timeline renderer on every surface. Measure native
-  // legend/text bounds instead of reserving a fixed right-hand strip. ECharts
-  // GridOption, LegendOption, and AxisLabelBaseOption are the source contracts
-  // (coord/cartesian/GridModel.ts, component/legend/LegendModel.ts,
-  // coord/axisCommonTypes.ts). No data, zoom, or selection settings are replaced.
-  // spec: draw/first-cran-release#responsive-timelines
+  // The package's fit of the timeline renderer (`fitGantt()` in
+  // @rtemis/draw). spec: draw/first-cran-release#responsive-timelines
   function fitGantt(echarts, chart, payload) {
-    const source = payload.option;
-    const series = Array.isArray(source?.series) ? source.series : [source?.series];
-    if (!series.some(s => s?.renderItem === 'rtemis.gantt.v1') ||
-        !source.grid || Array.isArray(source.grid) ||
-        !source.xAxis || !source.yAxis || Array.isArray(source.xAxis) || Array.isArray(source.yAxis)) return;
-    const width = chart.getWidth(), model = chart.getModel();
-    const y = model.getComponent('yAxis');
-    const font = y.getModel('axisLabel').getFont();
-    const labelWidth = Math.min(width * 0.35, y.get('data').reduce((max, label) =>
-      Math.max(max, echarts.format.getTextRect(String(label), font).width + 2), 0));
-    const update = {grid: {...source.grid},
-      yAxis: {axisLabel: {width: labelWidth, overflow: 'truncate', ...source.yAxis.axisLabel}}};
-    // Only adapt the builder's automatic legend. Explicit low-level placement
-    // remains under the caller's control, including a hidden legend.
-    const automatic = !payload.legendPosition && source.legend?.orient === 'vertical' &&
-      source.legend.right === 8 && source.legend.top === 'middle' && source.legend.show !== false;
-    let below = false;
-    if (automatic) {
-      const legend = model.getComponent('legend'), font = legend.getModel('textStyle').getFont();
-      const natural = Math.max(0, ...legend.getData().map(item =>
-        echarts.format.getTextRect(item.get('name'), font).width));
-      const right = Math.max(source.grid.right, natural + legend.get('itemWidth') + 29);
-      below = width - labelWidth - right - 32 < 240;
-      const available = Math.max(24, width - legend.get('itemWidth') - 31);
-      update.legend = {...source.legend, selected: legend.get('selected'), left: below ? 8 : null,
-        right: 8, top: below ? null : 'middle', bottom: below ? 4 : null,
-        orient: below ? 'horizontal' : 'vertical',
-        textStyle: {...source.legend.textStyle,
-          width: below && natural > available ? available : null,
-          overflow: 'break'}};
-      update.grid.right = below ? 16 : right;
-    }
-    // On a narrow surface put the toolbar on a separate header row, keeping
-    // both the title and controls visible. Even untitled charts reserve its row.
-    if (source.toolbox?.show !== false && Number.isFinite(source.toolbox?.top)) {
-      const title = model.getComponent('title'), toolbox = model.getComponent('toolbox');
-      const bounds = component => {
-        if (!component) return null;
-        const group = chart.getViewOfComponentModel(component).group;
-        const rect = group.getBoundingRect().clone();
-        rect.applyTransform(group.getComputedTransform());
-        return rect;
-      };
-      const titleBox = bounds(title), toolsBox = bounds(toolbox);
-      // A centered title can collide with a right-anchored toolbar even when
-      // their combined widths fit. Compare their actual horizontal extents.
-      const overlap = titleBox && toolsBox && titleBox.x < toolsBox.x + toolsBox.width + 8 &&
-        toolsBox.x < titleBox.x + titleBox.width + 8;
-      const top = overlap ? Math.max(source.toolbox.top, titleBox.y + titleBox.height + 8) : source.toolbox.top;
-      update.toolbox = {top};
-      update.grid.top = Math.max(source.grid.top, top + (toolsBox?.height || 14) + 12);
-    }
-    chart.setOption(update);
-    if (below) {
-      const legend = chart.getModel().getComponent('legend');
-      const height = chart.getViewOfComponentModel(legend).group.getBoundingRect().height;
-      chart.setOption({grid: {bottom: source.grid.bottom + height + 12}});
-    }
-    const grid = chart.getModel().getComponent('grid').coordinateSystem.getRect();
-    chart.setOption({xAxis: {
-      splitNumber: source.xAxis.splitNumber ?? Math.max(2, Math.min(5, Math.floor(grid.width / 80))),
-      axisLabel: {hideOverlap: true, ...source.xAxis.axisLabel}
-    }});
+    rtemisDraw().fitGantt(echarts, chart, {option: payload.option,
+      legendPosition: payload.legendPosition});
   }
-  // Fit default vertical Sankey labels to each native node width. Explicit
-  // label positions/widths remain caller-owned. SankeyNodeItemOption and native
-  // dx/dy geometry: chart/sankey/SankeySeries.ts and SankeyView.ts.
+  // Vertical Sankey labels broken to their node widths (`fitSankey()` in
+  // @rtemis/draw).
   function fitSankey(echarts, chart, payload) {
-    const sources = Array.isArray(payload.option.series) ? payload.option.series : [payload.option.series];
-    const updates = sources.map((source, index) => {
-      if (source?.type !== 'sankey' || source.orient !== 'vertical' ||
-          source.label?.position != null || source.label?.width != null) return {};
-      const series = chart.getModel().getSeriesByIndex(index), data = series.getData();
-      const fontSize = series.getModel('label').get('fontSize') || 12;
-      const fontFamily = series.getModel('label').get('fontFamily') || 'sans-serif';
-      const targets = new Set(source.links.map(edge => edge.target));
-      const origins = new Set(source.links.map(edge => edge.source));
-      let top = 0, bottom = 0;
-      const nodes = source.data.map((node, i) => {
-        if (node.label?.position != null || node.label?.width != null) return node;
-        const width = Math.max(1, data.getItemLayout(i).dx - 4);
-        const position = origins.has(node.name) ? 'top' : 'bottom';
-        const label = {...node.label, position, width, overflow:'break', lineHeight:fontSize + 2};
-        const height = new echarts.graphic.Text({style:{text:node.name, fontSize, fontFamily,
-          width, overflow:'break', lineHeight:fontSize + 2}}).getBoundingRect().height + 12;
-        if (!targets.has(node.name)) top = Math.max(top, height);
-        if (!origins.has(node.name)) bottom = Math.max(bottom, height);
-        return {...node, label};
-      });
-      const px = value => typeof value === 'string' && value.endsWith('%') ? parseFloat(value) * chart.getHeight() / 100 : Number(value) || 0;
-      return {data:nodes, top:Math.max(px(source.top), top), bottom:Math.max(px(source.bottom), bottom)};
-    });
-    if (updates.some(update => update.data)) chart.setOption({series:updates});
+    rtemisDraw().fitSankey(echarts, chart, {option: payload.option});
   }
-  // A value axis labels its extent ends even when they are not multiples of
-  // the tick interval: a zoomed window, or limits pinned to padded data values,
-  // print as 4.553 or 8.521968997863846. Label an end only when it falls on a
-  // tick, unless the option sets showMinLabel/showMaxLabel itself.
-  // Run after every layout change and zoom; the tick interval depends on the
-  // axis length in pixels.
-  // spec: draw/zoom-controls#endpoint-labels
+  // Value axis end labels only on ticks (`fitEndpointLabels()` in
+  // @rtemis/draw). spec: draw/zoom-controls#endpoint-labels
   function fitEndpointLabels(chart, payload) {
-    const source = payload?.option;
-    // The Node widget fixtures pass chart stubs without getModel().
-    if (typeof chart?.getModel !== 'function' || !source) return;
-    const update = {};
-    ['xAxis', 'yAxis'].forEach(type => {
-      const defined = [].concat(source[type] ?? []);
-      const axes = [];
-      let changed = false;
-      chart.getModel().eachComponent(type, model => {
-        const label = defined[model.componentIndex]?.axisLabel || {};
-        const scale = model.axis?.scale;
-        const next = {};
-        // ECharts 6.1 exposes the tick interval through getConfig().
-        const interval = scale?.getConfig?.()?.interval ?? scale?.getInterval?.();
-        if (model.axis?.type === 'value' && Number.isFinite(interval)) {
-          const extent = scale.getExtent();
-          const onTick = v => interval > 0 &&
-            Math.abs(v / interval - Math.round(v / interval)) < 1e-6;
-          if (label.showMinLabel === undefined) next.showMinLabel = onTick(extent[0]);
-          if (label.showMaxLabel === undefined) next.showMaxLabel = onTick(extent[1]);
-          const current = model.get('axisLabel');
-          if (Object.keys(next).some(k => current?.[k] !== next[k])) changed = true;
-        }
-        axes[model.componentIndex] = Object.keys(next).length ? {axisLabel: next} : {};
-      });
-      if (changed) update[type] = axes;
-    });
-    if (Object.keys(update).length) chart.setOption(update);
+    rtemisDraw().fitEndpointLabels(chart, {option: payload?.option});
   }
   return {background, cells, fit, fitAxes, fitHeatmap, prepareLabels, prepareColors, positionLegend, centerVisualMaps, fitGantt, fitSankey, fitEndpointLabels};
 });

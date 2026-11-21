@@ -1,0 +1,38 @@
+{
+  "600x400": {
+    "plots": [
+      {
+        "x": 60.4,
+        "y": 42,
+        "width": 503.6,
+        "height": 302
+      }
+    ],
+    "legend": {
+      "x": 214.5,
+      "y": 366,
+      "width": 195.5,
+      "height": 14
+    },
+    "colorScale": null,
+    "title": null
+  },
+  "390x420": {
+    "plots": [
+      {
+        "x": 60.4,
+        "y": 42,
+        "width": 293.6,
+        "height": 322
+      }
+    ],
+    "legend": {
+      "x": 109.5,
+      "y": 386,
+      "width": 195.5,
+      "height": 14
+    },
+    "colorScale": null,
+    "title": null
+  }
+}

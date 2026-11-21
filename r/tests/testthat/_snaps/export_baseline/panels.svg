@@ -1,0 +1,519 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="640" height="420" viewBox="0 0 640 420"><rect width="640" height="420" fill="#ffffff"/><svg x="0" y="0" overflow="hidden" width="205.33333333333334" height="420" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" baseProfile="full" viewBox="0 0 205.33333333333334 420">
+<rect width="205.33333333333334" height="420" x="0" y="0" fill="#ffffff"></rect>
+<path d="M57.7 363.5L165.3 363.5" fill="none" pointer-events="visible" stroke="#dbdee4" class="zr-cls-0"></path>
+<path d="M57.7 358.5L165.3 358.5" fill="none" pointer-events="visible" stroke="#dbdee4" class="zr-cls-0"></path>
+<path d="M57.7 352.5L165.3 352.5" fill="none" pointer-events="visible" stroke="#dbdee4" class="zr-cls-0"></path>
+<path d="M57.7 347.5L165.3 347.5" fill="none" pointer-events="visible" stroke="#dbdee4" class="zr-cls-0"></path>
+<path d="M57.7 341.5L165.3 341.5" fill="none" pointer-events="visible" stroke="#dbdee4" class="zr-cls-0"></path>
+<path d="M74.5 338.3L74.5 364" fill="none" pointer-events="visible" stroke="#dbdee4" class="zr-cls-0"></path>
+<path d="M96.5 338.3L96.5 364" fill="none" pointer-events="visible" stroke="#dbdee4" class="zr-cls-0"></path>
+<path d="M118.5 338.3L118.5 364" fill="none" pointer-events="visible" stroke="#dbdee4" class="zr-cls-0"></path>
+<path d="M141.5 338.3L141.5 364" fill="none" pointer-events="visible" stroke="#dbdee4" class="zr-cls-0"></path>
+<path d="M163.5 338.3L163.5 364" fill="none" pointer-events="visible" stroke="#dbdee4" class="zr-cls-0"></path>
+<path d="M118.5 364L118.5 338.3" fill="none" pointer-events="visible" stroke="#54555a" stroke-linecap="round" class="zr-cls-0"></path>
+<path d="M57.7 352.5L165.3 352.5" fill="none" pointer-events="visible" stroke="#54555a" stroke-linecap="round" class="zr-cls-0"></path>
+<text dominant-baseline="central" text-anchor="end" style="font-size:12px;font-family:system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;" transform="translate(49.68 363.2738)" fill="rgb(0,0,0)" fill-opacity="0.7">-2</text>
+<text dominant-baseline="central" text-anchor="end" style="font-size:12px;font-family:system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;" transform="translate(49.68 357.8314)" fill="rgb(0,0,0)" fill-opacity="0.7">-1</text>
+<text dominant-baseline="central" text-anchor="end" style="font-size:12px;font-family:system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;" transform="translate(49.68 352.389)" fill="rgb(0,0,0)" fill-opacity="0.7">0</text>
+<text dominant-baseline="central" text-anchor="end" style="font-size:12px;font-family:system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;" transform="translate(49.68 346.9466)" fill="rgb(0,0,0)" fill-opacity="0.7">1</text>
+<text dominant-baseline="central" text-anchor="end" style="font-size:12px;font-family:system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;" transform="translate(49.68 341.5042)" fill="rgb(0,0,0)" fill-opacity="0.7">2</text>
+<text dominant-baseline="central" text-anchor="middle" style="font-size:12px;font-family:system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;" y="6" transform="translate(73.8973 372)" fill="rgb(0,0,0)" fill-opacity="0.7">-2</text>
+<text dominant-baseline="central" text-anchor="middle" style="font-size:12px;font-family:system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;" y="6" transform="translate(96.2635 372)" fill="rgb(0,0,0)" fill-opacity="0.7">-1</text>
+<text dominant-baseline="central" text-anchor="middle" style="font-size:12px;font-family:system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;" y="6" transform="translate(118.6297 372)" fill="rgb(0,0,0)" fill-opacity="0.7">0</text>
+<text dominant-baseline="central" text-anchor="middle" style="font-size:12px;font-family:system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;" y="6" transform="translate(140.9959 372)" fill="rgb(0,0,0)" fill-opacity="0.7">1</text>
+<text dominant-baseline="central" text-anchor="middle" style="font-size:12px;font-family:system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;" y="6" transform="translate(163.3621 372)" fill="rgb(0,0,0)" fill-opacity="0.7">2</text>
+<path d="M1 0A1 1 0 1 1 1 -0.1A1 1 0 0 1 1 0" transform="matrix(3,0,0,3,130.2733,353.1589)" fill="#6CA3A0" fill-opacity="0.6332773124424536" ecmeta_series_index="0" ecmeta_data_index="0" ecmeta_ssr_type="chart" class="zr-cls-1"></path>
+<path d="M1 0A1 1 0 1 1 1 -0.1A1 1 0 0 1 1 0" transform="matrix(3,0,0,3,116.7342,353.9739)" fill="#6CA3A0" fill-opacity="0.6332773124424536" ecmeta_series_index="0" ecmeta_data_index="1" ecmeta_ssr_type="chart" class="zr-cls-1"></path>
+<path d="M1 0A1 1 0 1 1 1 -0.1A1 1 0 0 1 1 0" transform="matrix(3,0,0,3,102.1873,362.1849)" fill="#6CA3A0" fill-opacity="0.6332773124424536" ecmeta_series_index="0" ecmeta_data_index="2" ecmeta_ssr_type="chart" class="zr-cls-1"></path>
+<path d="M1 0A1 1 0 1 1 1 -0.1A1 1 0 0 1 1 0" transform="matrix(3,0,0,3,108.0328,351.5824)" fill="#6CA3A0" fill-opacity="0.6332773124424536" ecmeta_series_index="0" ecmeta_data_index="3" ecmeta_ssr_type="chart" class="zr-cls-1"></path>
+<path d="M1 0A1 1 0 1 1 1 -0.1A1 1 0 0 1 1 0" transform="matrix(3,0,0,3,113.677,345.0579)" fill="#6CA3A0" fill-opacity="0.6332773124424536" ecmeta_series_index="0" ecmeta_data_index="4" ecmeta_ssr_type="chart" class="zr-cls-1"></path>
+<path d="M1 0A1 1 0 1 1 1 -0.1A1 1 0 0 1 1 0" transform="matrix(3,0,0,3,148.757,357.707)" fill="#6CA3A0" fill-opacity="0.6332773124424536" ecmeta_series_index="0" ecmeta_data_index="5" ecmeta_ssr_type="chart" class="zr-cls-1"></path>
+<path d="M1 0A1 1 0 1 1 1 -0.1A1 1 0 0 1 1 0" transform="matrix(3,0,0,3,100.6312,354.2577)" fill="#6CA3A0" fill-opacity="0.6332773124424536" ecmeta_series_index="0" ecmeta_data_index="6" ecmeta_ssr_type="chart" class="zr-cls-1"></path>
+<path d="M1 0A1 1 0 1 1 1 -0.1A1 1 0 0 1 1 0" transform="matrix(3,0,0,3,114.9464,344.1768)" fill="#6CA3A0" fill-opacity="0.6332773124424536" ecmeta_series_index="0" ecmeta_data_index="7" ecmeta_ssr_type="chart" class="zr-cls-1"></path>
+<path d="M1 0A1 1 0 1 1 1 -0.1A1 1 0 0 1 1 0" transform="matrix(3,0,0,3,119.7079,352.6897)" fill="#6CA3A0" fill-opacity="0.6332773124424536" ecmeta_series_index="0" ecmeta_data_index="8" ecmeta_ssr_type="chart" class="zr-cls-1"></path>
+<path d="M1 0A1 1 0 1 1 1 -0.1A1 1 0 0 1 1 0" transform="matrix(3,0,0,3,119.9302,356.5269)" fill="#6CA3A0" fill-opacity="0.6332773124424536" ecmeta_series_index="0" ecmeta_data_index="9" ecmeta_ssr_type="chart" class="zr-cls-1"></path>
+<path d="M1 0A1 1 0 1 1 1 -0.1A1 1 0 0 1 1 0" transform="matrix(3,0,0,3,106.7987,363.048)" fill="#6CA3A0" fill-opacity="0.6332773124424536" ecmeta_series_index="0" ecmeta_data_index="10" ecmeta_ssr_type="chart" class="zr-cls-1"></path>
+<path d="M1 0A1 1 0 1 1 1 -0.1A1 1 0 0 1 1 0" transform="matrix(3,0,0,3,126.0728,347.049)" fill="#6CA3A0" fill-opacity="0.6332773124424536" ecmeta_series_index="0" ecmeta_data_index="11" ecmeta_ssr_type="chart" class="zr-cls-1"></path>
+<path d="M1 0A1 1 0 1 1 1 -0.1A1 1 0 0 1 1 0" transform="matrix(3,0,0,3,131.9039,357.6074)" fill="#6CA3A0" fill-opacity="0.6332773124424536" ecmeta_series_index="0" ecmeta_data_index="12" ecmeta_ssr_type="chart" class="zr-cls-1"></path>
+<path d="M1 0A1 1 0 1 1 1 -0.1A1 1 0 0 1 1 0" transform="matrix(3,0,0,3,100.1797,350.3784)" fill="#6CA3A0" fill-opacity="0.6332773124424536" ecmeta_series_index="0" ecmeta_data_index="13" ecmeta_ssr_type="chart" class="zr-cls-1"></path>
+<path d="M1 0A1 1 0 1 1 1 -0.1A1 1 0 0 1 1 0" transform="matrix(3,0,0,3,91.6958,353.6287)" fill="#6CA3A0" fill-opacity="0.6332773124424536" ecmeta_series_index="0" ecmeta_data_index="14" ecmeta_ssr_type="chart" class="zr-cls-1"></path>
+<path d="M1 0A1 1 0 1 1 1 -0.1A1 1 0 0 1 1 0" transform="matrix(3,0,0,3,150.3481,349.3313)" fill="#6CA3A0" fill-opacity="0.6332773124424536" ecmeta_series_index="0" ecmeta_data_index="15" ecmeta_ssr_type="chart" class="zr-cls-1"></path>
+<path d="M1 0A1 1 0 1 1 1 -0.1A1 1 0 0 1 1 0" transform="matrix(3,0,0,3,136.5084,358.7523)" fill="#6CA3A0" fill-opacity="0.6332773124424536" ecmeta_series_index="0" ecmeta_data_index="16" ecmeta_ssr_type="chart" class="zr-cls-1"></path>
+<path d="M1 0A1 1 0 1 1 1 -0.1A1 1 0 0 1 1 0" transform="matrix(3,0,0,3,114.0178,358.8842)" fill="#6CA3A0" fill-opacity="0.6332773124424536" ecmeta_series_index="0" ecmeta_data_index="17" ecmeta_ssr_type="chart" class="zr-cls-1"></path>
+<path d="M1 0A1 1 0 1 1 1 -0.1A1 1 0 0 1 1 0" transform="matrix(3,0,0,3,104.2078,356.2585)" fill="#6CA3A0" fill-opacity="0.6332773124424536" ecmeta_series_index="0" ecmeta_data_index="18" ecmeta_ssr_type="chart" class="zr-cls-1"></path>
+<path d="M1 0A1 1 0 1 1 1 -0.1A1 1 0 0 1 1 0" transform="matrix(3,0,0,3,97.1368,346.0163)" fill="#6CA3A0" fill-opacity="0.6332773124424536" ecmeta_series_index="0" ecmeta_data_index="19" ecmeta_ssr_type="chart" class="zr-cls-1"></path>
+<path d="M1 0A1 1 0 1 1 1 -0.1A1 1 0 0 1 1 0" transform="matrix(3,0,0,3,94.4811,351.4783)" fill="#F08904" fill-opacity="0.6332773124424536" ecmeta_series_index="1" ecmeta_data_index="0" ecmeta_ssr_type="chart" class="zr-cls-2"></path>
+<path d="M1 0A1 1 0 1 1 1 -0.1A1 1 0 0 1 1 0" transform="matrix(3,0,0,3,103.7195,361.8283)" fill="#F08904" fill-opacity="0.6332773124424536" ecmeta_series_index="1" ecmeta_data_index="1" ecmeta_ssr_type="chart" class="zr-cls-2"></path>
+<path d="M1 0A1 1 0 1 1 1 -0.1A1 1 0 0 1 1 0" transform="matrix(3,0,0,3,95.8134,346.1153)" fill="#F08904" fill-opacity="0.6332773124424536" ecmeta_series_index="1" ecmeta_data_index="2" ecmeta_ssr_type="chart" class="zr-cls-2"></path>
+<path d="M1 0A1 1 0 1 1 1 -0.1A1 1 0 0 1 1 0" transform="matrix(3,0,0,3,109.4995,349.5617)" fill="#F08904" fill-opacity="0.6332773124424536" ecmeta_series_index="1" ecmeta_data_index="3" ecmeta_ssr_type="chart" class="zr-cls-2"></path>
+<path d="M1 0A1 1 0 1 1 1 -0.1A1 1 0 0 1 1 0" transform="matrix(3,0,0,3,113.579,356.9989)" fill="#F08904" fill-opacity="0.6332773124424536" ecmeta_series_index="1" ecmeta_data_index="4" ecmeta_ssr_type="chart" class="zr-cls-2"></path>
+<path d="M1 0A1 1 0 1 1 1 -0.1A1 1 0 0 1 1 0" transform="matrix(3,0,0,3,132.4164,340.8266)" fill="#F08904" fill-opacity="0.6332773124424536" ecmeta_series_index="1" ecmeta_data_index="5" ecmeta_ssr_type="chart" class="zr-cls-2"></path>
+<path d="M1 0A1 1 0 1 1 1 -0.1A1 1 0 0 1 1 0" transform="matrix(3,0,0,3,134.0567,348.1158)" fill="#F08904" fill-opacity="0.6332773124424536" ecmeta_series_index="1" ecmeta_data_index="6" ecmeta_ssr_type="chart" class="zr-cls-2"></path>
+<path d="M1 0A1 1 0 1 1 1 -0.1A1 1 0 0 1 1 0" transform="matrix(3,0,0,3,87.4953,358.6777)" fill="#F08904" fill-opacity="0.6332773124424536" ecmeta_series_index="1" ecmeta_data_index="7" ecmeta_ssr_type="chart" class="zr-cls-2"></path>
+<path d="M1 0A1 1 0 1 1 1 -0.1A1 1 0 0 1 1 0" transform="matrix(3,0,0,3,161.3063,347.7673)" fill="#F08904" fill-opacity="0.6332773124424536" ecmeta_series_index="1" ecmeta_data_index="8" ecmeta_ssr_type="chart" class="zr-cls-2"></path>
+<path d="M1 0A1 1 0 1 1 1 -0.1A1 1 0 0 1 1 0" transform="matrix(3,0,0,3,133.0633,345.9898)" fill="#F08904" fill-opacity="0.6332773124424536" ecmeta_series_index="1" ecmeta_data_index="9" ecmeta_ssr_type="chart" class="zr-cls-2"></path>
+<path d="M1 0A1 1 0 1 1 1 -0.1A1 1 0 0 1 1 0" transform="matrix(3,0,0,3,122.3513,344.3691)" fill="#F08904" fill-opacity="0.6332773124424536" ecmeta_series_index="1" ecmeta_data_index="10" ecmeta_ssr_type="chart" class="zr-cls-2"></path>
+<path d="M1 0A1 1 0 1 1 1 -0.1A1 1 0 0 1 1 0" transform="matrix(3,0,0,3,122.71,362.3179)" fill="#F08904" fill-opacity="0.6332773124424536" ecmeta_series_index="1" ecmeta_data_index="11" ecmeta_ssr_type="chart" class="zr-cls-2"></path>
+<path d="M1 0A1 1 0 1 1 1 -0.1A1 1 0 0 1 1 0" transform="matrix(3,0,0,3,98.684,355.0574)" fill="#F08904" fill-opacity="0.6332773124424536" ecmeta_series_index="1" ecmeta_data_index="12" ecmeta_ssr_type="chart" class="zr-cls-2"></path>
+<path d="M1 0A1 1 0 1 1 1 -0.1A1 1 0 0 1 1 0" transform="matrix(3,0,0,3,92.7463,345.7696)" fill="#F08904" fill-opacity="0.6332773124424536" ecmeta_series_index="1" ecmeta_data_index="13" ecmeta_ssr_type="chart" class="zr-cls-2"></path>
+<path d="M1 0A1 1 0 1 1 1 -0.1A1 1 0 0 1 1 0" transform="matrix(3,0,0,3,125.4897,358.439)" fill="#F08904" fill-opacity="0.6332773124424536" ecmeta_series_index="1" ecmeta_data_index="14" ecmeta_ssr_type="chart" class="zr-cls-2"></path>
+<path d="M1 0A1 1 0 1 1 1 -0.1A1 1 0 0 1 1 0" transform="matrix(3,0,0,3,134.5497,360.9024)" fill="#F08904" fill-opacity="0.6332773124424536" ecmeta_series_index="1" ecmeta_data_index="15" ecmeta_ssr_type="chart" class="zr-cls-2"></path>
+<path d="M1 0A1 1 0 1 1 1 -0.1A1 1 0 0 1 1 0" transform="matrix(3,0,0,3,128.1685,358.1145)" fill="#F08904" fill-opacity="0.6332773124424536" ecmeta_series_index="1" ecmeta_data_index="16" ecmeta_ssr_type="chart" class="zr-cls-2"></path>
+<path d="M1 0A1 1 0 1 1 1 -0.1A1 1 0 0 1 1 0" transform="matrix(3,0,0,3,97.8155,354.2828)" fill="#F08904" fill-opacity="0.6332773124424536" ecmeta_series_index="1" ecmeta_data_index="17" ecmeta_ssr_type="chart" class="zr-cls-2"></path>
+<path d="M1 0A1 1 0 1 1 1 -0.1A1 1 0 0 1 1 0" transform="matrix(3,0,0,3,113.4537,353.472)" fill="#F08904" fill-opacity="0.6332773124424536" ecmeta_series_index="1" ecmeta_data_index="18" ecmeta_ssr_type="chart" class="zr-cls-2"></path>
+<path d="M1 0A1 1 0 1 1 1 -0.1A1 1 0 0 1 1 0" transform="matrix(3,0,0,3,121.6258,339.9328)" fill="#F08904" fill-opacity="0.6332773124424536" ecmeta_series_index="1" ecmeta_data_index="19" ecmeta_ssr_type="chart" class="zr-cls-2"></path>
+<path d="M1 0A1 1 0 1 1 1 -0.1A1 1 0 0 1 1 0" transform="matrix(3,0,0,3,121.7439,353.4709)" fill="#BE2E5F" fill-opacity="0.6332773124424536" ecmeta_series_index="2" ecmeta_data_index="0" ecmeta_ssr_type="chart" class="zr-cls-3"></path>
+<path d="M1 0A1 1 0 1 1 1 -0.1A1 1 0 0 1 1 0" transform="matrix(3,0,0,3,62.3543,353.8733)" fill="#BE2E5F" fill-opacity="0.6332773124424536" ecmeta_series_index="2" ecmeta_data_index="1" ecmeta_ssr_type="chart" class="zr-cls-3"></path>
+<path d="M1 0A1 1 0 1 1 1 -0.1A1 1 0 0 1 1 0" transform="matrix(3,0,0,3,121.1695,357.8495)" fill="#BE2E5F" fill-opacity="0.6332773124424536" ecmeta_series_index="2" ecmeta_data_index="2" ecmeta_ssr_type="chart" class="zr-cls-3"></path>
+<path d="M1 0A1 1 0 1 1 1 -0.1A1 1 0 0 1 1 0" transform="matrix(3,0,0,3,102.2927,352.3594)" fill="#BE2E5F" fill-opacity="0.6332773124424536" ecmeta_series_index="2" ecmeta_data_index="3" ecmeta_ssr_type="chart" class="zr-cls-3"></path>
+<path d="M1 0A1 1 0 1 1 1 -0.1A1 1 0 0 1 1 0" transform="matrix(3,0,0,3,61.6656,349.9758)" fill="#BE2E5F" fill-opacity="0.6332773124424536" ecmeta_series_index="2" ecmeta_data_index="4" ecmeta_ssr_type="chart" class="zr-cls-3"></path>
+<path d="M1 0A1 1 0 1 1 1 -0.1A1 1 0 0 1 1 0" transform="matrix(3,0,0,3,123.4958,348.6462)" fill="#BE2E5F" fill-opacity="0.6332773124424536" ecmeta_series_index="2" ecmeta_data_index="5" ecmeta_ssr_type="chart" class="zr-cls-3"></path>
+<path d="M1 0A1 1 0 1 1 1 -0.1A1 1 0 0 1 1 0" transform="matrix(3,0,0,3,111.2786,358.6781)" fill="#BE2E5F" fill-opacity="0.6332773124424536" ecmeta_series_index="2" ecmeta_data_index="6" ecmeta_ssr_type="chart" class="zr-cls-3"></path>
+<path d="M1 0A1 1 0 1 1 1 -0.1A1 1 0 0 1 1 0" transform="matrix(3,0,0,3,151.4146,360.8618)" fill="#BE2E5F" fill-opacity="0.6332773124424536" ecmeta_series_index="2" ecmeta_data_index="7" ecmeta_ssr_type="chart" class="zr-cls-3"></path>
+<path d="M1 0A1 1 0 1 1 1 -0.1A1 1 0 0 1 1 0" transform="matrix(3,0,0,3,157.3444,352.4494)" fill="#BE2E5F" fill-opacity="0.6332773124424536" ecmeta_series_index="2" ecmeta_data_index="8" ecmeta_ssr_type="chart" class="zr-cls-3"></path>
+<path d="M1 0A1 1 0 1 1 1 -0.1A1 1 0 0 1 1 0" transform="matrix(3,0,0,3,157.2255,339.2486)" fill="#BE2E5F" fill-opacity="0.6332773124424536" ecmeta_series_index="2" ecmeta_data_index="9" ecmeta_ssr_type="chart" class="zr-cls-3"></path>
+<path d="M1 0A1 1 0 1 1 1 -0.1A1 1 0 0 1 1 0" transform="matrix(3,0,0,3,112.9325,354.9735)" fill="#BE2E5F" fill-opacity="0.6332773124424536" ecmeta_series_index="2" ecmeta_data_index="10" ecmeta_ssr_type="chart" class="zr-cls-3"></path>
+<path d="M1 0A1 1 0 1 1 1 -0.1A1 1 0 0 1 1 0" transform="matrix(3,0,0,3,144.6773,353.8073)" fill="#BE2E5F" fill-opacity="0.6332773124424536" ecmeta_series_index="2" ecmeta_data_index="11" ecmeta_ssr_type="chart" class="zr-cls-3"></path>
+<path d="M1 0A1 1 0 1 1 1 -0.1A1 1 0 0 1 1 0" transform="matrix(3,0,0,3,131.5407,358.2521)" fill="#BE2E5F" fill-opacity="0.6332773124424536" ecmeta_series_index="2" ecmeta_data_index="12" ecmeta_ssr_type="chart" class="zr-cls-3"></path>
+<path d="M1 0A1 1 0 1 1 1 -0.1A1 1 0 0 1 1 0" transform="matrix(3,0,0,3,136.0306,355.0767)" fill="#BE2E5F" fill-opacity="0.6332773124424536" ecmeta_series_index="2" ecmeta_data_index="13" ecmeta_ssr_type="chart" class="zr-cls-3"></path>
+<path d="M1 0A1 1 0 1 1 1 -0.1A1 1 0 0 1 1 0" transform="matrix(3,0,0,3,99.9839,346.9692)" fill="#BE2E5F" fill-opacity="0.6332773124424536" ecmeta_series_index="2" ecmeta_data_index="14" ecmeta_ssr_type="chart" class="zr-cls-3"></path>
+<path d="M1 0A1 1 0 1 1 1 -0.1A1 1 0 0 1 1 0" transform="matrix(3,0,0,3,109.6274,344.3284)" fill="#BE2E5F" fill-opacity="0.6332773124424536" ecmeta_series_index="2" ecmeta_data_index="15" ecmeta_ssr_type="chart" class="zr-cls-3"></path>
+<path d="M1 0A1 1 0 1 1 1 -0.1A1 1 0 0 1 1 0" transform="matrix(3,0,0,3,92.4635,360.3994)" fill="#BE2E5F" fill-opacity="0.6332773124424536" ecmeta_series_index="2" ecmeta_data_index="16" ecmeta_ssr_type="chart" class="zr-cls-3"></path>
+<path d="M1 0A1 1 0 1 1 1 -0.1A1 1 0 0 1 1 0" transform="matrix(3,0,0,3,128.681,349.4891)" fill="#BE2E5F" fill-opacity="0.6332773124424536" ecmeta_series_index="2" ecmeta_data_index="17" ecmeta_ssr_type="chart" class="zr-cls-3"></path>
+<path d="M1 0A1 1 0 1 1 1 -0.1A1 1 0 0 1 1 0" transform="matrix(3,0,0,3,90.9768,353.9203)" fill="#BE2E5F" fill-opacity="0.6332773124424536" ecmeta_series_index="2" ecmeta_data_index="18" ecmeta_ssr_type="chart" class="zr-cls-3"></path>
+<path d="M1 0A1 1 0 1 1 1 -0.1A1 1 0 0 1 1 0" transform="matrix(3,0,0,3,96.2847,358.2061)" fill="#BE2E5F" fill-opacity="0.6332773124424536" ecmeta_series_index="2" ecmeta_data_index="19" ecmeta_ssr_type="chart" class="zr-cls-3"></path>
+<path d="M-5 -5l43.9 0l0 314l-43.9 0Z" transform="translate(94.556 17)" fill="rgb(0,0,0)" fill-opacity="0" stroke="#b7b9be" stroke-width="0" class="zr-cls-0"></path>
+<path d="M19.5 7A7 7 0 1 1 19.5 6.3A7 7 0 0 1 19.5 7" transform="translate(89.056 52)" fill="#6CA3A0" ecmeta_series_index="0" ecmeta_data_index="0" ecmeta_ssr_type="legend" ecmeta_silent="true" class="zr-cls-0"></path>
+<text dominant-baseline="central" text-anchor="start" style="font-size:12px;font-family:system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;" x="30" y="-17" transform="translate(89.056 52)" fill="rgb(0,0,0)" fill-opacity="0.7">A</text>
+<text dominant-baseline="central" text-anchor="start" style="font-size:12px;font-family:system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;" x="30" y="-5" transform="translate(89.056 52)" fill="rgb(0,0,0)" fill-opacity="0.7">d</text>
+<text dominant-baseline="central" text-anchor="start" style="font-size:12px;font-family:system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;" x="30" y="7" transform="translate(89.056 52)" fill="rgb(0,0,0)" fill-opacity="0.7">e</text>
+<text dominant-baseline="central" text-anchor="start" style="font-size:12px;font-family:system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;" x="30" y="19" transform="translate(89.056 52)" fill="rgb(0,0,0)" fill-opacity="0.7">l</text>
+<text dominant-baseline="central" text-anchor="start" style="font-size:12px;font-family:system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;" x="30" y="31" transform="translate(89.056 52)" fill="rgb(0,0,0)" fill-opacity="0.7">i</text>
+<text dominant-baseline="central" text-anchor="start" style="font-size:12px;font-family:system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;" x="30" y="43" transform="translate(89.056 52)" fill="rgb(0,0,0)" fill-opacity="0.7">e</text>
+<path d="M5.5 -35l32.5 0l0 84l-32.5 0Z" transform="translate(89.056 52)" fill="none" pointer-events="visible" ecmeta_series_index="0" ecmeta_data_index="0" ecmeta_ssr_type="legend" class="zr-cls-4"></path>
+<path d="M19.5 7A7 7 0 1 1 19.5 6.3A7 7 0 0 1 19.5 7" transform="translate(89.056 144)" fill="#F08904" ecmeta_series_index="1" ecmeta_data_index="1" ecmeta_ssr_type="legend" ecmeta_silent="true" class="zr-cls-0"></path>
+<text dominant-baseline="central" text-anchor="start" style="font-size:12px;font-family:system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;" x="30" y="-35" transform="translate(89.056 144)" fill="rgb(0,0,0)" fill-opacity="0.7">C</text>
+<text dominant-baseline="central" text-anchor="start" style="font-size:12px;font-family:system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;" x="30" y="-23" transform="translate(89.056 144)" fill="rgb(0,0,0)" fill-opacity="0.7">h</text>
+<text dominant-baseline="central" text-anchor="start" style="font-size:12px;font-family:system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;" x="30" y="-11" transform="translate(89.056 144)" fill="rgb(0,0,0)" fill-opacity="0.7">i</text>
+<text dominant-baseline="central" text-anchor="start" style="font-size:12px;font-family:system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;" x="30" y="1" transform="translate(89.056 144)" fill="rgb(0,0,0)" fill-opacity="0.7">n</text>
+<text dominant-baseline="central" text-anchor="start" style="font-size:12px;font-family:system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;" x="30" y="13" transform="translate(89.056 144)" fill="rgb(0,0,0)" fill-opacity="0.7">s</text>
+<text dominant-baseline="central" text-anchor="start" style="font-size:12px;font-family:system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;" x="30" y="25" transform="translate(89.056 144)" fill="rgb(0,0,0)" fill-opacity="0.7">t</text>
+<text dominant-baseline="central" text-anchor="start" style="font-size:12px;font-family:system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;" x="30" y="37" transform="translate(89.056 144)" fill="rgb(0,0,0)" fill-opacity="0.7">r</text>
+<text dominant-baseline="central" text-anchor="start" style="font-size:12px;font-family:system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;" x="30" y="49" transform="translate(89.056 144)" fill="rgb(0,0,0)" fill-opacity="0.7">a</text>
+<text dominant-baseline="central" text-anchor="start" style="font-size:12px;font-family:system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;" x="30" y="61" transform="translate(89.056 144)" fill="rgb(0,0,0)" fill-opacity="0.7">p</text>
+<path d="M5.5 -53l33.1 0l0 120l-33.1 0Z" transform="translate(89.056 144)" fill="none" pointer-events="visible" ecmeta_series_index="1" ecmeta_data_index="1" ecmeta_ssr_type="legend" class="zr-cls-4"></path>
+<path d="M19.5 7A7 7 0 1 1 19.5 6.3A7 7 0 0 1 19.5 7" transform="translate(89.056 272)" fill="#BE2E5F" ecmeta_series_index="2" ecmeta_data_index="2" ecmeta_ssr_type="legend" ecmeta_silent="true" class="zr-cls-0"></path>
+<text dominant-baseline="central" text-anchor="start" style="font-size:12px;font-family:system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;" x="30" y="-17" transform="translate(89.056 272)" fill="rgb(0,0,0)" fill-opacity="0.7">G</text>
+<text dominant-baseline="central" text-anchor="start" style="font-size:12px;font-family:system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;" x="30" y="-5" transform="translate(89.056 272)" fill="rgb(0,0,0)" fill-opacity="0.7">e</text>
+<text dominant-baseline="central" text-anchor="start" style="font-size:12px;font-family:system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;" x="30" y="7" transform="translate(89.056 272)" fill="rgb(0,0,0)" fill-opacity="0.7">n</text>
+<text dominant-baseline="central" text-anchor="start" style="font-size:12px;font-family:system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;" x="30" y="19" transform="translate(89.056 272)" fill="rgb(0,0,0)" fill-opacity="0.7">t</text>
+<text dominant-baseline="central" text-anchor="start" style="font-size:12px;font-family:system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;" x="30" y="31" transform="translate(89.056 272)" fill="rgb(0,0,0)" fill-opacity="0.7">o</text>
+<text dominant-baseline="central" text-anchor="start" style="font-size:12px;font-family:system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;" x="30" y="43" transform="translate(89.056 272)" fill="rgb(0,0,0)" fill-opacity="0.7">o</text>
+<path d="M5.5 -35l33.9 0l0 84l-33.9 0Z" transform="translate(89.056 272)" fill="none" pointer-events="visible" ecmeta_series_index="2" ecmeta_data_index="2" ecmeta_ssr_type="legend" class="zr-cls-4"></path>
+<style ><![CDATA[
+.zr-cls-0:hover {
+pointer-events:none;
+}
+.zr-cls-1:hover {
+cursor:pointer;
+fill:rgba(118,179,176,1);
+}
+.zr-cls-2:hover {
+cursor:pointer;
+fill:rgba(255,150,4,1);
+}
+.zr-cls-3:hover {
+cursor:pointer;
+fill:rgba(209,50,104,1);
+}
+.zr-cls-4:hover {
+cursor:pointer;
+fill:rgba(0,0,0,0);
+}
+
+]]>
+
+</style>
+</svg><svg x="217.33333333333334" y="0" overflow="hidden" width="205.33333333333334" height="420" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" baseProfile="full" viewBox="0 0 205.33333333333334 420">
+<rect width="205.33333333333334" height="420" x="0" y="0" fill="#ffffff"></rect>
+<path d="M70 258.5L181.3 258.5" fill="none" pointer-events="visible" stroke="#dbdee4" class="zr-cls-5"></path>
+<path d="M70 236.5L181.3 236.5" fill="none" pointer-events="visible" stroke="#dbdee4" class="zr-cls-5"></path>
+<path d="M70 213.5L181.3 213.5" fill="none" pointer-events="visible" stroke="#dbdee4" class="zr-cls-5"></path>
+<path d="M70 191.5L181.3 191.5" fill="none" pointer-events="visible" stroke="#dbdee4" class="zr-cls-5"></path>
+<path d="M70 169.5L181.3 169.5" fill="none" pointer-events="visible" stroke="#dbdee4" class="zr-cls-5"></path>
+<path d="M70 147.5L181.3 147.5" fill="none" pointer-events="visible" stroke="#dbdee4" class="zr-cls-5"></path>
+<path d="M70.5 146.8L70.5 258.2" fill="none" pointer-events="visible" stroke="#dbdee4" class="zr-cls-5"></path>
+<path d="M92.5 146.8L92.5 258.2" fill="none" pointer-events="visible" stroke="#dbdee4" class="zr-cls-5"></path>
+<path d="M114.5 146.8L114.5 258.2" fill="none" pointer-events="visible" stroke="#dbdee4" class="zr-cls-5"></path>
+<path d="M137.5 146.8L137.5 258.2" fill="none" pointer-events="visible" stroke="#dbdee4" class="zr-cls-5"></path>
+<path d="M159.5 146.8L159.5 258.2" fill="none" pointer-events="visible" stroke="#dbdee4" class="zr-cls-5"></path>
+<path d="M181.5 146.8L181.5 258.2" fill="none" pointer-events="visible" stroke="#dbdee4" class="zr-cls-5"></path>
+<text dominant-baseline="central" text-anchor="middle" style="font-size:12px;font-family:system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;" xml:space="preserve" y="-6" transform="matrix(0,-1,1,0,25,202.5)" fill="rgb(0,0,0)" fill-opacity="0.7">True positive rate</text>
+<path d="M70.5 258.2L70.5 146.8" fill="none" pointer-events="visible" stroke="#54555a" stroke-linecap="round" class="zr-cls-5"></path>
+<text dominant-baseline="central" text-anchor="middle" style="font-size:12px;font-family:system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;" xml:space="preserve" y="6" transform="translate(125.6667 288.1667)" fill="rgb(0,0,0)" fill-opacity="0.7">False positive rate</text>
+<path d="M70 258.5L181.3 258.5" fill="none" pointer-events="visible" stroke="#54555a" stroke-linecap="round" class="zr-cls-5"></path>
+<text dominant-baseline="central" text-anchor="end" style="font-size:12px;font-family:system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;" transform="translate(62 258.1667)" fill="rgb(0,0,0)" fill-opacity="0.7">0</text>
+<text dominant-baseline="central" text-anchor="end" style="font-size:12px;font-family:system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;" transform="translate(62 235.9)" fill="rgb(0,0,0)" fill-opacity="0.7">0.2</text>
+<text dominant-baseline="central" text-anchor="end" style="font-size:12px;font-family:system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;" transform="translate(62 213.6333)" fill="rgb(0,0,0)" fill-opacity="0.7">0.4</text>
+<text dominant-baseline="central" text-anchor="end" style="font-size:12px;font-family:system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;" transform="translate(62 191.3667)" fill="rgb(0,0,0)" fill-opacity="0.7">0.6</text>
+<text dominant-baseline="central" text-anchor="end" style="font-size:12px;font-family:system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;" transform="translate(62 169.1)" fill="rgb(0,0,0)" fill-opacity="0.7">0.8</text>
+<text dominant-baseline="central" text-anchor="end" style="font-size:12px;font-family:system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;" transform="translate(62 146.8333)" fill="rgb(0,0,0)" fill-opacity="0.7">1</text>
+<text dominant-baseline="central" text-anchor="middle" style="font-size:12px;font-family:system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;" y="6" transform="translate(70 266.1667)" fill="rgb(0,0,0)" fill-opacity="0.7">0</text>
+<text dominant-baseline="central" text-anchor="middle" style="font-size:12px;font-family:system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;" y="6" transform="translate(92.2667 266.1667)" fill="rgb(0,0,0)" fill-opacity="0.7">0.2</text>
+<text dominant-baseline="central" text-anchor="middle" style="font-size:12px;font-family:system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;" y="6" transform="translate(114.5333 266.1667)" fill="rgb(0,0,0)" fill-opacity="0.7">0.4</text>
+<text dominant-baseline="central" text-anchor="middle" style="font-size:12px;font-family:system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;" y="6" transform="translate(136.8 266.1667)" fill="rgb(0,0,0)" fill-opacity="0.7">0.6</text>
+<text dominant-baseline="central" text-anchor="middle" style="font-size:12px;font-family:system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;" y="6" transform="translate(159.0667 266.1667)" fill="rgb(0,0,0)" fill-opacity="0.7">0.8</text>
+<text dominant-baseline="central" text-anchor="middle" style="font-size:12px;font-family:system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;" y="6" transform="translate(181.3333 266.1667)" fill="rgb(0,0,0)" fill-opacity="0.7">1</text>
+<g clip-path="url(#zr-c0)">
+<path d="M70 258.2L181.3 146.8" fill="none" pointer-events="visible" stroke="#808080" stroke-dasharray="4,2" stroke-linejoin="bevel" class="zr-cls-5"></path>
+</g>
+<g clip-path="url(#zr-c1)">
+<path d="M70 258.2L70 254.5L70 250.7L70 247L70 243.3L70 239.6L70 235.9L70 232.2L70 228.5L70 224.8L70 221.1L70 217.3L70 213.6L70 209.9L70 206.2L70 202.5L73.7 202.5L73.7 198.8L73.7 195.1L73.7 191.4L73.7 187.7L73.7 183.9L73.7 180.2L73.7 176.5L77.4 176.5L81.1 176.5L81.1 172.8L84.8 172.8L84.8 169.1L84.8 165.4L84.8 161.7L84.8 158L84.8 154.3L88.6 154.3L92.3 154.3L96 154.3L99.7 154.3L103.4 154.3L103.4 150.5L107.1 150.5L110.8 150.5L114.5 150.5L114.5 146.8L118.2 146.8L122 146.8L125.7 146.8L129.4 146.8L133.1 146.8L136.8 146.8L140.5 146.8L144.2 146.8L147.9 146.8L151.6 146.8L155.4 146.8L159.1 146.8L162.8 146.8L166.5 146.8L170.2 146.8L173.9 146.8L177.6 146.8L181.3 146.8" fill="none" pointer-events="visible" stroke="#6CA3A0" stroke-width="2" stroke-linejoin="bevel" class="zr-cls-6"></path>
+</g>
+<path d="M0 0l70.6 0l0 12l-70.6 0Z" transform="translate(90.3667 26)" fill="rgb(0,0,0)" fill-opacity="0" stroke="#b7b9be" stroke-width="0" class="zr-cls-5"></path>
+<path d="M0.8 0L19.3 0A0.8 0.8 0 0 1 20 0.7L20 2.3A0.8 0.8 0 0 1 19.3 3L0.8 3A0.8 0.8 0 0 1 0 2.3L0 0.8A0.8 0.8 0 0 1 0.7 0Z" transform="translate(90.3667 30.5)" fill="#6CA3A0" ecmeta_series_index="1" ecmeta_data_index="0" ecmeta_ssr_type="legend" ecmeta_silent="true" class="zr-cls-5"></path>
+<text dominant-baseline="central" text-anchor="start" style="font-size:12px;font-family:system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;" xml:space="preserve" x="25" y="1.5" transform="translate(90.3667 30.5)" fill="rgb(0,0,0)" fill-opacity="0.7">yes 0.94</text>
+<path d="M0 -4.5l70.6 0l0 12l-70.6 0Z" transform="translate(90.3667 30.5)" fill="none" pointer-events="visible" ecmeta_series_index="1" ecmeta_data_index="0" ecmeta_ssr_type="legend" class="zr-cls-7"></path>
+<path d="M0 0l25.3 0l0 12l-25.3 0Z" transform="translate(90.3667 12)" fill="none" pointer-events="visible" class="zr-cls-5"></path>
+<text dominant-baseline="central" text-anchor="start" style="font-size:12px;font-family:system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;font-weight:bold;" y="6" transform="translate(90.3667 12)" fill="rgb(0,0,0)" fill-opacity="0.7">AUC</text>
+<defs >
+<clipPath id="zr-c0">
+<path d="M69 146.3l114 0l0 112.3l-114 0Z" fill="#000" class="zr-cls-5"></path>
+</clipPath>
+<clipPath id="zr-c1">
+<path d="M69 145.8l114 0l0 113.3l-114 0Z" fill="#000" class="zr-cls-8"></path>
+</clipPath>
+</defs>
+<style ><![CDATA[
+.zr-cls-5:hover {
+pointer-events:none;
+}
+.zr-cls-8:hover {
+cursor:pointer;
+fill:rgba(0,0,0,1);
+}
+.zr-cls-6:hover {
+cursor:pointer;
+}
+.zr-cls-7:hover {
+cursor:pointer;
+fill:rgba(0,0,0,0);
+}
+
+]]>
+
+</style>
+</svg><svg x="434.6666666666667" y="0" overflow="hidden" width="205.33333333333334" height="420" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" baseProfile="full" viewBox="0 0 205.33333333333334 420">
+<rect width="205.33333333333334" height="420" x="0" y="0" fill="#ffffff"></rect>
+<text dominant-baseline="central" text-anchor="end" style="font-size:12px;font-family:system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;" transform="translate(44 186.2587)" fill="rgb(0,0,0)" fill-opacity="0.7">mpg</text>
+<text dominant-baseline="central" text-anchor="end" style="font-size:12px;font-family:system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;" transform="translate(44 202.3707)" fill="rgb(0,0,0)" fill-opacity="0.7">wt</text>
+<path d="M51.8 183.3l5.9 0l0 5.9l-5.9 0Z" fill="rgb(197,94,40)" ecmeta_series_index="0" ecmeta_data_index="0" ecmeta_ssr_type="chart" class="zr-cls-9"></path>
+<path d="M57.1 183.3l5.9 0l0 5.9l-5.9 0Z" fill="rgb(49,133,211)" ecmeta_series_index="0" ecmeta_data_index="1" ecmeta_ssr_type="chart" class="zr-cls-10"></path>
+<path d="M62.5 183.3l5.9 0l0 5.9l-5.9 0Z" fill="rgb(67,144,215)" ecmeta_series_index="0" ecmeta_data_index="2" ecmeta_ssr_type="chart" class="zr-cls-11"></path>
+<path d="M67.9 183.3l5.9 0l0 5.9l-5.9 0Z" fill="rgb(45,131,211)" ecmeta_series_index="0" ecmeta_data_index="3" ecmeta_ssr_type="chart" class="zr-cls-12"></path>
+<path d="M73.2 183.3l5.9 0l0 5.9l-5.9 0Z" fill="rgb(230,186,164)" ecmeta_series_index="0" ecmeta_data_index="4" ecmeta_ssr_type="chart" class="zr-cls-13"></path>
+<path d="M51.8 188.7l5.9 0l0 5.9l-5.9 0Z" fill="rgb(49,133,211)" ecmeta_series_index="0" ecmeta_data_index="5" ecmeta_ssr_type="chart" class="zr-cls-10"></path>
+<path d="M57.1 188.7l5.9 0l0 5.9l-5.9 0Z" fill="rgb(197,94,40)" ecmeta_series_index="0" ecmeta_data_index="6" ecmeta_ssr_type="chart" class="zr-cls-9"></path>
+<path d="M62.5 188.7l5.9 0l0 5.9l-5.9 0Z" fill="rgb(208,127,84)" ecmeta_series_index="0" ecmeta_data_index="7" ecmeta_ssr_type="chart" class="zr-cls-14"></path>
+<path d="M67.9 188.7l5.9 0l0 5.9l-5.9 0Z" fill="rgb(203,111,63)" ecmeta_series_index="0" ecmeta_data_index="8" ecmeta_ssr_type="chart" class="zr-cls-15"></path>
+<path d="M73.2 188.7l5.9 0l0 5.9l-5.9 0Z" fill="rgb(151,193,233)" ecmeta_series_index="0" ecmeta_data_index="9" ecmeta_ssr_type="chart" class="zr-cls-16"></path>
+<path d="M51.8 194.1l5.9 0l0 5.9l-5.9 0Z" fill="rgb(67,144,215)" ecmeta_series_index="0" ecmeta_data_index="10" ecmeta_ssr_type="chart" class="zr-cls-11"></path>
+<path d="M57.1 194.1l5.9 0l0 5.9l-5.9 0Z" fill="rgb(208,127,84)" ecmeta_series_index="0" ecmeta_data_index="11" ecmeta_ssr_type="chart" class="zr-cls-14"></path>
+<path d="M62.5 194.1l5.9 0l0 5.9l-5.9 0Z" fill="rgb(197,94,40)" ecmeta_series_index="0" ecmeta_data_index="12" ecmeta_ssr_type="chart" class="zr-cls-9"></path>
+<path d="M67.9 194.1l5.9 0l0 5.9l-5.9 0Z" fill="rgb(216,148,112)" ecmeta_series_index="0" ecmeta_data_index="13" ecmeta_ssr_type="chart" class="zr-cls-17"></path>
+<path d="M73.2 194.1l5.9 0l0 5.9l-5.9 0Z" fill="rgb(84,154,219)" ecmeta_series_index="0" ecmeta_data_index="14" ecmeta_ssr_type="chart" class="zr-cls-18"></path>
+<path d="M51.8 199.4l5.9 0l0 5.9l-5.9 0Z" fill="rgb(45,131,211)" ecmeta_series_index="0" ecmeta_data_index="15" ecmeta_ssr_type="chart" class="zr-cls-12"></path>
+<path d="M57.1 199.4l5.9 0l0 5.9l-5.9 0Z" fill="rgb(203,111,63)" ecmeta_series_index="0" ecmeta_data_index="16" ecmeta_ssr_type="chart" class="zr-cls-15"></path>
+<path d="M62.5 199.4l5.9 0l0 5.9l-5.9 0Z" fill="rgb(216,148,112)" ecmeta_series_index="0" ecmeta_data_index="17" ecmeta_ssr_type="chart" class="zr-cls-17"></path>
+<path d="M67.9 199.4l5.9 0l0 5.9l-5.9 0Z" fill="rgb(197,94,40)" ecmeta_series_index="0" ecmeta_data_index="18" ecmeta_ssr_type="chart" class="zr-cls-9"></path>
+<path d="M73.2 199.4l5.9 0l0 5.9l-5.9 0Z" fill="rgb(214,230,246)" ecmeta_series_index="0" ecmeta_data_index="19" ecmeta_ssr_type="chart" class="zr-cls-19"></path>
+<path d="M51.8 204.8l5.9 0l0 5.9l-5.9 0Z" fill="rgb(230,186,164)" ecmeta_series_index="0" ecmeta_data_index="20" ecmeta_ssr_type="chart" class="zr-cls-13"></path>
+<path d="M57.1 204.8l5.9 0l0 5.9l-5.9 0Z" fill="rgb(151,193,233)" ecmeta_series_index="0" ecmeta_data_index="21" ecmeta_ssr_type="chart" class="zr-cls-16"></path>
+<path d="M62.5 204.8l5.9 0l0 5.9l-5.9 0Z" fill="rgb(84,154,219)" ecmeta_series_index="0" ecmeta_data_index="22" ecmeta_ssr_type="chart" class="zr-cls-18"></path>
+<path d="M67.9 204.8l5.9 0l0 5.9l-5.9 0Z" fill="rgb(214,230,246)" ecmeta_series_index="0" ecmeta_data_index="23" ecmeta_ssr_type="chart" class="zr-cls-19"></path>
+<path d="M73.2 204.8l5.9 0l0 5.9l-5.9 0Z" fill="rgb(197,94,40)" ecmeta_series_index="0" ecmeta_data_index="24" ecmeta_ssr_type="chart" class="zr-cls-9"></path>
+<path d="M-18 -161l94.5 0l0 182l-94.5 0Z" transform="translate(94.8533 267)" fill="rgb(0,0,0)" fill-opacity="0" stroke="#cfd2d7" stroke-width="0" class="zr-cls-20"></path>
+<text dominant-baseline="central" text-anchor="start" style="font-size:12px;font-family:system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;" x="34" transform="translate(94.8533 267)" fill="rgb(0,0,0)" fill-opacity="0.7">-0.87</text>
+<text dominant-baseline="central" text-anchor="start" style="font-size:12px;font-family:system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;" x="34" y="-140" transform="translate(94.8533 267)" fill="rgb(0,0,0)" fill-opacity="0.7">1.00</text>
+<g clip-path="url(#zr-c2)">
+<polygon points="0 0 20 0 20 140 0 140" transform="matrix(1,0,0,-1,94.8533,267)" fill="url(#zr-g0)" class="zr-cls-21"></polygon>
+<polygon points="0 0 20 0 20 140 0 140" transform="matrix(1,0,0,-1,94.8533,267)" fill="url(#zr-g1)" class="zr-cls-22"></polygon>
+</g>
+<path d="M12 0A2.9 2.9 0 0 1 9.1 2.9L-9.1 2.9A2.9 2.9 0 0 1 -12 0L-12 0A2.9 2.9 0 0 1 -9.1 -2.9L9.1 -2.9A2.9 2.9 0 0 1 12 0Z" transform="matrix(1,0,0,-1,104.8533,267)" fill="rgb(45,131,211)" stroke="#fff" stroke-width="2" paint-order="stroke" class="zr-cls-12"></path>
+<path d="M12 0A2.9 2.9 0 0 1 9.1 2.9L-9.1 2.9A2.9 2.9 0 0 1 -12 0L-12 0A2.9 2.9 0 0 1 -9.1 -2.9L9.1 -2.9A2.9 2.9 0 0 1 12 0Z" transform="matrix(1,0,0,-1,104.8533,127)" fill="rgb(197,94,40)" stroke="#fff" stroke-width="2" paint-order="stroke" class="zr-cls-9"></path>
+<defs >
+<clipPath id="zr-c2">
+<path d="M3 0L17 0A3 3 0 0 1 20 3L20 137A3 3 0 0 1 17 140L3 140A3 3 0 0 1 0 137L0 3A3 3 0 0 1 3 0Z" transform="matrix(1,0,0,-1,94.8533,267)" fill="#000" class="zr-cls-23"></path>
+</clipPath>
+<linearGradient gradientUnits="objectBoundingBox" x1="0" y1="0" x2="0" y2="1" id="zr-g0">
+<stop offset="0%" stop-color="rgb(207,210,215)"></stop>
+<stop offset="1%" stop-color="rgb(207,210,215)"></stop>
+<stop offset="2%" stop-color="rgb(207,210,215)"></stop>
+<stop offset="3%" stop-color="rgb(207,210,215)"></stop>
+<stop offset="4%" stop-color="rgb(207,210,215)"></stop>
+<stop offset="5%" stop-color="rgb(207,210,215)"></stop>
+<stop offset="6%" stop-color="rgb(207,210,215)"></stop>
+<stop offset="7.000000000000001%" stop-color="rgb(207,210,215)"></stop>
+<stop offset="8%" stop-color="rgb(207,210,215)"></stop>
+<stop offset="9%" stop-color="rgb(207,210,215)"></stop>
+<stop offset="10%" stop-color="rgb(207,210,215)"></stop>
+<stop offset="11%" stop-color="rgb(207,210,215)"></stop>
+<stop offset="12%" stop-color="rgb(207,210,215)"></stop>
+<stop offset="13%" stop-color="rgb(207,210,215)"></stop>
+<stop offset="14.000000000000002%" stop-color="rgb(207,210,215)"></stop>
+<stop offset="15%" stop-color="rgb(207,210,215)"></stop>
+<stop offset="16%" stop-color="rgb(207,210,215)"></stop>
+<stop offset="17%" stop-color="rgb(207,210,215)"></stop>
+<stop offset="18%" stop-color="rgb(207,210,215)"></stop>
+<stop offset="19%" stop-color="rgb(207,210,215)"></stop>
+<stop offset="20%" stop-color="rgb(207,210,215)"></stop>
+<stop offset="21%" stop-color="rgb(207,210,215)"></stop>
+<stop offset="22%" stop-color="rgb(207,210,215)"></stop>
+<stop offset="23%" stop-color="rgb(207,210,215)"></stop>
+<stop offset="24%" stop-color="rgb(207,210,215)"></stop>
+<stop offset="25%" stop-color="rgb(207,210,215)"></stop>
+<stop offset="26%" stop-color="rgb(207,210,215)"></stop>
+<stop offset="27%" stop-color="rgb(207,210,215)"></stop>
+<stop offset="28.000000000000004%" stop-color="rgb(207,210,215)"></stop>
+<stop offset="28.999999999999996%" stop-color="rgb(207,210,215)"></stop>
+<stop offset="30%" stop-color="rgb(207,210,215)"></stop>
+<stop offset="31%" stop-color="rgb(207,210,215)"></stop>
+<stop offset="32%" stop-color="rgb(207,210,215)"></stop>
+<stop offset="33%" stop-color="rgb(207,210,215)"></stop>
+<stop offset="34%" stop-color="rgb(207,210,215)"></stop>
+<stop offset="35%" stop-color="rgb(207,210,215)"></stop>
+<stop offset="36%" stop-color="rgb(207,210,215)"></stop>
+<stop offset="37%" stop-color="rgb(207,210,215)"></stop>
+<stop offset="38%" stop-color="rgb(207,210,215)"></stop>
+<stop offset="39%" stop-color="rgb(207,210,215)"></stop>
+<stop offset="40%" stop-color="rgb(207,210,215)"></stop>
+<stop offset="41%" stop-color="rgb(207,210,215)"></stop>
+<stop offset="42%" stop-color="rgb(207,210,215)"></stop>
+<stop offset="43%" stop-color="rgb(207,210,215)"></stop>
+<stop offset="44%" stop-color="rgb(207,210,215)"></stop>
+<stop offset="45%" stop-color="rgb(207,210,215)"></stop>
+<stop offset="46%" stop-color="rgb(207,210,215)"></stop>
+<stop offset="47%" stop-color="rgb(207,210,215)"></stop>
+<stop offset="48%" stop-color="rgb(207,210,215)"></stop>
+<stop offset="49%" stop-color="rgb(207,210,215)"></stop>
+<stop offset="50%" stop-color="rgb(207,210,215)"></stop>
+<stop offset="51%" stop-color="rgb(207,210,215)"></stop>
+<stop offset="52%" stop-color="rgb(207,210,215)"></stop>
+<stop offset="53%" stop-color="rgb(207,210,215)"></stop>
+<stop offset="54%" stop-color="rgb(207,210,215)"></stop>
+<stop offset="55.00000000000001%" stop-color="rgb(207,210,215)"></stop>
+<stop offset="56.00000000000001%" stop-color="rgb(207,210,215)"></stop>
+<stop offset="56.99999999999999%" stop-color="rgb(207,210,215)"></stop>
+<stop offset="57.99999999999999%" stop-color="rgb(207,210,215)"></stop>
+<stop offset="59%" stop-color="rgb(207,210,215)"></stop>
+<stop offset="60%" stop-color="rgb(207,210,215)"></stop>
+<stop offset="61%" stop-color="rgb(207,210,215)"></stop>
+<stop offset="62%" stop-color="rgb(207,210,215)"></stop>
+<stop offset="63%" stop-color="rgb(207,210,215)"></stop>
+<stop offset="64%" stop-color="rgb(207,210,215)"></stop>
+<stop offset="65%" stop-color="rgb(207,210,215)"></stop>
+<stop offset="66%" stop-color="rgb(207,210,215)"></stop>
+<stop offset="67%" stop-color="rgb(207,210,215)"></stop>
+<stop offset="68%" stop-color="rgb(207,210,215)"></stop>
+<stop offset="69%" stop-color="rgb(207,210,215)"></stop>
+<stop offset="70%" stop-color="rgb(207,210,215)"></stop>
+<stop offset="71%" stop-color="rgb(207,210,215)"></stop>
+<stop offset="72%" stop-color="rgb(207,210,215)"></stop>
+<stop offset="73%" stop-color="rgb(207,210,215)"></stop>
+<stop offset="74%" stop-color="rgb(207,210,215)"></stop>
+<stop offset="75%" stop-color="rgb(207,210,215)"></stop>
+<stop offset="76%" stop-color="rgb(207,210,215)"></stop>
+<stop offset="77%" stop-color="rgb(207,210,215)"></stop>
+<stop offset="78%" stop-color="rgb(207,210,215)"></stop>
+<stop offset="79%" stop-color="rgb(207,210,215)"></stop>
+<stop offset="80%" stop-color="rgb(207,210,215)"></stop>
+<stop offset="81%" stop-color="rgb(207,210,215)"></stop>
+<stop offset="82%" stop-color="rgb(207,210,215)"></stop>
+<stop offset="83%" stop-color="rgb(207,210,215)"></stop>
+<stop offset="84%" stop-color="rgb(207,210,215)"></stop>
+<stop offset="85%" stop-color="rgb(207,210,215)"></stop>
+<stop offset="86%" stop-color="rgb(207,210,215)"></stop>
+<stop offset="87%" stop-color="rgb(207,210,215)"></stop>
+<stop offset="88%" stop-color="rgb(207,210,215)"></stop>
+<stop offset="89%" stop-color="rgb(207,210,215)"></stop>
+<stop offset="90%" stop-color="rgb(207,210,215)"></stop>
+<stop offset="91%" stop-color="rgb(207,210,215)"></stop>
+<stop offset="92%" stop-color="rgb(207,210,215)"></stop>
+<stop offset="93%" stop-color="rgb(207,210,215)"></stop>
+<stop offset="94%" stop-color="rgb(207,210,215)"></stop>
+<stop offset="95%" stop-color="rgb(207,210,215)"></stop>
+<stop offset="96%" stop-color="rgb(207,210,215)"></stop>
+<stop offset="97%" stop-color="rgb(207,210,215)"></stop>
+<stop offset="98%" stop-color="rgb(207,210,215)"></stop>
+<stop offset="99%" stop-color="rgb(207,210,215)"></stop>
+<stop offset="100%" stop-color="rgb(207,210,215)"></stop>
+</linearGradient>
+<linearGradient gradientUnits="objectBoundingBox" x1="0" y1="0" x2="0" y2="1" id="zr-g1">
+<stop offset="0%" stop-color="rgb(45,131,211)"></stop>
+<stop offset="1%" stop-color="rgb(49,133,211)"></stop>
+<stop offset="2%" stop-color="rgb(54,136,212)"></stop>
+<stop offset="3%" stop-color="rgb(58,139,213)"></stop>
+<stop offset="4%" stop-color="rgb(63,141,214)"></stop>
+<stop offset="5%" stop-color="rgb(67,144,215)"></stop>
+<stop offset="6%" stop-color="rgb(72,147,216)"></stop>
+<stop offset="7.000000000000001%" stop-color="rgb(76,149,217)"></stop>
+<stop offset="8%" stop-color="rgb(81,152,218)"></stop>
+<stop offset="9%" stop-color="rgb(86,155,219)"></stop>
+<stop offset="10%" stop-color="rgb(90,157,220)"></stop>
+<stop offset="11%" stop-color="rgb(95,160,221)"></stop>
+<stop offset="12%" stop-color="rgb(99,163,222)"></stop>
+<stop offset="13%" stop-color="rgb(104,166,223)"></stop>
+<stop offset="14.000000000000002%" stop-color="rgb(108,168,224)"></stop>
+<stop offset="15%" stop-color="rgb(113,171,225)"></stop>
+<stop offset="16%" stop-color="rgb(118,174,226)"></stop>
+<stop offset="17%" stop-color="rgb(122,176,227)"></stop>
+<stop offset="18%" stop-color="rgb(127,179,228)"></stop>
+<stop offset="19%" stop-color="rgb(131,182,229)"></stop>
+<stop offset="20%" stop-color="rgb(136,184,230)"></stop>
+<stop offset="21%" stop-color="rgb(140,187,231)"></stop>
+<stop offset="22%" stop-color="rgb(145,190,232)"></stop>
+<stop offset="23%" stop-color="rgb(150,193,233)"></stop>
+<stop offset="24%" stop-color="rgb(154,195,233)"></stop>
+<stop offset="25%" stop-color="rgb(159,198,234)"></stop>
+<stop offset="26%" stop-color="rgb(163,201,235)"></stop>
+<stop offset="27%" stop-color="rgb(168,203,236)"></stop>
+<stop offset="28.000000000000004%" stop-color="rgb(172,206,237)"></stop>
+<stop offset="28.999999999999996%" stop-color="rgb(177,209,238)"></stop>
+<stop offset="30%" stop-color="rgb(181,211,239)"></stop>
+<stop offset="31%" stop-color="rgb(186,214,240)"></stop>
+<stop offset="32%" stop-color="rgb(191,217,241)"></stop>
+<stop offset="33%" stop-color="rgb(195,219,242)"></stop>
+<stop offset="34%" stop-color="rgb(200,222,243)"></stop>
+<stop offset="35%" stop-color="rgb(204,225,244)"></stop>
+<stop offset="36%" stop-color="rgb(209,228,245)"></stop>
+<stop offset="37%" stop-color="rgb(213,230,246)"></stop>
+<stop offset="38%" stop-color="rgb(218,233,247)"></stop>
+<stop offset="39%" stop-color="rgb(223,236,248)"></stop>
+<stop offset="40%" stop-color="rgb(227,238,249)"></stop>
+<stop offset="41%" stop-color="rgb(232,241,250)"></stop>
+<stop offset="42%" stop-color="rgb(236,244,251)"></stop>
+<stop offset="43%" stop-color="rgb(241,246,252)"></stop>
+<stop offset="44%" stop-color="rgb(245,249,253)"></stop>
+<stop offset="45%" stop-color="rgb(250,252,254)"></stop>
+<stop offset="46%" stop-color="rgb(255,255,255)"></stop>
+<stop offset="47%" stop-color="rgb(253,252,251)"></stop>
+<stop offset="48%" stop-color="rgb(252,249,247)"></stop>
+<stop offset="49%" stop-color="rgb(251,246,243)"></stop>
+<stop offset="50%" stop-color="rgb(250,243,239)"></stop>
+<stop offset="51%" stop-color="rgb(249,240,235)"></stop>
+<stop offset="52%" stop-color="rgb(248,237,231)"></stop>
+<stop offset="53%" stop-color="rgb(247,234,227)"></stop>
+<stop offset="54%" stop-color="rgb(246,231,223)"></stop>
+<stop offset="55.00000000000001%" stop-color="rgb(245,228,219)"></stop>
+<stop offset="56.00000000000001%" stop-color="rgb(244,225,215)"></stop>
+<stop offset="56.99999999999999%" stop-color="rgb(243,222,211)"></stop>
+<stop offset="57.99999999999999%" stop-color="rgb(242,219,207)"></stop>
+<stop offset="59%" stop-color="rgb(241,216,203)"></stop>
+<stop offset="60%" stop-color="rgb(239,213,199)"></stop>
+<stop offset="61%" stop-color="rgb(238,210,195)"></stop>
+<stop offset="62%" stop-color="rgb(237,207,191)"></stop>
+<stop offset="63%" stop-color="rgb(236,204,187)"></stop>
+<stop offset="64%" stop-color="rgb(235,201,183)"></stop>
+<stop offset="65%" stop-color="rgb(234,198,179)"></stop>
+<stop offset="66%" stop-color="rgb(233,195,175)"></stop>
+<stop offset="67%" stop-color="rgb(232,192,171)"></stop>
+<stop offset="68%" stop-color="rgb(231,189,167)"></stop>
+<stop offset="69%" stop-color="rgb(230,186,163)"></stop>
+<stop offset="70%" stop-color="rgb(229,183,159)"></stop>
+<stop offset="71%" stop-color="rgb(228,180,155)"></stop>
+<stop offset="72%" stop-color="rgb(227,177,151)"></stop>
+<stop offset="73%" stop-color="rgb(226,174,147)"></stop>
+<stop offset="74%" stop-color="rgb(224,171,143)"></stop>
+<stop offset="75%" stop-color="rgb(223,168,139)"></stop>
+<stop offset="76%" stop-color="rgb(222,165,135)"></stop>
+<stop offset="77%" stop-color="rgb(221,162,131)"></stop>
+<stop offset="78%" stop-color="rgb(220,159,127)"></stop>
+<stop offset="79%" stop-color="rgb(219,156,123)"></stop>
+<stop offset="80%" stop-color="rgb(218,153,119)"></stop>
+<stop offset="81%" stop-color="rgb(217,150,115)"></stop>
+<stop offset="82%" stop-color="rgb(216,147,111)"></stop>
+<stop offset="83%" stop-color="rgb(215,144,107)"></stop>
+<stop offset="84%" stop-color="rgb(214,141,103)"></stop>
+<stop offset="85%" stop-color="rgb(213,138,99)"></stop>
+<stop offset="86%" stop-color="rgb(212,135,95)"></stop>
+<stop offset="87%" stop-color="rgb(210,132,91)"></stop>
+<stop offset="88%" stop-color="rgb(209,129,87)"></stop>
+<stop offset="89%" stop-color="rgb(208,126,83)"></stop>
+<stop offset="90%" stop-color="rgb(207,123,79)"></stop>
+<stop offset="91%" stop-color="rgb(206,120,75)"></stop>
+<stop offset="92%" stop-color="rgb(205,117,71)"></stop>
+<stop offset="93%" stop-color="rgb(204,114,67)"></stop>
+<stop offset="94%" stop-color="rgb(203,111,63)"></stop>
+<stop offset="95%" stop-color="rgb(202,108,59)"></stop>
+<stop offset="96%" stop-color="rgb(201,105,55)"></stop>
+<stop offset="97%" stop-color="rgb(200,102,51)"></stop>
+<stop offset="98%" stop-color="rgb(199,99,47)"></stop>
+<stop offset="99%" stop-color="rgb(198,96,43)"></stop>
+<stop offset="100%" stop-color="rgb(197,94,40)"></stop>
+</linearGradient>
+</defs>
+<style ><![CDATA[
+.zr-cls-9:hover {
+cursor:pointer;
+fill:rgba(216,103,44,1);
+}
+.zr-cls-10:hover {
+cursor:pointer;
+fill:rgba(53,146,232,1);
+}
+.zr-cls-11:hover {
+cursor:pointer;
+fill:rgba(73,158,236,1);
+}
+.zr-cls-12:hover {
+cursor:pointer;
+fill:rgba(49,144,232,1);
+}
+.zr-cls-13:hover {
+cursor:pointer;
+fill:rgba(253,204,180,1);
+}
+.zr-cls-14:hover {
+cursor:pointer;
+fill:rgba(228,139,92,1);
+}
+.zr-cls-15:hover {
+cursor:pointer;
+fill:rgba(223,122,69,1);
+}
+.zr-cls-16:hover {
+cursor:pointer;
+fill:rgba(166,212,255,1);
+}
+.zr-cls-17:hover {
+cursor:pointer;
+fill:rgba(237,162,123,1);
+}
+.zr-cls-18:hover {
+cursor:pointer;
+fill:rgba(92,169,240,1);
+}
+.zr-cls-19:hover {
+cursor:pointer;
+fill:rgba(235,253,255,1);
+}
+.zr-cls-20:hover {
+pointer-events:none;
+}
+.zr-cls-23:hover {
+cursor:pointer;
+fill:rgba(0,0,0,1);
+}
+.zr-cls-21:hover {
+cursor:pointer;
+fill:[object Object];
+}
+.zr-cls-22:hover {
+cursor:pointer;
+fill:[object Object];
+}
+
+]]>
+
+</style>
+</svg></svg>

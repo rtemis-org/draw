@@ -1,0 +1,121 @@
+<svg width="640" height="420" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" baseProfile="full" viewBox="0 0 640 420">
+<rect width="640" height="420" x="0" y="0" fill="#ffffff"></rect>
+<path d="M84.6 328.5L506 328.5" fill="none" pointer-events="visible" stroke="#dbdee4" class="zr-cls-0"></path>
+<path d="M84.6 265.5L506 265.5" fill="none" pointer-events="visible" stroke="#dbdee4" class="zr-cls-0"></path>
+<path d="M84.6 201.5L506 201.5" fill="none" pointer-events="visible" stroke="#dbdee4" class="zr-cls-0"></path>
+<path d="M84.6 137.5L506 137.5" fill="none" pointer-events="visible" stroke="#dbdee4" class="zr-cls-0"></path>
+<path d="M84.6 73.5L506 73.5" fill="none" pointer-events="visible" stroke="#dbdee4" class="zr-cls-0"></path>
+<path d="M148.5 36L148.5 337.1" fill="none" pointer-events="visible" stroke="#dbdee4" class="zr-cls-0"></path>
+<path d="M235.5 36L235.5 337.1" fill="none" pointer-events="visible" stroke="#dbdee4" class="zr-cls-0"></path>
+<path d="M323.5 36L323.5 337.1" fill="none" pointer-events="visible" stroke="#dbdee4" class="zr-cls-0"></path>
+<path d="M411.5 36L411.5 337.1" fill="none" pointer-events="visible" stroke="#dbdee4" class="zr-cls-0"></path>
+<path d="M498.5 36L498.5 337.1" fill="none" pointer-events="visible" stroke="#dbdee4" class="zr-cls-0"></path>
+<text dominant-baseline="central" text-anchor="middle" style="font-size:12px;font-family:system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;" xml:space="preserve" y="-6" transform="matrix(0,-1,1,0,55.5,186.55)" fill="rgb(0,0,0)" fill-opacity="0.7">Bill depth</text>
+<path d="M323.5 337.1L323.5 36" fill="none" pointer-events="visible" stroke="#54555a" stroke-linecap="round" class="zr-cls-0"></path>
+<text dominant-baseline="central" text-anchor="middle" style="font-size:12px;font-family:system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;" xml:space="preserve" y="6" transform="translate(295.3 364.5)" fill="rgb(0,0,0)" fill-opacity="0.7">Bill length</text>
+<path d="M84.6 201.5L506 201.5" fill="none" pointer-events="visible" stroke="#54555a" stroke-linecap="round" class="zr-cls-0"></path>
+<text dominant-baseline="central" text-anchor="end" style="font-size:12px;font-family:system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;" transform="translate(76.58 328.5931)" fill="rgb(0,0,0)" fill-opacity="0.7">-2</text>
+<text dominant-baseline="central" text-anchor="end" style="font-size:12px;font-family:system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;" transform="translate(76.58 264.8386)" fill="rgb(0,0,0)" fill-opacity="0.7">-1</text>
+<text dominant-baseline="central" text-anchor="end" style="font-size:12px;font-family:system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;" transform="translate(76.58 201.084)" fill="rgb(0,0,0)" fill-opacity="0.7">0</text>
+<text dominant-baseline="central" text-anchor="end" style="font-size:12px;font-family:system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;" transform="translate(76.58 137.3295)" fill="rgb(0,0,0)" fill-opacity="0.7">1</text>
+<text dominant-baseline="central" text-anchor="end" style="font-size:12px;font-family:system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;" transform="translate(76.58 73.5749)" fill="rgb(0,0,0)" fill-opacity="0.7">2</text>
+<text dominant-baseline="central" text-anchor="middle" style="font-size:12px;font-family:system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;" y="6" transform="translate(148.0917 345.1)" fill="rgb(0,0,0)" fill-opacity="0.7">-2</text>
+<text dominant-baseline="central" text-anchor="middle" style="font-size:12px;font-family:system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;" y="6" transform="translate(235.6843 345.1)" fill="rgb(0,0,0)" fill-opacity="0.7">-1</text>
+<text dominant-baseline="central" text-anchor="middle" style="font-size:12px;font-family:system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;" y="6" transform="translate(323.277 345.1)" fill="rgb(0,0,0)" fill-opacity="0.7">0</text>
+<text dominant-baseline="central" text-anchor="middle" style="font-size:12px;font-family:system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;" y="6" transform="translate(410.8696 345.1)" fill="rgb(0,0,0)" fill-opacity="0.7">1</text>
+<text dominant-baseline="central" text-anchor="middle" style="font-size:12px;font-family:system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;" y="6" transform="translate(498.4623 345.1)" fill="rgb(0,0,0)" fill-opacity="0.7">2</text>
+<path d="M1 0A1 1 0 1 1 1 -0.1A1 1 0 0 1 1 0" transform="matrix(3,0,0,3,368.8768,210.1034)" fill="#6CA3A0" fill-opacity="0.6332773124424536" ecmeta_series_index="0" ecmeta_data_index="0" ecmeta_ssr_type="chart" class="zr-cls-1"></path>
+<path d="M1 0A1 1 0 1 1 1 -0.1A1 1 0 0 1 1 0" transform="matrix(3,0,0,3,315.8536,219.6498)" fill="#6CA3A0" fill-opacity="0.6332773124424536" ecmeta_series_index="0" ecmeta_data_index="1" ecmeta_ssr_type="chart" class="zr-cls-1"></path>
+<path d="M1 0A1 1 0 1 1 1 -0.1A1 1 0 0 1 1 0" transform="matrix(3,0,0,3,258.8835,315.8377)" fill="#6CA3A0" fill-opacity="0.6332773124424536" ecmeta_series_index="0" ecmeta_data_index="2" ecmeta_ssr_type="chart" class="zr-cls-1"></path>
+<path d="M1 0A1 1 0 1 1 1 -0.1A1 1 0 0 1 1 0" transform="matrix(3,0,0,3,281.7764,191.635)" fill="#6CA3A0" fill-opacity="0.6332773124424536" ecmeta_series_index="0" ecmeta_data_index="3" ecmeta_ssr_type="chart" class="zr-cls-1"></path>
+<path d="M1 0A1 1 0 1 1 1 -0.1A1 1 0 0 1 1 0" transform="matrix(3,0,0,3,303.8808,115.2053)" fill="#6CA3A0" fill-opacity="0.6332773124424536" ecmeta_series_index="0" ecmeta_data_index="4" ecmeta_ssr_type="chart" class="zr-cls-1"></path>
+<path d="M1 0A1 1 0 1 1 1 -0.1A1 1 0 0 1 1 0" transform="matrix(3,0,0,3,441.2644,263.3818)" fill="#6CA3A0" fill-opacity="0.6332773124424536" ecmeta_series_index="0" ecmeta_data_index="5" ecmeta_ssr_type="chart" class="zr-cls-1"></path>
+<path d="M1 0A1 1 0 1 1 1 -0.1A1 1 0 0 1 1 0" transform="matrix(3,0,0,3,252.7895,222.9753)" fill="#6CA3A0" fill-opacity="0.6332773124424536" ecmeta_series_index="0" ecmeta_data_index="6" ecmeta_ssr_type="chart" class="zr-cls-1"></path>
+<path d="M1 0A1 1 0 1 1 1 -0.1A1 1 0 0 1 1 0" transform="matrix(3,0,0,3,308.8521,104.8837)" fill="#6CA3A0" fill-opacity="0.6332773124424536" ecmeta_series_index="0" ecmeta_data_index="7" ecmeta_ssr_type="chart" class="zr-cls-1"></path>
+<path d="M1 0A1 1 0 1 1 1 -0.1A1 1 0 0 1 1 0" transform="matrix(3,0,0,3,327.4996,204.6063)" fill="#6CA3A0" fill-opacity="0.6332773124424536" ecmeta_series_index="0" ecmeta_data_index="8" ecmeta_ssr_type="chart" class="zr-cls-1"></path>
+<path d="M1 0A1 1 0 1 1 1 -0.1A1 1 0 0 1 1 0" transform="matrix(3,0,0,3,328.3701,249.5575)" fill="#6CA3A0" fill-opacity="0.6332773124424536" ecmeta_series_index="0" ecmeta_data_index="9" ecmeta_ssr_type="chart" class="zr-cls-1"></path>
+<path d="M1 0A1 1 0 1 1 1 -0.1A1 1 0 0 1 1 0" transform="matrix(3,0,0,3,276.9434,325.9481)" fill="#6CA3A0" fill-opacity="0.6332773124424536" ecmeta_series_index="0" ecmeta_data_index="10" ecmeta_ssr_type="chart" class="zr-cls-1"></path>
+<path d="M1 0A1 1 0 1 1 1 -0.1A1 1 0 0 1 1 0" transform="matrix(3,0,0,3,352.4263,138.5299)" fill="#6CA3A0" fill-opacity="0.6332773124424536" ecmeta_series_index="0" ecmeta_data_index="11" ecmeta_ssr_type="chart" class="zr-cls-1"></path>
+<path d="M1 0A1 1 0 1 1 1 -0.1A1 1 0 0 1 1 0" transform="matrix(3,0,0,3,375.2626,262.2148)" fill="#6CA3A0" fill-opacity="0.6332773124424536" ecmeta_series_index="0" ecmeta_data_index="12" ecmeta_ssr_type="chart" class="zr-cls-1"></path>
+<path d="M1 0A1 1 0 1 1 1 -0.1A1 1 0 0 1 1 0" transform="matrix(3,0,0,3,251.0213,177.5314)" fill="#6CA3A0" fill-opacity="0.6332773124424536" ecmeta_series_index="0" ecmeta_data_index="13" ecmeta_ssr_type="chart" class="zr-cls-1"></path>
+<path d="M1 0A1 1 0 1 1 1 -0.1A1 1 0 0 1 1 0" transform="matrix(3,0,0,3,217.796,215.6063)" fill="#6CA3A0" fill-opacity="0.6332773124424536" ecmeta_series_index="0" ecmeta_data_index="14" ecmeta_ssr_type="chart" class="zr-cls-1"></path>
+<path d="M1 0A1 1 0 1 1 1 -0.1A1 1 0 0 1 1 0" transform="matrix(3,0,0,3,447.4957,165.2649)" fill="#6CA3A0" fill-opacity="0.6332773124424536" ecmeta_series_index="0" ecmeta_data_index="15" ecmeta_ssr_type="chart" class="zr-cls-1"></path>
+<path d="M1 0A1 1 0 1 1 1 -0.1A1 1 0 0 1 1 0" transform="matrix(3,0,0,3,393.2952,275.6262)" fill="#6CA3A0" fill-opacity="0.6332773124424536" ecmeta_series_index="0" ecmeta_data_index="16" ecmeta_ssr_type="chart" class="zr-cls-1"></path>
+<path d="M1 0A1 1 0 1 1 1 -0.1A1 1 0 0 1 1 0" transform="matrix(3,0,0,3,305.2154,277.1711)" fill="#6CA3A0" fill-opacity="0.6332773124424536" ecmeta_series_index="0" ecmeta_data_index="17" ecmeta_ssr_type="chart" class="zr-cls-1"></path>
+<path d="M1 0A1 1 0 1 1 1 -0.1A1 1 0 0 1 1 0" transform="matrix(3,0,0,3,266.7967,246.4128)" fill="#6CA3A0" fill-opacity="0.6332773124424536" ecmeta_series_index="0" ecmeta_data_index="18" ecmeta_ssr_type="chart" class="zr-cls-1"></path>
+<path d="M1 0A1 1 0 1 1 1 -0.1A1 1 0 0 1 1 0" transform="matrix(3,0,0,3,239.1044,126.4321)" fill="#6CA3A0" fill-opacity="0.6332773124424536" ecmeta_series_index="0" ecmeta_data_index="19" ecmeta_ssr_type="chart" class="zr-cls-1"></path>
+<path d="M1 0A1 1 0 1 1 1 -0.1A1 1 0 0 1 1 0" transform="matrix(3,0,0,3,228.704,190.416)" fill="#F08904" fill-opacity="0.6332773124424536" ecmeta_series_index="1" ecmeta_data_index="0" ecmeta_ssr_type="chart" class="zr-cls-2"></path>
+<path d="M1 0A1 1 0 1 1 1 -0.1A1 1 0 0 1 1 0" transform="matrix(3,0,0,3,264.8843,311.6597)" fill="#F08904" fill-opacity="0.6332773124424536" ecmeta_series_index="1" ecmeta_data_index="1" ecmeta_ssr_type="chart" class="zr-cls-2"></path>
+<path d="M1 0A1 1 0 1 1 1 -0.1A1 1 0 0 1 1 0" transform="matrix(3,0,0,3,233.9218,127.5915)" fill="#F08904" fill-opacity="0.6332773124424536" ecmeta_series_index="1" ecmeta_data_index="2" ecmeta_ssr_type="chart" class="zr-cls-2"></path>
+<path d="M1 0A1 1 0 1 1 1 -0.1A1 1 0 0 1 1 0" transform="matrix(3,0,0,3,287.5204,167.9637)" fill="#F08904" fill-opacity="0.6332773124424536" ecmeta_series_index="1" ecmeta_data_index="3" ecmeta_ssr_type="chart" class="zr-cls-2"></path>
+<path d="M1 0A1 1 0 1 1 1 -0.1A1 1 0 0 1 1 0" transform="matrix(3,0,0,3,303.4971,255.0863)" fill="#F08904" fill-opacity="0.6332773124424536" ecmeta_series_index="1" ecmeta_data_index="4" ecmeta_ssr_type="chart" class="zr-cls-2"></path>
+<path d="M1 0A1 1 0 1 1 1 -0.1A1 1 0 0 1 1 0" transform="matrix(3,0,0,3,377.2698,65.638)" fill="#F08904" fill-opacity="0.6332773124424536" ecmeta_series_index="1" ecmeta_data_index="5" ecmeta_ssr_type="chart" class="zr-cls-2"></path>
+<path d="M1 0A1 1 0 1 1 1 -0.1A1 1 0 0 1 1 0" transform="matrix(3,0,0,3,383.6937,151.0259)" fill="#F08904" fill-opacity="0.6332773124424536" ecmeta_series_index="1" ecmeta_data_index="6" ecmeta_ssr_type="chart" class="zr-cls-2"></path>
+<path d="M1 0A1 1 0 1 1 1 -0.1A1 1 0 0 1 1 0" transform="matrix(3,0,0,3,201.3455,274.7522)" fill="#F08904" fill-opacity="0.6332773124424536" ecmeta_series_index="1" ecmeta_data_index="7" ecmeta_ssr_type="chart" class="zr-cls-2"></path>
+<path d="M1 0A1 1 0 1 1 1 -0.1A1 1 0 0 1 1 0" transform="matrix(3,0,0,3,490.4111,146.9441)" fill="#F08904" fill-opacity="0.6332773124424536" ecmeta_series_index="1" ecmeta_data_index="8" ecmeta_ssr_type="chart" class="zr-cls-2"></path>
+<path d="M1 0A1 1 0 1 1 1 -0.1A1 1 0 0 1 1 0" transform="matrix(3,0,0,3,379.803,126.1215)" fill="#F08904" fill-opacity="0.6332773124424536" ecmeta_series_index="1" ecmeta_data_index="9" ecmeta_ssr_type="chart" class="zr-cls-2"></path>
+<path d="M1 0A1 1 0 1 1 1 -0.1A1 1 0 0 1 1 0" transform="matrix(3,0,0,3,337.8517,107.136)" fill="#F08904" fill-opacity="0.6332773124424536" ecmeta_series_index="1" ecmeta_data_index="10" ecmeta_ssr_type="chart" class="zr-cls-2"></path>
+<path d="M1 0A1 1 0 1 1 1 -0.1A1 1 0 0 1 1 0" transform="matrix(3,0,0,3,339.2568,317.395)" fill="#F08904" fill-opacity="0.6332773124424536" ecmeta_series_index="1" ecmeta_data_index="11" ecmeta_ssr_type="chart" class="zr-cls-2"></path>
+<path d="M1 0A1 1 0 1 1 1 -0.1A1 1 0 0 1 1 0" transform="matrix(3,0,0,3,245.1636,232.3426)" fill="#F08904" fill-opacity="0.6332773124424536" ecmeta_series_index="1" ecmeta_data_index="12" ecmeta_ssr_type="chart" class="zr-cls-2"></path>
+<path d="M1 0A1 1 0 1 1 1 -0.1A1 1 0 0 1 1 0" transform="matrix(3,0,0,3,221.9101,123.5415)" fill="#F08904" fill-opacity="0.6332773124424536" ecmeta_series_index="1" ecmeta_data_index="13" ecmeta_ssr_type="chart" class="zr-cls-2"></path>
+<path d="M1 0A1 1 0 1 1 1 -0.1A1 1 0 0 1 1 0" transform="matrix(3,0,0,3,350.1429,271.9567)" fill="#F08904" fill-opacity="0.6332773124424536" ecmeta_series_index="1" ecmeta_data_index="14" ecmeta_ssr_type="chart" class="zr-cls-2"></path>
+<path d="M1 0A1 1 0 1 1 1 -0.1A1 1 0 0 1 1 0" transform="matrix(3,0,0,3,385.6242,300.8139)" fill="#F08904" fill-opacity="0.6332773124424536" ecmeta_series_index="1" ecmeta_data_index="15" ecmeta_ssr_type="chart" class="zr-cls-2"></path>
+<path d="M1 0A1 1 0 1 1 1 -0.1A1 1 0 0 1 1 0" transform="matrix(3,0,0,3,360.6339,268.1547)" fill="#F08904" fill-opacity="0.6332773124424536" ecmeta_series_index="1" ecmeta_data_index="16" ecmeta_ssr_type="chart" class="zr-cls-2"></path>
+<path d="M1 0A1 1 0 1 1 1 -0.1A1 1 0 0 1 1 0" transform="matrix(3,0,0,3,241.7624,223.2693)" fill="#F08904" fill-opacity="0.6332773124424536" ecmeta_series_index="1" ecmeta_data_index="17" ecmeta_ssr_type="chart" class="zr-cls-2"></path>
+<path d="M1 0A1 1 0 1 1 1 -0.1A1 1 0 0 1 1 0" transform="matrix(3,0,0,3,303.0061,213.7705)" fill="#F08904" fill-opacity="0.6332773124424536" ecmeta_series_index="1" ecmeta_data_index="18" ecmeta_ssr_type="chart" class="zr-cls-2"></path>
+<path d="M1 0A1 1 0 1 1 1 -0.1A1 1 0 0 1 1 0" transform="matrix(3,0,0,3,335.0106,55.1669)" fill="#F08904" fill-opacity="0.6332773124424536" ecmeta_series_index="1" ecmeta_data_index="19" ecmeta_ssr_type="chart" class="zr-cls-2"></path>
+<path d="M1 0A1 1 0 1 1 1 -0.1A1 1 0 0 1 1 0" transform="matrix(3,0,0,3,335.4732,213.7577)" fill="#BE2E5F" fill-opacity="0.6332773124424536" ecmeta_series_index="2" ecmeta_data_index="0" ecmeta_ssr_type="chart" class="zr-cls-3"></path>
+<path d="M1 0A1 1 0 1 1 1 -0.1A1 1 0 0 1 1 0" transform="matrix(3,0,0,3,102.8861,218.4717)" fill="#BE2E5F" fill-opacity="0.6332773124424536" ecmeta_series_index="2" ecmeta_data_index="1" ecmeta_ssr_type="chart" class="zr-cls-3"></path>
+<path d="M1 0A1 1 0 1 1 1 -0.1A1 1 0 0 1 1 0" transform="matrix(3,0,0,3,333.2235,265.0502)" fill="#BE2E5F" fill-opacity="0.6332773124424536" ecmeta_series_index="2" ecmeta_data_index="2" ecmeta_ssr_type="chart" class="zr-cls-3"></path>
+<path d="M1 0A1 1 0 1 1 1 -0.1A1 1 0 0 1 1 0" transform="matrix(3,0,0,3,259.2964,200.7374)" fill="#BE2E5F" fill-opacity="0.6332773124424536" ecmeta_series_index="2" ecmeta_data_index="3" ecmeta_ssr_type="chart" class="zr-cls-3"></path>
+<path d="M1 0A1 1 0 1 1 1 -0.1A1 1 0 0 1 1 0" transform="matrix(3,0,0,3,100.1889,172.8154)" fill="#BE2E5F" fill-opacity="0.6332773124424536" ecmeta_series_index="2" ecmeta_data_index="4" ecmeta_ssr_type="chart" class="zr-cls-3"></path>
+<path d="M1 0A1 1 0 1 1 1 -0.1A1 1 0 0 1 1 0" transform="matrix(3,0,0,3,342.334,157.2401)" fill="#BE2E5F" fill-opacity="0.6332773124424536" ecmeta_series_index="2" ecmeta_data_index="5" ecmeta_ssr_type="chart" class="zr-cls-3"></path>
+<path d="M1 0A1 1 0 1 1 1 -0.1A1 1 0 0 1 1 0" transform="matrix(3,0,0,3,294.4877,274.7574)" fill="#BE2E5F" fill-opacity="0.6332773124424536" ecmeta_series_index="2" ecmeta_data_index="6" ecmeta_ssr_type="chart" class="zr-cls-3"></path>
+<path d="M1 0A1 1 0 1 1 1 -0.1A1 1 0 0 1 1 0" transform="matrix(3,0,0,3,451.6725,300.3379)" fill="#BE2E5F" fill-opacity="0.6332773124424536" ecmeta_series_index="2" ecmeta_data_index="7" ecmeta_ssr_type="chart" class="zr-cls-3"></path>
+<path d="M1 0A1 1 0 1 1 1 -0.1A1 1 0 0 1 1 0" transform="matrix(3,0,0,3,474.895,201.7915)" fill="#BE2E5F" fill-opacity="0.6332773124424536" ecmeta_series_index="2" ecmeta_data_index="8" ecmeta_ssr_type="chart" class="zr-cls-3"></path>
+<path d="M1 0A1 1 0 1 1 1 -0.1A1 1 0 0 1 1 0" transform="matrix(3,0,0,3,474.4294,47.1519)" fill="#BE2E5F" fill-opacity="0.6332773124424536" ecmeta_series_index="2" ecmeta_data_index="9" ecmeta_ssr_type="chart" class="zr-cls-3"></path>
+<path d="M1 0A1 1 0 1 1 1 -0.1A1 1 0 0 1 1 0" transform="matrix(3,0,0,3,300.9651,231.36)" fill="#BE2E5F" fill-opacity="0.6332773124424536" ecmeta_series_index="2" ecmeta_data_index="10" ecmeta_ssr_type="chart" class="zr-cls-3"></path>
+<path d="M1 0A1 1 0 1 1 1 -0.1A1 1 0 0 1 1 0" transform="matrix(3,0,0,3,425.2868,217.6992)" fill="#BE2E5F" fill-opacity="0.6332773124424536" ecmeta_series_index="2" ecmeta_data_index="11" ecmeta_ssr_type="chart" class="zr-cls-3"></path>
+<path d="M1 0A1 1 0 1 1 1 -0.1A1 1 0 0 1 1 0" transform="matrix(3,0,0,3,373.8401,269.7666)" fill="#BE2E5F" fill-opacity="0.6332773124424536" ecmeta_series_index="2" ecmeta_data_index="12" ecmeta_ssr_type="chart" class="zr-cls-3"></path>
+<path d="M1 0A1 1 0 1 1 1 -0.1A1 1 0 0 1 1 0" transform="matrix(3,0,0,3,391.424,232.5688)" fill="#BE2E5F" fill-opacity="0.6332773124424536" ecmeta_series_index="2" ecmeta_data_index="13" ecmeta_ssr_type="chart" class="zr-cls-3"></path>
+<path d="M1 0A1 1 0 1 1 1 -0.1A1 1 0 0 1 1 0" transform="matrix(3,0,0,3,250.2546,137.5951)" fill="#BE2E5F" fill-opacity="0.6332773124424536" ecmeta_series_index="2" ecmeta_data_index="14" ecmeta_ssr_type="chart" class="zr-cls-3"></path>
+<path d="M1 0A1 1 0 1 1 1 -0.1A1 1 0 0 1 1 0" transform="matrix(3,0,0,3,288.0211,106.6586)" fill="#BE2E5F" fill-opacity="0.6332773124424536" ecmeta_series_index="2" ecmeta_data_index="15" ecmeta_ssr_type="chart" class="zr-cls-3"></path>
+<path d="M1 0A1 1 0 1 1 1 -0.1A1 1 0 0 1 1 0" transform="matrix(3,0,0,3,220.8025,294.9209)" fill="#BE2E5F" fill-opacity="0.6332773124424536" ecmeta_series_index="2" ecmeta_data_index="16" ecmeta_ssr_type="chart" class="zr-cls-3"></path>
+<path d="M1 0A1 1 0 1 1 1 -0.1A1 1 0 0 1 1 0" transform="matrix(3,0,0,3,362.6409,167.1142)" fill="#BE2E5F" fill-opacity="0.6332773124424536" ecmeta_series_index="2" ecmeta_data_index="17" ecmeta_ssr_type="chart" class="zr-cls-3"></path>
+<path d="M1 0A1 1 0 1 1 1 -0.1A1 1 0 0 1 1 0" transform="matrix(3,0,0,3,214.9802,219.0229)" fill="#BE2E5F" fill-opacity="0.6332773124424536" ecmeta_series_index="2" ecmeta_data_index="18" ecmeta_ssr_type="chart" class="zr-cls-3"></path>
+<path d="M1 0A1 1 0 1 1 1 -0.1A1 1 0 0 1 1 0" transform="matrix(3,0,0,3,235.7673,269.2285)" fill="#BE2E5F" fill-opacity="0.6332773124424536" ecmeta_series_index="2" ecmeta_data_index="19" ecmeta_ssr_type="chart" class="zr-cls-3"></path>
+<path d="M-5 -5l86 0l0 68l-86 0Z" transform="translate(547.02 160.55)" fill="rgb(0,0,0)" fill-opacity="0" stroke="#b7b9be" stroke-width="0" class="zr-cls-0"></path>
+<path d="M19.5 7A7 7 0 1 1 19.5 6.3A7 7 0 0 1 19.5 7" transform="translate(541.52 160.55)" fill="#6CA3A0" ecmeta_series_index="0" ecmeta_data_index="0" ecmeta_ssr_type="legend" ecmeta_silent="true" class="zr-cls-0"></path>
+<text dominant-baseline="central" text-anchor="start" style="font-size:12px;font-family:system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;" x="30" y="7" transform="translate(541.52 160.55)" fill="rgb(0,0,0)" fill-opacity="0.7">Adelie</text>
+<path d="M5.5 0l58 0l0 14l-58 0Z" transform="translate(541.52 160.55)" fill="none" pointer-events="visible" ecmeta_series_index="0" ecmeta_data_index="0" ecmeta_ssr_type="legend" class="zr-cls-4"></path>
+<path d="M19.5 7A7 7 0 1 1 19.5 6.3A7 7 0 0 1 19.5 7" transform="translate(541.52 182.55)" fill="#F08904" ecmeta_series_index="1" ecmeta_data_index="1" ecmeta_ssr_type="legend" ecmeta_silent="true" class="zr-cls-0"></path>
+<text dominant-baseline="central" text-anchor="start" style="font-size:12px;font-family:system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;" x="30" y="7" transform="translate(541.52 182.55)" fill="rgb(0,0,0)" fill-opacity="0.7">Chinstrap</text>
+<path d="M5.5 0l76 0l0 14l-76 0Z" transform="translate(541.52 182.55)" fill="none" pointer-events="visible" ecmeta_series_index="1" ecmeta_data_index="1" ecmeta_ssr_type="legend" class="zr-cls-4"></path>
+<path d="M19.5 7A7 7 0 1 1 19.5 6.3A7 7 0 0 1 19.5 7" transform="translate(541.52 204.55)" fill="#BE2E5F" ecmeta_series_index="2" ecmeta_data_index="2" ecmeta_ssr_type="legend" ecmeta_silent="true" class="zr-cls-0"></path>
+<text dominant-baseline="central" text-anchor="start" style="font-size:12px;font-family:system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;" x="30" y="7" transform="translate(541.52 204.55)" fill="rgb(0,0,0)" fill-opacity="0.7">Gentoo</text>
+<path d="M5.5 0l64.1 0l0 14l-64.1 0Z" transform="translate(541.52 204.55)" fill="none" pointer-events="visible" ecmeta_series_index="2" ecmeta_data_index="2" ecmeta_ssr_type="legend" class="zr-cls-4"></path>
+<style ><![CDATA[
+.zr-cls-0:hover {
+pointer-events:none;
+}
+.zr-cls-1:hover {
+cursor:pointer;
+fill:rgba(118,179,176,1);
+}
+.zr-cls-2:hover {
+cursor:pointer;
+fill:rgba(255,150,4,1);
+}
+.zr-cls-3:hover {
+cursor:pointer;
+fill:rgba(209,50,104,1);
+}
+.zr-cls-4:hover {
+cursor:pointer;
+fill:rgba(0,0,0,0);
+}
+
+]]>
+
+</style>
+</svg>

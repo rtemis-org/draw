@@ -1,0 +1,48 @@
+{
+  "600x400": {
+    "plots": [
+      {
+        "x": 117.6,
+        "y": 42,
+        "width": 446.4,
+        "height": 302
+      }
+    ],
+    "legend": {
+      "x": 242.6,
+      "y": 368,
+      "width": 196.5,
+      "height": 12
+    },
+    "colorScale": null,
+    "title": {
+      "x": 216.8,
+      "y": 20,
+      "width": 166.5,
+      "height": 14
+    }
+  },
+  "390x420": {
+    "plots": [
+      {
+        "x": 117.6,
+        "y": 42,
+        "width": 236.4,
+        "height": 322
+      }
+    ],
+    "legend": {
+      "x": 137.6,
+      "y": 388,
+      "width": 196.5,
+      "height": 12
+    },
+    "colorScale": null,
+    "title": {
+      "x": 111.8,
+      "y": 20,
+      "width": 166.5,
+      "height": 14
+    }
+  }
+}

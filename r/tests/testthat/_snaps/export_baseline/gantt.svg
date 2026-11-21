@@ -1,0 +1,67 @@
+<svg width="640" height="420" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" baseProfile="full" viewBox="0 0 640 420">
+<rect width="640" height="420" x="0" y="0" fill="#ffffff"></rect>
+<path d="M55.5 48L55.5 392" fill="none" pointer-events="visible" stroke="#dbdee4" class="zr-cls-0"></path>
+<path d="M166.5 48L166.5 392" fill="none" pointer-events="visible" stroke="#dbdee4" class="zr-cls-0"></path>
+<path d="M277.5 48L277.5 392" fill="none" pointer-events="visible" stroke="#dbdee4" class="zr-cls-0"></path>
+<path d="M388.5 48L388.5 392" fill="none" pointer-events="visible" stroke="#dbdee4" class="zr-cls-0"></path>
+<path d="M500.5 48L500.5 392" fill="none" pointer-events="visible" stroke="#dbdee4" class="zr-cls-0"></path>
+<path d="M611.5 48L611.5 392" fill="none" pointer-events="visible" stroke="#dbdee4" class="zr-cls-0"></path>
+<path d="M55.5 48L55.5 392" fill="none" pointer-events="visible" stroke="#54555a" stroke-linecap="round" class="zr-cls-0"></path>
+<text dominant-baseline="central" text-anchor="end" style="font-size:12px;font-family:system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;" transform="translate(47.12 91)" fill="rgb(0,0,0)" fill-opacity="0.7">load</text>
+<text dominant-baseline="central" text-anchor="end" style="font-size:12px;font-family:system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;" transform="translate(47.12 177)" fill="rgb(0,0,0)" fill-opacity="0.7">clean</text>
+<text dominant-baseline="central" text-anchor="end" style="font-size:12px;font-family:system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;" transform="translate(47.12 263)" fill="rgb(0,0,0)" fill-opacity="0.7">train</text>
+<text dominant-baseline="central" text-anchor="end" style="font-size:12px;font-family:system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;" transform="translate(47.12 349)" fill="rgb(0,0,0)" fill-opacity="0.7">predict</text>
+<text dominant-baseline="central" text-anchor="middle" style="font-size:12px;font-family:system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;" y="6" transform="translate(55.12 400)" fill="rgb(0,0,0)" fill-opacity="0.7">0</text>
+<text dominant-baseline="central" text-anchor="middle" style="font-size:12px;font-family:system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;" y="6" transform="translate(166.28 400)" fill="rgb(0,0,0)" fill-opacity="0.7">20</text>
+<text dominant-baseline="central" text-anchor="middle" style="font-size:12px;font-family:system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;" y="6" transform="translate(277.44 400)" fill="rgb(0,0,0)" fill-opacity="0.7">40</text>
+<text dominant-baseline="central" text-anchor="middle" style="font-size:12px;font-family:system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;" y="6" transform="translate(388.6 400)" fill="rgb(0,0,0)" fill-opacity="0.7">60</text>
+<text dominant-baseline="central" text-anchor="middle" style="font-size:12px;font-family:system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;" y="6" transform="translate(499.76 400)" fill="rgb(0,0,0)" fill-opacity="0.7">80</text>
+<text dominant-baseline="central" text-anchor="middle" style="font-size:12px;font-family:system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;" y="6" transform="translate(610.92 400)" fill="rgb(0,0,0)" fill-opacity="0.7">100</text>
+<g clip-path="url(#zr-c0)">
+<path d="M55.1 65.2l66.7 0l0 51.6l-66.7 0Z" fill="#6CA3A0" ecmeta_series_index="0" ecmeta_data_index="0" ecmeta_ssr_type="chart" class="zr-cls-1"></path>
+<path d="M121.8 151.2l100 0l0 51.6l-100 0Z" fill="#6CA3A0" ecmeta_series_index="0" ecmeta_data_index="1" ecmeta_ssr_type="chart" class="zr-cls-1"></path>
+<path d="M221.9 237.2l361.3 0l0 51.6l-361.3 0Z" fill="#6CA3A0" ecmeta_series_index="0" ecmeta_data_index="2" ecmeta_ssr_type="chart" class="zr-cls-1"></path>
+</g>
+<g clip-path="url(#zr-c1)">
+<path d="M583.1 323.2l27.8 0l0 51.6l-27.8 0Z" fill="#F08904" ecmeta_series_index="1" ecmeta_data_index="0" ecmeta_ssr_type="chart" class="zr-cls-2"></path>
+</g>
+<path d="M-5 -5l116 0l0 24l-116 0Z" transform="translate(280 17)" fill="rgb(0,0,0)" fill-opacity="0" stroke="#b7b9be" stroke-width="0" class="zr-cls-0"></path>
+<path d="M3.5 0L21.5 0A3.5 3.5 0 0 1 25 3.5L25 10.5A3.5 3.5 0 0 1 21.5 14L3.5 14A3.5 3.5 0 0 1 0 10.5L0 3.5A3.5 3.5 0 0 1 3.5 0Z" transform="translate(280 17)" fill="#6CA3A0" ecmeta_series_index="0" ecmeta_data_index="0" ecmeta_ssr_type="legend" ecmeta_silent="true" class="zr-cls-0"></path>
+<text dominant-baseline="central" text-anchor="start" style="font-size:12px;font-family:system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;" x="30" y="7" transform="translate(280 17)" fill="rgb(0,0,0)" fill-opacity="0.7">ok</text>
+<path d="M0 0l42.7 0l0 14l-42.7 0Z" transform="translate(280 17)" fill="none" pointer-events="visible" ecmeta_series_index="0" ecmeta_data_index="0" ecmeta_ssr_type="legend" class="zr-cls-3"></path>
+<path d="M3.5 0L21.5 0A3.5 3.5 0 0 1 25 3.5L25 10.5A3.5 3.5 0 0 1 21.5 14L3.5 14A3.5 3.5 0 0 1 0 10.5L0 3.5A3.5 3.5 0 0 1 3.5 0Z" transform="translate(330.72 17)" fill="#F08904" ecmeta_series_index="1" ecmeta_data_index="1" ecmeta_ssr_type="legend" ecmeta_silent="true" class="zr-cls-0"></path>
+<text dominant-baseline="central" text-anchor="start" style="font-size:12px;font-family:system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;" x="30" y="7" transform="translate(330.72 17)" fill="rgb(0,0,0)" fill-opacity="0.7">error</text>
+<path d="M0 0l55.3 0l0 14l-55.3 0Z" transform="translate(330.72 17)" fill="none" pointer-events="visible" ecmeta_series_index="1" ecmeta_data_index="1" ecmeta_ssr_type="legend" class="zr-cls-3"></path>
+<defs >
+<clipPath id="zr-c0">
+<path d="M55 48l557 0l0 344l-557 0Z" fill="#000" class="zr-cls-4"></path>
+</clipPath>
+<clipPath id="zr-c1">
+<path d="M55 48l557 0l0 344l-557 0Z" fill="#000" class="zr-cls-4"></path>
+</clipPath>
+</defs>
+<style ><![CDATA[
+.zr-cls-0:hover {
+pointer-events:none;
+}
+.zr-cls-4:hover {
+cursor:pointer;
+fill:rgba(0,0,0,1);
+}
+.zr-cls-1:hover {
+cursor:pointer;
+fill:rgba(118,179,176,1);
+}
+.zr-cls-2:hover {
+cursor:pointer;
+fill:rgba(255,150,4,1);
+}
+.zr-cls-3:hover {
+cursor:pointer;
+fill:rgba(0,0,0,0);
+}
+
+]]>
+
+</style>
+</svg>

@@ -1,0 +1,531 @@
+<svg width="640" height="420" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" baseProfile="full" viewBox="0 0 640 420">
+<rect width="640" height="420" x="0" y="0" fill="#ffffff"></rect>
+<text dominant-baseline="central" text-anchor="start" style="font-size:12px;font-family:system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;font-weight:bold;" y="6" transform="translate(424.7352 42)" fill="rgb(0,0,0)" fill-opacity="0.7">size</text>
+<circle cx="13.4" cy="36.4" r="13.4" transform="translate(424.7352 42)" fill="#808080" fill-opacity="0.6" class="zr-cls-0"></circle>
+<text dominant-baseline="central" text-anchor="start" style="font-size:12px;font-family:system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;" transform="translate(457.6184 78.4416)" fill="rgb(0,0,0)" fill-opacity="0.7">8</text>
+<circle cx="69" cy="36.4" r="11.6" transform="translate(424.7352 42)" fill="#808080" fill-opacity="0.6" class="zr-cls-0"></circle>
+<text dominant-baseline="central" text-anchor="start" style="font-size:12px;font-family:system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;" transform="translate(513.2216 78.4416)" fill="rgb(0,0,0)" fill-opacity="0.7">6</text>
+<circle cx="124.6" cy="36.4" r="9.5" transform="translate(424.7352 42)" fill="#808080" fill-opacity="0.6" class="zr-cls-0"></circle>
+<text dominant-baseline="central" text-anchor="start" style="font-size:12px;font-family:system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;" transform="translate(568.8248 78.4416)" fill="rgb(0,0,0)" fill-opacity="0.7">4</text>
+<path d="M84.6 331.5L604 331.5" fill="none" pointer-events="visible" stroke="#dbdee4" class="zr-cls-0"></path>
+<path d="M84.6 288.5L604 288.5" fill="none" pointer-events="visible" stroke="#dbdee4" class="zr-cls-0"></path>
+<path d="M84.6 245.5L604 245.5" fill="none" pointer-events="visible" stroke="#dbdee4" class="zr-cls-0"></path>
+<path d="M84.6 201.5L604 201.5" fill="none" pointer-events="visible" stroke="#dbdee4" class="zr-cls-0"></path>
+<path d="M84.6 158.5L604 158.5" fill="none" pointer-events="visible" stroke="#dbdee4" class="zr-cls-0"></path>
+<path d="M163.5 133L163.5 337.1" fill="none" pointer-events="visible" stroke="#dbdee4" class="zr-cls-0"></path>
+<path d="M271.5 133L271.5 337.1" fill="none" pointer-events="visible" stroke="#dbdee4" class="zr-cls-0"></path>
+<path d="M379.5 133L379.5 337.1" fill="none" pointer-events="visible" stroke="#dbdee4" class="zr-cls-0"></path>
+<path d="M486.5 133L486.5 337.1" fill="none" pointer-events="visible" stroke="#dbdee4" class="zr-cls-0"></path>
+<path d="M594.5 133L594.5 337.1" fill="none" pointer-events="visible" stroke="#dbdee4" class="zr-cls-0"></path>
+<text dominant-baseline="central" text-anchor="middle" style="font-size:12px;font-family:system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;" y="-6" transform="matrix(0,-1,1,0,55.5,235.05)" fill="rgb(0,0,0)" fill-opacity="0.7">Y</text>
+<path d="M379.5 337.1L379.5 133" fill="none" pointer-events="visible" stroke="#54555a" stroke-linecap="round" class="zr-cls-0"></path>
+<text dominant-baseline="central" text-anchor="middle" style="font-size:12px;font-family:system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;" y="6" transform="translate(344.29 364.5)" fill="rgb(0,0,0)" fill-opacity="0.7">X</text>
+<path d="M84.6 245.5L604 245.5" fill="none" pointer-events="visible" stroke="#54555a" stroke-linecap="round" class="zr-cls-0"></path>
+<text dominant-baseline="central" text-anchor="end" style="font-size:12px;font-family:system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;" transform="translate(76.58 331.3336)" fill="rgb(0,0,0)" fill-opacity="0.7">-2</text>
+<text dominant-baseline="central" text-anchor="end" style="font-size:12px;font-family:system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;" transform="translate(76.58 288.1178)" fill="rgb(0,0,0)" fill-opacity="0.7">-1</text>
+<text dominant-baseline="central" text-anchor="end" style="font-size:12px;font-family:system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;" transform="translate(76.58 244.9019)" fill="rgb(0,0,0)" fill-opacity="0.7">0</text>
+<text dominant-baseline="central" text-anchor="end" style="font-size:12px;font-family:system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;" transform="translate(76.58 201.686)" fill="rgb(0,0,0)" fill-opacity="0.7">1</text>
+<text dominant-baseline="central" text-anchor="end" style="font-size:12px;font-family:system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;" transform="translate(76.58 158.4701)" fill="rgb(0,0,0)" fill-opacity="0.7">2</text>
+<text dominant-baseline="central" text-anchor="middle" style="font-size:12px;font-family:system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;" y="6" transform="translate(162.8574 345.1)" fill="rgb(0,0,0)" fill-opacity="0.7">-2</text>
+<text dominant-baseline="central" text-anchor="middle" style="font-size:12px;font-family:system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;" y="6" transform="translate(270.8144 345.1)" fill="rgb(0,0,0)" fill-opacity="0.7">-1</text>
+<text dominant-baseline="central" text-anchor="middle" style="font-size:12px;font-family:system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;" y="6" transform="translate(378.7713 345.1)" fill="rgb(0,0,0)" fill-opacity="0.7">0</text>
+<text dominant-baseline="central" text-anchor="middle" style="font-size:12px;font-family:system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;" y="6" transform="translate(486.7283 345.1)" fill="rgb(0,0,0)" fill-opacity="0.7">1</text>
+<text dominant-baseline="central" text-anchor="middle" style="font-size:12px;font-family:system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;" y="6" transform="translate(594.6852 345.1)" fill="rgb(0,0,0)" fill-opacity="0.7">2</text>
+<path d="M1 0A1 1 0 1 1 1 -0.01" transform="matrix(14.835,0,0,14.835,434.9725,251.0156)" fill="rgb(157,114,91)" fill-opacity="0.6332773124424536" ecmeta_series_index="0" ecmeta_data_index="0" ecmeta_ssr_type="chart" class="zr-cls-1"></path>
+<path d="M1 0A1 1 0 1 1 1 -0.01" transform="matrix(11.509,0,0,11.509,262.2112,237.6706)" fill="rgb(162,111,85)" fill-opacity="0.6332773124424536" ecmeta_series_index="0" ecmeta_data_index="1" ecmeta_ssr_type="chart" class="zr-cls-2"></path>
+<path d="M1 0A1 1 0 1 1 1 -0.01" transform="matrix(14.916,0,0,14.916,393.803,253.4927)" fill="rgb(156,114,93)" fill-opacity="0.6332773124424536" ecmeta_series_index="0" ecmeta_data_index="2" ecmeta_ssr_type="chart" class="zr-cls-3"></path>
+<path d="M1 0A1 1 0 1 1 1 -0.01" transform="matrix(13.753,0,0,13.753,369.6221,257.4866)" fill="rgb(154,115,94)" fill-opacity="0.6332773124424536" ecmeta_series_index="0" ecmeta_data_index="3" ecmeta_ssr_type="chart" class="zr-cls-4"></path>
+<path d="M1 0A1 1 0 1 1 1 -0.01" transform="matrix(11.951,0,0,11.951,306.8029,319.8554)" fill="rgb(132,126,123)" fill-opacity="0.6332773124424536" ecmeta_series_index="0" ecmeta_data_index="4" ecmeta_ssr_type="chart" class="zr-cls-5"></path>
+<path d="M1 0A1 1 0 1 1 1 -0.01" transform="matrix(11.338,0,0,11.338,107.142,256.6881)" fill="rgb(155,115,94)" fill-opacity="0.6332773124424536" ecmeta_series_index="0" ecmeta_data_index="5" ecmeta_ssr_type="chart" class="zr-cls-6"></path>
+<path d="M1 0A1 1 0 1 1 1 -0.01" transform="matrix(13.721,0,0,13.721,299.4071,322.6874)" fill="rgb(131,127,125)" fill-opacity="0.6332773124424536" ecmeta_series_index="0" ecmeta_data_index="6" ecmeta_ssr_type="chart" class="zr-cls-7"></path>
+<path d="M1 0A1 1 0 1 1 1 -0.1A1 1 0 0 1 1 0" transform="matrix(9.327,0,0,9.327,268.642,195.0851)" fill="rgb(177,104,65)" fill-opacity="0.6332773124424536" ecmeta_series_index="0" ecmeta_data_index="7" ecmeta_ssr_type="chart" class="zr-cls-8"></path>
+<path d="M1 0A1 1 0 1 1 1 -0.1A1 1 0 0 1 1 0" transform="matrix(5.561,0,0,5.561,391.0303,288.2612)" fill="rgb(143,121,109)" fill-opacity="0.6332773124424536" ecmeta_series_index="0" ecmeta_data_index="8" ecmeta_ssr_type="chart" class="zr-cls-9"></path>
+<path d="M1 0A1 1 0 1 1 1 -0.1A1 1 0 0 1 1 0" transform="matrix(6.166,0,0,6.166,327.6223,238.4968)" fill="rgb(161,112,86)" fill-opacity="0.6332773124424536" ecmeta_series_index="0" ecmeta_data_index="9" ecmeta_ssr_type="chart" class="zr-cls-10"></path>
+<path d="M1 0A1 1 0 1 1 1 -0.01" transform="matrix(12.684,0,0,12.684,334.7017,222.4513)" fill="rgb(167,109,78)" fill-opacity="0.6332773124424536" ecmeta_series_index="0" ecmeta_data_index="10" ecmeta_ssr_type="chart" class="zr-cls-11"></path>
+<path d="M1 0A1 1 0 1 1 1 -0.1A1 1 0 0 1 1 0" transform="matrix(9.87,0,0,9.87,299.916,244.6669)" fill="rgb(159,113,88)" fill-opacity="0.6332773124424536" ecmeta_series_index="0" ecmeta_data_index="11" ecmeta_ssr_type="chart" class="zr-cls-12"></path>
+<path d="M1 0A1 1 0 1 1 1 -0.1A1 1 0 0 1 1 0" transform="matrix(9.065,0,0,9.065,354.8657,186.6892)" fill="rgb(180,102,61)" fill-opacity="0.6332773124424536" ecmeta_series_index="0" ecmeta_data_index="12" ecmeta_ssr_type="chart" class="zr-cls-13"></path>
+<path d="M1 0A1 1 0 1 1 1 -0.01" transform="matrix(12.863,0,0,12.863,354.3929,281.5072)" fill="rgb(146,119,106)" fill-opacity="0.6332773124424536" ecmeta_series_index="0" ecmeta_data_index="13" ecmeta_ssr_type="chart" class="zr-cls-14"></path>
+<path d="M1 0A1 1 0 1 1 1 -0.01" transform="matrix(10.529,0,0,10.529,103.8178,225.74)" fill="rgb(166,109,80)" fill-opacity="0.6332773124424536" ecmeta_series_index="0" ecmeta_data_index="14" ecmeta_ssr_type="chart" class="zr-cls-15"></path>
+<path d="M1 0A1 1 0 1 1 1 -0.1A1 1 0 0 1 1 0" transform="matrix(7.556,0,0,7.556,524.1895,287.1302)" fill="rgb(143,120,108)" fill-opacity="0.6332773124424536" ecmeta_series_index="0" ecmeta_data_index="15" ecmeta_ssr_type="chart" class="zr-cls-16"></path>
+<path d="M1 0A1 1 0 1 1 1 -0.01" transform="matrix(12.916,0,0,12.916,445.3169,153.0901)" fill="rgb(192,96,46)" fill-opacity="0.6332773124424536" ecmeta_series_index="0" ecmeta_data_index="16" ecmeta_ssr_type="chart" class="zr-cls-17"></path>
+<path d="M1 0A1 1 0 1 1 1 -0.01" transform="matrix(14.379,0,0,14.379,402.2589,215.1823)" fill="rgb(170,107,75)" fill-opacity="0.6332773124424536" ecmeta_series_index="0" ecmeta_data_index="17" ecmeta_ssr_type="chart" class="zr-cls-18"></path>
+<path d="M1 0A1 1 0 1 1 1 -0.01" transform="matrix(13.972,0,0,13.972,291.8963,259.7408)" fill="rgb(153,115,95)" fill-opacity="0.6332773124424536" ecmeta_series_index="0" ecmeta_data_index="18" ecmeta_ssr_type="chart" class="zr-cls-19"></path>
+<path d="M1 0A1 1 0 1 1 1 -0.01" transform="matrix(12.408,0,0,12.408,453.2343,210.9701)" fill="rgb(171,107,73)" fill-opacity="0.6332773124424536" ecmeta_series_index="0" ecmeta_data_index="19" ecmeta_ssr_type="chart" class="zr-cls-20"></path>
+<path d="M1 0A1 1 0 1 1 1 -0.01" transform="matrix(10.976,0,0,10.976,343.2889,294.8412)" fill="rgb(141,122,112)" fill-opacity="0.6332773124424536" ecmeta_series_index="0" ecmeta_data_index="20" ecmeta_ssr_type="chart" class="zr-cls-21"></path>
+<path d="M1 0A1 1 0 1 1 1 -0.01" transform="matrix(11.936,0,0,11.936,360.9928,179.6927)" fill="rgb(183,101,58)" fill-opacity="0.6332773124424536" ecmeta_series_index="0" ecmeta_data_index="21" ecmeta_ssr_type="chart" class="zr-cls-22"></path>
+<path d="M1 0A1 1 0 1 1 1 -0.01" transform="matrix(15,0,0,15,228.4921,294.8377)" fill="rgb(141,122,112)" fill-opacity="0.6332773124424536" ecmeta_series_index="0" ecmeta_data_index="22" ecmeta_ssr_type="chart" class="zr-cls-21"></path>
+<path d="M1 0A1 1 0 1 1 1 -0.1A1 1 0 0 1 1 0" transform="matrix(8.635,0,0,8.635,537.0173,312.1809)" fill="rgb(134,125,120)" fill-opacity="0.6332773124424536" ecmeta_series_index="0" ecmeta_data_index="23" ecmeta_ssr_type="chart" class="zr-cls-23"></path>
+<path d="M1 0A1 1 0 1 1 1 -0.01" transform="matrix(13.014,0,0,13.014,383.9756,247.2894)" fill="rgb(158,113,90)" fill-opacity="0.6332773124424536" ecmeta_series_index="0" ecmeta_data_index="24" ecmeta_ssr_type="chart" class="zr-cls-24"></path>
+<path d="M1 0A1 1 0 1 1 1 -0.1A1 1 0 0 1 1 0" transform="matrix(8.018,0,0,8.018,584.7622,208.2032)" fill="rgb(172,106,71)" fill-opacity="0.6332773124424536" ecmeta_series_index="0" ecmeta_data_index="25" ecmeta_ssr_type="chart" class="zr-cls-25"></path>
+<path d="M1 0A1 1 0 1 1 1 -0.01" transform="matrix(10.388,0,0,10.388,565.6388,245.3814)" fill="rgb(159,113,89)" fill-opacity="0.6332773124424536" ecmeta_series_index="0" ecmeta_data_index="26" ecmeta_ssr_type="chart" class="zr-cls-26"></path>
+<path d="M1 0A1 1 0 1 1 1 -0.01" transform="matrix(11.973,0,0,11.973,385.0486,277.7595)" fill="rgb(147,119,104)" fill-opacity="0.6332773124424536" ecmeta_series_index="0" ecmeta_data_index="27" ecmeta_ssr_type="chart" class="zr-cls-27"></path>
+<path d="M1 0A1 1 0 1 1 1 -0.01" transform="matrix(12.605,0,0,12.605,448.439,194.0886)" fill="rgb(177,104,65)" fill-opacity="0.6332773124424536" ecmeta_series_index="0" ecmeta_data_index="28" ecmeta_ssr_type="chart" class="zr-cls-8"></path>
+<path d="M1 0A1 1 0 1 1 1 -0.01" transform="matrix(13.22,0,0,13.22,565.065,140.5593)" fill="rgb(197,94,40)" fill-opacity="0.6332773124424536" ecmeta_series_index="0" ecmeta_data_index="29" ecmeta_ssr_type="chart" class="zr-cls-28"></path>
+<path d="M1 0A1 1 0 1 1 1 -0.01" transform="matrix(10.775,0,0,10.775,321.6657,329.5407)" fill="rgb(128,128,128)" fill-opacity="0.6332773124424536" ecmeta_series_index="0" ecmeta_data_index="30" ecmeta_ssr_type="chart" class="zr-cls-29"></path>
+<path d="M1 0A1 1 0 1 1 1 -0.01" transform="matrix(10.936,0,0,10.936,396.7345,181.2194)" fill="rgb(182,101,59)" fill-opacity="0.6332773124424536" ecmeta_series_index="0" ecmeta_data_index="31" ecmeta_ssr_type="chart" class="zr-cls-30"></path>
+<path d="M1 0A1 1 0 1 1 1 -0.1A1 1 0 0 1 1 0" transform="matrix(7.103,0,0,7.103,351.2721,265.4244)" fill="rgb(151,116,98)" fill-opacity="0.6332773124424536" ecmeta_series_index="0" ecmeta_data_index="32" ecmeta_ssr_type="chart" class="zr-cls-31"></path>
+<path d="M1 0A1 1 0 1 1 1 -0.1A1 1 0 0 1 1 0" transform="matrix(8.296,0,0,8.296,414.6975,202.4997)" fill="rgb(174,105,69)" fill-opacity="0.6332773124424536" ecmeta_series_index="0" ecmeta_data_index="33" ecmeta_ssr_type="chart" class="zr-cls-32"></path>
+<path d="M1 0A1 1 0 1 1 1 -0.01" transform="matrix(12.781,0,0,12.781,398.4662,323.743)" fill="rgb(130,127,125)" fill-opacity="0.6332773124424536" ecmeta_series_index="0" ecmeta_data_index="34" ecmeta_ssr_type="chart" class="zr-cls-33"></path>
+<path d="M1 0A1 1 0 1 1 1 -0.01" transform="matrix(11.93,0,0,11.93,504.4973,256.1644)" fill="rgb(155,115,94)" fill-opacity="0.6332773124424536" ecmeta_series_index="0" ecmeta_data_index="35" ecmeta_ssr_type="chart" class="zr-cls-6"></path>
+<path d="M1 0A1 1 0 1 1 1 -0.01" transform="matrix(13.822,0,0,13.822,442.843,286.3392)" fill="rgb(144,120,108)" fill-opacity="0.6332773124424536" ecmeta_series_index="0" ecmeta_data_index="36" ecmeta_ssr_type="chart" class="zr-cls-34"></path>
+<path d="M1 0A1 1 0 1 1 1 -0.01" transform="matrix(12.889,0,0,12.889,282.4975,266.0904)" fill="rgb(151,117,98)" fill-opacity="0.6332773124424536" ecmeta_series_index="0" ecmeta_data_index="37" ecmeta_ssr_type="chart" class="zr-cls-35"></path>
+<path d="M1 0A1 1 0 1 1 1 -0.01" transform="matrix(12.43,0,0,12.43,441.0898,291.4582)" fill="rgb(142,121,110)" fill-opacity="0.6332773124424536" ecmeta_series_index="0" ecmeta_data_index="38" ecmeta_ssr_type="chart" class="zr-cls-36"></path>
+<path d="M1 0A1 1 0 1 1 1 -0.1A1 1 0 0 1 1 0" transform="matrix(5.313,0,0,5.313,289.717,228.9368)" fill="rgb(165,110,81)" fill-opacity="0.6332773124424536" ecmeta_series_index="0" ecmeta_data_index="39" ecmeta_ssr_type="chart" class="zr-cls-37"></path>
+<path d="M1 0A1 1 0 1 1 1 -0.01" transform="matrix(12.396,0,0,12.396,253.8377,192.3398)" fill="rgb(178,103,64)" fill-opacity="0.6332773124424536" ecmeta_series_index="0" ecmeta_data_index="40" ecmeta_ssr_type="chart" class="zr-cls-38"></path>
+<path d="M1 0A1 1 0 1 1 1 -0.01" transform="matrix(13.32,0,0,13.32,462.7617,266.2437)" fill="rgb(151,117,99)" fill-opacity="0.6332773124424536" ecmeta_series_index="0" ecmeta_data_index="41" ecmeta_ssr_type="chart" class="zr-cls-39"></path>
+<path d="M1 0A1 1 0 1 1 1 -0.01" transform="matrix(11.701,0,0,11.701,248.7672,254.7458)" fill="rgb(155,115,93)" fill-opacity="0.6332773124424536" ecmeta_series_index="0" ecmeta_data_index="42" ecmeta_ssr_type="chart" class="zr-cls-40"></path>
+<path d="M1 0A1 1 0 1 1 1 -0.01" transform="matrix(12.443,0,0,12.443,411.8832,292.9428)" fill="rgb(141,121,111)" fill-opacity="0.6332773124424536" ecmeta_series_index="0" ecmeta_data_index="43" ecmeta_ssr_type="chart" class="zr-cls-41"></path>
+<path d="M1 0A1 1 0 1 1 1 -0.01" transform="matrix(13.622,0,0,13.622,288.7721,201.866)" fill="rgb(175,105,69)" fill-opacity="0.6332773124424536" ecmeta_series_index="0" ecmeta_data_index="44" ecmeta_ssr_type="chart" class="zr-cls-42"></path>
+<path d="M1 0A1 1 0 1 1 1 -0.01" transform="matrix(11.451,0,0,11.451,531.8695,220.6219)" fill="rgb(168,108,77)" fill-opacity="0.6332773124424536" ecmeta_series_index="0" ecmeta_data_index="45" ecmeta_ssr_type="chart" class="zr-cls-43"></path>
+<path d="M1 0A1 1 0 1 1 1 -0.1A1 1 0 0 1 1 0" transform="matrix(6.546,0,0,6.546,455.6136,312.5036)" fill="rgb(134,125,120)" fill-opacity="0.6332773124424536" ecmeta_series_index="0" ecmeta_data_index="46" ecmeta_ssr_type="chart" class="zr-cls-23"></path>
+<path d="M1 0A1 1 0 1 1 1 -0.1A1 1 0 0 1 1 0" transform="matrix(6.083,0,0,6.083,335.3189,180.8958)" fill="rgb(182,101,59)" fill-opacity="0.6332773124424536" ecmeta_series_index="0" ecmeta_data_index="47" ecmeta_ssr_type="chart" class="zr-cls-30"></path>
+<path d="M1 0A1 1 0 1 1 1 -0.01" transform="matrix(14.169,0,0,14.169,465.068,295.4301)" fill="rgb(140,122,112)" fill-opacity="0.6332773124424536" ecmeta_series_index="0" ecmeta_data_index="48" ecmeta_ssr_type="chart" class="zr-cls-44"></path>
+<path d="M1 0A1 1 0 1 1 1 -0.01" transform="matrix(13.359,0,0,13.359,424.8133,290.3656)" fill="rgb(142,121,110)" fill-opacity="0.6332773124424536" ecmeta_series_index="0" ecmeta_data_index="49" ecmeta_ssr_type="chart" class="zr-cls-36"></path>
+<path d="M1 0A1 1 0 1 1 1 -0.1A1 1 0 0 1 1 0" transform="matrix(7.714,0,0,7.714,252.4726,308.509)" fill="rgb(136,124,118)" fill-opacity="0.6332773124424536" ecmeta_series_index="0" ecmeta_data_index="50" ecmeta_ssr_type="chart" class="zr-cls-45"></path>
+<path d="M1 0A1 1 0 1 1 1 -0.01" transform="matrix(14.219,0,0,14.219,356.5106,296.4773)" fill="rgb(140,122,113)" fill-opacity="0.6332773124424536" ecmeta_series_index="0" ecmeta_data_index="51" ecmeta_ssr_type="chart" class="zr-cls-46"></path>
+<path d="M1 0A1 1 0 1 1 1 -0.01" transform="matrix(12.283,0,0,12.283,278.3055,259.9401)" fill="rgb(153,115,96)" fill-opacity="0.6332773124424536" ecmeta_series_index="0" ecmeta_data_index="52" ecmeta_ssr_type="chart" class="zr-cls-47"></path>
+<path d="M1 0A1 1 0 1 1 1 -0.01" transform="matrix(14.122,0,0,14.122,427.2869,221.8755)" fill="rgb(167,109,78)" fill-opacity="0.6332773124424536" ecmeta_series_index="0" ecmeta_data_index="53" ecmeta_ssr_type="chart" class="zr-cls-11"></path>
+<path d="M1 0A1 1 0 1 1 1 -0.01" transform="matrix(13.467,0,0,13.467,309.16,275.6279)" fill="rgb(148,118,103)" fill-opacity="0.6332773124424536" ecmeta_series_index="0" ecmeta_data_index="54" ecmeta_ssr_type="chart" class="zr-cls-48"></path>
+<path d="M1 0A1 1 0 1 1 1 -0.01" transform="matrix(12.402,0,0,12.402,353.7876,253.5014)" fill="rgb(156,114,93)" fill-opacity="0.6332773124424536" ecmeta_series_index="0" ecmeta_data_index="55" ecmeta_ssr_type="chart" class="zr-cls-3"></path>
+<path d="M1 0A1 1 0 1 1 1 -0.01" transform="matrix(11.969,0,0,11.969,245.2968,257.0617)" fill="rgb(154,115,94)" fill-opacity="0.6332773124424536" ecmeta_series_index="0" ecmeta_data_index="56" ecmeta_ssr_type="chart" class="zr-cls-4"></path>
+<path d="M1 0A1 1 0 1 1 1 -0.01" transform="matrix(11.207,0,0,11.207,275.0295,194.2992)" fill="rgb(177,104,65)" fill-opacity="0.6332773124424536" ecmeta_series_index="0" ecmeta_data_index="57" ecmeta_ssr_type="chart" class="zr-cls-8"></path>
+<path d="M1 0A1 1 0 1 1 1 -0.1A1 1 0 0 1 1 0" transform="matrix(5.887,0,0,5.887,393.2328,145.9922)" fill="rgb(195,95,43)" fill-opacity="0.6332773124424536" ecmeta_series_index="0" ecmeta_data_index="58" ecmeta_ssr_type="chart" class="zr-cls-49"></path>
+<path d="M1 0A1 1 0 1 1 1 -0.01" transform="matrix(10.527,0,0,10.527,270.9166,291.0935)" fill="rgb(142,121,110)" fill-opacity="0.6332773124424536" ecmeta_series_index="0" ecmeta_data_index="59" ecmeta_ssr_type="chart" class="zr-cls-36"></path>
+<path d="M-25.4 -18l188.8 0l0 73l-188.8 0Z" transform="translate(245.3352 68)" fill="rgb(0,0,0)" fill-opacity="0" stroke="#cfd2d7" stroke-width="0" class="zr-cls-0"></path>
+<text dominant-baseline="central" text-anchor="middle" style="font-size:12px;font-family:system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;" x="-2.0818995585505003e-15" y="34" transform="translate(245.3352 68)" fill="rgb(0,0,0)" fill-opacity="0.7">-2.0</text>
+<text dominant-baseline="central" text-anchor="middle" style="font-size:12px;font-family:system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;" x="140" y="34.00000000000001" transform="translate(245.3352 68)" fill="rgb(0,0,0)" fill-opacity="0.7">2.4</text>
+<g clip-path="url(#zr-c0)">
+<polygon points="0 0 20 0 20 140 0 140" transform="matrix(0,1,1,0,245.3352,68)" fill="url(#zr-g0)" class="zr-cls-50"></polygon>
+<polygon points="0 0 20 0 20 140 0 140" transform="matrix(0,1,1,0,245.3352,68)" fill="url(#zr-g1)" class="zr-cls-51"></polygon>
+</g>
+<path d="M12 0A2.9 2.9 0 0 1 9.1 2.9L-9.1 2.9A2.9 2.9 0 0 1 -12 0L-12 0A2.9 2.9 0 0 1 -9.1 -2.9L9.1 -2.9A2.9 2.9 0 0 1 12 0Z" transform="matrix(0,1,1,0,245.3352,78)" fill="rgb(128,128,128)" stroke="#fff" stroke-width="2" paint-order="stroke" class="zr-cls-29"></path>
+<path d="M12 0A2.9 2.9 0 0 1 9.1 2.9L-9.1 2.9A2.9 2.9 0 0 1 -12 0L-12 0A2.9 2.9 0 0 1 -9.1 -2.9L9.1 -2.9A2.9 2.9 0 0 1 12 0Z" transform="matrix(0,1,1,0,385.3352,78)" fill="rgb(197,94,40)" stroke="#fff" stroke-width="2" paint-order="stroke" class="zr-cls-28"></path>
+<text dominant-baseline="central" text-anchor="start" style="font-size:12px;font-family:system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;font-weight:bold;" y="6" transform="translate(219.9552 42)" fill="rgb(0,0,0)" fill-opacity="0.7">color</text>
+<defs >
+<clipPath id="zr-c0">
+<path d="M3 0L17 0A3 3 0 0 1 20 3L20 137A3 3 0 0 1 17 140L3 140A3 3 0 0 1 0 137L0 3A3 3 0 0 1 3 0Z" transform="matrix(0,1,1,0,245.3352,68)" fill="#000" class="zr-cls-52"></path>
+</clipPath>
+<linearGradient gradientUnits="objectBoundingBox" x1="0" y1="0" x2="0" y2="1" id="zr-g0">
+<stop offset="0%" stop-color="rgb(207,210,215)"></stop>
+<stop offset="1%" stop-color="rgb(207,210,215)"></stop>
+<stop offset="2%" stop-color="rgb(207,210,215)"></stop>
+<stop offset="3%" stop-color="rgb(207,210,215)"></stop>
+<stop offset="4%" stop-color="rgb(207,210,215)"></stop>
+<stop offset="5%" stop-color="rgb(207,210,215)"></stop>
+<stop offset="6%" stop-color="rgb(207,210,215)"></stop>
+<stop offset="7.000000000000001%" stop-color="rgb(207,210,215)"></stop>
+<stop offset="8%" stop-color="rgb(207,210,215)"></stop>
+<stop offset="9%" stop-color="rgb(207,210,215)"></stop>
+<stop offset="10%" stop-color="rgb(207,210,215)"></stop>
+<stop offset="11%" stop-color="rgb(207,210,215)"></stop>
+<stop offset="12%" stop-color="rgb(207,210,215)"></stop>
+<stop offset="13%" stop-color="rgb(207,210,215)"></stop>
+<stop offset="14.000000000000002%" stop-color="rgb(207,210,215)"></stop>
+<stop offset="15%" stop-color="rgb(207,210,215)"></stop>
+<stop offset="16%" stop-color="rgb(207,210,215)"></stop>
+<stop offset="17%" stop-color="rgb(207,210,215)"></stop>
+<stop offset="18%" stop-color="rgb(207,210,215)"></stop>
+<stop offset="19%" stop-color="rgb(207,210,215)"></stop>
+<stop offset="20%" stop-color="rgb(207,210,215)"></stop>
+<stop offset="21%" stop-color="rgb(207,210,215)"></stop>
+<stop offset="22%" stop-color="rgb(207,210,215)"></stop>
+<stop offset="23%" stop-color="rgb(207,210,215)"></stop>
+<stop offset="24%" stop-color="rgb(207,210,215)"></stop>
+<stop offset="25%" stop-color="rgb(207,210,215)"></stop>
+<stop offset="26%" stop-color="rgb(207,210,215)"></stop>
+<stop offset="27%" stop-color="rgb(207,210,215)"></stop>
+<stop offset="28.000000000000004%" stop-color="rgb(207,210,215)"></stop>
+<stop offset="28.999999999999996%" stop-color="rgb(207,210,215)"></stop>
+<stop offset="30%" stop-color="rgb(207,210,215)"></stop>
+<stop offset="31%" stop-color="rgb(207,210,215)"></stop>
+<stop offset="32%" stop-color="rgb(207,210,215)"></stop>
+<stop offset="33%" stop-color="rgb(207,210,215)"></stop>
+<stop offset="34%" stop-color="rgb(207,210,215)"></stop>
+<stop offset="35%" stop-color="rgb(207,210,215)"></stop>
+<stop offset="36%" stop-color="rgb(207,210,215)"></stop>
+<stop offset="37%" stop-color="rgb(207,210,215)"></stop>
+<stop offset="38%" stop-color="rgb(207,210,215)"></stop>
+<stop offset="39%" stop-color="rgb(207,210,215)"></stop>
+<stop offset="40%" stop-color="rgb(207,210,215)"></stop>
+<stop offset="41%" stop-color="rgb(207,210,215)"></stop>
+<stop offset="42%" stop-color="rgb(207,210,215)"></stop>
+<stop offset="43%" stop-color="rgb(207,210,215)"></stop>
+<stop offset="44%" stop-color="rgb(207,210,215)"></stop>
+<stop offset="45%" stop-color="rgb(207,210,215)"></stop>
+<stop offset="46%" stop-color="rgb(207,210,215)"></stop>
+<stop offset="47%" stop-color="rgb(207,210,215)"></stop>
+<stop offset="48%" stop-color="rgb(207,210,215)"></stop>
+<stop offset="49%" stop-color="rgb(207,210,215)"></stop>
+<stop offset="50%" stop-color="rgb(207,210,215)"></stop>
+<stop offset="51%" stop-color="rgb(207,210,215)"></stop>
+<stop offset="52%" stop-color="rgb(207,210,215)"></stop>
+<stop offset="53%" stop-color="rgb(207,210,215)"></stop>
+<stop offset="54%" stop-color="rgb(207,210,215)"></stop>
+<stop offset="55.00000000000001%" stop-color="rgb(207,210,215)"></stop>
+<stop offset="56.00000000000001%" stop-color="rgb(207,210,215)"></stop>
+<stop offset="56.99999999999999%" stop-color="rgb(207,210,215)"></stop>
+<stop offset="57.99999999999999%" stop-color="rgb(207,210,215)"></stop>
+<stop offset="59%" stop-color="rgb(207,210,215)"></stop>
+<stop offset="60%" stop-color="rgb(207,210,215)"></stop>
+<stop offset="61%" stop-color="rgb(207,210,215)"></stop>
+<stop offset="62%" stop-color="rgb(207,210,215)"></stop>
+<stop offset="63%" stop-color="rgb(207,210,215)"></stop>
+<stop offset="64%" stop-color="rgb(207,210,215)"></stop>
+<stop offset="65%" stop-color="rgb(207,210,215)"></stop>
+<stop offset="66%" stop-color="rgb(207,210,215)"></stop>
+<stop offset="67%" stop-color="rgb(207,210,215)"></stop>
+<stop offset="68%" stop-color="rgb(207,210,215)"></stop>
+<stop offset="69%" stop-color="rgb(207,210,215)"></stop>
+<stop offset="70%" stop-color="rgb(207,210,215)"></stop>
+<stop offset="71%" stop-color="rgb(207,210,215)"></stop>
+<stop offset="72%" stop-color="rgb(207,210,215)"></stop>
+<stop offset="73%" stop-color="rgb(207,210,215)"></stop>
+<stop offset="74%" stop-color="rgb(207,210,215)"></stop>
+<stop offset="75%" stop-color="rgb(207,210,215)"></stop>
+<stop offset="76%" stop-color="rgb(207,210,215)"></stop>
+<stop offset="77%" stop-color="rgb(207,210,215)"></stop>
+<stop offset="78%" stop-color="rgb(207,210,215)"></stop>
+<stop offset="79%" stop-color="rgb(207,210,215)"></stop>
+<stop offset="80%" stop-color="rgb(207,210,215)"></stop>
+<stop offset="81%" stop-color="rgb(207,210,215)"></stop>
+<stop offset="82%" stop-color="rgb(207,210,215)"></stop>
+<stop offset="83%" stop-color="rgb(207,210,215)"></stop>
+<stop offset="84%" stop-color="rgb(207,210,215)"></stop>
+<stop offset="85%" stop-color="rgb(207,210,215)"></stop>
+<stop offset="86%" stop-color="rgb(207,210,215)"></stop>
+<stop offset="87%" stop-color="rgb(207,210,215)"></stop>
+<stop offset="88%" stop-color="rgb(207,210,215)"></stop>
+<stop offset="89%" stop-color="rgb(207,210,215)"></stop>
+<stop offset="90%" stop-color="rgb(207,210,215)"></stop>
+<stop offset="91%" stop-color="rgb(207,210,215)"></stop>
+<stop offset="92%" stop-color="rgb(207,210,215)"></stop>
+<stop offset="93%" stop-color="rgb(207,210,215)"></stop>
+<stop offset="94%" stop-color="rgb(207,210,215)"></stop>
+<stop offset="95%" stop-color="rgb(207,210,215)"></stop>
+<stop offset="96%" stop-color="rgb(207,210,215)"></stop>
+<stop offset="97%" stop-color="rgb(207,210,215)"></stop>
+<stop offset="98%" stop-color="rgb(207,210,215)"></stop>
+<stop offset="99%" stop-color="rgb(207,210,215)"></stop>
+<stop offset="100%" stop-color="rgb(207,210,215)"></stop>
+</linearGradient>
+<linearGradient gradientUnits="objectBoundingBox" x1="0" y1="0" x2="0" y2="1" id="zr-g1">
+<stop offset="0%" stop-color="rgb(128,128,128)"></stop>
+<stop offset="1%" stop-color="rgb(129,128,127)"></stop>
+<stop offset="2%" stop-color="rgb(129,127,126)"></stop>
+<stop offset="3%" stop-color="rgb(130,127,125)"></stop>
+<stop offset="4%" stop-color="rgb(131,127,124)"></stop>
+<stop offset="5%" stop-color="rgb(131,126,124)"></stop>
+<stop offset="6%" stop-color="rgb(132,126,123)"></stop>
+<stop offset="7.000000000000001%" stop-color="rgb(133,126,122)"></stop>
+<stop offset="8%" stop-color="rgb(134,125,121)"></stop>
+<stop offset="9%" stop-color="rgb(134,125,120)"></stop>
+<stop offset="10%" stop-color="rgb(135,125,119)"></stop>
+<stop offset="11%" stop-color="rgb(136,124,118)"></stop>
+<stop offset="12%" stop-color="rgb(136,124,117)"></stop>
+<stop offset="13%" stop-color="rgb(137,124,117)"></stop>
+<stop offset="14.000000000000002%" stop-color="rgb(138,123,116)"></stop>
+<stop offset="15%" stop-color="rgb(138,123,115)"></stop>
+<stop offset="16%" stop-color="rgb(139,123,114)"></stop>
+<stop offset="17%" stop-color="rgb(140,122,113)"></stop>
+<stop offset="18%" stop-color="rgb(140,122,112)"></stop>
+<stop offset="19%" stop-color="rgb(141,122,111)"></stop>
+<stop offset="20%" stop-color="rgb(142,121,110)"></stop>
+<stop offset="21%" stop-color="rgb(142,121,110)"></stop>
+<stop offset="22%" stop-color="rgb(143,121,109)"></stop>
+<stop offset="23%" stop-color="rgb(144,120,108)"></stop>
+<stop offset="24%" stop-color="rgb(145,120,107)"></stop>
+<stop offset="25%" stop-color="rgb(145,120,106)"></stop>
+<stop offset="26%" stop-color="rgb(146,119,105)"></stop>
+<stop offset="27%" stop-color="rgb(147,119,104)"></stop>
+<stop offset="28.000000000000004%" stop-color="rgb(147,118,103)"></stop>
+<stop offset="28.999999999999996%" stop-color="rgb(148,118,102)"></stop>
+<stop offset="30%" stop-color="rgb(149,118,102)"></stop>
+<stop offset="31%" stop-color="rgb(149,117,101)"></stop>
+<stop offset="32%" stop-color="rgb(150,117,100)"></stop>
+<stop offset="33%" stop-color="rgb(151,117,99)"></stop>
+<stop offset="34%" stop-color="rgb(151,116,98)"></stop>
+<stop offset="35%" stop-color="rgb(152,116,97)"></stop>
+<stop offset="36%" stop-color="rgb(153,116,96)"></stop>
+<stop offset="37%" stop-color="rgb(154,115,95)"></stop>
+<stop offset="38%" stop-color="rgb(154,115,95)"></stop>
+<stop offset="39%" stop-color="rgb(155,115,94)"></stop>
+<stop offset="40%" stop-color="rgb(156,114,93)"></stop>
+<stop offset="41%" stop-color="rgb(156,114,92)"></stop>
+<stop offset="42%" stop-color="rgb(157,114,91)"></stop>
+<stop offset="43%" stop-color="rgb(158,113,90)"></stop>
+<stop offset="44%" stop-color="rgb(158,113,89)"></stop>
+<stop offset="45%" stop-color="rgb(159,113,88)"></stop>
+<stop offset="46%" stop-color="rgb(160,112,88)"></stop>
+<stop offset="47%" stop-color="rgb(160,112,87)"></stop>
+<stop offset="48%" stop-color="rgb(161,112,86)"></stop>
+<stop offset="49%" stop-color="rgb(162,111,85)"></stop>
+<stop offset="50%" stop-color="rgb(163,111,84)"></stop>
+<stop offset="51%" stop-color="rgb(163,111,83)"></stop>
+<stop offset="52%" stop-color="rgb(164,110,82)"></stop>
+<stop offset="53%" stop-color="rgb(165,110,81)"></stop>
+<stop offset="54%" stop-color="rgb(165,110,80)"></stop>
+<stop offset="55.00000000000001%" stop-color="rgb(166,109,80)"></stop>
+<stop offset="56.00000000000001%" stop-color="rgb(167,109,79)"></stop>
+<stop offset="56.99999999999999%" stop-color="rgb(167,109,78)"></stop>
+<stop offset="57.99999999999999%" stop-color="rgb(168,108,77)"></stop>
+<stop offset="59%" stop-color="rgb(169,108,76)"></stop>
+<stop offset="60%" stop-color="rgb(169,108,75)"></stop>
+<stop offset="61%" stop-color="rgb(170,107,74)"></stop>
+<stop offset="62%" stop-color="rgb(171,107,73)"></stop>
+<stop offset="63%" stop-color="rgb(171,107,73)"></stop>
+<stop offset="64%" stop-color="rgb(172,106,72)"></stop>
+<stop offset="65%" stop-color="rgb(173,106,71)"></stop>
+<stop offset="66%" stop-color="rgb(174,106,70)"></stop>
+<stop offset="67%" stop-color="rgb(174,105,69)"></stop>
+<stop offset="68%" stop-color="rgb(175,105,68)"></stop>
+<stop offset="69%" stop-color="rgb(176,105,67)"></stop>
+<stop offset="70%" stop-color="rgb(176,104,66)"></stop>
+<stop offset="71%" stop-color="rgb(177,104,66)"></stop>
+<stop offset="72%" stop-color="rgb(178,104,65)"></stop>
+<stop offset="73%" stop-color="rgb(178,103,64)"></stop>
+<stop offset="74%" stop-color="rgb(179,103,63)"></stop>
+<stop offset="75%" stop-color="rgb(180,103,62)"></stop>
+<stop offset="76%" stop-color="rgb(180,102,61)"></stop>
+<stop offset="77%" stop-color="rgb(181,102,60)"></stop>
+<stop offset="78%" stop-color="rgb(182,101,59)"></stop>
+<stop offset="79%" stop-color="rgb(183,101,58)"></stop>
+<stop offset="80%" stop-color="rgb(183,101,58)"></stop>
+<stop offset="81%" stop-color="rgb(184,100,57)"></stop>
+<stop offset="82%" stop-color="rgb(185,100,56)"></stop>
+<stop offset="83%" stop-color="rgb(185,100,55)"></stop>
+<stop offset="84%" stop-color="rgb(186,99,54)"></stop>
+<stop offset="85%" stop-color="rgb(187,99,53)"></stop>
+<stop offset="86%" stop-color="rgb(187,99,52)"></stop>
+<stop offset="87%" stop-color="rgb(188,98,51)"></stop>
+<stop offset="88%" stop-color="rgb(189,98,51)"></stop>
+<stop offset="89%" stop-color="rgb(189,98,50)"></stop>
+<stop offset="90%" stop-color="rgb(190,97,49)"></stop>
+<stop offset="91%" stop-color="rgb(191,97,48)"></stop>
+<stop offset="92%" stop-color="rgb(191,97,47)"></stop>
+<stop offset="93%" stop-color="rgb(192,96,46)"></stop>
+<stop offset="94%" stop-color="rgb(193,96,45)"></stop>
+<stop offset="95%" stop-color="rgb(194,96,44)"></stop>
+<stop offset="96%" stop-color="rgb(194,95,44)"></stop>
+<stop offset="97%" stop-color="rgb(195,95,43)"></stop>
+<stop offset="98%" stop-color="rgb(196,95,42)"></stop>
+<stop offset="99%" stop-color="rgb(196,94,41)"></stop>
+<stop offset="100%" stop-color="rgb(197,94,40)"></stop>
+</linearGradient>
+</defs>
+<style ><![CDATA[
+.zr-cls-0:hover {
+pointer-events:none;
+}
+.zr-cls-1:hover {
+cursor:pointer;
+fill:rgba(172,125,100,1);
+}
+.zr-cls-2:hover {
+cursor:pointer;
+fill:rgba(178,122,93,1);
+}
+.zr-cls-3:hover {
+cursor:pointer;
+fill:rgba(171,125,102,1);
+}
+.zr-cls-4:hover {
+cursor:pointer;
+fill:rgba(169,126,103,1);
+}
+.zr-cls-5:hover {
+cursor:pointer;
+fill:rgba(145,138,135,1);
+}
+.zr-cls-6:hover {
+cursor:pointer;
+fill:rgba(170,126,103,1);
+}
+.zr-cls-7:hover {
+cursor:pointer;
+fill:rgba(144,139,137,1);
+}
+.zr-cls-8:hover {
+cursor:pointer;
+fill:rgba(194,114,71,1);
+}
+.zr-cls-9:hover {
+cursor:pointer;
+fill:rgba(157,133,119,1);
+}
+.zr-cls-10:hover {
+cursor:pointer;
+fill:rgba(177,123,94,1);
+}
+.zr-cls-11:hover {
+cursor:pointer;
+fill:rgba(183,119,85,1);
+}
+.zr-cls-12:hover {
+cursor:pointer;
+fill:rgba(174,124,96,1);
+}
+.zr-cls-13:hover {
+cursor:pointer;
+fill:rgba(198,112,67,1);
+}
+.zr-cls-14:hover {
+cursor:pointer;
+fill:rgba(160,130,116,1);
+}
+.zr-cls-15:hover {
+cursor:pointer;
+fill:rgba(182,119,88,1);
+}
+.zr-cls-16:hover {
+cursor:pointer;
+fill:rgba(157,132,118,1);
+}
+.zr-cls-17:hover {
+cursor:pointer;
+fill:rgba(211,105,50,1);
+}
+.zr-cls-18:hover {
+cursor:pointer;
+fill:rgba(187,117,82,1);
+}
+.zr-cls-19:hover {
+cursor:pointer;
+fill:rgba(168,126,104,1);
+}
+.zr-cls-20:hover {
+cursor:pointer;
+fill:rgba(188,117,80,1);
+}
+.zr-cls-21:hover {
+cursor:pointer;
+fill:rgba(155,134,123,1);
+}
+.zr-cls-22:hover {
+cursor:pointer;
+fill:rgba(201,111,63,1);
+}
+.zr-cls-23:hover {
+cursor:pointer;
+fill:rgba(147,137,132,1);
+}
+.zr-cls-24:hover {
+cursor:pointer;
+fill:rgba(173,124,99,1);
+}
+.zr-cls-25:hover {
+cursor:pointer;
+fill:rgba(189,116,78,1);
+}
+.zr-cls-26:hover {
+cursor:pointer;
+fill:rgba(174,124,97,1);
+}
+.zr-cls-27:hover {
+cursor:pointer;
+fill:rgba(161,130,114,1);
+}
+.zr-cls-28:hover {
+cursor:pointer;
+fill:rgba(216,103,44,1);
+}
+.zr-cls-29:hover {
+cursor:pointer;
+fill:rgba(140,140,140,1);
+}
+.zr-cls-30:hover {
+cursor:pointer;
+fill:rgba(200,111,64,1);
+}
+.zr-cls-31:hover {
+cursor:pointer;
+fill:rgba(166,127,107,1);
+}
+.zr-cls-32:hover {
+cursor:pointer;
+fill:rgba(191,115,75,1);
+}
+.zr-cls-33:hover {
+cursor:pointer;
+fill:rgba(143,139,137,1);
+}
+.zr-cls-34:hover {
+cursor:pointer;
+fill:rgba(158,132,118,1);
+}
+.zr-cls-35:hover {
+cursor:pointer;
+fill:rgba(166,128,107,1);
+}
+.zr-cls-36:hover {
+cursor:pointer;
+fill:rgba(156,133,121,1);
+}
+.zr-cls-37:hover {
+cursor:pointer;
+fill:rgba(181,121,89,1);
+}
+.zr-cls-38:hover {
+cursor:pointer;
+fill:rgba(195,113,70,1);
+}
+.zr-cls-39:hover {
+cursor:pointer;
+fill:rgba(166,128,108,1);
+}
+.zr-cls-40:hover {
+cursor:pointer;
+fill:rgba(170,126,102,1);
+}
+.zr-cls-41:hover {
+cursor:pointer;
+fill:rgba(155,133,122,1);
+}
+.zr-cls-42:hover {
+cursor:pointer;
+fill:rgba(192,115,75,1);
+}
+.zr-cls-43:hover {
+cursor:pointer;
+fill:rgba(184,118,84,1);
+}
+.zr-cls-44:hover {
+cursor:pointer;
+fill:rgba(154,134,123,1);
+}
+.zr-cls-45:hover {
+cursor:pointer;
+fill:rgba(149,136,129,1);
+}
+.zr-cls-46:hover {
+cursor:pointer;
+fill:rgba(154,134,124,1);
+}
+.zr-cls-47:hover {
+cursor:pointer;
+fill:rgba(168,126,105,1);
+}
+.zr-cls-48:hover {
+cursor:pointer;
+fill:rgba(162,129,113,1);
+}
+.zr-cls-49:hover {
+cursor:pointer;
+fill:rgba(214,104,47,1);
+}
+.zr-cls-52:hover {
+cursor:pointer;
+fill:rgba(0,0,0,1);
+}
+.zr-cls-50:hover {
+cursor:pointer;
+fill:[object Object];
+}
+.zr-cls-51:hover {
+cursor:pointer;
+fill:[object Object];
+}
+
+]]>
+
+</style>
+</svg>

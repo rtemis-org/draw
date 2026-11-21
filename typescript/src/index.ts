@@ -39,10 +39,17 @@ export type {
   A3Appearance,
   A3ChartConfig,
   A3EChartsOption,
+  A3FitContext,
+  A3FitHints,
   A3PtmPlacement,
   A3SurfaceHints,
 } from "./charts/a3/index.ts";
-export { A3_CHART_CONFIG_MEMBERS, a3SurfaceHints, buildA3Option } from "./charts/a3/index.ts";
+export {
+  A3_CHART_CONFIG_MEMBERS,
+  a3SurfaceHints,
+  buildA3Option,
+  fitA3,
+} from "./charts/a3/index.ts";
 export type { BarAppearance, BarChartConfig } from "./charts/bar/index.ts";
 export { BAR_CHART_CONFIG_MEMBERS, buildBarOption } from "./charts/bar/index.ts";
 export type {
@@ -159,9 +166,14 @@ export {
   FUNNEL_CHART_CONFIG_MEMBERS,
   funnelStages,
 } from "./charts/funnel/index.ts";
-export type { GanttAppearance, GanttChartConfig } from "./charts/gantt/index.ts";
+export type {
+  GanttAppearance,
+  GanttChartConfig,
+  GanttFitContext,
+} from "./charts/gantt/index.ts";
 export {
   buildGanttOption,
+  fitGantt,
   GANTT_CHART_CONFIG_MEMBERS,
   GANTT_ROW_PX,
   ganttHeight,
@@ -234,6 +246,7 @@ export {
 export type { PieAppearance, PieChartConfig, PieSlice } from "./charts/pie/index.ts";
 export {
   buildPieOption,
+  fitPieLabels,
   labeledSums,
   PIE_CHART_CONFIG_MEMBERS,
   pieSlices,
@@ -248,6 +261,7 @@ export {
 export type { SankeyAppearance, SankeyChartConfig, SankeyLink } from "./charts/sankey/index.ts";
 export {
   buildSankeyOption,
+  fitSankey,
   SANKEY_CHART_CONFIG_MEMBERS,
   sankeyLinks,
 } from "./charts/sankey/index.ts";
@@ -329,6 +343,17 @@ export {
   hierarchyPalette,
   TREEMAP_CHART_CONFIG_MEMBERS,
 } from "./charts/treemap/index.ts";
+export type { AspectFitHint } from "./layout/aspect.ts";
+export { fitAspectAxes, fitAspectBox } from "./layout/aspect.ts";
+export { fitEndpointLabels } from "./layout/axes.ts";
+export type {
+  FitChart,
+  FitContext,
+  FitECharts,
+  FitHints,
+  FitResult,
+} from "./layout/fit.ts";
+export { FIT_EVENTS, fit, fitState } from "./layout/fit.ts";
 export type { KeyContext, KeyPlacement, KeyReserve, SizeKeySpec } from "./layout/keys.ts";
 export {
   fitKeys,
@@ -340,8 +365,17 @@ export {
   SIZE_KEY_ID,
   sizeKeyValues,
 } from "./layout/keys.ts";
+export type { LegendFitContext, LegendTitle } from "./layout/legend.ts";
+export {
+  drawLegendTitle,
+  LEGEND_TITLE_ID,
+  layoutLegend,
+  measureLegendTitle,
+} from "./layout/legend.ts";
 export type { LayoutRect, MeasuredLayout } from "./layout/measure.ts";
 export { measureLayout } from "./layout/measure.ts";
+export type { ColorScaleFitContext } from "./layout/scales.ts";
+export { centerColorScales, layoutColorScale } from "./layout/scales.ts";
 export { colorRamp, dark3, divergingRamp, hcl } from "./shared/color.ts";
 export type { ColormapName } from "./shared/colormaps.ts";
 export { COLORMAPS } from "./shared/colormaps.ts";

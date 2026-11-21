@@ -546,8 +546,8 @@
       "panel_widget.js"
     ],
     "md5": [
-      "c4ffb87d764ad6e92a6e83a7ce61e7a7",
-      "d35d723753c796470a8513968a8f15b2",
+      "da1b66e0f864dc0a27f8232297ba2eba",
+      "be28b58a666017f58b6a8e23dcf7ad7a",
       "ca5750ba961ca56c09b06a83ae32205e"
     ]
   },
@@ -589,6 +589,14 @@
     ],
     "md5": [
       "2080b6045638dbea3db73eceef431ab4"
+    ]
+  },
+  "rtemis-draw-builders-0.12.0": {
+    "scripts": [
+      "rtemis-draw-builders.js"
+    ],
+    "md5": [
+      "652806f0cec7ed1218157b273db3dae4"
     ]
   }
 }
