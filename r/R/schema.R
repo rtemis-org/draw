@@ -401,6 +401,10 @@ theme_schema <- function(id, complete = FALSE) {
       out[[nm]] <- writer_property(nullable = !complete)
       next
     }
+    if (identical(nm, "a3")) {
+      out[[nm]] <- a3_theme_schema(complete)
+      next
+    }
     out[[nm]] <- schema_property(prop_spec(properties[[nm]]))
   }
   list(
@@ -410,9 +414,9 @@ theme_schema <- function(id, complete = FALSE) {
     description = paste(
       "The tokens of a chart theme, which every rtemis.draw backend reads:",
       "fonts, text sizes and weights, surface and text colors, the categorical",
-      "palette, the sign colors, gridline style, and axis spacing, with an",
-      "ECharts theme patch. A record holds every token resolved, with its",
-      "origin."
+      "palette, the sign colors, gridline style, axis spacing, legend spacing,",
+      "and the annotation colors of A3 diagrams, with an ECharts theme patch.",
+      "A record holds every token resolved, with its origin."
     ),
     type = "object",
     `x-rtemis` = list(
@@ -432,6 +436,42 @@ theme_schema <- function(id, complete = FALSE) {
     additionalProperties = FALSE
   )
 } # /rtemis.draw::theme_schema
+
+
+# %% a3_theme_schema ----
+#' JSON Schema fragment for a theme's `a3` member
+#'
+#' A closed object with one entry per [A3Theme] member; an absent `a3` is the
+#' scheme's A3 colors. The record form requires every member, each set.
+#'
+#' @param complete Logical: If TRUE, the record form.
+#'
+#' @return Named list: JSON Schema fragment.
+#'
+#' @author EDG
+#' @keywords internal
+#' @noRd
+a3_theme_schema <- function(complete = FALSE) {
+  properties <- A3Theme@properties
+  members <- lapply(properties, function(property) {
+    spec <- prop_spec(property)
+    spec[["nullable"]] <- !complete
+    schema_property(spec)
+  })
+  out <- list(
+    type = "object",
+    description = paste(
+      "The annotation colors of A3 diagrams; an unset member is that of the",
+      "theme's scheme."
+    ),
+    properties = members,
+    additionalProperties = FALSE
+  )
+  if (complete) {
+    out[["required"]] <- I(names(members))
+  }
+  out
+} # /rtemis.draw::a3_theme_schema
 
 
 # %% chart_type_of ----

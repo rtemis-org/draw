@@ -23,8 +23,7 @@
   },
   "yAxis": {
     "type": "value",
-    "name": "Generation (GWh)",
-    "nameLocation": "middle"
+    "name": "Generation (GWh)"
   },
   "grid": {
     "top": 36,

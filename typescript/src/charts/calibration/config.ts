@@ -1,6 +1,13 @@
 import { ddSci } from "../../shared/format.ts";
 import type { LegendMembers } from "../../shared/legend.ts";
 import { asArray, type ColumnNames } from "../../shared/source.ts";
+import { SIGN_COLORS } from "../../theme/tokens.ts";
+
+/** The host's input to the calibration builder beyond the data and config. */
+export interface CalibrationAppearance {
+  /** The theme's neutral color (`neutral_color`); unset is rtemis.draw's, `SIGN_COLORS.neutral`. */
+  readonly neutral?: string;
+}
 
 /**
  * An instance of the `chart/calibration/v1` schema, written by rtemis.draw's
@@ -35,7 +42,7 @@ export interface CalibrationChartConfig extends LegendMembers {
   readonly digits?: number;
   /** Draw the perfect-calibration diagonal. Default `true`. */
   readonly diagonal?: boolean;
-  /** Diagonal color. Default `"#888888"`. */
+  /** Diagonal color; unset is the theme's neutral color. */
   readonly diagonal_color?: string;
   /** Group colors; unset uses the theme palette. */
   readonly palette?: ColumnNames | null;
@@ -132,6 +139,7 @@ const TOOLTIP_DIMENSIONS = [
 export function buildCalibrationOption(
   data: CalibrationData,
   config: CalibrationChartConfig,
+  appearance: CalibrationAppearance = {},
 ): Record<string, unknown> {
   const digits = config.digits ?? 3;
   const fmt = (x: number) => ddSci(x, digits);
@@ -143,7 +151,7 @@ export function buildCalibrationOption(
   );
   const series: Record<string, unknown>[] = [];
   if (config.diagonal ?? true) {
-    const diagonal = config.diagonal_color ?? "#888888";
+    const diagonal = config.diagonal_color ?? appearance.neutral ?? SIGN_COLORS.neutral;
     series.push({
       data: [
         [0, 0],
@@ -227,7 +235,6 @@ export function buildCalibrationOption(
       show: config.legend ?? true,
       orient: "horizontal",
       padding: 0,
-      textStyle: { fontSize: 12, lineHeight: 14 },
       itemStyle: { opacity: 1 },
       data: labels,
     },
@@ -242,7 +249,6 @@ export function buildCalibrationOption(
     xAxis: {
       type: "value",
       name: config.xlab ?? "Mean predicted probability",
-      nameLocation: "middle",
       nameGap: 30,
       min: 0,
       max: 1,
@@ -250,7 +256,6 @@ export function buildCalibrationOption(
     yAxis: {
       type: "value",
       name: config.ylab ?? "Observed proportion",
-      nameLocation: "middle",
       nameGap: 45,
       min: 0,
       max: 1,

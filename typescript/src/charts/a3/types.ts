@@ -1,49 +1,10 @@
 import type { A3Data } from "@rtemis/a3";
+import type { A3ThemeTokens } from "../../theme/tokens.ts";
 
 /**
  * Supported PTM placement strategies for renderer overlays.
  */
 export type A3PtmPlacement = "outerRadial" | "innerRadial" | "radial";
-
-/**
- * Shared visual theme values used by all renderers.
- */
-export interface A3VisualizationTheme {
-  /** @deprecated Use `annotationFontFamily` and `legendFontFamily` instead. */
-  readonly fontFamily?: string;
-  /** Font family used for residue labels and numeric position annotations. */
-  readonly annotationFontFamily: string;
-  /** Font family used for titles and legends. */
-  readonly legendFontFamily: string;
-  /** Background color outside the plot area. */
-  readonly backgroundColor: string;
-  /** Background color inside the plot area. */
-  readonly plotBackgroundColor: string;
-  /** Primary residue marker fill. */
-  readonly residueFillColor: string;
-  /** Primary residue marker stroke and backbone line color. */
-  readonly residueStrokeColor: string;
-  /** Default residue text color. */
-  readonly labelColor: string;
-  /** Color used for numeric position labels. */
-  readonly positionLabelColor: string;
-  /** Legend text color. */
-  readonly legendColor: string;
-  /** Grid line color for value axes. */
-  readonly gridColor: string;
-  /** Variant label highlight color. */
-  readonly variantColor: string;
-  /** Disease-associated variant highlight color. */
-  readonly diseaseVariantColor: string;
-  /** Colors recycled for region overlays. */
-  readonly regionPalette: readonly string[];
-  /** Colors recycled for site overlays. */
-  readonly sitePalette: readonly string[];
-  /** Colors recycled for PTM overlays. */
-  readonly ptmPalette: readonly string[];
-  /** Colors recycled for processing annotation overlays. */
-  readonly processingPalette: readonly string[];
-}
 
 /**
  * High-level options shared across all renderers.
@@ -93,8 +54,8 @@ export interface A3VisualizationOptions {
   readonly animationDurationUpdate?: number;
   /** Optional extra positions to treat as disease-associated variants. */
   readonly diseaseVariants?: readonly number[];
-  /** Partial theme overrides. */
-  readonly theme?: Partial<A3VisualizationTheme>;
+  /** The A3 annotation colors; unset is those of the light theme. */
+  readonly theme?: A3ThemeTokens;
 }
 
 /**
@@ -150,7 +111,6 @@ export interface A3EChartsSeries {
  * Minimal option object consumed by Apache ECharts.
  */
 export interface A3EChartsOption {
-  readonly backgroundColor: string;
   readonly animation?: boolean;
   readonly animationDuration?: number;
   readonly animationDurationUpdate?: number;

@@ -3,7 +3,7 @@ import { axisZoom, cartesianGrid, type MarginMembers } from "../../shared/layout
 import type { LegendMembers } from "../../shared/legend.ts";
 import { type AxisLimits, calcLimits } from "../../shared/limits.ts";
 import { asArray, type ColumnNames } from "../../shared/source.ts";
-import { RTEMIS_PALETTE } from "../../theme/tokens.ts";
+import { RTEMIS_PALETTE, SIGN_COLORS } from "../../theme/tokens.ts";
 import {
   BOXPLOT_BRACKETS,
   BOXPLOT_MEAN,
@@ -203,6 +203,8 @@ export interface BoxplotAppearance {
   readonly palette?: readonly string[];
   /** Animate the first render and updates; unset leaves the ECharts default. */
   readonly animation?: boolean;
+  /** The theme's neutral color (`neutral_color`); unset is rtemis.draw's, `SIGN_COLORS.neutral`. */
+  readonly neutral?: string;
 }
 
 interface BoxSeries {
@@ -269,6 +271,7 @@ export function buildBoxplotOption(
   }
 
   const memberPalette = asArray(config.palette);
+  const neutral = appearance.neutral ?? SIGN_COLORS.neutral;
   const palette = memberPalette.length > 0 ? memberPalette : (appearance.palette ?? RTEMIS_PALETTE);
   const single = series.length === 1;
   // One series is one color, unless its boxes are colored by category: on
@@ -443,7 +446,7 @@ export function buildBoxplotOption(
           alpha: config.pair_alpha ?? 0.35,
           width: config.pair_width ?? 1,
         },
-        itemStyle: { color: s.name === null ? NEUTRAL : colorOf(si, 0) },
+        itemStyle: { color: s.name === null ? neutral : colorOf(si, 0) },
         data: pairs,
       });
     }
@@ -462,6 +465,8 @@ export function buildBoxplotOption(
     layers.push({
       type: "custom",
       renderItem: BOXPLOT_BRACKETS,
+      // The renderer draws the brackets and their labels in the series color.
+      itemStyle: { color: neutral },
       silent: true,
       clip: true,
       z: 4,
@@ -493,8 +498,8 @@ export function buildBoxplotOption(
   };
   const xAxis = horizontal ? valueAxis : categoryAxis;
   const yAxis = horizontal ? categoryAxis : valueAxis;
-  if (config.xlab) Object.assign(xAxis, { name: config.xlab, nameLocation: "middle" });
-  if (config.ylab) Object.assign(yAxis, { name: config.ylab, nameLocation: "middle" });
+  if (config.xlab) Object.assign(xAxis, { name: config.xlab });
+  if (config.ylab) Object.assign(yAxis, { name: config.ylab });
 
   const grid = cartesianGrid(config, Boolean(config.xlab || config.ylab));
   const dataZoom = config.zoom ? axisZoom(horizontal ? "y" : "x", grid) : undefined;
@@ -522,7 +527,6 @@ export function buildBoxplotOption(
 
 // Paired lines of one series take a neutral gray, so they read as links
 // rather than as a group.
-const NEUTRAL = "#888888";
 
 /**
  * Deterministic offsets in `[-0.5, 0.5)`: the base-two radical inverse of a

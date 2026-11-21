@@ -1,13 +1,8 @@
 import type { A3Data } from "@rtemis/a3";
+import { type A3ThemeTokens, a3ThemeTokens } from "../../theme/tokens.ts";
 import { createA3EChartsOption } from "./echarts.ts";
 import { createA3LayoutModel, resolveA3VisualizationHeight } from "./layout.ts";
-import { DARK_A3_VISUALIZATION_THEME } from "./palette.ts";
-import type {
-  A3EChartsOption,
-  A3PtmPlacement,
-  A3VisualizationOptions,
-  A3VisualizationTheme,
-} from "./types.ts";
+import type { A3EChartsOption, A3PtmPlacement, A3VisualizationOptions } from "./types.ts";
 
 /**
  * An instance of the `chart/a3/v1` schema, written by rtemis.draw's `A3Config`
@@ -43,17 +38,17 @@ export interface A3ChartConfig {
   readonly position_label_gap?: number;
   /** Region band opacity in [0, 1]. Default 0.3. */
   readonly region_opacity?: number;
-  /** Residue marker fill; `null` selects the theme color. */
+  /** Residue marker fill; `null` selects the theme's A3 color. */
   readonly residue_fill?: string | null;
-  /** Residue marker outline; `null` selects the theme color. */
+  /** Residue marker outline; `null` selects the theme's A3 color. */
   readonly residue_stroke?: string | null;
-  /** Residue label color; `null` selects the theme color. */
+  /** Residue label color; `null` selects the theme's A3 color. */
   readonly label_color?: string | null;
-  /** Position label color; `null` selects the theme color. */
+  /** Position label color; `null` selects the theme's A3 color. */
   readonly pos_label_color?: string | null;
-  /** Variant label color; `null` selects the theme color. */
+  /** Variant label color; `null` selects the theme's A3 color. */
   readonly variant_color?: string | null;
-  /** Disease-associated variant label color; `null` selects the theme color. */
+  /** Disease-associated variant label color; `null` selects the theme's A3 color. */
   readonly disease_variant_color?: string | null;
   /** Chart title. */
   readonly title?: string | null;
@@ -90,15 +85,15 @@ const _everyMember: MissingMember extends never ? true : never = true;
 void _everyMember;
 
 /**
- * Appearance shared by every chart type, and the light or dark theme. The
- * defaults equal rtemislive's A3 defaults until the appearance contract is
- * reconciled across chart types (spec: draw/shared-builders/notes#inputs-that-are-not-the-chart-config).
+ * The host's input to the A3 builder: the theme's scheme and A3 colors, and
+ * the legend and title placement. Fonts, the legend's and title's text, and
+ * the background come from the registered theme.
  */
 export interface A3Appearance {
   /** Select the dark theme. Default `false`. */
   readonly dark?: boolean;
-  /** Font family for residue labels, titles, and the legend. */
-  readonly fontFamily?: string;
+  /** The theme's A3 colors (`a3` of the theme document); unset members are the scheme's. */
+  readonly a3?: Partial<A3ThemeTokens> | null;
   /** Vertical inset of the title in pixels. */
   readonly titleTop?: number;
   /** Gap in pixels between the plot and the legend rail. Default 90. */
@@ -163,22 +158,19 @@ function visualizationOptions(
   config: A3ChartConfig,
   appearance: A3Appearance,
 ): A3VisualizationOptions {
-  const dark = appearance.dark ?? false;
-  const base: Partial<A3VisualizationTheme> = dark ? DARK_A3_VISUALIZATION_THEME : {};
-  const theme: Partial<A3VisualizationTheme> = {
-    ...base,
-    ...(appearance.fontFamily
-      ? {
-          annotationFontFamily: appearance.fontFamily,
-          legendFontFamily: appearance.fontFamily,
-        }
-      : {}),
-    ...colorOverride("residueStrokeColor", config.residue_stroke),
-    ...colorOverride("labelColor", config.label_color),
-    ...colorOverride("positionLabelColor", config.pos_label_color),
-    ...colorOverride("variantColor", config.variant_color),
-    ...colorOverride("diseaseVariantColor", config.disease_variant_color),
-  };
+  const a3 = a3ThemeTokens(appearance.dark ? "dark" : "light", appearance.a3);
+  // A config's color member replaces the theme's.
+  const theme: A3ThemeTokens = Object.freeze({
+    ...a3,
+    ...present({
+      residue_fill_color: config.residue_fill,
+      residue_stroke_color: config.residue_stroke,
+      label_color: config.label_color,
+      position_label_color: config.pos_label_color,
+      variant_color: config.variant_color,
+      disease_variant_color: config.disease_variant_color,
+    }),
+  });
   return {
     nPerRow: config.n_per_row ?? 21,
     residueSpacing: config.residue_spacing ?? 0.3,
@@ -190,7 +182,7 @@ function visualizationOptions(
     lineWidth: config.line_width ?? 2,
     annotationGap: config.annotation_gap ?? 16,
     positionLabelGap: config.position_label_gap ?? 16,
-    markerColor: config.residue_fill ?? (dark ? "#181818" : "#efefef"),
+    markerColor: theme.residue_fill_color,
     regionOpacity: config.region_opacity ?? 0.3,
     ptmPlacement: config.ptm_placement ?? "radial",
     legendGap: appearance.legendGap ?? 90,
@@ -221,9 +213,8 @@ const A3_ZOOM: readonly Record<string, unknown>[] = Object.freeze([
   },
 ]);
 
-function colorOverride(
-  key: keyof A3VisualizationTheme,
-  value: string | null | undefined,
-): Partial<A3VisualizationTheme> {
-  return value ? { [key]: value } : {};
+function present(entries: Record<string, string | null | undefined>): Record<string, string> {
+  return Object.fromEntries(
+    Object.entries(entries).filter((e): e is [string, string] => Boolean(e[1])),
+  );
 }

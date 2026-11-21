@@ -1,4 +1,9 @@
-export type { RollFn, RollingMembers, TimeSeriesChartConfig } from "./config.ts";
+export type {
+  RollFn,
+  RollingMembers,
+  TimeSeriesAppearance,
+  TimeSeriesChartConfig,
+} from "./config.ts";
 export {
   axisTooltip,
   buildTimeSeriesOption,

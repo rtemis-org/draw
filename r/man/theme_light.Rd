@@ -35,6 +35,8 @@ theme_light(
   axis_name_location = "middle",
   axis_line_show = NULL,
   color_scale_font_size = NULL,
+  legend_item_gap = NULL,
+  a3 = NULL,
   echarts = NULL
 )
 }
@@ -95,6 +97,14 @@ ECharts' default for each axis type.}
 
 \item{color_scale_font_size}{Optional Numeric \verb{(0, Inf)}: Text size in
 pixels of color scale labels. \code{NULL} uses \code{base_font_size}.}
+
+\item{legend_item_gap}{Optional Numeric \verb{[0, Inf)}: Gap between legend
+items, in em of the legend font size. \code{NULL} uses the ECharts default, 10
+pixels.}
+
+\item{a3}{Optional \link{A3Theme}: The annotation colors of A3 diagrams. \code{NULL}
+uses those of the theme's scheme; \code{\link[=theme_light]{theme_light()}} and \code{\link[=theme_dark]{theme_dark()}} fill
+each \code{NULL} member from their scheme.}
 
 \item{echarts}{Optional Named list: ECharts theme-object patch, merged over
 the projection of the tokens: objects merge recursively, any other value

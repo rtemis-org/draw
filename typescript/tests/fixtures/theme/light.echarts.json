@@ -42,6 +42,14 @@
       "fontSize": 12
     }
   },
+  "axisPointer": {
+    "lineStyle": {
+      "color": "#808080"
+    },
+    "label": {
+      "backgroundColor": "#808080"
+    }
+  },
   "tooltip": {
     "textStyle": {
       "color": "rgba(0, 0, 0, 0.7)",
@@ -142,6 +150,74 @@
     },
     "axisTick": {
       "show": false
+    }
+  },
+  "valueAxis3D": {
+    "axisLabel": {
+      "fontSize": 12,
+      "color": "rgba(0, 0, 0, 0.7)",
+      "fontFamily": "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
+    },
+    "nameTextStyle": {
+      "color": "rgba(0, 0, 0, 0.7)",
+      "fontFamily": "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+      "fontSize": 12
+    },
+    "axisLine": {
+      "lineStyle": {
+        "color": "#808080"
+      }
+    }
+  },
+  "categoryAxis3D": {
+    "axisLabel": {
+      "fontSize": 12,
+      "color": "rgba(0, 0, 0, 0.7)",
+      "fontFamily": "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
+    },
+    "nameTextStyle": {
+      "color": "rgba(0, 0, 0, 0.7)",
+      "fontFamily": "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+      "fontSize": 12
+    },
+    "axisLine": {
+      "lineStyle": {
+        "color": "#808080"
+      }
+    }
+  },
+  "logAxis3D": {
+    "axisLabel": {
+      "fontSize": 12,
+      "color": "rgba(0, 0, 0, 0.7)",
+      "fontFamily": "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
+    },
+    "nameTextStyle": {
+      "color": "rgba(0, 0, 0, 0.7)",
+      "fontFamily": "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+      "fontSize": 12
+    },
+    "axisLine": {
+      "lineStyle": {
+        "color": "#808080"
+      }
+    }
+  },
+  "timeAxis3D": {
+    "axisLabel": {
+      "fontSize": 12,
+      "color": "rgba(0, 0, 0, 0.7)",
+      "fontFamily": "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
+    },
+    "nameTextStyle": {
+      "color": "rgba(0, 0, 0, 0.7)",
+      "fontFamily": "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+      "fontSize": 12
+    },
+    "axisLine": {
+      "lineStyle": {
+        "color": "#808080"
+      }
     }
   }
 }

@@ -371,7 +371,7 @@ export function buildSignificanceOption(
         silent: true,
         animation: false,
         symbol: "none",
-        lineStyle: { color: "#888888", type: "dashed", width: 1 },
+        lineStyle: { color: sign.neutral, type: "dashed", width: 1 },
         data: refs,
       },
     });
@@ -436,13 +436,12 @@ export function buildSignificanceOption(
           },
         }
       : {}),
-    ...(legend ? { legend: { data: shown.map((g) => names[g]), bottom: 0, itemGap: 20 } } : {}),
+    ...(legend ? { legend: { data: shown.map((g) => names[g]), bottom: 0 } } : {}),
     tooltip: { trigger: "item" },
     xAxis: volcano
       ? {
           type: "value",
           ...(xlab ? { name: xlab } : {}),
-          nameLocation: "middle",
           scale: true,
           splitLine,
           ...(xRange ? { min: xRange[0], max: xRange[1] } : {}),
@@ -450,14 +449,12 @@ export function buildSignificanceOption(
       : {
           type: "category",
           ...(xlab ? { name: xlab } : {}),
-          nameLocation: "middle",
           data: [...data.label],
           ...(dense ? { axisLabel: { show: false }, axisTick: { show: false } } : {}),
         },
     yAxis: {
       type: "value",
       ...(ylab ? { name: ylab } : {}),
-      nameLocation: "middle",
       splitLine,
       ...(yRange ? { min: yRange[0], max: yRange[1] } : {}),
     },

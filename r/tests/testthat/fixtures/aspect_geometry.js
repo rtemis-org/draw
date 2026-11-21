@@ -3,9 +3,11 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const payload = JSON.parse(fs.readFileSync(process.argv[2], 'utf8'));
 const echarts = require(payload.echarts);
+// The widget projects a theme document with the builders' `themeObject()`.
+const themeOf = (doc) => doc && typeof doc === 'object' ? require(require('node:path').join(require('node:path').dirname(payload.echarts), '..', 'draw', 'rtemis-draw-builders.js')).themeObject(doc) : doc || null;
 const layout = require(payload.layout);
 for (const original of payload.charts) {
-  const chart = echarts.init(null, original.theme, {
+  const chart = echarts.init(null, themeOf(original.theme), {
     renderer: 'svg', ssr: true, width: 800, height: 500
   });
   try {

@@ -20,7 +20,7 @@ setup_CalibrationConfig(
   line_width = 2,
   digits = 3L,
   diagonal = TRUE,
-  diagonal_color = "#888888",
+  diagonal_color = NULL,
   palette = NULL,
   legend = TRUE,
   legend_position = "top",
@@ -67,7 +67,8 @@ scores, written as \code{\link[rtemis.core:ddSci]{rtemis.core::ddSci()}} writes 
 
 \item{diagonal}{Logical: Show an independent chance diagonal.}
 
-\item{diagonal_color}{Character: Chance-line color.}
+\item{diagonal_color}{Optional Character: Chance-line color. \code{NULL} uses the
+theme's neutral color.}
 
 \item{palette}{Optional Character: Group colors; unset uses the chart theme.}
 

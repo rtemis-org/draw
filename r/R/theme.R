@@ -39,6 +39,180 @@ theme_size_property <- function(description) {
   prop_float(nullable = TRUE, exclusive_min = 0, description = description)
 }
 
+# The palettes A3 diagrams recycle in both schemes.
+A3_PALETTES <- list(
+  region_palette = c(
+    "#0F766E",
+    "#2563EB",
+    "#D97706",
+    "#7C3AED",
+    "#DC2626",
+    "#0891B2"
+  ),
+  site_palette = c(
+    "#0EA5E9",
+    "#14B8A6",
+    "#E11D48",
+    "#A855F7",
+    "#F97316",
+    "#16A34A"
+  ),
+  ptm_palette = c(
+    "#0284C7",
+    "#F59E0B",
+    "#10B981",
+    "#8B5CF6",
+    "#EF4444",
+    "#14B8A6"
+  ),
+  processing_palette = c(
+    "#D97706",
+    "#DC2626",
+    "#0EA5E9",
+    "#9333EA",
+    "#16A34A",
+    "#DB2777"
+  )
+)
+
+# The A3 tokens of the light and dark themes, as `A3_THEME_TOKENS` in
+# @rtemis/draw `src/theme/tokens.ts`.
+A3_THEME_DEFAULTS <- list(
+  light = c(
+    A3_PALETTES,
+    list(
+      residue_fill_color = "#efefef",
+      residue_stroke_color = "#44403C",
+      label_color = "#1C1917",
+      position_label_color = "#78716C",
+      variant_color = "#FA6E1E",
+      disease_variant_color = "#E266AE"
+    )
+  ),
+  dark = c(
+    A3_PALETTES,
+    list(
+      residue_fill_color = "#181818",
+      residue_stroke_color = "#a1a1aa",
+      label_color = "#fafafa",
+      position_label_color = "#a1a1aa",
+      variant_color = "#fb923c",
+      disease_variant_color = "#f472b6"
+    )
+  )
+)
+
+#' A3 Theme
+#'
+#' The annotation colors of A3 diagrams in a [Theme]: the palettes recycled for
+#' regions, sites, post-translational modifications, and processing
+#' annotations, and the colors of residue markers, labels (residue and
+#' position), and variants. A `NULL` member takes the value of the theme's scheme, set by
+#' [theme_light()] and [theme_dark()]. An [A3Config] color member replaces the
+#' theme's.
+#'
+#' Corresponds to `A3ThemeTokens` in `@rtemis/draw` `src/theme/tokens.ts`.
+#'
+#' @param region_palette,site_palette,ptm_palette,processing_palette Optional
+#'   Character: Colors recycled for regions, sites, modifications, and
+#'   processing annotations.
+#' @param residue_fill_color Optional Character: Residue marker fill.
+#' @param residue_stroke_color Optional Character: Residue marker outline and
+#'   backbone line.
+#' @param label_color Optional Character: Residue label color.
+#' @param position_label_color Optional Character: Position label color.
+#' @param variant_color Optional Character: Variant label color.
+#' @param disease_variant_color Optional Character: Disease-associated variant
+#'   label color.
+#'
+#' @return `A3Theme` object.
+#'
+#' @author EDG
+#' @export
+#'
+#' @examples
+#' theme_light(a3 = A3Theme(variant_color = "#d62728"))
+A3Theme <- S7::new_class(
+  "A3Theme",
+  properties = list(
+    region_palette = prop_string(
+      nullable = TRUE,
+      vector = TRUE,
+      description = "Colors recycled for regions."
+    ),
+    site_palette = prop_string(
+      nullable = TRUE,
+      vector = TRUE,
+      description = "Colors recycled for sites."
+    ),
+    ptm_palette = prop_string(
+      nullable = TRUE,
+      vector = TRUE,
+      description = "Colors recycled for post-translational modifications."
+    ),
+    processing_palette = prop_string(
+      nullable = TRUE,
+      vector = TRUE,
+      description = "Colors recycled for processing annotations."
+    ),
+    residue_fill_color = theme_color_property(
+      description = "Residue marker fill."
+    ),
+    residue_stroke_color = theme_color_property(
+      description = "Residue marker outline and backbone line."
+    ),
+    label_color = theme_color_property(description = "Residue label color."),
+    position_label_color = theme_color_property(
+      description = "Position label color."
+    ),
+    variant_color = theme_color_property(description = "Variant label color."),
+    disease_variant_color = theme_color_property(
+      description = "Disease-associated variant label color."
+    )
+  )
+)
+
+#' The token list of an A3 theme
+#'
+#' Every set member, the palettes as `AsIs` vectors so that a one-color palette
+#' serializes as a JSON array.
+#'
+#' @param x `A3Theme` object.
+#' @param ... Not used.
+#' @return Named list.
+#' @keywords internal
+#' @noRd
+S7::method(to_list, A3Theme) <- function(x, ...) {
+  out <- lapply(
+    stats::setNames(nm = S7::prop_names(x)),
+    function(name) S7::prop(x, name)
+  )
+  out <- out[!vapply(out, is.null, logical(1L))]
+  for (name in intersect(names(out), names(A3_PALETTES))) {
+    out[[name]] <- I(out[[name]])
+  }
+  out
+}
+
+#' The A3 theme of a scheme
+#'
+#' Each `NULL` member of `a3` set to the value of the light or dark theme. A
+#' port of `a3ThemeTokens()` in `@rtemis/draw`.
+#'
+#' @param scheme Character \{"light", "dark"\}: The theme's scheme.
+#' @param a3 Optional `A3Theme` object.
+#' @return `A3Theme` object with every member set.
+#' @keywords internal
+#' @noRd
+a3_theme_tokens <- function(scheme, a3 = NULL) {
+  defaults <- A3_THEME_DEFAULTS[[
+    if (identical(scheme, "dark")) "dark" else "light"
+  ]]
+  set <- if (is.null(a3)) list() else to_list(a3)
+  set <- lapply(set, unclass)
+  do.call(A3Theme, utils::modifyList(defaults, set))
+}
+
 #' Theme
 #'
 #' The tokens of a chart theme, which every backend reads: fonts, text sizes,
@@ -92,6 +266,12 @@ theme_size_property <- function(description) {
 #'   labels. `NULL` uses ECharts' default.
 #' @param axis_name_location Optional Character \{"start", "middle", "end"\}:
 #'   Where every axis name sits along its axis. `NULL` leaves it to each chart.
+#' @param legend_item_gap Optional Numeric `[0, Inf)`: Gap between legend
+#'   items, in em of the legend font size. `NULL` uses the ECharts default, 10
+#'   pixels.
+#' @param a3 Optional [A3Theme]: The annotation colors of A3 diagrams. `NULL`
+#'   uses those of the theme's scheme; [theme_light()] and [theme_dark()] fill
+#'   each `NULL` member from their scheme.
 #' @param axis_line_show Optional Logical: Whether axis lines show. `NULL` uses
 #'   ECharts' default for each axis type.
 #' @param echarts Optional Named list: ECharts theme-object patch, merged over
@@ -210,6 +390,12 @@ Theme <- S7::new_class(
       nullable = TRUE,
       description = "Whether axis lines show."
     ),
+    legend_item_gap = prop_float(
+      nullable = TRUE,
+      min = 0,
+      description = "Gap between legend items, in em of the legend font size."
+    ),
+    a3 = class_or_null_property(A3Theme),
     echarts = prop_bag(
       nullable = TRUE,
       description = "ECharts theme-object patch merged over the projection."
@@ -287,6 +473,8 @@ Theme <- S7::new_class(
     axis_name_gap = NULL,
     axis_name_location = NULL,
     axis_line_show = NULL,
+    legend_item_gap = NULL,
+    a3 = NULL,
     echarts = NULL,
     origin = NULL,
     writer = NULL,
@@ -385,6 +573,8 @@ Theme <- S7::new_class(
       axis_name_gap = axis_name_gap,
       axis_name_location = axis_name_location,
       axis_line_show = axis_line_show,
+      legend_item_gap = legend_item_gap,
+      a3 = a3,
       echarts = echarts,
       origin = origin,
       writer = writer
@@ -439,6 +629,9 @@ S7::method(to_list, Theme) <- function(x, ...) {
   )
   out <- out[!vapply(out, is.null, logical(1L))]
   out[["palette"]] <- I(out[["palette"]])
+  if (!is.null(out[["a3"]])) {
+    out[["a3"]] <- to_list(out[["a3"]])
+  }
   # Maps serialize as JSON objects.
   for (map in c("origin", "writer")) {
     if (!is.null(out[[map]])) out[[map]] <- as.list(out[[map]])
@@ -574,7 +767,8 @@ font_stack <- function(font_family) {
 #' one `"derived"`: the title size, 1.2 times `base_font_size` rounded half to
 #' even; the subtitle, axis label, legend, tooltip, and color scale sizes,
 #' `base_font_size`; the title, subtitle, legend, and tooltip colors,
-#' `fg_color`; and the font family, the system UI font stack. Tokens left to a
+#' `fg_color`; the font family, the system UI font stack; and each unset member
+#' of `a3`, from the theme's scheme. Tokens left to a
 #' backend's own default, such as `axis_color`, stay unset. A port of
 #' `resolveTheme()` in `@rtemis/draw`, held equal to it by shared fixtures.
 #'
@@ -611,6 +805,11 @@ resolve_theme <- function(theme) {
     derive(name, theme@fg_color)
   }
   derive("font_family", DEFAULT_FONT_FAMILY)
+  if (is.null(theme@a3)) {
+    derive("a3", a3_theme_tokens(theme@scheme))
+  } else {
+    theme@a3 <- a3_theme_tokens(theme@scheme, theme@a3)
+  }
   theme@origin <- origin
   theme@writer <- chart_writer()
   theme
@@ -640,6 +839,7 @@ theme_record <- function(theme = NULL) {
     S7::prop(resolved, name)
   })
   out[["palette"]] <- I(out[["palette"]])
+  out[["a3"]] <- to_list(out[["a3"]])
   out[["origin"]] <- as.list(out[["origin"]])
   out[["writer"]] <- as.list(out[["writer"]])
   out
@@ -703,6 +903,8 @@ theme_light <- function(
   axis_name_location = "middle",
   axis_line_show = NULL,
   color_scale_font_size = NULL,
+  legend_item_gap = NULL,
+  a3 = NULL,
   echarts = NULL
 ) {
   Theme(
@@ -737,6 +939,8 @@ theme_light <- function(
     axis_name_location = axis_name_location,
     axis_line_show = axis_line_show,
     color_scale_font_size = color_scale_font_size,
+    legend_item_gap = legend_item_gap,
+    a3 = a3_theme_tokens("light", a3),
     echarts = echarts,
     origin = theme_origin(match.call())
   )
@@ -787,6 +991,8 @@ theme_dark <- function(
   axis_name_location = "middle",
   axis_line_show = NULL,
   color_scale_font_size = NULL,
+  legend_item_gap = NULL,
+  a3 = NULL,
   echarts = NULL
 ) {
   Theme(
@@ -821,6 +1027,8 @@ theme_dark <- function(
     axis_name_location = axis_name_location,
     axis_line_show = axis_line_show,
     color_scale_font_size = color_scale_font_size,
+    legend_item_gap = legend_item_gap,
+    a3 = a3_theme_tokens("dark", a3),
     echarts = echarts,
     origin = theme_origin(match.call())
   )

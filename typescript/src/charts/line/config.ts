@@ -306,7 +306,7 @@ export function buildLineOption(
 
   const xAxis: Record<string, unknown> = {
     type: xType,
-    ...(config.xlab ? { name: config.xlab, nameLocation: "middle" } : {}),
+    ...(config.xlab ? { name: config.xlab } : {}),
     ...(categories ? { data: categories } : {}),
     ...(xType === "value" ? { scale: true } : {}),
     ...(xLim ? { min: xLim[0], max: xLim[1] } : {}),
@@ -316,7 +316,7 @@ export function buildLineOption(
   };
   const yAxis: Record<string, unknown> = {
     type: "value",
-    ...(config.ylab ? { name: config.ylab, nameLocation: "middle" } : {}),
+    ...(config.ylab ? { name: config.ylab } : {}),
     scale: true,
     ...(yLim ? { min: yLim[0], max: yLim[1] } : {}),
     splitLine: NO_CORNER_LINES,

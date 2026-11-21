@@ -182,8 +182,9 @@ test_that("bars preserve signed values, physical axes, clean labels, and overrid
   expect_identical(opt[["xAxis"]][["data"]], c("a", "b", "c"))
   expect_identical(opt[["xAxis"]][["name"]], "Predictor")
   expect_identical(opt[["yAxis"]][["name"]], "Score")
-  expect_identical(opt[["xAxis"]][["nameLocation"]], "middle")
-  expect_identical(opt[["yAxis"]][["nameLocation"]], "middle")
+  # The theme supplies the name location.
+  expect_null(opt[["xAxis"]][["nameLocation"]])
+  expect_null(opt[["yAxis"]][["nameLocation"]])
   expect_identical(opt[["title"]][["text"]], "VI")
   expect_equal(vertical[["width"]], 700)
   expect_equal(vertical[["height"]], 500)

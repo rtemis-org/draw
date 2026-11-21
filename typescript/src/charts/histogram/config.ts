@@ -399,13 +399,13 @@ export function buildHistogramOption(
   const xAxis: Record<string, unknown> = {
     type: "value",
     scale: true,
-    ...(xlab ? { name: xlab, nameLocation: "middle" } : {}),
+    ...(xlab ? { name: xlab } : {}),
   };
   const yAxis: Record<string, unknown> = {
     type: "value",
     min: low < 0 ? low * 1.05 : 0,
     ...(barMode === "stack" && high > 0 ? { max: high * 1.05 } : {}),
-    ...(ylab ? { name: ylab, nameLocation: "middle" } : {}),
+    ...(ylab ? { name: ylab } : {}),
   };
   const grid = cartesianGrid(config, Boolean(xlab || ylab));
   const dataZoom = config.zoom ? axisZoom("x", grid, { filterMode: "none" }) : undefined;

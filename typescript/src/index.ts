@@ -62,6 +62,7 @@ export {
   radicalInverse,
 } from "./charts/boxplot/index.ts";
 export type {
+  CalibrationAppearance,
   CalibrationBins,
   CalibrationChartConfig,
   CalibrationData,
@@ -309,7 +310,12 @@ export {
   SURVIVAL_CHART_CONFIG_MEMBERS,
   survivalMedian,
 } from "./charts/survival/index.ts";
-export type { RollFn, RollingMembers, TimeSeriesChartConfig } from "./charts/timeseries/index.ts";
+export type {
+  RollFn,
+  RollingMembers,
+  TimeSeriesAppearance,
+  TimeSeriesChartConfig,
+} from "./charts/timeseries/index.ts";
 export {
   axisTooltip,
   buildTimeSeriesOption,

@@ -1,4 +1,5 @@
 export type {
+  CalibrationAppearance,
   CalibrationBins,
   CalibrationChartConfig,
   CalibrationData,

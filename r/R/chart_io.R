@@ -463,6 +463,9 @@ theme_from_list <- function(x) {
     if (identical(nm, "echarts")) {
       return(tokens[[nm]])
     }
+    if (identical(nm, "a3")) {
+      return(a3_theme_from_list(tokens[[nm]]))
+    }
     coerce_to_spec(
       unlist_scalar(tokens[[nm]]),
       prop_spec(Theme@properties[[nm]])
@@ -477,3 +480,23 @@ theme_from_list <- function(x) {
   }
   theme
 } # /rtemis.draw::theme_from_list
+
+
+# %% a3_theme_from_list ----
+#' Rebuild an A3Theme from a parsed theme document's `a3` member
+#'
+#' @param x Named list: The parsed `a3` member.
+#' @return `A3Theme` object.
+#' @keywords internal
+#' @noRd
+a3_theme_from_list <- function(x) {
+  members <- x[intersect(names(x), names(A3Theme@properties))]
+  members <- members[!vapply(members, is.null, logical(1L))]
+  members <- lapply(stats::setNames(nm = names(members)), function(nm) {
+    coerce_to_spec(
+      unlist_scalar(members[[nm]]),
+      prop_spec(A3Theme@properties[[nm]])
+    )
+  })
+  do.call(A3Theme, members)
+} # /rtemis.draw::a3_theme_from_list

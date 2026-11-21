@@ -206,8 +206,8 @@ export function buildBarOption(
   };
   const xAxis = horizontal ? value : category;
   const yAxis = horizontal ? category : value;
-  if (config.xlab) Object.assign(xAxis, { name: config.xlab, nameLocation: "middle" });
-  if (config.ylab) Object.assign(yAxis, { name: config.ylab, nameLocation: "middle" });
+  if (config.xlab) Object.assign(xAxis, { name: config.xlab });
+  if (config.ylab) Object.assign(yAxis, { name: config.ylab });
 
   const grid = cartesianGrid(config, Boolean(config.xlab || config.ylab));
   const dataZoom = config.zoom ? axisZoom(horizontal ? "y" : "x", grid) : undefined;

@@ -5,6 +5,7 @@ import { a3SurfaceHints, buildA3Option } from "../src/charts/a3/config.ts";
 import { createA3EChartsOption } from "../src/charts/a3/echarts.ts";
 import { resolveA3VisualizationHeight } from "../src/charts/a3/layout.ts";
 import type { A3EChartsOption } from "../src/charts/a3/types.ts";
+import { A3_THEME_TOKENS, darkThemeTokens } from "../src/theme/tokens.ts";
 
 const mapt = new A3(
   JSON.parse(readFileSync(new URL("./fixtures/mapt.a3.json", import.meta.url), "utf8")),
@@ -46,7 +47,7 @@ describe("buildA3Option", () => {
       ptmPlacement: "radial",
       legendGap: 90,
       enableAnimation: true,
-      theme: {},
+      theme: A3_THEME_TOKENS.light,
     });
     expect(JSON.stringify(built)).toBe(JSON.stringify(live));
     expect(dataZoom).toHaveLength(2);
@@ -70,6 +71,33 @@ describe("buildA3Option", () => {
     ) as { itemStyle: { color: string; borderColor: string } };
     expect(backbone.itemStyle.color).toBe("#123456");
     expect(backbone.itemStyle.borderColor).toBe("#654321");
+  });
+
+  it("takes its colors from the theme's a3 tokens, each member unset the scheme's", () => {
+    const backbone = (option: A3EChartsOption) =>
+      (option.series as readonly Record<string, unknown>[]).find(
+        (s) => s.name === "Primary structure",
+      ) as { itemStyle: { color: string; borderColor: string } };
+    const dark = backbone(
+      buildA3Option(mapt, {}, { dark: true, a3: darkThemeTokens().a3 ?? null }),
+    );
+    expect(dark.itemStyle).toMatchObject({ color: "#181818", borderColor: "#a1a1aa" });
+    const themed = backbone(
+      buildA3Option(mapt, { residue_stroke: "#654321" }, { a3: { residue_fill_color: "#abcdef" } }),
+    );
+    expect(themed.itemStyle).toMatchObject({ color: "#abcdef", borderColor: "#654321" });
+    const regions = buildA3Option(mapt, {}, { a3: { region_palette: ["#111111"] } });
+    expect(JSON.stringify(regions.series)).toContain("rgba(17, 17, 17, 0.3)");
+  });
+
+  it("writes no font, legend text, title text, or background", () => {
+    const option = buildA3Option(mapt, { title: "Tau" });
+    expect(option).not.toHaveProperty("backgroundColor");
+    expect(option.title).not.toHaveProperty("textStyle");
+    expect(JSON.stringify(option)).not.toContain("fontFamily");
+    expect((option.legend as { textStyle: unknown }).textStyle).toEqual({
+      rich: { heading: { fontWeight: 600, padding: [12, 0, 2, 0] } },
+    });
   });
 
   it("adds the title from the config", () => {

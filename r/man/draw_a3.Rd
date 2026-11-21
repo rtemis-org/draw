@@ -86,7 +86,7 @@ Placement of PTM symbols relative to the residue circle.
 
 \item{disease_variant_color}{Optional Character: Label color for disease-associated
 variant residues (takes precedence over \code{variant_color}).
-\code{NULL} color arguments follow the light/dark A3 theme.}
+\code{NULL} color arguments follow the theme's \link{A3Theme} (\code{a3}).}
 
 \item{zoom}{Logical: Enable Shift+wheel zoom, and wheel and drag panning,
 along the sequence.}

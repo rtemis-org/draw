@@ -207,7 +207,8 @@ test_that("ROC SVG contains curves, chance line, full labels, and a square plott
   expect_match(text, ">AUC<", fixed = TRUE)
   expect_true(widget[["x"]][["legendTitleAbove"]])
   expect_match(text, 'stroke="#123456"')
-  expect_match(text, 'stroke="#888888"')
+  # The chance line takes the theme's neutral color.
+  expect_match(text, 'stroke="#808080"')
   expect_false(grepl("<image", text, fixed = TRUE))
   grid <- static_aspect(
     raw_option(widget),

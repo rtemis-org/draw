@@ -15,7 +15,6 @@
   "xAxis": {
     "type": "value",
     "name": "Bill length (mm)",
-    "nameLocation": "middle",
     "scale": true,
     "min": 31,
     "max": 60.7,
@@ -31,7 +30,6 @@
   "yAxis": {
     "type": "value",
     "name": "Bill depth (mm)",
-    "nameLocation": "middle",
     "scale": true,
     "min": 12.764,
     "max": 21.836,

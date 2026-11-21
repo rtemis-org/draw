@@ -4,6 +4,7 @@ import { asArray, type ColumnNames } from "../../shared/source.ts";
 import {
   darkThemeTokens,
   lightThemeTokens,
+  SIGN_COLORS,
   type ThemeTokens,
   themeFontSizes,
 } from "../../theme/tokens.ts";
@@ -126,6 +127,8 @@ export interface SurvivalAppearance {
   readonly textColor?: string;
   /** The chart is drawn on a dark background. */
   readonly dark?: boolean;
+  /** The theme's neutral color (`neutral_color`); unset is rtemis.draw's, `SIGN_COLORS.neutral`. */
+  readonly neutral?: string;
 }
 
 /**
@@ -376,7 +379,12 @@ export function buildSurvivalOption(
         silent: true,
         animation: false,
         symbol: "none",
-        lineStyle: { color: "#888888", type: "dashed", width: 1, opacity: 0.7 },
+        lineStyle: {
+          color: appearance.neutral ?? SIGN_COLORS.neutral,
+          type: "dashed",
+          width: 1,
+          opacity: 0.7,
+        },
         label: { show: false },
         data: references.map((t) => ({ xAxis: t })),
       },
@@ -457,7 +465,6 @@ export function buildSurvivalOption(
       min: domain[0],
       max: domain[1],
       name: config.xlab ?? "Time",
-      nameLocation: "middle",
       nameGap: 30,
       // With the strip, the axis labels exactly the risk times.
       ...(riskTimes
@@ -469,7 +476,6 @@ export function buildSurvivalOption(
       min: 0,
       max: 1,
       name: config.ylab ?? "Survival probability",
-      nameLocation: "middle",
       nameGap: Y_NAME_GAP,
     },
     legend: {
@@ -477,7 +483,6 @@ export function buildSurvivalOption(
       data: names,
       padding: 0,
       itemStyle: { opacity: 1 },
-      textStyle: { fontSize: 12, lineHeight: 14 },
     },
     tooltip: { trigger: "item", confine: true },
     series,
@@ -546,7 +551,10 @@ export function layoutSurvivalRisk<T extends Record<string, unknown>>(
   const y = (Array.isArray(option.yAxis) ? option.yAxis[0] : option.yAxis) as
     | Record<string, unknown>
     | undefined;
-  const centered = y?.nameLocation === "middle" || y?.nameLocation === "center";
+  // The name's place along the axis: the option's, else the theme's, which
+  // centers it in rtemis.draw's themes.
+  const location = y?.nameLocation ?? tokens?.axis_name_location ?? "middle";
+  const centered = location === "middle" || location === "center";
   const yGap = centered && typeof y?.nameGap === "number" ? y.nameGap : Y_NAME_GAP;
   // A centered name with a text margin keeps it from the tick labels, which
   // ECharts moves the name clear of. The labels' extent is estimated as their

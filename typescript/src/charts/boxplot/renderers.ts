@@ -205,7 +205,7 @@ export const boxplotRenderers: Readonly<Record<string, Renderer>> = {
         {
           type: "polyline",
           shape: { points: [endA, a, b, endB] },
-          style: { fill: null, stroke: "#888888", lineWidth: 1 },
+          style: { fill: null, stroke: api.visual("color"), lineWidth: 1 },
         },
         {
           type: "text",
@@ -216,7 +216,7 @@ export const boxplotRenderers: Readonly<Record<string, Renderer>> = {
             x: center[0],
             y: center[1],
             text: String(api.value(5)),
-            fill: "#888888",
+            fill: api.visual("color"),
             font: api.font({ fontSize: 12 }),
             align: "center",
             verticalAlign: "bottom",

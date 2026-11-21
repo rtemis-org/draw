@@ -12,7 +12,6 @@
   "xAxis": {
     "type": "time",
     "name": "Month",
-    "nameLocation": "middle",
     "min": 1702909440000,
     "max": 1734168960000,
     "splitLine": {
@@ -31,7 +30,6 @@
   "yAxis": {
     "type": "value",
     "name": "Generation (GWh)",
-    "nameLocation": "middle",
     "scale": true,
     "min": 7.199999999999999,
     "max": 82.8,

@@ -1,5 +1,9 @@
 # rtemis.draw 0.5.5
 
+* `Theme`, `theme_light()`, and `theme_dark()` gain `legend_item_gap`, the gap between legend items in em of the legend text size, and `a3`, an `A3Theme` of the A3 annotation palettes and colors; an A3 diagram takes its colors from the theme unless its config sets them, and its legend, title, and fonts from the theme's general tokens.
+
+* Charts write no theme-owned styling: the ROC, precision-recall, calibration, and survival legends take the theme's text size and ECharts' item gap; 3D axes take the theme's text and axis colors; reference lines, chance diagonals, boxplot brackets, and axis pointers take the theme's `neutral_color`. `ROCConfig` and `CalibrationConfig` `diagonal_color` default to `NULL`, the neutral color.
+
 * A complete chart record (`write_chart_config(complete = TRUE)`) states the theme it was drawn with in a `theme` member, and `read_chart_config()` restores it, so `draw()` of the config draws with that theme unless the caller passes one. The automatic light/dark theme is recorded as the light theme and reads back as automatic. `Theme` gains `origin` and `writer`, and the theme is published as `theme/v1` with a record form.
 
 * `theme_light()` and `theme_dark()` set `axis_label_gap` to 2/3 em, `axis_name_gap` to 0.625 em, and `axis_name_location` to `"middle"`: tick labels stay 8 pixels from the plot at the default 12-pixel text, and axis names sit 7.5 pixels clear of the tick labels.

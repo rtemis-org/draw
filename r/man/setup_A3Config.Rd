@@ -66,7 +66,7 @@ anchors and position labels.}
 \item{label_color, pos_label_color}{Optional Character: Label colors.}
 
 \item{variant_color, disease_variant_color}{Optional Character: Variant marker colors.
-\code{NULL} selects the corresponding light/dark A3 theme color.}
+\code{NULL} selects the theme's color, its \link{A3Theme} (\code{a3}).}
 
 \item{title}{Optional Character: Chart title. Declared here because it is the
 one property every chart type has; \code{palette} is not (four take a \code{colormap}

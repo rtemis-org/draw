@@ -9,6 +9,7 @@ interface Api {
   coord(value: number[]): number[];
   value(dimension: number): number | string;
   font(style: { fontSize: number }): string;
+  visual(name: string): string;
 }
 interface Params {
   readonly coordSys: { x: number; y: number; width: number; height: number };
@@ -35,7 +36,7 @@ export const timeSeriesRenderers: Readonly<Record<string, (params: Params, api: 
           text: String(api.value(1)),
           align: "center",
           verticalAlign: "top",
-          fill: "#888888",
+          fill: api.visual("color"),
           font: api.font({ fontSize: 12 }),
         },
       };

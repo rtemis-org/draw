@@ -370,7 +370,6 @@ export function buildSpectrogramOption(
     type: "category",
     data: labels,
     name,
-    nameLocation: "middle",
     boundaryGap: true,
     splitArea: { show: false },
     axisLine: { show: false },

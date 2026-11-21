@@ -3,11 +3,13 @@ const fs = require('node:fs');
 const assert = require('node:assert/strict');
 const input = JSON.parse(fs.readFileSync(process.argv[2], 'utf8'));
 const echarts = require(input.echarts);
+// The widget projects a theme document with the builders' `themeObject()`.
+const themeOf = (doc) => doc && typeof doc === 'object' ? require(require('node:path').join(require('node:path').dirname(input.echarts), '..', 'draw', 'rtemis-draw-builders.js')).themeObject(doc) : doc || null;
 require(input.renderers)(echarts);
 const near = (a, b) => assert.ok(Math.abs(a - b) < 1e-7, `${a} != ${b}`);
 let cases = 0;
 for (const item of input.charts) {
-  const chart = echarts.init(null, item.theme || null, { renderer: 'svg', ssr: true, width: 800, height: 600 });
+  const chart = echarts.init(null, themeOf(item.theme), { renderer: 'svg', ssr: true, width: 800, height: 600 });
   item.option.animation = false;
   chart.setOption(item.option);
   const cdim = item.horizontal ? 1 : 0;

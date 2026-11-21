@@ -4,6 +4,8 @@
 const assert = require('node:assert/strict'), fs = require('node:fs'), path = require('node:path');
 const input = JSON.parse(fs.readFileSync(process.argv[2], 'utf8'));
 const echarts = require(input.echarts), layout = require(input.layout);
+// The widget projects a theme document with the builders' `themeObject()`.
+const themeOf = (doc) => doc && typeof doc === 'object' ? require(require('node:path').join(require('node:path').dirname(input.echarts), '..', 'draw', 'rtemis-draw-builders.js')).themeObject(doc) : doc || null;
 require(path.join(path.dirname(input.layout), 'renderers.js'))(echarts);
 const near = (a, b, message) => assert.ok(Math.abs(a - b) < .05, `${message}: ${a} / ${b}`);
 const overlap = (a, b) => a.x < b.x + b.width - .05 && b.x < a.x + a.width - .05 &&
@@ -19,7 +21,7 @@ for (const [name, original] of Object.entries(input.charts)) {
     payload.legendPosition = position; payload.legendPlacement = placement;
     payload.option.animation = false;
     const target = payload.legendTarget || 'legend';
-    const chart = echarts.init(null, payload.theme, {renderer: 'svg', ssr: true, width: 900, height: 650});
+    const chart = echarts.init(null, themeOf(payload.theme), {renderer: 'svg', ssr: true, width: 900, height: 650});
     const titles = () => {
       const found = [];
       chart.getModel().eachComponent('graphic', model => {
@@ -75,7 +77,7 @@ for (const [name, original] of Object.entries(input.charts)) {
 }
 for (const [name, original] of Object.entries(input.untitled)) {
   const payload = structuredClone(original);
-  const chart = echarts.init(null, payload.theme, {renderer: 'svg', ssr: true, width: 900, height: 650});
+  const chart = echarts.init(null, themeOf(payload.theme), {renderer: 'svg', ssr: true, width: 900, height: 650});
   try {
     chart.setOption(payload.option);
     layout.positionLegend(echarts, chart, payload); layout.centerVisualMaps(chart, payload, echarts);

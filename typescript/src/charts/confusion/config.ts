@@ -268,7 +268,6 @@ export function buildConfusionOption(
     const ph = (100 - topOffset) / rows;
     titles.push({
       ...(named ? { text: p.name } : {}),
-      textStyle: { fontSize: fontSize + 2 },
       left: percent(left + pw / 2),
       top: percent(top),
       textAlign: "center",
@@ -304,10 +303,8 @@ export function buildConfusionOption(
         position: "top",
         boundaryGap: true,
         ...(j === 0 && xlab ? { name: xlab } : {}),
-        nameLocation: "middle",
         nameGap: 30,
         axisLine: { show: false },
-        splitLine: { show: false },
         axisLabel: { show: j === 0 || j === 1, interval: 0, fontSize },
       });
       yAxes.push({
@@ -317,10 +314,8 @@ export function buildConfusionOption(
         inverse: true,
         boundaryGap: true,
         ...(j === 0 && ylab ? { name: ylab } : {}),
-        nameLocation: "middle",
         nameGap: 50,
         axisLine: { show: false },
-        splitLine: { show: false },
         axisLabel: { show: j === 0 || j === 2, interval: 0, fontSize },
       });
     });

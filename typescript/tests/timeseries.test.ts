@@ -184,6 +184,7 @@ describe("buildTimeSeriesOption", () => {
     const series = seriesOf(option);
     const labels = series[series.length - 1] as Series;
     expect(labels.renderItem).toBe(AXIS_LABELS);
+    expect(labels.itemStyle).toEqual({ color: "#808080" });
     expect(labels.data).toEqual([
       [0, "0"],
       [24, "0"],
@@ -192,7 +193,7 @@ describe("buildTimeSeriesOption", () => {
     expect((series[0] as Series).markArea).toEqual({
       silent: true,
       label: { show: false },
-      data: [[{ xAxis: 2, itemStyle: { color: "#888888", opacity: 0.15 } }, { xAxis: 8 }]],
+      data: [[{ xAxis: 2, itemStyle: { color: "#808080", opacity: 0.15 } }, { xAxis: 8 }]],
     });
     expect(() =>
       buildTimeSeriesOption(
@@ -232,9 +233,15 @@ describe("the zeitgeber label renderer", () => {
       coord: ([x]: number[]) => [x as number, 0],
       value: (d: number) => (d === 0 ? t : "6"),
       font: () => "12px sans-serif",
+      visual: () => "#808080",
     });
     const params = { coordSys: { x: 10, y: 0, width: 100, height: 50 } };
-    expect(render(params, api(40))?.style).toMatchObject({ x: 40, y: 60, text: "6" });
+    expect(render(params, api(40))?.style).toMatchObject({
+      x: 40,
+      y: 60,
+      text: "6",
+      fill: "#808080",
+    });
     expect(render(params, api(200))).toBeUndefined();
   });
 });

@@ -39,7 +39,8 @@
 #' @param digits Integer: Decimal places for AUC labels and tooltip values,
 #'   written as [rtemis.core::ddSci()] writes them.
 #' @param diagonal Logical: Show an independent chance diagonal.
-#' @param diagonal_color Character: Chance-line color.
+#' @param diagonal_color Optional Character: Chance-line color. `NULL` uses the
+#'   theme's neutral color.
 #' @param palette Optional Character: Group colors; unset uses the chart theme.
 #' @param legend Logical: Show group labels and AUC summaries.
 #' @inheritParams draw_line
@@ -110,8 +111,9 @@ ROCConfig <- new_class(
         description = "Show an independent chance diagonal."
       ),
       diagonal_color = prop_string(
-        "#888888",
-        description = "Chance-line color."
+        NULL,
+        nullable = TRUE,
+        description = "Chance-line color. Unset uses the theme's neutral color."
       ),
       palette = prop_string(
         NULL,
@@ -178,7 +180,7 @@ setup_ROCConfig <- function(
   variant = "aggregate",
   digits = 2L,
   diagonal = TRUE,
-  diagonal_color = "#888888",
+  diagonal_color = NULL,
   palette = NULL,
   legend = TRUE,
   legend_position = "top",

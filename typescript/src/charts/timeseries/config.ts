@@ -11,7 +11,14 @@ import {
   textColumn,
   timeMs,
 } from "../../shared/source.ts";
+import { SIGN_COLORS } from "../../theme/tokens.ts";
 import { AXIS_LABELS } from "./renderers.ts";
+
+/** The host's input to the time series builder beyond the data and config. */
+export interface TimeSeriesAppearance {
+  /** The theme's neutral color (`neutral_color`); unset is rtemis.draw's, `SIGN_COLORS.neutral`. */
+  readonly neutral?: string;
+}
 
 /** A rolling summary of a time series. */
 export type RollFn = "none" | "mean" | "median" | "min" | "max" | "sum";
@@ -290,7 +297,9 @@ function sortedRows(xs: readonly (number | null)[]): number[] {
 export function buildTimeSeriesOption(
   data: TabularData,
   config: TimeSeriesChartConfig,
+  appearance: TimeSeriesAppearance = {},
 ): Record<string, unknown> {
+  const neutral = appearance.neutral ?? SIGN_COLORS.neutral;
   const { primary, secondary, time } = samples(data, config);
   const points = config.points ?? true;
   const rawOpacity = config.raw_opacity ?? 0.5;
@@ -338,7 +347,7 @@ export function buildTimeSeriesOption(
   const xAxis: Record<string, unknown> = {
     type: time ? "time" : "value",
     scale: true,
-    ...(config.xlab ? { name: config.xlab, nameLocation: "middle" } : {}),
+    ...(config.xlab ? { name: config.xlab } : {}),
   };
   if (config.zt || config.shade_bin) {
     if (config.x2) {
@@ -367,6 +376,8 @@ export function buildTimeSeriesOption(
       type: "custom",
       name: "",
       renderItem: AXIS_LABELS,
+      // The renderer draws the labels in the series color.
+      itemStyle: { color: neutral },
       silent: true,
       clip: false,
       dimensions: [
@@ -398,7 +409,7 @@ export function buildTimeSeriesOption(
       const end = next ? next.start - 1 : order.length - 1;
       return [
         [
-          { xAxis: xs[order[run.start] as number], itemStyle: { color: "#888888", opacity: 0.15 } },
+          { xAxis: xs[order[run.start] as number], itemStyle: { color: neutral, opacity: 0.15 } },
           { xAxis: xs[order[end] as number] },
         ],
       ];
@@ -412,7 +423,7 @@ export function buildTimeSeriesOption(
     {
       type: "value",
       scale: true,
-      ...(config.ylab ? { name: config.ylab, nameLocation: "middle" } : {}),
+      ...(config.ylab ? { name: config.ylab } : {}),
     },
   ];
   if (secondary.length > 0) {
@@ -420,7 +431,7 @@ export function buildTimeSeriesOption(
       type: "value",
       scale: true,
       position: "right",
-      ...(config.y2lab ? { name: config.y2lab, nameLocation: "middle" } : {}),
+      ...(config.y2lab ? { name: config.y2lab } : {}),
       splitLine: { show: false },
     });
   }

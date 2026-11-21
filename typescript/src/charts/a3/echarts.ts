@@ -1,6 +1,7 @@
 import type { A3FlexData } from "@rtemis/a3";
+import { A3_THEME_TOKENS, type A3ThemeTokens } from "../../theme/tokens.ts";
 import { createA3LayoutModel, resolveA3TitleMarginTop, resolveA3TitleTop } from "./layout.ts";
-import { paletteColorAt, resolveA3VisualizationTheme, withAlpha } from "./palette.ts";
+import { paletteColorAt, withAlpha } from "./palette.ts";
 import type {
   A3EChartsOption,
   A3EChartsSeries,
@@ -60,7 +61,7 @@ export function createA3EChartsOption(
   options: A3VisualizationOptions = {},
 ): A3EChartsOption {
   const model = createA3LayoutModel(input, options);
-  const theme = resolveA3VisualizationTheme(options.theme);
+  const theme = options.theme ?? A3_THEME_TOKENS.light;
   const markerSize = options.markerSize ?? 28;
   const fontSize = options.fontSize ?? 18;
   const lineWidth = options.lineWidth ?? 2;
@@ -115,19 +116,18 @@ export function createA3EChartsOption(
             params.data?.position as number | undefined,
             params.data?.residueName as string | undefined,
             annotationsByPosition,
-            theme,
           ),
       },
       showSymbol: true,
       symbol: "circle",
       symbolSize: markerSize,
       lineStyle: {
-        color: theme.residueStrokeColor,
+        color: theme.residue_stroke_color,
         width: lineWidth,
       },
       itemStyle: {
         color: markerColor,
-        borderColor: theme.residueStrokeColor,
+        borderColor: theme.residue_stroke_color,
         borderWidth: 1,
       },
     });
@@ -136,7 +136,7 @@ export function createA3EChartsOption(
   // ── Regions ────────────────────────────────────────────────────────────────
   // Each region entry has { index: [start, end][], type: string }
   for (const [index, [name, entry]] of Object.entries(model.data.annotations.region).entries()) {
-    const color = paletteColorAt(theme.regionPalette, index);
+    const color = paletteColorAt(theme.region_palette, index);
     const data = [];
 
     for (const [start, end] of entry.index) {
@@ -180,7 +180,7 @@ export function createA3EChartsOption(
   // ── Sites ──────────────────────────────────────────────────────────────────
   // Each site entry has { index: number[], type: string }
   for (const [index, [name, entry]] of Object.entries(model.data.annotations.site).entries()) {
-    const color = paletteColorAt(theme.sitePalette, index);
+    const color = paletteColorAt(theme.site_palette, index);
     series.push({
       type: "scatter",
       name,
@@ -218,7 +218,7 @@ export function createA3EChartsOption(
   // Each PTM entry has { index: number[] | [number, number][], type: string }
   // Extract positions from flex entries (handles both positions and ranges).
   for (const [index, [name, entry]] of Object.entries(model.data.annotations.ptm).entries()) {
-    const color = paletteColorAt(theme.ptmPalette, index);
+    const color = paletteColorAt(theme.ptm_palette, index);
     const positions = extractPositionsFromFlexEntry(entry);
     const ptmSymbolSize = markerSize / 4.5;
     const offset = resolvePtmPixelOffset(
@@ -258,7 +258,7 @@ export function createA3EChartsOption(
   for (const [index, [name, entry]] of Object.entries(
     model.data.annotations.processing,
   ).entries()) {
-    const color = paletteColorAt(theme.processingPalette, index);
+    const color = paletteColorAt(theme.processing_palette, index);
     const positions = extractPositionsFromFlexEntry(entry);
     const offset = circularPixelOffset(
       index + 1,
@@ -305,7 +305,7 @@ export function createA3EChartsOption(
       addAnnotationHit(position, {
         family: "Variants",
         name: label,
-        color: theme.variantColor,
+        color: theme.variant_color,
         ...(sources.size > 0 ? { detail: [...sources].join(", ") } : {}),
       });
     }
@@ -334,7 +334,6 @@ export function createA3EChartsOption(
           show: true,
           formatter: residue.residue,
           color: labelColors[index],
-          fontFamily: theme.annotationFontFamily,
           fontSize,
         },
       })),
@@ -361,8 +360,7 @@ export function createA3EChartsOption(
             position: "top",
             distance: positionLabelGap,
             formatter: String(residue.position),
-            color: theme.positionLabelColor,
-            fontFamily: theme.annotationFontFamily,
+            color: theme.position_label_color,
             fontSize: Math.max(10, fontSize - 6),
           },
         })),
@@ -374,7 +372,6 @@ export function createA3EChartsOption(
   }
 
   return Object.freeze({
-    backgroundColor: theme.backgroundColor,
     animation: enableAnimation,
     animationDuration,
     animationDurationUpdate,
@@ -384,11 +381,6 @@ export function createA3EChartsOption(
             text: options.title,
             left: "5.5%",
             top: titleTop,
-            textStyle: {
-              fontFamily: theme.legendFontFamily,
-              fontSize,
-              color: theme.legendColor,
-            },
           },
         }
       : {}),
@@ -451,15 +443,10 @@ export function createA3EChartsOption(
 
         return name;
       },
+      // The family headings: the legend's text, semibold, set off above.
       textStyle: {
-        color: theme.legendColor,
-        fontFamily: theme.legendFontFamily,
-        fontSize,
         rich: {
           heading: {
-            color: theme.legendColor,
-            fontFamily: theme.legendFontFamily,
-            fontSize: Math.max(12, fontSize - 1),
             fontWeight: 600,
             padding: [12, 0, 2, 0],
           },
@@ -502,7 +489,7 @@ function extractPositionsFromFlexEntry(entry: A3FlexData): number[] {
 function buildResidueLabelColors(
   model: ReturnType<typeof createA3LayoutModel>,
   options: A3VisualizationOptions,
-  theme: ReturnType<typeof resolveA3VisualizationTheme>,
+  theme: A3ThemeTokens,
 ): string[] {
   const diseaseVariants = new Set(options.diseaseVariants ?? []);
 
@@ -521,14 +508,14 @@ function buildResidueLabelColors(
 
   return model.residues.map((residue) => {
     if (diseaseVariants.has(residue.position)) {
-      return theme.diseaseVariantColor;
+      return theme.disease_variant_color;
     }
 
     if (variantPositions.has(residue.position)) {
-      return theme.variantColor;
+      return theme.variant_color;
     }
 
-    return theme.labelColor;
+    return theme.label_color;
   });
 }
 
@@ -635,7 +622,6 @@ function formatResidueTooltip(
   position: number | undefined,
   residueName: string | undefined,
   annotationsByPosition: ReadonlyMap<number, readonly AnnotationHit[]>,
-  theme: ReturnType<typeof resolveA3VisualizationTheme>,
 ): string {
   const name = escapeHtml(residueName ?? "");
   const header =
@@ -643,8 +629,7 @@ function formatResidueTooltip(
       ? name
       : `<span style="opacity:0.6;font-weight:400">${position}</span> ${name}`;
   const headerHtml = `<div style="font-weight:600">${header}</div>`;
-  const wrap = (inner: string) =>
-    `<div style="color:${theme.legendColor};font-family:${theme.legendFontFamily}">${inner}</div>`;
+  const wrap = (inner: string) => `<div>${inner}</div>`;
 
   const hits = position === undefined ? undefined : annotationsByPosition.get(position);
   if (!hits || hits.length === 0) {

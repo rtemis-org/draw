@@ -28,8 +28,7 @@
     "scale": true,
     "min": 0.655,
     "max": 8.245000000000001,
-    "name": "Length (cm)",
-    "nameLocation": "middle"
+    "name": "Length (cm)"
   },
   "grid": {
     "top": 36,

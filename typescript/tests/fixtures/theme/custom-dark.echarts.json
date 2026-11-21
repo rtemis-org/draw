@@ -42,6 +42,14 @@
       "fontSize": 16
     }
   },
+  "axisPointer": {
+    "lineStyle": {
+      "color": "#808080"
+    },
+    "label": {
+      "backgroundColor": "#808080"
+    }
+  },
   "tooltip": {
     "backgroundColor": "rgba(20, 20, 20, 0.9)",
     "borderColor": "rgba(255, 255, 255, 0.1)",
@@ -169,6 +177,94 @@
     },
     "axisTick": {
       "show": false
+    },
+    "splitLine": {
+      "lineStyle": {
+        "color": "rgba(255, 255, 255, 0.1)"
+      }
+    }
+  },
+  "valueAxis3D": {
+    "axisLabel": {
+      "fontSize": 16,
+      "color": "rgba(255, 255, 255, 0.7)",
+      "fontFamily": "Geist, sans-serif"
+    },
+    "nameTextStyle": {
+      "color": "rgba(255, 255, 255, 0.7)",
+      "fontFamily": "Geist, sans-serif",
+      "fontSize": 16
+    },
+    "axisLine": {
+      "lineStyle": {
+        "color": "rgba(255, 255, 255, 0.3)"
+      }
+    },
+    "splitLine": {
+      "lineStyle": {
+        "color": "rgba(255, 255, 255, 0.1)"
+      }
+    }
+  },
+  "categoryAxis3D": {
+    "axisLabel": {
+      "fontSize": 16,
+      "color": "rgba(255, 255, 255, 0.7)",
+      "fontFamily": "Geist, sans-serif"
+    },
+    "nameTextStyle": {
+      "color": "rgba(255, 255, 255, 0.7)",
+      "fontFamily": "Geist, sans-serif",
+      "fontSize": 16
+    },
+    "axisLine": {
+      "lineStyle": {
+        "color": "rgba(255, 255, 255, 0.3)"
+      }
+    },
+    "splitLine": {
+      "lineStyle": {
+        "color": "rgba(255, 255, 255, 0.1)"
+      }
+    }
+  },
+  "logAxis3D": {
+    "axisLabel": {
+      "fontSize": 16,
+      "color": "rgba(255, 255, 255, 0.7)",
+      "fontFamily": "Geist, sans-serif"
+    },
+    "nameTextStyle": {
+      "color": "rgba(255, 255, 255, 0.7)",
+      "fontFamily": "Geist, sans-serif",
+      "fontSize": 16
+    },
+    "axisLine": {
+      "lineStyle": {
+        "color": "rgba(255, 255, 255, 0.3)"
+      }
+    },
+    "splitLine": {
+      "lineStyle": {
+        "color": "rgba(255, 255, 255, 0.1)"
+      }
+    }
+  },
+  "timeAxis3D": {
+    "axisLabel": {
+      "fontSize": 16,
+      "color": "rgba(255, 255, 255, 0.7)",
+      "fontFamily": "Geist, sans-serif"
+    },
+    "nameTextStyle": {
+      "color": "rgba(255, 255, 255, 0.7)",
+      "fontFamily": "Geist, sans-serif",
+      "fontSize": 16
+    },
+    "axisLine": {
+      "lineStyle": {
+        "color": "rgba(255, 255, 255, 0.3)"
+      }
     },
     "splitLine": {
       "lineStyle": {

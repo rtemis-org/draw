@@ -25,6 +25,14 @@
       "fontSize": 14
     }
   },
+  "axisPointer": {
+    "lineStyle": {
+      "color": "#808080"
+    },
+    "label": {
+      "backgroundColor": "#808080"
+    }
+  },
   "tooltip": {
     "backgroundColor": "#fafafa",
     "textStyle": {
@@ -151,6 +159,94 @@
     },
     "axisTick": {
       "show": false
+    },
+    "splitLine": {
+      "lineStyle": {
+        "color": "#eeeeee"
+      }
+    }
+  },
+  "valueAxis3D": {
+    "axisLabel": {
+      "fontSize": 14,
+      "color": "rgba(0, 0, 0, 0.7)",
+      "fontFamily": "'Source Sans 3', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
+    },
+    "nameTextStyle": {
+      "color": "rgba(0, 0, 0, 0.7)",
+      "fontFamily": "'Source Sans 3', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+      "fontSize": 14
+    },
+    "axisLine": {
+      "lineStyle": {
+        "color": "#999999"
+      }
+    },
+    "splitLine": {
+      "lineStyle": {
+        "color": "#eeeeee"
+      }
+    }
+  },
+  "categoryAxis3D": {
+    "axisLabel": {
+      "fontSize": 14,
+      "color": "rgba(0, 0, 0, 0.7)",
+      "fontFamily": "'Source Sans 3', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
+    },
+    "nameTextStyle": {
+      "color": "rgba(0, 0, 0, 0.7)",
+      "fontFamily": "'Source Sans 3', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+      "fontSize": 14
+    },
+    "axisLine": {
+      "lineStyle": {
+        "color": "#999999"
+      }
+    },
+    "splitLine": {
+      "lineStyle": {
+        "color": "#eeeeee"
+      }
+    }
+  },
+  "logAxis3D": {
+    "axisLabel": {
+      "fontSize": 14,
+      "color": "rgba(0, 0, 0, 0.7)",
+      "fontFamily": "'Source Sans 3', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
+    },
+    "nameTextStyle": {
+      "color": "rgba(0, 0, 0, 0.7)",
+      "fontFamily": "'Source Sans 3', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+      "fontSize": 14
+    },
+    "axisLine": {
+      "lineStyle": {
+        "color": "#999999"
+      }
+    },
+    "splitLine": {
+      "lineStyle": {
+        "color": "#eeeeee"
+      }
+    }
+  },
+  "timeAxis3D": {
+    "axisLabel": {
+      "fontSize": 14,
+      "color": "rgba(0, 0, 0, 0.7)",
+      "fontFamily": "'Source Sans 3', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
+    },
+    "nameTextStyle": {
+      "color": "rgba(0, 0, 0, 0.7)",
+      "fontFamily": "'Source Sans 3', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+      "fontSize": 14
+    },
+    "axisLine": {
+      "lineStyle": {
+        "color": "#999999"
+      }
     },
     "splitLine": {
       "lineStyle": {

@@ -14,8 +14,7 @@
   },
   "xAxis": {
     "type": "value",
-    "name": "Generation (GWh)",
-    "nameLocation": "middle"
+    "name": "Generation (GWh)"
   },
   "yAxis": {
     "type": "category",

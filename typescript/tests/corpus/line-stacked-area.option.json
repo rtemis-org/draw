@@ -32,7 +32,6 @@
   "yAxis": {
     "type": "value",
     "name": "Generation (GWh)",
-    "nameLocation": "middle",
     "scale": true,
     "min": 0,
     "max": 178.256,

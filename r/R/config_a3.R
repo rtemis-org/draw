@@ -39,7 +39,7 @@
 #' @param residue_fill,residue_stroke Optional Character: Residue marker colors.
 #' @param label_color,pos_label_color Optional Character: Label colors.
 #' @param variant_color,disease_variant_color Optional Character: Variant marker colors.
-#'   `NULL` selects the corresponding light/dark A3 theme color.
+#'   `NULL` selects the theme's color, its [A3Theme] (`a3`).
 #' @inheritParams ChartConfig
 #'
 #' @return `A3Config` object.

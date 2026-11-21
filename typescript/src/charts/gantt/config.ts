@@ -189,15 +189,14 @@ export function buildGanttOption(
     },
     xAxis: {
       type: time ? "time" : "value",
-      ...(config.xlab ? { name: config.xlab, nameLocation: "middle", nameGap: 28 } : {}),
+      ...(config.xlab ? { name: config.xlab, nameGap: 28 } : {}),
       ...((config.guides ?? true)
         ? {
             axisPointer: {
               show: true,
               type: "line",
               snap: false,
-              label: { show: true, backgroundColor: "#666666" },
-              lineStyle: { color: "#808080", width: 1, type: "dashed" },
+              label: { show: true },
             },
           }
         : {}),
@@ -211,7 +210,6 @@ export function buildGanttOption(
       boundaryGap: true,
       // Every row is labeled; `ganttHeight()` gives each row its line.
       axisLabel: { interval: 0 },
-      axisTick: { show: false },
     },
     ...(controls ? { dataZoom: controls.dataZoom } : {}),
     series,

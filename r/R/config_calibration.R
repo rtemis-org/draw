@@ -139,8 +139,9 @@ CalibrationConfig <- new_class(
         description = "Show the perfect-calibration diagonal."
       ),
       diagonal_color = prop_string(
-        "#888888",
-        description = "Perfect-calibration line color."
+        NULL,
+        nullable = TRUE,
+        description = "Perfect-calibration line color. Unset uses the theme's neutral color."
       ),
       palette = prop_string(
         NULL,
@@ -204,7 +205,7 @@ setup_CalibrationConfig <- function(
   line_width = 2,
   digits = 3L,
   diagonal = TRUE,
-  diagonal_color = "#888888",
+  diagonal_color = NULL,
   palette = NULL,
   legend = TRUE,
   legend_position = "top",

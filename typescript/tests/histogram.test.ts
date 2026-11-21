@@ -156,7 +156,7 @@ describe("buildHistogramOption", () => {
 
   it("names the axes it is given and zooms x without filtering bins", () => {
     const option = buildHistogramOption(one, { xlab: "Age", ylab: "", zoom: true });
-    expect(option.xAxis).toMatchObject({ name: "Age", nameLocation: "middle" });
+    expect(option.xAxis).toMatchObject({ name: "Age" });
     expect((option.yAxis as Record<string, unknown>).name).toBeUndefined();
     const zoom = option.dataZoom as Record<string, unknown>[];
     expect(zoom.map((z) => z.filterMode)).toEqual(["none", "none"]);

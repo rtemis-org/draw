@@ -47,6 +47,8 @@
       captions.push({id:'rtemis3d-'+dimension+'-name',type:'text',left:12,bottom:46-i*16,
         silent:true,invisible:width>=500,style:{text:dimension+': '+axis.rtemisAxisName,
           fill:color,font:'11px '+(theme?.textStyle?.fontFamily || 'sans-serif')}});
+      option[key].axisLabel = option[key].axisLabel || {};
+      option[key].nameTextStyle = option[key].nameTextStyle || {};
       option[key].axisLabel.color = color;
       // The builder's tick labels take the decimals of its interval.
       if (typeof option[key].axisLabel.formatter !== 'function')

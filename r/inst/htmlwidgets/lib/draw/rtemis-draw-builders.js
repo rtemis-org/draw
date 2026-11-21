@@ -191,6 +191,395 @@ var RtemisDraw = (() => {
     zoomSliderStyle: () => zoomSliderStyle
   });
 
+  // src/theme/tokens.ts
+  var A3_THEME_MEMBERS = Object.freeze([
+    "region_palette",
+    "site_palette",
+    "ptm_palette",
+    "processing_palette",
+    "residue_fill_color",
+    "residue_stroke_color",
+    "label_color",
+    "position_label_color",
+    "variant_color",
+    "disease_variant_color"
+  ]);
+  var A3_PALETTES = Object.freeze({
+    region_palette: Object.freeze(["#0F766E", "#2563EB", "#D97706", "#7C3AED", "#DC2626", "#0891B2"]),
+    site_palette: Object.freeze(["#0EA5E9", "#14B8A6", "#E11D48", "#A855F7", "#F97316", "#16A34A"]),
+    ptm_palette: Object.freeze(["#0284C7", "#F59E0B", "#10B981", "#8B5CF6", "#EF4444", "#14B8A6"]),
+    processing_palette: Object.freeze([
+      "#D97706",
+      "#DC2626",
+      "#0EA5E9",
+      "#9333EA",
+      "#16A34A",
+      "#DB2777"
+    ])
+  });
+  var A3_THEME_TOKENS = Object.freeze({
+    light: Object.freeze({
+      ...A3_PALETTES,
+      residue_fill_color: "#efefef",
+      residue_stroke_color: "#44403C",
+      label_color: "#1C1917",
+      position_label_color: "#78716C",
+      variant_color: "#FA6E1E",
+      disease_variant_color: "#E266AE"
+    }),
+    dark: Object.freeze({
+      ...A3_PALETTES,
+      residue_fill_color: "#181818",
+      residue_stroke_color: "#a1a1aa",
+      label_color: "#fafafa",
+      position_label_color: "#a1a1aa",
+      variant_color: "#fb923c",
+      disease_variant_color: "#f472b6"
+    })
+  });
+  function a3ThemeTokens(scheme, a3) {
+    const defaults = A3_THEME_TOKENS[scheme === "dark" ? "dark" : "light"];
+    return Object.freeze({ ...defaults, ...present(a3 ?? {}) });
+  }
+  var RTEMIS_PALETTE = Object.freeze([
+    "#6CA3A0",
+    "#F08904",
+    "#BE2E5F",
+    "#B3CFE8",
+    "#0F6A66",
+    "#FDB808",
+    "#EA384A",
+    "#466D96",
+    "#526551",
+    "#F384FF",
+    "#7D0830",
+    "#375D86",
+    "#B1A7B3",
+    "#7364F2",
+    "#895140",
+    "#C5A267"
+  ]);
+  var SIGN_COLORS = Object.freeze({
+    negative: "#2D83D3",
+    neutral: "#808080",
+    positive: "#C55E28"
+  });
+  var THEME_SPACING = Object.freeze({
+    axis_label_gap: 2 / 3,
+    axis_name_gap: 0.625,
+    axis_name_location: "middle"
+  });
+  function lightThemeTokens(overrides = {}) {
+    return Object.freeze({
+      scheme: "light",
+      base_font_size: 12,
+      palette: RTEMIS_PALETTE,
+      ...THEME_SPACING,
+      bg_color: "#ffffff",
+      fg_color: "rgba(0, 0, 0, 0.7)",
+      negative_color: SIGN_COLORS.negative,
+      neutral_color: SIGN_COLORS.neutral,
+      positive_color: SIGN_COLORS.positive,
+      a3: A3_THEME_TOKENS.light,
+      ...overrides
+    });
+  }
+  function darkThemeTokens(overrides = {}) {
+    return Object.freeze({
+      scheme: "dark",
+      base_font_size: 12,
+      palette: RTEMIS_PALETTE,
+      ...THEME_SPACING,
+      bg_color: "#181818",
+      fg_color: "rgba(255, 255, 255, 0.7)",
+      title_color: "rgba(255, 255, 255, 0.9)",
+      subtitle_color: "rgba(255, 255, 255, 0.5)",
+      axis_color: "rgba(255, 255, 255, 0.3)",
+      grid_color: "rgba(255, 255, 255, 0.1)",
+      tooltip_bg: "rgba(20, 20, 20, 0.9)",
+      tooltip_border_color: "rgba(255, 255, 255, 0.1)",
+      negative_color: SIGN_COLORS.negative,
+      neutral_color: SIGN_COLORS.neutral,
+      positive_color: SIGN_COLORS.positive,
+      a3: A3_THEME_TOKENS.dark,
+      ...overrides
+    });
+  }
+  var DEFAULT_FONT_FAMILY = "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif";
+  var GENERIC_FONT_FAMILIES = /* @__PURE__ */ new Set([
+    "serif",
+    "sans-serif",
+    "monospace",
+    "cursive",
+    "fantasy",
+    "math",
+    "emoji",
+    "fangsong",
+    "system-ui",
+    "ui-serif",
+    "ui-sans-serif",
+    "ui-monospace",
+    "ui-rounded",
+    "-apple-system",
+    "blinkmacsystemfont"
+  ]);
+  function fontStack(fontFamily) {
+    if (fontFamily === void 0 || fontFamily === null) return DEFAULT_FONT_FAMILY;
+    const entries = fontFamily.split(",").map((e) => e.trim()).filter((e) => e.length > 0);
+    if (entries.length === 0) throw new Error("`font_family` must be a nonempty font family.");
+    const ident = /^-?[A-Za-z_][A-Za-z0-9_-]*( +-?[A-Za-z_][A-Za-z0-9_-]*)*$/;
+    const quoted = /^(['"]).*\1$/;
+    const variable = /^var\(.*\)$/i;
+    const out = entries.map((e) => {
+      const generic = GENERIC_FONT_FAMILIES.has(e.toLowerCase());
+      return quoted.test(e) || generic || ident.test(e) || variable.test(e) ? e : `'${e.replaceAll("'", "\\'")}'`;
+    });
+    const last = entries[entries.length - 1] ?? "";
+    if (!GENERIC_FONT_FAMILIES.has(last.toLowerCase())) out.push(DEFAULT_FONT_FAMILY);
+    return out.join(", ");
+  }
+  function em(length, size) {
+    return length === void 0 || length === null ? void 0 : length * size;
+  }
+  function roundHalfEven(x) {
+    const floor = Math.floor(x);
+    const diff = x - floor;
+    if (Math.abs(diff - 0.5) > 1e-9) return Math.round(x);
+    return floor % 2 === 0 ? floor : floor + 1;
+  }
+  function themeFontSizes(tokens) {
+    const base = tokens.base_font_size;
+    return {
+      base,
+      title: tokens.title_font_size ?? roundHalfEven(base * 1.2),
+      subtitle: tokens.subtitle_font_size ?? base,
+      axisLabel: tokens.axis_label_font_size ?? base,
+      legend: tokens.legend_font_size ?? base,
+      tooltip: tokens.tooltip_font_size ?? base
+    };
+  }
+  function present(entries) {
+    return Object.fromEntries(
+      Object.entries(entries).filter(([, v]) => v !== void 0 && v !== null)
+    );
+  }
+  function zoomSliderStyle(dark) {
+    return {
+      backgroundColor: "rgba(128,128,128,0.06)",
+      borderColor: dark ? "#606060" : "#b0b0b0",
+      fillerColor: "rgba(128,128,128,0.18)",
+      dataBackground: {
+        lineStyle: { color: "#808080" },
+        areaStyle: { color: "#808080", opacity: 0.12 }
+      },
+      selectedDataBackground: {
+        lineStyle: { color: dark ? "#b0b0b0" : "#707070" },
+        areaStyle: { color: "#808080", opacity: 0.25 }
+      },
+      handleStyle: {
+        color: dark ? "#303030" : "#ffffff",
+        borderColor: dark ? "#909090" : "#808080"
+      },
+      moveHandleStyle: { color: "#909090", opacity: 0.6 },
+      brushStyle: { color: "#808080", opacity: 0.3 },
+      emphasis: {
+        handleStyle: { borderColor: dark ? "#cccccc" : "#505050" },
+        moveHandleStyle: { color: dark ? "#b0b0b0" : "#707070" }
+      }
+    };
+  }
+  var SERIES_THEME = Object.freeze({
+    line: Object.freeze({ symbol: "circle" }),
+    radar: Object.freeze({ symbol: "circle" })
+  });
+  function themeOption(tokens) {
+    const sizes = themeFontSizes(tokens);
+    const dark = tokens.scheme === "dark";
+    const fg = tokens.fg_color;
+    const textStyle = present({
+      color: fg,
+      fontFamily: fontStack(tokens.font_family),
+      fontSize: sizes.base,
+      fontWeight: tokens.font_weight
+    });
+    const withText = (style) => ({ ...textStyle, ...style });
+    const axisLabelText = present({
+      fontSize: sizes.axisLabel,
+      color: fg,
+      fontWeight: tokens.font_weight
+    });
+    const axisLabel = present({
+      ...axisLabelText,
+      margin: em(tokens.axis_label_gap, sizes.axisLabel)
+    });
+    const nameMargin = em(tokens.axis_name_gap, sizes.base);
+    const nameTextStyle = nameMargin === void 0 ? void 0 : { textMargin: [nameMargin, 3, nameMargin, 3] };
+    const axisLineStyle = tokens.axis_color ? { lineStyle: { color: tokens.axis_color } } : {};
+    const axisLine = Object.keys(axisLineStyle).length > 0 || tokens.axis_line_show !== void 0 && tokens.axis_line_show !== null ? present({ show: tokens.axis_line_show, ...axisLineStyle }) : void 0;
+    const axisTick = { show: false };
+    const gridLine = present({
+      color: tokens.grid_color,
+      opacity: tokens.grid_opacity,
+      type: tokens.grid_style
+    });
+    const splitLine = Object.keys(gridLine).length > 0 ? { lineStyle: gridLine } : void 0;
+    const axisName = present({ nameLocation: tokens.axis_name_location, nameTextStyle });
+    const valueAxis2 = present({ ...axisName, axisLabel, axisLine, axisTick, splitLine });
+    const gridLine3D = present({ color: tokens.grid_color, opacity: tokens.grid_opacity });
+    const axis3D = present({
+      axisLabel: present({ ...axisLabelText, fontFamily: textStyle.fontFamily }),
+      nameTextStyle: textStyle,
+      axisLine: { lineStyle: { color: tokens.axis_color ?? tokens.neutral_color } },
+      splitLine: Object.keys(gridLine3D).length > 0 ? { lineStyle: gridLine3D } : void 0
+    });
+    const radar = present({
+      ...SERIES_THEME.radar,
+      axisName: axisLabelText,
+      axisLine,
+      splitLine,
+      splitArea: tokens.grid_color ? { areaStyle: { color: ["rgba(0, 0, 0, 0)", tokens.grid_color] } } : void 0
+    });
+    return {
+      color: [...tokens.palette],
+      backgroundColor: tokens.bg_color,
+      textStyle,
+      title: {
+        textStyle: withText(
+          present({
+            color: tokens.title_color,
+            fontSize: sizes.title,
+            fontWeight: tokens.title_font_weight
+          })
+        ),
+        subtextStyle: withText(present({ color: tokens.subtitle_color, fontSize: sizes.subtitle }))
+      },
+      legend: present({
+        itemGap: em(tokens.legend_item_gap, sizes.legend),
+        textStyle: withText({ color: tokens.legend_color ?? fg, fontSize: sizes.legend })
+      }),
+      // The pointer line and its value label on an axis, in the neutral color.
+      axisPointer: {
+        lineStyle: { color: tokens.neutral_color },
+        label: { backgroundColor: tokens.neutral_color }
+      },
+      tooltip: present({
+        backgroundColor: tokens.tooltip_bg,
+        borderColor: tokens.tooltip_border_color,
+        textStyle: withText({ color: tokens.tooltip_color ?? fg, fontSize: sizes.tooltip })
+      }),
+      visualMap: {
+        textStyle: present({ ...textStyle, fontSize: tokens.color_scale_font_size ?? sizes.base })
+      },
+      // Neutral controls leave the palette to encode data; every accent-bearing
+      // slider state is set so ECharts' blue defaults cannot show.
+      // spec: draw/visual-qa-docs#neutral-data-zoom-sliders
+      dataZoom: { ...zoomSliderStyle(dark), textStyle: axisLabelText },
+      ...SERIES_THEME,
+      radar,
+      categoryAxis: present({
+        ...axisName,
+        axisLabel,
+        axisLine,
+        axisTick,
+        splitLine: { show: false }
+      }),
+      valueAxis: valueAxis2,
+      logAxis: valueAxis2,
+      timeAxis: valueAxis2,
+      valueAxis3D: axis3D,
+      categoryAxis3D: axis3D,
+      logAxis3D: axis3D,
+      timeAxis3D: axis3D
+    };
+  }
+  var THEME_DOCUMENT_MEMBERS = Object.freeze([
+    "scheme",
+    "font_family",
+    "base_font_size",
+    "title_font_size",
+    "subtitle_font_size",
+    "axis_label_font_size",
+    "legend_font_size",
+    "tooltip_font_size",
+    "color_scale_font_size",
+    "font_weight",
+    "title_font_weight",
+    "palette",
+    "bg_color",
+    "fg_color",
+    "title_color",
+    "subtitle_color",
+    "legend_color",
+    "axis_color",
+    "grid_color",
+    "grid_opacity",
+    "grid_style",
+    "tooltip_bg",
+    "tooltip_border_color",
+    "tooltip_color",
+    "negative_color",
+    "neutral_color",
+    "positive_color",
+    "axis_label_gap",
+    "axis_name_gap",
+    "axis_name_location",
+    "axis_line_show",
+    "legend_item_gap",
+    "a3",
+    "echarts",
+    "origin",
+    "writer"
+  ]);
+  function resolveTheme(doc) {
+    const origin = { ...doc.origin ?? {} };
+    const out = { ...doc };
+    const derive = (name, value) => {
+      if (out[name] === void 0 || out[name] === null) {
+        out[name] = value;
+        origin[name] = "derived";
+      }
+    };
+    const base = doc.base_font_size;
+    derive("title_font_size", roundHalfEven(base * 1.2));
+    for (const name of [
+      "subtitle_font_size",
+      "axis_label_font_size",
+      "legend_font_size",
+      "tooltip_font_size",
+      "color_scale_font_size"
+    ]) {
+      derive(name, base);
+    }
+    for (const name of ["title_color", "subtitle_color", "legend_color", "tooltip_color"]) {
+      derive(name, doc.fg_color);
+    }
+    derive("font_family", DEFAULT_FONT_FAMILY);
+    if (out.a3 === void 0 || out.a3 === null) {
+      derive("a3", a3ThemeTokens(doc.scheme));
+    } else {
+      out.a3 = a3ThemeTokens(doc.scheme, doc.a3);
+    }
+    return { ...out, origin };
+  }
+  function mergePatch(target, patch) {
+    const out = { ...target };
+    for (const [key, value] of Object.entries(patch)) {
+      if (value === null) {
+        delete out[key];
+      } else if (typeof value === "object" && !Array.isArray(value) && typeof out[key] === "object" && out[key] !== null && !Array.isArray(out[key])) {
+        out[key] = mergePatch(out[key], value);
+      } else {
+        out[key] = value;
+      }
+    }
+    return out;
+  }
+  function themeObject(doc) {
+    const { echarts, ...tokens } = doc;
+    const option = themeOption(tokens);
+    return echarts ? mergePatch(option, echarts) : option;
+  }
+
   // src/charts/a3/layout.ts
   var AMINO_ACID_NAMES = Object.freeze({
     A: "Alanine",
@@ -358,99 +747,6 @@ var RtemisDraw = (() => {
   }
 
   // src/charts/a3/palette.ts
-  var DEFAULT_REGION_PALETTE = Object.freeze([
-    "#0F766E",
-    "#2563EB",
-    "#D97706",
-    "#7C3AED",
-    "#DC2626",
-    "#0891B2"
-  ]);
-  var DEFAULT_SITE_PALETTE = Object.freeze([
-    "#0EA5E9",
-    "#14B8A6",
-    "#E11D48",
-    "#A855F7",
-    "#F97316",
-    "#16A34A"
-  ]);
-  var DEFAULT_PTM_PALETTE = Object.freeze([
-    "#0284C7",
-    "#F59E0B",
-    "#10B981",
-    "#8B5CF6",
-    "#EF4444",
-    "#14B8A6"
-  ]);
-  var DEFAULT_PROCESSING_PALETTE = Object.freeze([
-    "#D97706",
-    "#DC2626",
-    "#0EA5E9",
-    "#9333EA",
-    "#16A34A",
-    "#DB2777"
-  ]);
-  var DEFAULT_GEIST_FONT_STACK = "Geist, 'Geist Sans', 'Inter', 'Avenir Next', 'Segoe UI', sans-serif";
-  var DEFAULT_A3_VISUALIZATION_THEME = Object.freeze({
-    fontFamily: DEFAULT_GEIST_FONT_STACK,
-    annotationFontFamily: DEFAULT_GEIST_FONT_STACK,
-    legendFontFamily: DEFAULT_GEIST_FONT_STACK,
-    backgroundColor: "transparent",
-    plotBackgroundColor: "transparent",
-    residueFillColor: "#E7E5E4",
-    residueStrokeColor: "#44403C",
-    labelColor: "#1C1917",
-    positionLabelColor: "#78716C",
-    legendColor: "#1C1917",
-    gridColor: "#E7E5E4",
-    variantColor: "#FA6E1E",
-    diseaseVariantColor: "#E266AE",
-    regionPalette: DEFAULT_REGION_PALETTE,
-    sitePalette: DEFAULT_SITE_PALETTE,
-    ptmPalette: DEFAULT_PTM_PALETTE,
-    processingPalette: DEFAULT_PROCESSING_PALETTE
-  });
-  var DARK_A3_VISUALIZATION_THEME = Object.freeze({
-    fontFamily: DEFAULT_GEIST_FONT_STACK,
-    annotationFontFamily: DEFAULT_GEIST_FONT_STACK,
-    legendFontFamily: DEFAULT_GEIST_FONT_STACK,
-    backgroundColor: "transparent",
-    plotBackgroundColor: "transparent",
-    residueFillColor: "#3f3f46",
-    // zinc-700
-    residueStrokeColor: "#a1a1aa",
-    // zinc-400
-    labelColor: "#fafafa",
-    // zinc-50
-    positionLabelColor: "#a1a1aa",
-    // zinc-400
-    legendColor: "#e4e4e7",
-    // zinc-200
-    gridColor: "#3f3f46",
-    // zinc-700
-    variantColor: "#fb923c",
-    // orange-400 (brighter for dark bg)
-    diseaseVariantColor: "#f472b6",
-    // pink-400 (brighter for dark bg)
-    regionPalette: DEFAULT_REGION_PALETTE,
-    sitePalette: DEFAULT_SITE_PALETTE,
-    ptmPalette: DEFAULT_PTM_PALETTE,
-    processingPalette: DEFAULT_PROCESSING_PALETTE
-  });
-  function resolveA3VisualizationTheme(overrides = {}) {
-    const fallbackFontFamily = overrides.fontFamily ?? DEFAULT_A3_VISUALIZATION_THEME.annotationFontFamily;
-    return Object.freeze({
-      ...DEFAULT_A3_VISUALIZATION_THEME,
-      ...overrides,
-      fontFamily: fallbackFontFamily,
-      annotationFontFamily: overrides.annotationFontFamily ?? fallbackFontFamily,
-      legendFontFamily: overrides.legendFontFamily ?? fallbackFontFamily,
-      regionPalette: overrides.regionPalette ?? DEFAULT_REGION_PALETTE,
-      sitePalette: overrides.sitePalette ?? DEFAULT_SITE_PALETTE,
-      ptmPalette: overrides.ptmPalette ?? DEFAULT_PTM_PALETTE,
-      processingPalette: overrides.processingPalette ?? DEFAULT_PROCESSING_PALETTE
-    });
-  }
   function paletteColorAt(palette, index) {
     if (palette.length === 0) {
       throw new RangeError("A3 visualization palettes cannot be empty.");
@@ -490,7 +786,7 @@ var RtemisDraw = (() => {
   ];
   function createA3EChartsOption(input, options = {}) {
     const model = createA3LayoutModel(input, options);
-    const theme = resolveA3VisualizationTheme(options.theme);
+    const theme = options.theme ?? A3_THEME_TOKENS.light;
     const markerSize = options.markerSize ?? 28;
     const fontSize = options.fontSize ?? 18;
     const lineWidth = options.lineWidth ?? 2;
@@ -539,26 +835,25 @@ var RtemisDraw = (() => {
           formatter: (params) => formatResidueTooltip(
             params.data?.position,
             params.data?.residueName,
-            annotationsByPosition,
-            theme
+            annotationsByPosition
           )
         },
         showSymbol: true,
         symbol: "circle",
         symbolSize: markerSize,
         lineStyle: {
-          color: theme.residueStrokeColor,
+          color: theme.residue_stroke_color,
           width: lineWidth
         },
         itemStyle: {
           color: markerColor,
-          borderColor: theme.residueStrokeColor,
+          borderColor: theme.residue_stroke_color,
           borderWidth: 1
         }
       });
     }
     for (const [index, [name, entry]] of Object.entries(model.data.annotations.region).entries()) {
-      const color = paletteColorAt(theme.regionPalette, index);
+      const color = paletteColorAt(theme.region_palette, index);
       const data = [];
       for (const [start, end] of entry.index) {
         for (let position = start; position <= end; position += 1) {
@@ -597,7 +892,7 @@ var RtemisDraw = (() => {
       });
     }
     for (const [index, [name, entry]] of Object.entries(model.data.annotations.site).entries()) {
-      const color = paletteColorAt(theme.sitePalette, index);
+      const color = paletteColorAt(theme.site_palette, index);
       series.push({
         type: "scatter",
         name,
@@ -629,7 +924,7 @@ var RtemisDraw = (() => {
       });
     }
     for (const [index, [name, entry]] of Object.entries(model.data.annotations.ptm).entries()) {
-      const color = paletteColorAt(theme.ptmPalette, index);
+      const color = paletteColorAt(theme.ptm_palette, index);
       const positions = extractPositionsFromFlexEntry(entry);
       const ptmSymbolSize = markerSize / 4.5;
       const offset = resolvePtmPixelOffset(
@@ -663,7 +958,7 @@ var RtemisDraw = (() => {
     for (const [index, [name, entry]] of Object.entries(
       model.data.annotations.processing
     ).entries()) {
-      const color = paletteColorAt(theme.processingPalette, index);
+      const color = paletteColorAt(theme.processing_palette, index);
       const positions = extractPositionsFromFlexEntry(entry);
       const offset = circularPixelOffset(
         index + 1,
@@ -705,7 +1000,7 @@ var RtemisDraw = (() => {
         addAnnotationHit(position, {
           family: "Variants",
           name: label,
-          color: theme.variantColor,
+          color: theme.variant_color,
           ...sources.size > 0 ? { detail: [...sources].join(", ") } : {}
         });
       }
@@ -730,7 +1025,6 @@ var RtemisDraw = (() => {
             show: true,
             formatter: residue.residue,
             color: labelColors[index],
-            fontFamily: theme.annotationFontFamily,
             fontSize
           }
         })),
@@ -754,8 +1048,7 @@ var RtemisDraw = (() => {
             position: "top",
             distance: positionLabelGap,
             formatter: String(residue.position),
-            color: theme.positionLabelColor,
-            fontFamily: theme.annotationFontFamily,
+            color: theme.position_label_color,
             fontSize: Math.max(10, fontSize - 6)
           }
         })),
@@ -766,7 +1059,6 @@ var RtemisDraw = (() => {
       });
     }
     return Object.freeze({
-      backgroundColor: theme.backgroundColor,
       animation: enableAnimation,
       animationDuration,
       animationDurationUpdate,
@@ -774,12 +1066,7 @@ var RtemisDraw = (() => {
         title: {
           text: options.title,
           left: "5.5%",
-          top: titleTop,
-          textStyle: {
-            fontFamily: theme.legendFontFamily,
-            fontSize,
-            color: theme.legendColor
-          }
+          top: titleTop
         }
       } : {},
       grid: {
@@ -838,15 +1125,10 @@ var RtemisDraw = (() => {
           }
           return name;
         },
+        // The family headings: the legend's text, semibold, set off above.
         textStyle: {
-          color: theme.legendColor,
-          fontFamily: theme.legendFontFamily,
-          fontSize,
           rich: {
             heading: {
-              color: theme.legendColor,
-              fontFamily: theme.legendFontFamily,
-              fontSize: Math.max(12, fontSize - 1),
               fontWeight: 600,
               padding: [12, 0, 2, 0]
             }
@@ -889,12 +1171,12 @@ var RtemisDraw = (() => {
     );
     return model.residues.map((residue) => {
       if (diseaseVariants.has(residue.position)) {
-        return theme.diseaseVariantColor;
+        return theme.disease_variant_color;
       }
       if (variantPositions.has(residue.position)) {
-        return theme.variantColor;
+        return theme.variant_color;
       }
-      return theme.labelColor;
+      return theme.label_color;
     });
   }
   function circularPixelOffset(index, count, gap) {
@@ -958,11 +1240,11 @@ var RtemisDraw = (() => {
     }
     return [];
   }
-  function formatResidueTooltip(position, residueName, annotationsByPosition, theme) {
+  function formatResidueTooltip(position, residueName, annotationsByPosition) {
     const name = escapeHtml(residueName ?? "");
     const header = position === void 0 ? name : `<span style="opacity:0.6;font-weight:400">${position}</span> ${name}`;
     const headerHtml = `<div style="font-weight:600">${header}</div>`;
-    const wrap = (inner) => `<div style="color:${theme.legendColor};font-family:${theme.legendFontFamily}">${inner}</div>`;
+    const wrap = (inner) => `<div>${inner}</div>`;
     const hits = position === void 0 ? void 0 : annotationsByPosition.get(position);
     if (!hits || hits.length === 0) {
       return wrap(headerHtml);
@@ -1039,20 +1321,18 @@ var RtemisDraw = (() => {
     });
   }
   function visualizationOptions(config, appearance) {
-    const dark = appearance.dark ?? false;
-    const base = dark ? DARK_A3_VISUALIZATION_THEME : {};
-    const theme = {
-      ...base,
-      ...appearance.fontFamily ? {
-        annotationFontFamily: appearance.fontFamily,
-        legendFontFamily: appearance.fontFamily
-      } : {},
-      ...colorOverride("residueStrokeColor", config.residue_stroke),
-      ...colorOverride("labelColor", config.label_color),
-      ...colorOverride("positionLabelColor", config.pos_label_color),
-      ...colorOverride("variantColor", config.variant_color),
-      ...colorOverride("diseaseVariantColor", config.disease_variant_color)
-    };
+    const a3 = a3ThemeTokens(appearance.dark ? "dark" : "light", appearance.a3);
+    const theme = Object.freeze({
+      ...a3,
+      ...present2({
+        residue_fill_color: config.residue_fill,
+        residue_stroke_color: config.residue_stroke,
+        label_color: config.label_color,
+        position_label_color: config.pos_label_color,
+        variant_color: config.variant_color,
+        disease_variant_color: config.disease_variant_color
+      })
+    });
     return {
       nPerRow: config.n_per_row ?? 21,
       residueSpacing: config.residue_spacing ?? 0.3,
@@ -1064,7 +1344,7 @@ var RtemisDraw = (() => {
       lineWidth: config.line_width ?? 2,
       annotationGap: config.annotation_gap ?? 16,
       positionLabelGap: config.position_label_gap ?? 16,
-      markerColor: config.residue_fill ?? (dark ? "#181818" : "#efefef"),
+      markerColor: theme.residue_fill_color,
       regionOpacity: config.region_opacity ?? 0.3,
       ptmPlacement: config.ptm_placement ?? "radial",
       legendGap: appearance.legendGap ?? 90,
@@ -1091,8 +1371,10 @@ var RtemisDraw = (() => {
       moveOnMouseMove: false
     }
   ]);
-  function colorOverride(key, value) {
-    return value ? { [key]: value } : {};
+  function present2(entries) {
+    return Object.fromEntries(
+      Object.entries(entries).filter((e) => Boolean(e[1]))
+    );
   }
 
   // src/shared/format.ts
@@ -1376,8 +1658,8 @@ var RtemisDraw = (() => {
     };
     const xAxis = horizontal ? value : category;
     const yAxis = horizontal ? category : value;
-    if (config.xlab) Object.assign(xAxis, { name: config.xlab, nameLocation: "middle" });
-    if (config.ylab) Object.assign(yAxis, { name: config.ylab, nameLocation: "middle" });
+    if (config.xlab) Object.assign(xAxis, { name: config.xlab });
+    if (config.ylab) Object.assign(yAxis, { name: config.ylab });
     const grid = cartesianGrid(config, Boolean(config.xlab || config.ylab));
     const dataZoom = config.zoom ? axisZoom(horizontal ? "y" : "x", grid) : void 0;
     return {
@@ -1487,320 +1769,6 @@ var RtemisDraw = (() => {
     if (best) return best;
     const interval = (hi - lo) / 4;
     return { min: lo, max: hi, interval, decimals: Math.max(0, decimalsOf(interval)) };
-  }
-
-  // src/theme/tokens.ts
-  var RTEMIS_PALETTE = Object.freeze([
-    "#6CA3A0",
-    "#F08904",
-    "#BE2E5F",
-    "#B3CFE8",
-    "#0F6A66",
-    "#FDB808",
-    "#EA384A",
-    "#466D96",
-    "#526551",
-    "#F384FF",
-    "#7D0830",
-    "#375D86",
-    "#B1A7B3",
-    "#7364F2",
-    "#895140",
-    "#C5A267"
-  ]);
-  var SIGN_COLORS = Object.freeze({
-    negative: "#2D83D3",
-    neutral: "#808080",
-    positive: "#C55E28"
-  });
-  var THEME_SPACING = Object.freeze({
-    axis_label_gap: 2 / 3,
-    axis_name_gap: 0.625,
-    axis_name_location: "middle"
-  });
-  function lightThemeTokens(overrides = {}) {
-    return Object.freeze({
-      scheme: "light",
-      base_font_size: 12,
-      palette: RTEMIS_PALETTE,
-      ...THEME_SPACING,
-      bg_color: "#ffffff",
-      fg_color: "rgba(0, 0, 0, 0.7)",
-      negative_color: SIGN_COLORS.negative,
-      neutral_color: SIGN_COLORS.neutral,
-      positive_color: SIGN_COLORS.positive,
-      ...overrides
-    });
-  }
-  function darkThemeTokens(overrides = {}) {
-    return Object.freeze({
-      scheme: "dark",
-      base_font_size: 12,
-      palette: RTEMIS_PALETTE,
-      ...THEME_SPACING,
-      bg_color: "#181818",
-      fg_color: "rgba(255, 255, 255, 0.7)",
-      title_color: "rgba(255, 255, 255, 0.9)",
-      subtitle_color: "rgba(255, 255, 255, 0.5)",
-      axis_color: "rgba(255, 255, 255, 0.3)",
-      grid_color: "rgba(255, 255, 255, 0.1)",
-      tooltip_bg: "rgba(20, 20, 20, 0.9)",
-      tooltip_border_color: "rgba(255, 255, 255, 0.1)",
-      negative_color: SIGN_COLORS.negative,
-      neutral_color: SIGN_COLORS.neutral,
-      positive_color: SIGN_COLORS.positive,
-      ...overrides
-    });
-  }
-  var DEFAULT_FONT_FAMILY = "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif";
-  var GENERIC_FONT_FAMILIES = /* @__PURE__ */ new Set([
-    "serif",
-    "sans-serif",
-    "monospace",
-    "cursive",
-    "fantasy",
-    "math",
-    "emoji",
-    "fangsong",
-    "system-ui",
-    "ui-serif",
-    "ui-sans-serif",
-    "ui-monospace",
-    "ui-rounded",
-    "-apple-system",
-    "blinkmacsystemfont"
-  ]);
-  function fontStack(fontFamily) {
-    if (fontFamily === void 0 || fontFamily === null) return DEFAULT_FONT_FAMILY;
-    const entries = fontFamily.split(",").map((e) => e.trim()).filter((e) => e.length > 0);
-    if (entries.length === 0) throw new Error("`font_family` must be a nonempty font family.");
-    const ident = /^-?[A-Za-z_][A-Za-z0-9_-]*( +-?[A-Za-z_][A-Za-z0-9_-]*)*$/;
-    const quoted = /^(['"]).*\1$/;
-    const variable = /^var\(.*\)$/i;
-    const out = entries.map((e) => {
-      const generic = GENERIC_FONT_FAMILIES.has(e.toLowerCase());
-      return quoted.test(e) || generic || ident.test(e) || variable.test(e) ? e : `'${e.replaceAll("'", "\\'")}'`;
-    });
-    const last = entries[entries.length - 1] ?? "";
-    if (!GENERIC_FONT_FAMILIES.has(last.toLowerCase())) out.push(DEFAULT_FONT_FAMILY);
-    return out.join(", ");
-  }
-  function em(length, size) {
-    return length === void 0 || length === null ? void 0 : length * size;
-  }
-  function roundHalfEven(x) {
-    const floor = Math.floor(x);
-    const diff = x - floor;
-    if (Math.abs(diff - 0.5) > 1e-9) return Math.round(x);
-    return floor % 2 === 0 ? floor : floor + 1;
-  }
-  function themeFontSizes(tokens) {
-    const base = tokens.base_font_size;
-    return {
-      base,
-      title: tokens.title_font_size ?? roundHalfEven(base * 1.2),
-      subtitle: tokens.subtitle_font_size ?? base,
-      axisLabel: tokens.axis_label_font_size ?? base,
-      legend: tokens.legend_font_size ?? base,
-      tooltip: tokens.tooltip_font_size ?? base
-    };
-  }
-  function present(entries) {
-    return Object.fromEntries(
-      Object.entries(entries).filter(([, v]) => v !== void 0 && v !== null)
-    );
-  }
-  function zoomSliderStyle(dark) {
-    return {
-      backgroundColor: "rgba(128,128,128,0.06)",
-      borderColor: dark ? "#606060" : "#b0b0b0",
-      fillerColor: "rgba(128,128,128,0.18)",
-      dataBackground: {
-        lineStyle: { color: "#808080" },
-        areaStyle: { color: "#808080", opacity: 0.12 }
-      },
-      selectedDataBackground: {
-        lineStyle: { color: dark ? "#b0b0b0" : "#707070" },
-        areaStyle: { color: "#808080", opacity: 0.25 }
-      },
-      handleStyle: {
-        color: dark ? "#303030" : "#ffffff",
-        borderColor: dark ? "#909090" : "#808080"
-      },
-      moveHandleStyle: { color: "#909090", opacity: 0.6 },
-      brushStyle: { color: "#808080", opacity: 0.3 },
-      emphasis: {
-        handleStyle: { borderColor: dark ? "#cccccc" : "#505050" },
-        moveHandleStyle: { color: dark ? "#b0b0b0" : "#707070" }
-      }
-    };
-  }
-  var SERIES_THEME = Object.freeze({
-    line: Object.freeze({ symbol: "circle" }),
-    radar: Object.freeze({ symbol: "circle" })
-  });
-  function themeOption(tokens) {
-    const sizes = themeFontSizes(tokens);
-    const dark = tokens.scheme === "dark";
-    const fg = tokens.fg_color;
-    const textStyle = present({
-      color: fg,
-      fontFamily: fontStack(tokens.font_family),
-      fontSize: sizes.base,
-      fontWeight: tokens.font_weight
-    });
-    const withText = (style) => ({ ...textStyle, ...style });
-    const axisLabelText = present({
-      fontSize: sizes.axisLabel,
-      color: fg,
-      fontWeight: tokens.font_weight
-    });
-    const axisLabel = present({
-      ...axisLabelText,
-      margin: em(tokens.axis_label_gap, sizes.axisLabel)
-    });
-    const nameMargin = em(tokens.axis_name_gap, sizes.base);
-    const nameTextStyle = nameMargin === void 0 ? void 0 : { textMargin: [nameMargin, 3, nameMargin, 3] };
-    const axisLineStyle = tokens.axis_color ? { lineStyle: { color: tokens.axis_color } } : {};
-    const axisLine = Object.keys(axisLineStyle).length > 0 || tokens.axis_line_show !== void 0 && tokens.axis_line_show !== null ? present({ show: tokens.axis_line_show, ...axisLineStyle }) : void 0;
-    const axisTick = { show: false };
-    const gridLine = present({
-      color: tokens.grid_color,
-      opacity: tokens.grid_opacity,
-      type: tokens.grid_style
-    });
-    const splitLine = Object.keys(gridLine).length > 0 ? { lineStyle: gridLine } : void 0;
-    const axisName = present({ nameLocation: tokens.axis_name_location, nameTextStyle });
-    const valueAxis2 = present({ ...axisName, axisLabel, axisLine, axisTick, splitLine });
-    const radar = present({
-      ...SERIES_THEME.radar,
-      axisName: axisLabelText,
-      axisLine,
-      splitLine,
-      splitArea: tokens.grid_color ? { areaStyle: { color: ["rgba(0, 0, 0, 0)", tokens.grid_color] } } : void 0
-    });
-    return {
-      color: [...tokens.palette],
-      backgroundColor: tokens.bg_color,
-      textStyle,
-      title: {
-        textStyle: withText(
-          present({
-            color: tokens.title_color,
-            fontSize: sizes.title,
-            fontWeight: tokens.title_font_weight
-          })
-        ),
-        subtextStyle: withText(present({ color: tokens.subtitle_color, fontSize: sizes.subtitle }))
-      },
-      legend: {
-        textStyle: withText({ color: tokens.legend_color ?? fg, fontSize: sizes.legend })
-      },
-      tooltip: present({
-        backgroundColor: tokens.tooltip_bg,
-        borderColor: tokens.tooltip_border_color,
-        textStyle: withText({ color: tokens.tooltip_color ?? fg, fontSize: sizes.tooltip })
-      }),
-      visualMap: {
-        textStyle: present({ ...textStyle, fontSize: tokens.color_scale_font_size ?? sizes.base })
-      },
-      // Neutral controls leave the palette to encode data; every accent-bearing
-      // slider state is set so ECharts' blue defaults cannot show.
-      // spec: draw/visual-qa-docs#neutral-data-zoom-sliders
-      dataZoom: { ...zoomSliderStyle(dark), textStyle: axisLabelText },
-      ...SERIES_THEME,
-      radar,
-      categoryAxis: present({
-        ...axisName,
-        axisLabel,
-        axisLine,
-        axisTick,
-        splitLine: { show: false }
-      }),
-      valueAxis: valueAxis2,
-      logAxis: valueAxis2,
-      timeAxis: valueAxis2
-    };
-  }
-  var THEME_DOCUMENT_MEMBERS = Object.freeze([
-    "scheme",
-    "font_family",
-    "base_font_size",
-    "title_font_size",
-    "subtitle_font_size",
-    "axis_label_font_size",
-    "legend_font_size",
-    "tooltip_font_size",
-    "color_scale_font_size",
-    "font_weight",
-    "title_font_weight",
-    "palette",
-    "bg_color",
-    "fg_color",
-    "title_color",
-    "subtitle_color",
-    "legend_color",
-    "axis_color",
-    "grid_color",
-    "grid_opacity",
-    "grid_style",
-    "tooltip_bg",
-    "tooltip_border_color",
-    "tooltip_color",
-    "negative_color",
-    "neutral_color",
-    "positive_color",
-    "axis_label_gap",
-    "axis_name_gap",
-    "axis_name_location",
-    "axis_line_show",
-    "echarts",
-    "origin",
-    "writer"
-  ]);
-  function resolveTheme(doc) {
-    const origin = { ...doc.origin ?? {} };
-    const out = { ...doc };
-    const derive = (name, value) => {
-      if (out[name] === void 0 || out[name] === null) {
-        out[name] = value;
-        origin[name] = "derived";
-      }
-    };
-    const base = doc.base_font_size;
-    derive("title_font_size", roundHalfEven(base * 1.2));
-    for (const name of [
-      "subtitle_font_size",
-      "axis_label_font_size",
-      "legend_font_size",
-      "tooltip_font_size",
-      "color_scale_font_size"
-    ]) {
-      derive(name, base);
-    }
-    for (const name of ["title_color", "subtitle_color", "legend_color", "tooltip_color"]) {
-      derive(name, doc.fg_color);
-    }
-    derive("font_family", DEFAULT_FONT_FAMILY);
-    return { ...out, origin };
-  }
-  function mergePatch(target, patch) {
-    const out = { ...target };
-    for (const [key, value] of Object.entries(patch)) {
-      if (value === null) {
-        delete out[key];
-      } else if (typeof value === "object" && !Array.isArray(value) && typeof out[key] === "object" && out[key] !== null && !Array.isArray(out[key])) {
-        out[key] = mergePatch(out[key], value);
-      } else {
-        out[key] = value;
-      }
-    }
-    return out;
-  }
-  function themeObject(doc) {
-    const { echarts, ...tokens } = doc;
-    const option = themeOption(tokens);
-    return echarts ? mergePatch(option, echarts) : option;
   }
 
   // src/charts/boxplot/renderers.ts
@@ -1952,7 +1920,7 @@ var RtemisDraw = (() => {
           {
             type: "polyline",
             shape: { points: [endA, a, b, endB] },
-            style: { fill: null, stroke: "#888888", lineWidth: 1 }
+            style: { fill: null, stroke: api.visual("color"), lineWidth: 1 }
           },
           {
             type: "text",
@@ -1963,7 +1931,7 @@ var RtemisDraw = (() => {
               x: center[0],
               y: center[1],
               text: String(api.value(5)),
-              fill: "#888888",
+              fill: api.visual("color"),
               font: api.font({ fontSize: 12 }),
               align: "center",
               verticalAlign: "bottom"
@@ -2054,6 +2022,7 @@ var RtemisDraw = (() => {
       throw new Error("Supply at least one available boxplot value; missing groups are not zeros.");
     }
     const memberPalette = asArray(config.palette);
+    const neutral = appearance.neutral ?? SIGN_COLORS.neutral;
     const palette = memberPalette.length > 0 ? memberPalette : appearance.palette ?? RTEMIS_PALETTE;
     const single = series.length === 1;
     const perBox = single && (config.color_by_group === true || memberPalette.length > 1);
@@ -2219,7 +2188,7 @@ var RtemisDraw = (() => {
             alpha: config.pair_alpha ?? 0.35,
             width: config.pair_width ?? 1
           },
-          itemStyle: { color: s.name === null ? NEUTRAL : colorOf(si, 0) },
+          itemStyle: { color: s.name === null ? neutral : colorOf(si, 0) },
           data: pairs
         });
       }
@@ -2236,6 +2205,8 @@ var RtemisDraw = (() => {
       layers.push({
         type: "custom",
         renderItem: BOXPLOT_BRACKETS,
+        // The renderer draws the brackets and their labels in the series color.
+        itemStyle: { color: neutral },
         silent: true,
         clip: true,
         z: 4,
@@ -2264,8 +2235,8 @@ var RtemisDraw = (() => {
     };
     const xAxis = horizontal ? valueAxis2 : categoryAxis;
     const yAxis = horizontal ? categoryAxis : valueAxis2;
-    if (config.xlab) Object.assign(xAxis, { name: config.xlab, nameLocation: "middle" });
-    if (config.ylab) Object.assign(yAxis, { name: config.ylab, nameLocation: "middle" });
+    if (config.xlab) Object.assign(xAxis, { name: config.xlab });
+    if (config.ylab) Object.assign(yAxis, { name: config.ylab });
     const grid = cartesianGrid(config, Boolean(config.xlab || config.ylab));
     const dataZoom = config.zoom ? axisZoom(horizontal ? "y" : "x", grid) : void 0;
     const named = series.filter((s) => s.name !== null);
@@ -2286,7 +2257,6 @@ var RtemisDraw = (() => {
       ...appearance.animation === void 0 ? {} : { animation: appearance.animation }
     };
   }
-  var NEUTRAL = "#888888";
   function radicalInverse(index) {
     let x = index;
     let value = 0;
@@ -2416,7 +2386,7 @@ var RtemisDraw = (() => {
     "Bin upper",
     "Brier"
   ];
-  function buildCalibrationOption(data, config) {
+  function buildCalibrationOption(data, config, appearance = {}) {
     const digits = config.digits ?? 3;
     const fmt = (x) => ddSci(x, digits);
     const mode = config.mode ?? "lines+markers";
@@ -2427,7 +2397,7 @@ var RtemisDraw = (() => {
     );
     const series = [];
     if (config.diagonal ?? true) {
-      const diagonal = config.diagonal_color ?? "#888888";
+      const diagonal = config.diagonal_color ?? appearance.neutral ?? SIGN_COLORS.neutral;
       series.push({
         data: [
           [0, 0],
@@ -2510,7 +2480,6 @@ var RtemisDraw = (() => {
         show: config.legend ?? true,
         orient: "horizontal",
         padding: 0,
-        textStyle: { fontSize: 12, lineHeight: 14 },
         itemStyle: { opacity: 1 },
         data: labels
       },
@@ -2525,7 +2494,6 @@ var RtemisDraw = (() => {
       xAxis: {
         type: "value",
         name: config.xlab ?? "Mean predicted probability",
-        nameLocation: "middle",
         nameGap: 30,
         min: 0,
         max: 1
@@ -2533,7 +2501,6 @@ var RtemisDraw = (() => {
       yAxis: {
         type: "value",
         name: config.ylab ?? "Observed proportion",
-        nameLocation: "middle",
         nameGap: 45,
         min: 0,
         max: 1
@@ -2664,7 +2631,6 @@ var RtemisDraw = (() => {
       const ph = (100 - topOffset) / rows;
       titles.push({
         ...named ? { text: p.name } : {},
-        textStyle: { fontSize: fontSize + 2 },
         left: percent(left + pw / 2),
         top: percent(top),
         textAlign: "center"
@@ -2697,10 +2663,8 @@ var RtemisDraw = (() => {
           position: "top",
           boundaryGap: true,
           ...j === 0 && xlab ? { name: xlab } : {},
-          nameLocation: "middle",
           nameGap: 30,
           axisLine: { show: false },
-          splitLine: { show: false },
           axisLabel: { show: j === 0 || j === 1, interval: 0, fontSize }
         });
         yAxes.push({
@@ -2710,10 +2674,8 @@ var RtemisDraw = (() => {
           inverse: true,
           boundaryGap: true,
           ...j === 0 && ylab ? { name: ylab } : {},
-          nameLocation: "middle",
           nameGap: 50,
           axisLine: { show: false },
-          splitLine: { show: false },
           axisLabel: { show: j === 0 || j === 2, interval: 0, fontSize }
         });
       });
@@ -3237,7 +3199,6 @@ ${rate(r.balancedAccuracy)}`, summary2) }
         min: 0,
         max: 1,
         ...xlab ? { name: xlab } : {},
-        nameLocation: "middle",
         nameGap: 30
       },
       yAxis: {
@@ -3245,21 +3206,18 @@ ${rate(r.balancedAccuracy)}`, summary2) }
         min: 0,
         max: 1,
         ...ylab ? { name: ylab } : {},
-        nameLocation: "middle",
         nameGap: 45
       },
       legend: {
         show: config.legend ?? true,
         orient: "horizontal",
         padding: 0,
-        itemGap: 6,
         icon: "roundRect",
         itemWidth: 20,
         itemHeight: 3,
         // Legend keys stay visible whatever the transparent hover targets.
         itemStyle: { opacity: 1 },
-        data: active.map((id) => labels[id]),
-        textStyle: { fontSize: 12, lineHeight: 14 }
+        data: active.map((id) => labels[id])
       },
       tooltip: { trigger: "item", confine: true },
       series,
@@ -3267,7 +3225,7 @@ ${rate(r.balancedAccuracy)}`, summary2) }
     };
   }
   function buildRocOption(data, config, appearance = {}) {
-    const color = config.diagonal_color ?? "#888888";
+    const color = config.diagonal_color ?? appearance.neutral ?? SIGN_COLORS.neutral;
     const diagonal = config.diagonal ?? true ? [
       {
         type: "line",
@@ -3323,7 +3281,7 @@ ${rate(r.balancedAccuracy)}`, summary2) }
         max: input.x[1],
         gridIndex: i,
         show: i === rows - 1,
-        ...i === rows - 1 && xlab ? { name: xlab, nameLocation: "middle" } : {}
+        ...i === rows - 1 && xlab ? { name: xlab } : {}
       })),
       yAxis: names.map((name, i) => ({
         type: "value",
@@ -3331,7 +3289,6 @@ ${rate(r.balancedAccuracy)}`, summary2) }
         max: high > 0 ? high * 1.05 : 1,
         gridIndex: i,
         name,
-        nameLocation: "middle",
         nameGap: 55,
         splitNumber: 2,
         axisLabel: { showMinLabel: false, showMaxLabel: false }
@@ -3427,12 +3384,12 @@ ${rate(r.balancedAccuracy)}`, summary2) }
     const xAxis = {
       type: "value",
       scale: true,
-      ...xlab ? { name: xlab, nameLocation: "middle" } : {}
+      ...xlab ? { name: xlab } : {}
     };
     const yAxis = {
       type: "value",
       min: 0,
-      ...ylab ? { name: ylab, nameLocation: "middle" } : {}
+      ...ylab ? { name: ylab } : {}
     };
     const grid = cartesianGrid(config, Boolean(xlab || ylab));
     const dataZoom = config.zoom ? axisZoom("x", grid, { filterMode: "none" }) : void 0;
@@ -3797,14 +3754,13 @@ ${rate(r.balancedAccuracy)}`, summary2) }
       },
       xAxis: {
         type: time ? "time" : "value",
-        ...config.xlab ? { name: config.xlab, nameLocation: "middle", nameGap: 28 } : {},
+        ...config.xlab ? { name: config.xlab, nameGap: 28 } : {},
         ...config.guides ?? true ? {
           axisPointer: {
             show: true,
             type: "line",
             snap: false,
-            label: { show: true, backgroundColor: "#666666" },
-            lineStyle: { color: "#808080", width: 1, type: "dashed" }
+            label: { show: true }
           }
         } : {}
       },
@@ -3816,8 +3772,7 @@ ${rate(r.balancedAccuracy)}`, summary2) }
         inverse: true,
         boundaryGap: true,
         // Every row is labeled; `ganttHeight()` gives each row its line.
-        axisLabel: { interval: 0 },
-        axisTick: { show: false }
+        axisLabel: { interval: 0 }
       },
       ...controls ? { dataZoom: controls.dataZoom } : {},
       series
@@ -4694,13 +4649,13 @@ ${rate(r.balancedAccuracy)}`, summary2) }
     const xAxis = {
       type: "value",
       scale: true,
-      ...xlab ? { name: xlab, nameLocation: "middle" } : {}
+      ...xlab ? { name: xlab } : {}
     };
     const yAxis = {
       type: "value",
       min: low < 0 ? low * 1.05 : 0,
       ...barMode === "stack" && high > 0 ? { max: high * 1.05 } : {},
-      ...ylab ? { name: ylab, nameLocation: "middle" } : {}
+      ...ylab ? { name: ylab } : {}
     };
     const grid = cartesianGrid(config, Boolean(xlab || ylab));
     const dataZoom = config.zoom ? axisZoom("x", grid, { filterMode: "none" }) : void 0;
@@ -5049,7 +5004,7 @@ ${rate(r.balancedAccuracy)}`, summary2) }
     }
     const xAxis = {
       type: xType,
-      ...config.xlab ? { name: config.xlab, nameLocation: "middle" } : {},
+      ...config.xlab ? { name: config.xlab } : {},
       ...categories ? { data: categories } : {},
       ...xType === "value" ? { scale: true } : {},
       ...xLim ? { min: xLim[0], max: xLim[1] } : {},
@@ -5059,7 +5014,7 @@ ${rate(r.balancedAccuracy)}`, summary2) }
     };
     const yAxis = {
       type: "value",
-      ...config.ylab ? { name: config.ylab, nameLocation: "middle" } : {},
+      ...config.ylab ? { name: config.ylab } : {},
       scale: true,
       ...yLim ? { min: yLim[0], max: yLim[1] } : {},
       splitLine: NO_CORNER_LINES,
@@ -5093,8 +5048,8 @@ ${rate(r.balancedAccuracy)}`, summary2) }
     if (isTime(data, name)) return "time";
     const values = column(data.columns, name, "x");
     if (!Array.isArray(data.columns[name])) return "value";
-    const present2 = values.filter((v) => v !== null && v !== void 0);
-    return present2.length > 0 && present2.every((v) => typeof v === "number") ? "value" : "category";
+    const present3 = values.filter((v) => v !== null && v !== void 0);
+    return present3.length > 0 && present3.every((v) => typeof v === "number") ? "value" : "category";
   }
   function lineSeries(data, config, yColumns, xKey) {
     const ys = new Map(yColumns.map((y) => [y, column(data.columns, y, "y").map(numberOrNull)]));
@@ -5115,8 +5070,8 @@ ${rate(r.balancedAccuracy)}`, summary2) }
     const raw = column(data.columns, config.group, "group");
     const labels = textColumn(data, config.group, "group");
     const missing = (v) => v === null || v === void 0 || Number.isNaN(v);
-    const present2 = labels.filter((_, row) => !missing(raw[row]));
-    const groups = distinct(present2, data.levels?.[config.group]);
+    const present3 = labels.filter((_, row) => !missing(raw[row]));
+    const groups = distinct(present3, data.levels?.[config.group]);
     const multiY = yColumns.length > 1;
     return groups.flatMap((g) => {
       const rows = allRows.filter((row) => !missing(raw[row]) && labels[row] === g);
@@ -5170,8 +5125,8 @@ ${rate(r.balancedAccuracy)}`, summary2) }
     return out;
   }
   function isolatedPoints(y) {
-    const present2 = (j) => y[j] !== null && y[j] !== void 0;
-    return y.flatMap((_, j) => present2(j) && !present2(j - 1) && !present2(j + 1) ? [j] : []);
+    const present3 = (j) => y[j] !== null && y[j] !== void 0;
+    return y.flatMap((_, j) => present3(j) && !present3(j - 1) && !present3(j + 1) ? [j] : []);
   }
   function blockMarkArea(data, config, blocks, xNum, xText) {
     const colors = asArray(config.block_color);
@@ -5181,9 +5136,9 @@ ${rate(r.balancedAccuracy)}`, summary2) }
     const raw = column(data.columns, blocks, "blocks");
     const missing = (v) => v === null || v === void 0 || Number.isNaN(v);
     const keys = raw.map((v) => missing(v) ? null : String(v));
-    const present2 = new Set(keys.filter((k) => k !== null));
+    const present3 = new Set(keys.filter((k) => k !== null));
     const declared = data.levels?.[blocks];
-    const levels = declared ? declared.filter((level) => present2.has(level)) : sortedLevels(raw.filter((v) => !missing(v)));
+    const levels = declared ? declared.filter((level) => present3.has(level)) : sortedLevels(raw.filter((v) => !missing(v)));
     if (colors.length !== levels.length) {
       throw new Error(
         `\`block_color\` must have length ${levels.length} (one per level of \`blocks\`); it has ${colors.length}.`
@@ -6124,7 +6079,7 @@ ${rate(r.balancedAccuracy)}`, summary2) }
     const yName = config.ylab ?? null;
     const xAxis = {
       type: time ? "time" : "value",
-      ...xName ? { name: xName, nameLocation: "middle" } : {},
+      ...xName ? { name: xName } : {},
       ...time ? {} : { scale: true },
       ...xLim ? { min: xLim[0], max: xLim[1] } : {},
       splitLine: NO_CORNER_LINES2,
@@ -6133,7 +6088,7 @@ ${rate(r.balancedAccuracy)}`, summary2) }
     };
     const yAxis = {
       type: "value",
-      ...yName ? { name: yName, nameLocation: "middle" } : {},
+      ...yName ? { name: yName } : {},
       scale: true,
       ...yLim ? { min: yLim[0], max: yLim[1] } : {},
       splitLine: NO_CORNER_LINES2,
@@ -6211,8 +6166,8 @@ ${rate(r.balancedAccuracy)}`, summary2) }
     const raw = column(data.columns, config.group, "group");
     const labels = textColumn(data, config.group, "group");
     const missing = (v) => v === null || v === void 0 || Number.isNaN(v);
-    const present2 = labels.filter((_, row) => !missing(raw[row]));
-    const groups = distinct(present2, data.levels?.[config.group]);
+    const present3 = labels.filter((_, row) => !missing(raw[row]));
+    const groups = distinct(present3, data.levels?.[config.group]);
     const multiY = yColumns.length > 1;
     return groups.flatMap((g, gi) => {
       const rows = all.filter((row) => !missing(raw[row]) && labels[row] === g);
@@ -6474,9 +6429,7 @@ ${rate(r.balancedAccuracy)}`, summary2) }
         ...valueAxis(min, max),
         name: labels[d],
         nameGap: 25,
-        axisLine: { lineStyle: { color: "#888888" } },
-        axisLabel: { color: "#888888", formatter: axisTicks(niceAxis(min, max), d === 2) },
-        nameTextStyle: { color: "#888888" }
+        axisLabel: { formatter: axisTicks(niceAxis(min, max), d === 2) }
       };
     });
     const memberPalette = asArray(config.palette);
@@ -6697,11 +6650,11 @@ ${rate(r.balancedAccuracy)}`, summary2) }
       labels.forEach((g, i) => {
         if (keep[i] && g != null && !order2.includes(g)) order2.push(g);
       });
-      const present2 = order2.filter((g) => labels.some((l, i) => keep[i] && l === g));
-      names = present2;
-      groupOf = labels.map((g) => g == null ? -1 : present2.indexOf(g));
+      const present3 = order2.filter((g) => labels.some((l, i) => keep[i] && l === g));
+      names = present3;
+      groupOf = labels.map((g) => g == null ? -1 : present3.indexOf(g));
       const palette2 = asArray(config.palette);
-      colors = present2.map((_, k) => palette2.length > 0 ? palette2[k % palette2.length] : void 0);
+      colors = present3.map((_, k) => palette2.length > 0 ? palette2[k % palette2.length] : void 0);
     }
     const shown = [...new Set(groupOf.filter((g, i) => keep[i] && g >= 0))].sort((a, b) => a - b);
     const dimensions2 = [
@@ -6768,7 +6721,7 @@ ${rate(r.balancedAccuracy)}`, summary2) }
           silent: true,
           animation: false,
           symbol: "none",
-          lineStyle: { color: "#888888", type: "dashed", width: 1 },
+          lineStyle: { color: sign.neutral, type: "dashed", width: 1 },
           data: refs
         }
       });
@@ -6822,26 +6775,23 @@ ${rate(r.balancedAccuracy)}`, summary2) }
           left: "center"
         }
       } : {},
-      ...legend ? { legend: { data: shown.map((g) => names[g]), bottom: 0, itemGap: 20 } } : {},
+      ...legend ? { legend: { data: shown.map((g) => names[g]), bottom: 0 } } : {},
       tooltip: { trigger: "item" },
       xAxis: volcano ? {
         type: "value",
         ...xlab ? { name: xlab } : {},
-        nameLocation: "middle",
         scale: true,
         splitLine,
         ...xRange ? { min: xRange[0], max: xRange[1] } : {}
       } : {
         type: "category",
         ...xlab ? { name: xlab } : {},
-        nameLocation: "middle",
         data: [...data.label],
         ...dense ? { axisLabel: { show: false }, axisTick: { show: false } } : {}
       },
       yAxis: {
         type: "value",
         ...ylab ? { name: ylab } : {},
-        nameLocation: "middle",
         splitLine,
         ...yRange ? { min: yRange[0], max: yRange[1] } : {}
       },
@@ -9151,7 +9101,6 @@ ${rate(r.balancedAccuracy)}`, summary2) }
       type: "category",
       data: labels,
       name,
-      nameLocation: "middle",
       boundaryGap: true,
       splitArea: { show: false },
       axisLine: { show: false },
@@ -9642,7 +9591,12 @@ ${rate(r.balancedAccuracy)}`, summary2) }
           silent: true,
           animation: false,
           symbol: "none",
-          lineStyle: { color: "#888888", type: "dashed", width: 1, opacity: 0.7 },
+          lineStyle: {
+            color: appearance.neutral ?? SIGN_COLORS.neutral,
+            type: "dashed",
+            width: 1,
+            opacity: 0.7
+          },
           label: { show: false },
           data: references.map((t) => ({ xAxis: t }))
         }
@@ -9713,7 +9667,6 @@ ${rate(r.balancedAccuracy)}`, summary2) }
         min: domain[0],
         max: domain[1],
         name: config.xlab ?? "Time",
-        nameLocation: "middle",
         nameGap: 30,
         // With the strip, the axis labels exactly the risk times.
         ...riskTimes ? { axisLabel: { customValues: riskTimes }, axisTick: { customValues: riskTimes } } : {}
@@ -9723,15 +9676,13 @@ ${rate(r.balancedAccuracy)}`, summary2) }
         min: 0,
         max: 1,
         name: config.ylab ?? "Survival probability",
-        nameLocation: "middle",
         nameGap: Y_NAME_GAP
       },
       legend: {
         show: legendShown,
         data: names,
         padding: 0,
-        itemStyle: { opacity: 1 },
-        textStyle: { fontSize: 12, lineHeight: 14 }
+        itemStyle: { opacity: 1 }
       },
       tooltip: { trigger: "item", confine: true },
       series
@@ -9761,7 +9712,8 @@ ${rate(r.balancedAccuracy)}`, summary2) }
     const offset = nameGap + above + Math.ceil(size(x?.nameTextStyle, nameSize) * 1.3) + below + RISK_GAP;
     const lineHeight = Math.round(fontSize * 1.6);
     const y = Array.isArray(option.yAxis) ? option.yAxis[0] : option.yAxis;
-    const centered = y?.nameLocation === "middle" || y?.nameLocation === "center";
+    const location = y?.nameLocation ?? tokens?.axis_name_location ?? "middle";
+    const centered = location === "middle" || location === "center";
     const yGap = centered && typeof y?.nameGap === "number" ? y.nameGap : Y_NAME_GAP;
     const yMargin = firstMargin(
       y?.nameTextStyle?.textMargin,
@@ -9801,7 +9753,7 @@ ${rate(r.balancedAccuracy)}`, summary2) }
           text: String(api.value(1)),
           align: "center",
           verticalAlign: "top",
-          fill: "#888888",
+          fill: api.visual("color"),
           font: api.font({ fontSize: 12 })
         }
       };
@@ -9858,12 +9810,12 @@ ${rate(r.balancedAccuracy)}`, summary2) }
     return values.map((_, i) => {
       const start = Math.max(i - offset, 0);
       const end = Math.min(i - offset + width - 1, values.length - 1);
-      const present2 = [];
+      const present3 = [];
       for (let k = start; k <= end; k++) {
         const v = values[k];
-        if (typeof v === "number") present2.push(v);
+        if (typeof v === "number") present3.push(v);
       }
-      return present2.length < required ? null : SUMMARIES[fn](present2);
+      return present3.length < required ? null : SUMMARIES[fn](present3);
     });
   }
   function samples(data, config) {
@@ -9925,9 +9877,9 @@ ${rate(r.balancedAccuracy)}`, summary2) }
       }
       const groups = textColumn(data, config.group, "group");
       const raw = column(data.columns, config.group, "group");
-      const present2 = (i) => raw[i] !== null && raw[i] !== void 0;
+      const present3 = (i) => raw[i] !== null && raw[i] !== void 0;
       const levels = distinct(
-        groups.filter((_, i) => present2(i)),
+        groups.filter((_, i) => present3(i)),
         data.levels?.[config.group]
       );
       return parts.flatMap((b) => {
@@ -9938,7 +9890,7 @@ ${rate(r.balancedAccuracy)}`, summary2) }
             axis,
             xs,
             ys,
-            (i) => present2(i) && groups[i] === level
+            (i) => present3(i) && groups[i] === level
           )
         );
       });
@@ -9954,7 +9906,8 @@ ${rate(r.balancedAccuracy)}`, summary2) }
     const rows = xs.flatMap((t, i) => t === null ? [] : [i]);
     return rows.sort((a, b) => xs[a] - xs[b]);
   }
-  function buildTimeSeriesOption(data, config) {
+  function buildTimeSeriesOption(data, config, appearance = {}) {
+    const neutral = appearance.neutral ?? SIGN_COLORS.neutral;
     const { primary, secondary, time } = samples(data, config);
     const points = config.points ?? true;
     const rawOpacity = config.raw_opacity ?? 0.5;
@@ -9998,7 +9951,7 @@ ${rate(r.balancedAccuracy)}`, summary2) }
     const xAxis = {
       type: time ? "time" : "value",
       scale: true,
-      ...config.xlab ? { name: config.xlab, nameLocation: "middle" } : {}
+      ...config.xlab ? { name: config.xlab } : {}
     };
     if (config.zt || config.shade_bin) {
       if (config.x2) {
@@ -10025,6 +9978,8 @@ ${rate(r.balancedAccuracy)}`, summary2) }
         type: "custom",
         name: "",
         renderItem: AXIS_LABELS,
+        // The renderer draws the labels in the series color.
+        itemStyle: { color: neutral },
         silent: true,
         clip: false,
         dimensions: [
@@ -10055,7 +10010,7 @@ ${rate(r.balancedAccuracy)}`, summary2) }
         const end = next ? next.start - 1 : order2.length - 1;
         return [
           [
-            { xAxis: xs[order2[run.start]], itemStyle: { color: "#888888", opacity: 0.15 } },
+            { xAxis: xs[order2[run.start]], itemStyle: { color: neutral, opacity: 0.15 } },
             { xAxis: xs[order2[end]] }
           ]
         ];
@@ -10068,7 +10023,7 @@ ${rate(r.balancedAccuracy)}`, summary2) }
       {
         type: "value",
         scale: true,
-        ...config.ylab ? { name: config.ylab, nameLocation: "middle" } : {}
+        ...config.ylab ? { name: config.ylab } : {}
       }
     ];
     if (secondary.length > 0) {
@@ -10076,7 +10031,7 @@ ${rate(r.balancedAccuracy)}`, summary2) }
         type: "value",
         scale: true,
         position: "right",
-        ...config.y2lab ? { name: config.y2lab, nameLocation: "middle" } : {},
+        ...config.y2lab ? { name: config.y2lab } : {},
         splitLine: { show: false }
       });
     }

@@ -1,6 +1,7 @@
 import { ddSci } from "../../shared/format.ts";
 import type { LegendMembers } from "../../shared/legend.ts";
 import { asArray, type ColumnNames } from "../../shared/source.ts";
+import { SIGN_COLORS } from "../../theme/tokens.ts";
 import type { AspectHint } from "../line/config.ts";
 
 /** The members ROC and precision-recall configs share. */
@@ -48,7 +49,7 @@ export interface RocChartConfig extends CurveMembers {
   readonly auc?: string | null;
   /** Draw the chance diagonal. Default `true`. */
   readonly diagonal?: boolean;
-  /** Chance-line color. Default `"#888888"`. */
+  /** Chance-line color; unset is the theme's neutral color. */
   readonly diagonal_color?: string;
 }
 
@@ -154,6 +155,8 @@ export interface CurveAppearance {
   readonly palette?: readonly string[];
   /** Animate the first render; unset leaves the ECharts default. */
   readonly animation?: boolean;
+  /** The theme's neutral color (`neutral_color`); unset is rtemis.draw's, `SIGN_COLORS.neutral`. */
+  readonly neutral?: string;
 }
 
 /** What tells one threshold-curve chart from another. */
@@ -381,7 +384,6 @@ function buildCurveOption(
       min: 0,
       max: 1,
       ...(xlab ? { name: xlab } : {}),
-      nameLocation: "middle",
       nameGap: 30,
     },
     yAxis: {
@@ -389,21 +391,18 @@ function buildCurveOption(
       min: 0,
       max: 1,
       ...(ylab ? { name: ylab } : {}),
-      nameLocation: "middle",
       nameGap: 45,
     },
     legend: {
       show: config.legend ?? true,
       orient: "horizontal",
       padding: 0,
-      itemGap: 6,
       icon: "roundRect",
       itemWidth: 20,
       itemHeight: 3,
       // Legend keys stay visible whatever the transparent hover targets.
       itemStyle: { opacity: 1 },
       data: active.map((id) => labels[id]),
-      textStyle: { fontSize: 12, lineHeight: 14 },
     },
     tooltip: { trigger: "item", confine: true },
     series,
@@ -422,7 +421,7 @@ export function buildRocOption(
   config: RocChartConfig,
   appearance: CurveAppearance = {},
 ): Record<string, unknown> {
-  const color = config.diagonal_color ?? "#888888";
+  const color = config.diagonal_color ?? appearance.neutral ?? SIGN_COLORS.neutral;
   const diagonal =
     (config.diagonal ?? true)
       ? [

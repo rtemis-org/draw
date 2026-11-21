@@ -22,8 +22,7 @@
     "scale": true,
     "min": 4.12,
     "max": 8.08,
-    "name": "Sepal length (cm)",
-    "nameLocation": "middle"
+    "name": "Sepal length (cm)"
   },
   "grid": {
     "top": 36,

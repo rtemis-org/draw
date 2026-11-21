@@ -35,9 +35,15 @@ const rounded = (v: unknown): unknown =>
 const channels = (hex: string) => [1, 3, 5].map((i) => Number.parseInt(hex.slice(i, i + 2), 16));
 
 // The axes label the bins nearest their nice values, where R let ECharts
-// choose the labeled bins; the labels are compared in their own test.
+// choose the labeled bins; the labels are compared in their own test. The
+// name location is the theme's.
 const withoutLabels = (axis: unknown) => {
-  const { axisLabel: _label, axisTick: _tick, ...rest } = axis as Record<string, unknown>;
+  const {
+    axisLabel: _label,
+    axisTick: _tick,
+    nameLocation: _location,
+    ...rest
+  } = axis as Record<string, unknown>;
   return rest;
 };
 

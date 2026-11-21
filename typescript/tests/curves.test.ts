@@ -85,7 +85,7 @@ describe("buildRocOption", () => {
     const [diagonal, a, b, c] = seriesOf(option);
     expect(diagonal).toMatchObject({
       silent: true,
-      lineStyle: { type: "dashed", color: "#888888" },
+      lineStyle: { type: "dashed", color: "#808080" },
     });
     expect(diagonal?.name).toBeUndefined();
     expect(a?.name).toBe(b?.name);

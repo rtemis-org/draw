@@ -2,6 +2,8 @@
 const assert = require('node:assert/strict'), fs = require('node:fs');
 const input = JSON.parse(fs.readFileSync(process.argv[2], 'utf8'));
 const echarts = require(input.echarts), layout = require(input.layout);
+// The widget projects a theme document with the builders' `themeObject()`.
+const themeOf = (doc) => doc && typeof doc === 'object' ? require(require('node:path').join(require('node:path').dirname(input.echarts), '..', 'draw', 'rtemis-draw-builders.js')).themeObject(doc) : doc || null;
 require(require('node:path').join(require('node:path').dirname(input.layout), 'renderers.js'))(echarts);
 const near = (a, b, message) => assert.ok(Math.abs(a - b) < .05, `${message}: ${a} / ${b}`);
 // The drawn marks of a color scale: its bar, handles, and labels, without its
@@ -22,7 +24,7 @@ for (const [name, original] of Object.entries(input.charts)) {
     payload.legendPosition = position; payload.legendPlacement = placement;
     payload.option.animation = false;
     const source = JSON.stringify(payload);
-    const chart = echarts.init(null, payload.theme, {renderer: 'svg', ssr: true, width: 900, height: 650});
+    const chart = echarts.init(null, themeOf(payload.theme), {renderer: 'svg', ssr: true, width: 900, height: 650});
     const boxes = () => {
       const result = [];
       chart.getModel().eachComponent(payload.legendTarget || 'legend', model => {

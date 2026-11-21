@@ -40,7 +40,7 @@ describe("buildDensityOption", () => {
     const option = buildDensityOption(two, { fill_alpha: 0.6, xlab: "len", ylab: "Density" });
     expect(option.legend).toEqual({ data: ["a", "b"] });
     expect(seriesOf(option).map((s) => s.areaStyle?.opacity)).toEqual([0.6, 0.6]);
-    expect(option.xAxis).toMatchObject({ name: "len", nameLocation: "middle" });
+    expect(option.xAxis).toMatchObject({ name: "len" });
     expect(option.yAxis).toMatchObject({ name: "Density" });
   });
 

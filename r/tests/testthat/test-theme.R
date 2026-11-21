@@ -362,3 +362,91 @@ test_that("a chart record carries its theme, and drawing it uses that theme", {
     "light"
   )
 })
+
+test_that("A3Theme holds the A3 colors, and the built-in themes fill them by scheme", {
+  expect_error(A3Theme(region_palette = character()), "must not be empty")
+  expect_error(A3Theme(label_color = 1))
+  light <- theme_light()@a3
+  dark <- theme_dark()@a3
+  expect_identical(to_list(light)[["residue_fill_color"]], "#efefef")
+  expect_identical(dark@residue_fill_color, "#181818")
+  expect_identical(dark@region_palette, A3_THEME_DEFAULTS$dark$region_palette)
+  # A member the author sets replaces the scheme's; the rest stay.
+  set <- theme_dark(a3 = A3Theme(variant_color = "#d62728"))
+  expect_identical(set@a3@variant_color, "#d62728")
+  expect_identical(set@a3@label_color, A3_THEME_DEFAULTS$dark$label_color)
+  expect_identical(set@origin[["a3"]], "user")
+  expect_identical(theme_dark()@origin[["a3"]], "default")
+  # Theme() leaves `a3` unset; resolving the theme derives it from the scheme.
+  bare <- Theme(scheme = "dark")
+  expect_null(bare@a3)
+  resolved <- resolve_theme(bare)
+  expect_identical(resolved@a3@label_color, A3_THEME_DEFAULTS$dark$label_color)
+  expect_identical(resolved@origin[["a3"]], "derived")
+  # A one-color palette serializes as a JSON array.
+  one <- to_list(theme_light(a3 = A3Theme(site_palette = "#123456")))
+  expect_match(
+    jsonlite::toJSON(one[["a3"]], auto_unbox = TRUE),
+    '"site_palette":["#123456"]',
+    fixed = TRUE
+  )
+})
+
+test_that("legend_item_gap is a nullable em token that the projection writes", {
+  skip_if_no_node()
+  expect_null(theme_light()@legend_item_gap)
+  expect_error(theme_light(legend_item_gap = -1))
+  theme <- theme_light(legend_font_size = 16, legend_item_gap = 0.5)
+  expect_identical(to_list(theme)[["legend_item_gap"]], 0.5)
+  path <- tempfile(fileext = ".json")
+  on.exit(unlink(path), add = TRUE)
+  jsonlite::write_json(
+    list(
+      builders = system.file(
+        "htmlwidgets/lib/draw/rtemis-draw-builders.js",
+        package = "rtemis.draw"
+      ),
+      theme = to_list(theme)
+    ),
+    path,
+    auto_unbox = TRUE,
+    null = "null",
+    digits = I(17)
+  )
+  script <- tempfile(fileext = ".js")
+  on.exit(unlink(script), add = TRUE)
+  writeLines(
+    c(
+      "const input = JSON.parse(require('node:fs').readFileSync(process.argv[2], 'utf8'));",
+      "const theme = require(input.builders).themeObject(input.theme);",
+      "process.stdout.write(JSON.stringify(theme.legend.itemGap));"
+    ),
+    script
+  )
+  output <- system2(
+    Sys.which("node"),
+    c(shQuote(script), shQuote(path)),
+    stdout = TRUE,
+    stderr = TRUE
+  )
+  expect_identical(output, "8")
+})
+
+test_that("a chart record's theme keeps its A3 colors", {
+  config <- resolve(setup_ScatterConfig(x = "wt", y = "mpg"), data = mtcars)
+  path <- tempfile(fileext = ".json")
+  on.exit(unlink(path), add = TRUE)
+  config@theme <- theme_light(
+    legend_item_gap = 0.75,
+    a3 = A3Theme(ptm_palette = c("#111111", "#222222"))
+  )
+  write_chart_config(config, path, complete = TRUE)
+  back <- read_chart_config(path)
+  expect_true(S7::S7_inherits(back@theme@a3, A3Theme))
+  expect_identical(back@theme@a3@ptm_palette, c("#111111", "#222222"))
+  expect_identical(
+    back@theme@a3@label_color,
+    A3_THEME_DEFAULTS$light$label_color
+  )
+  expect_identical(back@theme@legend_item_gap, 0.75)
+})

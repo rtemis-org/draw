@@ -44,12 +44,21 @@ describe("buildScatter3DOption", () => {
         c.config,
       );
       // The builder places nice ticks where R divided the data range in four,
-      // and formats the tooltip; the rest matches.
+      // and formats the tooltip; the axis colors are the theme's; the rest
+      // matches.
       const strip = (o: Record<string, unknown>) => {
         const { tooltip: _t, xAxis3D, yAxis3D, zAxis3D, ...rest } = o;
         const axis = (a: unknown) => {
-          const { min: _a, max: _b, interval: _c, axisLabel, ...r } = a as Record<string, unknown>;
-          const { formatter: _f, ...label } = axisLabel as Record<string, unknown>;
+          const {
+            min: _a,
+            max: _b,
+            interval: _c,
+            axisLabel,
+            axisLine: _l,
+            nameTextStyle: _n,
+            ...r
+          } = a as Record<string, unknown>;
+          const { formatter: _f, color: _k, ...label } = axisLabel as Record<string, unknown>;
           return { ...r, axisLabel: label };
         };
         return { ...rest, axes: [xAxis3D, yAxis3D, zAxis3D].map(axis) };

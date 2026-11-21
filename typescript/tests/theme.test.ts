@@ -2,9 +2,12 @@ import { existsSync, readFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { describe, expect, it } from "vitest";
 import {
+  A3_THEME_TOKENS,
+  a3ThemeTokens,
   darkThemeTokens,
   fontStack,
   lightThemeTokens,
+  resolveTheme,
   type ThemeTokens,
   themeFontSizes,
   themeObject,
@@ -171,6 +174,64 @@ describe("a registered theme's axis spacing", () => {
       nameLocation: "middle",
     });
     expect(plain - fromTheme).toBeGreaterThan(10);
+  });
+});
+
+describe("themeOption's legend, axis pointer, and 3D axis entries", () => {
+  it("sets the legend item gap in em of the legend size, and leaves it to ECharts unset", () => {
+    const set = themeOption(lightThemeTokens({ legend_font_size: 16, legend_item_gap: 0.5 }));
+    expect((set.legend as Record<string, unknown>).itemGap).toBe(8);
+    expect(themeOption(lightThemeTokens()).legend).not.toHaveProperty("itemGap");
+  });
+
+  it("draws the axis pointer in the neutral color", () => {
+    expect(themeOption(darkThemeTokens({ neutral_color: "#777777" })).axisPointer).toEqual({
+      lineStyle: { color: "#777777" },
+      label: { backgroundColor: "#777777" },
+    });
+  });
+
+  it("styles echarts-gl's 3D axes by axis type", () => {
+    const option = themeOption(
+      darkThemeTokens({ base_font_size: 14, grid_opacity: 0.4 }),
+    ) as Record<string, Record<string, Record<string, unknown>>>;
+    const axis = option.valueAxis3D as Record<string, Record<string, unknown>>;
+    expect(axis.axisLabel).toMatchObject({ color: "rgba(255, 255, 255, 0.7)", fontSize: 14 });
+    expect(axis.nameTextStyle).toMatchObject({ color: "rgba(255, 255, 255, 0.7)", fontSize: 14 });
+    expect(axis.axisLine).toEqual({ lineStyle: { color: "rgba(255, 255, 255, 0.3)" } });
+    expect(axis.splitLine).toEqual({
+      lineStyle: { color: "rgba(255, 255, 255, 0.1)", opacity: 0.4 },
+    });
+    for (const key of ["categoryAxis3D", "logAxis3D", "timeAxis3D"]) {
+      expect(option[key]).toEqual(axis);
+    }
+    // Without an axis color, the lines take the neutral color.
+    const light = themeOption(lightThemeTokens()).valueAxis3D as Record<string, unknown>;
+    expect(light.axisLine).toEqual({ lineStyle: { color: "#808080" } });
+  });
+});
+
+describe("the a3 tokens", () => {
+  it("fill each unset member from the scheme's theme", () => {
+    expect(a3ThemeTokens("dark")).toEqual(A3_THEME_TOKENS.dark);
+    const partial = a3ThemeTokens("light", { variant_color: "#123456" });
+    expect(partial).toEqual({ ...A3_THEME_TOKENS.light, variant_color: "#123456" });
+    expect(lightThemeTokens().a3).toEqual(A3_THEME_TOKENS.light);
+    expect(darkThemeTokens().a3).toEqual(A3_THEME_TOKENS.dark);
+  });
+
+  it("are derived by resolveTheme when unset and completed when partial", () => {
+    const { a3: _a3, ...bare } = darkThemeTokens();
+    const derived = resolveTheme(bare);
+    expect(derived.a3).toEqual(A3_THEME_TOKENS.dark);
+    expect(derived.origin?.a3).toBe("derived");
+    const partial = resolveTheme({
+      ...bare,
+      a3: { label_color: "#ffffff" },
+      origin: { a3: "user" },
+    });
+    expect(partial.a3).toEqual({ ...A3_THEME_TOKENS.dark, label_color: "#ffffff" });
+    expect(partial.origin?.a3).toBe("user");
   });
 });
 

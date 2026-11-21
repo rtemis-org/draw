@@ -54,8 +54,9 @@ test_that("importance boxes retain ranking, fold IDs, missing observations and s
     expect_equal(unlist(opt[[axis]][["data"]]), c("a", "c", "b"))
     expect_identical(isTRUE(opt[[axis]][["inverse"]]), horizontal)
     expect_identical(opt[[value_axis]][["name"]], "Gain")
-    expect_identical(opt[[value_axis]][["nameLocation"]], "middle")
-    expect_identical(opt[[axis]][["nameLocation"]], "middle")
+    # The theme supplies the name location.
+    expect_null(opt[[value_axis]][["nameLocation"]])
+    expect_null(opt[[axis]][["nameLocation"]])
     expect_equal(opt[["grid"]][["top"]], 36)
     expect_null(opt[[value_axis]][["axisLabel"]][["showMinLabel"]])
     expect_null(opt[[value_axis]][["axisLabel"]][["showMaxLabel"]])

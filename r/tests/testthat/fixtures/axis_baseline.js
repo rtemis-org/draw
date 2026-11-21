@@ -1,10 +1,12 @@
-// Inspect native axis marks in the SVG renderer, not just serialized flags.
+// Inspect the native axis marks the SVG renderer draws, beyond the serialized flags.
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const input = JSON.parse(fs.readFileSync(process.argv[2], 'utf8'));
 const echarts = require(input.echarts);
+// The widget projects a theme document with the builders' `themeObject()`.
+const themeOf = (doc) => doc && typeof doc === 'object' ? require(require('node:path').join(require('node:path').dirname(input.echarts), '..', 'draw', 'rtemis-draw-builders.js')).themeObject(doc) : doc || null;
 for (const item of input.charts) {
-  const chart = echarts.init(null, item.theme, {renderer: 'svg', ssr: true, width: 700, height: 500});
+  const chart = echarts.init(null, themeOf(item.theme), {renderer: 'svg', ssr: true, width: 700, height: 500});
   try {
     item.option.animation = false;
     chart.setOption(item.option);

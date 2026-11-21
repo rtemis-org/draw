@@ -1,10 +1,10 @@
-// Native vertical Sankey labels must remain complete, distinct and in bounds.
+// Native vertical Sankey labels must remain complete, distinct, and in bounds.
 const assert = require('node:assert/strict');
 const input = JSON.parse(require('node:fs').readFileSync(process.argv[2], 'utf8'));
 const echarts = require(input.echarts), layout = require(input.layout);
 for (const theme of [input.light, input.dark]) {
   const payload = structuredClone(input.payload);
-  const chart = echarts.init(null, theme, {renderer:'svg',ssr:true,width:1200,height:650});
+  const chart = echarts.init(null, require(require('node:path').join(require('node:path').dirname(input.echarts), '..', 'draw', 'rtemis-draw-builders.js')).themeObject(theme), {renderer:'svg',ssr:true,width:1200,height:650});
   try {
     payload.option.animation = false;
     chart.setOption(payload.option);

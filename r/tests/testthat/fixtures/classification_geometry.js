@@ -5,10 +5,12 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const input = JSON.parse(fs.readFileSync(process.argv[2], 'utf8'));
 const echarts = require(input.echarts);
+// The widget projects a theme document with the builders' `themeObject()`.
+const themeOf = (doc) => doc && typeof doc === 'object' ? require(require('node:path').join(require('node:path').dirname(input.echarts), '..', 'draw', 'rtemis-draw-builders.js')).themeObject(doc) : doc || null;
 const layout = require(input.layout);
 const confusion = require(input.confusion);
 for (const original of input.charts) {
-  const chart = echarts.init(null, original.theme, {
+  const chart = echarts.init(null, themeOf(original.theme), {
     renderer: 'svg', ssr: true, width: 800, height: 550
   });
   try {

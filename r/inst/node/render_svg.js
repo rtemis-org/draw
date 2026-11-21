@@ -52,7 +52,16 @@ function build(panel) {
   // borders take.
   const background = typeof panel.theme?.bg_color === "string" ? panel.theme.bg_color : undefined;
   const dark = panel.theme?.scheme === "dark";
-  const appearance = {...request.appearance, dark, ...(background ? {background} : {})};
+  // The theme tokens a builder reads at build time: the neutral color of
+  // reference lines and the A3 annotation colors.
+  const theme = panel.theme;
+  const appearance = {
+    ...request.appearance,
+    dark,
+    ...(background ? {background} : {}),
+    ...(typeof theme?.neutral_color === "string" ? {neutral: theme.neutral_color} : {}),
+    ...(theme?.a3 && typeof theme.a3 === "object" ? {a3: theme.a3} : {}),
+  };
   const option = {...builder(data, request.config, appearance)};
   // The builders leave the background to the host; export paints the theme's.
   delete option.backgroundColor;

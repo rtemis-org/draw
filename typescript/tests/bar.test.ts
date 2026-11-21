@@ -93,7 +93,7 @@ describe("buildBarOption", () => {
       ylim: [0, 10],
     });
     expect(option.xAxis).toMatchObject({ type: "value", name: "Count", min: 0, max: 10 });
-    expect(option.yAxis).toMatchObject({ type: "category", name: "Group", nameLocation: "middle" });
+    expect(option.yAxis).toMatchObject({ type: "category", name: "Group" });
     expect(option.grid).toMatchObject({ outerBoundsContain: "all" });
   });
 

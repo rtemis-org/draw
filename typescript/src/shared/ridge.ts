@@ -48,7 +48,7 @@ export function ridgeOption(input: RidgeInput): Record<string, unknown> {
       max: input.x[1],
       gridIndex: i,
       show: i === rows - 1,
-      ...(i === rows - 1 && xlab ? { name: xlab, nameLocation: "middle" } : {}),
+      ...(i === rows - 1 && xlab ? { name: xlab } : {}),
     })),
     yAxis: names.map((name, i) => ({
       type: "value",
@@ -56,7 +56,6 @@ export function ridgeOption(input: RidgeInput): Record<string, unknown> {
       max: high > 0 ? high * 1.05 : 1,
       gridIndex: i,
       name,
-      nameLocation: "middle",
       nameGap: 55,
       splitNumber: 2,
       axisLabel: { showMinLabel: false, showMaxLabel: false },

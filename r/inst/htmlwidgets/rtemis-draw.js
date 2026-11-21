@@ -45,6 +45,16 @@ if (typeof RtemisDraw !== 'undefined' && typeof echarts !== 'undefined') {
   RtemisDraw.registerRenderers(echarts);
 }
 
+// The theme tokens a builder reads at build time: the neutral color of
+// reference lines and the A3 annotation colors.
+function themeAppearance(theme) {
+  if (!theme) return {};
+  return {
+    ...(typeof theme.neutral_color === 'string' ? {neutral: theme.neutral_color} : {}),
+    ...(theme.a3 && typeof theme.a3 === 'object' ? {a3: theme.a3} : {}),
+  };
+}
+
 // Build the ECharts option of a payload that carries a build request, with the
 // @rtemis/draw builders (rtemis-draw-builders.js), for the current color
 // scheme. The A3 surface hints come from the same package; flags set in R
@@ -63,7 +73,12 @@ function rtemisDrawBuild(x, dark) {
   // An explicit theme states the scheme the builder draws in; the automatic
   // theme follows the page.
   const scheme = !x.autoTheme && theme ? theme.scheme === 'dark' : dark;
-  const appearance = {...request.appearance, dark: scheme, ...(background ? {background} : {})};
+  const appearance = {
+    ...request.appearance,
+    dark: scheme,
+    ...(background ? {background} : {}),
+    ...themeAppearance(theme),
+  };
   const option = {...builder(data, request.config, appearance)};
   // The builders leave the background to the host; the widget paints the theme's.
   delete option.backgroundColor;

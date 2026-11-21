@@ -14,6 +14,86 @@ export type FontWeight = number;
 /** Where an axis name sits along its axis. */
 export type AxisNameLocation = "start" | "middle" | "end";
 
+/**
+ * The annotation colors of A3 diagrams: the palettes recycled for regions,
+ * sites, modifications, and processing annotations, and the colors of
+ * residue markers, labels (residue and position), and variants.
+ */
+export interface A3ThemeTokens {
+  readonly region_palette: readonly string[];
+  readonly site_palette: readonly string[];
+  readonly ptm_palette: readonly string[];
+  readonly processing_palette: readonly string[];
+  readonly residue_fill_color: string;
+  readonly residue_stroke_color: string;
+  readonly label_color: string;
+  readonly position_label_color: string;
+  readonly variant_color: string;
+  readonly disease_variant_color: string;
+}
+
+/** The members of {@link A3ThemeTokens}, as rtemis.draw's `A3Theme` declares them. */
+export const A3_THEME_MEMBERS = Object.freeze([
+  "region_palette",
+  "site_palette",
+  "ptm_palette",
+  "processing_palette",
+  "residue_fill_color",
+  "residue_stroke_color",
+  "label_color",
+  "position_label_color",
+  "variant_color",
+  "disease_variant_color",
+] as const satisfies readonly (keyof A3ThemeTokens)[]);
+
+const A3_PALETTES = Object.freeze({
+  region_palette: Object.freeze(["#0F766E", "#2563EB", "#D97706", "#7C3AED", "#DC2626", "#0891B2"]),
+  site_palette: Object.freeze(["#0EA5E9", "#14B8A6", "#E11D48", "#A855F7", "#F97316", "#16A34A"]),
+  ptm_palette: Object.freeze(["#0284C7", "#F59E0B", "#10B981", "#8B5CF6", "#EF4444", "#14B8A6"]),
+  processing_palette: Object.freeze([
+    "#D97706",
+    "#DC2626",
+    "#0EA5E9",
+    "#9333EA",
+    "#16A34A",
+    "#DB2777",
+  ]),
+});
+
+/** The A3 tokens of rtemis.draw's light and dark themes. */
+export const A3_THEME_TOKENS: Readonly<Record<ColorScheme, A3ThemeTokens>> = Object.freeze({
+  light: Object.freeze({
+    ...A3_PALETTES,
+    residue_fill_color: "#efefef",
+    residue_stroke_color: "#44403C",
+    label_color: "#1C1917",
+    position_label_color: "#78716C",
+    variant_color: "#FA6E1E",
+    disease_variant_color: "#E266AE",
+  }),
+  dark: Object.freeze({
+    ...A3_PALETTES,
+    residue_fill_color: "#181818",
+    residue_stroke_color: "#a1a1aa",
+    label_color: "#fafafa",
+    position_label_color: "#a1a1aa",
+    variant_color: "#fb923c",
+    disease_variant_color: "#f472b6",
+  }),
+});
+
+/**
+ * The A3 tokens of a theme: its `a3` members, each unset member that of
+ * rtemis.draw's theme for the scheme.
+ */
+export function a3ThemeTokens(
+  scheme: ColorScheme,
+  a3?: Partial<A3ThemeTokens> | null,
+): A3ThemeTokens {
+  const defaults = A3_THEME_TOKENS[scheme === "dark" ? "dark" : "light"];
+  return Object.freeze({ ...defaults, ...present(a3 ?? {}) } as A3ThemeTokens);
+}
+
 /** A theme's tokens. Unset text sizes follow `base_font_size`; unset text colors follow `fg_color`. */
 export interface ThemeTokens {
   readonly scheme: ColorScheme;
@@ -68,6 +148,13 @@ export interface ThemeTokens {
   readonly axis_name_location?: AxisNameLocation | null;
   /** Whether axis lines show; unset is ECharts' default for each axis type. */
   readonly axis_line_show?: boolean | null;
+  /**
+   * Gap between legend items, in em of the legend font size; unset is
+   * ECharts' default, 10 pixels.
+   */
+  readonly legend_item_gap?: number | null;
+  /** The A3 annotation colors; an unset member is that of the scheme's theme. */
+  readonly a3?: Partial<A3ThemeTokens>;
 }
 
 /** rtemis' categorical palette. */
@@ -120,6 +207,7 @@ export function lightThemeTokens(overrides: Partial<ThemeTokens> = {}): ThemeTok
     negative_color: SIGN_COLORS.negative,
     neutral_color: SIGN_COLORS.neutral,
     positive_color: SIGN_COLORS.positive,
+    a3: A3_THEME_TOKENS.light,
     ...overrides,
   });
 }
@@ -142,6 +230,7 @@ export function darkThemeTokens(overrides: Partial<ThemeTokens> = {}): ThemeToke
     negative_color: SIGN_COLORS.negative,
     neutral_color: SIGN_COLORS.neutral,
     positive_color: SIGN_COLORS.positive,
+    a3: A3_THEME_TOKENS.dark,
     ...overrides,
   });
 }
@@ -319,6 +408,17 @@ export function themeOption(tokens: ThemeTokens): Json {
   const splitLine = Object.keys(gridLine).length > 0 ? { lineStyle: gridLine } : undefined;
   const axisName = present({ nameLocation: tokens.axis_name_location, nameTextStyle });
   const valueAxis = present({ ...axisName, axisLabel, axisLine, axisTick, splitLine });
+  // echarts-gl's 3D axes read the theme by axis type (`valueAxis3D`). Their
+  // text is the theme's; their lines, without an axis color, the neutral
+  // color; and their gridlines the grid color and opacity, as echarts-gl
+  // draws every gridline solid.
+  const gridLine3D = present({ color: tokens.grid_color, opacity: tokens.grid_opacity });
+  const axis3D = present({
+    axisLabel: present({ ...axisLabelText, fontFamily: textStyle.fontFamily }),
+    nameTextStyle: textStyle,
+    axisLine: { lineStyle: { color: tokens.axis_color ?? tokens.neutral_color } },
+    splitLine: Object.keys(gridLine3D).length > 0 ? { lineStyle: gridLine3D } : undefined,
+  });
   // The radar coordinate system: indicator names in the axis label style,
   // spokes in the axis color, and rings and their bands in the grid color.
   // ECharts merges a theme's `radar` entry into the radar component and into
@@ -346,8 +446,14 @@ export function themeOption(tokens: ThemeTokens): Json {
       ),
       subtextStyle: withText(present({ color: tokens.subtitle_color, fontSize: sizes.subtitle })),
     },
-    legend: {
+    legend: present({
+      itemGap: em(tokens.legend_item_gap, sizes.legend),
       textStyle: withText({ color: tokens.legend_color ?? fg, fontSize: sizes.legend }),
+    }),
+    // The pointer line and its value label on an axis, in the neutral color.
+    axisPointer: {
+      lineStyle: { color: tokens.neutral_color },
+      label: { backgroundColor: tokens.neutral_color },
     },
     tooltip: present({
       backgroundColor: tokens.tooltip_bg,
@@ -373,6 +479,10 @@ export function themeOption(tokens: ThemeTokens): Json {
     valueAxis,
     logAxis: valueAxis,
     timeAxis: valueAxis,
+    valueAxis3D: axis3D,
+    categoryAxis3D: axis3D,
+    logAxis3D: axis3D,
+    timeAxis3D: axis3D,
   };
 }
 
@@ -424,6 +534,8 @@ export const THEME_DOCUMENT_MEMBERS = Object.freeze([
   "axis_name_gap",
   "axis_name_location",
   "axis_line_show",
+  "legend_item_gap",
+  "a3",
   "echarts",
   "origin",
   "writer",
@@ -434,7 +546,8 @@ export const THEME_DOCUMENT_MEMBERS = Object.freeze([
  * marked `"derived"`: the title size, 1.2 times `base_font_size` rounded half
  * to even; the subtitle, axis label, legend, tooltip, and color scale sizes,
  * `base_font_size`; the title, subtitle, legend, and tooltip colors,
- * `fg_color`; and the font family, {@link DEFAULT_FONT_FAMILY}. Tokens left to
+ * `fg_color`; the font family, {@link DEFAULT_FONT_FAMILY}; and the A3 colors,
+ * {@link a3ThemeTokens}, unset members included. Tokens left to
  * a backend's own default stay unset. rtemis.draw's `resolve_theme()` ports
  * these rules. spec: draw/chart-appearance#the-theme
  */
@@ -462,6 +575,11 @@ export function resolveTheme(doc: ThemeDocument): ThemeDocument {
     derive(name, doc.fg_color);
   }
   derive("font_family", DEFAULT_FONT_FAMILY);
+  if (out.a3 === undefined || out.a3 === null) {
+    derive("a3", a3ThemeTokens(doc.scheme));
+  } else {
+    out.a3 = a3ThemeTokens(doc.scheme, doc.a3);
+  }
   return { ...(out as unknown as ThemeDocument), origin };
 }
 

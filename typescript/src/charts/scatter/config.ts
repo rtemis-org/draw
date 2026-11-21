@@ -315,7 +315,7 @@ export function buildScatterOption(
   const yName = config.ylab ?? null;
   const xAxis: Record<string, unknown> = {
     type: time ? "time" : "value",
-    ...(xName ? { name: xName, nameLocation: "middle" } : {}),
+    ...(xName ? { name: xName } : {}),
     ...(time ? {} : { scale: true }),
     ...(xLim ? { min: xLim[0], max: xLim[1] } : {}),
     splitLine: NO_CORNER_LINES,
@@ -324,7 +324,7 @@ export function buildScatterOption(
   };
   const yAxis: Record<string, unknown> = {
     type: "value",
-    ...(yName ? { name: yName, nameLocation: "middle" } : {}),
+    ...(yName ? { name: yName } : {}),
     scale: true,
     ...(yLim ? { min: yLim[0], max: yLim[1] } : {}),
     splitLine: NO_CORNER_LINES,

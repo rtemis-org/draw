@@ -347,3 +347,34 @@ test_that("A3 empty display choices and zero marker configs still export", {
     path
   ))
 })
+
+test_that("A3 SVG export takes its colors from the theme's a3 tokens", {
+  skip_if_not_installed("rtemis.a3")
+  skip_if_no_node()
+  path <- tempfile(fileext = ".svg")
+  on.exit(unlink(path), add = TRUE)
+  theme <- theme_light(a3 = A3Theme(residue_stroke_color = "#a52a2a"))
+  save_drawing(
+    draw_a3(a3_fixture(), n_per_row = 12L, theme = theme),
+    path,
+    width = 1200,
+    height = 600
+  )
+  svg <- paste(readLines(path, warn = FALSE), collapse = "\n")
+  expect_match(svg, "#a52a2a", fixed = TRUE)
+  # A config color member replaces the theme's.
+  save_drawing(
+    draw_a3(
+      a3_fixture(),
+      n_per_row = 12L,
+      residue_stroke = "#2a52a5",
+      theme = theme
+    ),
+    path,
+    width = 1200,
+    height = 600
+  )
+  svg <- paste(readLines(path, warn = FALSE), collapse = "\n")
+  expect_match(svg, "#2a52a5", fixed = TRUE)
+  expect_false(grepl("#a52a2a", svg, fixed = TRUE))
+})

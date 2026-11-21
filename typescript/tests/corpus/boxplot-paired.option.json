@@ -7,8 +7,7 @@
     "scale": true,
     "min": 46.07,
     "max": 66.53,
-    "name": "Score",
-    "nameLocation": "middle"
+    "name": "Score"
   },
   "yAxis": {
     "type": "category",
@@ -428,7 +427,7 @@
         "width": 1
       },
       "itemStyle": {
-        "color": "#888888"
+        "color": "#808080"
       },
       "data": [
         [
@@ -544,6 +543,9 @@
     {
       "type": "custom",
       "renderItem": "rtemis.boxplot_brackets.v1",
+      "itemStyle": {
+        "color": "#808080"
+      },
       "silent": true,
       "clip": true,
       "z": 4,

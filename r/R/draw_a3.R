@@ -57,7 +57,7 @@
 #' @param variant_color Optional Character: Label color for variant residues.
 #' @param disease_variant_color Optional Character: Label color for disease-associated
 #'   variant residues (takes precedence over `variant_color`).
-#'   `NULL` color arguments follow the light/dark A3 theme.
+#'   `NULL` color arguments follow the theme's [A3Theme] (`a3`).
 #' @param zoom Logical: Enable Shift+wheel zoom, and wheel and drag panning,
 #'   along the sequence.
 #' @param title Optional Character: Chart title.

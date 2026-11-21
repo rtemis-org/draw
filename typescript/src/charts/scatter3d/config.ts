@@ -317,9 +317,7 @@ export function buildScatter3DOption(
       ...valueAxis(min, max),
       name: labels[d],
       nameGap: 25,
-      axisLine: { lineStyle: { color: "#888888" } },
-      axisLabel: { color: "#888888", formatter: axisTicks(niceAxis(min, max), d === 2) },
-      nameTextStyle: { color: "#888888" },
+      axisLabel: { formatter: axisTicks(niceAxis(min, max), d === 2) },
     };
   });
   const memberPalette = asArray(config.palette);
