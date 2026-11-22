@@ -18,7 +18,7 @@ for (const original of payload.charts) {
       layout.fit(current, width, height);
       chart.resize({width, height});
       chart.setOption(current.option, true);
-      layout.fitAxes(chart, current);
+      layout.fitChart(echarts, chart, current);
       const grid = chart.getModel().getComponent('grid').coordinateSystem.getRect();
       assert.ok(Math.abs(grid.height / grid.width - current.aspect.ratio) < 1e-10);
       const texts = chart.getZr().storage.getDisplayList(true).filter(el => el.type === 'tspan');

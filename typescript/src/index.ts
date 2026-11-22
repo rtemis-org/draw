@@ -351,9 +351,10 @@ export type {
   FitContext,
   FitECharts,
   FitHints,
+  FitLegendMembers,
   FitResult,
 } from "./layout/fit.ts";
-export { FIT_EVENTS, fit, fitState } from "./layout/fit.ts";
+export { FIT_EVENTS, fit, fitSquareCells, fitState } from "./layout/fit.ts";
 export type { KeyContext, KeyPlacement, KeyReserve, SizeKeySpec } from "./layout/keys.ts";
 export {
   fitKeys,
@@ -401,7 +402,7 @@ export type { AxisLimits } from "./shared/limits.ts";
 export { calcLimits, calcLimitsFromZero, DEFAULT_PAD } from "./shared/limits.ts";
 export { RENDERER_NAMES, registerRenderers } from "./shared/renderers.ts";
 export type { RepelLabelParams, RepelLabelPosition } from "./shared/repel.ts";
-export { applyRepelLabels, repelLabels } from "./shared/repel.ts";
+export { applyRepelLabels, attachLabelLayouts, repelLabels } from "./shared/repel.ts";
 export type { ColumnarSource, ColumnNames, ColumnType, TabularData } from "./shared/source.ts";
 export { timeLabel, timeMs } from "./shared/source.ts";
 export type { ChoroplethTheme, NetworkTheme } from "./theme/backends.ts";

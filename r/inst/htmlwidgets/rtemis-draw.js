@@ -254,7 +254,6 @@ function rtemisDrawFactory(el, width, height, bounded = false, onBackground = ()
       const bgColor = x.option?.backgroundColor || themeObj?.backgroundColor || 'transparent';
       surface.paint(bgColor);
       rtemisPanels.prepareLabels(x);
-      rtemisPanels.prepareColors(echarts, x, themeObj);
 
       chart = echarts.init(el, themeName, {
         renderer: x.renderer || "canvas",
@@ -265,20 +264,15 @@ function rtemisDrawFactory(el, width, height, bounded = false, onBackground = ()
       if (x.option.grid3D) rtemisScatter3D.prepare(x.option, themeObj, currentWidth, currentHeight);
       chart.setOption(x.option, true);
       if (x.option.grid3D) rtemisScatter3D.dottedGuides(chart);
-      rtemisPanels.fitGantt(echarts, chart, x);
-      rtemisA3.fit(chart, x, bounded);
-      if (x.a3 && !bounded && x.a3.autoHeight) {
-        currentHeight = chart.getHeight();
+      // The package's fit lays the chart out on its surface; an unbounded A3
+      // surface takes the diagram's height.
+      const fitted = rtemisPanels.fitChart(echarts, chart, x, bounded);
+      if (fitted?.height !== undefined) {
+        currentHeight = fitted.height;
         el.style.height = `${currentHeight}px`;
       }
       onBackground();
-      rtemisPanels.fitAxes(chart, x);
-      rtemisPanels.fitHeatmap(chart, x);
-      rtemisPanels.positionLegend(echarts, chart, x);
-      rtemisPanels.centerVisualMaps(chart, x, echarts);
       // Zoom and reset change axis extents; endpoint labels follow them.
-      // Optional calls: the Node widget fixtures stub rtemisPanels.
-      rtemisPanels.fitEndpointLabels?.(chart, x);
       if (x.option?.dataZoom || x.option?.toolbox) {
         chart.on("datazoom", () => rtemisPanels.fitEndpointLabels(chart, x));
         chart.on("restore", () => rtemisPanels.fitEndpointLabels(chart, x));
@@ -377,12 +371,12 @@ function rtemisDrawFactory(el, width, height, bounded = false, onBackground = ()
           chart.resize({width, height});
           chart.setOption({grid3D:{left:currentPayload.option.grid3D.left,width:currentPayload.option.grid3D.width,height:currentPayload.option.grid3D.height,viewControl:{orthographicSize:currentPayload.option.grid3D.viewControl.orthographicSize,distance:currentPayload.option.grid3D.viewControl.distance,maxDistance:currentPayload.option.grid3D.viewControl.maxDistance}},
             xAxis3D:currentPayload.option.xAxis3D,yAxis3D:currentPayload.option.yAxis3D,zAxis3D:currentPayload.option.zAxis3D,graphic:currentPayload.option.graphic});
-          rtemisPanels.positionLegend(echarts, chart, currentPayload);
+          rtemisPanels.fitChart(echarts, chart, currentPayload, bounded);
           return;
         }
         if (currentPayload?.a3 && chart) {
           chart.resize({width, height});
-          rtemisA3.fit(chart, currentPayload, bounded);
+          rtemisPanels.fitChart(echarts, chart, currentPayload, bounded);
           currentHeight = chart.getHeight();
           if (!bounded && currentPayload.a3.autoHeight) el.style.height = `${currentHeight}px`;
           return;
@@ -397,6 +391,7 @@ function rtemisDrawFactory(el, width, height, bounded = false, onBackground = ()
           if (chart) {
             chart.resize({width, height: currentHeight});
             chart.setOption(currentPayload.option, true);
+            rtemisPanels.fitChart(echarts, chart, currentPayload, bounded);
           }
           return;
         }
@@ -408,9 +403,7 @@ function rtemisDrawFactory(el, width, height, bounded = false, onBackground = ()
           currentHeight = newHeight;
           if (chart) {
             chart.resize({ width, height: newHeight });
-            rtemisPanels.fitHeatmap(chart, currentPayload);
-            rtemisPanels.centerVisualMaps(chart, currentPayload, echarts);
-            rtemisPanels.fitEndpointLabels?.(chart, currentPayload);
+            rtemisPanels.fitChart(echarts, chart, currentPayload, bounded);
           }
           return;
         }
@@ -426,17 +419,11 @@ function rtemisDrawFactory(el, width, height, bounded = false, onBackground = ()
           if (chart) {
             chart.resize({ width, height: aspectHeight });
             chart.setOption({ grid: currentPayload.option.grid });
-            rtemisPanels.fitAxes(chart, currentPayload);
-            rtemisPanels.positionLegend(echarts, chart, currentPayload);
-            rtemisPanels.centerVisualMaps(chart, currentPayload, echarts);
-            rtemisPanels.fitEndpointLabels?.(chart, currentPayload);
+            rtemisPanels.fitChart(echarts, chart, currentPayload, bounded);
           }
         } else if (chart) {
           chart.resize({ width, height });
-          rtemisPanels.fitGantt(echarts, chart, currentPayload);
-          rtemisPanels.positionLegend(echarts, chart, currentPayload);
-          rtemisPanels.centerVisualMaps(chart, currentPayload, echarts);
-          rtemisPanels.fitEndpointLabels?.(chart, currentPayload);
+          rtemisPanels.fitChart(echarts, chart, currentPayload, bounded);
         }
       },
 

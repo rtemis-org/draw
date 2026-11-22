@@ -80,6 +80,7 @@ var RtemisDraw = (() => {
     appendLayers: () => appendLayers,
     applyRepelLabels: () => applyRepelLabels,
     aspectHints: () => aspectHints,
+    attachLabelLayouts: () => attachLabelLayouts,
     autoAlpha: () => autoAlpha,
     axisLabelInset: () => axisLabelInset,
     axisTooltip: () => axisTooltip,
@@ -145,6 +146,7 @@ var RtemisDraw = (() => {
     fitLegend: () => fitLegend,
     fitPieLabels: () => fitPieLabels,
     fitSankey: () => fitSankey,
+    fitSquareCells: () => fitSquareCells,
     fitState: () => fitState,
     fitSurfaceAxes: () => fitSurfaceAxes,
     flattenColor: () => flattenColor,
@@ -11152,35 +11154,6 @@ ${rate(r.balancedAccuracy)}`, summary2) }
     if (Object.keys(update).length) chart.setOption(update);
   }
 
-  // src/layout/fit.ts
-  var FIT_EVENTS = Object.freeze([
-    "legendselectchanged",
-    "legendscroll",
-    "datazoom",
-    "restore"
-  ]);
-  var OWN_LAYOUT = /* @__PURE__ */ new Set(["a3"]);
-  function fit(echarts, chart, context) {
-    const { option, type } = context;
-    if (!(type && OWN_LAYOUT.has(type))) {
-      const heatmap = context.hints?.heatmap;
-      if (heatmap) fitHeatmap(chart, option, heatmap);
-      if (type === "scatter") {
-        fitKeys(echarts, chart, {
-          option,
-          ...context.placement ? { placement: context.placement } : {}
-        });
-      } else {
-        placeColorScale(chart, { option });
-      }
-      fitLegend(chart, { option });
-    }
-    return { state: fitState(chart) };
-  }
-  function fitState(chart) {
-    return keyState(chart);
-  }
-
   // src/layout/legend.ts
   var LEGEND_TITLE_ID = "rtemis-legend-title";
   function measureLegendTitle(echarts, chart, model, text, maxWidth = Number.POSITIVE_INFINITY) {
@@ -11436,84 +11409,6 @@ ${rate(r.balancedAccuracy)}`, summary2) }
     chart.setOption({ legend: updates });
   }
 
-  // src/layout/measure.ts
-  var round = (v) => Math.round(v * 10) / 10;
-  var rounded = (r) => ({
-    x: round(r.x),
-    y: round(r.y),
-    width: round(r.width),
-    height: round(r.height)
-  });
-  function blank(color) {
-    if (color === null || color === void 0 || color === "none" || color === "transparent") {
-      return true;
-    }
-    return typeof color === "string" && /^rgba\(.*,\s*0(\.0*)?\s*\)$/.test(color);
-  }
-  function paints(el) {
-    const style = el.style ?? {};
-    if (typeof style.text === "string") return style.text.length > 0;
-    if (!blank(style.fill)) return true;
-    const width = typeof style.lineWidth === "number" ? style.lineWidth : 1;
-    return !blank(style.stroke) && width > 0;
-  }
-  function extent(group, keep = () => true) {
-    let x0 = Number.POSITIVE_INFINITY;
-    let y0 = Number.POSITIVE_INFINITY;
-    let x1 = Number.NEGATIVE_INFINITY;
-    let y1 = Number.NEGATIVE_INFINITY;
-    group.traverse((el) => {
-      if (el.isGroup || el.invisible || el.ignore || !paints(el) || !keep(el)) return;
-      const r = el.getBoundingRect().clone();
-      r.applyTransform(el.getComputedTransform());
-      if (!(r.width > 0 || r.height > 0)) return;
-      x0 = Math.min(x0, r.x);
-      y0 = Math.min(y0, r.y);
-      x1 = Math.max(x1, r.x + r.width);
-      y1 = Math.max(y1, r.y + r.height);
-    });
-    return Number.isFinite(x0) ? rounded({ x: x0, y: y0, width: x1 - x0, height: y1 - y0 }) : null;
-  }
-  function componentExtent(chart, type, keep) {
-    const model = chart.getModel().getComponent(type);
-    if (!model || model.get("show") === false) return null;
-    const view = chart.getViewOfComponentModel(model);
-    return view ? extent(view.group, keep) : null;
-  }
-  var isGradient = (el) => {
-    const fill = el.style?.fill;
-    return Boolean(fill && typeof fill === "object" && fill.colorStops);
-  };
-  function measureLayout(chart) {
-    const model = chart.getModel();
-    const plots = [];
-    for (let i = 0; ; i++) {
-      const grid = model.getComponent("grid", i);
-      if (!grid) break;
-      const rect = grid.coordinateSystem?.getRect?.();
-      if (rect && rect.width > 0) plots.push(rounded(rect));
-    }
-    const fromGrid = plots.length > 0;
-    if (!fromGrid && chart.getViewOfSeriesModel) {
-      for (const series of model.getSeries?.() ?? []) {
-        const view = chart.getViewOfSeriesModel(series);
-        const rect = view ? extent(view.group) : null;
-        if (rect) plots.push(rect);
-      }
-    }
-    const scale = model.getComponent("visualMap");
-    const scaleView = scale && scale.get("show") !== false ? chart.getViewOfComponentModel(scale) : void 0;
-    return {
-      pane: { width: chart.getWidth(), height: chart.getHeight() },
-      plots,
-      plotsFrom: fromGrid ? "grid" : plots.length > 0 ? "series" : "none",
-      legend: componentExtent(chart, "legend"),
-      colorScale: scaleView ? extent(scaleView.group) : null,
-      colorScaleBar: scaleView ? extent(scaleView.group, isGradient) : null,
-      title: componentExtent(chart, "title")
-    };
-  }
-
   // src/layout/scales.ts
   function layoutColorScale(echarts, chart, context) {
     const position = context.position;
@@ -11660,6 +11555,182 @@ ${rate(r.balancedAccuracy)}`, summary2) }
     if (changed) chart.setOption({ visualMap: updates });
   }
 
+  // src/layout/fit.ts
+  var FIT_EVENTS = Object.freeze([
+    "legendselectchanged",
+    "legendscroll",
+    "datazoom",
+    "restore"
+  ]);
+  var OWN_LAYOUT = /* @__PURE__ */ new Set(["a3"]);
+  function fit(echarts, chart, context) {
+    if (context.members) return fitWithMembers(echarts, chart, context, context.members);
+    const { option, type } = context;
+    const a3 = context.hints?.a3;
+    if (a3) {
+      fitA3(chart, { option, hints: a3, bounded: context.bounded ?? true });
+    } else if (!(type && OWN_LAYOUT.has(type))) {
+      const heatmap = context.hints?.heatmap;
+      if (heatmap) fitHeatmap(chart, option, heatmap);
+      if (type === "scatter") {
+        fitKeys(echarts, chart, {
+          option,
+          ...context.placement ? { placement: context.placement } : {}
+        });
+      } else {
+        placeColorScale(chart, { option });
+      }
+      fitLegend(chart, { option });
+    }
+    return { state: fitState(chart) };
+  }
+  function fitWithMembers(echarts, chart, context, members) {
+    const instance = chart;
+    const { option, type } = context;
+    const hints = context.hints ?? {};
+    const bounded = context.bounded ?? true;
+    fitGantt(echarts, instance, { option, legendPosition: members.position ?? null });
+    let height;
+    if (hints.a3) {
+      fitA3(instance, { option, hints: hints.a3, bounded });
+      if (!bounded && hints.a3.autoHeight) height = instance.getHeight();
+    }
+    if (hints.aspect) fitAspectAxes(instance, hints.aspect);
+    if (hints.heatmap?.squareCells) fitSquareCells(instance, option, hints.heatmap);
+    fitSankey(echarts, instance, { option });
+    fitEndpointLabels(instance, { option });
+    layoutLegend(echarts, instance, {
+      option,
+      position: members.position ?? null,
+      placement: members.placement ?? null,
+      title: members.title ?? null,
+      titleAbove: members.titleAbove ?? false,
+      target: members.target ?? null,
+      aspect: hints.aspect ?? null
+    });
+    fitPieLabels(echarts, instance, { option });
+    if (type === "scatter") {
+      let hasLegend = false;
+      instance.getModel().eachComponent("legend", (model) => {
+        if (model.get("show") && model.getData().length) hasLegend = true;
+      });
+      const aspect = hints.aspect;
+      fitKeys(echarts, chart, {
+        option,
+        placement: keyPlacement(members.position, members.placement, hasLegend),
+        ...aspect ? { afterReserve: () => fitAspectAxes(instance, aspect) } : {}
+      });
+    } else if (members.target === "visualMap") {
+      layoutColorScale(echarts, instance, {
+        option,
+        position: members.position ?? null,
+        placement: members.placement ?? null,
+        title: members.title ?? null,
+        heatmap: hints.heatmap ?? null
+      });
+    } else {
+      centerColorScales(instance, { option });
+    }
+    fitEndpointLabels(instance, { option });
+    return { state: fitState(chart), ...height === void 0 ? {} : { height } };
+  }
+  function fitSquareCells(chart, option, hints) {
+    if (!hints.squareCells) return;
+    const { nRows, nCols, leftPx, rightPx, topPx, botPx } = hints;
+    if (![nRows, nCols].every((v) => Number.isInteger(v) && v > 0) || ![leftPx, rightPx, topPx, botPx].every((v) => Number.isFinite(v) && v >= 0)) {
+      throw new Error("Supply positive heatmap dimensions and nonnegative pixel margins.");
+    }
+    const cell = Math.min(
+      (chart.getWidth() - leftPx - rightPx) / nCols,
+      (chart.getHeight() - topPx - botPx) / nRows
+    );
+    if (cell <= 0) {
+      throw new Error("Increase figure dimensions to leave room for heatmap cells and margins.");
+    }
+    fitHeatmap(chart, option, hints);
+  }
+  function fitState(chart) {
+    return keyState(chart);
+  }
+
+  // src/layout/measure.ts
+  var round = (v) => Math.round(v * 10) / 10;
+  var rounded = (r) => ({
+    x: round(r.x),
+    y: round(r.y),
+    width: round(r.width),
+    height: round(r.height)
+  });
+  function blank(color) {
+    if (color === null || color === void 0 || color === "none" || color === "transparent") {
+      return true;
+    }
+    return typeof color === "string" && /^rgba\(.*,\s*0(\.0*)?\s*\)$/.test(color);
+  }
+  function paints(el) {
+    const style = el.style ?? {};
+    if (typeof style.text === "string") return style.text.length > 0;
+    if (!blank(style.fill)) return true;
+    const width = typeof style.lineWidth === "number" ? style.lineWidth : 1;
+    return !blank(style.stroke) && width > 0;
+  }
+  function extent(group, keep = () => true) {
+    let x0 = Number.POSITIVE_INFINITY;
+    let y0 = Number.POSITIVE_INFINITY;
+    let x1 = Number.NEGATIVE_INFINITY;
+    let y1 = Number.NEGATIVE_INFINITY;
+    group.traverse((el) => {
+      if (el.isGroup || el.invisible || el.ignore || !paints(el) || !keep(el)) return;
+      const r = el.getBoundingRect().clone();
+      r.applyTransform(el.getComputedTransform());
+      if (!(r.width > 0 || r.height > 0)) return;
+      x0 = Math.min(x0, r.x);
+      y0 = Math.min(y0, r.y);
+      x1 = Math.max(x1, r.x + r.width);
+      y1 = Math.max(y1, r.y + r.height);
+    });
+    return Number.isFinite(x0) ? rounded({ x: x0, y: y0, width: x1 - x0, height: y1 - y0 }) : null;
+  }
+  function componentExtent(chart, type, keep) {
+    const model = chart.getModel().getComponent(type);
+    if (!model || model.get("show") === false) return null;
+    const view = chart.getViewOfComponentModel(model);
+    return view ? extent(view.group, keep) : null;
+  }
+  var isGradient = (el) => {
+    const fill = el.style?.fill;
+    return Boolean(fill && typeof fill === "object" && fill.colorStops);
+  };
+  function measureLayout(chart) {
+    const model = chart.getModel();
+    const plots = [];
+    for (let i = 0; ; i++) {
+      const grid = model.getComponent("grid", i);
+      if (!grid) break;
+      const rect = grid.coordinateSystem?.getRect?.();
+      if (rect && rect.width > 0) plots.push(rounded(rect));
+    }
+    const fromGrid = plots.length > 0;
+    if (!fromGrid && chart.getViewOfSeriesModel) {
+      for (const series of model.getSeries?.() ?? []) {
+        const view = chart.getViewOfSeriesModel(series);
+        const rect = view ? extent(view.group) : null;
+        if (rect) plots.push(rect);
+      }
+    }
+    const scale = model.getComponent("visualMap");
+    const scaleView = scale && scale.get("show") !== false ? chart.getViewOfComponentModel(scale) : void 0;
+    return {
+      pane: { width: chart.getWidth(), height: chart.getHeight() },
+      plots,
+      plotsFrom: fromGrid ? "grid" : plots.length > 0 ? "series" : "none",
+      legend: componentExtent(chart, "legend"),
+      colorScale: scaleView ? extent(scaleView.group) : null,
+      colorScaleBar: scaleView ? extent(scaleView.group, isGradient) : null,
+      title: componentExtent(chart, "title")
+    };
+  }
+
   // src/shared/labels.ts
   function valueLabel(config, name = (column2) => column2) {
     const ys = asArray(config.y);
@@ -11780,6 +11851,21 @@ ${rate(r.balancedAccuracy)}`, summary2) }
       if (!s?.rtemisRepelLabels) continue;
       repel = repel ?? repelLabels();
       s.labelLayout = repel;
+    }
+    return option;
+  }
+  function attachLabelLayouts(option) {
+    applyRepelLabels(option);
+    const series = option.series;
+    if (!Array.isArray(series)) return option;
+    for (const s of series) {
+      if (!s?.rtemisCellNotes) continue;
+      s.label = { ...s.label, overflow: "truncate", ellipsis: "..." };
+      s.labelLayout = (params) => ({
+        width: Math.max(0, params.rect.width - 5),
+        height: Math.max(0, params.rect.height - 3),
+        hideOverlap: true
+      });
     }
     return option;
   }

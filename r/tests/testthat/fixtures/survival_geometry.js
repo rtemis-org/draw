@@ -18,7 +18,7 @@ for (const payload of input.charts) {
     try {
       payload.option.animation = false;
       chart.setOption(payload.option);
-      layout.positionLegend(echarts, chart, payload);
+      layout.fitChart(echarts, chart, payload);
       const svg = chart.renderToSVGString(); // Resolve text attachment transforms.
       const models = chart.getModel().getSeries();
       const curve = models[0];

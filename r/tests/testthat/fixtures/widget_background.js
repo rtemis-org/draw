@@ -51,7 +51,7 @@ for (const location of ['standalone', 'embedded', 'embedded-direct', 'embedded-h
     HTMLWidgets: {widget() {}},
     RtemisDraw: builders,
     rtemisA3: {fit() {}},
-    rtemisPanels: {background: require(path.join(directory, 'panels.js')).background, cells: require(path.join(directory, 'panels.js')).cells, fitHeatmap() {}, fitGantt() {}, prepareLabels: require(path.join(directory, 'panels.js')).prepareLabels, prepareColors() {}, fitAxes() {}, positionLegend() {}, centerVisualMaps() {}},
+    rtemisPanels: {background: require(path.join(directory, 'panels.js')).background, cells: require(path.join(directory, 'panels.js')).cells, fitHeatmap() {}, fitGantt() {}, prepareLabels: require(path.join(directory, 'panels.js')).prepareLabels, fitAxes() {}, positionLegend() {}, centerVisualMaps() {}, fitChart() { return {}; }},
     echarts: {registerTheme() {}, registerCustomSeries() {}, init() {return {setOption() {}, dispose() {}};}}
   };
   vm.createContext(context);

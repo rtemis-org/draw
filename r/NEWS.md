@@ -1,5 +1,7 @@
 # rtemis.draw 0.5.5
 
+* A legend placed by `legend_position` aligns with the plot area as drawn, after the value axes' end labels are set, and a legend in a narrow panel keeps each name on one line.
+
 * `Theme`, `theme_light()`, and `theme_dark()` gain `legend_item_gap`, the gap between legend items in em of the legend text size, and `a3`, an `A3Theme` of the A3 annotation palettes and colors; an A3 diagram takes its colors from the theme unless its config sets them, and its legend, title, and fonts from the theme's general tokens.
 
 * Charts write no theme-owned styling: the ROC, precision-recall, calibration, and survival legends take the theme's text size and ECharts' item gap; 3D axes take the theme's text and axis colors; reference lines, chance diagonals, boxplot brackets, and axis pointers take the theme's `neutral_color`. `ROCConfig` and `CalibrationConfig` `diagonal_color` default to `NULL`, the neutral color.

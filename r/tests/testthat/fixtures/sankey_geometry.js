@@ -10,7 +10,7 @@ for (const theme of [input.light, input.dark]) {
     chart.setOption(payload.option);
     for (const width of [1200,390,760,1200]) {
       chart.resize({width,height:650});
-      layout.fitSankey(echarts, chart, payload);
+      layout.fitChart(echarts, chart, payload);
       const data=chart.getModel().getSeriesByIndex(0).getData();
       const boxes=[];
       for(let i=0;i<data.count();i++) {
@@ -32,7 +32,7 @@ for (const theme of [input.light, input.dark]) {
     // An explicit low-level label position must not be replaced by auto-fit.
     payload.option.series[0].label.position = 'inside';
     chart.setOption(payload.option, true);
-    layout.fitSankey(echarts,chart,payload);
+    layout.fitChart(echarts,chart,payload);
     assert.equal(chart.getModel().getSeriesByIndex(0).get('label.position'),'inside');
   } finally {chart.dispose();}
 }

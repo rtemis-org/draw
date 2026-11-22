@@ -7,7 +7,7 @@ for(const roseType of [null,'radius']) {
   const payload={legendPosition:'top',legendPlacement:'outside',option:{animation:false,legend:{},series:[{type:'pie',radius:'75%',roseType,label:{alignTo:'edge',edgeDistance:8},data:labels.map((name,i)=>({name,value:[151,68,123][i]}))}]}};
   const chart=echarts.init(null,null,{renderer:'svg',ssr:true,width:390,height:600});
   chart.setOption(payload.option);
-  layout.positionLegend(echarts,chart,payload);
+  layout.fitChart(echarts,chart,payload);
   const check=()=>{
     const data=chart.getModel().getSeries()[0].getData();
     for(let i=0;i<data.count();i++) {
@@ -19,7 +19,7 @@ for(const roseType of [null,'radius']) {
     }
   };
   check(); const small=chart.getModel().getSeries()[0].getData().getLayout('r');
-  chart.resize({width:1100,height:600});layout.positionLegend(echarts,chart,payload);check();
+  chart.resize({width:1100,height:600});layout.fitChart(echarts,chart,payload);check();
   assert(chart.getModel().getSeries()[0].getData().getLayout('r')>small);
   chart.dispose();
 }

@@ -8,7 +8,8 @@ const scripts = JSON.parse(fs.readFileSync(process.argv[2], 'utf8'));
 function renderWithScripts(paths) {
   let binding;
   let rendered = 0;
-  const chart = {setOption() {rendered++;}, resize() {}, dispose() {}};
+  const chart = {setOption() {rendered++;}, getOption() {return {};}, getWidth() {return 560;},
+    getHeight() {return 450;}, resize() {}, dispose() {}};
   const body = {style: {}, classList: {contains() {return false;}}};
   const context = {
     document: {body}, window: {},

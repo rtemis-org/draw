@@ -21,8 +21,7 @@ for (const original of input.charts) {
       layout.fit(current, width, height);
       if (current.confusion) confusion.fitConfusion(echarts, current, current.theme, width, height);
       chart.setOption(current.option, true);
-      layout.fitAxes(chart, current);
-      layout.positionLegend(echarts, chart, current);
+      layout.fitChart(echarts, chart, current);
       if (current.aspect) {
         const grid = chart.getModel().getComponent('grid').coordinateSystem.getRect();
         assert.ok(grid.width >= 200, 'ROC plotting area collapsed');

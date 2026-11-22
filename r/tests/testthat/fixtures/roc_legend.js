@@ -18,8 +18,7 @@ for (const original of input.charts) {
       chart.resize({width, height});
       layout.fit(payload, width, height);
       chart.setOption(payload.option, true);
-      layout.fitAxes(chart, payload);
-      layout.positionLegend(echarts, chart, payload);
+      layout.fitChart(echarts, chart, payload);
       const grid = chart.getModel().getComponent('grid').coordinateSystem.getRect();
       const legend = chart.getModel().getComponent('legend');
       const group = chart.getViewOfComponentModel(legend).group;
@@ -71,7 +70,7 @@ for (const original of input.charts) {
       assert.equal(hidden.length, payload.option.series.length -
         payload.option.series.filter(series => series.name === names[0]).length);
       // Layout changes preserve the user's selection.
-      layout.positionLegend(echarts, chart, payload);
+      layout.fitChart(echarts, chart, payload);
       assert.equal(chart.getModel().getComponent('legend').isSelected(names[0]), false);
       chart.dispatchAction({type: 'legendSelect', name: names[0]});
     }

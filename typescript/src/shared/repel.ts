@@ -124,3 +124,27 @@ export function applyRepelLabels<T extends Record<string, unknown>>(option: T): 
   }
   return option;
 }
+
+/**
+ * Installs the label layouts a built option asks for by flag, as functions
+ * its JSON cannot carry: one {@link repelLabels} layout shared by every
+ * series flagged `rtemisRepelLabels`, and on a series flagged
+ * `rtemisCellNotes` (a heatmap's notes) labels truncated with an ellipsis to
+ * each cell's drawn size, overlapping ones hidden; the notes stay whole in
+ * the data. Mutates and returns `option`. Call before `setOption`.
+ */
+export function attachLabelLayouts<T extends Record<string, unknown>>(option: T): T {
+  applyRepelLabels(option);
+  const series = option.series;
+  if (!Array.isArray(series)) return option;
+  for (const s of series as Record<string, unknown>[]) {
+    if (!s?.rtemisCellNotes) continue;
+    s.label = { ...(s.label as Record<string, unknown>), overflow: "truncate", ellipsis: "..." };
+    s.labelLayout = (params: { rect: { width: number; height: number } }) => ({
+      width: Math.max(0, params.rect.width - 5),
+      height: Math.max(0, params.rect.height - 3),
+      hideOverlap: true,
+    });
+  }
+  return option;
+}

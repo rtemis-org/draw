@@ -1,6 +1,8 @@
-import { existsSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { createRequire } from "node:module";
+import { A3 } from "@rtemis/a3";
 import { describe, expect, it } from "vitest";
+import { a3SurfaceHints, buildA3Option } from "../src/charts/a3/config.ts";
 import { buildBarOption } from "../src/charts/bar/config.ts";
 import { buildScatterOption } from "../src/charts/scatter/config.ts";
 import { FIT_EVENTS, fit as fitChart, fitState } from "../src/layout/fit.ts";
@@ -44,6 +46,48 @@ describe.skipIf(!echarts)("fit", () => {
     const box = chart.getViewOfComponentModel(legend).group.getBoundingRect();
     const left = chart.getOption().legend[0].left as number;
     expect(left + box.width / 2).toBeCloseTo(grid.x + grid.width / 2, 0);
+    chart.dispose();
+  });
+
+  it("aligns the legend with the plot area with legend members too", () => {
+    for (const placement of ["outside", "inside"]) {
+      const chart = render(bar);
+      fitChart(echarts, chart, {
+        type: "bar",
+        option: bar,
+        members: { position: "top", placement },
+      });
+      const grid = chart.getModel().getComponent("grid").coordinateSystem.getRect();
+      const legend = chart.getModel().getComponent("legend");
+      const group = chart.getViewOfComponentModel(legend).group;
+      const box = group.getBoundingRect().clone();
+      box.applyTransform(group.getComputedTransform());
+      expect(box.x + box.width / 2).toBeCloseTo(grid.x + grid.width / 2, 0);
+      if (placement === "outside") expect(box.y + box.height).toBeLessThanOrEqual(grid.y);
+      chart.dispose();
+    }
+  });
+
+  it("fits an A3 diagram without legend members: the rail sets the right margin", () => {
+    const doc = new A3(
+      JSON.parse(readFileSync(new URL("./fixtures/mapt.a3.json", import.meta.url), "utf8")),
+    ).toData();
+    const option = buildA3Option(doc, { n_per_row: 21 }) as unknown as Record<string, unknown>;
+    const chart = render(option);
+    const hints = { ...a3SurfaceHints(doc, { n_per_row: 21 }), autoGrid: true, legendGap: 24 };
+    fitChart(echarts, chart, { type: "a3", option, hints: { a3: hints } });
+    const legend = chart.getModel().getComponent("legend");
+    const rail = chart.getViewOfComponentModel(legend).group.getBoundingRect().width;
+    const legendRight = (option.legend as { right: number }).right;
+    expect(chart.getOption().grid[0].right).toBeCloseTo(legendRight + rail + 24, 5);
+    chart.dispose();
+  });
+
+  it("returns no height for a chart without an A3 surface", () => {
+    const chart = render(bar);
+    expect(fitChart(echarts, chart, { type: "bar", option: bar, members: {} }).height).toBe(
+      undefined,
+    );
     chart.dispose();
   });
 

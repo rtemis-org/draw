@@ -26,7 +26,7 @@ function mount(element) {
     HTMLWidgets: {widget(definition) {context.definition = definition;}},
     rtemisA3: {fit() {}},
     rtemisPanels: {...panels, fitAxes() {}, fitHeatmap() {}, positionLegend() {},
-      centerVisualMaps() {}, fitGantt() {}, fitEndpointLabels() {}},
+      centerVisualMaps() {}, fitGantt() {}, fitEndpointLabels() {}, fitChart() { return {}; }},
     echarts: {registerTheme() {}, init(_, __, size) {inits.push(size); return chart;}},
   };
   vm.createContext(context);

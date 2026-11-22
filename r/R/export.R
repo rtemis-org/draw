@@ -236,9 +236,7 @@ save_drawing <- function(widget, filename, width = NULL, height = NULL) {
         "legendTarget",
         "legendTitle",
         "legendTitleAbove",
-        "legendReserveRight",
-        "colorLight",
-        "colorDark"
+        "legendReserveRight"
       )
     )]
   )

@@ -4,7 +4,7 @@ dependencies:
     src: htmlwidgets/lib/pele
     script: pele.global.js
   - name: rtemis-draw-builders
-    version: 0.12.0
+    version: 0.13.0
     src: htmlwidgets/lib/draw
     script: rtemis-draw-builders.js
   - name: rtemis-diagram-theme

@@ -139,7 +139,6 @@ process.stdin.on("end", () => {
     if (panel.option?.grid3D) return require("../htmlwidgets/lib/draw/scatter3d.js").svg({...panel, theme: themeObj}, w, h);
 		if (panel.confusion) builders.fitConfusion(echarts, panel, themeObj, w, h);
 		layout.prepareLabels(panel);
-		layout.prepareColors(echarts, panel, themeObj);
 		const option = panel.option;
 		if (!option) throw new Error("An ECharts option is required for each panel.");
 		const series = Array.isArray(option.series) ? option.series : [option.series];
@@ -162,13 +161,7 @@ process.stdin.on("end", () => {
 			chart = echarts.init(null, themeObj,
 				{renderer: "svg", ssr: true, width: w, height: h});
 			chart.setOption(option);
-			layout.fitGantt(echarts, chart, panel);
-			a3.fit(chart, panel, true);
-			layout.fitAxes(chart, panel);
-			layout.fitHeatmap(chart, panel);
-			layout.positionLegend(echarts, chart, panel);
-			layout.centerVisualMaps(chart, panel, echarts);
-			layout.fitEndpointLabels(chart, panel);
+			layout.fitChart(echarts, chart, panel, true);
 			return chart.renderToSVGString();
 		} finally {
 			if (chart) chart.dispose();

@@ -36,7 +36,7 @@ for (const [name, original] of Object.entries(input.charts)) {
     };
     try {
       chart.setOption(payload.option);
-      const fit = () => {layout.positionLegend(echarts, chart, payload); layout.centerVisualMaps(chart, payload);};
+      const fit = () => {layout.fitChart(echarts, chart, payload);};
       for (const width of [900, 390, 900]) {
         chart.resize({width, height: 650}); fit();
         const before = boxes().map(x => x.box);

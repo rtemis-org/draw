@@ -42,7 +42,7 @@ for (const [name, original] of Object.entries(input.charts)) {
       });
       return found;
     };
-    const fit = () => {layout.positionLegend(echarts, chart, payload); layout.centerVisualMaps(chart, payload, echarts);};
+    const fit = () => {layout.fitChart(echarts, chart, payload);};
     const context = `${name}/${position}/${placement}`;
     try {
       chart.setOption(payload.option);
@@ -80,7 +80,7 @@ for (const [name, original] of Object.entries(input.untitled)) {
   const chart = echarts.init(null, themeOf(payload.theme), {renderer: 'svg', ssr: true, width: 900, height: 650});
   try {
     chart.setOption(payload.option);
-    layout.positionLegend(echarts, chart, payload); layout.centerVisualMaps(chart, payload, echarts);
+    layout.fitChart(echarts, chart, payload);
     let graphics = 0;
     chart.getModel().eachComponent('graphic', () => {graphics++;});
     assert.equal(graphics, 0, `${name} untitled chart draws a graphic`);

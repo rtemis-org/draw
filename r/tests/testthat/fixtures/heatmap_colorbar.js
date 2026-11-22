@@ -15,7 +15,7 @@ for (const payload of input.charts) {
     chart.setOption(payload.option);
     for (const [width, height] of [[800, 600], [390, 500], [950, 700]]) {
       chart.resize({width, height});
-      layout.centerVisualMaps(chart, payload);
+      layout.fitChart(echarts, chart, payload);
       const model = chart.getModel().getComponent('visualMap');
       const series = chart.getModel().getSeries().find(s => s.subType === 'heatmap');
       if (model.get('show') && model.get('orient') === 'vertical') {
@@ -38,7 +38,7 @@ for (const payload of input.charts) {
       const [min, max] = model.getExtent();
       const range = [min + (max - min) / 4, max - (max - min) / 4];
       chart.dispatchAction({type: 'selectDataRange', visualMapIndex: 0, selected: range});
-      layout.centerVisualMaps(chart, payload);
+      layout.fitChart(echarts, chart, payload);
       assert.deepEqual(model.getSelected(), range, 'Layout reset the selected color range');
     }
   } finally {chart.dispose();}

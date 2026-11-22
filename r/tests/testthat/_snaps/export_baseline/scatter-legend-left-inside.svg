@@ -84,16 +84,16 @@
 <path d="M1 0A1 1 0 1 1 1 -0.1A1 1 0 0 1 1 0" transform="matrix(3,0,0,3,427.2869,167.1142)" fill="#BE2E5F" fill-opacity="0.6332773124424536" ecmeta_series_index="2" ecmeta_data_index="17" ecmeta_ssr_type="chart" class="zr-cls-3"></path>
 <path d="M1 0A1 1 0 1 1 1 -0.1A1 1 0 0 1 1 0" transform="matrix(3,0,0,3,245.2968,219.0229)" fill="#BE2E5F" fill-opacity="0.6332773124424536" ecmeta_series_index="2" ecmeta_data_index="18" ecmeta_ssr_type="chart" class="zr-cls-3"></path>
 <path d="M1 0A1 1 0 1 1 1 -0.1A1 1 0 0 1 1 0" transform="matrix(3,0,0,3,270.9166,269.2285)" fill="#BE2E5F" fill-opacity="0.6332773124424536" ecmeta_series_index="2" ecmeta_data_index="19" ecmeta_ssr_type="chart" class="zr-cls-3"></path>
-<path d="M-5 -5l86 0l0 68l-86 0Z" transform="translate(208.5 160.55)" fill="rgb(0,0,0)" fill-opacity="0" stroke="#b7b9be" stroke-width="0" class="zr-cls-0"></path>
-<path d="M19.5 7A7 7 0 1 1 19.5 6.3A7 7 0 0 1 19.5 7" transform="translate(203 160.55)" fill="#6CA3A0" ecmeta_series_index="0" ecmeta_data_index="0" ecmeta_ssr_type="legend" ecmeta_silent="true" class="zr-cls-0"></path>
-<text dominant-baseline="central" text-anchor="start" style="font-size:12px;font-family:system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;" x="30" y="7" transform="translate(203 160.55)" fill="rgb(0,0,0)" fill-opacity="0.7">Adelie</text>
-<path d="M5.5 0l58 0l0 14l-58 0Z" transform="translate(203 160.55)" fill="none" pointer-events="visible" ecmeta_series_index="0" ecmeta_data_index="0" ecmeta_ssr_type="legend" class="zr-cls-4"></path>
-<path d="M19.5 7A7 7 0 1 1 19.5 6.3A7 7 0 0 1 19.5 7" transform="translate(203 182.55)" fill="#F08904" ecmeta_series_index="1" ecmeta_data_index="1" ecmeta_ssr_type="legend" ecmeta_silent="true" class="zr-cls-0"></path>
-<text dominant-baseline="central" text-anchor="start" style="font-size:12px;font-family:system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;" x="30" y="7" transform="translate(203 182.55)" fill="rgb(0,0,0)" fill-opacity="0.7">Chinstrap</text>
-<path d="M5.5 0l76 0l0 14l-76 0Z" transform="translate(203 182.55)" fill="none" pointer-events="visible" ecmeta_series_index="1" ecmeta_data_index="1" ecmeta_ssr_type="legend" class="zr-cls-4"></path>
-<path d="M19.5 7A7 7 0 1 1 19.5 6.3A7 7 0 0 1 19.5 7" transform="translate(203 204.55)" fill="#BE2E5F" ecmeta_series_index="2" ecmeta_data_index="2" ecmeta_ssr_type="legend" ecmeta_silent="true" class="zr-cls-0"></path>
-<text dominant-baseline="central" text-anchor="start" style="font-size:12px;font-family:system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;" x="30" y="7" transform="translate(203 204.55)" fill="rgb(0,0,0)" fill-opacity="0.7">Gentoo</text>
-<path d="M5.5 0l64.1 0l0 14l-64.1 0Z" transform="translate(203 204.55)" fill="none" pointer-events="visible" ecmeta_series_index="2" ecmeta_data_index="2" ecmeta_ssr_type="legend" class="zr-cls-4"></path>
+<path d="M-5 -5l86 0l0 68l-86 0Z" transform="translate(101.58 157.55)" fill="rgb(0,0,0)" fill-opacity="0" stroke="#b7b9be" stroke-width="0" class="zr-cls-0"></path>
+<path d="M19.5 7A7 7 0 1 1 19.5 6.3A7 7 0 0 1 19.5 7" transform="translate(96.08 157.55)" fill="#6CA3A0" ecmeta_series_index="0" ecmeta_data_index="0" ecmeta_ssr_type="legend" ecmeta_silent="true" class="zr-cls-0"></path>
+<text dominant-baseline="central" text-anchor="start" style="font-size:12px;font-family:system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;" x="30" y="7" transform="translate(96.08 157.55)" fill="rgb(0,0,0)" fill-opacity="0.7">Adelie</text>
+<path d="M5.5 0l58 0l0 14l-58 0Z" transform="translate(96.08 157.55)" fill="none" pointer-events="visible" ecmeta_series_index="0" ecmeta_data_index="0" ecmeta_ssr_type="legend" class="zr-cls-4"></path>
+<path d="M19.5 7A7 7 0 1 1 19.5 6.3A7 7 0 0 1 19.5 7" transform="translate(96.08 179.55)" fill="#F08904" ecmeta_series_index="1" ecmeta_data_index="1" ecmeta_ssr_type="legend" ecmeta_silent="true" class="zr-cls-0"></path>
+<text dominant-baseline="central" text-anchor="start" style="font-size:12px;font-family:system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;" x="30" y="7" transform="translate(96.08 179.55)" fill="rgb(0,0,0)" fill-opacity="0.7">Chinstrap</text>
+<path d="M5.5 0l76 0l0 14l-76 0Z" transform="translate(96.08 179.55)" fill="none" pointer-events="visible" ecmeta_series_index="1" ecmeta_data_index="1" ecmeta_ssr_type="legend" class="zr-cls-4"></path>
+<path d="M19.5 7A7 7 0 1 1 19.5 6.3A7 7 0 0 1 19.5 7" transform="translate(96.08 201.55)" fill="#BE2E5F" ecmeta_series_index="2" ecmeta_data_index="2" ecmeta_ssr_type="legend" ecmeta_silent="true" class="zr-cls-0"></path>
+<text dominant-baseline="central" text-anchor="start" style="font-size:12px;font-family:system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;" x="30" y="7" transform="translate(96.08 201.55)" fill="rgb(0,0,0)" fill-opacity="0.7">Gentoo</text>
+<path d="M5.5 0l64.1 0l0 14l-64.1 0Z" transform="translate(96.08 201.55)" fill="none" pointer-events="visible" ecmeta_series_index="2" ecmeta_data_index="2" ecmeta_ssr_type="legend" class="zr-cls-4"></path>
 <style ><![CDATA[
 .zr-cls-0:hover {
 pointer-events:none;
