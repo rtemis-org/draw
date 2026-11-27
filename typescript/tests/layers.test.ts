@@ -148,7 +148,7 @@ describe("disjoint layers", () => {
         label: ["load", "clean", "fold 1"],
         start: [0, 12, 30],
         end: [12, 30, 95],
-        status: ["ok", "ok", "error"],
+        status: ["completed", "completed", "failed"],
       }),
       { label: "label", start: "start", end: "end", group: "status", xlab: "Elapsed (ms)" },
     ],

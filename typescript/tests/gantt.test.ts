@@ -19,8 +19,8 @@ const tasks: TabularData = {
     label: ["load", "clean", "  fold 1", "load"],
     start: [0, 12, 30, 95],
     end: [12, 30, 95, 100],
-    status: ["ok", "ok", "error", "ok"],
-    failed: [false, false, true, false],
+    status: ["completed", "completed", "failed", "completed"],
+    incomplete: [false, false, true, false],
     tip: ["load: 12 ms", "clean: 18 ms", "fold 1: 65 ms", "load: 5 ms"],
   },
 };
@@ -48,14 +48,14 @@ describe("buildGanttOption", () => {
   it("draws one series per group with the palette, flags, and tooltip text", () => {
     const option = buildGanttOption(tasks, {
       group: "status",
-      border: "failed",
+      border: "incomplete",
       tooltip: "tip",
       palette: ["#111111", "#222222"],
       bar_height: 0.5,
       bar_radius: 2,
     });
     const series = seriesOf(option);
-    expect(series.map((s) => s.name)).toEqual(["ok", "error"]);
+    expect(series.map((s) => s.name)).toEqual(["completed", "failed"]);
     expect(series.map((s) => s.itemStyle?.color)).toEqual(["#111111", "#222222"]);
     expect(series[1]?.data).toEqual([{ value: [2, 30, 95, 1], name: "fold 1: 65 ms" }]);
     expect(series[0]?.data.map((d) => d.value[3])).toEqual([0, 0, 0]);
@@ -65,16 +65,16 @@ describe("buildGanttOption", () => {
       borderColor: "#E53935",
       borderWidth: 1.5,
     });
-    expect(option.legend).toEqual({ show: true, data: ["ok", "error"] });
+    expect(option.legend).toEqual({ show: true, data: ["completed", "failed"] });
     expect((option.tooltip as Axis).formatter).toBe("{b}");
   });
 
   it("orders groups by their levels", () => {
     const option = buildGanttOption(
-      { ...tasks, levels: { status: ["error", "ok"] } },
+      { ...tasks, levels: { status: ["failed", "completed"] } },
       { group: "status" },
     );
-    expect(seriesOf(option).map((s) => s.name)).toEqual(["error", "ok"]);
+    expect(seriesOf(option).map((s) => s.name)).toEqual(["failed", "completed"]);
   });
 
   it("zooms on Shift+wheel with the toolbox and guides by default", () => {

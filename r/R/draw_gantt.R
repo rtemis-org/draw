@@ -84,7 +84,7 @@ gantt_height <- function(rows) {
 #'   label = c("load", "clean", "train", "predict"),
 #'   start = c(0, 12, 30, 95),
 #'   end = c(12, 30, 95, 100),
-#'   status = c("ok", "ok", "ok", "error")
+#'   status = c("completed", "completed", "completed", "failed")
 #' )
 #' draw_gantt(tasks, group = "status")
 #' @inheritParams draw_line legend_position legend_placement legend_title

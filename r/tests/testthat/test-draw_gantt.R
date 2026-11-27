@@ -6,7 +6,7 @@ tasks_df <- function() {
     label = c("load", "clean", "train", "predict"),
     start = c(0, 12, 30, 95),
     end = c(12, 30, 95, 100),
-    status = c("ok", "ok", "ok", "error"),
+    status = c("completed", "completed", "completed", "failed"),
     stringsAsFactors = FALSE
   )
 }
@@ -164,7 +164,7 @@ test_that("draw_gantt with group draws one colored series per level with a legen
     palette = c("#111111", "#222222")
   ))
   series <- o[["series"]]
-  expect_identical(vapply(series, `[[`, "", "name"), c("ok", "error"))
+  expect_identical(vapply(series, `[[`, "", "name"), c("completed", "failed"))
   expect_identical(
     vapply(series, function(s) s[["itemStyle"]][["color"]], ""),
     c("#111111", "#222222")
