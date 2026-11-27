@@ -4,6 +4,7 @@ __dev/
 specs/
 plan/
 AGENTS.md
+.style-scan-ignore
 
 # macOS
 .DS_Store
